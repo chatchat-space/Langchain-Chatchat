@@ -20,7 +20,7 @@ def init_knowledge_vector_store(filepath):
     return vector_store
 
 
-def get_wiki_agent_answer(query, vector_store, chat_history=[]):
+def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     system_template = """基于以下内容，简洁和专业的来回答用户的问题。
     如果无法从中得到答案，请说 "不知道" 或 "没有足够的相关信息"，不要试图编造答案。答案请使用中文。
     ----------------
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     history = []
     while True:
         query = input("Input your question 请输入问题：")
-        resp, history = get_wiki_agent_answer(query=query,
-                                              vector_store=vector_store,
-                                              chat_history=history)
+        resp, history = get_knowledge_based_answer(query=query,
+                                                   vector_store=vector_store,
+                                                   chat_history=history)
         print(resp)
