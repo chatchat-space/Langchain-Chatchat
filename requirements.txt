@@ -7,3 +7,4 @@ sentence-transformers
 beautifulsoup4
 icetk
 cpm_kernels
+faiss-cpu
