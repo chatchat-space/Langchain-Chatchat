@@ -40,6 +40,10 @@ pip install -r requirements
 ```commandline
 python knowledge_based_chatglm.py
 ```
+### 已知问题
+- 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)，目前已知文档中若含有特殊字符，可能存在文件无法加载的问题；
+- 使用 macOS 运行本项目时，可能因为 macOS 版本为 13.3 及以上版本导致与 pytorch 不兼容，无法正常运行的情况。
+
 ## DEMO
 以问题`chatglm-6b 的局限性具体体现在哪里，如何实现改进`为例
 
