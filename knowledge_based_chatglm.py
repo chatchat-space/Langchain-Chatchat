@@ -10,6 +10,8 @@ from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from chatglm_llm import ChatGLM
 
+chatglm = ChatGLM()
+
 
 def init_knowledge_vector_store(filepath):
     embeddings = HuggingFaceEmbeddings(model_name="GanymedeNil/text2vec-large-chinese", )
@@ -42,7 +44,6 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     ----------------
     改写后的独立、完整的问题："""
     new_question_prompt = PromptTemplate.from_template(condese_propmt_template)
-    chatglm = ChatGLM()
     chatglm.history = chat_history
     knowledge_chain = ChatVectorDBChain.from_llm(
         llm=chatglm,
