@@ -16,6 +16,19 @@
 
 ## 使用方式
 
+### 硬件需求
+- ChatGLM-6B 模型硬件需求
+    
+    | **量化等级**   | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
+    | -------------- | ------------------------- | --------------------------------- |
+    | FP16（无量化） | 13 GB                     | 14 GB                             |
+    | INT8           | 8 GB                     | 9 GB                             |
+    | INT4           | 6 GB                      | 7 GB                              |
+
+- Embedding 模型硬件需求
+
+    本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
+
 ### 1. 安装 python 依赖包
 ```commandline
 pip install -r requirements
