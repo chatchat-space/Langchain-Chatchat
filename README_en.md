@@ -10,7 +10,26 @@
 
 ✅ In this project, [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) is used as Embedding Model，and [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) used as LLM。Based on those models，this project can be deployed **offline** with all **open source** models。
 
+## Update
+**[2023/04/07]**
+1. Fix bug which costs twice gpu memory (Thanks to [@suc16](https://github.com/suc16) and [@myml](https://github.com/myml)).
+2. Add gpu memory clear function after each call of ChatGLM.
+
 ## Usage
+
+### Hardware Requirements
+
+- ChatGLM Hardware Requirements
+
+    | **Quantization Level** | **GPU Memory** |
+    |------------------------|----------------|
+    | FP16（no quantization）  | 13 GB          |
+    | INT8                   | 10 GB          |
+    | INT4                   | 6 GB           |
+- Embedding Hardware Requirements
+
+   The default Embedding model in this repo is [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main), 3GB GPU Memory required when running on GPU.
+
 
 ### 1. install python packages
 ```commandline
