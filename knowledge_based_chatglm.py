@@ -10,12 +10,18 @@ from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from chatglm_llm import ChatGLM
 
+embedding_model_dict = {
+    "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
+    "ernie-base": "nghuyong/ernie-3.0-base-zh",
+    "text2vec": "GanymedeNil/text2vec-large-chinese"
+}
+embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["ernie-tiny"])
+chatglm = ChatGLM()
+
 
 def init_knowledge_vector_store(filepath):
-    embeddings = HuggingFaceEmbeddings(model_name="GanymedeNil/text2vec-large-chinese", )
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
-
     vector_store = FAISS.from_documents(docs, embeddings)
     return vector_store
 
@@ -42,7 +48,6 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     ----------------
     改写后的独立、完整的问题："""
     new_question_prompt = PromptTemplate.from_template(condese_propmt_template)
-    chatglm = ChatGLM()
     chatglm.history = chat_history
     knowledge_chain = ChatVectorDBChain.from_llm(
         llm=chatglm,
