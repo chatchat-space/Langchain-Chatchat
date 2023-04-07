@@ -12,8 +12,9 @@
 
 ## 更新信息
 
-**[2023/04/07]** 解决加载 ChatGLM 模型时发生显存占用为双倍的问题 (感谢 [@suc16](https://github.com/suc16) 和 [@myml](https://github.com/myml)) 
-
+**[2023/04/07]** 
+1. 解决加载 ChatGLM 模型时发生显存占用为双倍的问题 (感谢 [@suc16](https://github.com/suc16) 和 [@myml](https://github.com/myml)) ；
+2. 新增清理显存机制。
 ## 使用方式
 
 ### 硬件需求
