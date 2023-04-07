@@ -42,6 +42,10 @@ Attention: With langchain.document_loaders.UnstructuredFileLoader used to connec
 python knowledge_based_chatglm.py
 ```
 
+### Known issues
+- Currently tested to support txt, docx, md format files, for more file formats please refer to [langchain documentation](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html). If the document contains special characters, the file may not be correctly loaded.
+- When running this project with macOS, it may not work properly due to incompatibility with pytorch caused by macOS version 13.3 and above.
+
 ## Roadmap
 - [x] local knowledge based application with langchain + ChatGLM-6B
 - [x] unstructured files loaded with langchain
