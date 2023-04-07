@@ -15,6 +15,8 @@ model = (
     .cuda()
 )
 
+tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True)
+model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).half().cuda()
 
 class ChatGLM(LLM):
     max_token: int = 10000
