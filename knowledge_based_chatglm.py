@@ -1,5 +1,5 @@
 from langchain.prompts.prompt import PromptTemplate
-from langchain.chains import ChatVectorDBChain
+from langchain.chains import ChatVectorDBChain, ConversationalRetrievalChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
@@ -13,16 +13,13 @@ from chatglm_llm import ChatGLM
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec": "GanymedeNil/text2vec-large-chinese"
+    "text2vec": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm_embedding"#"GanymedeNil/text2vec-large-chinese"
 }
 
-llm_model_dict = {
-    "chatglm-6b": "THUDM/chatglm-6b",
-    "chatglm-6b-int4": "THUDM/chatglm-6b-int4"
-}
+
 
 chatglm = ChatGLM()
-chatglm.load_model(model_name_or_path=llm_model_dict["chatglm-6b"])
+
 
 def init_knowledge_vector_store(filepath):
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )
@@ -56,15 +53,16 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     改写后的独立、完整的问题："""
     new_question_prompt = PromptTemplate.from_template(condese_propmt_template)
     chatglm.history = chat_history
-    knowledge_chain = ChatVectorDBChain.from_llm(
+    knowledge_chain = ConversationalRetrievalChain.from_llm(
         llm=chatglm,
-        vectorstore=vector_store,
+        retriever=vector_store.as_retriever(),
         qa_prompt=prompt,
         condense_question_prompt=new_question_prompt,
     )
 
     knowledge_chain.return_source_documents = True
-    knowledge_chain.top_k_docs_for_context = 10
+    # knowledge_chain.top_k_docs_for_context = 10
+    knowledge_chain.max_tokens_limit = 10000
 
     result = knowledge_chain({"question": query, "chat_history": chat_history})
     return result, chatglm.history

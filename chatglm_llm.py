@@ -16,13 +16,28 @@ def torch_gc():
             torch.cuda.ipc_collect()
 
 
+tokenizer = AutoTokenizer.from_pretrained(
+    "/Users/liuqian/Downloads/ChatGLM-6B/chatglm_hf_model",
+    # "THUDM/chatglm-6b",
+    trust_remote_code=True
+)
+model = (
+    AutoModel.from_pretrained(
+        "/Users/liuqian/Downloads/ChatGLM-6B/chatglm_hf_model",
+        # "THUDM/chatglm-6b",
+        trust_remote_code=True)
+    .float()
+    .to("mps")
+    # .half()
+    # .cuda()
+)
+
+
 class ChatGLM(LLM):
     max_token: int = 10000
     temperature: float = 0.1
     top_p = 0.9
     history = []
-    tokenizer: object = None
-    model: object = None
 
     def __init__(self):
         super().__init__()
@@ -34,8 +49,8 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               stop: Optional[List[str]] = None) -> str:
-        response, updated_history = self.model.chat(
-            self.tokenizer,
+        response, updated_history = model.chat(
+            tokenizer,
             prompt,
             history=self.history,
             max_length=self.max_token,
@@ -48,16 +63,17 @@ class ChatGLM(LLM):
         self.history = updated_history
         return response
 
-    def load_model(self,
-                   model_name_or_path: str = "THUDM/chatglm-6b"):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path,
-            trust_remote_code=True
-        )
-        self.model = (
-            AutoModel.from_pretrained(
-                model_name_or_path,
-                trust_remote_code=True)
-            .half()
-            .cuda()
-        )
+    def get_num_tokens(self, text: str) -> int:
+        tokenized_text = tokenizer.tokenize(text)
+        return len(tokenized_text)
+
+if __name__ == "__main__":
+    history = []
+    while True:
+        query = input("Input your question 请输入问题：")
+        resp, history = model.chat(tokenizer,
+                                   query,
+                                   history=history,
+                                   temperature=0.01,
+                                   max_length=100000)
+        print(resp)
