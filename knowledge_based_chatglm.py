@@ -15,8 +15,14 @@ embedding_model_dict = {
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
     "text2vec": "GanymedeNil/text2vec-large-chinese"
 }
-chatglm = ChatGLM()
 
+llm_model_dict = {
+    "chatglm-6b": "THUDM/chatglm-6b",
+    "chatglm-6b-int4": "THUDM/chatglm-6b-int4"
+}
+
+chatglm = ChatGLM()
+chatglm.load_model(model_name_or_path=llm_model_dict["chatglm-6b"])
 
 def init_knowledge_vector_store(filepath):
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )

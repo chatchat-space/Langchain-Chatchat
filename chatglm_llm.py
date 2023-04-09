@@ -16,20 +16,8 @@ def torch_gc():
             torch.cuda.ipc_collect()
 
 
-tokenizer = AutoTokenizer.from_pretrained(
-    "THUDM/chatglm-6b",
-    trust_remote_code=True
-)
-model = (
-    AutoModel.from_pretrained(
-        "THUDM/chatglm-6b",
-        trust_remote_code=True)
-    .half()
-    .cuda()
-)
-
-
 class ChatGLM(LLM):
+    model_name: str
     max_token: int = 10000
     temperature: float = 0.1
     top_p = 0.9
@@ -38,6 +26,20 @@ class ChatGLM(LLM):
     def __init__(self):
         super().__init__()
 
+    def load_model(self,
+                   model_name_or_path: str = "THUDM/chatglm-6b"):
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_name_or_path,
+            trust_remote_code=True
+        )
+        self.model = (
+            AutoModel.from_pretrained(
+                model_name_or_path,
+                trust_remote_code=True)
+            .half()
+            .cuda()
+        )
+
     @property
     def _llm_type(self) -> str:
         return "ChatGLM"
@@ -45,8 +47,8 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               stop: Optional[List[str]] = None) -> str:
-        response, updated_history = model.chat(
-            tokenizer,
+        response, updated_history = self.model.chat(
+            self.tokenizer,
             prompt,
             history=self.history,
             max_length=self.max_token,
