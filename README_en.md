@@ -34,7 +34,7 @@
 
 ### 1. install python packages
 ```commandline
-pip install -r requirements
+pip install -r requirements.txt
 ```
 Attention: With langchain.document_loaders.UnstructuredFileLoader used to connect with local knowledge file, you may need some other dependencies as mentioned in  [langchain documentation](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
 
