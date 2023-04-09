@@ -34,7 +34,7 @@
 
 ### 1. 安装 python 依赖包
 ```commandline
-pip install -r requirements
+pip install -r requirements.txt
 ```
 注：使用 langchain.document_loaders.UnstructuredFileLoader 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
 
