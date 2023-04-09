@@ -1,0 +1,13 @@
+{
+  "base_model_name_or_path": "THUDM/chatglm-6b",
+  "encoder_hidden_size": 4096,
+  "inference_mode": true,
+  "num_attention_heads": 32,
+  "num_layers": 28,
+  "num_transformer_submodules": 1,
+  "num_virtual_tokens": 8,
+  "peft_type": "PREFIX_TUNING",
+  "prefix_projection": false,
+  "task_type": "CAUSAL_LM",
+  "token_dim": 4096
+}

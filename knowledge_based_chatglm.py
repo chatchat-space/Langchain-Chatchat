@@ -16,10 +16,13 @@ embedding_model_dict = {
     "text2vec": "GanymedeNil/text2vec-large-chinese"
 }
 chatglm = ChatGLM()
+chatglm.max_token = 2048
 
+from chatglm_embedding import ChatGLM_Embedding
 
 def init_knowledge_vector_store(filepath):
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )
+    # embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )
+    embeddings = ChatGLM_Embedding()
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
 
