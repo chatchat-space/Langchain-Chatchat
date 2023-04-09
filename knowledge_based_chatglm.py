@@ -10,19 +10,20 @@ from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from chatglm_llm import ChatGLM
 
+def get_chatGLM_embedding():
+    from chatglm_embedding import ChatGLM_Embedding
+    return ChatGLM_Embedding()
+
 embedding_model_dict = {
-    "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
-    "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec": "GanymedeNil/text2vec-large-chinese"
+    "ernie-tiny": lambda: HuggingFaceEmbeddings(model_name="nghuyong/ernie-3.0-nano-zh"),
+    "ernie-base": lambda: HuggingFaceEmbeddings(model_name="nghuyong/ernie-3.0-base-zh"),
+    "text2vec": lambda: HuggingFaceEmbeddings(model_name="GanymedeNil/text2vec-large-chinese"),
+    "ChatGLMLocalEmbedding":lambda: get_chatGLM_embedding()
 }
 chatglm = ChatGLM()
-chatglm.max_token = 2048
-
-from chatglm_embedding import ChatGLM_Embedding
 
 def init_knowledge_vector_store(filepath):
-    # embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )
-    embeddings = ChatGLM_Embedding()
+    embeddings = embedding_model_dict["ChatGLMLocalEmbedding"]()
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
 
