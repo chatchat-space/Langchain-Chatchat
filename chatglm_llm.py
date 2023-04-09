@@ -22,6 +22,8 @@ class ChatGLM(LLM):
     temperature: float = 0.1
     top_p = 0.9
     history = []
+    tokenizer: object = None
+    model: object = None
 
     def __init__(self):
         super().__init__()
