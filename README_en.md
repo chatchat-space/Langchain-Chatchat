@@ -57,6 +57,10 @@ python knowledge_based_chatglm.py
 
 ### FAQ
 
+Q: How to solve the problem of slow download of `pytorch_model-*-of-*.bin`?
+
+A: Go to https://huggingface.co/THUDM/chatglm-6b/tree/main and manually download these bin files and put them in `~/.cache/huggingface/hub/models--THUDM--chatglm-6b/snapshot/xxx/` directory.
+
 Q: How to solve `Resource punkt not found.`?
 
 A: Unzip `packages/tokenizers` in https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip and put it in the corresponding directory of `Searched in:`.
