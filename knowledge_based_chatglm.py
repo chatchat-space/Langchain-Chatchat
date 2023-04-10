@@ -20,9 +20,9 @@ REPLY_WITH_SOURCE = True
 
 
 embedding_model_dict = {
-    "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
-    "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec": "GanymedeNil/text2vec-large-chinese",
+    "ernie-tiny": ("nghuyong/ernie-3.0-nano-zh", "main"),
+    "ernie-base": ("nghuyong/ernie-3.0-base-zh", "main"),
+    "text2vec": ("GanymedeNil/text2vec-large-chinese", "main"),
 }
 
 llm_model_dict = {
@@ -36,7 +36,8 @@ chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
 chatglm.history_len = LLM_HISTORY_LEN
 
 def init_knowledge_vector_store(filepath):
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
+    model_name, revision = embedding_model_dict[EMBEDDING_MODEL]
+    embeddings = HuggingFaceEmbeddings(model_name=model_name, revision=revision)
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
 

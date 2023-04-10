@@ -49,14 +49,17 @@ class ChatGLM(LLM):
         return response
 
     def load_model(self,
-                   model_name_or_path: str = "THUDM/chatglm-6b"):
+                   model_name_or_path: str = "THUDM/chatglm-6b",
+                   revision: str = "main"):
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
+            revision=revision,
             trust_remote_code=True
         )
         self.model = (
             AutoModel.from_pretrained(
                 model_name_or_path,
+                revision=revision,
                 trust_remote_code=True)
             .half()
             .cuda()
