@@ -1,5 +1,4 @@
-from langchain.prompts.prompt import PromptTemplate
-from langchain.chains import ChatVectorDBChain, ConversationalRetrievalChain
+from langchain.chains import RetrievalQA
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
@@ -10,19 +9,34 @@ from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from chatglm_llm import ChatGLM
 
+# Global Parameters
+EMBEDDING_MODEL = "text2vec"
+VECTOR_SEARCH_TOP_K = 6
+LLM_MODEL = "chatglm-6b"
+LLM_HISTORY_LEN = 3
+
+# Show reply with source text from input document
+REPLY_WITH_SOURCE = True
+
+
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm_embedding"#"GanymedeNil/text2vec-large-chinese"
+    "text2vec": "GanymedeNil/text2vec-large-chinese",
 }
 
-
+llm_model_dict = {
+    "chatglm-6b": "THUDM/chatglm-6b",
+    "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
+    "chatglm-6b-int4-qe":"THUDM/chatglm-6b-int4-qe",
+}
 
 chatglm = ChatGLM()
-
+chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
+chatglm.history_len = LLM_HISTORY_LEN
 
 def init_knowledge_vector_store(filepath):
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict["text2vec"], )
+    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
 
@@ -43,28 +57,17 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     ]
     prompt = ChatPromptTemplate.from_messages(messages)
 
-    condese_propmt_template = """任务: 给一段对话和一个后续问题，将后续问题改写成一个独立的问题。确保问题是完整的，没有模糊的指代。
-    ----------------
-    聊天记录：
-    {chat_history}
-    ----------------
-    后续问题：{question}
-    ----------------
-    改写后的独立、完整的问题："""
-    new_question_prompt = PromptTemplate.from_template(condese_propmt_template)
     chatglm.history = chat_history
-    knowledge_chain = ConversationalRetrievalChain.from_llm(
+    knowledge_chain = RetrievalQA.from_llm(
         llm=chatglm,
-        retriever=vector_store.as_retriever(),
-        qa_prompt=prompt,
-        condense_question_prompt=new_question_prompt,
+        retriever=vector_store.as_retriever(search_kwargs={"k": VECTOR_SEARCH_TOP_K}),
+        prompt=prompt
     )
 
     knowledge_chain.return_source_documents = True
-    # knowledge_chain.top_k_docs_for_context = 10
-    knowledge_chain.max_tokens_limit = 10000
 
-    result = knowledge_chain({"question": query, "chat_history": chat_history})
+    result = knowledge_chain({"query": query})
+    chatglm.history[-1][0] = query
     return result, chatglm.history
 
 
@@ -77,4 +80,7 @@ if __name__ == "__main__":
         resp, history = get_knowledge_based_answer(query=query,
                                                    vector_store=vector_store,
                                                    chat_history=history)
-        print(resp)
+        if REPLY_WITH_SOURCE:
+            print(resp)
+        else:
+            print(resp["result"])
