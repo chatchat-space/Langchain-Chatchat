@@ -55,7 +55,18 @@ python knowledge_based_chatglm.py
 - Currently tested to support txt, docx, md format files, for more file formats please refer to [langchain documentation](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html). If the document contains special characters, the file may not be correctly loaded.
 - When running this project with macOS, it may not work properly due to incompatibility with pytorch caused by macOS version 13.3 and above.
 
+### FAQ
+
+Q: How to solve `Resource punkt not found.`?
+
+A: Unzip `packages/tokenizers` in https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip and put it in the corresponding directory of `Searched in:`.
+
+Q: How to solve `Resource averaged_perceptron_tagger not found.`?
+
+A: Download https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip, decompress it and put it in the corresponding directory of `Searched in:`.
+
 ## Roadmap
+
 - [x] local knowledge based application with langchain + ChatGLM-6B
 - [x] unstructured files loaded with langchain
 - [ ] more different file format loaded with langchain
