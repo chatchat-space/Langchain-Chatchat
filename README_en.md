@@ -16,6 +16,12 @@
 2. Add gpu memory clear function after each call of ChatGLM.
 3. Add `nghuyong/ernie-3.0-nano-zh` and `nghuyong/ernie-3.0-base-zh` as Embedding model alternatives，costing less gpu than `GanymedeNil/text2vec-large-chinese` (Thanks to [@lastrei](https://github.com/lastrei))
 
+**[2023/04/09]**
+1. Using `RetrievalQA` in `langchain` to replace the previously selected `ChatVectorDBChain`, the replacement can effectively solve the problem of program stopping after 2-3 questions due to insufficient gpu memory.
+2. Add `EMBEDDING_MODEL`, `VECTOR_SEARCH_TOP_K`, `LLM_MODEL`, `LLM_HISTORY_LEN`, `REPLY_WITH_SOURCE` parameter value settings in `knowledge_based_chatglm.py`.
+3. Add `chatglm-6b-int4`, `chatglm-6b-int4-qe` with smaller GPU memory requirements as LLM model alternatives.
+4. Correct code errors in `README.md` (Thanks to [@calcitem](https://github.com/calcitem)).
+
 ## Usage
 
 ### Hardware Requirements
@@ -31,6 +37,8 @@
 
    The default Embedding model in this repo is [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main), 3GB GPU Memory required when running on GPU.
 
+### Software Requirements
+This repo has been tested in python 3.8 environment。
 
 ### 1. install python packages
 ```commandline
