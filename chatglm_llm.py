@@ -1,3 +1,7 @@
+import sys
+import itertools
+import time
+import threading
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
@@ -56,6 +60,23 @@ class ChatGLM(LLM):
             revision=revision,
             trust_remote_code=True
         )
+
+        # Set up the rotating progress indicator
+        progress_indicator = itertools.cycle(['|', '/', '-', '\\'])
+
+        def display_progress_indicator():
+            while not model_loaded:
+                sys.stdout.write(next(progress_indicator))
+                sys.stdout.flush()
+                sys.stdout.write('\b')
+                time.sleep(0.1)
+
+        # Create a separate thread for the rotating progress indicator
+        model_loaded = False
+        progress_thread = threading.Thread(target=display_progress_indicator, daemon=True)
+        progress_thread.start()
+
+        # Load the model
         self.model = (
             AutoModel.from_pretrained(
                 model_name_or_path,
@@ -64,3 +85,7 @@ class ChatGLM(LLM):
             .half()
             .cuda()
         )
+
+        # Stop the progress indicator thread
+        model_loaded = True
+        progress_thread.join()
