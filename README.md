@@ -54,7 +54,18 @@ python knowledge_based_chatglm.py
 - 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)，目前已知文档中若含有特殊字符，可能存在文件无法加载的问题；
 - 使用 macOS 运行本项目时，可能因为 macOS 版本为 13.3 及以上版本导致与 pytorch 不兼容，无法正常运行的情况。
 
+### 常见问题
+
+Q: `Resource punkt not found.` 如何解决？
+
+A: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `Searched in:` 对应目录下。
+
+Q: `Resource averaged_perceptron_tagger not found.` 如何解决？
+
+A: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `Searched in:` 对应目录下。
+
 ## DEMO
+
 以问题`chatglm-6b 的局限性具体体现在哪里，如何实现改进`为例
 
 未使用 langchain 接入本地文档时：
