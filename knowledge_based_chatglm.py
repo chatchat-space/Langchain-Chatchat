@@ -11,12 +11,13 @@ from chatglm_llm import ChatGLM
 import sentence_transformers
 import torch
 import os
+import readline
 
 
 # Global Parameters
-EMBEDDING_MODEL = "local"#"text2vec"
+EMBEDDING_MODEL = "text2vec"
 VECTOR_SEARCH_TOP_K = 6
-LLM_MODEL = "local"#"chatglm-6b"
+LLM_MODEL = "chatglm-6b"
 LLM_HISTORY_LEN = 3
 DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -27,14 +28,12 @@ embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
     "text2vec": "GanymedeNil/text2vec-large-chinese",
-    "local": "/Users/liuqian/Downloads/ChatGLM-6B/text2vec-large-chinese"
 }
 
 llm_model_dict = {
     "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b": "THUDM/chatglm-6b",
-    "local": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm-6b"
 }
 
 
@@ -52,7 +51,10 @@ def init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN, V_SEARCH_TOP_K=6):
 
 
 def init_knowledge_vector_store(filepath:str):
-    if os.path.isfile(filepath):
+    if not os.path.exists(filepath):
+        print("路径不存在")
+        return None
+    elif os.path.isfile(filepath):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
         print(f"{os.path.split(filepath)[-1]} 已成功加载")
@@ -66,6 +68,7 @@ def init_knowledge_vector_store(filepath:str):
                 print(f"{file} 已成功加载")
             except:
                 print(f"{file} 未能成功加载")
+
     vector_store = FAISS.from_documents(docs, embeddings)
     return vector_store
 
@@ -100,8 +103,11 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
 
 if __name__ == "__main__":
     init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
-    filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
-    vector_store = init_knowledge_vector_store(filepath)
+    vector_store = None
+    while not vector_store:
+        filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
+        print(filepath)
+        vector_store = init_knowledge_vector_store(filepath)
     history = []
     while True:
         query = input("Input your question 请输入问题：")
