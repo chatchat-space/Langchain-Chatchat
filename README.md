@@ -10,6 +10,20 @@
 
 ✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
+## webui
+![webui](./img/ui1.png)
+根据上图依次点击step1~3，即可完成模型加载，加载文件，以及对话历史记录的查看
+
+![webui](./img/ui2.png)
+点击底部Use via API可查看API接口，现有应用可通过post请求进行对接调用
+
+### TODO
+- [ ] 添加模型加载进度条
+- [ ] 添加输出内容及错误提示
+- [ ] 国际化语言切换
+- [ ] 引用标注
+- [ ] 添加插件系统（可基础lora训练等）
+
 ## 更新信息
 
 **[2023/04/07]** 
@@ -22,6 +36,9 @@
 2. 在`knowledge_based_chatglm.py`中增加`EMBEDDING_MODEL`、`VECTOR_SEARCH_TOP_K`、`LLM_MODEL`、`LLM_HISTORY_LEN`、`REPLY_WITH_SOURCE`参数值设置；
 3. 增加 GPU 显存需求更小的`chatglm-6b-int4`、`chatglm-6b-int4-qe`作为 LLM 模型备选项；
 4. 更正`README.md`中的代码错误（感谢 [@calcitem](https://github.com/calcitem)）。
+
+**[2023/04/11]** 
+1. 加入 Web UI V0.1 版本。
 
 
 ## 使用方式
@@ -46,10 +63,27 @@ pip install -r requirements.txt
 ```
 注：使用 langchain.document_loaders.UnstructuredFileLoader 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
 
-### 2. 执行 [knowledge_based_chatglm.py](knowledge_based_chatglm.py) 脚本
+### 2. 执行脚本体验 Web UI 或命令行交互
+执行 [webui.py](webui.py) 脚本体验 **Web 交互**
+```commandline
+python webui.py
+```
+执行后效果如下图所示：
+![webui](./img/ui1.png)
+Web UI 中提供的 API 接口如下图所示：
+![webui](./img/ui2.png)
+Web UI 可以实现如下功能：
+1. 自动读取`knowledge_based_chatglm.py`中`LLM`及`embedding`模型枚举，选择后点击`setting`进行模型加载，可随时切换模型进行测试
+2. 可手动调节保留对话历史长度，可根据显存大小自行调节
+3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`loading`加载文件，过程中可随时更换加载的文件
+4. 底部添加`use via API`可对接到自己系统
+
+或执行 [knowledge_based_chatglm.py](knowledge_based_chatglm.py) 脚本体验**命令行交互**
 ```commandline
 python knowledge_based_chatglm.py
 ```
+
+
 ### 已知问题
 - 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)，目前已知文档中若含有特殊字符，可能存在文件无法加载的问题；
 - 使用 macOS 运行本项目时，可能因为 macOS 版本为 13.3 及以上版本导致与 pytorch 不兼容，无法正常运行的情况。
@@ -93,9 +127,6 @@ A: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged
 >3. 增加数据量:可以使用更大的数据集来训练 ChatGLM-6B,提高模型的表现。
 >4. 引入更多的评估指标:可以引入更多的评估指标来评估模型的表现,从而发现 ChatGLM-6B 存在的不足和局限性。
 >5. 改进模型架构:可以改进 ChatGLM-6B 的模型架构,提高模型的性能和表现。例如,可以使用更大的神经网络或者改进的卷积神经网络结构。
-
-
-
 
 ## 路线图
 - [x] 实现 langchain + ChatGLM-6B 本地知识应用

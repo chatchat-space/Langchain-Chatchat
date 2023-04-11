@@ -10,7 +10,29 @@
 
 ✅ In this project, [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) is used as Embedding Model，and [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) used as LLM。Based on those models，this project can be deployed **offline** with all **open source** models。
 
+## Webui 
+![webui](./img/ui1.png)
+Click on steps 1-3 according to the above figure to complete the model loading, file loading, and viewing of dialogue history
+
+![webui](./img/ui2.png)
+Click on the Use via API at the bottom to view the API interface. Existing applications can be docked and called through post requests
+
+### TODO
+-[] Add Model Load progress bar
+-[] Add output content and error prompts
+-[] International language switching
+-[] Reference annotation
+-[] Add plugin system (can be used for basic LORA training, etc.)
+
 ## Update
+
+**[2023/04/11]** 
+1. Add Webui V0.1 version and synchronize the updated content before the current day;
+2. Automatically read knowledge_ based_ Enumerate LLM and embedding models in chatglm.py, select and click 'setting' to load the model. You can switch models for testing at any time
+3. The length of the conversation history can be manually adjusted and can be adjusted according to the size of the video memory
+4. Add the upload file function, select the uploaded file from the dropdown box, click loading to load the file, and the loaded file can be changed at any time during the process
+5. Add use via API at the bottom to connect to your own system
+
 **[2023/04/07]**
 1. Fix bug which costs twice gpu memory (Thanks to [@suc16](https://github.com/suc16) and [@myml](https://github.com/myml)).
 2. Add gpu memory clear function after each call of ChatGLM.
