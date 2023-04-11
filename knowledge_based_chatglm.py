@@ -106,7 +106,6 @@ if __name__ == "__main__":
     vector_store = None
     while not vector_store:
         filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
-        print(filepath)
         vector_store = init_knowledge_vector_store(filepath)
     history = []
     while True:
