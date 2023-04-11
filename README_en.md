@@ -14,6 +14,9 @@
 ![webui](./img/ui1.png)
 Click on steps 1-3 according to the above figure to complete the model loading, file loading, and viewing of dialogue history
 
+![webui](./img/ui2.png)
+Click on the Use via API at the bottom to view the API interface. Existing applications can be docked and called through post requests
+
 ### TODO
 -[] Add Model Load progress bar
 -[] Add output content and error prompts
