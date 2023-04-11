@@ -25,7 +25,7 @@
 4. 更正`README.md`中的代码错误（感谢 [@calcitem](https://github.com/calcitem)）。
 
 **[2023/04/11]** 
-1. 加入 Web UI V0.1 版本。
+1. 加入 Web UI V0.1 版本（感谢 [@liangtongt](https://github.com/liangtongt)）。
 
 
 ## 使用方式
