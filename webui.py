@@ -4,17 +4,6 @@ import shutil
 import knowledge_based_chatglm as kb
 
 
-# class kb:
-#     def __init__(self):
-#         pass
-
-#     def init_knowledge_vector_store(filepath):
-#         return filepath
-
-#     def get_knowledge_based_answer(*args):
-#         return args
-
-
 def get_file_list():
     if not os.path.exists("content"):
         return []
@@ -32,16 +21,24 @@ def upload_file(file):
     if not os.path.exists("content"):
         os.mkdir("content")
     filename = os.path.basename(file.name)
-    shutil.move(file.name, "content/"+filename)
+    shutil.move(file.name, "content/" + filename)
     # file_list首位插入新上传的文件
     file_list.insert(0, filename)
     return gr.Dropdown.update(choices=file_list, value=filename)
 
 
-def getAnswer(q, v, h):
+def get_answer(query, vector_store, history):
     resp, history = kb.get_knowledge_based_answer(
-        query=q, vector_store=v, chat_history=h)
+        query=query, vector_store=vector_store, chat_history=history)
     return history, history
+
+
+def get_model_status(history):
+    return history + [[None, "模型已完成加载，请选择要加载的文档"]]
+
+
+def get_file_status(history):
+    return history + [[None, "文档已完成加载，请开始提问"]]
 
 
 with gr.Blocks(css="""
@@ -65,7 +62,11 @@ with gr.Blocks(css="""
 """)
     with gr.Row():
         with gr.Column(scale=2):
-            chatbot = gr.Chatbot(elem_id="chat-box",
+            chatbot = gr.Chatbot([[None, """欢迎使用 langchain-ChatGLM Web UI，开始提问前，请依次如下 3 个步骤：
+1. 选择语言模型、Embedding 模型及相关参数后点击"step.1: setting"，并等待加载完成提示
+2. 上传或选择已有文件作为本地知识文档输入后点击"step.2 loading"，并等待加载完成提示
+3. 输入要提交的问题后点击"step.3 asking" """]],
+                                 elem_id="chat-box",
                                  show_label=False).style(height=600)
         with gr.Column(scale=1):
             with gr.Column():
@@ -84,15 +85,19 @@ with gr.Blocks(css="""
                                         kb.init_cfg(args[0], args[1], args[2], args[3]),
                                         show_progress=True,
                                         api_name="init_cfg",
-                                        inputs=[llm_model, embedding_model, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN])
+                                        inputs=[llm_model, embedding_model, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN]
+                                        ).then(
+                    get_model_status, chatbot, chatbot
+                )
 
             with gr.Column():
                 with gr.Tab("select"):
                     selectFile = gr.Dropdown(
-                        file_list, label="content file", interactive=True, value=file_list[0] if len(file_list) > 0 else None)
+                        file_list, label="content file", interactive=True,
+                        value=file_list[0] if len(file_list) > 0 else None)
                 with gr.Tab("upload"):
                     file = gr.File(label="content file", file_types=[
-                                   '.txt', '.md', '.docx']).style(height=100)
+                        '.txt', '.md', '.docx']).style(height=100)
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     file.upload(upload_file, inputs=file, outputs=selectFile)
                 history = gr.State([])
@@ -100,10 +105,12 @@ with gr.Blocks(css="""
                 load_button = gr.Button("step.2：loading")
                 load_button.click(lambda fileName:
                                   kb.init_knowledge_vector_store(
-                                      "content/"+fileName),
+                                      "content/" + fileName),
                                   show_progress=True,
                                   api_name="init_knowledge_vector_store",
-                                  inputs=selectFile, outputs=vector_store)
+                                  inputs=selectFile, outputs=vector_store).then(
+                    get_file_status, chatbot, chatbot, show_progress=True,
+                )
 
     with gr.Row():
         with gr.Column(scale=2):
@@ -112,9 +119,8 @@ with gr.Blocks(css="""
         with gr.Column(scale=1):
             generate_button = gr.Button(
                 "step.3：asking", elem_classes="importantButton")
-            generate_button.click(getAnswer, [query, vector_store, history],
-                                [chatbot, history],api_name="get_knowledge_based_answer")
-
+            generate_button.click(get_answer, [query, vector_store, chatbot],
+                                  [chatbot, history], api_name="get_knowledge_based_answer")
 
 demo.queue(concurrency_count=3).launch(
     server_name='0.0.0.0', share=False, inbrowser=False)

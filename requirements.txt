@@ -8,3 +8,4 @@ beautifulsoup4
 icetk
 cpm_kernels
 faiss-cpu
+gradio

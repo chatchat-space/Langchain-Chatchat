@@ -18,7 +18,6 @@ LLM_HISTORY_LEN = 3
 # Show reply with source text from input document
 REPLY_WITH_SOURCE = True
 
-
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
@@ -26,17 +25,15 @@ embedding_model_dict = {
 }
 
 llm_model_dict = {
+    "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
+    "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b": "THUDM/chatglm-6b",
-    "glm-6b-int4": "THUDM/chatglm-6b-int4",
-    "glm-int4-qe": "THUDM/chatglm-6b-int4-qe",
 }
 
-chatglm = None
-embeddings = None
 
-def init_cfg(LLM_MODEL,EMBEDDING_MODEL, LLM_HISTORY_LEN,V_SEARCH_TOP_K=6):
-    global chatglm,embeddings,VECTOR_SEARCH_TOP_K
-    VECTOR_SEARCH_TOP_K=V_SEARCH_TOP_K
+def init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN, V_SEARCH_TOP_K=6):
+    global chatglm, embeddings, VECTOR_SEARCH_TOP_K
+    VECTOR_SEARCH_TOP_K = V_SEARCH_TOP_K
 
     chatglm = ChatGLM()
     chatglm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL])
@@ -44,8 +41,8 @@ def init_cfg(LLM_MODEL,EMBEDDING_MODEL, LLM_HISTORY_LEN,V_SEARCH_TOP_K=6):
 
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL], )
 
+
 def init_knowledge_vector_store(filepath):
-    
     loader = UnstructuredFileLoader(filepath, mode="elements")
     docs = loader.load()
     vector_store = FAISS.from_documents(docs, embeddings)
@@ -53,7 +50,7 @@ def init_knowledge_vector_store(filepath):
 
 
 def get_knowledge_based_answer(query, vector_store, chat_history=[]):
-    global chatglm,embeddings
+    global chatglm, embeddings
     system_template = """基于以下内容，简洁和专业的来回答用户的问题。
     如果无法从中得到答案，请说 "不知道" 或 "没有足够的相关信息"，不要试图编造答案。答案请使用中文。
     ----------------
@@ -81,7 +78,7 @@ def get_knowledge_based_answer(query, vector_store, chat_history=[]):
 
 
 if __name__ == "__main__":
-    init_cfg(LLM_MODEL,EMBEDDING_MODEL, LLM_HISTORY_LEN)
+    init_cfg(LLM_MODEL, EMBEDDING_MODEL, LLM_HISTORY_LEN)
     filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
     vector_store = init_knowledge_vector_store(filepath)
     history = []
