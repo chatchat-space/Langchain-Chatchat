@@ -27,8 +27,8 @@ embedding_model_dict = {
 
 llm_model_dict = {
     "chatglm-6b": "THUDM/chatglm-6b",
-    "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
-    # "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
+    "glm-6b-int4": "THUDM/chatglm-6b-int4",
+    "glm-int4-qe": "THUDM/chatglm-6b-int4-qe",
 }
 
 chatglm = None

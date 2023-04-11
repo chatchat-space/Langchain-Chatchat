@@ -10,7 +10,25 @@
 
 ✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
+## webui
+![webui](./img/ui1.png)
+根据上图依次点击step1~3，即可完成模型加载，加载文件，以及对话历史记录的查看
+
+### TODO
+- [ ] 添加模型加载进度条
+- [ ] 添加输出内容及错误提示
+- [ ] 国际化语言切换
+- [ ] 引用标注
+- [ ] 添加插件系统（可基础lora训练等）
+
 ## 更新信息
+
+**[2023/04/11]** 
+1. 加入Webui V0.1版本，同步当日之前的更新内容；
+2. 自动读取knowledge_based_chatglm.py中LLM及embedding模型枚举，选择后点击setting进行模型加载，可随时切换模型进行测试
+3. 可手动调节保留对话历史长度，可根据显存大小自行调节
+4. 添加上传文件功能，通过下拉框选择已上传的文件，点击loading加载文件，过程中可随时更换加载的文件
+5. 底部添加use via API可对接到自己系统
 
 **[2023/04/07]** 
 1. 解决加载 ChatGLM 模型时发生显存占用为双倍的问题 (感谢 [@suc16](https://github.com/suc16) 和 [@myml](https://github.com/myml)) ；
