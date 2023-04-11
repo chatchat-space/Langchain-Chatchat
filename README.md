@@ -10,19 +10,6 @@
 
 ✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
-## webui
-![webui](./img/ui1.png)
-根据上图依次点击step1~3，即可完成模型加载，加载文件，以及对话历史记录的查看
-
-![webui](./img/ui2.png)
-点击底部Use via API可查看API接口，现有应用可通过post请求进行对接调用
-
-### TODO
-- [ ] 添加模型加载进度条
-- [ ] 添加输出内容及错误提示
-- [ ] 国际化语言切换
-- [ ] 引用标注
-- [ ] 添加插件系统（可基础lora训练等）
 
 ## 更新信息
 
@@ -64,7 +51,7 @@ pip install -r requirements.txt
 注：使用 langchain.document_loaders.UnstructuredFileLoader 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
 
 ### 2. 执行脚本体验 Web UI 或命令行交互
-执行 [webui.py](webui.py) 脚本体验 **Web 交互**
+执行 [webui.py](webui.py) 脚本体验 **Web 交互** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
 ```commandline
 python webui.py
 ```
@@ -132,6 +119,15 @@ A: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged
 - [x] 实现 langchain + ChatGLM-6B 本地知识应用
 - [x] 基于 langchain 实现非结构化文件接入
 - [ ] 基于 langchain 实现更多类型本地知识文件接入
-- [ ] 利用 gradio/streamlit 实现 web ui DEMO
+- [ ] 增加 Web UI DEMO
+  - [x] 利用 gradio 实现 Web UI DEMO
+  - [ ] 添加模型加载进度条
+  - [ ] 添加输出内容及错误提示
+  - [ ] 国际化语言切换
+  - [ ] 引用标注
+  - [ ] 添加插件系统（可基础lora训练等）
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
+## 项目交流群
+![群聊二维码](img/group_qr_code.jpg)
+🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
