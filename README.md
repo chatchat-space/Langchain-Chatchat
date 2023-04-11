@@ -10,6 +10,11 @@
 
 ✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
+⛓️ 本项目实现原理如下图所示，过程包括输入文档路径加载文档后，读取文本 ➡ ️文本分割 ➡ ️文本向量化 ➡ ️问句向量化 ➡ ️在文本向量中匹配出与问句向量最相似的`top-k`个 ➡ ️匹配出的文本作为上下文和问题一起添加到`prompt`中 ➡ ️提交给`llm`生成回答。
+
+![实现原理图](img/langchain+chatglm.png)
+
+🚩 本项目未设计微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
 ## 更新信息
 
@@ -94,6 +99,10 @@ Q: `Resource averaged_perceptron_tagger not found.` 如何解决？
 
 A: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `Searched in:` 对应目录下。
 
+Q: 本项目可否在 colab 中运行？
+
+A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意的是，如需在 colab 中运行 Web UI，需将`webui.py`中`demo.queue(concurrency_count=3).launch(
+    server_name='0.0.0.0', share=False, inbrowser=False)`中参数`share`设置为`True`。
 ## DEMO
 
 以问题`chatglm-6b 的局限性具体体现在哪里，如何实现改进`为例
