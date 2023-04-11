@@ -55,9 +55,14 @@ def init_knowledge_vector_store(filepath:str):
         print("路径不存在")
         return None
     elif os.path.isfile(filepath):
-        loader = UnstructuredFileLoader(filepath, mode="elements")
-        docs = loader.load()
-        print(f"{os.path.split(filepath)[-1]} 已成功加载")
+        file = os.path.split(filepath)[-1]
+        try:
+            loader = UnstructuredFileLoader(filepath, mode="elements")
+            docs = loader.load()
+            print(f"{file} 已成功加载")
+        except:
+            print(f"{file} 未能成功加载")
+            return None
     elif os.path.isdir(filepath):
         docs = []
         for file in os.listdir(filepath):
