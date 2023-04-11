@@ -25,8 +25,10 @@
 4. 更正`README.md`中的代码错误（感谢 [@calcitem](https://github.com/calcitem)）。
 
 **[2023/04/11]** 
-1. 加入 Web UI V0.1 版本（感谢 [@liangtongt](https://github.com/liangtongt)）。
-
+1. 加入 Web UI V0.1 版本（感谢 [@liangtongt](https://github.com/liangtongt)）；
+2. `README.md`中增加常见问题（感谢 [@calcitem](https://github.com/calcitem)）；
+3. 增加 LLM 和 Embedding 模型运行设备是否可用`cuda`、`mps`、`cpu`的自动判断。
+4. 在`knowledge_based_chatglm.py`中增加对`filepath`的判断，在之前支持单个文件导入的基础上，现支持单个文件夹路径作为输入，输入后将会遍历文件夹中各个文件，并在命令行中显示每个文件是否成功加载。
 
 ## 使用方式
 
@@ -71,11 +73,18 @@ python knowledge_based_chatglm.py
 ```
 
 
-### 已知问题
-- 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)，目前已知文档中若含有特殊字符，可能存在文件无法加载的问题；
-- 使用 macOS 运行本项目时，可能因为 macOS 版本为 13.3 及以上版本导致与 pytorch 不兼容，无法正常运行的情况。
-
 ### 常见问题
+Q: 本项目支持哪些文件格式？
+
+A: 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。目前已知文档中若含有特殊字符，可能存在文件无法加载的问题。
+
+Q: 读取特定格式文件时遇到缺少`detectron2`时如何解决？
+
+A: 因该包安装过程中遇到问题较多，且仅部分格式文件需要，所以未加入`requirements.txt`。可以通过一下命令安装
+
+```commandline
+pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2"
+```
 
 Q: `Resource punkt not found.` 如何解决？
 
