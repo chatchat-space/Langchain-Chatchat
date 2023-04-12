@@ -79,29 +79,29 @@ python knowledge_based_chatglm.py
 
 
 ### 常见问题
-Q: 本项目支持哪些文件格式？
+Q1: 本项目支持哪些文件格式？
 
-A: 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。目前已知文档中若含有特殊字符，可能存在文件无法加载的问题。
+A1: 目前已测试支持 txt、docx、md 格式文件，更多文件格式请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。目前已知文档中若含有特殊字符，可能存在文件无法加载的问题。
 
-Q: 读取特定格式文件时遇到缺少`detectron2`时如何解决？
+Q2: 读取特定格式文件时遇到缺少`detectron2`时如何解决？
 
-A: 因该包安装过程中遇到问题较多，且仅部分格式文件需要，所以未加入`requirements.txt`。可以通过一下命令安装
+A2: 因该包安装过程中遇到问题较多，且仅部分格式文件需要，所以未加入`requirements.txt`。可以通过一下命令安装
 
 ```commandline
 pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2"
 ```
 
-Q: `Resource punkt not found.` 如何解决？
+Q3: `Resource punkt not found.` 如何解决？
 
-A: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `Searched in:` 对应目录下。
+A3: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `Searched in:` 对应目录下。
 
-Q: `Resource averaged_perceptron_tagger not found.` 如何解决？
+Q4: `Resource averaged_perceptron_tagger not found.` 如何解决？
 
-A: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `Searched in:` 对应目录下。
+A4: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `Searched in:` 对应目录下。
 
-Q: 本项目可否在 colab 中运行？
+Q5: 本项目可否在 colab 中运行？
 
-A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意的是，如需在 colab 中运行 Web UI，需将`webui.py`中`demo.queue(concurrency_count=3).launch(
+A5: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意的是，如需在 colab 中运行 Web UI，需将`webui.py`中`demo.queue(concurrency_count=3).launch(
     server_name='0.0.0.0', share=False, inbrowser=False)`中参数`share`设置为`True`。
 ## DEMO
 
@@ -136,14 +136,20 @@ A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意�
 ## 路线图
 - [x] 实现 langchain + ChatGLM-6B 本地知识应用
 - [x] 基于 langchain 实现非结构化文件接入
-- [ ] 基于 langchain 实现更多类型本地知识文件接入
+  - [x] .md
+  - [x] .pdf(需要按照常见问题 Q2 中描述进行`detectron2`的安装)
+  - [x] .docx
+  - [x] .txt
+- [ ] 增加更多 LLM 模型支持
+  - [x] THUDM/chatglm-6b
+  - [x] THUDM/chatglm-6b-int4
+  - [x] THUDM/chatglm-6b-int4-qe
 - [ ] 增加 Web UI DEMO
   - [x] 利用 gradio 实现 Web UI DEMO
   - [ ] 添加模型加载进度条
   - [ ] 添加输出内容及错误提示
   - [ ] 国际化语言切换
   - [ ] 引用标注
-  - [ ] 添加插件系统（可基础lora训练等）
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
