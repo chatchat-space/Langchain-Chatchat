@@ -1,9 +1,5 @@
 from langchain.chains import RetrievalQA
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts import PromptTemplate
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
@@ -80,24 +76,28 @@ def init_knowledge_vector_store(filepath:str):
 
 def get_knowledge_based_answer(query, vector_store, chat_history=[]):
     global chatglm, embeddings
-    system_template = """基于以下内容，简洁和专业的来回答用户的问题。
-    如果无法从中得到答案，请说 "不知道" 或 "没有足够的相关信息"，不要试图编造答案。答案请使用中文。
-    ----------------
-    {context}
-    ----------------
-    """
-    messages = [
-        SystemMessagePromptTemplate.from_template(system_template),
-        HumanMessagePromptTemplate.from_template("{question}"),
-    ]
-    prompt = ChatPromptTemplate.from_messages(messages)
 
+    prompt_template = """基于以下已知信息，简洁和专业的来回答用户的问题。
+如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。
+
+已知内容:
+{context}
+
+问题:
+{question}"""
+    prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "question"]
+    )
     chatglm.history = chat_history
     knowledge_chain = RetrievalQA.from_llm(
         llm=chatglm,
         retriever=vector_store.as_retriever(search_kwargs={"k": VECTOR_SEARCH_TOP_K}),
         prompt=prompt
     )
+    knowledge_chain.combine_documents_chain.document_prompt = PromptTemplate(
+            input_variables=["page_content"], template="{page_content}"
+        )
 
     knowledge_chain.return_source_documents = True
 
