@@ -148,4 +148,5 @@ A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意�
 
 ## 项目交流群
 ![群聊二维码](img/group_qr_code.jpg)
+
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
