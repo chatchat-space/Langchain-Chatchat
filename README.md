@@ -10,7 +10,7 @@
 
 ✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
-⛓️ 本项目实现原理如下图所示，过程包括输入文档路径加载文档后，读取文本 ➡ ️文本分割 ➡ ️文本向量化 ➡ ️问句向量化 ➡ ️在文本向量中匹配出与问句向量最相似的`top-k`个 ➡ ️匹配出的文本作为上下文和问题一起添加到`prompt`中 ➡ ️提交给`llm`生成回答。
+⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的`top k`个 -> 匹配出的文本作为上下文和问题一起添加到`prompt`中 -> 提交给`LLM`生成回答。
 
 ![实现原理图](img/langchain+chatglm.png)
 
