@@ -35,6 +35,10 @@
 3. 增加 LLM 和 Embedding 模型运行设备是否可用`cuda`、`mps`、`cpu`的自动判断。
 4. 在`knowledge_based_chatglm.py`中增加对`filepath`的判断，在之前支持单个文件导入的基础上，现支持单个文件夹路径作为输入，输入后将会遍历文件夹中各个文件，并在命令行中显示每个文件是否成功加载。
 
+**[2023/04/12]**
+1. 替换 Web UI 中的样例文件，避免出现 Ubuntu 中出现因文件编码无法读取的问题；
+2. 替换`knowledge_based_chatglm.py`中的 prompt 模版，避免出现因 prompt 模版包含中英双语导致 chatglm 返回内容错乱的问题。
+
 ## 使用方式
 
 ### 硬件需求
