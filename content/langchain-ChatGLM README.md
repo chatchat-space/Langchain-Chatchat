@@ -2,7 +2,7 @@
 
 ## 介绍
 
-🌍 [_READ THIS IN ENGLISH_](README_en.md)
+🌍 [_READ THIS IN ENGLISH_](../README_en.md)
 
 🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。
 
@@ -12,7 +12,7 @@
 
 ⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的`top k`个 -> 匹配出的文本作为上下文和问题一起添加到`prompt`中 -> 提交给`LLM`生成回答。
 
-![实现原理图](img/langchain+chatglm.png)
+![实现原理图](../img/langchain+chatglm.png)
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
@@ -58,21 +58,21 @@ pip install -r requirements.txt
 注：使用 langchain.document_loaders.UnstructuredFileLoader 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
 
 ### 2. 执行脚本体验 Web UI 或命令行交互
-执行 [webui.py](webui.py) 脚本体验 **Web 交互** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
+执行 [webui.py](../webui.py) 脚本体验 **Web 交互** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
 ```commandline
 python webui.py
 ```
 执行后效果如下图所示：
-![webui](./img/ui1.png)
+![webui](../img/ui1.png)
 Web UI 中提供的 API 接口如下图所示：
-![webui](./img/ui2.png)
+![webui](../img/ui2.png)
 Web UI 可以实现如下功能：
 1. 自动读取`knowledge_based_chatglm.py`中`LLM`及`embedding`模型枚举，选择后点击`setting`进行模型加载，可随时切换模型进行测试
 2. 可手动调节保留对话历史长度，可根据显存大小自行调节
 3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`loading`加载文件，过程中可随时更换加载的文件
 4. 底部添加`use via API`可对接到自己系统
 
-或执行 [knowledge_based_chatglm.py](knowledge_based_chatglm.py) 脚本体验**命令行交互**
+或执行 [knowledge_based_chatglm.py](../knowledge_based_chatglm.py) 脚本体验**命令行交互**
 ```commandline
 python knowledge_based_chatglm.py
 ```
@@ -147,8 +147,6 @@ A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意�
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
-![二维码](img/qr_code.jpg)
-
-请扫描上方二维码，好友验证请备注 github。
+![二维码](../img/qr_code.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
