@@ -147,7 +147,7 @@ A: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意�
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
-![二维码](img/group_qr_code.jpg)
+![二维码](img/qr_code.jpg)
 
 请扫描上方二维码，好友验证请备注 github。
 
