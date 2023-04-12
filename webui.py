@@ -70,16 +70,26 @@ with gr.Blocks(css="""
                                  show_label=False).style(height=600)
         with gr.Column(scale=1):
             with gr.Column():
-                llm_model = gr.Radio(
-                    llm_model_dict_list, label="llm model",
-                    value="chatglm-6b", interactive=True)
-                LLM_HISTORY_LEN = gr.Slider(
-                    1, 10, value=3, step=1, label="LLM history len", interactive=True)
-                embedding_model = gr.Radio(
-                    embedding_model_dict_list, label="embedding model",
-                    value="text2vec", interactive=True)
-                VECTOR_SEARCH_TOP_K = gr.Slider(
-                    1, 20, value=6, step=1, label="vector search top k", interactive=True)
+                llm_model = gr.Radio(llm_model_dict_list,
+                                     label="llm model",
+                                     value="chatglm-6b",
+                                     interactive=True)
+                LLM_HISTORY_LEN = gr.Slider(1,
+                                            10,
+                                            value=3,
+                                            step=1,
+                                            label="LLM history len",
+                                            interactive=True)
+                embedding_model = gr.Radio(embedding_model_dict_list,
+                                           label="embedding model",
+                                           value="text2vec",
+                                           interactive=True)
+                VECTOR_SEARCH_TOP_K = gr.Slider(1,
+                                                20,
+                                                value=6,
+                                                step=1,
+                                                label="vector search top k",
+                                                interactive=True)
                 load_model_button = gr.Button("step.1：setting")
                 load_model_button.click(lambda *args:
                                         kb.init_cfg(args[0], args[1], args[2], args[3]),
@@ -92,14 +102,18 @@ with gr.Blocks(css="""
 
             with gr.Column():
                 with gr.Tab("select"):
-                    selectFile = gr.Dropdown(
-                        file_list, label="content file", interactive=True,
-                        value=file_list[0] if len(file_list) > 0 else None)
+                    selectFile = gr.Dropdown(file_list,
+                                             label="content file",
+                                             interactive=True,
+                                             value=file_list[0] if len(file_list) > 0 else None)
                 with gr.Tab("upload"):
-                    file = gr.File(label="content file", file_types=[
-                        '.txt', '.md', '.docx']).style(height=100)
+                    file = gr.File(label="content file",
+                                   file_types=['.txt', '.md', '.docx']
+                                   ).style(height=100)
                     # 将上传的文件保存到content文件夹下,并更新下拉框
-                    file.upload(upload_file, inputs=file, outputs=selectFile)
+                    file.upload(upload_file,
+                                inputs=file,
+                                outputs=selectFile)
                 history = gr.State([])
                 vector_store = gr.State()
                 load_button = gr.Button("step.2：loading")
@@ -108,19 +122,30 @@ with gr.Blocks(css="""
                                       "content/" + fileName),
                                   show_progress=True,
                                   api_name="init_knowledge_vector_store",
-                                  inputs=selectFile, outputs=vector_store).then(
-                    get_file_status, chatbot, chatbot, show_progress=True,
+                                  inputs=selectFile,
+                                  outputs=vector_store
+                                  ).then(
+                    get_file_status,
+                    chatbot,
+                    chatbot,
+                    show_progress=True,
                 )
 
     with gr.Row():
         with gr.Column(scale=2):
-            query = gr.Textbox(show_label=False, placeholder="Prompts", lines=1, value="用200字总结一下").style(
-                container=False)
+            query = gr.Textbox(show_label=False,
+                               placeholder="Prompts",
+                               lines=1,
+                               value="用200字总结一下"
+                               ).style(container=False)
         with gr.Column(scale=1):
-            generate_button = gr.Button(
-                "step.3：asking", elem_classes="importantButton")
-            generate_button.click(get_answer, [query, vector_store, chatbot],
-                                  [chatbot, history], api_name="get_knowledge_based_answer")
+            generate_button = gr.Button("step.3：asking",
+                                        elem_classes="importantButton")
+            generate_button.click(get_answer,
+                                  [query, vector_store, chatbot],
+                                  [chatbot, history],
+                                  api_name="get_knowledge_based_answer"
+                                  )
 
 demo.queue(concurrency_count=3).launch(
     server_name='0.0.0.0', share=False, inbrowser=False)
