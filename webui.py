@@ -74,7 +74,7 @@ with gr.Blocks(css="""
                                      label="llm model",
                                      value="chatglm-6b",
                                      interactive=True)
-                LLM_HISTORY_LEN = gr.Slider(1,
+                LLM_HISTORY_LEN = gr.Slider(0,
                                             10,
                                             value=3,
                                             step=1,
@@ -95,7 +95,7 @@ with gr.Blocks(css="""
                                         kb.init_cfg(args[0], args[1], args[2], args[3]),
                                         show_progress=True,
                                         api_name="init_cfg",
-                                        inputs=[llm_model, embedding_model, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN]
+                                        inputs=[llm_model, embedding_model, LLM_HISTORY_LEN,VECTOR_SEARCH_TOP_K]
                                         ).then(
                     get_model_status, chatbot, chatbot
                 )
