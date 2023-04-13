@@ -62,19 +62,51 @@
      The default Embedding model [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) in this project occupies around 3GB of video memory and can also be configured to run on a CPU.
 ### Software Requirements
 
-This project has been tested in a Python 3.8 environment.
-### 1. Install Python Dependencies
+This repository has been tested with Python 3.8 and CUDA 11.7 environments.
 
-```commandline
-pip install -r requirements.txt
+### 1. Setting up the environment
+
+* Environment check
+
+```shell
+# First, make sure your machine has Python 3.8 or higher installed
+$ python --version
+Python 3.8.13
+
+# If your version is lower, you can use conda to install the environment
+$ conda create -p /your_path/env_name python=3.8
+
+# Activate the environment
+$ source activate /your_path/env_name
+
+# Deactivate the environment
+$ source deactivate /your_path/env_name
+
+# Remove the environment
+$ conda env remove -p  /your_path/env_name
 ```
-Note: When using `langchain.document_loaders.UnstructuredFileLoader` for unstructured file loading, you may need to install other dependent packages according to the documentation. Please refer to the [langchain documentation](https://python.langchain.com/en/latest/modules /indexes/document_loaders/examples/unstructured_file.html)
+
+* Project dependencies
+
+```shell
+
+# Clone the repository
+$ git clone https://github.com/imClumsyPanda/langchain-ChatGLM.git
+
+# Install dependencies
+$ pip install -r requirements.txt
+```
+
+Note: When using langchain.document_loaders.UnstructuredFileLoader for unstructured file integration, you may need to install other dependency packages according to the documentation. Please refer to [langchain documentation](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html).
 
 ### 2. Run Scripts to Experience Web UI or Command Line Interaction
+
 Execute [webui.py](webui.py) script to experience **Web interaction** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
 ```commandline
 python webui.py
 ```
+Note: Before executing, check the remaining space in the `$HOME/.cache/huggingface/` folder, at least 15G.
+
 The resulting interface is shown below:
 ![webui](img/ui1.png)
 The API interface provided in the Web UI is shown below:
@@ -92,6 +124,7 @@ python knowledge_based_chatglm.py
 ```
 
 ### FAQ
+
 Q1: What file formats does this project support?
 
 A1: Currently, this project has been tested with txt, docx, and md file formats. For more file formats, please refer to the [langchain documentation](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html). It is known that if the document contains special characters, there might be issues with loading the file.
@@ -119,6 +152,8 @@ The `nltk_data` storage path can be found using `nltk.data.path`.
 Q5: Can this project run in Google Colab?
 
 A5: You can try running the chatglm-6b-int4 model in Google Colab. Please note that if you want to run the Web UI in Colab, you need to set the `share` parameter in `demo.queue(concurrency_count=3).launch(server_name='0.0.0.0', share=False, inbrowser=False)` to `True`.
+
+This issue is related to the system environment. For more details, please refer to [Issues with installing packages using pip in Anaconda](docs/Issue-with-Installing-Packages-Using-pip-in-Anaconda.md).
 
 ## DEMO
 
@@ -153,6 +188,7 @@ ChatGLM's answer after using LangChain to access the README.md file of the ChatG
 >5. Enhance the model architecture: Improve ChatGLM-6B's model architecture to boost its performance and capabilities. For example, employ larger neural networks or refined convolutional neural network structures.
 
 ## Road map
+
 - [x] Implement LangChain + ChatGLM-6B for local knowledge application
 - [x] Unstructured file access based on langchain
    - [x].md

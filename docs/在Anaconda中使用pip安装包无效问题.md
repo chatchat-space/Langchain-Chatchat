@@ -14,18 +14,14 @@
 
 3、使用 pip 安装 numpy，`pip install numpy`，会发现 numpy 已经存在默认的环境中
 
-```shell
+```powershell
 Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
 Requirement already satisfied: numpy in c:\programdata\anaconda3\lib\site-packages (1.20.3)
 ```
 
-Bash
-
-Copy
-
 4、这时候看一下 pip 的信息，`pip show pip`
 
-```shell
+```powershell
 Name: pip
 Version: 21.2.4
 Summary: The PyPA recommended tool for installing Python packages.
@@ -38,10 +34,6 @@ Requires:
 Required-by:
 ```
 
-Bash
-
-Copy
-
 5、可以发现当前 pip 是在默认的 conda 环境中。这也就解释了当我们直接使用 pip 安装包时为什么包不在这个新的虚拟环境中，因为使用的 pip 属于默认环境，安装的包要么已经存在，要么直接装到默认环境中去了。
 
 ------
@@ -52,7 +44,7 @@ Copy
 
 2、我们可以先使用 conda 命令为当前虚拟环境安装 pip 包，再使用 pip 安装新的包
 
-```shell
+```powershell
 # 使用 conda 安装 pip 包
 (test) PS C:\Users\Administrator> conda install pip
 Collecting package metadata (current_repodata.json): done
@@ -93,10 +85,6 @@ wheel        0.37.1
 wincertstore 0.2
 ```
 
-Bash
-
-Copy
-
 ------
 
 ## 补充
@@ -122,22 +110,14 @@ Copy
 > /usr/bin/python
 > ```
 >
-> Bash
->
-> Copy
->
 > 2、然后，而不是直接调用 `pip install <package>`，你可以在 python 中使用模块标志 -m，以便它使用 anaconda python 进行安装
 >
 > ```shell
-> python -m pip install <package>
+>python -m pip install <package>
 > ```
 >
-> Bash
->
-> Copy
->
 > 3、这将把包安装到 anaconda 库目录，而不是与（非anaconda） pip 关联的库目录
->
+> 
 > 4、这样做的原因如下：命令 pip 引用了一个特定的 pip 文件 / 快捷方式（which -a pip 会告诉你是哪一个）。类似地，命令 python 引用一个特定的 python 文件（which -a python 会告诉你是哪个）。由于这样或那样的原因，这两个命令可能变得不同步，因此你的“默认” pip 与你的默认 python 位于不同的文件夹中，因此与不同版本的 python 相关联。
 >
 > 5、与此相反，python -m pip 构造不使用 pip 命令指向的快捷方式。相反，它要求 python 找到它的pip 版本，并使用该版本安装一个包。
