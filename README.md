@@ -45,7 +45,7 @@
 
 ### 硬件需求
 - ChatGLM-6B 模型硬件需求
-    
+  
     | **量化等级**   | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
     | -------------- | ------------------------- | --------------------------------- |
     | FP16（无量化） | 13 GB                     | 14 GB                             |
@@ -56,23 +56,62 @@
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 ### 软件需求
-本项目已在 python 3.8 环境下完成测试。
-### 1. 安装 python 依赖包
+本项目已在 python 3.8，cuda11.7 环境下完成测试。
+
+
+
+### 1. 安装环境
+
+- 环境检查
+
+```
+# 首先，确信你的机器安装了 Python 3.8 及以上版本
+$ python --version
+Python 3.8.13
+
+# 如果低于这个版本，可使用conda安装环境
+$ conda create -p /your_path/env_name python=3.8
+
+# 激活环境
+$ source activate /your_path/env_name
+
+# 关闭环境
+$ source deactivate /your_path/env_name
+
+# 删除环境
+$ conda env remove -p  /your_path/env_name
+```
+
+- 项目依赖
+
 ```commandline
-pip install -r requirements.txt
+
+# 拉取仓库
+$ git clone https://github.com/imClumsyPanda/langchain-ChatGLM.git
+
+# 安装依赖
+$ pip install -r requirements.txt
+
 ```
 注：使用 langchain.document_loaders.UnstructuredFileLoader 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)
+
+
 
 ### 2. 执行脚本体验 Web UI 或命令行交互
 执行 [webui.py](webui.py) 脚本体验 **Web 交互** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
 ```commandline
 python webui.py
 ```
+注：执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G
+
+
+
 执行后效果如下图所示：
 ![webui](img/ui1.png)
 Web UI 中提供的 API 接口如下图所示：
 ![webui](img/ui2.png)
 Web UI 可以实现如下功能：
+
 1. 自动读取`knowledge_based_chatglm.py`中`LLM`及`embedding`模型枚举，选择后点击`setting`进行模型加载，可随时切换模型进行测试
 2. 可手动调节保留对话历史长度，可根据显存大小自行调节
 3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`loading`加载文件，过程中可随时更换加载的文件
@@ -113,6 +152,13 @@ Q5: 本项目可否在 colab 中运行？
 
 A5: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意的是，如需在 colab 中运行 Web UI，需将`webui.py`中`demo.queue(concurrency_count=3).launch(
     server_name='0.0.0.0', share=False, inbrowser=False)`中参数`share`设置为`True`。
+
+Q6: 在Anaconda中使用pip安装包无效问题
+
+此问题是系统环境问题，详细见  [在Anaconda中使用pip安装包无效问题](docs/在Anaconda中使用pip安装包无效问题.md)
+
+
+
 ## DEMO
 
 以问题`chatglm-6b 的局限性具体体现在哪里，如何实现改进`为例
