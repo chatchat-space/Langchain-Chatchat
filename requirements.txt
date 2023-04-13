@@ -1,0 +1,12 @@
+langchain>=0.0.124
+transformers==4.27.1
+unstructured[local-inference]
+layoutparser[layoutmodels,tesseract]
+nltk
+sentence-transformers
+beautifulsoup4
+icetk
+cpm_kernels
+faiss-cpu
+gradio>=3.25.0
+detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2

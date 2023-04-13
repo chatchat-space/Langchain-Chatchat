@@ -59,6 +59,10 @@ def reinit_model(llm_model, embedding_model, llm_history_len, top_k):
                           top_k=top_k),
 
 
+def get_vector_store(filepath):
+    local_doc_qa.init_knowledge_vector_store("content/"+filepath)
+
+
 model_status = gr.State()
 history = gr.State([])
 vs_path = gr.State()
@@ -141,12 +145,12 @@ with gr.Blocks(css="""
     file.upload(upload_file,
                 inputs=file,
                 outputs=selectFile)
-    # load_button.click(local_doc_qa.init_knowledge_vector_store,
-    #                   show_progress=True,
-    #                   api_name="init_knowledge_vector_store",
-    #                   inputs=selectFile,
-    #                   outputs=vs_path
-    #                   ).then(
+    load_button.click(get_vector_store,
+                      show_progress=True,
+                      api_name="init_knowledge_vector_store",
+                      inputs=selectFile,
+                      outputs=vs_path
+                      )#.then(
     #     get_file_status,
     #     chatbot,
     #     chatbot,
