@@ -1,0 +1,31 @@
+remote_theme: vaibhavvikas/jekyll-theme-minimalistic
+
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jemoji
+  - jekyll-remote-theme
+
+title:  LangChain - ChatGLM
+description:  A local knowledge based LLM Application with ChatGLM-6B and langchain
+favicon: true
+color-scheme: auto
+
+
+# You can find fonts from https://iconify.design or https://fontawesome.com. Below is just an example illustrating how to use custom icons
+platforms:
+  - name: GitHub
+    icon: <i class="fa-brands fa-github"></i>
+    link: https://github.com/imClumsyPanda/langchain-ChatGLM
+
+navigation:
+  - name: Intro
+    link: ./index.html
+  - name: Example
+    link: ./example.html
+    sublist:
+      - name: Installation
+        link: ./example.html#installation
+      - name: Reference
+        link: ./example.html#reference
+
