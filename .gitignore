@@ -1,3 +1,4 @@
 output/*
 __pycache__/*
 log/*
+vector_store/*
