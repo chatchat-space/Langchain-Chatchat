@@ -9,3 +9,4 @@ icetk
 cpm_kernels
 faiss-cpu
 gradio>=3.25.0
+detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2
