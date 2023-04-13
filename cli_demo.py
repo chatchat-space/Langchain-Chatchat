@@ -1,5 +1,4 @@
 from configs.model_config import *
-import datetime
 from chains.local_doc_qa import LocalDocQA
 
 # return top-k text chunk from vector store
