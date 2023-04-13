@@ -16,6 +16,8 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
+[TOC]
+
 ## 更新信息
 
 **[2023/04/07]** 
@@ -76,7 +78,7 @@ Web UI 可以实现如下功能：
 3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`loading`加载文件，过程中可随时更换加载的文件
 4. 底部添加`use via API`可对接到自己系统
 
-或执行 [knowledge_based_chatglm.py](knowledge_based_chatglm.py) 脚本体验**命令行交互**
+或执行 [knowledge_based_chatglm.py](cli_demo.py) 脚本体验**命令行交互**
 ```commandline
 python knowledge_based_chatglm.py
 ```

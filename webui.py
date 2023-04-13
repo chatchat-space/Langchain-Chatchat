@@ -1,7 +1,7 @@
 import gradio as gr
 import os
 import shutil
-import knowledge_based_chatglm as kb
+import cli_demo as kb
 
 
 def get_file_list():
@@ -108,7 +108,7 @@ with gr.Blocks(css="""
                                              value=file_list[0] if len(file_list) > 0 else None)
                 with gr.Tab("upload"):
                     file = gr.File(label="content file",
-                                   file_types=['.txt', '.md', '.docx']
+                                   file_types=['.txt', '.md', '.docx', '.pdf']
                                    ).style(height=100)
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     file.upload(upload_file,
