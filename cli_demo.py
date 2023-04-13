@@ -15,7 +15,8 @@ if __name__ == "__main__":
     local_doc_qa.init_cfg(llm_model=LLM_MODEL,
                           embedding_model=EMBEDDING_MODEL,
                           embedding_device=EMBEDDING_DEVICE,
-                          llm_history_len=LLM_HISTORY_LEN)
+                          llm_history_len=LLM_HISTORY_LEN,
+                          top_k=VECTOR_SEARCH_TOP_K)
     vs_path = None
     while not vs_path:
         filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")
