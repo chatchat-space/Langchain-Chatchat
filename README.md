@@ -31,7 +31,7 @@
 
 **[2023/04/11]** 
 1. 加入 Web UI V0.1 版本（感谢 [@liangtongt](https://github.com/liangtongt)）；
-2. `README.md`中增加常见问题（感谢 [@calcitem](https://github.com/calcitem)）；
+2. `README.md`中增加常见问题（感谢 [@calcitem](https://github.com/calcitem) 和 [@bolongliu](https://github.com/bolongliu)）；
 3. 增加 LLM 和 Embedding 模型运行设备是否可用`cuda`、`mps`、`cpu`的自动判断。
 4. 在`knowledge_based_chatglm.py`中增加对`filepath`的判断，在之前支持单个文件导入的基础上，现支持单个文件夹路径作为输入，输入后将会遍历文件夹中各个文件，并在命令行中显示每个文件是否成功加载。
 
@@ -97,11 +97,15 @@ pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@v
 
 Q3: `Resource punkt not found.` 如何解决？
 
-A3: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `Searched in:` 对应目录下。
+A3: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `nltk_data/tokenizers` 存储路径下。
+
+ `nltk_data` 存储路径可以通过 `nltk.data.path` 查询。
 
 Q4: `Resource averaged_perceptron_tagger not found.` 如何解决？
 
-A4: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `Searched in:` 对应目录下。
+A4: 将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `nltk_data/taggers` 存储路径下。
+
+ `nltk_data` 存储路径可以通过 `nltk.data.path` 查询。
 
 Q5: 本项目可否在 colab 中运行？
 
