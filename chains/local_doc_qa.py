@@ -8,6 +8,7 @@ import sentence_transformers
 import os
 from configs.model_config import *
 import datetime
+from typing import List
 
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 10
@@ -42,25 +43,35 @@ class LocalDocQA:
         self.top_k = top_k
 
     def init_knowledge_vector_store(self,
-                                    filepath: str):
-        if not os.path.exists(filepath):
-            print("路径不存在")
-            return None
-        elif os.path.isfile(filepath):
-            file = os.path.split(filepath)[-1]
-            try:
-                loader = UnstructuredFileLoader(filepath, mode="elements")
-                docs = loader.load()
-                print(f"{file} 已成功加载")
-            except:
-                print(f"{file} 未能成功加载")
+                                    filepath: str or List[str]):
+        if isinstance(filepath, str):
+            if not os.path.exists(filepath):
+                print("路径不存在")
                 return None
-        elif os.path.isdir(filepath):
-            docs = []
-            for file in os.listdir(filepath):
-                fullfilepath = os.path.join(filepath, file)
+            elif os.path.isfile(filepath):
+                file = os.path.split(filepath)[-1]
                 try:
-                    loader = UnstructuredFileLoader(fullfilepath, mode="elements")
+                    loader = UnstructuredFileLoader(filepath, mode="elements")
+                    docs = loader.load()
+                    print(f"{file} 已成功加载")
+                except:
+                    print(f"{file} 未能成功加载")
+                    return None
+            elif os.path.isdir(filepath):
+                docs = []
+                for file in os.listdir(filepath):
+                    fullfilepath = os.path.join(filepath, file)
+                    try:
+                        loader = UnstructuredFileLoader(fullfilepath, mode="elements")
+                        docs += loader.load()
+                        print(f"{file} 已成功加载")
+                    except:
+                        print(f"{file} 未能成功加载")
+        else:
+            docs = []
+            for file in filepath:
+                try:
+                    loader = UnstructuredFileLoader(file, mode="elements")
                     docs += loader.load()
                     print(f"{file} 已成功加载")
                 except:
@@ -74,7 +85,7 @@ class LocalDocQA:
     def get_knowledge_based_answer(self,
                                    query,
                                    vs_path,
-                                   chat_history=[],):
+                                   chat_history=[], ):
         prompt_template = """基于以下已知信息，简洁和专业的来回答用户的问题。
     如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。
     
