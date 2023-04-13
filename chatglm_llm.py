@@ -38,7 +38,7 @@ class ChatGLM(LLM):
         response, _ = self.model.chat(
             self.tokenizer,
             prompt,
-            history=self.history[-self.history_len:],
+            history=self.history[-self.history_len:] if self.history_len>0 else [],
             max_length=self.max_token,
             temperature=self.temperature,
         )
