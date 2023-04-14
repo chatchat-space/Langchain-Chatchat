@@ -153,8 +153,6 @@ Q5: 本项目可否在 colab 中运行？
 A5: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意的是，如需在 colab 中运行 Web UI，需将`webui.py`中`demo.queue(concurrency_count=3).launch(
     server_name='0.0.0.0', share=False, inbrowser=False)`中参数`share`设置为`True`。
 
-
-
 Q6: 在Anaconda中使用pip安装包无效问题
 
 此问题是系统环境问题，详细见  [在Anaconda中使用pip安装包无效问题](docs/在Anaconda中使用pip安装包无效问题.md)
