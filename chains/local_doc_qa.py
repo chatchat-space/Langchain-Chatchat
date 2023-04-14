@@ -80,7 +80,7 @@ class LocalDocQA:
         vector_store = FAISS.from_documents(docs, self.embeddings)
         vs_path = f"""./vector_store/{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
         vector_store.save_local(vs_path)
-        return vs_path
+        return vs_path if len(docs)>0 else None
 
     def get_knowledge_based_answer(self,
                                    query,
