@@ -36,7 +36,7 @@ def get_answer(query, vs_path, history):
             query=query, vs_path=vs_path, chat_history=history)
     else:
         history = history + [[None, "请先加载文件后，再进行提问。"]]
-    return history
+    return history, ""
 
 
 def update_status(history, status):
@@ -114,8 +114,6 @@ with gr.Blocks(css=block_css) as demo:
                                  show_label=False).style(height=750)
             query = gr.Textbox(show_label=False,
                                placeholder="请输入提问内容，按回车进行提交",
-                               # lines=1,
-                               # value="用200字总结一下"
                                ).style(container=False)
 
         with gr.Column(scale=1):
@@ -168,7 +166,7 @@ with gr.Blocks(css=block_css) as demo:
                            )
     query.submit(get_answer,
                  [query, vs_path, chatbot],
-                 [chatbot],
+                 [chatbot, query],
                  )
 
 demo.queue(concurrency_count=3).launch(
