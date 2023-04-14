@@ -1,4 +1,8 @@
 output/*
-__pycache__/*
+__pycache__
+*/**/__pycache__
 log/*
+*/**/state_of_the_history.txt
+.chroma
+.idea
 vector_store/*
