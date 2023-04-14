@@ -158,6 +158,15 @@ Q6: 在Anaconda中使用pip安装包无效问题
 此问题是系统环境问题，详细见  [在Anaconda中使用pip安装包无效问题](docs/在Anaconda中使用pip安装包无效问题.md)
 
 
+Q7: 本项目用到的模型权重文件百度网盘地址：
+
+- ernie-3.0-base-zh.zip 链接: https://pan.baidu.com/s/1CIvKnD3qzE-orFouA8qvNQ?pwd=4wih
+- ernie-3.0-nano-zh.zip 链接: https://pan.baidu.com/s/1Fh8fgzVdavf5P1omAJJ-Zw?pwd=q6s5
+- text2vec-large-chinese.zip 链接: https://pan.baidu.com/s/1sMyPzBIXdEzHygftEoyBuA?pwd=4xs7
+- chatglm-6b-int4-qe.zip 链接: https://pan.baidu.com/s/1DDKMOMHtNZccOOBGWIOYww?pwd=22ji
+- chatglm-6b-int4.zip 链接: https://pan.baidu.com/s/1pvZ6pMzovjhkA6uPcRLuJA?pwd=3gjd
+- chatglm-6b.zip 链接: https://pan.baidu.com/s/1B-MpsVVs1GHhteVBetaquw?pwd=djay
+
 
 ## DEMO
 
@@ -209,6 +218,6 @@ Q6: 在Anaconda中使用pip安装包无效问题
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
-![二维码](img/qr_code.jpg)
+![二维码](img/qr_code_500.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

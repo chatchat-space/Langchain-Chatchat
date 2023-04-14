@@ -1,0 +1,55 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="42">
+            <item index="0" class="java.lang.String" itemvalue="openai" />
+            <item index="1" class="java.lang.String" itemvalue="fire" />
+            <item index="2" class="java.lang.String" itemvalue="rouge_score" />
+            <item index="3" class="java.lang.String" itemvalue="pandas" />
+            <item index="4" class="java.lang.String" itemvalue="tqdm" />
+            <item index="5" class="java.lang.String" itemvalue="sentencepiece" />
+            <item index="6" class="java.lang.String" itemvalue="uniout" />
+            <item index="7" class="java.lang.String" itemvalue="keras" />
+            <item index="8" class="java.lang.String" itemvalue="bottle" />
+            <item index="9" class="java.lang.String" itemvalue="tensorflow" />
+            <item index="10" class="java.lang.String" itemvalue="paddlefsl" />
+            <item index="11" class="java.lang.String" itemvalue="jieba" />
+            <item index="12" class="java.lang.String" itemvalue="typer" />
+            <item index="13" class="java.lang.String" itemvalue="colorlog" />
+            <item index="14" class="java.lang.String" itemvalue="rich" />
+            <item index="15" class="java.lang.String" itemvalue="dill" />
+            <item index="16" class="java.lang.String" itemvalue="datasets" />
+            <item index="17" class="java.lang.String" itemvalue="paddle2onnx" />
+            <item index="18" class="java.lang.String" itemvalue="seqeval" />
+            <item index="19" class="java.lang.String" itemvalue="colorama" />
+            <item index="20" class="java.lang.String" itemvalue="multiprocess" />
+            <item index="21" class="java.lang.String" itemvalue="visualdl" />
+            <item index="22" class="java.lang.String" itemvalue="huggingface_hub" />
+            <item index="23" class="java.lang.String" itemvalue="Flask-Babel" />
+            <item index="24" class="java.lang.String" itemvalue="gensim" />
+            <item index="25" class="java.lang.String" itemvalue="six" />
+            <item index="26" class="java.lang.String" itemvalue="pyahocorasick" />
+            <item index="27" class="java.lang.String" itemvalue="requests" />
+            <item index="28" class="java.lang.String" itemvalue="numpy" />
+            <item index="29" class="java.lang.String" itemvalue="py2neo" />
+            <item index="30" class="java.lang.String" itemvalue="termcolor" />
+            <item index="31" class="java.lang.String" itemvalue="pyzmq" />
+            <item index="32" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="33" class="java.lang.String" itemvalue="flask_json" />
+            <item index="34" class="java.lang.String" itemvalue="flask_cors" />
+            <item index="35" class="java.lang.String" itemvalue="gevent" />
+            <item index="36" class="java.lang.String" itemvalue="Keras" />
+            <item index="37" class="java.lang.String" itemvalue="GPUtil" />
+            <item index="38" class="java.lang.String" itemvalue="itchat" />
+            <item index="39" class="java.lang.String" itemvalue="bert4keras" />
+            <item index="40" class="java.lang.String" itemvalue="flask_compress" />
+            <item index="41" class="java.lang.String" itemvalue="Flask" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
