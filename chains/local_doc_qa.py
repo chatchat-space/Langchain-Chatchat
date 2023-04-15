@@ -17,6 +17,7 @@ VECTOR_SEARCH_TOP_K = 6
 # LLM input history length
 LLM_HISTORY_LEN = 3
 
+<<<<<<< HEAD
 
 def load_file(filepath):
     if filepath.lower().endswith(".pdf"):
@@ -29,6 +30,8 @@ def load_file(filepath):
         docs = loader.load_and_split(text_splitter=textsplitter)
     return docs
 
+=======
+>>>>>>> cba44ca (修复 webui.py 中 llm_history_len 和 vector_search_top_k 显示值与启动设置默认值不一致的问题)
 
 class LocalDocQA:
     llm: object = None

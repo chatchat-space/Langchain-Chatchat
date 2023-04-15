@@ -15,7 +15,15 @@ LLM_HISTORY_LEN = 3
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 >>>>>>> f87a5f5 (fix bug in webui.py)
+=======
+# return top-k text chunk from vector store
+VECTOR_SEARCH_TOP_K = 6
+
+# LLM input history length
+LLM_HISTORY_LEN = 3
+>>>>>>> cba44ca (修复 webui.py 中 llm_history_len 和 vector_search_top_k 显示值与启动设置默认值不一致的问题)
 
 def get_file_list():
     if not os.path.exists("content"):
