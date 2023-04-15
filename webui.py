@@ -4,6 +4,11 @@ import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 
+# return top-k text chunk from vector store
+VECTOR_SEARCH_TOP_K = 6
+
+# LLM input history length
+LLM_HISTORY_LEN = 3
 
 def get_file_list():
     if not os.path.exists("content"):
@@ -124,7 +129,7 @@ with gr.Blocks(css=block_css) as demo:
                                  interactive=True)
             llm_history_len = gr.Slider(0,
                                         10,
-                                        value=3,
+                                        value=LLM_HISTORY_LEN,
                                         step=1,
                                         label="LLM history len",
                                         interactive=True)
@@ -137,7 +142,7 @@ with gr.Blocks(css=block_css) as demo:
                                        interactive=True)
             top_k = gr.Slider(1,
                               20,
-                              value=6,
+                              value=VECTOR_SEARCH_TOP_K,
                               step=1,
                               label="向量匹配 top k",
                               interactive=True)
@@ -173,5 +178,9 @@ with gr.Blocks(css=block_css) as demo:
                  [chatbot, query],
                  )
 
-demo.queue(concurrency_count=3).launch(
-    server_name='0.0.0.0', share=False, inbrowser=False)
+demo.queue(concurrency_count=3
+           ).launch(server_name='0.0.0.0',
+                    server_port=7860,
+                    show_api=False,
+                    share=False,
+                    inbrowser=False)
