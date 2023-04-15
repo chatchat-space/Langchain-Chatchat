@@ -53,11 +53,12 @@ def init_model():
         return """模型未成功加载，请重新选择后点击"加载模型"按钮"""
 
 
-def reinit_model(llm_model, embedding_model, llm_history_len, top_k, history):
+def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, history):
     try:
         local_doc_qa.init_cfg(llm_model=llm_model,
                               embedding_model=embedding_model,
                               llm_history_len=llm_history_len,
+                              use_ptuning_v2=use_ptuning_v2,
                               top_k=top_k)
         model_status = """模型已成功重新加载，请选择文件后点击"加载文件"按钮"""
     except:
@@ -97,7 +98,7 @@ webui_title = """
 """
 
 init_message = """欢迎使用 langchain-ChatGLM Web UI，开始提问前，请依次如下 3 个步骤：
-1. 选择语言模型、Embedding 模型及相关参数后点击"重新加载模型"，并等待加载完成提示
+1. 选择语言模型、Embedding 模型及相关参数，如果使用ptuning-v2方式微调过模型，将PrefixEncoder模型放在ptuning-v2文件夹里并勾选相关选项，然后点击"重新加载模型"，并等待加载完成提示
 2. 上传或选择已有文件作为本地知识文档输入后点击"重新加载文档"，并等待加载完成提示
 3. 输入要提交的问题后，点击回车提交 """
 
@@ -127,6 +128,9 @@ with gr.Blocks(css=block_css) as demo:
                                         step=1,
                                         label="LLM history len",
                                         interactive=True)
+            use_ptuning_v2 = gr.Checkbox(USE_PTUNING_V2,
+                                         label="使用p-tuning-v2微调过的模型",
+                                         interactive=True)
             embedding_model = gr.Radio(embedding_model_dict_list,
                                        label="Embedding 模型",
                                        value=EMBEDDING_MODEL,
@@ -152,7 +156,7 @@ with gr.Blocks(css=block_css) as demo:
             load_file_button = gr.Button("加载文件")
     load_model_button.click(reinit_model,
                             show_progress=True,
-                            inputs=[llm_model, embedding_model, llm_history_len, top_k, chatbot],
+                            inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, chatbot],
                             outputs=chatbot
                             )
     # 将上传的文件保存到content文件夹下,并更新下拉框
