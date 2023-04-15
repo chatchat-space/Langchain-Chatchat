@@ -3,8 +3,9 @@ from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
 from transformers import AutoTokenizer, AutoModel
 import torch
+from configs.model_config import LLM_DEVICE
 
-DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+DEVICE = LLM_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
 CUDA_DEVICE = f"{DEVICE}:{DEVICE_ID}" if DEVICE_ID else DEVICE
 
@@ -48,12 +49,14 @@ class ChatGLM(LLM):
         self.history = self.history+[[None, response]]
         return response
 
-    def load_model(self, model_name_or_path: str = "THUDM/chatglm-6b"):
+    def load_model(self,
+                   model_name_or_path: str = "THUDM/chatglm-6b",
+                   llm_device=LLM_DEVICE):
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
             trust_remote_code=True
         )
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
             self.model = (
                 AutoModel.from_pretrained(
                     model_name_or_path,
@@ -61,19 +64,12 @@ class ChatGLM(LLM):
                 .half()
                 .cuda()
             )
-        elif torch.backends.mps.is_available():
-            self.model = (
-                AutoModel.from_pretrained(
-                    model_name_or_path,
-                    trust_remote_code=True)
-                .float()
-                .to('mps')
-            )
         else:
             self.model = (
                 AutoModel.from_pretrained(
                     model_name_or_path,
                     trust_remote_code=True)
                 .float()
+                .to(llm_device)
             )
         self.model = self.model.eval()
