@@ -58,10 +58,10 @@
 - Embedding 模型硬件需求
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
+
 ### 软件需求
-本项目已在 python 3.8，cuda 11.7 环境下完成测试。
 
-
+本项目已在 Python 3.8，CUDA 11.7 环境下完成测试。
 
 ### 1. 安装环境
 
@@ -111,10 +111,9 @@ $ python webui.py
 ![webui](img/ui1.png)
 Web UI 可以实现如下功能：
 
-1. 自动读取`knowledge_based_chatglm.py`中`LLM`及`embedding`模型枚举，选择后点击`setting`进行模型加载，可随时切换模型进行测试
+1. 运行前自动读取`configs/model_config.py`中`LLM`及`Embedding`模型枚举及默认模型设置运行模型，如需重新加载模型，可在界面重新选择后点击`重新加载模型`进行模型加载；
 2. 可手动调节保留对话历史长度，可根据显存大小自行调节
-3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`loading`加载文件，过程中可随时更换加载的文件
-4. 底部添加`use via API`可对接到自己系统
+3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`加载文件`按钮，过程中可随时更换加载的文件
 
 或执行 [knowledge_based_chatglm.py](cli_demo.py) 脚本体验**命令行交互**
 ```shell

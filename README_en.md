@@ -18,22 +18,19 @@
 
 🚩 This project does not involve fine-tuning or training; however, fine-tuning or training can be employed to optimize the effectiveness of this project.
 
-[TOC]
 
 ## Changelog
 
-**[2023/04/07]**
+**[2023/04/15]**
 
-   1. Resolved the issue of doubled video memory usage when loading the ChatGLM model (thanks to [@suc16](https://github.com/suc16) and [@myml](https://github.com/myml));
-   2. Added a mechanism to clear video memory;
-   3. Added `nghuyong/ernie-3.0-nano-zh` and `nghuyong/ernie-3.0-base-zh` as Embedding model options, which consume less video memory resources than `GanymedeNil/text2vec-large-chinese` (thanks to [@lastrei](https://github.com/lastrei)).
+   1. refactor the project structure to keep the command line demo [cli_demo.py](cli_demo.py) and the Web UI demo [webui.py](webui.py) in the root directory.
+   2. Improve the Web UI by modifying it to first load the model according to the default option of [configs/model_config.py](configs/model_config.py) after running the Web UI, and adding error messages, etc.
+   3. Update FAQ.
 
-**[2023/04/09]**
+**[2023/04/12]**
 
-   1. Replaced the previously selected `ChatVectorDBChain` with `RetrievalQA` in `langchain`, effectively reducing the issue of stopping due to insufficient video memory after asking 2-3 times;
-   2. Added `EMBEDDING_MODEL`, `VECTOR_SEARCH_TOP_K`, `LLM_MODEL`, `LLM_HISTORY_LEN`, `REPLY_WITH_SOURCE` parameter value settings in `knowledge_based_chatglm.py`;
-   3. Added `chatglm-6b-int4` and `chatglm-6b-int4-qe`, which require less GPU memory, as LLM model options;
-   4. Corrected code errors in `README.md` (thanks to [@calcitem](https://github.com/calcitem)).
+   1. Replaced the sample files in the Web UI to avoid issues with unreadable files due to encoding problems in Ubuntu;
+   2. Replaced the prompt template in `knowledge_based_chatglm.py` to prevent confusion in the content returned by ChatGLM, which may arise from the prompt template containing Chinese and English bilingual text.
 
 **[2023/04/11]**
 
@@ -42,10 +39,18 @@
    3. Enhanced automatic detection for the availability of `cuda`, `mps`, and `cpu` for LLM and Embedding model running devices;
    4. Added a check for `filepath` in `knowledge_based_chatglm.py`. In addition to supporting single file import, it now supports a single folder path as input. After input, it will traverse each file in the folder and display a command-line message indicating the success of each file load.
 
-   **[2023/04/12]**
+5. **[2023/04/09]**
 
-   1. Replaced the sample files in the Web UI to avoid issues with unreadable files due to encoding problems in Ubuntu;
-   2. Replaced the prompt template in `knowledge_based_chatglm.py` to prevent confusion in the content returned by ChatGLM, which may arise from the prompt template containing Chinese and English bilingual text.
+   1. Replaced the previously selected `ChatVectorDBChain` with `RetrievalQA` in `langchain`, effectively reducing the issue of stopping due to insufficient video memory after asking 2-3 times;
+   2. Added `EMBEDDING_MODEL`, `VECTOR_SEARCH_TOP_K`, `LLM_MODEL`, `LLM_HISTORY_LEN`, `REPLY_WITH_SOURCE` parameter value settings in `knowledge_based_chatglm.py`;
+   3. Added `chatglm-6b-int4` and `chatglm-6b-int4-qe`, which require less GPU memory, as LLM model options;
+   4. Corrected code errors in `README.md` (thanks to [@calcitem](https://github.com/calcitem)).
+
+**[2023/04/07]**
+
+   1. Resolved the issue of doubled video memory usage when loading the ChatGLM model (thanks to [@suc16](https://github.com/suc16) and [@myml](https://github.com/myml));
+   2. Added a mechanism to clear video memory;
+   3. Added `nghuyong/ernie-3.0-nano-zh` and `nghuyong/ernie-3.0-base-zh` as Embedding model options, which consume less video memory resources than `GanymedeNil/text2vec-large-chinese` (thanks to [@lastrei](https://github.com/lastrei)).
 
 ## How to Use
 
@@ -111,13 +116,11 @@ Note: Before executing, check the remaining space in the `$HOME/.cache/huggingfa
 
 The resulting interface is shown below:
 ![webui](img/ui1.png)
-The API interface provided in the Web UI is shown below:
-![webui](img/ui2.png)The Web UI supports the following features:
+The Web UI supports the following features:
 
-1. Automatically reads the `LLM` and `embedding` model enumerations in `knowledge_based_chatglm.py`, allowing you to select and load the model by clicking `setting`. Models can be switched at any time for testing.
+1. Automatically reads the `LLM` and `embedding` model enumerations in `configs/model_config.py`, allowing you to select and reload the model by clicking `重新加载模型`.
 2. The length of retained dialogue history can be manually adjusted according to the available video memory.
-3. Adds a file upload function. Select the uploaded file through the drop-down box, click `loading` to load the file, and change the loaded file at any time during the process.
-4. Adds a `use via API` option at the bottom to connect to your own system.
+3. Adds a file upload function. Select the uploaded file through the drop-down box, click `加载文件` to load the file, and change the loaded file at any time during the process.
 
 Alternatively, execute the [knowledge_based_chatglm.py](https://chat.openai.com/chat/cli_demo.py) script to experience **command line interaction**:
 
@@ -189,12 +192,12 @@ ChatGLM's answer after using LangChain to access the README.md file of the ChatG
 >4. Introduce more evaluation metrics: Incorporate additional evaluation metrics to assess the model's performance, which can help identify the shortcomings and limitations of ChatGLM-6B.
 >5. Enhance the model architecture: Improve ChatGLM-6B's model architecture to boost its performance and capabilities. For example, employ larger neural networks or refined convolutional neural network structures.
 
-## Road map
+## Roadmap
 
 - [x] Implement LangChain + ChatGLM-6B for local knowledge application
 - [x] Unstructured file access based on langchain
    - [x].md
-   - [x].pdf (need to install `detectron2` as described in FAQ Q2)
+   - [x].pdf
    - [x].docx
    - [x].txt
 - [ ] Add support for more LLM models
@@ -203,8 +206,6 @@ ChatGLM's answer after using LangChain to access the README.md file of the ChatG
    - [x] THUDM/chatglm-6b-int4-qe
 - [ ] Add Web UI DEMO
    - [x]  Implement Web UI DEMO using Gradio
-   - [ ] Add model loading progress bar
-   - [ ] Add output and error messages
-   - [ ] Internationalization for language switching
+   - [x] Add output and error messages
    - [ ] Citation callout
 - [ ] Use FastAPI to implement API deployment method and develop a Web UI DEMO for API calls
