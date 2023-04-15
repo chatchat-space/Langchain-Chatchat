@@ -20,7 +20,7 @@
 
 **[2023/04/15]**
 1. 重构项目结构，在根目录下保留命令行 Demo [cli_demo.py](cli_demo.py) 和 Web UI Demo [webui.py](webui.py)；
-2. 对 Web UI 进行改进，修改为运行 Web UI 后首先按照默认选项加载模型，并增加报错提示信息等；
+2. 对 Web UI 进行改进，修改为运行 Web UI 后首先按照 [configs/model_config.py](configs/model_config.py) 默认选项加载模型，并增加报错提示信息等；
 3. 对常见问题进行补充说明。
 
 **[2023/04/12]**
