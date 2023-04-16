@@ -178,4 +178,4 @@ with gr.Blocks(css=block_css) as demo:
                  )
 
 demo.queue(concurrency_count=3).launch(
-    server_name='0.0.0.0', share=False, inbrowser=False)
+    server_name='0.0.0.0', share=True, inbrowser=False)

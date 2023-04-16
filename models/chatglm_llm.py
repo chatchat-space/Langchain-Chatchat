@@ -61,7 +61,7 @@ class ChatGLM(LLM):
                 AutoModel.from_pretrained(
                     model_name_or_path,
                     trust_remote_code=True)
-                .half()
+                .half().quantize(8)
                 .cuda()
             )
         else:
