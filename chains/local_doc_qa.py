@@ -39,7 +39,7 @@ class LocalDocQA:
 
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model], )
         self.embeddings.client = sentence_transformers.SentenceTransformer(self.embeddings.model_name,
-                                                                           device=embedding_device)
+                                                                           device="cpu")
         self.top_k = top_k
 
     def init_knowledge_vector_store(self,
