@@ -3,6 +3,9 @@ import os
 import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
+import nltk
+
+nltk.data.path = [os.path.join(os.path.dirname(__file__), "nltk_data")] + nltk.data.path
 
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 6
