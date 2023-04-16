@@ -4,6 +4,12 @@ import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 
+# return top-k text chunk from vector store
+VECTOR_SEARCH_TOP_K = 6
+
+# LLM input history length
+LLM_HISTORY_LEN = 3
+
 
 def get_file_list():
     if not os.path.exists("content"):
@@ -49,7 +55,8 @@ def init_model():
     try:
         local_doc_qa.init_cfg()
         return """模型已成功加载，请选择文件后点击"加载文件"按钮"""
-    except:
+    except Exception as e:
+        print(e)
         return """模型未成功加载，请重新选择后点击"加载模型"按钮"""
 
 
@@ -60,14 +67,15 @@ def reinit_model(llm_model, embedding_model, llm_history_len, top_k, history):
                               llm_history_len=llm_history_len,
                               top_k=top_k)
         model_status = """模型已成功重新加载，请选择文件后点击"加载文件"按钮"""
-    except:
+    except Exception as e:
+        print(e)
         model_status = """模型未成功重新加载，请重新选择后点击"加载模型"按钮"""
     return history + [[None, model_status]]
 
 
 
 def get_vector_store(filepath, history):
-    if local_doc_qa.llm and local_doc_qa.llm:
+    if local_doc_qa.llm and local_doc_qa.embeddings:
         vs_path = local_doc_qa.init_knowledge_vector_store(["content/" + filepath])
         if vs_path:
             file_status = "文件已成功加载，请开始提问"
@@ -123,7 +131,7 @@ with gr.Blocks(css=block_css) as demo:
                                  interactive=True)
             llm_history_len = gr.Slider(0,
                                         10,
-                                        value=3,
+                                        value=LLM_HISTORY_LEN,
                                         step=1,
                                         label="LLM history len",
                                         interactive=True)
@@ -133,7 +141,7 @@ with gr.Blocks(css=block_css) as demo:
                                        interactive=True)
             top_k = gr.Slider(1,
                               20,
-                              value=6,
+                              value=VECTOR_SEARCH_TOP_K,
                               step=1,
                               label="向量匹配 top k",
                               interactive=True)
