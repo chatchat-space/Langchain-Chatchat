@@ -2,7 +2,7 @@ from configs.model_config import *
 from chains.local_doc_qa import LocalDocQA
 
 # return top-k text chunk from vector store
-VECTOR_SEARCH_TOP_K = 10
+VECTOR_SEARCH_TOP_K = 6
 
 # LLM input history length
 LLM_HISTORY_LEN = 3
