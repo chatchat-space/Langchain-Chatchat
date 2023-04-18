@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..") # 将父目录放入系统路径中
+
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings

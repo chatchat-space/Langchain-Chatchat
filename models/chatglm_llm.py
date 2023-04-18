@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..") # 将父目录放入系统路径中
+
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens

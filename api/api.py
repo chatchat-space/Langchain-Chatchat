@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..") # 将父目录放入系统路径中
+
 from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import StreamingResponse
 import uvicorn, json, datetime, time
