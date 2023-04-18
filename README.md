@@ -245,6 +245,6 @@ embedding_model_dict = {
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
-![二维码](img/qr_code.jpg)
+![二维码](img/qr_code_4.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
