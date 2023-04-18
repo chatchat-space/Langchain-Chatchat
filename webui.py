@@ -23,7 +23,7 @@ def get_file_list():
 def get_vs_list():
     if not os.path.exists("vector_store"):
         return []
-    return [f for f in os.listdir("vector_store")]
+    return ["新建知识库"] + os.listdir("vector_store")
 
 
 file_list = get_file_list()
@@ -106,6 +106,13 @@ def get_vector_store(filepath, history):
     return vs_path, history + [[None, file_status]]
 
 
+def change_vs_name_input(vs):
+    if vs == "新建知识库":
+        return gr.update(lines=1, visible=True)
+    else:
+        return gr.update(visible=False)
+
+
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
@@ -142,27 +149,38 @@ with gr.Blocks(css=block_css) as demo:
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交",
                                    ).style(container=False)
-
             with gr.Column(scale=1):
-                # with gr.Column():
-                # with gr.Tab("select"):
-                selectFile = gr.Dropdown(vs_list,
-                                         label="请选择要加载的知识库",
-                                         interactive=True,
-                                         value=vs_list[0] if len(vs_list) > 0 else None)
-                #
-                gr.Markdown("向知识库中添加文件")
-                with gr.Tab("上传文件"):
-                    files = gr.File(label="向知识库中添加文件",
-                                    file_types=['.txt', '.md', '.docx', '.pdf'],
-                                    file_count="multiple"
-                                    )  # .style(height=100)
-                with gr.Tab("上传文件夹"):
-                    files = gr.File(label="向知识库中添加文件",
-                                    file_types=['.txt', '.md', '.docx', '.pdf'],
-                                    file_count="directory"
-                                    )  # .style(height=100)
-                load_file_button = gr.Button("加载知识库")
+                gr.Markdown("请选择使用模式")
+                gr.Radio(["默认", "知识库问答"],
+                         label="请选择使用模式",
+                         info="默认模式将不使用知识库")
+                with gr.Accordion("配置知识库"):
+                # gr.Markdown("配置知识库")
+                    select_vs = gr.Dropdown(vs_list,
+                                            label="请选择要加载的知识库",
+                                            interactive=True,
+                                            value=vs_list[0] if len(vs_list) > 0 else None)
+                    vs_name = gr.Textbox(label="请输入新建知识库名称",
+                                         lines=1,
+                                         interactive=True)
+                    select_vs.change(fn=change_vs_name_input,
+                                     inputs=select_vs,
+                                     outputs=vs_name)
+                    gr.Markdown("向知识库中添加文件")
+                    with gr.Tab("上传文件"):
+                        files = gr.File(label="添加文件",
+                                        file_types=['.txt', '.md', '.docx', '.pdf'],
+                                        file_count="multiple",
+                                        show_label=False
+                                        )
+                        load_file_button = gr.Button("上传文件")
+                    with gr.Tab("上传文件夹"):
+                        folder_files = gr.File(label="添加文件",
+                                               file_types=['.txt', '.md', '.docx', '.pdf'],
+                                               file_count="directory",
+                                               show_label=False
+                                               )
+                        load_folder_button = gr.Button("上传文件夹")
     with gr.Tab("模型配置"):
         llm_model = gr.Radio(llm_model_dict_list,
                              label="LLM 模型",
@@ -199,7 +217,7 @@ with gr.Blocks(css=block_css) as demo:
                  outputs=chatbot)
     load_file_button.click(get_vector_store,
                            show_progress=True,
-                           inputs=[selectFile, chatbot],
+                           inputs=[select_vs, chatbot],
                            outputs=[vs_path, chatbot],
                            )
     query.submit(get_answer,
