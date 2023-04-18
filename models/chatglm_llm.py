@@ -29,7 +29,7 @@ def torch_gc():
             torch.cuda.ipc_collect()
 
 
-class ChatGLM(LLM):
+class ChatGLM():
     max_token: int = 10000
     temperature: float = 0.01
     top_p = 0.9
