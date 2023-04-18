@@ -15,8 +15,8 @@ from langchain.document_loaders import UnstructuredFileLoader
 # pip install pinecone-client,记得换源
 import pinecone
 import sentence_transformers
-from configs import model_config as MODEL_CONFIG
-from models.chatglm_llm import ChatGLM
+from configs import *
+from models import *
 
 # 写到 import torch前面，否则多显卡情况有异常
 import os
@@ -71,7 +71,7 @@ async def create_stream_item(request: Request):
 @app.post("/uploadfile")
 async def create_upload_file(file: UploadFile = File(...)):
     # 指定文件保存路径
-    file_path = MODEL_CONFIG.UPLOAD_LOCAL_PATH + file.filename
+    file_path = model_config.UPLOAD_LOCAL_PATH + file.filename
     with open(file_path, "wb") as f:
         # 读取上传的文件内容并保存到指定路径
         f.write(file.file.read())
@@ -142,15 +142,15 @@ async def create_item(request: Request):
 
 def init_embedding():
     print("加载embeding模型......")
-    embeddings = HuggingFaceEmbeddings(model_name=MODEL_CONFIG.embedding_model_dict[MODEL_CONFIG.EMBEDDING_MODEL])
+    embeddings = HuggingFaceEmbeddings(model_name=model_config.embedding_model_dict[model_config.EMBEDDING_MODEL])
     embeddings.client = sentence_transformers.SentenceTransformer(embeddings.model_name,
-                                                                  device=MODEL_CONFIG.EMBEDDING_DEVICE)
+                                                                  device=model_config.EMBEDDING_DEVICE)
     print("加载embeding模型完成......")
 
 
 def init_vector_store(vs_path):
     start_time = time.perf_counter()
-    if MODEL_CONFIG.IS_LOCAL_STORAGE:
+    if model_config.IS_LOCAL_STORAGE:
         vector_store = FAISS.load_local(vs_path, embeddings)
     else:
         # 去Pinecone官网免费注册获得：api_key、environment、index_name
