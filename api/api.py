@@ -15,7 +15,7 @@ from langchain.document_loaders import UnstructuredFileLoader
 # pip install pinecone-client,记得换源
 import pinecone
 import sentence_transformers
-from models import *
+from models.chatglm_llm import ChatGLM
 from configs import model_config as MODEL_CONFIG
 
 # 写到 import torch前面，否则多显卡情况有异常
