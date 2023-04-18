@@ -14,9 +14,10 @@ from langchain.prompts.chat import (
 from langchain.document_loaders import UnstructuredFileLoader
 # pip install pinecone-client,记得换源
 import pinecone
-import configs.model_config as MODEL_CONFIG
 import sentence_transformers
 from models.chatglm_llm import ChatGLM, ModelType
+import configs.model_config as MODEL_CONFIG
+
 # 写到 import torch前面，否则多显卡情况有异常
 import os
 
