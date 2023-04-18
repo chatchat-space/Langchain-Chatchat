@@ -20,7 +20,7 @@
 
 ## 变更日志
 
-参见 [变更日志](CHANGELOG.md)。
+参见 [变更日志](docs/CHANGELOG.md)。
 
 ## 使用方式
 
@@ -42,9 +42,13 @@
 
 本项目已在 Python 3.8，CUDA 11.7 环境下完成测试。
 
+### 从本地加载模型
+
+请参考 [THUDM/ChatGLM-6B#从本地加载模型](https://github.com/THUDM/ChatGLM-6B#从本地加载模型)
+
 ### 1. 安装环境
 
-参见 [安装指南](INSTALL.md)。
+参见 [安装指南](docs/INSTALL.md)。
 
 ### 2. 设置模型默认参数
 
@@ -52,7 +56,14 @@
 
 ### 3. 执行脚本体验 Web UI 或命令行交互
 
-执行 [webui.py](webui.py) 脚本体验 **Web 交互**
+> 注：鉴于环境部署过程中可能遇到问题，建议首先测试命令行脚本。建议命令行脚本测试可正常运行后再运行 Web UI。
+
+执行 [knowledge_based_chatglm.py](cli_demo.py) 脚本体验**命令行交互**：
+```shell
+$ python cli_demo.py
+```
+
+或执行 [webui.py](webui.py) 脚本体验 **Web 交互**
 
 ```shell
 $ python webui.py
@@ -68,14 +79,9 @@ Web UI 可以实现如下功能：
 2. 可手动调节保留对话历史长度，可根据显存大小自行调节；
 3. 添加上传文件功能，通过下拉框选择已上传的文件，点击`加载文件`按钮，过程中可随时更换加载的文件。
 
-或执行 [knowledge_based_chatglm.py](cli_demo.py) 脚本体验**命令行交互**：
-```shell
-$ python knowledge_based_chatglm.py
-```
-
 ### 常见问题
 
-参见 [常见问题](FAQ.md)。
+参见 [常见问题](docs/FAQ.md)。
 
 ## Demo
 

@@ -6,6 +6,18 @@ A1: 目前已测试支持 txt、docx、md、pdf 格式文件，更多文件格�
 
 ---
 
+Q2: 执行 `pip install -r requirements.txt` 过程中，安装 `detectron2` 时发生报错怎么办？
+
+A2: 如果不需要对 `pdf` 格式文件读取，可不安装 `detectron2`；如需对 `pdf` 文件进行高精度文本提取，建议按照如下方法安装：
+
+```commandline
+$ git clone https://github.com/facebookresearch/detectron2.git
+$ cd detectron2
+$ pip install -e .
+```
+
+---
+
 Q3: 使用过程中 Python 包`nltk`发生了`Resource punkt not found.`报错，该如何解决？
 
 A3: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `nltk_data/tokenizers` 存储路径下。
@@ -31,7 +43,7 @@ A5: 可以尝试使用 chatglm-6b-int4 模型在 colab 中运行，需要注意�
 
 Q6: 在 Anaconda 中使用 pip 安装包无效如何解决？
 
-A6: 此问题是系统环境问题，详细见  [在Anaconda中使用pip安装包无效问题](docs/在Anaconda中使用pip安装包无效问题.md)
+A6: 此问题是系统环境问题，详细见  [在Anaconda中使用pip安装包无效问题](在Anaconda中使用pip安装包无效问题.md)
 
 ---
 
@@ -70,7 +82,7 @@ A8: 可使用本项目用到的模型权重文件百度网盘地址：
 
 Q9: 下载完模型后，如何修改代码以执行本地模型？
 
-A9: 模型下载完成后，请在 [configs/model_config.py](configs/model_config.py) 文件中，对`embedding_model_dict`和`llm_model_dict`参数进行修改，如把`llm_model_dict`从
+A9: 模型下载完成后，请在 [configs/model_config.py](../configs/model_config.py) 文件中，对`embedding_model_dict`和`llm_model_dict`参数进行修改，如把`llm_model_dict`从
 
 ```json
 embedding_model_dict = {
