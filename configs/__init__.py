@@ -1,1 +1,1 @@
-from .api import *
+from .model_config import *

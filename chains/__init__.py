@@ -1,1 +1,1 @@
-from .model_config import *
+from .local_doc_qa import *
