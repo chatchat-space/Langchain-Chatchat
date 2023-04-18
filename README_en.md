@@ -18,6 +18,7 @@
 
 🚩 This project does not involve fine-tuning or training; however, fine-tuning or training can be employed to optimize the effectiveness of this project.
 
+📓 [ModelWhale online notebook](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
 
 ## Changelog
 
