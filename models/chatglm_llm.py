@@ -1,5 +1,6 @@
 import sys
-sys.path.append("..") # 将父目录放入系统路径中
+
+sys.path.append("..")  # 将父目录放入系统路径中
 
 from langchain.llms.base import LLM
 from typing import Optional, List
@@ -8,7 +9,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch, json, datetime
 from transformers import AutoTokenizer, AutoModel, AutoConfig
 import torch
-from configs.model_config import LLM_DEVICE
+from configs import *
 from enum import Enum
 
 DEVICE = LLM_DEVICE
