@@ -16,6 +16,8 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
+📓 [ModelWhale 在线运行项目](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
+
 ## 变更日志
 
 参见 [变更日志](CHANGELOG.md)。
