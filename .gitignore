@@ -165,3 +165,6 @@ output/*
 log/*
 .chroma
 vector_store/*
+
+llm/*
+embedding/*
