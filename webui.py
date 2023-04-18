@@ -108,9 +108,26 @@ def get_vector_store(filepath, history):
 
 def change_vs_name_input(vs):
     if vs == "新建知识库":
-        return gr.update(lines=1, visible=True)
+        return gr.update(visible=True), gr.update(visible=True)
+    else:
+        return gr.update(visible=False), gr.update(visible=False)
+
+
+def change_mode(mode):
+    if mode == "知识库问答":
+        return gr.update(visible=True)
     else:
         return gr.update(visible=False)
+
+def add_vs_name(vs_name, vs_list, chatbot):
+    if vs_name in vs_list:
+        chatbot = chatbot+[None, "与已有知识库名称冲突，请重新选择其他名称后提交"]
+        return gr.update(visible=True),vs_list, chatbot
+    else:
+        chatbot = chatbot + [None, f"""已新增知识库"{vs_name}" """]
+        vs_list = vs_list+[vs_name]
+        return gr.update(visible=True),vs_list, chatbot
+
 
 
 block_css = """.importantButton {
@@ -140,22 +157,24 @@ model_status = init_model()
 with gr.Blocks(css=block_css) as demo:
     vs_path, file_status, model_status = gr.State(""), gr.State(""), gr.State(model_status)
     gr.Markdown(webui_title)
-    with gr.Tab("聊天"):
+    with gr.Tab("对话"):
         with gr.Row():
-            with gr.Column(scale=2):
+            with gr.Column(scale=10):
                 chatbot = gr.Chatbot([[None, init_message], [None, model_status.value]],
                                      elem_id="chat-box",
                                      show_label=False).style(height=750)
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交",
                                    ).style(container=False)
-            with gr.Column(scale=1):
-                gr.Markdown("请选择使用模式")
-                gr.Radio(["默认", "知识库问答"],
-                         label="请选择使用模式",
-                         info="默认模式将不使用知识库")
-                with gr.Accordion("配置知识库"):
-                # gr.Markdown("配置知识库")
+            with gr.Column(scale=5):
+                mode = gr.Radio(["LLM 对话", "知识库问答"],
+                                label="请选择使用模式",
+                                value="知识库问答",)
+                vs_setting = gr.Accordion("配置知识库")
+                mode.change(fn=change_mode,
+                            inputs=mode,
+                            outputs=vs_setting)
+                with vs_setting:
                     select_vs = gr.Dropdown(vs_list,
                                             label="请选择要加载的知识库",
                                             interactive=True,
@@ -163,9 +182,13 @@ with gr.Blocks(css=block_css) as demo:
                     vs_name = gr.Textbox(label="请输入新建知识库名称",
                                          lines=1,
                                          interactive=True)
+                    vs_add = gr.Button(value="添加至知识库选项")
+                    vs_add.click(fn=add_vs_name,
+                                 inputs=[vs_name, vs_list, chatbot],
+                                 outputs=[select_vs, vs_list, chatbot])
                     select_vs.change(fn=change_vs_name_input,
                                      inputs=select_vs,
-                                     outputs=vs_name)
+                                     outputs=[vs_name, vs_add])
                     gr.Markdown("向知识库中添加文件")
                     with gr.Tab("上传文件"):
                         files = gr.File(label="添加文件",
