@@ -24,6 +24,13 @@ llm_model_dict = {
 # LLM model name
 LLM_MODEL = "chatglm-6b"
 
+# Use p-tuning-v2 PrefixEncoder
+USE_PTUNING_V2 = False
+
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+VS_ROOT_PATH = "./vector_store/"
+
+UPLOAD_ROOT_PATH = "./content/"
 

@@ -1,7 +1,8 @@
+import json
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 import torch
 from configs.model_config import LLM_DEVICE
 
@@ -84,19 +85,34 @@ class ChatGLM(LLM):
     def load_model(self,
                    model_name_or_path: str = "THUDM/chatglm-6b",
                    llm_device=LLM_DEVICE,
+                   use_ptuning_v2=False,
                    device_map: Optional[Dict[str, int]] = None,
                    **kwargs):
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
             trust_remote_code=True
         )
+
+        model_config = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=True)
+
+        if use_ptuning_v2:
+            try:
+                prefix_encoder_file = open('ptuning-v2/config.json', 'r')
+                prefix_encoder_config = json.loads(prefix_encoder_file.read())
+                prefix_encoder_file.close()
+                model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
+                model_config.prefix_projection = prefix_encoder_config['prefix_projection']
+            except Exception:
+                print("加载PrefixEncoder config.json失败")
+
         if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
             # 根据当前设备GPU数量决定是否进行多卡部署
             num_gpus = torch.cuda.device_count()
             if num_gpus < 2 and device_map is None:
                 self.model = (
                     AutoModel.from_pretrained(
-                        model_name_or_path, 
+                        model_name_or_path,
+                        config=model_config,
                         trust_remote_code=True, 
                         **kwargs)
                     .half()
@@ -111,12 +127,34 @@ class ChatGLM(LLM):
                     device_map = auto_configure_device_map(num_gpus)
 
                 self.model = dispatch_model(model, device_map=device_map)
+            self.model = (
+                AutoModel.from_pretrained(
+                    model_name_or_path,
+                    config=model_config,
+                    trust_remote_code=True)
+                .half()
+                .cuda()
+            )
         else:
             self.model = (
                 AutoModel.from_pretrained(
                     model_name_or_path,
+                    config=model_config,
                     trust_remote_code=True)
                 .float()
                 .to(llm_device)
             )
+
+        if use_ptuning_v2:
+            try:
+                prefix_state_dict = torch.load('ptuning-v2/pytorch_model.bin')
+                new_prefix_state_dict = {}
+                for k, v in prefix_state_dict.items():
+                    if k.startswith("transformer.prefix_encoder."):
+                        new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
+                self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
+                self.model.transformer.prefix_encoder.float()
+            except Exception:
+                print("加载PrefixEncoder模型参数失败")
+
         self.model = self.model.eval()
