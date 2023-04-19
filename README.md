@@ -115,23 +115,26 @@ Web UI 可以实现如下功能：
 
 ## 路线图
 
-- [x] 实现 langchain + ChatGLM-6B 本地知识应用
-- [x] 基于 langchain 实现非结构化文件接入
-  - [x] .md
-  - [x] .pdf
-  - [x] .docx
-  - [x] .txt
+- [x] Langchain 应用
+  - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
   - [ ] 搜索引擎与本地网页
+  - [ ] Agent 实现
 - [ ] 增加更多 LLM 模型支持
   - [x] THUDM/chatglm-6b
   - [x] THUDM/chatglm-6b-int4
   - [x] THUDM/chatglm-6b-int4-qe
-- [ ] 完善 Web UI DEMO
+- [ ] Web UI
   - [x] 利用 gradio 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
   - [x] 引用标注
+  - [ ] 增加知识库管理
+    - [x] 选择知识库开始问答
+    - [x] 上传文件/文件夹至知识库
+    - [ ] 删除知识库中文件
   - [ ] 利用 streamlit 实现 Web UI Demo
-- [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
+- [ ] 增加 API 支持
+  - [x] 利用 fastapi 实现 API 部署方式
+  - [ ] 实现调用 API 的 web ui DEMO
 
 ## 项目交流群
 

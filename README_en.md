@@ -206,7 +206,14 @@ ChatGLM's answer after using LangChain to access the README.md file of the ChatG
    - [x] THUDM/chatglm-6b-int4
    - [x] THUDM/chatglm-6b-int4-qe
 - [ ] Add Web UI DEMO
-   - [x]  Implement Web UI DEMO using Gradio
+   - [x] Implement Web UI DEMO using Gradio
    - [x] Add output and error messages
-   - [ ] Citation callout
-- [ ] Use FastAPI to implement API deployment method and develop a Web UI DEMO for API calls
+   - [x] Citation callout
+   - [ ] Knowledge base management
+     - [x] QA based on selected knowledge base
+     - [x] Add files/folder to knowledge base
+     - [ ] Add files/folder to knowledge base
+   - [ ] Implement Web UI DEMO using Streamlit
+- [ ] Add support for API deployment
+  - [x] Use fastapi to implement API
+  - [ ] Implement Web UI DEMO for API calls
