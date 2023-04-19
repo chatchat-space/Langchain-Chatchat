@@ -41,7 +41,7 @@ def get_answer(query, vs_path, history, mode):
         history[-1][-1] += source
     else:
         resp = local_doc_qa.llm._call(query)
-        history = history + [[None, resp + "\n如需基于知识库进行问答，请先加载知识库后，再进行提问。"]]
+        history = history + [[query, resp + ("\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")]]
     return history, ""
 
 
@@ -55,10 +55,10 @@ def init_model():
     try:
         local_doc_qa.init_cfg()
         local_doc_qa.llm._call("你好")
-        return """模型已成功加载，请选择文件后点击"加载文件"按钮"""
+        return """模型已成功加载，可以开始对话，或从右侧选择模式后开始对话"""
     except Exception as e:
         print(e)
-        return """模型未成功加载，请重新选择后点击"加载模型"按钮"""
+        return """模型未成功加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
 
 
 def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, history):
@@ -68,10 +68,10 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, to
                               llm_history_len=llm_history_len,
                               use_ptuning_v2=use_ptuning_v2,
                               top_k=top_k)
-        model_status = """模型已成功重新加载，请选择文件后点击"加载文件"按钮"""
+        model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
     except Exception as e:
         print(e)
-        model_status = """模型未成功重新加载，请重新选择后点击"加载模型"按钮"""
+        model_status = """模型未成功重新加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
     return history + [[None, model_status]]
 
 
@@ -94,11 +94,11 @@ def get_vector_store(vs_id, files, history):
     return vs_path, None, history + [[None, file_status]]
 
 
-def change_vs_name_input(vs):
-    if vs == "新建知识库":
-        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False)
+def change_vs_name_input(vs_id):
+    if vs_id == "新建知识库":
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None
     else:
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), VS_ROOT_PATH + vs_id
 
 
 def change_mode(mode):
@@ -135,10 +135,14 @@ webui_title = """
 
 """
 
-init_message = """欢迎使用 langchain-ChatGLM Web UI，开始提问前，请依次如下 3 个步骤：
-1. 选择语言模型、Embedding 模型及相关参数，如果使用 ptuning-v2 方式微调过模型，将 PrefixEncoder 模型放在 ptuning-v2 文件夹里并勾选相关选项，然后点击"重新加载模型"，并等待加载完成提示
-2. 上传或选择已有文件作为本地知识文档输入后点击"重新加载文档"，并等待加载完成提示
-3. 输入要提交的问题后，点击回车提交 """
+init_message = """欢迎使用 langchain-ChatGLM Web UI！
+
+请在右侧切换模式，目前支持直接与 LLM 模型对话或基于本地知识库问答。
+
+知识库问答模式中，选择知识库名称后，即可开始问答，如有需要可以在选择知识库名称后上传文件/文件夹至知识库。
+
+知识库暂不支持文件删除，该功能将在后续版本中推出。
+"""
 
 model_status = init_model()
 
@@ -176,8 +180,9 @@ with gr.Blocks(css=block_css) as demo:
                                  inputs=[vs_name, vs_list, chatbot],
                                  outputs=[select_vs, vs_list, chatbot])
 
-                    file2vs = gr.Box(visible=False)
+                    file2vs = gr.Column(visible=False)
                     with file2vs:
+                        # load_vs = gr.Button("加载知识库")
                         gr.Markdown("向知识库中添加文件")
                         with gr.Tab("上传文件"):
                             files = gr.File(label="添加文件",
@@ -185,17 +190,18 @@ with gr.Blocks(css=block_css) as demo:
                                             file_count="multiple",
                                             show_label=False
                                             )
-                            load_file_button = gr.Button("上传文件")
+                            load_file_button = gr.Button("上传文件并加载知识库")
                         with gr.Tab("上传文件夹"):
                             folder_files = gr.File(label="添加文件",
                                                    # file_types=['.txt', '.md', '.docx', '.pdf'],
                                                    file_count="directory",
                                                    show_label=False
                                                    )
-                            load_folder_button = gr.Button("上传文件夹")
+                            load_folder_button = gr.Button("上传文件夹并加载知识库")
+                    # load_vs.click(fn=)
                     select_vs.change(fn=change_vs_name_input,
                                      inputs=select_vs,
-                                     outputs=[vs_name, vs_add, file2vs])
+                                     outputs=[vs_name, vs_add, file2vs, vs_path])
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     load_file_button.click(get_vector_store,
                                            show_progress=True,

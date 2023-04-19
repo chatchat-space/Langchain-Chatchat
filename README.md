@@ -72,7 +72,7 @@ $ python webui.py
 注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
 
 执行后效果如下图所示：
-![webui](img/ui1.png)
+![webui](img/webui_0419.png)
 Web UI 可以实现如下功能：
 
 1. 运行前自动读取`configs/model_config.py`中`LLM`及`Embedding`模型枚举及默认模型设置运行模型，如需重新加载模型，可在界面重新选择后点击`重新加载模型`进行模型加载；
@@ -118,7 +118,7 @@ Web UI 可以实现如下功能：
 - [x] 实现 langchain + ChatGLM-6B 本地知识应用
 - [x] 基于 langchain 实现非结构化文件接入
   - [x] .md
-  - [x] .pdf(需要按照常见问题 Q2 中描述进行`detectron2`的安装)
+  - [x] .pdf
   - [x] .docx
   - [x] .txt
   - [ ] 搜索引擎与本地网页
@@ -126,10 +126,11 @@ Web UI 可以实现如下功能：
   - [x] THUDM/chatglm-6b
   - [x] THUDM/chatglm-6b-int4
   - [x] THUDM/chatglm-6b-int4-qe
-- [ ] 增加 Web UI DEMO
+- [ ] 完善 Web UI DEMO
   - [x] 利用 gradio 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
-  - [ ] 引用标注
+  - [x] 引用标注
+  - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
 
 ## 项目交流群
