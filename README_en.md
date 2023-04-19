@@ -60,7 +60,7 @@
 - ChatGLM-6B Model Hardware Requirements
   
      | **Quantization Level** | **Minimum GPU Memory** (inference) | **Minimum GPU Memory** (efficient parameter fine-tuning) |
-     | -------------- | ------------------------- | -------- ------------------------- |
+     | -------------- | ------------------------- | --------------------------------- |
      | FP16 (no quantization) | 13 GB | 14 GB |
      | INT8 | 8 GB | 9 GB |
      | INT4 | 6 GB | 7 GB |
