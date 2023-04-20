@@ -20,9 +20,15 @@ $ pip install -e .
 
 Q3: 使用过程中 Python 包`nltk`发生了`Resource punkt not found.`报错，该如何解决？
 
-A3: https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `nltk_data/tokenizers` 存储路径下。
+A3: 方法一：https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip 中的 `packages/tokenizers` 解压，放到  `nltk_data/tokenizers` 存储路径下。
 
  `nltk_data` 存储路径可以通过 `nltk.data.path` 查询。
+ 
+ 方法二：执行python代码
+``` 
+import nltk
+nltk.download()
+``` 
 
 ---
 
@@ -31,7 +37,8 @@ Q4: 使用过程中 Python 包`nltk`发生了`Resource averaged_perceptron_tagge
 A4: 方法一：将 https://github.com/nltk/nltk_data/blob/gh-pages/packages/taggers/averaged_perceptron_tagger.zip 下载，解压放到 `nltk_data/taggers` 存储路径下。
 
  `nltk_data` 存储路径可以通过 `nltk.data.path` 查询。  
-A4: 方法二：科学上网，用梯子，执行 python代码
+ 
+方法二：执行python代码
 ``` 
 import nltk
 nltk.download()
@@ -109,6 +116,6 @@ embedding_model_dict = {
 
 Q10: 执行`python cli_demo.py`过程中，显卡内存爆了，提示"OutOfMemoryError: CUDA out of memory"
 
-A10: 将VECTOR_SEARCH_TOP_K和LLM_HISTORY_LEN的值设小一点，比如VECTOR_SEARCH_TOP_K=5和LLM_HISTORY_LEN=2，这样由query和context拼接得到的prompt会变短，会减少内存的占用。
+A10: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。
 
 ---
