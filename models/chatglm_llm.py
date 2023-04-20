@@ -127,14 +127,6 @@ class ChatGLM(LLM):
                     device_map = auto_configure_device_map(num_gpus)
 
                 self.model = dispatch_model(model, device_map=device_map)
-            self.model = (
-                AutoModel.from_pretrained(
-                    model_name_or_path,
-                    config=model_config,
-                    trust_remote_code=True)
-                .half()
-                .cuda()
-            )
         else:
             self.model = (
                 AutoModel.from_pretrained(
