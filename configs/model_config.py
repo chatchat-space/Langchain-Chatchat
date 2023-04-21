@@ -19,10 +19,11 @@ llm_model_dict = {
     "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b": "THUDM/chatglm-6b",
+    "chatyuan": "ClueAI/ChatYuan-large-v2",
 }
 
 # LLM model name
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "chatyuan" #"chatglm-6b"
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
