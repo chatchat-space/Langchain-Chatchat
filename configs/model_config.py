@@ -25,6 +25,7 @@ llm_model_dict = {
     "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b": "THUDM/chatglm-6b",
+    "chatyuan": "ClueAI/ChatYuan-large-v2",
 }
 
 # LLM model name
@@ -35,3 +36,8 @@ USE_PTUNING_V2 = False
 
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+VS_ROOT_PATH = "./vector_store/"
+
+UPLOAD_ROOT_PATH = "./content/"
+

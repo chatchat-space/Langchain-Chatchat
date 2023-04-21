@@ -54,10 +54,11 @@ async def upload_file(UserFile: UploadFile=File(...)):
         # print(UserFile.filename)
         with open(filepath, 'wb') as f:
             f.write(content)
-        vs_path = local_doc_qa.init_knowledge_vector_store(filepath)
+        vs_path, files = local_doc_qa.init_knowledge_vector_store(filepath)
         response = {
-            'msg': 'seccessful',
-            'status': 1
+            'msg': 'seccess' if len(files)>0 else 'fail',
+            'status': 1 if len(files)>0 else 0,
+            'loaded_files': files
         }
         
     except Exception as err:

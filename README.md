@@ -4,11 +4,11 @@
 
 🌍 [_READ THIS IN ENGLISH_](README_en.md)
 
-🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。
+🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。增加 [clue-ai/ChatYuan](https://github.com/clue-ai/ChatYuan) 项目的模型 [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2) 的支持。
 
 💡 受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai) 和 [AlexZhangji](https://github.com/AlexZhangji) 创建的 [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) 启发，建立了全部基于开源模型实现的本地知识问答应用。
 
-✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
+✅ 本项目中 Embedding 默认选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 默认选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
 ⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的`top k`个 -> 匹配出的文本作为上下文和问题一起添加到`prompt`中 -> 提交给`LLM`生成回答。
 
@@ -22,9 +22,7 @@
 
 参见 [变更日志](docs/CHANGELOG.md)。
 
-## 使用方式
-
-### 硬件需求
+## 硬件需求
 
 - ChatGLM-6B 模型硬件需求
   
@@ -38,9 +36,19 @@
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 
+## Docker 部署
+
+```commandline
+$ docker build -t chatglm:v1.0 .
+
+$ docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
+```
+
+## 开发部署
+
 ### 软件需求
 
-本项目已在 Python 3.8，CUDA 11.7 环境下完成测试。
+本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
 ### 从本地加载模型
 
@@ -72,7 +80,7 @@ $ python webui.py
 注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
 
 执行后效果如下图所示：
-![webui](img/ui1.png)
+![webui](img/webui_0419.png)
 Web UI 可以实现如下功能：
 
 1. 运行前自动读取`configs/model_config.py`中`LLM`及`Embedding`模型枚举及默认模型设置运行模型，如需重新加载模型，可在界面重新选择后点击`重新加载模型`进行模型加载；
@@ -115,25 +123,29 @@ Web UI 可以实现如下功能：
 
 ## 路线图
 
-- [x] 实现 langchain + ChatGLM-6B 本地知识应用
-- [x] 基于 langchain 实现非结构化文件接入
-  - [x] .md
-  - [x] .pdf(需要按照常见问题 Q2 中描述进行`detectron2`的安装)
-  - [x] .docx
-  - [x] .txt
+- [x] Langchain 应用
+  - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
   - [ ] 搜索引擎与本地网页
+  - [ ] Agent 实现
 - [ ] 增加更多 LLM 模型支持
   - [x] THUDM/chatglm-6b
   - [x] THUDM/chatglm-6b-int4
   - [x] THUDM/chatglm-6b-int4-qe
-- [ ] 增加 Web UI DEMO
+  - [x] ClueAI/ChatYuan-large-v2
+- [ ] Web UI
   - [x] 利用 gradio 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
-  - [ ] 引用标注
-- [ ] 利用 fastapi 实现 API 部署方式，并实现调用 API 的 web ui DEMO
+  - [x] 引用标注
+  - [ ] 增加知识库管理
+    - [x] 选择知识库开始问答
+    - [x] 上传文件/文件夹至知识库
+    - [ ] 删除知识库中文件
+  - [ ] 利用 streamlit 实现 Web UI Demo
+- [ ] 增加 API 支持
+  - [x] 利用 fastapi 实现 API 部署方式
+  - [ ] 实现调用 API 的 web ui DEMO
 
 ## 项目交流群
-
-![二维码](img/qr_code.jpg)
+![二维码](img/qr_code_4.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

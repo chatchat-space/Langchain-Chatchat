@@ -44,10 +44,12 @@ class LocalDocQA:
                  llm_model: str = LLM_MODEL,
                  llm_device=LLM_DEVICE,
                  top_k=VECTOR_SEARCH_TOP_K,
+                 use_ptuning_v2: bool = USE_PTUNING_V2
                  ):
         self.llm = ChatGLM()
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
-                            llm_device=llm_device)
+                            llm_device=llm_device,
+                            use_ptuning_v2=use_ptuning_v2)
         self.llm.history_len = llm_history_len
 
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model], )
@@ -56,7 +58,9 @@ class LocalDocQA:
         self.top_k = top_k
 
     def init_knowledge_vector_store(self,
-                                    filepath: str or List[str]):
+                                    filepath: str or List[str],
+                                    vs_path: str or os.PathLike = None):
+        loaded_files = []
         if isinstance(filepath, str):
             if not os.path.exists(filepath):
                 print("路径不存在")
@@ -66,6 +70,7 @@ class LocalDocQA:
                 try:
                     docs = load_file(filepath)
                     print(f"{file} 已成功加载")
+                    loaded_files.append(filepath)
                 except Exception as e:
                     print(e)
                     print(f"{file} 未能成功加载")
@@ -77,6 +82,7 @@ class LocalDocQA:
                     try:
                         docs += load_file(fullfilepath)
                         print(f"{file} 已成功加载")
+                        loaded_files.append(fullfilepath)
                     except Exception as e:
                         print(e)
                         print(f"{file} 未能成功加载")
@@ -86,14 +92,21 @@ class LocalDocQA:
                 try:
                     docs += load_file(file)
                     print(f"{file} 已成功加载")
+                    loaded_files.append(file)
                 except Exception as e:
                     print(e)
                     print(f"{file} 未能成功加载")
 
-        vector_store = FAISS.from_documents(docs, self.embeddings)
-        vs_path = f"""./vector_store/{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
+        if vs_path and os.path.isdir(vs_path):
+            vector_store = FAISS.load_local(vs_path, self.embeddings)
+            vector_store.add_documents(docs)
+        else:
+            if not vs_path:
+                vs_path = f"""{VS_ROOT_PATH}{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
+            vector_store = FAISS.from_documents(docs, self.embeddings)
+
         vector_store.save_local(vs_path)
-        return vs_path if len(docs) > 0 else None
+        return vs_path if len(docs) > 0 else None, loaded_files
 
     def get_knowledge_based_answer(self,
                                    query,
@@ -123,7 +136,7 @@ class LocalDocQA:
         )
 
         knowledge_chain.return_source_documents = True
-
+        
         result = knowledge_chain({"query": query})
         self.llm.history[-1][0] = query
         return result, self.llm.history

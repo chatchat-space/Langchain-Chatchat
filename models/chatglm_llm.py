@@ -1,7 +1,7 @@
 import sys
-
 sys.path.append("..")  # 将父目录放入系统路径中
 
+import json
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
@@ -11,6 +11,8 @@ from transformers import AutoTokenizer, AutoModel, AutoConfig
 import torch
 from configs import *
 from enum import Enum
+
+from typing import Dict, Tuple, Union, Optional
 
 DEVICE = LLM_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -29,7 +31,38 @@ def torch_gc():
             torch.cuda.ipc_collect()
 
 
-class ChatGLM():
+
+def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
+    # transformer.word_embeddings 占用1层
+    # transformer.final_layernorm 和 lm_head 占用1层
+    # transformer.layers 占用 28 层
+    # 总共30层分配到num_gpus张卡上
+    num_trans_layers = 28
+    per_gpu_layers = 30 / num_gpus
+
+    # bugfix: 在linux中调用torch.embedding传入的weight,input不在同一device上,导致RuntimeError
+    # windows下 model.device 会被设置成 transformer.word_embeddings.device
+    # linux下 model.device 会被设置成 lm_head.device
+    # 在调用chat或者stream_chat时,input_ids会被放到model.device上
+    # 如果transformer.word_embeddings.device和model.device不同,则会导致RuntimeError
+    # 因此这里将transformer.word_embeddings,transformer.final_layernorm,lm_head都放到第一张卡上
+    device_map = {'transformer.word_embeddings': 0,
+                  'transformer.final_layernorm': 0, 'lm_head': 0}
+
+    used = 2
+    gpu_target = 0
+    for i in range(num_trans_layers):
+        if used >= per_gpu_layers:
+            gpu_target += 1
+            used = 0
+        assert gpu_target < num_gpus
+        device_map[f'transformer.layers.{i}'] = gpu_target
+        used += 1
+
+    return device_map
+
+
+class ChatGLM(LLM):
     max_token: int = 10000
     temperature: float = 0.01
     top_p = 0.9
@@ -66,10 +99,25 @@ class ChatGLM():
             self.history = self.history + [[None, response]]
             return response
 
+    def chat(self,
+              prompt: str) -> str:
+        response, _ = self.model.chat(
+            self.tokenizer,
+            prompt,
+            history=[],#self.history[-self.history_len:] if self.history_len>0 else 
+            max_length=self.max_token,
+            temperature=self.temperature,
+        )
+        torch_gc()
+        self.history = self.history+[[None, response]]
+        return response
+        
     def load_model(self,
                    model_name_or_path: str = "THUDM/chatglm-6b",
                    llm_device=LLM_DEVICE,
-                   use_ptuning_v2=False):
+                   use_ptuning_v2=False,
+                   device_map: Optional[Dict[str, int]] = None,
+                   **kwargs):
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_name_or_path,
             trust_remote_code=True
@@ -88,14 +136,27 @@ class ChatGLM():
                 print("加载PrefixEncoder config.json失败")
 
         if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
-            self.model = (
-                AutoModel.from_pretrained(
-                    model_name_or_path,
-                    config=model_config,
-                    trust_remote_code=True)
-                .half()
-                .cuda()
-            )
+            # 根据当前设备GPU数量决定是否进行多卡部署
+            num_gpus = torch.cuda.device_count()
+            if num_gpus < 2 and device_map is None:
+                self.model = (
+                    AutoModel.from_pretrained(
+                        model_name_or_path,
+                        config=model_config,
+                        trust_remote_code=True, 
+                        **kwargs)
+                    .half()
+                    .cuda()
+                )
+            else:
+                from accelerate import dispatch_model
+
+                model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True, **kwargs).half()
+                # 可传入device_map自定义每张卡的部署情况
+                if device_map is None:
+                    device_map = auto_configure_device_map(num_gpus)
+
+                self.model = dispatch_model(model, device_map=device_map)
         else:
             self.model = (
                 AutoModel.from_pretrained(

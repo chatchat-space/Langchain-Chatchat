@@ -60,7 +60,7 @@
 - ChatGLM-6B Model Hardware Requirements
   
      | **Quantization Level** | **Minimum GPU Memory** (inference) | **Minimum GPU Memory** (efficient parameter fine-tuning) |
-     | -------------- | ------------------------- | -------- ------------------------- |
+     | -------------- | ------------------------- | --------------------------------- |
      | FP16 (no quantization) | 13 GB | 14 GB |
      | INT8 | 8 GB | 9 GB |
      | INT4 | 6 GB | 7 GB |
@@ -116,7 +116,7 @@ python webui.py
 Note: Before executing, check the remaining space in the `$HOME/.cache/huggingface/` folder, at least 15G.
 
 The resulting interface is shown below:
-![webui](img/ui1.png)
+![webui](img/webui_0419.png)
 The Web UI supports the following features:
 
 1. Automatically reads the `LLM` and `embedding` model enumerations in `configs/model_config.py`, allowing you to select and reload the model by clicking `重新加载模型`.
@@ -206,7 +206,14 @@ ChatGLM's answer after using LangChain to access the README.md file of the ChatG
    - [x] THUDM/chatglm-6b-int4
    - [x] THUDM/chatglm-6b-int4-qe
 - [ ] Add Web UI DEMO
-   - [x]  Implement Web UI DEMO using Gradio
+   - [x] Implement Web UI DEMO using Gradio
    - [x] Add output and error messages
-   - [ ] Citation callout
-- [ ] Use FastAPI to implement API deployment method and develop a Web UI DEMO for API calls
+   - [x] Citation callout
+   - [ ] Knowledge base management
+     - [x] QA based on selected knowledge base
+     - [x] Add files/folder to knowledge base
+     - [ ] Add files/folder to knowledge base
+   - [ ] Implement Web UI DEMO using Streamlit
+- [ ] Add support for API deployment
+  - [x] Use fastapi to implement API
+  - [ ] Implement Web UI DEMO for API calls
