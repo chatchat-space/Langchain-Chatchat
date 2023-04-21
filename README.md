@@ -1,10 +1,11 @@
-# 基于本地知识的 ChatGLM 应用实现
+# 基于本地知识的 ChatGLM 应用实现 增加ChatYuan模型的支持（Docker CPU model3.2G 响应更快）
 
 ## 介绍
 
 🌍 [_READ THIS IN ENGLISH_](README_en.md)
 
 🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。
+💡 增加[clue-ai/ChatYuan](https://github.com/clue-ai/ChatYuan) 项目的模型 [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)的支持，模型更小，响应更快
 
 💡 受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai) 和 [AlexZhangji](https://github.com/AlexZhangji) 创建的 [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) 启发，建立了全部基于开源模型实现的本地知识问答应用。
 
@@ -120,6 +121,7 @@ Web UI 可以实现如下功能：
   - [ ] 搜索引擎与本地网页
   - [ ] Agent 实现
 - [ ] 增加更多 LLM 模型支持
+  - [x] ClueAI/ChatYuan-large-v2
   - [x] THUDM/chatglm-6b
   - [x] THUDM/chatglm-6b-int4
   - [x] THUDM/chatglm-6b-int4-qe
