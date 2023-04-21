@@ -138,6 +138,12 @@ Web UI 可以实现如下功能：
   - [x] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 web ui DEMO
 
+## Docker
+
+docker build -t chatglm:v1.0 .
+
+docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
+
 ## 项目交流群
 ![二维码](img/qr_code_4.jpg)
 
