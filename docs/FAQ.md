@@ -95,7 +95,7 @@ Q9: 下载完模型后，如何修改代码以执行本地模型？
 
 A9: 模型下载完成后，请在 [configs/model_config.py](../configs/model_config.py) 文件中，对`embedding_model_dict`和`llm_model_dict`参数进行修改，如把`llm_model_dict`从
 
-```json
+```python
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
@@ -105,7 +105,7 @@ embedding_model_dict = {
 
 修改为
 
-```json
+```python
 embedding_model_dict = {
                         "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
                         "ernie-base": "nghuyong/ernie-3.0-base-zh",
