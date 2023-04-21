@@ -133,7 +133,7 @@ class LocalDocQA:
         )
 
         knowledge_chain.return_source_documents = True
+        
         result = knowledge_chain({"query": query})
-            
         self.llm.history[-1][0] = query
         return result, self.llm.history
