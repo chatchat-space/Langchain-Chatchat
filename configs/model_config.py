@@ -23,7 +23,7 @@ llm_model_dict = {
 }
 
 # LLM model name
-LLM_MODEL = "chatyuan" #"chatglm-6b"
+LLM_MODEL = "chatglm-6b"
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
