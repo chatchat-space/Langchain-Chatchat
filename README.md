@@ -1,15 +1,14 @@
-# 基于本地知识的 ChatGLM 应用实现 增加ChatYuan模型的支持（Docker CPU model3.2G 响应更快）
+# 基于本地知识的 ChatGLM 应用实现
 
 ## 介绍
 
 🌍 [_READ THIS IN ENGLISH_](README_en.md)
 
-🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。
-💡 增加[clue-ai/ChatYuan](https://github.com/clue-ai/ChatYuan) 项目的模型 [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)的支持，模型更小，响应更快
+🤖️ 一种利用 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) + [langchain](https://github.com/hwchase17/langchain) 实现的基于本地知识的 ChatGLM 应用。增加 [clue-ai/ChatYuan](https://github.com/clue-ai/ChatYuan) 项目的模型 [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2) 的支持。
 
 💡 受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai) 和 [AlexZhangji](https://github.com/AlexZhangji) 创建的 [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) 启发，建立了全部基于开源模型实现的本地知识问答应用。
 
-✅ 本项目中 Embedding 选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
+✅ 本项目中 Embedding 默认选用的是 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main)，LLM 默认选用的是 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B)。依托上述模型，本项目可实现全部使用**开源**模型**离线私有部署**。
 
 ⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的`top k`个 -> 匹配出的文本作为上下文和问题一起添加到`prompt`中 -> 提交给`LLM`生成回答。
 
@@ -23,9 +22,7 @@
 
 参见 [变更日志](docs/CHANGELOG.md)。
 
-## 使用方式
-
-### 硬件需求
+## 硬件需求
 
 - ChatGLM-6B 模型硬件需求
   
@@ -39,9 +36,19 @@
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 
+## Docker 部署
+
+```commandline
+$ docker build -t chatglm:v1.0 .
+
+$ docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
+```
+
+## 开发部署
+
 ### 软件需求
 
-本项目已在 Python 3.8，CUDA 11.7 环境下完成测试。
+本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
 ### 从本地加载模型
 
@@ -121,10 +128,10 @@ Web UI 可以实现如下功能：
   - [ ] 搜索引擎与本地网页
   - [ ] Agent 实现
 - [ ] 增加更多 LLM 模型支持
-  - [x] ClueAI/ChatYuan-large-v2
   - [x] THUDM/chatglm-6b
   - [x] THUDM/chatglm-6b-int4
   - [x] THUDM/chatglm-6b-int4-qe
+  - [x] ClueAI/ChatYuan-large-v2
 - [ ] Web UI
   - [x] 利用 gradio 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
@@ -137,12 +144,6 @@ Web UI 可以实现如下功能：
 - [ ] 增加 API 支持
   - [x] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 web ui DEMO
-
-## Docker
-
-docker build -t chatglm:v1.0 .
-
-docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
 
 ## 项目交流群
 ![二维码](img/qr_code_4.jpg)
