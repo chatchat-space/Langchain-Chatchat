@@ -82,6 +82,19 @@ class ChatGLM(LLM):
         self.history = self.history+[[None, response]]
         return response
 
+    def chat(self,
+              prompt: str) -> str:
+        response, _ = self.model.chat(
+            self.tokenizer,
+            prompt,
+            history=[],#self.history[-self.history_len:] if self.history_len>0 else 
+            max_length=self.max_token,
+            temperature=self.temperature,
+        )
+        torch_gc()
+        self.history = self.history+[[None, response]]
+        return response
+        
     def load_model(self,
                    model_name_or_path: str = "THUDM/chatglm-6b",
                    llm_device=LLM_DEVICE,
