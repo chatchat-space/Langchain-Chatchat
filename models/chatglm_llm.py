@@ -115,7 +115,8 @@ class ChatGLM(LLM):
                 prefix_encoder_file.close()
                 model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 model_config.prefix_projection = prefix_encoder_config['prefix_projection']
-            except Exception:
+            except Exception as e:
+                print(e)
                 print("加载PrefixEncoder config.json失败")
 
         if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
