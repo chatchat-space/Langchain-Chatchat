@@ -42,7 +42,7 @@ async def get_local_doc_qa():
     
 
 @app.post("/file")
-async def upload_file(UserFile: UploadFile=File(...)):
+async def upload_file(UserFile: UploadFile=File(...),):
     global vs_path
     response = {
         "msg": None,
@@ -67,7 +67,7 @@ async def upload_file(UserFile: UploadFile=File(...)):
     return response 
 
 @app.post("/qa")
-async def get_answer(UserQuery: Query):
+async def get_answer(query: str = ""):
     response = {
         "status": 0,
         "message": "",
@@ -76,7 +76,7 @@ async def get_answer(UserQuery: Query):
     global vs_path
     history = []
     try:
-        resp, history = local_doc_qa.get_knowledge_based_answer(query=UserQuery.query,
+        resp, history = local_doc_qa.get_knowledge_based_answer(query=query,
                                                                 vs_path=vs_path,
                                                                 chat_history=history)
         if REPLY_WITH_SOURCE:
@@ -95,9 +95,9 @@ async def get_answer(UserQuery: Query):
 
 if __name__ == "__main__":
     uvicorn.run(
-        app='api:app', 
+        app=app,
         host='0.0.0.0', 
         port=8100,
-        reload = True,
+        reload=True,
         )
 
