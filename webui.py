@@ -17,10 +17,10 @@ LLM_HISTORY_LEN = 3
 def get_vs_list():
     if not os.path.exists(VS_ROOT_PATH):
         return []
-    return ["新建知识库"] + os.listdir(VS_ROOT_PATH)
+    return os.listdir(VS_ROOT_PATH)
 
 
-vs_list = get_vs_list()
+vs_list = ["新建知识库"] + get_vs_list()
 
 embedding_model_dict_list = list(embedding_model_dict.keys())
 
