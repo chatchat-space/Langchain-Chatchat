@@ -123,7 +123,7 @@ Web UI 可以实现如下功能：
 
 ## 路线图
 
-- [x] Langchain 应用
+- [ ] Langchain 应用
   - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
   - [ ] 搜索引擎与本地网页
   - [ ] Agent 实现
