@@ -66,7 +66,7 @@ $ docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/cod
 
 > 注：鉴于环境部署过程中可能遇到问题，建议首先测试命令行脚本。建议命令行脚本测试可正常运行后再运行 Web UI。
 
-执行 [knowledge_based_chatglm.py](cli_demo.py) 脚本体验**命令行交互**：
+执行 [cli_demo.py](cli_demo.py) 脚本体验**命令行交互**：
 ```shell
 $ python cli_demo.py
 ```

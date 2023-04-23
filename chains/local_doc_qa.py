@@ -95,17 +95,20 @@ class LocalDocQA:
                 except Exception as e:
                     print(e)
                     print(f"{file} 未能成功加载")
+        if len(docs) > 0:
+            if vs_path and os.path.isdir(vs_path):
+                vector_store = FAISS.load_local(vs_path, self.embeddings)
+                vector_store.add_documents(docs)
+            else:
+                if not vs_path:
+                    vs_path = f"""{VS_ROOT_PATH}{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
+                vector_store = FAISS.from_documents(docs, self.embeddings)
 
-        if vs_path and os.path.isdir(vs_path):
-            vector_store = FAISS.load_local(vs_path, self.embeddings)
-            vector_store.add_documents(docs)
+            vector_store.save_local(vs_path)
+            return vs_path, loaded_files
         else:
-            if not vs_path:
-                vs_path = f"""{VS_ROOT_PATH}{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
-            vector_store = FAISS.from_documents(docs, self.embeddings)
-
-        vector_store.save_local(vs_path)
-        return vs_path if len(docs) > 0 else None, loaded_files
+            print("文件均未成功加载，请检查依赖包或替换为其他文件再次上传。")
+            return None, loaded_files
 
     def get_knowledge_based_answer(self,
                                    query,

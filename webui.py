@@ -55,10 +55,18 @@ def init_model():
     try:
         local_doc_qa.init_cfg()
         local_doc_qa.llm._call("你好")
-        return """模型已成功加载，可以开始对话，或从右侧选择模式后开始对话"""
+        reply = """模型已成功加载，可以开始对话，或从右侧选择模式后开始对话"""
+        print(reply)
+        return reply
     except Exception as e:
         print(e)
-        return """模型未成功加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
+        reply = """模型未成功加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
+        if str(e) == "Unknown platform: darwin":
+            print("改报错可能因为您使用的是 macOS 操作系统，需先下载模型至本地后执行 Web UI，具体方法请参考项目 README 中本地部署方法及常见问题："
+                  " https://github.com/imClumsyPanda/langchain-ChatGLM")
+        else:
+            print(reply)
+        return reply
 
 
 def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, history):
@@ -69,9 +77,11 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, to
                               use_ptuning_v2=use_ptuning_v2,
                               top_k=top_k)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
+        print(model_status)
     except Exception as e:
         print(e)
         model_status = """模型未成功重新加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
+        print(model_status)
     return history + [[None, model_status]]
 
 
@@ -91,6 +101,7 @@ def get_vector_store(vs_id, files, history):
     else:
         file_status = "模型未完成加载，请先在加载模型后再导入文件"
         vs_path = None
+    print(file_status)
     return vs_path, None, history + [[None, file_status]]
 
 
@@ -110,11 +121,12 @@ def change_mode(mode):
 
 def add_vs_name(vs_name, vs_list, chatbot):
     if vs_name in vs_list:
-        chatbot = chatbot + [[None, "与已有知识库名称冲突，请重新选择其他名称后提交"]]
+        vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
+        chatbot = chatbot + [[None, vs_status]]
         return gr.update(visible=True), vs_list, chatbot
     else:
-        chatbot = chatbot + [
-            [None, f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """]]
+        vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
+        chatbot = chatbot + [[None, vs_status]]
         return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
 
 
