@@ -72,16 +72,16 @@ class ChatGLM(LLM):
               stream=True) -> str:
         if stream:
             self.history = self.history + [[None, ""]]
-            response, _ = self.model.stream_chat(
+            for response, history in self.model.stream_chat(
                 self.tokenizer,
                 prompt,
                 history=self.history[-self.history_len:] if self.history_len > 0 else [],
                 max_length=self.max_token,
                 temperature=self.temperature,
-            )
-            torch_gc()
-            self.history[-1][-1] = response
-            yield response
+            ):
+                torch_gc()
+                self.history[-1][-1] = response
+                yield response
         else:
             response, _ = self.model.chat(
                 self.tokenizer,

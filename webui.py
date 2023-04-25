@@ -30,19 +30,28 @@ local_doc_qa = LocalDocQA()
 
 
 def get_answer(query, vs_path, history, mode):
-    if vs_path and mode == "知识库问答":
-        resp, history = local_doc_qa.get_knowledge_based_answer(
-            query=query, vs_path=vs_path, chat_history=history)
-        source = "".join([f"""<details> <summary>出处 {i + 1}</summary>
-{doc.page_content}
-
-<b>所属文件：</b>{doc.metadata["source"]}
-</details>""" for i, doc in enumerate(resp["source_documents"])])
-        history[-1][-1] += source
+    if mode == "知识库问答":
+        if vs_path:
+            for resp, history in local_doc_qa.get_knowledge_based_answer(
+                query=query, vs_path=vs_path, chat_history=history):
+    #         source = "".join([f"""<details> <summary>出处 {i + 1}</summary>
+    # {doc.page_content}
+    #
+    # <b>所属文件：</b>{doc.metadata["source"]}
+    # </details>""" for i, doc in enumerate(resp["source_documents"])])
+    #         history[-1][-1] += source
+                yield history, ""
+        else:
+            history = history + [[query, ""]]
+            for resp in local_doc_qa.llm._call(query):
+                history[-1][-1] = resp + (
+                    "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
+                yield history, ""
     else:
-        resp = local_doc_qa.llm._call(query)
-        history = history + [[query, resp + ("\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")]]
-    return history, ""
+        history = history + [[query, ""]]
+        for resp in local_doc_qa.llm._call(query):
+            history[-1][-1] = resp
+            yield history, ""
 
 
 def update_status(history, status):
@@ -62,7 +71,7 @@ def init_model():
         print(e)
         reply = """模型未成功加载，请到页面左上角"模型配置"选项卡中重新选择后点击"加载模型"按钮"""
         if str(e) == "Unknown platform: darwin":
-            print("改报错可能因为您使用的是 macOS 操作系统，需先下载模型至本地后执行 Web UI，具体方法请参考项目 README 中本地部署方法及常见问题："
+            print("该报错可能因为您使用的是 macOS 操作系统，需先下载模型至本地后执行 Web UI，具体方法请参考项目 README 中本地部署方法及常见问题："
                   " https://github.com/imClumsyPanda/langchain-ChatGLM")
         else:
             print(reply)
