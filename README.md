@@ -143,9 +143,9 @@ Web UI 可以实现如下功能：
   - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 增加 API 支持
   - [x] 利用 fastapi 实现 API 部署方式
-  - [ ] 实现调用 API 的 web ui DEMO
+  - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
-![二维码](img/qr_code_6.jpg)
+![二维码](img/qr_code_7.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
