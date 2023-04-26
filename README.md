@@ -127,7 +127,9 @@ Web UI 可以实现如下功能：
 
 - [ ] Langchain 应用
   - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
-  - [ ] 搜索引擎与本地网页
+  - [ ] 搜索引擎与本地网页接入
+  - [ ] 结构化数据接入（如 csv、Excel、SQL 等）
+  - [ ] 知识图谱/图数据库接入
   - [ ] Agent 实现
 - [ ] 增加更多 LLM 模型支持
   - [x] THUDM/chatglm-6b
