@@ -142,7 +142,7 @@ Web UI 可以实现如下功能：
     - [ ] 删除知识库中文件
   - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 增加 API 支持
-  - [x] 利用 fastapi 实现 API 部署方式
+  - [ ] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
