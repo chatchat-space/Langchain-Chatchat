@@ -5,6 +5,7 @@ import os
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
+    "text2vec-base": "shibing624/text2vec-base-chinese",
     "text2vec": "GanymedeNil/text2vec-large-chinese",
 }
 
@@ -16,10 +17,10 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 
 # supported LLM models
 llm_model_dict = {
+    "chatyuan": "ClueAI/ChatYuan-large-v2",
     "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b": "THUDM/chatglm-6b",
-    "chatyuan": "ClueAI/ChatYuan-large-v2",
 }
 
 # LLM model name
