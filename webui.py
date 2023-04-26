@@ -33,23 +33,23 @@ def get_answer(query, vs_path, history, mode):
     if mode == "知识库问答":
         if vs_path:
             for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=query, vs_path=vs_path, chat_history=history):
-    #         source = "".join([f"""<details> <summary>出处 {i + 1}</summary>
-    # {doc.page_content}
-    #
-    # <b>所属文件：</b>{doc.metadata["source"]}
-    # </details>""" for i, doc in enumerate(resp["source_documents"])])
-    #         history[-1][-1] += source
+                    query=query, vs_path=vs_path, chat_history=history):
+                source = "\n\n"
+                source += "".join(
+                    [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
+                     f"""{doc.page_content}\n"""
+                     f"""</details>"""
+                     for i, doc in
+                     enumerate(resp["source_documents"])])
+                history[-1][-1] += source
                 yield history, ""
         else:
-            history = history + [[query, ""]]
-            for resp in local_doc_qa.llm._call(query):
+            for resp, history in local_doc_qa.llm._call(query, history):
                 history[-1][-1] = resp + (
                     "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
                 yield history, ""
     else:
-        history = history + [[query, ""]]
-        for resp in local_doc_qa.llm._call(query):
+        for resp, history in local_doc_qa.llm._call(query, history):
             history[-1][-1] = resp
             yield history, ""
 
@@ -269,9 +269,10 @@ with gr.Blocks(css=block_css) as demo:
                             outputs=chatbot
                             )
 
-demo.queue(concurrency_count=3
-           ).launch(server_name='0.0.0.0',
-                    server_port=7860,
-                    show_api=False,
-                    share=False,
-                    inbrowser=False)
+(demo
+ .queue(concurrency_count=3)
+ .launch(server_name='0.0.0.0',
+         server_port=7860,
+         show_api=False,
+         share=False,
+         inbrowser=False))

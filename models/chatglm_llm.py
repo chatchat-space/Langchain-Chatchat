@@ -74,14 +74,17 @@ class ChatGLM(LLM):
               history: List[List[str]] = [],
               stop: Optional[List[str]] = None) -> str:
         if self.streaming:
-            history = history + [[None, ""]]
-            for stream_resp, history in self.model.stream_chat(
+            for inum, (stream_resp, _) in enumerate(self.model.stream_chat(
                     self.tokenizer,
                     prompt,
-                    history=history[-self.history_len:] if self.history_len > 0 else [],
+                    history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     temperature=self.temperature,
-            ):
+            )):
+                if inum == 0:
+                    history += [[prompt, stream_resp]]
+                else:
+                    history[-1] = [prompt, stream_resp]
                 yield stream_resp, history
 
         else:

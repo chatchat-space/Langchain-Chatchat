@@ -141,7 +141,6 @@ class LocalDocQA:
         if streaming:
             for result, history in self.llm._call(prompt=prompt,
                                                   history=chat_history):
-                history[-1] = list(history[-1])
                 history[-1][0] = query
                 response = {"query": query,
                             "result": result,
@@ -150,7 +149,6 @@ class LocalDocQA:
         else:
             result, history = self.llm._call(prompt=prompt,
                                              history=chat_history)
-            history[-1] = list(history[-1])
             history[-1][0] = query
             response = {"query": query,
                         "result": result,
