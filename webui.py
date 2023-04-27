@@ -26,7 +26,7 @@ embedding_model_dict_list = list(embedding_model_dict.keys())
 
 llm_model_dict_list = list(llm_model_dict.keys())
 
-local_doc_qa = LocalDocQA()
+local_doc_qa = LocalDocQA(top_k=VECTOR_SEARCH_TOP_K, history_len=VECTOR_SEARCH_TOP_K)
 
 
 def get_answer(query, vs_path, history, mode):
