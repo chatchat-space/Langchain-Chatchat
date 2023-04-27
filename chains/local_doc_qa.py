@@ -12,25 +12,20 @@ from typing import List
 from textsplitter import ChineseTextSplitter
 from langchain.docstore.document import Document
 
-# return top-k text chunk from vector store
-VECTOR_SEARCH_TOP_K = 6
-
-# LLM input history length
-LLM_HISTORY_LEN = 3
-
 
 def load_file(filepath):
     if filepath.lower().endswith(".md"):
-        loader = UnstructuredFileLoader(filepath, mode="elements")
+        loader = UnstructuredFileLoader(filepath)
         docs = loader.load()
     elif filepath.lower().endswith(".pdf"):
         loader = UnstructuredFileLoader(filepath)
-        textsplitter = ChineseTextSplitter(pdf=True)
+        textsplitter = ChineseTextSplitter()
         docs = loader.load_and_split(textsplitter)
     else:
-        loader = UnstructuredFileLoader(filepath, mode="elements")
-        textsplitter = ChineseTextSplitter(pdf=False)
+        loader = UnstructuredFileLoader(filepath)
+        textsplitter = ChineseTextSplitter()
         docs = loader.load_and_split(text_splitter=textsplitter)
+    # print(docs)
     return docs
 
 def generate_prompt(related_docs: List[str],
@@ -51,26 +46,24 @@ def get_docs_with_score(docs_with_score):
 class LocalDocQA:
     llm: object = None
     embeddings: object = None
-    top_k: int = VECTOR_SEARCH_TOP_K
-
+    def __init__(self, top_k, history_len):
+        self.top_k=top_k
+        self.llm_history_len = history_len
     def init_cfg(self,
                  embedding_model: str = EMBEDDING_MODEL,
                  embedding_device=EMBEDDING_DEVICE,
-                 llm_history_len: int = LLM_HISTORY_LEN,
                  llm_model: str = LLM_MODEL,
                  llm_device=LLM_DEVICE,
-                 top_k=VECTOR_SEARCH_TOP_K,
+                 top_k=6,
                  use_ptuning_v2: bool = USE_PTUNING_V2
                  ):
         self.llm = ChatGLM()
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
                             llm_device=llm_device,
                             use_ptuning_v2=use_ptuning_v2)
-        self.llm.history_len = llm_history_len
 
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
-        self.top_k = top_k
 
     def init_knowledge_vector_store(self,
                                     filepath: str or List[str],
