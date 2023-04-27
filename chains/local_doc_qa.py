@@ -54,7 +54,7 @@ class LocalDocQA:
                  llm_model: str = LLM_MODEL,
                  llm_device=LLM_DEVICE,
                  top_k=6,
-                 llm_history_len=3,
+                 history_len=3,
                  use_ptuning_v2: bool = USE_PTUNING_V2
                  ):
         self.llm = ChatGLM()
