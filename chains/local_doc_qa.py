@@ -15,17 +15,16 @@ from langchain.docstore.document import Document
 
 def load_file(filepath):
     if filepath.lower().endswith(".md"):
-        loader = UnstructuredFileLoader(filepath)
+        loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
     elif filepath.lower().endswith(".pdf"):
         loader = UnstructuredFileLoader(filepath)
-        textsplitter = ChineseTextSplitter()
+        textsplitter = ChineseTextSplitter(pdf=True)
         docs = loader.load_and_split(textsplitter)
     else:
-        loader = UnstructuredFileLoader(filepath)
-        textsplitter = ChineseTextSplitter()
+        loader = UnstructuredFileLoader(filepath, mode="elements")
+        textsplitter = ChineseTextSplitter(pdf=False)
         docs = loader.load_and_split(text_splitter=textsplitter)
-    # print(docs)
     return docs
 
 def generate_prompt(related_docs: List[str],
