@@ -18,6 +18,8 @@ COPY requirements.txt /chatGLM/
 
 COPY cli_demo.py /chatGLM/
 
+COPY textsplitter /chatGLM/
+
 COPY webui.py /chatGLM/
 
 WORKDIR /chatGLM
