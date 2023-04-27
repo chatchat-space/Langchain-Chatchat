@@ -15,7 +15,7 @@ LLM_HISTORY_LEN = 3
 REPLY_WITH_SOURCE = True
 
 if __name__ == "__main__":
-    local_doc_qa = LocalDocQA()
+    local_doc_qa = LocalDocQA(top_k=VECTOR_SEARCH_TOP_K, history_len=VECTOR_SEARCH_TOP_K)
     local_doc_qa.init_cfg(llm_model=LLM_MODEL,
                           embedding_model=EMBEDDING_MODEL,
                           embedding_device=EMBEDDING_DEVICE,
