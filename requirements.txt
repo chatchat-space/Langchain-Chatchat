@@ -1,4 +1,4 @@
-langchain>=0.0.146
+langchain==0.0.146
 transformers==4.27.1
 unstructured[local-inference]
 layoutparser[layoutmodels,tesseract]
@@ -9,6 +9,5 @@ icetk
 cpm_kernels
 faiss-cpu
 accelerate
-pycocotools
 gradio==3.24.1
 #detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2
