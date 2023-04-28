@@ -1,4 +1,4 @@
-# settings for langchain-ChatGLM
+# 配置文件格式更详细使用请参考 https://www.dynaconf.com/
 # Embedding model name
 embedding_model: "text2vec"
 # LLM model name
@@ -11,8 +11,8 @@ chunk_size: 500
 prompt_template: '基于以下已知信息，简洁和专业的来回答用户的问题，问题是"{question}"。如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。已知内容如下:
 {context}'
 
-vs_root_path: ./vector_store
-upload_root_path: ./content
+vs_root_path: vector_store
+upload_root_path: content
 
 embedding_model_dict:
   "ernie-tiny": "nghuyong/ernie-3.0-nano-zh"
