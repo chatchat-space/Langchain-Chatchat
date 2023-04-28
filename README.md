@@ -37,12 +37,22 @@
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 
 ## Docker 部署
-
-```commandline
-$ docker build -t chatglm:v1.0 .
-
-$ docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
+为了能让容器使用主机GPU资源，需要在主机上安装 [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)。具体安装步骤如下：
+```shell
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit-base
+sudo systemctl daemon-reload 
+sudo systemctl restart docker
 ```
+安装完成后，可以使用以下命令编译镜像和启动容器：
+```
+docker build -t chatglm-cuda:latest .
+docker run --gpus all -d --name chatglm -p 7860:7860  chatglm-cuda:latest
+
+#若要使用离线模型，请配置好模型路径，然后此repo挂载到Container
+docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatGLM:/chatGLM  chatglm-cuda:latest
+```
+
 
 ## 开发部署
 
