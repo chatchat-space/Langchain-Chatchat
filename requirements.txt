@@ -10,5 +10,6 @@ cpm_kernels
 faiss-cpu
 accelerate
 pycocotools
+dynaconf
 gradio==3.24.1
 #detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2

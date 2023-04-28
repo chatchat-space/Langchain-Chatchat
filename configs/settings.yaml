@@ -1,0 +1,31 @@
+# settings for langchain-ChatGLM
+# Embedding model name
+embedding_model: "text2vec"
+# LLM model name
+llm_model: "chatglm-6b"
+# Use p-tuning-v2 PrefixEncoder
+use_ptuning_v2: false
+# 匹配后单段上下文长度
+chunk_size: 500
+# Prompt模板
+prompt_template: '基于以下已知信息，简洁和专业的来回答用户的问题，问题是"{question}"。如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。已知内容如下:
+{context}'
+
+vs_root_path: ./vector_store
+upload_root_path: ./content
+
+embedding_model_dict:
+  "ernie-tiny": "nghuyong/ernie-3.0-nano-zh"
+  "ernie-base": "nghuyong/ernie-3.0-base-zh"
+  "text2vec-base": "shibing624/text2vec-base-chinese"
+  "text2vec": "GanymedeNil/text2vec-large-chinese"
+
+llm_model_dict:
+  "chatyuan": "ClueAI/ChatYuan-large-v2"
+  "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe"
+  "chatglm-6b-int4": "THUDM/chatglm-6b-int4"
+  "chatglm-6b-int8": "THUDM/chatglm-6b-int8"
+  "chatglm-6b": "THUDM/chatglm-6b"
+
+
+

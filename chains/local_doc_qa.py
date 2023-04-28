@@ -32,7 +32,7 @@ def load_file(filepath):
 
 def generate_prompt(related_docs: List[str],
                     query: str,
-                    prompt_template=PROMPT_TEMPLATE) -> str:
+                    prompt_template=settings.PROMPT_TEMPLATE) -> str:
     context = "\n".join([doc.page_content for doc in related_docs])
     prompt = prompt_template.replace("{question}", query).replace("{context}", context)
     return prompt
@@ -108,24 +108,24 @@ class LocalDocQA:
     llm: object = None
     embeddings: object = None
     top_k: int = VECTOR_SEARCH_TOP_K
-    chunk_size: int = CHUNK_SIZE
+    chunk_size: int = settings.CHUNK_SIZE
 
     def init_cfg(self,
-                 embedding_model: str = EMBEDDING_MODEL,
+                 embedding_model: str = settings.EMBEDDING_MODEL,
                  embedding_device=EMBEDDING_DEVICE,
                  llm_history_len: int = LLM_HISTORY_LEN,
-                 llm_model: str = LLM_MODEL,
+                 llm_model: str = settings.LLM_MODEL,
                  llm_device=LLM_DEVICE,
                  top_k=VECTOR_SEARCH_TOP_K,
-                 use_ptuning_v2: bool = USE_PTUNING_V2
+                 use_ptuning_v2: bool = settings.USE_PTUNING_V2
                  ):
         self.llm = ChatGLM()
-        self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
+        self.llm.load_model(model_name_or_path=settings.llm_model_dict[llm_model],
                             llm_device=llm_device,
                             use_ptuning_v2=use_ptuning_v2)
         self.llm.history_len = llm_history_len
 
-        self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
+        self.embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
 

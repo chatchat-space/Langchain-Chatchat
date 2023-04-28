@@ -1,5 +1,4 @@
 import gradio as gr
-import os
 import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
@@ -22,9 +21,9 @@ def get_vs_list():
 
 vs_list = ["新建知识库"] + get_vs_list()
 
-embedding_model_dict_list = list(embedding_model_dict.keys())
+embedding_model_dict_list = list(settings.embedding_model_dict.keys())
 
-llm_model_dict_list = list(llm_model_dict.keys())
+llm_model_dict_list = list(settings.llm_model_dict.keys())
 
 local_doc_qa = LocalDocQA()
 
@@ -241,7 +240,7 @@ with gr.Blocks(css=block_css) as demo:
     with gr.Tab("模型配置"):
         llm_model = gr.Radio(llm_model_dict_list,
                              label="LLM 模型",
-                             value=LLM_MODEL,
+                             value=settings.LLM_MODEL,
                              interactive=True)
         llm_history_len = gr.Slider(0,
                                     10,
@@ -249,12 +248,12 @@ with gr.Blocks(css=block_css) as demo:
                                     step=1,
                                     label="LLM 对话轮数",
                                     interactive=True)
-        use_ptuning_v2 = gr.Checkbox(USE_PTUNING_V2,
+        use_ptuning_v2 = gr.Checkbox(settings.USE_PTUNING_V2,
                                      label="使用p-tuning-v2微调过的模型",
                                      interactive=True)
         embedding_model = gr.Radio(embedding_model_dict_list,
                                    label="Embedding 模型",
-                                   value=EMBEDDING_MODEL,
+                                   value=settings.EMBEDDING_MODEL,
                                    interactive=True)
         top_k = gr.Slider(1,
                           20,
