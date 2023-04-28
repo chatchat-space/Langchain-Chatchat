@@ -1,6 +1,8 @@
 langchain>=0.0.146
 transformers==4.27.1
 unstructured[local-inference]
+wheel
+pexpect
 layoutparser[layoutmodels,tesseract]
 nltk
 sentence-transformers
