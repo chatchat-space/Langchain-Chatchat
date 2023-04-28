@@ -1,9 +1,8 @@
-FROM python:3.8-slim
+FROM python:3.8
 
 MAINTAINER "chatGLM"
 
 RUN useradd -m chatglm
-USER chatglm
 WORKDIR /home/chatglm
 
 Add . /home/chatglm
