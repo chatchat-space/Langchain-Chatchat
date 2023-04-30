@@ -112,6 +112,11 @@ Note: When using langchain.document_loaders.UnstructuredFileLoader for unstructu
 Execute [webui.py](webui.py) script to experience **Web interaction** <img src="https://img.shields.io/badge/Version-0.1-brightgreen">
 ```commandline
 python webui.py
+
+```
+Or execute [api.py](api.py) script to deploy web api.
+```shell
+$ python api.py
 ```
 Note: Before executing, check the remaining space in the `$HOME/.cache/huggingface/` folder, at least 15G.
 
