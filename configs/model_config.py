@@ -27,6 +27,9 @@ llm_model_dict = {
 # LLM model name
 LLM_MODEL = "chatglm-6b"
 
+# LLM streaming reponse
+STREAMING = True
+
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
 

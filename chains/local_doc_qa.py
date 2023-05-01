@@ -116,10 +116,12 @@ class LocalDocQA:
                  llm_history_len: int = LLM_HISTORY_LEN,
                  llm_model: str = LLM_MODEL,
                  llm_device=LLM_DEVICE,
+                 streaming=STREAMING,
                  top_k=VECTOR_SEARCH_TOP_K,
                  use_ptuning_v2: bool = USE_PTUNING_V2
                  ):
         self.llm = ChatGLM()
+        self.llm.streaming = streaming
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
                             llm_device=llm_device,
                             use_ptuning_v2=use_ptuning_v2)
@@ -186,9 +188,7 @@ class LocalDocQA:
     def get_knowledge_based_answer(self,
                                    query,
                                    vs_path,
-                                   chat_history=[],
-                                   streaming=True):
-        self.llm.streaming = streaming
+                                   chat_history=[]):
         vector_store = FAISS.load_local(vs_path, self.embeddings)
         FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector
         vector_store.chunk_size=self.chunk_size
@@ -197,7 +197,7 @@ class LocalDocQA:
         related_docs = get_docs_with_score(related_docs_with_score)
         prompt = generate_prompt(related_docs, query)
 
-        if streaming:
+        if self.llm.streaming:
             for result, history in self.llm._call(prompt=prompt,
                                                   history=chat_history):
                 history[-1][0] = query
