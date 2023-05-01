@@ -29,23 +29,14 @@ llm_model_dict_list = list(llm_model_dict.keys())
 local_doc_qa = LocalDocQA()
 
 
-def get_answer(query, vs_path, history, mode):
+def get_answer(query, vs_path, history, mode,
+               streaming: bool = STREAMING):
     if mode == "知识库问答" and vs_path:
-        if local_doc_qa.llm.streaming:
-            for resp, history in local_doc_qa.get_knowledge_based_answer(
-                    query=query, vs_path=vs_path, chat_history=history):
-                source = "\n\n"
-                source += "".join(
-                    [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
-                     f"""{doc.page_content}\n"""
-                     f"""</details>"""
-                     for i, doc in
-                     enumerate(resp["source_documents"])])
-                history[-1][-1] += source
-                yield history, ""
-        else:
-            resp, history = local_doc_qa.get_knowledge_based_answer(
-                query=query, vs_path=vs_path, chat_history=history)
+        for resp, history in local_doc_qa.get_knowledge_based_answer(
+                query=query,
+                vs_path=vs_path,
+                chat_history=history,
+                streaming=streaming):
             source = "\n\n"
             source += "".join(
                 [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
@@ -54,18 +45,13 @@ def get_answer(query, vs_path, history, mode):
                  for i, doc in
                  enumerate(resp["source_documents"])])
             history[-1][-1] += source
-            return history, ""
+            yield history, ""
     else:
-        if local_doc_qa.llm.streaming:
-            for resp, history in local_doc_qa.llm._call(query, history):
-                history[-1][-1] = resp + (
-                    "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
-                yield history, ""
-        else:
-            resp, history = local_doc_qa.llm._call(query, history)
+        for resp, history in local_doc_qa.llm._call(query, history,
+                                                    streaming=streaming):
             history[-1][-1] = resp + (
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
-            return history, ""
+            yield history, ""
 
 
 def update_status(history, status):
@@ -76,7 +62,7 @@ def update_status(history, status):
 
 def init_model():
     try:
-        local_doc_qa.init_cfg(streaming=STREAMING)
+        local_doc_qa.init_cfg()
         local_doc_qa.llm._call("你好")
         reply = """模型已成功加载，可以开始对话，或从右侧选择模式后开始对话"""
         print(reply)
@@ -98,8 +84,7 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, to
                               embedding_model=embedding_model,
                               llm_history_len=llm_history_len,
                               use_ptuning_v2=use_ptuning_v2,
-                              top_k=top_k,
-                              streaming=STREAMING)
+                              top_k=top_k,)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
         print(model_status)
     except Exception as e:
