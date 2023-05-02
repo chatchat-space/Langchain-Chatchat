@@ -27,6 +27,9 @@ llm_model_dict = {
 # LLM model name
 LLM_MODEL = "chatglm-6b"
 
+# LLM streaming reponse
+STREAMING = True
+
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
 
@@ -38,14 +41,10 @@ VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_
 UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content", "")
 
 # 基于上下文的prompt模版，请务必保留"{question}"和"{context}"
-PROMPT_TEMPLATE = """已知信息在下方"="包裹的段落，基于以下已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题" 或 "没有提供足够的相关信息"，不允许在答案中添加编造成分，答案请使用中文。 
-
-====================================已知信息===================================================== 
+PROMPT_TEMPLATE = """已知信息：
 {context} 
-================================================================================================
 
-问题:"{question}"
-答案:"""
+根据上述已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题” 或 “没有提供足够的相关信息”，不允许在答案中添加编造成分，答案请使用中文。 问题是：{question}"""
 
 # 匹配后单段上下文长度
 CHUNK_SIZE = 500

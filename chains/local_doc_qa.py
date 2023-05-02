@@ -8,12 +8,17 @@ from textsplitter import ChineseTextSplitter
 from typing import List, Tuple
 from langchain.docstore.document import Document
 import numpy as np
+from utils import torch_gc
 
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 6
 
 # LLM input history length
 LLM_HISTORY_LEN = 3
+
+DEVICE_ = EMBEDDING_DEVICE
+DEVICE_ID = "0" if torch.cuda.is_available() else None
+DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
 
 
 def load_file(filepath):
@@ -30,6 +35,7 @@ def load_file(filepath):
         docs = loader.load_and_split(text_splitter=textsplitter)
     return docs
 
+
 def generate_prompt(related_docs: List[str],
                     query: str,
                     prompt_template=PROMPT_TEMPLATE) -> str:
@@ -39,7 +45,7 @@ def generate_prompt(related_docs: List[str],
 
 
 def get_docs_with_score(docs_with_score):
-    docs=[]
+    docs = []
     for doc, score in docs_with_score:
         doc.metadata["score"] = score
         docs.append(doc)
@@ -50,7 +56,7 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
     lists = []
     ls1 = [ls[0]]
     for i in range(1, len(ls)):
-        if ls[i-1] + 1 == ls[i]:
+        if ls[i - 1] + 1 == ls[i]:
             ls1.append(ls[i])
         else:
             lists.append(ls1)
@@ -59,49 +65,52 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
     return lists
 
 
-
 def similarity_search_with_score_by_vector(
         self,
         embedding: List[float],
         k: int = 4,
-    ) -> List[Tuple[Document, float]]:
-        scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
-        docs = []
-        id_set = set()
-        for j, i in enumerate(indices[0]):
-            if i == -1:
-                # This happens when not enough docs are returned.
-                continue
-            _id = self.index_to_docstore_id[i]
-            doc = self.docstore.search(_id)
-            id_set.add(i)
-            docs_len = len(doc.page_content)
-            for k in range(1, max(i, len(docs)-i)):
-                for l in [i+k, i-k]:
-                    if 0 <= l < len(self.index_to_docstore_id):
-                        _id0 = self.index_to_docstore_id[l]
-                        doc0 = self.docstore.search(_id0)
-                        if docs_len + len(doc0.page_content) > self.chunk_size:
-                            break
-                        elif doc0.metadata["source"] == doc.metadata["source"]:
-                            docs_len += len(doc0.page_content)
-                            id_set.add(l)
-        id_list = sorted(list(id_set))
-        id_lists = seperate_list(id_list)
-        for id_seq in id_lists:
-            for id in id_seq:
-                if id == id_seq[0]:
-                    _id = self.index_to_docstore_id[id]
-                    doc = self.docstore.search(_id)
-                else:
-                    _id0 = self.index_to_docstore_id[id]
+) -> List[Tuple[Document, float]]:
+    scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
+    docs = []
+    id_set = set()
+    for j, i in enumerate(indices[0]):
+        if i == -1:
+            # This happens when not enough docs are returned.
+            continue
+        _id = self.index_to_docstore_id[i]
+        doc = self.docstore.search(_id)
+        id_set.add(i)
+        docs_len = len(doc.page_content)
+        for k in range(1, max(i, len(docs) - i)):
+            break_flag = False
+            for l in [i + k, i - k]:
+                if 0 <= l < len(self.index_to_docstore_id):
+                    _id0 = self.index_to_docstore_id[l]
                     doc0 = self.docstore.search(_id0)
-                    doc.page_content += doc0.page_content
-            if not isinstance(doc, Document):
-                raise ValueError(f"Could not find document for id {_id}, got {doc}")
-            docs.append((doc, scores[0][j]))
-        return docs
-
+                    if docs_len + len(doc0.page_content) > self.chunk_size:
+                        break_flag=True
+                        break
+                    elif doc0.metadata["source"] == doc.metadata["source"]:
+                        docs_len += len(doc0.page_content)
+                        id_set.add(l)
+            if break_flag:
+                break
+    id_list = sorted(list(id_set))
+    id_lists = seperate_list(id_list)
+    for id_seq in id_lists:
+        for id in id_seq:
+            if id == id_seq[0]:
+                _id = self.index_to_docstore_id[id]
+                doc = self.docstore.search(_id)
+            else:
+                _id0 = self.index_to_docstore_id[id]
+                doc0 = self.docstore.search(_id0)
+                doc.page_content += doc0.page_content
+        if not isinstance(doc, Document):
+            raise ValueError(f"Could not find document for id {_id}, got {doc}")
+        docs.append((doc, scores[0][j]))
+    torch_gc(DEVICE)
+    return docs
 
 
 class LocalDocQA:
@@ -172,10 +181,12 @@ class LocalDocQA:
             if vs_path and os.path.isdir(vs_path):
                 vector_store = FAISS.load_local(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
+                torch_gc(DEVICE)
             else:
                 if not vs_path:
                     vs_path = f"""{VS_ROOT_PATH}{os.path.splitext(file)[0]}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}"""
                 vector_store = FAISS.from_documents(docs, self.embeddings)
+                torch_gc(DEVICE)
 
             vector_store.save_local(vs_path)
             return vs_path, loaded_files
@@ -187,29 +198,54 @@ class LocalDocQA:
                                    query,
                                    vs_path,
                                    chat_history=[],
-                                   streaming=True):
-        self.llm.streaming = streaming
+                                   streaming: bool = STREAMING):
         vector_store = FAISS.load_local(vs_path, self.embeddings)
         FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector
-        vector_store.chunk_size=self.chunk_size
+        vector_store.chunk_size = self.chunk_size
         related_docs_with_score = vector_store.similarity_search_with_score(query,
                                                                             k=self.top_k)
         related_docs = get_docs_with_score(related_docs_with_score)
         prompt = generate_prompt(related_docs, query)
 
-        if streaming:
-            for result, history in self.llm._call(prompt=prompt,
-                                                  history=chat_history):
-                history[-1][0] = query
-                response = {"query": query,
-                            "result": result,
-                            "source_documents": related_docs}
-                yield response, history
-        else:
-            result, history = self.llm._call(prompt=prompt,
-                                             history=chat_history)
+        # if streaming:
+        #     for result, history in self.llm._stream_call(prompt=prompt,
+        #                                                  history=chat_history):
+        #         history[-1][0] = query
+        #         response = {"query": query,
+        #                     "result": result,
+        #                     "source_documents": related_docs}
+        #         yield response, history
+        # else:
+        for result, history in self.llm._call(prompt=prompt,
+                                              history=chat_history,
+                                              streaming=streaming):
             history[-1][0] = query
             response = {"query": query,
                         "result": result,
                         "source_documents": related_docs}
-            return response, history
+            yield response, history
+
+
+if __name__ == "__main__":
+    local_doc_qa = LocalDocQA()
+    local_doc_qa.init_cfg()
+    query = "本项目使用的embedding模型是什么，消耗多少显存"
+    vs_path = "/Users/liuqian/Downloads/glm-dev/vector_store/aaa"
+    last_print_len = 0
+    for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
+                                                                 vs_path=vs_path,
+                                                                 chat_history=[],
+                                                                 streaming=True):
+        print(resp["result"][last_print_len:], end="", flush=True)
+        last_print_len = len(resp["result"])
+    source_text = [f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+                   # f"""相关度：{doc.metadata['score']}\n\n"""
+                   for inum, doc in
+                   enumerate(resp["source_documents"])]
+    print("\n\n" + "\n\n".join(source_text))
+    # for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
+    #                                                              vs_path=vs_path,
+    #                                                              chat_history=[],
+    #                                                              streaming=False):
+    #     print(resp["result"])
+    pass

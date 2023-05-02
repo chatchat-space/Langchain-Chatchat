@@ -4,21 +4,15 @@ from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
 from transformers import AutoTokenizer, AutoModel, AutoConfig
 import torch
-from configs.model_config import LLM_DEVICE
+from configs.model_config import *
 from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from typing import Dict, Tuple, Union, Optional
+from utils import torch_gc
 
-DEVICE = LLM_DEVICE
+DEVICE_ = LLM_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
-CUDA_DEVICE = f"{DEVICE}:{DEVICE_ID}" if DEVICE_ID else DEVICE
-
-
-def torch_gc():
-    if torch.cuda.is_available():
-        with torch.cuda.device(CUDA_DEVICE):
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
 
 
 def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
@@ -59,7 +53,6 @@ class ChatGLM(LLM):
     tokenizer: object = None
     model: object = None
     history_len: int = 10
-    streaming: bool = True
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
     def __init__(self):
@@ -72,8 +65,8 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               history: List[List[str]] = [],
-              stop: Optional[List[str]] = None) -> str:
-        if self.streaming:
+              streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
+        if streaming:
             for inum, (stream_resp, _) in enumerate(self.model.stream_chat(
                     self.tokenizer,
                     prompt,
@@ -81,25 +74,23 @@ class ChatGLM(LLM):
                     max_length=self.max_token,
                     temperature=self.temperature,
             )):
+                torch_gc(DEVICE)
                 if inum == 0:
                     history += [[prompt, stream_resp]]
                 else:
                     history[-1] = [prompt, stream_resp]
                 yield stream_resp, history
-
         else:
             response, _ = self.model.chat(
-                self.tokenizer,
-                prompt,
-                history=history[-self.history_len:] if self.history_len > 0 else [],
-                max_length=self.max_token,
-                temperature=self.temperature,
+                    self.tokenizer,
+                    prompt,
+                    history=history[-self.history_len:] if self.history_len > 0 else [],
+                    max_length=self.max_token,
+                    temperature=self.temperature,
             )
-            torch_gc()
-            if stop is not None:
-                response = enforce_stop_tokens(response, stop)
-            history = history + [[None, response]]
-            return response, history
+            torch_gc(DEVICE)
+            history += [[prompt, response]]
+            yield response, history
 
     # def chat(self,
     #          prompt: str) -> str:
@@ -191,3 +182,16 @@ class ChatGLM(LLM):
                 print("加载PrefixEncoder模型参数失败")
 
         self.model = self.model.eval()
+
+
+if __name__ == "__main__":
+    llm = ChatGLM()
+    llm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL],
+                   llm_device=LLM_DEVICE, )
+    last_print_len=0
+    for resp, history in llm._call("你好", streaming=True):
+        print(resp[last_print_len:], end="", flush=True)
+        last_print_len = len(resp)
+    for resp, history in llm._call("你好", streaming=False):
+        print(resp)
+    pass
