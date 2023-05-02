@@ -14,7 +14,13 @@
 
 ![实现原理图](img/langchain+chatglm.png)
 
+从文档处理角度来看，实现流程如下：
+
+![实现原理图2](img/langchain+chatglm2.png)
+
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
+
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM)
 
 📓 [ModelWhale 在线运行项目](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
 
