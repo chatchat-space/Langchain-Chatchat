@@ -25,7 +25,7 @@ llm_model_dict = {
 }
 
 # LLM model name
-LLM_MODEL = "chatglm-6b-int4"
+LLM_MODEL = "chatglm-6b"
 
 # LLM streaming reponse
 STREAMING = True
