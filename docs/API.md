@@ -49,7 +49,7 @@ Accept: application/json
 
 ```javascript
 const inputBody = '{
-  "local_doc_id": "string",
+  "knowledge_base_id": "string",
   "question": "string",
   "history": []
 }';
@@ -185,7 +185,7 @@ func main() {
 
 ```json
 {
-  "local_doc_id": "string",
+  "knowledge_base_id": "string",
   "question": "string",
   "history": []
 }
@@ -257,7 +257,7 @@ const inputBody = '{
   "files": [
     "string"
   ],
-  "local_doc_id": "string"
+  "knowledge_base_id": "string"
 }';
 const headers = {
   'Content-Type':'multipart/form-data',
@@ -392,7 +392,7 @@ func main() {
 ```yaml
 files:
   - string
-local_doc_id: string
+knowledge_base_id: string
 
 ```
 
@@ -432,13 +432,13 @@ This operation does not require authentication
 
 ```shell
 # You can also use wget
-curl -X GET /chat-docs/list?local_doc_id=doc_id1 \
+curl -X GET /chat-docs/list?knowledge_base_id=doc_id1 \
   -H 'Accept: application/json'
 
 ```
 
 ```http
-GET /chat-docs/list?local_doc_id=doc_id1 HTTP/1.1
+GET /chat-docs/list?knowledge_base_id=doc_id1 HTTP/1.1
 
 Accept: application/json
 
@@ -450,7 +450,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/chat-docs/list?local_doc_id=doc_id1',
+fetch('/chat-docs/list?knowledge_base_id=doc_id1',
 {
   method: 'GET',
 
@@ -474,7 +474,7 @@ headers = {
 
 result = RestClient.get '/chat-docs/list',
   params: {
-  'local_doc_id' => 'string'
+  'knowledge_base_id' => 'string'
 }, headers: headers
 
 p JSON.parse(result)
@@ -488,7 +488,7 @@ headers = {
 }
 
 r = requests.get('/chat-docs/list', params={
-  'local_doc_id': 'doc_id1'
+  'knowledge_base_id': 'doc_id1'
 }, headers = headers)
 
 print(r.json())
@@ -527,7 +527,7 @@ try {
 ```
 
 ```java
-URL obj = new URL("/chat-docs/list?local_doc_id=doc_id1");
+URL obj = new URL("/chat-docs/list?knowledge_base_id=doc_id1");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 con.setRequestMethod("GET");
 int responseCode = con.getResponseCode();
@@ -576,7 +576,7 @@ func main() {
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|local_doc_id|query|string|true|Document ID|
+|knowledge_base_id|query|string|true|Document ID|
 
 > Example responses
 
@@ -629,7 +629,7 @@ Accept: application/json
 
 ```javascript
 const inputBody = '{
-  "local_doc_id": "string",
+  "knowledge_base_id": "string",
   "doc_name": "string"
 }';
 const headers = {
@@ -763,7 +763,7 @@ func main() {
 > Body parameter
 
 ```yaml
-local_doc_id: string
+knowledge_base_id: string
 doc_name: string
 
 ```
@@ -831,7 +831,7 @@ BaseResponse
 
 ```json
 {
-  "local_doc_id": "string",
+  "knowledge_base_id": "string",
   "question": "string",
   "history": []
 }
@@ -844,7 +844,7 @@ Body_chat_chat_docs_chat_post
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|local_doc_id|string|true|none|Document ID|
+|knowledge_base_id|string|true|none|Knowledge Base Name|
 |question|string|true|none|Question|
 |history|[array]|false|none|History of previous questions and answers|
 
@@ -857,7 +857,7 @@ Body_chat_chat_docs_chat_post
 
 ```json
 {
-  "local_doc_id": "string",
+  "knowledge_base_id": "string",
   "doc_name": "string"
 }
 
@@ -869,7 +869,7 @@ Body_delete_docs_chat_docs_delete_delete
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|local_doc_id|string|true|none|local doc id|
+|knowledge_base_id|string|true|none|Knowledge Base Name|
 |doc_name|string|false|none|doc name|
 
 <h2 id="tocS_Body_upload_file_chat_docs_upload_post">Body_upload_file_chat_docs_upload_post</h2>
@@ -884,7 +884,7 @@ Body_delete_docs_chat_docs_delete_delete
   "files": [
     "string"
   ],
-  "local_doc_id": "string"
+  "knowledge_base_id": "string"
 }
 
 ```
@@ -896,7 +896,7 @@ Body_upload_file_chat_docs_upload_post
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |files|[string]|true|none|none|
-|local_doc_id|string|true|none|Local document ID|
+|knowledge_base_id|string|true|none|Knowledge Base Name|
 
 <h2 id="tocS_ChatMessage">ChatMessage</h2>
 <!-- backwards compatibility -->
