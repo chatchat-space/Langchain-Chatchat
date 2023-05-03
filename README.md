@@ -93,6 +93,12 @@ $ python cli_demo.py
 $ python webui.py
 ```
 
+或执行 [api.py](api.py) 利用 fastapi 部署 API
+```shell
+$ python api.py
+```
+
+
 注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
 
 执行后效果如下图所示：
@@ -168,7 +174,7 @@ Web UI 可以实现如下功能：
     - [ ] 删除知识库中文件
   - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 增加 API 支持
-  - [ ] 利用 fastapi 实现 API 部署方式
+  - [x] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
