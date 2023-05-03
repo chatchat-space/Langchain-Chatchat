@@ -95,12 +95,12 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, to
 
 
 def get_vector_store(vs_id, files, history):
-    vs_path = VS_ROOT_PATH + vs_id
+    vs_path = os.path.join(VS_ROOT_PATH, vs_id)
     filelist = []
     for file in files:
         filename = os.path.split(file.name)[-1]
-        shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
-        filelist.append(UPLOAD_ROOT_PATH + filename)
+        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, filename))
+        filelist.append(os.path.join(UPLOAD_ROOT_PATH, filename))
     if local_doc_qa.llm and local_doc_qa.embeddings:
         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
         if len(loaded_files):
@@ -118,7 +118,7 @@ def change_vs_name_input(vs_id):
     if vs_id == "新建知识库":
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None
     else:
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), VS_ROOT_PATH + vs_id
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id)
 
 
 def change_mode(mode):
