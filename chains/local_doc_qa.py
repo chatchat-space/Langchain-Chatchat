@@ -61,9 +61,7 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
 
 
 def similarity_search_with_score_by_vector(
-        self,
-        embedding: List[float],
-        k: int = 4,
+        self, embedding: List[float], k: int = 4,
 ) -> List[Tuple[Document, float]]:
     scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
     docs = []
@@ -122,12 +120,12 @@ class LocalDocQA:
                  llm_model: str = LLM_MODEL,
                  llm_device=LLM_DEVICE,
                  top_k=VECTOR_SEARCH_TOP_K,
-                 use_ptuning_v2: bool = USE_PTUNING_V2
+                 use_ptuning_v2: bool = USE_PTUNING_V2,
+                 use_lora: bool = USE_LORA,
                  ):
         self.llm = ChatGLM()
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
-                            llm_device=llm_device,
-                            use_ptuning_v2=use_ptuning_v2)
+                            llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
         self.llm.history_len = llm_history_len
 
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],

@@ -72,12 +72,13 @@ def init_model():
         return reply
 
 
-def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, history):
+def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, history):
     try:
         local_doc_qa.init_cfg(llm_model=llm_model,
                               embedding_model=embedding_model,
                               llm_history_len=llm_history_len,
                               use_ptuning_v2=use_ptuning_v2,
+                              use_lora = use_lora,
                               top_k=top_k,)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
         print(model_status)
@@ -246,6 +247,9 @@ with gr.Blocks(css=block_css) as demo:
         use_ptuning_v2 = gr.Checkbox(USE_PTUNING_V2,
                                      label="使用p-tuning-v2微调过的模型",
                                      interactive=True)
+        use_lora = gr.Checkbox(USE_LORA,
+                                     label="使用lora微调的权重",
+                                     interactive=True)
         embedding_model = gr.Radio(embedding_model_dict_list,
                                    label="Embedding 模型",
                                    value=EMBEDDING_MODEL,
@@ -259,7 +263,7 @@ with gr.Blocks(css=block_css) as demo:
         load_model_button = gr.Button("重新加载模型")
     load_model_button.click(reinit_model,
                             show_progress=True,
-                            inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, chatbot],
+                            inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, chatbot],
                             outputs=chatbot
                             )
 
