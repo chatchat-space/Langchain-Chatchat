@@ -69,12 +69,13 @@ class ChatGLM(LLM):
                     max_length=self.max_token,
                     temperature=self.temperature,
             )):
-                torch_gc(DEVICE)
+                torch_gc()
                 if inum == 0:
                     history += [[prompt, stream_resp]]
                 else:
                     history[-1] = [prompt, stream_resp]
                 yield stream_resp, history
+                torch_gc()
         else:
             response, _ = self.model.chat(
                     self.tokenizer,
@@ -83,9 +84,10 @@ class ChatGLM(LLM):
                     max_length=self.max_token,
                     temperature=self.temperature,
             )
-            torch_gc(DEVICE)
+            torch_gc()
             history += [[prompt, response]]
             yield response, history
+            torch_gc()
 
     # def chat(self,
     #          prompt: str) -> str:

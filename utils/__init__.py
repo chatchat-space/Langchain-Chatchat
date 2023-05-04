@@ -1,10 +1,10 @@
 import torch
 
-def torch_gc(DEVICE):
+def torch_gc():
     if torch.cuda.is_available():
-        with torch.cuda.device(DEVICE):
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+        # with torch.cuda.device(DEVICE):
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
     elif torch.backends.mps.is_available():
         try:
             from torch.mps import empty_cache
