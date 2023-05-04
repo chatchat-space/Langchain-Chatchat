@@ -123,7 +123,9 @@ class ChatGLM(LLM):
             except Exception as e:
                 print(e)
                 print("加载PrefixEncoder config.json失败")
-        if LLM_LORA_PATH:
+        self.model = AutoModel.from_pretrained(model_name_or_path, config=model_config, trust_remote_code=True,
+                                               **kwargs)
+        if LLM_LORA_PATH and 'chat' in LLM_MODEL:
             from peft import PeftModel
             self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
 
@@ -137,14 +139,14 @@ class ChatGLM(LLM):
 
                 model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
                         config=model_config, **kwargs)
-                if LLM_LORA_PATH:
+                if LLM_LORA_PATH and 'chat' in LLM_MODEL:
                     from peft import PeftModel
-                    model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
+                    model_auto = PeftModel.from_pretrained(model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
                 if device_map is None:
                     device_map = auto_configure_device_map(num_gpus)
 
-                self.model = dispatch_model(model.half(), device_map=device_map)
+                self.model = dispatch_model(model_auto.half(), device_map=device_map)
         else:
             self.model = self.model.float().to(llm_device)
 
