@@ -77,11 +77,11 @@ class ChatGLM(LLM):
                 yield stream_resp, history
         else:
             response, _ = self.model.chat(
-                    self.tokenizer,
-                    prompt,
-                    history=history[-self.history_len:] if self.history_len > 0 else [],
-                    max_length=self.max_token,
-                    temperature=self.temperature,
+                self.tokenizer,
+                prompt,
+                history=history[-self.history_len:] if self.history_len > 0 else [],
+                max_length=self.max_token,
+                temperature=self.temperature,
             )
             torch_gc(DEVICE)
             history += [[prompt, response]]
@@ -123,45 +123,30 @@ class ChatGLM(LLM):
             except Exception as e:
                 print(e)
                 print("加载PrefixEncoder config.json失败")
+        if LLM_LORA_PATH:
+            from peft import PeftModel
+            self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
 
         if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
             # 根据当前设备GPU数量决定是否进行多卡部署
             num_gpus = torch.cuda.device_count()
             if num_gpus < 2 and device_map is None:
-                self.model = (
-                    AutoModel.from_pretrained(
-                        model_name_or_path,
-                        config=model_config,
-                        trust_remote_code=True,
-                        **kwargs)
-                    .half()
-                    .cuda()
-                )
+                self.model = self.model.half().cuda()
             else:
                 from accelerate import dispatch_model
 
-                model = (
-                    AutoModel.from_pretrained(
-                        model_name_or_path,
-                        trust_remote_code=True,
-                        config=model_config,
-                        **kwargs)
-                    .half())
+                model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
+                        config=model_config, **kwargs)
+                if LLM_LORA_PATH:
+                    from peft import PeftModel
+                    model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
                 if device_map is None:
                     device_map = auto_configure_device_map(num_gpus)
 
-                self.model = dispatch_model(model, device_map=device_map)
+                self.model = dispatch_model(model.half(), device_map=device_map)
         else:
-            self.model = (
-                AutoModel.from_pretrained(
-                    model_name_or_path,
-                    config=model_config,
-                    trust_remote_code=True,
-                    **kwargs)
-                .float()
-                .to(llm_device)
-            )
+            self.model = self.model.float().to(llm_device)
 
         if use_ptuning_v2:
             try:
@@ -183,7 +168,7 @@ if __name__ == "__main__":
     llm = ChatGLM()
     llm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL],
                    llm_device=LLM_DEVICE, )
-    last_print_len=0
+    last_print_len = 0
     for resp, history in llm._call("你好", streaming=True):
         print(resp[last_print_len:], end="", flush=True)
         last_print_len = len(resp)
