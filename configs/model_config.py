@@ -62,4 +62,4 @@ LLM_HISTORY_LEN = 3
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 5
 
-NLTK_DATA_PATH = os.path.join(os.path.dirname(__file__), "nltk_data")
+NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
