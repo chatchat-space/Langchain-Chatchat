@@ -168,7 +168,7 @@ init_message = """欢迎使用 langchain-ChatGLM Web UI！
 model_status = init_model()
 
 with gr.Blocks(css=block_css) as demo:
-    vs_path, file_status, model_status, vs_list = gr.State(""), gr.State(""), gr.State(model_status), gr.State(vs_list)
+    vs_path, file_status, model_status, vs_list = gr.State(vs_list), gr.State(""), gr.State(model_status), gr.State(vs_list)
     gr.Markdown(webui_title)
     with gr.Tab("对话"):
         with gr.Row():
