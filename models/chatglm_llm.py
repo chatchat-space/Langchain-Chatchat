@@ -104,6 +104,7 @@ class ChatGLM(LLM):
                    model_name_or_path: str = "THUDM/chatglm-6b",
                    llm_device=LLM_DEVICE,
                    use_ptuning_v2=False,
+                   use_lora=False,
                    device_map: Optional[Dict[str, int]] = None,
                    **kwargs):
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -125,7 +126,7 @@ class ChatGLM(LLM):
                 print("加载PrefixEncoder config.json失败")
         self.model = AutoModel.from_pretrained(model_name_or_path, config=model_config, trust_remote_code=True,
                                                **kwargs)
-        if LLM_LORA_PATH and 'chat' in LLM_MODEL:
+        if LLM_LORA_PATH and use_lora:
             from peft import PeftModel
             self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
 
@@ -139,7 +140,7 @@ class ChatGLM(LLM):
 
                 model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
                         config=model_config, **kwargs)
-                if LLM_LORA_PATH and 'chat' in LLM_MODEL:
+                if LLM_LORA_PATH and use_lora:
                     from peft import PeftModel
                     model_auto = PeftModel.from_pretrained(model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
