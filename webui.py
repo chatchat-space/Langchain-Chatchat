@@ -48,12 +48,6 @@ def get_answer(query, vs_path, history, mode,
             yield history, ""
 
 
-def update_status(history, status):
-    history = history + [[None, status]]
-    print(status)
-    return history
-
-
 def init_model():
     try:
         local_doc_qa.init_cfg()
@@ -92,10 +86,12 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, us
 def get_vector_store(vs_id, files, history):
     vs_path = os.path.join(VS_ROOT_PATH, vs_id)
     filelist = []
+    if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_id)):
+        os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_id))
     for file in files:
         filename = os.path.split(file.name)[-1]
-        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, filename))
-        filelist.append(os.path.join(UPLOAD_ROOT_PATH, filename))
+        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
+        filelist.append(os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
     if local_doc_qa.llm and local_doc_qa.embeddings:
         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
         if len(loaded_files):
