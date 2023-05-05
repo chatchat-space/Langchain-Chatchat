@@ -43,7 +43,7 @@ def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
 
 class ChatGLM(LLM):
     max_token: int = 10000
-    temperature: float = 0.01
+    temperature: float = 0.8
     top_p = 0.9
     # history = []
     tokenizer: object = None
@@ -68,6 +68,7 @@ class ChatGLM(LLM):
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     temperature=self.temperature,
+                    top_p=self.top_p,
             )):
                 torch_gc()
                 if inum == 0:
@@ -83,6 +84,7 @@ class ChatGLM(LLM):
                 history=history[-self.history_len:] if self.history_len > 0 else [],
                 max_length=self.max_token,
                 temperature=self.temperature,
+                top_p=self.top_p,
             )
             torch_gc()
             history += [[prompt, response]]
@@ -141,7 +143,7 @@ class ChatGLM(LLM):
                 from accelerate import dispatch_model
 
                 model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
-                        config=model_config, **kwargs)
+                                                  config=model_config, **kwargs)
                 if LLM_LORA_PATH and use_lora:
                     from peft import PeftModel
                     model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
