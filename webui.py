@@ -11,10 +11,11 @@ nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 def get_vs_list():
     if not os.path.exists(VS_ROOT_PATH):
         return []
-    return os.listdir(VS_ROOT_PATH)
+    lst= os.listdir(VS_ROOT_PATH)
+    return lst.sort()
 
 
-vs_list = ["新建知识库"] + get_vs_list()
+vs_list =get_vs_list()+ ["新建知识库"] 
 
 embedding_model_dict_list = list(embedding_model_dict.keys())
 
@@ -46,12 +47,6 @@ def get_answer(query, vs_path, history, mode,
             history[-1][-1] = resp + (
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
             yield history, ""
-
-
-def update_status(history, status):
-    history = history + [[None, status]]
-    print(status)
-    return history
 
 
 def init_model():
@@ -92,10 +87,12 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, us
 def get_vector_store(vs_id, files, history):
     vs_path = os.path.join(VS_ROOT_PATH, vs_id)
     filelist = []
+    if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_id)):
+        os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_id))
     for file in files:
         filename = os.path.split(file.name)[-1]
-        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, filename))
-        filelist.append(os.path.join(UPLOAD_ROOT_PATH, filename))
+        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
+        filelist.append(os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
     if local_doc_qa.llm and local_doc_qa.embeddings:
         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
         if len(loaded_files):
@@ -161,9 +158,10 @@ init_message = """欢迎使用 langchain-ChatGLM Web UI！
 """
 
 model_status = init_model()
-
+default_path =  os.path.join(VS_ROOT_PATH, vs_list.value[0]) if len(vs_list.value) > 1 else ""
 with gr.Blocks(css=block_css) as demo:
-    vs_path, file_status, model_status, vs_list = gr.State(""), gr.State(""), gr.State(model_status), gr.State(vs_list)
+    
+    vs_path, file_status, model_status, vs_list = gr.State(default_path), gr.State(""), gr.State(model_status), gr.State(vs_list)
     gr.Markdown(webui_title)
     with gr.Tab("对话"):
         with gr.Row():

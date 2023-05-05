@@ -28,7 +28,6 @@ llm_model_dict = {
 LLM_MODEL = "chatglm-6b"
 
 # LLM lora path，默认为空，如果有请直接指定文件夹路径
-# 推荐使用 chatglm-6b-belle-zh-lora
 LLM_LORA_PATH = ""
 USE_LORA = True if LLM_LORA_PATH else False
 
@@ -44,8 +43,6 @@ LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mp
 VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
 
 UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content")
-
-API_UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "api_content")
 
 # 基于上下文的prompt模版，请务必保留"{question}"和"{context}"
 PROMPT_TEMPLATE = """已知信息：
