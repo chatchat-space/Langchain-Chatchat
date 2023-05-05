@@ -12,7 +12,7 @@ def get_vs_list():
     if not os.path.exists(VS_ROOT_PATH):
         return []
     lst= os.listdir(VS_ROOT_PATH)
-    return lst.sort()
+    return lst.sort(reverse=True)
 
 
 vs_list =get_vs_list()+ ["新建知识库"] 
