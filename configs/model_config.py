@@ -28,7 +28,6 @@ llm_model_dict = {
 LLM_MODEL = "chatglm-6b"
 
 # LLM lora path，默认为空，如果有请直接指定文件夹路径
-# 推荐使用 chatglm-6b-belle-zh-lora
 LLM_LORA_PATH = ""
 USE_LORA = True if LLM_LORA_PATH else False
 
