@@ -151,7 +151,7 @@ webui_title = """
 
 """
 default_vs = vs_list[0] if len(vs_list) > 1 else "为空"
-init_message = """欢迎使用 langchain-ChatGLM Web UI！
+init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 
 请在右侧切换模式，目前支持直接与 LLM 模型对话或基于本地知识库问答。
 
