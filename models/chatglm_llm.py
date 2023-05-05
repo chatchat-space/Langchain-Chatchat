@@ -144,12 +144,12 @@ class ChatGLM(LLM):
                         config=model_config, **kwargs)
                 if LLM_LORA_PATH and use_lora:
                     from peft import PeftModel
-                    model_auto = PeftModel.from_pretrained(model, LLM_LORA_PATH)
+                    model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
                 if device_map is None:
                     device_map = auto_configure_device_map(num_gpus)
 
-                self.model = dispatch_model(model_auto.half(), device_map=device_map)
+                self.model = dispatch_model(model.half(), device_map=device_map)
         else:
             self.model = self.model.float().to(llm_device)
 
