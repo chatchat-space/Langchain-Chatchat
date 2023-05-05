@@ -109,11 +109,12 @@ def get_vector_store(vs_id, files, history):
     return vs_path, None, history + [[None, file_status]]
 
 
-def change_vs_name_input(vs_id):
+def change_vs_name_input(vs_id,history):
     if vs_id == "新建知识库":
-        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None,history
     else:
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id)
+        file_status = f"已加载知识库{vs_id}，请开始提问"
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id),history + [[None, file_status]]
 
 
 def change_mode(mode):
@@ -217,8 +218,9 @@ with gr.Blocks(css=block_css) as demo:
                             load_folder_button = gr.Button("上传文件夹并加载知识库")
                     # load_vs.click(fn=)
                     select_vs.change(fn=change_vs_name_input,
-                                     inputs=select_vs,
-                                     outputs=[vs_name, vs_add, file2vs, vs_path])
+                                    show_progress=True,
+                                     inputs=[select_vs,chatbot],
+                                     outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
