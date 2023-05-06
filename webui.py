@@ -4,17 +4,21 @@ import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
+import uuid
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
-
 def get_vs_list():
+    lst_default  = ["新建知识库"]
     if not os.path.exists(VS_ROOT_PATH):
-        return []
-    return os.listdir(VS_ROOT_PATH)
+        return lst_default
+    lst= os.listdir(VS_ROOT_PATH)
+    if not lst:           
+        return lst_default
+    lst.sort(reverse=True)
+    return lst+ lst_default
 
-
-vs_list = ["新建知识库"] + get_vs_list()
+vs_list =get_vs_list()
 
 embedding_model_dict_list = list(embedding_model_dict.keys())
 
@@ -22,6 +26,8 @@ llm_model_dict_list = list(llm_model_dict.keys())
 
 local_doc_qa = LocalDocQA()
 
+logger = gr.CSVLogger()
+username = uuid.uuid4().hex
 
 def get_answer(query, vs_path, history, mode,
                streaming: bool = STREAMING):
@@ -45,8 +51,8 @@ def get_answer(query, vs_path, history, mode,
                                                     streaming=streaming):
             history[-1][-1] = resp + (
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
-            yield history, ""
-
+            yield history, "" 
+    logger.flag([query, vs_path, history, mode],username=username)
 
 def init_model():
     try:
@@ -105,11 +111,12 @@ def get_vector_store(vs_id, files, history):
     return vs_path, None, history + [[None, file_status]]
 
 
-def change_vs_name_input(vs_id):
+def change_vs_name_input(vs_id,history):
     if vs_id == "新建知识库":
-        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None,history
     else:
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id)
+        file_status = f"已加载知识库{vs_id}，请开始提问"
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id),history + [[None, file_status]]
 
 
 def change_mode(mode):
@@ -129,7 +136,6 @@ def add_vs_name(vs_name, vs_list, chatbot):
         chatbot = chatbot + [[None, vs_status]]
         return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
 
-
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
@@ -146,20 +152,21 @@ webui_title = """
 👍 [https://github.com/imClumsyPanda/langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
 
 """
-
-init_message = """欢迎使用 langchain-ChatGLM Web UI！
+default_vs = vs_list[0] if len(vs_list) > 1 else "为空"
+init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 
 请在右侧切换模式，目前支持直接与 LLM 模型对话或基于本地知识库问答。
 
-知识库问答模式中，选择知识库名称后，即可开始问答，如有需要可以在选择知识库名称后上传文件/文件夹至知识库。
+知识库问答模式，选择知识库名称后，即可开始问答，当前知识库{default_vs}，如有需要可以在选择知识库名称后上传文件/文件夹至知识库。
 
 知识库暂不支持文件删除，该功能将在后续版本中推出。
 """
 
 model_status = init_model()
+default_path =  os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""
 
 with gr.Blocks(css=block_css) as demo:
-    vs_path, file_status, model_status, vs_list = gr.State(""), gr.State(""), gr.State(model_status), gr.State(vs_list)
+    vs_path, file_status, model_status, vs_list = gr.State(default_path), gr.State(""), gr.State(model_status), gr.State(vs_list)
     gr.Markdown(webui_title)
     with gr.Tab("对话"):
         with gr.Row():
@@ -168,8 +175,7 @@ with gr.Blocks(css=block_css) as demo:
                                      elem_id="chat-box",
                                      show_label=False).style(height=750)
                 query = gr.Textbox(show_label=False,
-                                   placeholder="请输入提问内容，按回车进行提交",
-                                   ).style(container=False)
+                                   placeholder="请输入提问内容，按回车进行提交").style(container=False) 
             with gr.Column(scale=5):
                 mode = gr.Radio(["LLM 对话", "知识库问答"],
                                 label="请选择使用模式",
@@ -212,8 +218,8 @@ with gr.Blocks(css=block_css) as demo:
                             load_folder_button = gr.Button("上传文件夹并加载知识库")
                     # load_vs.click(fn=)
                     select_vs.change(fn=change_vs_name_input,
-                                     inputs=select_vs,
-                                     outputs=[vs_name, vs_add, file2vs, vs_path])
+                                     inputs=[select_vs,chatbot],
+                                     outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
@@ -224,11 +230,11 @@ with gr.Blocks(css=block_css) as demo:
                                              show_progress=True,
                                              inputs=[select_vs, folder_files, chatbot],
                                              outputs=[vs_path, folder_files, chatbot],
-                                             )
+                                             )             
+                    logger.setup([query, vs_path, chatbot, mode], "flagged")       
                     query.submit(get_answer,
-                                 [query, vs_path, chatbot, mode],
-                                 [chatbot, query],
-                                 )
+                               [query, vs_path, chatbot, mode],
+                               [chatbot, query])                  
     with gr.Tab("模型配置"):
         llm_model = gr.Radio(llm_model_dict_list,
                              label="LLM 模型",
