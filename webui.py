@@ -5,13 +5,7 @@ from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
 
-nltk.data.path = [os.path.join(os.path.dirname(__file__), "nltk_data")] + nltk.data.path
-
-# return top-k text chunk from vector store
-VECTOR_SEARCH_TOP_K = 6
-
-# LLM input history length
-LLM_HISTORY_LEN = 3
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
 def get_vs_list():
@@ -29,35 +23,29 @@ llm_model_dict_list = list(llm_model_dict.keys())
 local_doc_qa = LocalDocQA()
 
 
-def get_answer(query, vs_path, history, mode):
-    if mode == "知识库问答":
-        if vs_path:
-            for resp, history in local_doc_qa.get_knowledge_based_answer(
-                    query=query, vs_path=vs_path, chat_history=history):
-                source = "\n\n"
-                source += "".join(
-                    [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
-                     f"""{doc.page_content}\n"""
-                     f"""</details>"""
-                     for i, doc in
-                     enumerate(resp["source_documents"])])
-                history[-1][-1] += source
-                yield history, ""
-        else:
-            for resp, history in local_doc_qa.llm._call(query, history):
-                history[-1][-1] = resp + (
-                    "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
-                yield history, ""
-    else:
-        for resp, history in local_doc_qa.llm._call(query, history):
-            history[-1][-1] = resp
+def get_answer(query, vs_path, history, mode,
+               streaming: bool = STREAMING):
+    if mode == "知识库问答" and vs_path:
+        for resp, history in local_doc_qa.get_knowledge_based_answer(
+                query=query,
+                vs_path=vs_path,
+                chat_history=history,
+                streaming=streaming):
+            source = "\n\n"
+            source += "".join(
+                [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
+                 f"""{doc.page_content}\n"""
+                 f"""</details>"""
+                 for i, doc in
+                 enumerate(resp["source_documents"])])
+            history[-1][-1] += source
             yield history, ""
-
-
-def update_status(history, status):
-    history = history + [[None, status]]
-    print(status)
-    return history
+    else:
+        for resp, history in local_doc_qa.llm._call(query, history,
+                                                    streaming=streaming):
+            history[-1][-1] = resp + (
+                "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
+            yield history, ""
 
 
 def init_model():
@@ -78,13 +66,14 @@ def init_model():
         return reply
 
 
-def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, history):
+def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, history):
     try:
         local_doc_qa.init_cfg(llm_model=llm_model,
                               embedding_model=embedding_model,
                               llm_history_len=llm_history_len,
                               use_ptuning_v2=use_ptuning_v2,
-                              top_k=top_k)
+                              use_lora = use_lora,
+                              top_k=top_k,)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
         print(model_status)
     except Exception as e:
@@ -95,12 +84,14 @@ def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, to
 
 
 def get_vector_store(vs_id, files, history):
-    vs_path = VS_ROOT_PATH + vs_id
+    vs_path = os.path.join(VS_ROOT_PATH, vs_id)
     filelist = []
+    if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_id)):
+        os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_id))
     for file in files:
         filename = os.path.split(file.name)[-1]
-        shutil.move(file.name, UPLOAD_ROOT_PATH + filename)
-        filelist.append(UPLOAD_ROOT_PATH + filename)
+        shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
+        filelist.append(os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
     if local_doc_qa.llm and local_doc_qa.embeddings:
         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
         if len(loaded_files):
@@ -118,7 +109,7 @@ def change_vs_name_input(vs_id):
     if vs_id == "新建知识库":
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None
     else:
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), VS_ROOT_PATH + vs_id
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id)
 
 
 def change_mode(mode):
@@ -252,6 +243,9 @@ with gr.Blocks(css=block_css) as demo:
         use_ptuning_v2 = gr.Checkbox(USE_PTUNING_V2,
                                      label="使用p-tuning-v2微调过的模型",
                                      interactive=True)
+        use_lora = gr.Checkbox(USE_LORA,
+                                     label="使用lora微调的权重",
+                                     interactive=True)
         embedding_model = gr.Radio(embedding_model_dict_list,
                                    label="Embedding 模型",
                                    value=EMBEDDING_MODEL,
@@ -265,7 +259,7 @@ with gr.Blocks(css=block_css) as demo:
         load_model_button = gr.Button("重新加载模型")
     load_model_button.click(reinit_model,
                             show_progress=True,
-                            inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, top_k, chatbot],
+                            inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, chatbot],
                             outputs=chatbot
                             )
 

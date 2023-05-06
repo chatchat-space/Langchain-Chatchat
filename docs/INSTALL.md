@@ -26,6 +26,9 @@ $ conda env remove -p  /your_path/env_name
 # 拉取仓库
 $ git clone https://github.com/imClumsyPanda/langchain-ChatGLM.git
 
+# 进入目录
+$ cd langchain-ChatGLM
+
 # 安装依赖
 $ pip install -r requirements.txt
 ```

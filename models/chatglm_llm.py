@@ -1,24 +1,14 @@
 import json
 from langchain.llms.base import LLM
-from typing import Optional, List
-from langchain.llms.utils import enforce_stop_tokens
+from typing import List, Dict, Optional
 from transformers import AutoTokenizer, AutoModel, AutoConfig
 import torch
-from configs.model_config import LLM_DEVICE
-from langchain.callbacks.base import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from typing import Dict, Tuple, Union, Optional
+from configs.model_config import *
+from utils import torch_gc
 
-DEVICE = LLM_DEVICE
+DEVICE_ = LLM_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
-CUDA_DEVICE = f"{DEVICE}:{DEVICE_ID}" if DEVICE_ID else DEVICE
-
-
-def torch_gc():
-    if torch.cuda.is_available():
-        with torch.cuda.device(CUDA_DEVICE):
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
 
 
 def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
@@ -59,8 +49,6 @@ class ChatGLM(LLM):
     tokenizer: object = None
     model: object = None
     history_len: int = 10
-    streaming: bool = True
-    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
     def __init__(self):
         super().__init__()
@@ -72,8 +60,8 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               history: List[List[str]] = [],
-              stop: Optional[List[str]] = None) -> str:
-        if self.streaming:
+              streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
+        if streaming:
             for inum, (stream_resp, _) in enumerate(self.model.stream_chat(
                     self.tokenizer,
                     prompt,
@@ -81,12 +69,13 @@ class ChatGLM(LLM):
                     max_length=self.max_token,
                     temperature=self.temperature,
             )):
+                torch_gc()
                 if inum == 0:
                     history += [[prompt, stream_resp]]
                 else:
                     history[-1] = [prompt, stream_resp]
                 yield stream_resp, history
-
+                torch_gc()
         else:
             response, _ = self.model.chat(
                 self.tokenizer,
@@ -96,10 +85,9 @@ class ChatGLM(LLM):
                 temperature=self.temperature,
             )
             torch_gc()
-            if stop is not None:
-                response = enforce_stop_tokens(response, stop)
-            history = history + [[None, response]]
-            return response, history
+            history += [[prompt, response]]
+            yield response, history
+            torch_gc()
 
     # def chat(self,
     #          prompt: str) -> str:
@@ -118,6 +106,7 @@ class ChatGLM(LLM):
                    model_name_or_path: str = "THUDM/chatglm-6b",
                    llm_device=LLM_DEVICE,
                    use_ptuning_v2=False,
+                   use_lora=False,
                    device_map: Optional[Dict[str, int]] = None,
                    **kwargs):
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -137,45 +126,32 @@ class ChatGLM(LLM):
             except Exception as e:
                 print(e)
                 print("加载PrefixEncoder config.json失败")
+        self.model = AutoModel.from_pretrained(model_name_or_path, config=model_config, trust_remote_code=True,
+                                               **kwargs)
+        if LLM_LORA_PATH and use_lora:
+            from peft import PeftModel
+            self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
 
         if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
             # 根据当前设备GPU数量决定是否进行多卡部署
             num_gpus = torch.cuda.device_count()
             if num_gpus < 2 and device_map is None:
-                self.model = (
-                    AutoModel.from_pretrained(
-                        model_name_or_path,
-                        config=model_config,
-                        trust_remote_code=True,
-                        **kwargs)
-                    .half()
-                    .cuda()
-                )
+                self.model = self.model.half().cuda()
             else:
                 from accelerate import dispatch_model
 
-                model = (
-                    AutoModel.from_pretrained(
-                        model_name_or_path,
-                        trust_remote_code=True,
-                        config=model_config,
-                        **kwargs)
-                    .half())
+                model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
+                        config=model_config, **kwargs)
+                if LLM_LORA_PATH and use_lora:
+                    from peft import PeftModel
+                    model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
                 if device_map is None:
                     device_map = auto_configure_device_map(num_gpus)
 
-                self.model = dispatch_model(model, device_map=device_map)
+                self.model = dispatch_model(model.half(), device_map=device_map)
         else:
-            self.model = (
-                AutoModel.from_pretrained(
-                    model_name_or_path,
-                    config=model_config,
-                    trust_remote_code=True,
-                    **kwargs)
-                .float()
-                .to(llm_device)
-            )
+            self.model = self.model.float().to(llm_device)
 
         if use_ptuning_v2:
             try:
@@ -191,3 +167,16 @@ class ChatGLM(LLM):
                 print("加载PrefixEncoder模型参数失败")
 
         self.model = self.model.eval()
+
+
+if __name__ == "__main__":
+    llm = ChatGLM()
+    llm.load_model(model_name_or_path=llm_model_dict[LLM_MODEL],
+                   llm_device=LLM_DEVICE, )
+    last_print_len = 0
+    for resp, history in llm._call("你好", streaming=True):
+        print(resp[last_print_len:], end="", flush=True)
+        last_print_len = len(resp)
+    for resp, history in llm._call("你好", streaming=False):
+        print(resp)
+    pass

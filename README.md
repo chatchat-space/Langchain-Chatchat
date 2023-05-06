@@ -14,7 +14,13 @@
 
 ![实现原理图](img/langchain+chatglm.png)
 
+从文档处理角度来看，实现流程如下：
+
+![实现原理图2](img/langchain+chatglm2.png)
+
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
+
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM)
 
 📓 [ModelWhale 在线运行项目](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
 
@@ -37,12 +43,22 @@
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 
 ## Docker 部署
-
-```commandline
-$ docker build -t chatglm:v1.0 .
-
-$ docker run -d --restart=always --name chatglm -p 7860:7860 -v /www/wwwroot/code/langchain-ChatGLM:/chatGLM  chatglm
+为了能让容器使用主机GPU资源，需要在主机上安装 [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)。具体安装步骤如下：
+```shell
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit-base
+sudo systemctl daemon-reload 
+sudo systemctl restart docker
 ```
+安装完成后，可以使用以下命令编译镜像和启动容器：
+```
+docker build -f Dockerfile-cuda -t chatglm-cuda:latest .
+docker run --gpus all -d --name chatglm -p 7860:7860  chatglm-cuda:latest
+
+#若要使用离线模型，请配置好模型路径，然后此repo挂载到Container
+docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatGLM:/chatGLM  chatglm-cuda:latest
+```
+
 
 ## 开发部署
 
@@ -76,6 +92,12 @@ $ python cli_demo.py
 ```shell
 $ python webui.py
 ```
+
+或执行 [api.py](api.py) 利用 fastapi 部署 API
+```shell
+$ python api.py
+```
+
 
 注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
 
@@ -152,10 +174,10 @@ Web UI 可以实现如下功能：
     - [ ] 删除知识库中文件
   - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 增加 API 支持
-  - [ ] 利用 fastapi 实现 API 部署方式
+  - [x] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
-![二维码](img/qr_code_9.jpg)
+![二维码](img/qr_code_12.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
