@@ -11,7 +11,7 @@ icetk
 cpm_kernels
 faiss-cpu
 accelerate
-gradio==3.24.1
+gradio==3.26.0
 fastapi
 uvicorn
 peft
