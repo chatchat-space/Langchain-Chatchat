@@ -15,8 +15,8 @@ def get_vs_list():
     lst = os.listdir(VS_ROOT_PATH)
     if not lst:
         return lst_default
-    lst.sort(reverse=True)
-    return lst + lst_default
+    lst.sort()
+    return lst_default + lst
 
 
 vs_list = get_vs_list()
