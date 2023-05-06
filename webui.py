@@ -8,7 +8,6 @@ import uuid
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
-
 def get_vs_list():
     lst_default = ["新建知识库"]
     if not os.path.exists(VS_ROOT_PATH):
@@ -56,7 +55,6 @@ def get_answer(query, vs_path, history, mode,
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
             yield history, ""
     logger.flag([query, vs_path, history, mode], username=username)
-
 
 def init_model():
     try:
@@ -115,6 +113,7 @@ def get_vector_store(vs_id, files, history):
     return vs_path, None, history + [[None, file_status]]
 
 
+
 def change_vs_name_input(vs_id, history):
     if vs_id == "新建知识库":
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None, history
@@ -136,18 +135,16 @@ def add_vs_name(vs_name, vs_list, chatbot):
     if vs_name in vs_list:
         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True), vs_list, chatbot
+        return gr.update(visible=True), vs_list,gr.update(visible=True), gr.update(visible=True), gr.update(visible=False),  chatbot
     else:
         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
-
+        return gr.update(visible=True, choices= [vs_name] + vs_list, value=vs_name), [vs_name]+vs_list, gr.update(visible=False), gr.update(visible=False), gr.update(visible=True),chatbot
 
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
 }
-
 .importantButton:hover {
     background: linear-gradient(45deg, #ff00e0,#8500ff, #6e00ff) !important;
     border: none !important;
@@ -155,9 +152,7 @@ block_css = """.importantButton {
 
 webui_title = """
 # 🎉langchain-ChatGLM WebUI🎉
-
 👍 [https://github.com/imClumsyPanda/langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
-
 """
 default_vs = vs_list[0] if len(vs_list) > 1 else "为空"
 init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
@@ -175,6 +170,7 @@ default_path = os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else "
 with gr.Blocks(css=block_css) as demo:
     vs_path, file_status, model_status, vs_list = gr.State(default_path), gr.State(""), gr.State(
         model_status), gr.State(vs_list)
+        
     gr.Markdown(webui_title)
     with gr.Tab("对话"):
         with gr.Row():
@@ -200,13 +196,10 @@ with gr.Blocks(css=block_css) as demo:
                                             )
                     vs_name = gr.Textbox(label="请输入新建知识库名称",
                                          lines=1,
-                                         interactive=True)
-                    vs_add = gr.Button(value="添加至知识库选项")
-                    vs_add.click(fn=add_vs_name,
-                                 inputs=[vs_name, vs_list, chatbot],
-                                 outputs=[select_vs, vs_list, chatbot])
-
-                    file2vs = gr.Column(visible=False)
+                                         interactive=True,
+                                         visible=True if default_path=="" else False)
+                    vs_add = gr.Button(value="添加至知识库选项",  visible=True if default_path=="" else False)                   
+                    file2vs = gr.Column(visible=False if default_path=="" else True)
                     with file2vs:
                         # load_vs = gr.Button("加载知识库")
                         gr.Markdown("向知识库中添加文件")
@@ -225,6 +218,9 @@ with gr.Blocks(css=block_css) as demo:
                                                    )
                             load_folder_button = gr.Button("上传文件夹并加载知识库")
                     # load_vs.click(fn=)
+                    vs_add.click(fn=add_vs_name,
+                                 inputs=[vs_name, vs_list, chatbot],
+                                 outputs=[select_vs, vs_list,vs_name,vs_add, file2vs,chatbot])
                     select_vs.change(fn=change_vs_name_input,
                                      inputs=[select_vs, chatbot],
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
