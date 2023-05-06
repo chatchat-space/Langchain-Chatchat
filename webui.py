@@ -141,7 +141,6 @@ block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
 }
-
 .importantButton:hover {
     background: linear-gradient(45deg, #ff00e0,#8500ff, #6e00ff) !important;
     border: none !important;
@@ -149,17 +148,12 @@ block_css = """.importantButton {
 
 webui_title = """
 # 🎉langchain-ChatGLM WebUI🎉
-
 👍 [https://github.com/imClumsyPanda/langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
-
 """
 default_vs = vs_list[0] if len(vs_list) > 1 else "为空"
 init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
-
 请在右侧切换模式，目前支持直接与 LLM 模型对话或基于本地知识库问答。
-
 知识库问答模式，选择知识库名称后，即可开始问答，当前知识库{default_vs}，如有需要可以在选择知识库名称后上传文件/文件夹至知识库。
-
 知识库暂不支持文件删除，该功能将在后续版本中推出。
 """
 
