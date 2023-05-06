@@ -112,8 +112,9 @@ def get_vector_store(vs_id, files, history):
 
 
 def change_vs_name_input(vs_id,history):
+    print(vs_id)
     if vs_id == "新建知识库":
-        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None,history
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None,history         
     else:
         file_status = f"已加载知识库{vs_id}，请开始提问"
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH, vs_id),history + [[None, file_status]]
@@ -130,11 +131,11 @@ def add_vs_name(vs_name, vs_list, chatbot):
     if vs_name in vs_list:
         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True), vs_list, chatbot
+        return gr.update(visible=True), vs_list,gr.update(visible=True), gr.update(visible=True), gr.update(visible=False),  chatbot
     else:
         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True, choices=vs_list + [vs_name], value=vs_name), vs_list + [vs_name], chatbot
+        return gr.update(visible=True, choices= [vs_name] + vs_list, value=vs_name), [vs_name]+vs_list, gr.update(visible=False), gr.update(visible=False), gr.update(visible=True),chatbot
 
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
@@ -192,13 +193,10 @@ with gr.Blocks(css=block_css) as demo:
                                             )
                     vs_name = gr.Textbox(label="请输入新建知识库名称",
                                          lines=1,
-                                         interactive=True)
-                    vs_add = gr.Button(value="添加至知识库选项")
-                    vs_add.click(fn=add_vs_name,
-                                 inputs=[vs_name, vs_list, chatbot],
-                                 outputs=[select_vs, vs_list, chatbot])
-
-                    file2vs = gr.Column(visible=False)
+                                         interactive=True,
+                                         visible=True if default_path=="" else False)
+                    vs_add = gr.Button(value="添加至知识库选项",  visible=True if default_path=="" else False)                   
+                    file2vs = gr.Column(visible=False if default_path=="" else True)
                     with file2vs:
                         # load_vs = gr.Button("加载知识库")
                         gr.Markdown("向知识库中添加文件")
@@ -217,6 +215,9 @@ with gr.Blocks(css=block_css) as demo:
                                                    )
                             load_folder_button = gr.Button("上传文件夹并加载知识库")
                     # load_vs.click(fn=)
+                    vs_add.click(fn=add_vs_name,
+                                 inputs=[vs_name, vs_list, chatbot],
+                                 outputs=[select_vs, vs_list,vs_name,vs_add, file2vs,chatbot])
                     select_vs.change(fn=change_vs_name_input,
                                      inputs=[select_vs,chatbot],
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
