@@ -18,8 +18,14 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub('\s', ' ', text)
             text = text.replace("\n\n", "")
         if use_document_segmentation:
+            from modelscope.pipelines import pipeline
+            p = pipeline(
+                task="document-segmentation",
+                model='damo/nlp_bert_document-segmentation_chinese-base',
+                device="cpu")
             result = p(documents=text)
             sent_list = [i for i in result["text"].split("\n\t") if i]
+            return sent_list
         else:
             sent_sep_pattern = re.compile('([﹒﹔﹖﹗．。！？]["’”」』]{0,2}|(?=["‘“「『]{1,2}|$))')  # del ：；
             sent_list = []
