@@ -31,13 +31,13 @@ if __name__ == "__main__":
                                                                      chat_history=history,
                                                                      streaming=STREAMING):
             if STREAMING:
-                print(resp["result"][last_print_len:], end="", flush=True)
+                logger.info(resp["result"][last_print_len:], end="", flush=True)
                 last_print_len = len(resp["result"])
             else:
-                print(resp["result"])
+                logger.info(resp["result"])
         if REPLY_WITH_SOURCE:
             source_text = [f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                            # f"""相关度：{doc.metadata['score']}\n\n"""
                            for inum, doc in
                            enumerate(resp["source_documents"])]
-            print("\n\n" + "\n\n".join(source_text))
+            logger.info("\n\n" + "\n\n".join(source_text))
