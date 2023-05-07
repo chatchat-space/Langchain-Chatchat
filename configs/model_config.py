@@ -62,4 +62,7 @@ LLM_HISTORY_LEN = 3
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 5
 
+# 如果为0，则不生效，否则过滤掉向量距离大于阈值的doc
+VECTOR_SEARCH_SCORE_THRESHOLD = int(os.getenv("VECTOR_SEARCH_SCORE_THRESHOLD", "-1"))
+
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")

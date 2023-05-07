@@ -14,7 +14,8 @@ if __name__ == "__main__":
                           embedding_model=EMBEDDING_MODEL,
                           embedding_device=EMBEDDING_DEVICE,
                           llm_history_len=LLM_HISTORY_LEN,
-                          top_k=VECTOR_SEARCH_TOP_K)
+                          top_k=VECTOR_SEARCH_TOP_K,
+                          vector_search_score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD)
     vs_path = None
     while not vs_path:
         filepath = input("Input your local knowledge file path 请输入本地知识文件路径：")

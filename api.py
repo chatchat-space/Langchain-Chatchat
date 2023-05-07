@@ -16,7 +16,7 @@ from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import (VS_ROOT_PATH, EMBEDDING_DEVICE, EMBEDDING_MODEL, LLM_MODEL, UPLOAD_ROOT_PATH,
-                                  NLTK_DATA_PATH, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN)
+                                  NLTK_DATA_PATH, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, VECTOR_SEARCH_SCORE_THRESHOLD)
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 

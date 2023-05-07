@@ -72,6 +72,8 @@ def similarity_search_with_score_by_vector(
         if i == -1:
             # This happens when not enough docs are returned.
             continue
+        if scores[0][j] > self.score_threshold >= 0:
+            continue
         _id = self.index_to_docstore_id[i]
         doc = self.docstore.search(_id)
         id_set.add(i)
@@ -91,6 +93,8 @@ def similarity_search_with_score_by_vector(
             if break_flag:
                 break
     id_list = sorted(list(id_set))
+    if len(id_list) == 0:
+        return []
     id_lists = seperate_list(id_list)
     for id_seq in id_lists:
         for id in id_seq:
@@ -114,6 +118,7 @@ class LocalDocQA:
     embeddings: object = None
     top_k: int = VECTOR_SEARCH_TOP_K
     chunk_size: int = CHUNK_SIZE
+    score_threshold: int = VECTOR_SEARCH_SCORE_THRESHOLD
 
     def init_cfg(self,
                  embedding_model: str = EMBEDDING_MODEL,
@@ -124,6 +129,7 @@ class LocalDocQA:
                  top_k=VECTOR_SEARCH_TOP_K,
                  use_ptuning_v2: bool = USE_PTUNING_V2,
                  use_lora: bool = USE_LORA,
+                 score_threshold: int = VECTOR_SEARCH_SCORE_THRESHOLD
                  ):
         self.llm = ChatGLM()
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
@@ -133,6 +139,7 @@ class LocalDocQA:
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
+        self.score_threshold = score_threshold
 
     def init_knowledge_vector_store(self,
                                     filepath: str or List[str],
@@ -205,6 +212,7 @@ class LocalDocQA:
         vector_store = FAISS.load_local(vs_path, self.embeddings)
         FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector
         vector_store.chunk_size = self.chunk_size
+        vector_store.score_threshold = self.score_threshold
         related_docs_with_score = vector_store.similarity_search_with_score(query,
                                                                             k=self.top_k)
         related_docs = get_docs_with_score(related_docs_with_score)

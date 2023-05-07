@@ -8,6 +8,7 @@ import uuid
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
+
 def get_vs_list():
     lst_default = ["新建知识库"]
     if not os.path.exists(VS_ROOT_PATH):
@@ -56,6 +57,7 @@ def get_answer(query, vs_path, history, mode,
             yield history, ""
     logger.flag([query, vs_path, history, mode], username=username)
 
+
 def init_model():
     try:
         local_doc_qa.init_cfg()
@@ -74,14 +76,16 @@ def init_model():
         return reply
 
 
-def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, history):
+def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, history,
+                 score_threshold):
     try:
         local_doc_qa.init_cfg(llm_model=llm_model,
                               embedding_model=embedding_model,
                               llm_history_len=llm_history_len,
                               use_ptuning_v2=use_ptuning_v2,
                               use_lora=use_lora,
-                              top_k=top_k, )
+                              top_k=top_k,
+                              score_threshold=score_threshold)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
         print(model_status)
     except Exception as e:
@@ -113,7 +117,6 @@ def get_vector_store(vs_id, files, history):
     return vs_path, None, history + [[None, file_status]]
 
 
-
 def change_vs_name_input(vs_id, history):
     if vs_id == "新建知识库":
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None, history
@@ -121,7 +124,7 @@ def change_vs_name_input(vs_id, history):
         file_status = f"已加载知识库{vs_id}，请开始提问"
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH,
                                                                                                          vs_id), history + [
-                   [None, file_status]]
+            [None, file_status]]
 
 
 def change_mode(mode):
@@ -135,11 +138,14 @@ def add_vs_name(vs_name, vs_list, chatbot):
     if vs_name in vs_list:
         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True), vs_list,gr.update(visible=True), gr.update(visible=True), gr.update(visible=False),  chatbot
+        return gr.update(visible=True), vs_list, gr.update(visible=True), gr.update(visible=True), gr.update(
+            visible=False), chatbot
     else:
         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
         chatbot = chatbot + [[None, vs_status]]
-        return gr.update(visible=True, choices= [vs_name] + vs_list, value=vs_name), [vs_name]+vs_list, gr.update(visible=False), gr.update(visible=False), gr.update(visible=True),chatbot
+        return gr.update(visible=True, choices=[vs_name] + vs_list, value=vs_name), [vs_name] + vs_list, gr.update(
+            visible=False), gr.update(visible=False), gr.update(visible=True), chatbot
+
 
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
@@ -170,7 +176,7 @@ default_path = os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else "
 with gr.Blocks(css=block_css) as demo:
     vs_path, file_status, model_status, vs_list = gr.State(default_path), gr.State(""), gr.State(
         model_status), gr.State(vs_list)
-        
+
     gr.Markdown(webui_title)
     with gr.Tab("对话"):
         with gr.Row():
@@ -197,9 +203,9 @@ with gr.Blocks(css=block_css) as demo:
                     vs_name = gr.Textbox(label="请输入新建知识库名称",
                                          lines=1,
                                          interactive=True,
-                                         visible=True if default_path=="" else False)
-                    vs_add = gr.Button(value="添加至知识库选项",  visible=True if default_path=="" else False)                   
-                    file2vs = gr.Column(visible=False if default_path=="" else True)
+                                         visible=True if default_path == "" else False)
+                    vs_add = gr.Button(value="添加至知识库选项", visible=True if default_path == "" else False)
+                    file2vs = gr.Column(visible=False if default_path == "" else True)
                     with file2vs:
                         # load_vs = gr.Button("加载知识库")
                         gr.Markdown("向知识库中添加文件")
@@ -220,7 +226,7 @@ with gr.Blocks(css=block_css) as demo:
                     # load_vs.click(fn=)
                     vs_add.click(fn=add_vs_name,
                                  inputs=[vs_name, vs_list, chatbot],
-                                 outputs=[select_vs, vs_list,vs_name,vs_add, file2vs,chatbot])
+                                 outputs=[select_vs, vs_list, vs_name, vs_add, file2vs, chatbot])
                     select_vs.change(fn=change_vs_name_input,
                                      inputs=[select_vs, chatbot],
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
@@ -266,11 +272,14 @@ with gr.Blocks(css=block_css) as demo:
                           step=1,
                           label="向量匹配 top k",
                           interactive=True)
+        score_threshold = gr.Number(value=VECTOR_SEARCH_SCORE_THRESHOLD,
+                                    label="向量距离过滤，-1则不生效，否则过滤大于阈值的doc",
+                                    interactive=True)
         load_model_button = gr.Button("重新加载模型")
     load_model_button.click(reinit_model,
                             show_progress=True,
                             inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k,
-                                    chatbot],
+                                    chatbot, score_threshold],
                             outputs=chatbot
                             )
 
