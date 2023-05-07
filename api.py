@@ -170,36 +170,32 @@ async def delete_docs(
 
 
 async def chat(
-        knowledge_base_id: str = Body(..., description="知识库名字", example="kb1"),
-        question: str = Body(..., description="问题", example="工伤保险是什么？"),
+        knowledge_base_id: str = Body(..., description="Knowledge Base Name", example="kb1"),
+        question: str = Body(..., description="Question", example="工伤保险是什么？"),
         history: List[List[str]] = Body(
             [],
-            description="问题及答案的历史记录",
+            description="History of previous questions and answers",
             example=[
                 [
-                    "这里是问题，如：工伤保险是什么？",
-                    "答案：工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
+                    "工伤保险是什么？",
+                    "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
                 ]
             ],
         ),
 ):
     vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
-    resp = {}
-    if os.path.exists(vs_path) and knowledge_base_id:
-        for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=question, vs_path=vs_path, chat_history=history, streaming=False
-        ):
-            pass
-        source_documents = [
-            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-            f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
-        ]
-    else:
-        for resp_s, history in local_doc_qa.llm._call(prompt=question, history=history, streaming=False):
-            pass
-        resp["result"] = resp_s
-        source_documents =[("当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。")]
+    if not os.path.exists(vs_path):
+        raise ValueError(f"Knowledge base {knowledge_base_id} not found")
+
+    for resp, history in local_doc_qa.get_knowledge_based_answer(
+            query=question, vs_path=vs_path, chat_history=history, streaming=True
+    ):
+        pass
+    source_documents = [
+        f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+        f"""相关度：{doc.metadata['score']}\n\n"""
+        for inum, doc in enumerate(resp["source_documents"])
+    ]
 
     return ChatMessage(
         question=question,

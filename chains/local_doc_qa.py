@@ -103,7 +103,8 @@ def similarity_search_with_score_by_vector(
                 doc.page_content += doc0.page_content
         if not isinstance(doc, Document):
             raise ValueError(f"Could not find document for id {_id}, got {doc}")
-        docs.append((doc, scores[0][j]))
+        doc_score = min([scores[0][id] for id in [indices[0].tolist().index(i) for i in id_seq if i in indices[0]]])
+        docs.append((doc, doc_score))
     torch_gc()
     return docs
 
