@@ -9,73 +9,51 @@ class ChineseTextSplitter(CharacterTextSplitter):
         super().__init__(**kwargs)
         self.pdf = pdf
 
-    def split_text1(self, text: str, use_document_segmentation: bool = False) -> List[str]:
-        # use_document_segmentation参数指定是否用语义切分文档，此处采取的文档语义分割模型为达摩院开源的nlp_bert_document-segmentation_chinese-base，论文见https://arxiv.org/abs/2107.09278
-        # 如果使用模型进行文档语义切分，那么需要安装modelscope[nlp]：pip install "modelscope[nlp]" -f https://modelscope.oss-cn-beijing.aliyuncs.com/releases/repo.html
-        # 考虑到使用了三个模型，可能对于低配置gpu不太友好，因此这里将模型load进cpu计算，有需要的话可以替换device为自己的显卡id
+    def split_text1(self, text: str) -> List[str]:
         if self.pdf:
             text = re.sub(r"\n{3,}", "\n", text)
             text = re.sub('\s', ' ', text)
             text = text.replace("\n\n", "")
-        if use_document_segmentation:
-            from modelscope.pipelines import pipeline
-            p = pipeline(
-                task="document-segmentation",
-                model='damo/nlp_bert_document-segmentation_chinese-base',
-                device="cpu")
-            result = p(documents=text)
-            sent_list = [i for i in result["text"].split("\n\t") if i]
-            return sent_list
-        else:
-            sent_sep_pattern = re.compile('([﹒﹔﹖﹗．。！？]["’”」』]{0,2}|(?=["‘“「『]{1,2}|$))')  # del ：；
-            sent_list = []
-            for ele in sent_sep_pattern.split(text):
-                if sent_sep_pattern.match(ele) and sent_list:
-                    sent_list[-1] += ele
-                elif ele:
-                    sent_list.append(ele)
+        sent_sep_pattern = re.compile('([﹒﹔﹖﹗．。！？]["’”」』]{0,2}|(?=["‘“「『]{1,2}|$))')  # del ：；
+        sent_list = []
+        for ele in sent_sep_pattern.split(text):
+            if sent_sep_pattern.match(ele) and sent_list:
+                sent_list[-1] += ele
+            elif ele:
+                sent_list.append(ele)
         return sent_list
 
-    def split_text(self, text: str, use_document_segmentation: bool = False) -> List[str]:
+    def split_text(self, text: str) -> List[str]:
         if self.pdf:
             text = re.sub(r"\n{3,}", r"\n", text)
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
-        if use_document_segmentation:
-            from modelscope.pipelines import pipeline
-            p = pipeline(
-                task="document-segmentation",
-                model='damo/nlp_bert_document-segmentation_chinese-base',
-                device="cpu")
-            result = p(documents=text)
-            sent_list = [i for i in result["text"].split("\n\t") if i]
-            return sent_list
-        else:
-            text = re.sub(r'([;；.!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
-            text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
-            text = re.sub(r'(\…{2})([^"’”」』])', r"\1\n\2", text)  # 中文省略号
-            text = re.sub(r'([;；!?。！？\?]["’”」』]{0,2})([^;；!?，。！？\?])', r'\1\n\2', text)
-            # 如果双引号前有终止符，那么双引号才是句子的终点，把分句符\n放到双引号后，注意前面的几句都小心保留了双引号
-            text = text.rstrip()  # 段尾如果有多余的\n就去掉它
-            # 很多规则中会考虑分号;，但是这里我把它忽略不计，破折号、英文双引号等同样忽略，需要的再做些简单调整即可。
-            ls = [i for i in text.split("\n") if i]
-            for ele in ls:
-                if len(ele) > SENTENCE_SIZE:
-                    ele1 = re.sub(r'([,，.]["’”」』]{0,2})([^,，.])', r'\1\n\2', ele)
-                    ele1_ls = ele1.split("\n")
-                    for ele_ele1 in ele1_ls:
-                        if len(ele_ele1) > SENTENCE_SIZE:
-                            ele_ele2 = re.sub(r'([\n]{1,}| {2,}["’”」』]{0,2})([^\s])', r'\1\n\2', ele_ele1)
-                            ele2_ls = ele_ele2.split("\n")
-                            for ele_ele2 in ele2_ls:
-                                if len(ele_ele2) > SENTENCE_SIZE:
-                                    ele_ele3 = re.sub('( ["’”」』]{0,2})([^ ])', r'\1\n\2', ele_ele2)
-                                    ele2_id = ele2_ls.index(ele_ele2)
-                                    ele2_ls = ele2_ls[:ele2_id] + [i for i in ele_ele3.split("\n") if i] + ele2_ls[
-                                                                                                           ele2_id + 1:]
-                            ele_id = ele1_ls.index(ele_ele1)
-                            ele1_ls = ele1_ls[:ele_id] + [i for i in ele2_ls if i] + ele1_ls[ele_id + 1:]
 
-                    id = ls.index(ele)
-                    ls = ls[:id] + [i for i in ele1_ls if i] + ls[id + 1:]
-            return ls
+        text = re.sub(r'([;；.!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
+        text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
+        text = re.sub(r'(\…{2})([^"’”」』])', r"\1\n\2", text)  # 中文省略号
+        text = re.sub(r'([;；!?。！？\?]["’”」』]{0,2})([^;；!?，。！？\?])', r'\1\n\2', text)
+        # 如果双引号前有终止符，那么双引号才是句子的终点，把分句符\n放到双引号后，注意前面的几句都小心保留了双引号
+        text = text.rstrip()  # 段尾如果有多余的\n就去掉它
+        # 很多规则中会考虑分号;，但是这里我把它忽略不计，破折号、英文双引号等同样忽略，需要的再做些简单调整即可。
+        ls = [i for i in text.split("\n") if i]
+        for ele in ls:
+            if len(ele) > SENTENCE_SIZE:
+                ele1 = re.sub(r'([,，.]["’”」』]{0,2})([^,，.])', r'\1\n\2', ele)
+                ele1_ls = ele1.split("\n")
+                for ele_ele1 in ele1_ls:
+                    if len(ele_ele1) > SENTENCE_SIZE:
+                        ele_ele2 = re.sub(r'([\n]{1,}| {2,}["’”」』]{0,2})([^\s])', r'\1\n\2', ele_ele1)
+                        ele2_ls = ele_ele2.split("\n")
+                        for ele_ele2 in ele2_ls:
+                            if len(ele_ele2) > SENTENCE_SIZE:
+                                ele_ele3 = re.sub('( ["’”」』]{0,2})([^ ])', r'\1\n\2', ele_ele2)
+                                ele2_id = ele2_ls.index(ele_ele2)
+                                ele2_ls = ele2_ls[:ele2_id] + [i for i in ele_ele3.split("\n") if i] + ele2_ls[
+                                                                                                       ele2_id + 1:]
+                        ele_id = ele1_ls.index(ele_ele1)
+                        ele1_ls = ele1_ls[:ele_id] + [i for i in ele2_ls if i] + ele1_ls[ele_id + 1:]
+
+                id = ls.index(ele)
+                ls = ls[:id] + [i for i in ele1_ls if i] + ls[id + 1:]
+        return ls
