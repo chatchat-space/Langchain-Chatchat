@@ -13,4 +13,5 @@ gradio==3.28.3
 fastapi
 uvicorn
 peft
+pypinyin
 #detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2
