@@ -1,0 +1,64 @@
+{
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "json",
+    "jsonc",
+    "json5",
+    "yaml",
+    "yml",
+    "markdown"
+  ],
+  "cSpell.words": [
+    "antfu",
+    "axios",
+    "bumpp",
+    "chatgpt",
+    "commitlint",
+    "davinci",
+    "dockerhub",
+    "esno",
+    "GPTAPI",
+    "highlightjs",
+    "hljs",
+    "iconify",
+    "katex",
+    "katexmath",
+    "linkify",
+    "logprobs",
+    "mdhljs",
+    "mila",
+    "nodata",
+    "OPENAI",
+    "pinia",
+    "Popconfirm",
+    "rushstack",
+    "Sider",
+    "tailwindcss",
+    "traptitech",
+    "tsup",
+    "Typecheck",
+    "unplugin",
+    "VITE",
+    "vueuse",
+    "Zhao"
+  ],
+  "i18n-ally.enabledParsers": [
+    "ts"
+  ],
+  "i18n-ally.sortKeys": true,
+  "i18n-ally.keepFulfilled": true,
+  "i18n-ally.localesPaths": [
+    "src/locales"
+  ],
+  "i18n-ally.keystyle": "nested"
+}
