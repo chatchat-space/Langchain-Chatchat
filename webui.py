@@ -267,12 +267,12 @@ with gr.Blocks(css=block_css) as demo:
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
-                                           inputs=[select_vs, files, sentence_size, chatbot, vs_setting, file2vs],
+                                           inputs=[select_vs, files, sentence_size, chatbot, vs_add, vs_add],
                                            outputs=[vs_path, files, chatbot], )
                     load_folder_button.click(get_vector_store,
                                              show_progress=True,
-                                             inputs=[select_vs, folder_files, sentence_size, chatbot, vs_setting,
-                                                     file2vs],
+                                             inputs=[select_vs, folder_files, sentence_size, chatbot, vs_add,
+                                                     vs_add],
                                              outputs=[vs_path, folder_files, chatbot], )
                     flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
                     query.submit(get_answer,
@@ -356,12 +356,12 @@ with gr.Blocks(css=block_css) as demo:
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
-                                           inputs=[select_vs, files, sentence_size, chatbot, vs_setting, file2vs],
+                                           inputs=[select_vs, files, sentence_size, chatbot, vs_add, vs_add],
                                            outputs=[vs_path, files, chatbot], )
                     load_folder_button.click(get_vector_store,
                                              show_progress=True,
-                                             inputs=[select_vs, folder_files, sentence_size, chatbot, vs_setting,
-                                                     file2vs],
+                                             inputs=[select_vs, folder_files, sentence_size, chatbot, vs_add,
+                                                     vs_add],
                                              outputs=[vs_path, folder_files, chatbot], )
                     load_conent_button.click(get_vector_store,
                                              show_progress=True,
