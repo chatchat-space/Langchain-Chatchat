@@ -69,7 +69,7 @@ LLM_HISTORY_LEN = 3
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 5
 
-# 如果为0，则不生效，经测试小于500值的结果更精准
+# 如果为0，则不生效，经测试小于600值的结果更精准
 VECTOR_SEARCH_SCORE_THRESHOLD = 0
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
