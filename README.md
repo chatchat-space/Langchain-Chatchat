@@ -98,7 +98,7 @@ $ python webui.py
 ```shell
 $ python api.py
 ```
-或执行以下脚本体验基于 VUE 的前端页面
+或成功部署 API 后，执行以下脚本体验基于 VUE 的前端页面
 ```shell
 $ cd views 
 
