@@ -1,6 +1,13 @@
 import torch.cuda
 import torch.backends
 import os
+import logging
+import uuid
+
+LOG_FORMAT = "%(levelname) -5s %(asctime)s" "-1d: %(message)s"
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logging.basicConfig(format=LOG_FORMAT)
 
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
@@ -50,6 +57,9 @@ PROMPT_TEMPLATE = """已知信息：
 
 根据上述已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题” 或 “没有提供足够的相关信息”，不允许在答案中添加编造成分，答案请使用中文。 问题是：{question}"""
 
+# 文本分句长度
+SENTENCE_SIZE = 100
+
 # 匹配后单段上下文长度
 CHUNK_SIZE = 250
 
@@ -60,3 +70,13 @@ LLM_HISTORY_LEN = 3
 VECTOR_SEARCH_TOP_K = 5
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
+
+FLAG_USER_NAME = uuid.uuid4().hex
+
+logger.info(f"""
+loading model config
+llm device: {LLM_DEVICE}
+embedding device: {EMBEDDING_DEVICE}
+dir: {os.path.dirname(os.path.dirname(__file__))}
+flagging username: {FLAG_USER_NAME}
+""")

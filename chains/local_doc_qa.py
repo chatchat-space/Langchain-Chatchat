@@ -9,6 +9,7 @@ from typing import List, Tuple
 from langchain.docstore.document import Document
 import numpy as np
 from utils import torch_gc
+from tqdm import tqdm
 
 
 DEVICE_ = EMBEDDING_DEVICE
@@ -102,7 +103,8 @@ def similarity_search_with_score_by_vector(
                 doc.page_content += doc0.page_content
         if not isinstance(doc, Document):
             raise ValueError(f"Could not find document for id {_id}, got {doc}")
-        docs.append((doc, scores[0][j]))
+        doc_score = min([scores[0][id] for id in [indices[0].tolist().index(i) for i in id_seq if i in indices[0]]])
+        docs.append((doc, doc_score))
     torch_gc()
     return docs
 
@@ -136,6 +138,7 @@ class LocalDocQA:
                                     filepath: str or List[str],
                                     vs_path: str or os.PathLike = None):
         loaded_files = []
+        failed_files = []
         if isinstance(filepath, str):
             if not os.path.exists(filepath):
                 print("路径不存在")
@@ -152,15 +155,19 @@ class LocalDocQA:
                     return None
             elif os.path.isdir(filepath):
                 docs = []
-                for file in os.listdir(filepath):
+                for file in tqdm(os.listdir(filepath), desc="加载文件"):
                     fullfilepath = os.path.join(filepath, file)
                     try:
                         docs += load_file(fullfilepath)
-                        print(f"{file} 已成功加载")
                         loaded_files.append(fullfilepath)
                     except Exception as e:
-                        print(e)
-                        print(f"{file} 未能成功加载")
+                        failed_files.append(file)
+
+                if len(failed_files) > 0:
+                    print("以下文件未能成功加载：")
+                    for file in failed_files:
+                        print(file,end="\n")
+
         else:
             docs = []
             for file in filepath:
@@ -172,6 +179,7 @@ class LocalDocQA:
                     print(e)
                     print(f"{file} 未能成功加载")
         if len(docs) > 0:
+            print("文件加载完毕，正在生成向量库")
             if vs_path and os.path.isdir(vs_path):
                 vector_store = FAISS.load_local(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
@@ -234,7 +242,7 @@ if __name__ == "__main__":
                                                                  vs_path=vs_path,
                                                                  chat_history=[],
                                                                  streaming=True):
-        print(resp["result"][last_print_len:], end="", flush=True)
+        print(resp["result"][last_print_len:])
         last_print_len = len(resp["result"])
     source_text = [f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                    # f"""相关度：{doc.metadata['score']}\n\n"""
