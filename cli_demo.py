@@ -31,7 +31,7 @@ if __name__ == "__main__":
                                                                      chat_history=history,
                                                                      streaming=STREAMING):
             if STREAMING:
-                logger.info(resp["result"][last_print_len:], end="", flush=True)
+                logger.info(resp["result"][last_print_len:])
                 last_print_len = len(resp["result"])
             else:
                 logger.info(resp["result"])
