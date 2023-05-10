@@ -125,7 +125,7 @@ class ChatGLM(LLM):
                 prefix_encoder_file.close()
                 model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 model_config.prefix_projection = prefix_encoder_config['prefix_projection']
-            except Exception as e:                
+            except Exception as e:
                 logger.error(f"加载PrefixEncoder config.json失败: {e}")
         self.model = AutoModel.from_pretrained(model_name_or_path, config=model_config, trust_remote_code=True,
                                                **kwargs)
@@ -163,7 +163,7 @@ class ChatGLM(LLM):
                         new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
                 self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
                 self.model.transformer.prefix_encoder.float()
-            except Exception as e:              
+            except Exception as e:
                 logger.error(f"加载PrefixEncoder模型参数失败:{e}")
 
         self.model = self.model.eval()
