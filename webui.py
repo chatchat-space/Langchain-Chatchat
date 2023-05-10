@@ -152,7 +152,7 @@ webui_title = """
 # 🎉langchain-ChatGLM WebUI🎉
 👍 [https://github.com/imClumsyPanda/langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)
 """
-default_vs = vs_list[0] if len(vs_list) > 1 else "为空"
+default_vs = vs_list[0] if len(vs_list) > 0 else "为空"
 init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 
 请在右侧切换模式，目前支持直接与 LLM 模型对话或基于本地知识库问答。
@@ -163,7 +163,7 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 """
 
 model_status = init_model()
-default_path = os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""
+default_path = os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 0 else ""
 
 with gr.Blocks(css=block_css) as demo:
     vs_path, file_status, model_status, vs_list = gr.State(default_path), gr.State(""), gr.State(
