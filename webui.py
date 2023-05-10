@@ -175,7 +175,7 @@ def change_chunk_conent(mode, label_conent, history):
     if mode:
         return gr.update(visible=True), history + [[None, f"【已开启{conent}】"]]
     else:
-        return gr.update(visible=False), history + [[None, f"[已关闭{conent}]"]]
+        return gr.update(visible=False), history + [[None, f"【已关闭{conent}】"]]
 
 
 def add_vs_name(vs_name, vs_list, chatbot):
@@ -245,7 +245,7 @@ with gr.Blocks(css=block_css) as demo:
                                             interactive=True,
                                             value=vs_list.value[0] if len(vs_list.value) > 0 else None
                                             )
-                    vs_name = gr.Textbox(label="请输入新建知识库名称",
+                    vs_name = gr.Textbox(label="请输入新建知识库名称，当前知识库命名暂不支持中文",
                                          lines=1,
                                          interactive=True,
                                          visible=True)
@@ -327,7 +327,7 @@ with gr.Blocks(css=block_css) as demo:
                                             label="请选择要加载的知识库",
                                             interactive=True,
                                             value=vs_list.value[0] if len(vs_list.value) > 0 else None)
-                    vs_name = gr.Textbox(label="请输入新建知识库名称",
+                    vs_name = gr.Textbox(label="请输入新建知识库名称，当前知识库命名暂不支持中文",
                                          lines=1,
                                          interactive=True,
                                          visible=True)
