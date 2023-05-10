@@ -141,16 +141,26 @@ def change_vs_name_input(vs_id, history):
         file_status = f"已加载知识库{vs_id}，请开始提问"
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), os.path.join(VS_ROOT_PATH,
                                                                                                          vs_id), history + [
-            [None, file_status]]
+                   [None, file_status]]
+
+
+knowledge_base_test_mode_info = ("【注意】\n\n"
+                                 "1. 您已进入知识库测试模式，您输入的任何对话内容都将用于进行知识库查询，"
+                                 "并仅输出知识库匹配出的内容及相似度分值和及输入的文本源路径，查询的内容并不会进入模型查询。\n\n"
+                                 "2. 匹配内容相关度 Score 经测试，建议设置为 500 或更低，具体设置情况请结合实际使用调整。"
+                                 """3. 使用"添加单条数据"添加文本至知识库时，内容如未分段，则内容越多越会稀释各查询内容与之关联的score阈值。\n\n"""
+                                 "4. 单条内容长度建议设置在100-150左右。\n\n"
+                                 "5. 本界面用于知识入库及知识匹配相关参数设定，但当前版本中，"
+                                 "本界面中修改的参数并不会直接修改对话界面中参数，仍需前往`configs/model_config.py`修改后生效")
 
 
 def change_mode(mode, history):
     if mode == "知识库问答":
-        return gr.update(visible=True), gr.update(visible=False), history + [[None,
-                                                                              "【注意】：现在是知识库问答模式，您输入的任何查询都将进行知识库查询，然后会自动整理知识库关联内容进入模型查询！！！"]]
+        return gr.update(visible=True), gr.update(visible=False), history
+        # + [[None, "【注意】：您已进入知识库问答模式，您输入的任何查询都将进行知识库查询，然后会自动整理知识库关联内容进入模型查询！！！"]]
     elif mode == "知识库测试":
         return gr.update(visible=True), gr.update(visible=True), [[None,
-                                                                   "【注意】：现在是知识库测试模式，您输入的任何查询都将进行知识库查询，并仅输出知识库匹配出的内容及相似度分值和及输入的文本源路径，查询的内容并不会进入模型查询！！！如果单条内容入库，内容如未分段，则内容越多越会稀释各查询内容与之关联的score阈值。单条内容长度在100-150左右较为合理。"]]
+                                                                   knowledge_base_test_mode_info]]
     else:
         return gr.update(visible=False), gr.update(visible=False), history
 
@@ -207,7 +217,8 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 model_status = init_model()
 
 with gr.Blocks(css=block_css) as demo:
-    vs_path, file_status, model_status, vs_list = gr.State(os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""), gr.State(""), gr.State(
+    vs_path, file_status, model_status, vs_list = gr.State(
+        os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""), gr.State(""), gr.State(
         model_status), gr.State(vs_list)
 
     gr.Markdown(webui_title)
@@ -216,7 +227,7 @@ with gr.Blocks(css=block_css) as demo:
             with gr.Column(scale=10):
                 chatbot = gr.Chatbot([[None, init_message], [None, model_status.value]],
                                      elem_id="chat-box",
-                                     show_label=False).style(height=650)
+                                     show_label=False).style(height=750)
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交").style(container=False)
             with gr.Column(scale=5):
@@ -277,19 +288,19 @@ with gr.Blocks(css=block_css) as demo:
                     query.submit(get_answer,
                                  [query, vs_path, chatbot, mode],
                                  [chatbot, query])
-    with gr.Tab("知识库测试"):
+    with gr.Tab("知识库测试 Beta"):
         with gr.Row():
             with gr.Column(scale=10):
-                chatbot = gr.Chatbot([[None,
-                                       "【注意】：现在是知识库测试模式，您输入的任何查询都将进行知识库查询，并仅输出知识库匹配出的内容及相似度分值和及输入的文本源路径，查询的内容并不会进入模型查询！！！如果单条内容入库，内容如未分段，则内容越多越会稀释各查询内容与之关联的score阈值。单条内容长度在100-150左右较为合理。"]],
+                chatbot = gr.Chatbot([[None, knowledge_base_test_mode_info]],
                                      elem_id="chat-box",
                                      show_label=False).style(height=750)
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交").style(container=False)
             with gr.Column(scale=5):
-                mode = gr.Radio(["知识库问答", "知识库测试"],
+                mode = gr.Radio(["知识库测试"],  # "知识库问答",
                                 label="请选择使用模式",
-                                value="知识库测试", )
+                                value="知识库测试",
+                                visible=False)
                 knowledge_set = gr.Accordion("知识库设定", visible=True)
                 vs_setting = gr.Accordion("配置知识库", visible=True)
                 mode.change(fn=change_mode,
@@ -297,8 +308,9 @@ with gr.Blocks(css=block_css) as demo:
                             outputs=[vs_setting, knowledge_set, chatbot])
                 with knowledge_set:
                     score_threshold = gr.Number(value=VECTOR_SEARCH_SCORE_THRESHOLD,
-                                                label="score阈值，分值越低匹配度越高",
-                                                precision=0, interactive=True)
+                                                label="内容相关度 Score 阈值，分值越低匹配度越高",
+                                                precision=0,
+                                                interactive=True)
                     vector_search_top_k = gr.Number(value=VECTOR_SEARCH_TOP_K, precision=0,
                                                     label="获取知识库内容条数", interactive=True)
                     chunk_conent = gr.Checkbox(value=False,
