@@ -114,7 +114,7 @@ def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_conte
     if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_id)):
         os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_id))
     if local_doc_qa.llm and local_doc_qa.embeddings:
-        if isinstance(files, list) and one_conent is None:
+        if isinstance(files, list):
             for file in files:
                 filename = os.path.split(file.name)[-1]
                 shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
