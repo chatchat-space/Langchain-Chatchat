@@ -230,8 +230,12 @@ class LocalDocQA:
         vector_store.chunk_conent = self.chunk_conent
         vector_store.score_threshold = self.score_threshold
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
+        if related_docs_with_score:
+            prompt = generate_prompt(related_docs_with_score, query)
+        else:
+            prompt = query
+            related_docs_with_score = []
         torch_gc()
-        prompt = generate_prompt(related_docs_with_score, query)
 
         for result, history in self.llm._call(prompt=prompt,
                                               history=chat_history,

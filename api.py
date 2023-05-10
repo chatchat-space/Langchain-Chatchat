@@ -184,18 +184,22 @@ async def chat(
         ),
 ):
     vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
-    if not os.path.exists(vs_path):
-        raise ValueError(f"Knowledge base {knowledge_base_id} not found")
-
-    for resp, history in local_doc_qa.get_knowledge_based_answer(
-            query=question, vs_path=vs_path, chat_history=history, streaming=True
-    ):
-        pass
-    source_documents = [
-        f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-        f"""相关度：{doc.metadata['score']}\n\n"""
-        for inum, doc in enumerate(resp["source_documents"])
-    ]
+    resp = {}
+    if os.path.exists(vs_path) and knowledge_base_id:
+        for resp, history in local_doc_qa.get_knowledge_based_answer(
+                query=question, vs_path=vs_path, chat_history=history, streaming=False
+        ):
+            pass
+        source_documents = [
+            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+            f"""相关度：{doc.metadata['score']}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+    else:
+        for resp_s, history in local_doc_qa.llm._call(prompt=question, history=history, streaming=False):
+            pass
+        resp["result"] = resp_s
+        source_documents = [("当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。")]
 
     return ChatMessage(
         question=question,
