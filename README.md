@@ -66,6 +66,7 @@ docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatG
 
 本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
+vue前端需要node18环境
 ### 从本地加载模型
 
 请参考 [THUDM/ChatGLM-6B#从本地加载模型](https://github.com/THUDM/ChatGLM-6B#从本地加载模型)
@@ -97,7 +98,13 @@ $ python webui.py
 ```shell
 $ python api.py
 ```
+或执行 cd views 
 
+pnpm i
+
+npm run dev
+
+体验vue页面
 
 注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
 
