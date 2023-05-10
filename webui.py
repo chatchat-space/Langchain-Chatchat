@@ -57,7 +57,7 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
         else:
             source = "".join(
                 [
-                    f"""<details> <summary>[score值]：{doc.metadata["score"]} - （{i + 1}）[出处]：  {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
+                    f"""<details> <summary>【出处{i + 1}】：  {os.path.split(doc.metadata["source"])[-1]} - 【内容匹配相关度 Score】：{doc.metadata["score"]}</summary>\n"""
                     f"""{doc.page_content}\n"""
                     f"""</details>"""
                     for i, doc in
