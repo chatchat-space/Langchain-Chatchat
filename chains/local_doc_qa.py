@@ -242,7 +242,7 @@ if __name__ == "__main__":
                                                                  vs_path=vs_path,
                                                                  chat_history=[],
                                                                  streaming=True):
-        print(resp["result"][last_print_len:], end="", flush=True)
+        print(resp["result"][last_print_len:])
         last_print_len = len(resp["result"])
     source_text = [f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                    # f"""相关度：{doc.metadata['score']}\n\n"""

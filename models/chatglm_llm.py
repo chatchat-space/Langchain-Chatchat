@@ -175,7 +175,7 @@ if __name__ == "__main__":
                    llm_device=LLM_DEVICE, )
     last_print_len = 0
     for resp, history in llm._call("你好", streaming=True):
-        logger.info(resp[last_print_len:], end="", flush=True)
+        logger.info(resp[last_print_len:])
         last_print_len = len(resp)
     for resp, history in llm._call("你好", streaming=False):
         logger.info(resp)
