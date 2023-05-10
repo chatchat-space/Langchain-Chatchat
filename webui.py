@@ -45,25 +45,29 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
                  enumerate(resp["source_documents"])])
             history[-1][-1] += source
             yield history, ""
-    elif mode == "知识库测试" and os.path.exists(vs_path):
-        resp, prompt = local_doc_qa.get_knowledge_based_conent_test(query=query, vs_path=vs_path,
-                                                                    score_threshold=score_threshold,
-                                                                    vector_search_top_k=vector_search_top_k,
-                                                                    chunk_conent=chunk_conent,
-                                                                    chunk_size=chunk_size)
-        if not resp["source_documents"]:
-            yield history + [[query,
-                              "根据您的设定，没有匹配到任何内容，请确认您设置的score阈值是否过小或其他参数是否正确！"]], ""
+    elif mode == "知识库测试":
+        if os.path.exists(vs_path):
+            resp, prompt = local_doc_qa.get_knowledge_based_conent_test(query=query, vs_path=vs_path,
+                                                                        score_threshold=score_threshold,
+                                                                        vector_search_top_k=vector_search_top_k,
+                                                                        chunk_conent=chunk_conent,
+                                                                        chunk_size=chunk_size)
+            if not resp["source_documents"]:
+                yield history + [[query,
+                                  "根据您的设定，没有匹配到任何内容，请确认您设置的知识相关度 Score 阈值是否过小或其他参数是否正确。"]], ""
+            else:
+                source = "\n".join(
+                    [
+                        f"""<details open> <summary>【知识相关度 Score】：{doc.metadata["score"]} - 【出处{i + 1}】：  {os.path.split(doc.metadata["source"])[-1]} </summary>\n"""
+                        f"""{doc.page_content}\n"""
+                        f"""</details>"""
+                        for i, doc in
+                        enumerate(resp["source_documents"])])
+                history.append([query, "以下内容为知识库中满足设置条件的匹配结果：\n\n" + source])
+                yield history, ""
         else:
-            source = "".join(
-                [
-                    f"""<details> <summary>【出处{i + 1}】：  {os.path.split(doc.metadata["source"])[-1]} - 【内容匹配相关度 Score】：{doc.metadata["score"]}</summary>\n"""
-                    f"""{doc.page_content}\n"""
-                    f"""</details>"""
-                    for i, doc in
-                    enumerate(resp["source_documents"])])
-            history.append([query, prompt + source])
-            yield history, ""
+            yield history + [[query,
+                              "请选择知识库后进行测试，当前未选择知识库。"]], ""
     else:
         for resp, history in local_doc_qa.llm._call(query, history, streaming=streaming):
             history[-1][-1] = resp + (
@@ -147,11 +151,12 @@ def change_vs_name_input(vs_id, history):
 knowledge_base_test_mode_info = ("【注意】\n\n"
                                  "1. 您已进入知识库测试模式，您输入的任何对话内容都将用于进行知识库查询，"
                                  "并仅输出知识库匹配出的内容及相似度分值和及输入的文本源路径，查询的内容并不会进入模型查询。\n\n"
-                                 "2. 匹配内容相关度 Score 经测试，建议设置为 500 或更低，具体设置情况请结合实际使用调整。"
+                                 "2. 知识相关度 Score 经测试，建议设置为 500 或更低，具体设置情况请结合实际使用调整。"
                                  """3. 使用"添加单条数据"添加文本至知识库时，内容如未分段，则内容越多越会稀释各查询内容与之关联的score阈值。\n\n"""
                                  "4. 单条内容长度建议设置在100-150左右。\n\n"
                                  "5. 本界面用于知识入库及知识匹配相关参数设定，但当前版本中，"
-                                 "本界面中修改的参数并不会直接修改对话界面中参数，仍需前往`configs/model_config.py`修改后生效")
+                                 "本界面中修改的参数并不会直接修改对话界面中参数，仍需前往`configs/model_config.py`修改后生效。"
+                                 "相关参数将在后续版本中支持本界面直接修改。")
 
 
 def change_mode(mode, history):
@@ -308,7 +313,7 @@ with gr.Blocks(css=block_css) as demo:
                             outputs=[vs_setting, knowledge_set, chatbot])
                 with knowledge_set:
                     score_threshold = gr.Number(value=VECTOR_SEARCH_SCORE_THRESHOLD,
-                                                label="内容相关度 Score 阈值，分值越低匹配度越高",
+                                                label="知识相关度 Score 阈值，分值越低匹配度越高",
                                                 precision=0,
                                                 interactive=True)
                     vector_search_top_k = gr.Number(value=VECTOR_SEARCH_TOP_K, precision=0,
@@ -317,7 +322,7 @@ with gr.Blocks(css=block_css) as demo:
                                                label="是否启用上下文关联",
                                                interactive=True)
                     chunk_sizes = gr.Number(value=CHUNK_SIZE, precision=0,
-                                            label="匹配单段内容的连接上下文长度",
+                                            label="匹配单段内容的连接上下文后最大长度",
                                             interactive=True, visible=False)
                     chunk_conent.change(fn=change_chunk_conent,
                                         inputs=[chunk_conent, gr.Textbox(value="chunk_conent", visible=False), chatbot],
