@@ -15,4 +15,6 @@ uvicorn
 peft
 pypinyin
 bitsandbytes
+pip install paddlepaddle==2.4.2
+pip install paddleocr
 #detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2
