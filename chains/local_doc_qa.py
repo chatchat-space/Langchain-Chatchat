@@ -176,7 +176,7 @@ class LocalDocQA:
                 if len(failed_files) > 0:
                     logger.info("以下文件未能成功加载：")
                     for file in failed_files:
-                        logger.info(file, end="\n")
+                        logger.info(f"{file}\n")
 
         else:
             docs = []
