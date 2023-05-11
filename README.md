@@ -38,6 +38,13 @@
     | INT8           | 8 GB                     | 9 GB                             |
     | INT4           | 6 GB                      | 7 GB                              |
 
+- MOSS 模型硬件需求
+
+    | **量化等级**  | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
+    |-------------------|-----------------------| --------------------------------- |
+    | FP16（无量化） | 68 GB             | -                     |
+    | INT8      | 20 GB          | -                     |
+
 - Embedding 模型硬件需求
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
@@ -107,7 +114,7 @@ $ pnpm i
 $ npm run dev
 ```
 
-注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
+注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G（MOSS模型下载需要70G）。
 
 执行后效果如下图所示：
 1. `对话` Tab 界面
@@ -174,6 +181,7 @@ Web UI 可以实现如下功能：
   - [x] [THUDM/chatglm-6b-int4](https://huggingface.co/THUDM/chatglm-6b-int4)
   - [x] [THUDM/chatglm-6b-int4-qe](https://huggingface.co/THUDM/chatglm-6b-int4-qe)
   - [x] [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)
+  - [x] [fnlp/moss-moon-003-sft](https://huggingface.co/fnlp/moss-moon-003-sft)
 - [ ] 增加更多 Embedding 模型支持
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)

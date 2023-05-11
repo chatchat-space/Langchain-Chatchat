@@ -1,7 +1,6 @@
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
-from models.chatglm_llm import ChatGLM
 from configs.model_config import *
 import datetime
 from textsplitter import ChineseTextSplitter
@@ -129,7 +128,12 @@ class LocalDocQA:
                  use_ptuning_v2: bool = USE_PTUNING_V2,
                  use_lora: bool = USE_LORA,
                  ):
-        self.llm = ChatGLM()
+        if llm_model.startswith('moss'):
+            from models.moss_llm import MOSS
+            self.llm = MOSS()
+        else:
+            from models.chatglm_llm import ChatGLM
+            self.llm = ChatGLM()
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
                             llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
         self.llm.history_len = llm_history_len
