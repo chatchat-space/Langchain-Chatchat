@@ -22,7 +22,7 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
     elif filepath.lower().endswith(".pdf"):
-        loader = UnstructuredFileLoader(filepath)
+        loader = UnstructuredFileLoader(filepath, strategy="fast")
         textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     else:
