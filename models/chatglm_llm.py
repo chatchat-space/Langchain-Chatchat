@@ -155,7 +155,7 @@ class ChatGLM(LLM):
                     model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
                 # 可传入device_map自定义每张卡的部署情况
                 if device_map is None:
-                    device_map = auto_configure_device_map(num_gpus)
+                    device_map = auto_configure_device_map(num_gpus, use_lora)
 
                 self.model = dispatch_model(self.model.half(), device_map=device_map)
         else:
