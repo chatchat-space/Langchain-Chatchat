@@ -34,7 +34,18 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
+    write_check_file(filepath, docs)
     return docs
+
+
+def write_check_file(filepath, docs):
+    fout = open('load_file.txt', 'a')
+    fout.write("filepath=%s,len=%s" % (filepath, len(docs)))
+    fout.write('\n')
+    for i in docs:
+        fout.write(str(i))
+        fout.write('\n')
+    fout.close()
 
 
 def image_ocr_txt(filepath, dir_path="tmp_files"):
