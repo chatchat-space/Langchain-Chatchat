@@ -46,7 +46,6 @@ def image_ocr_txt(filepath, dir_path="tmp_files"):
 
     ocr_result = [i[1][0] for line in result for i in line]
     txt_file_path = os.path.join(dir_path, "%s.txt" % (filename))
-    print("\n".join(ocr_result))
     fout = open(txt_file_path, 'w', encoding='utf-8')
     fout.write("\n".join(ocr_result))
     fout.close()
