@@ -83,3 +83,7 @@ embedding device: {EMBEDDING_DEVICE}
 dir: {os.path.dirname(os.path.dirname(__file__))}
 flagging username: {FLAG_USER_NAME}
 """)
+
+# 是否开启跨域，默认为False，如果需要开启，请设置为True
+# is open cross domain
+OPEN_CROSS_DOMAIN = False
