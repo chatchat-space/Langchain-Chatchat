@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 from chains.local_doc_qa import LocalDocQA
-from configs.model_config import (API_UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
+from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
                                   EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 
