@@ -43,7 +43,7 @@ def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
 
 class ChatGLM(LLM):
     max_token: int = 10000
-    temperature: float = 0.01
+    temperature: float = 0.8
     top_p = 0.9
     # history = []
     tokenizer: object = None
@@ -68,6 +68,7 @@ class ChatGLM(LLM):
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     temperature=self.temperature,
+                    top_p=self.top_p,
             )):
                 torch_gc()
                 if inum == 0:
@@ -83,6 +84,7 @@ class ChatGLM(LLM):
                 history=history[-self.history_len:] if self.history_len > 0 else [],
                 max_length=self.max_token,
                 temperature=self.temperature,
+                top_p=self.top_p,
             )
             torch_gc()
             history += [[prompt, response]]
@@ -124,8 +126,7 @@ class ChatGLM(LLM):
                 model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 model_config.prefix_projection = prefix_encoder_config['prefix_projection']
             except Exception as e:
-                print(e)
-                print("加载PrefixEncoder config.json失败")
+                logger.error(f"加载PrefixEncoder config.json失败: {e}")
         self.model = AutoModel.from_pretrained(model_name_or_path, config=model_config, trust_remote_code=True,
                                                **kwargs)
         if LLM_LORA_PATH and use_lora:
@@ -141,7 +142,7 @@ class ChatGLM(LLM):
                 from accelerate import dispatch_model
 
                 model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=True,
-                        config=model_config, **kwargs)
+                                                  config=model_config, **kwargs)
                 if LLM_LORA_PATH and use_lora:
                     from peft import PeftModel
                     model = PeftModel.from_pretrained(model, LLM_LORA_PATH)
@@ -163,8 +164,7 @@ class ChatGLM(LLM):
                 self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
                 self.model.transformer.prefix_encoder.float()
             except Exception as e:
-                print(e)
-                print("加载PrefixEncoder模型参数失败")
+                logger.error(f"加载PrefixEncoder模型参数失败:{e}")
 
         self.model = self.model.eval()
 
@@ -175,8 +175,8 @@ if __name__ == "__main__":
                    llm_device=LLM_DEVICE, )
     last_print_len = 0
     for resp, history in llm._call("你好", streaming=True):
-        print(resp[last_print_len:], end="", flush=True)
+        logger.info(resp[last_print_len:], end="", flush=True)
         last_print_len = len(resp)
     for resp, history in llm._call("你好", streaming=False):
-        print(resp)
+        logger.info(resp)
     pass

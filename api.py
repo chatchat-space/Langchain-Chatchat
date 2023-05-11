@@ -11,12 +11,14 @@ import pydantic
 import uvicorn
 from fastapi import Body, FastAPI, File, Form, Query, UploadFile, WebSocket
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 from chains.local_doc_qa import LocalDocQA
-from configs.model_config import (VS_ROOT_PATH, EMBEDDING_DEVICE, EMBEDDING_MODEL, LLM_MODEL, UPLOAD_ROOT_PATH,
-                                  NLTK_DATA_PATH, VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN)
+from configs.model_config import (API_UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
+                                  EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
+                                  VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -85,6 +87,38 @@ def get_vs_path(local_doc_id: str):
 def get_file_path(local_doc_id: str, doc_name: str):
     return os.path.join(UPLOAD_ROOT_PATH, local_doc_id, doc_name)
 
+async def single_upload_file(
+        file: UploadFile = File(description="A single binary file"),
+        knowledge_base_id: str = Form(..., description="Knowledge Base Name", example="kb1"),
+):
+    saved_path = get_folder_path(knowledge_base_id)
+    if not os.path.exists(saved_path):
+        os.makedirs(saved_path)
+
+    file_content = await file.read()  # 读取上传文件的内容
+
+    file_path = os.path.join(saved_path, file.filename)
+    if os.path.exists(file_path) and os.path.getsize(file_path) == len(file_content):
+        file_status = f"文件 {file.filename} 已存在。"
+        return BaseResponse(code=200, msg=file_status)
+
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+
+    vs_path = get_vs_path(knowledge_base_id)
+    if os.path.exists(vs_path):
+        added_files = await local_doc_qa.add_files_to_knowledge_vector_store(vs_path, [file_path])
+        if len(added_files) > 0:
+            file_status = f"文件 {file.filename} 已上传并已加载知识库，请开始提问。"
+            return BaseResponse(code=200, msg=file_status)
+    else:
+        vs_path, loaded_files = await local_doc_qa.init_knowledge_vector_store([file_path], vs_path)
+        if len(loaded_files) > 0:
+            file_status = f"文件 {file.filename} 已上传至新的知识库，并已加载知识库，请开始提问。"
+            return BaseResponse(code=200, msg=file_status)
+
+    file_status = "文件上传失败，请重新上传"
+    return BaseResponse(code=500, msg=file_status)
 
 async def upload_file(
         files: Annotated[
@@ -204,6 +238,24 @@ async def chat(
         source_documents=source_documents,
     )
 
+async def no_knowledge_chat(
+        question: str = Body(..., description="Question", example="工伤保险是什么？"),
+        history: List[List[str]] = Body(
+            [],
+            description="History of previous questions and answers",
+            example=[
+                [
+                    "工伤保险是什么？",
+                    "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
+                ]
+            ],
+        ),
+):
+
+    for resp, history in local_doc_qa._call(
+            query=question, chat_history=history, streaming=True
+    ):
+        pass
 
 async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
     await websocket.accept()
@@ -260,9 +312,22 @@ def main():
     args = parser.parse_args()
 
     app = FastAPI()
+    # Add CORS middleware to allow all origins
+    # 在config.py中设置OPEN_DOMAIN=True，允许跨域
+    # set OPEN_DOMAIN=True in config.py to allow cross-domain
+    if OPEN_CROSS_DOMAIN:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+    )
     app.websocket("/chat-docs/stream-chat/{knowledge_base_id}")(stream_chat)
     app.post("/chat-docs/chat", response_model=ChatMessage)(chat)
+    app.post("/chat-docs/chatno", response_model=ChatMessage)(no_knowledge_chat)
     app.post("/chat-docs/upload", response_model=BaseResponse)(upload_file)
+    app.post("/chat-docs/uploadone", response_model=BaseResponse)(single_upload_file)
     app.get("/chat-docs/list", response_model=ListDocsResponse)(list_docs)
     app.delete("/chat-docs/delete", response_model=BaseResponse)(delete_docs)
     app.get("/", response_model=BaseResponse)(document)

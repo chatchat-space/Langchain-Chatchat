@@ -1,0 +1,17 @@
+"*.vue"    eol=lf
+"*.js"     eol=lf
+"*.ts"     eol=lf
+"*.jsx"    eol=lf
+"*.tsx"    eol=lf
+"*.cjs"    eol=lf
+"*.cts"    eol=lf
+"*.mjs"    eol=lf
+"*.mts"    eol=lf
+"*.json"   eol=lf
+"*.html"   eol=lf
+"*.css"    eol=lf
+"*.less"   eol=lf
+"*.scss"   eol=lf
+"*.sass"   eol=lf
+"*.styl"   eol=lf
+"*.md"     eol=lf
