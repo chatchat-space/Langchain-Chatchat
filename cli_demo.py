@@ -2,8 +2,6 @@ from configs.model_config import *
 from chains.local_doc_qa import LocalDocQA
 import os
 import nltk
-import sys
-sys.path.append("..")
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
