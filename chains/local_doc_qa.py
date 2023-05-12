@@ -11,6 +11,10 @@ from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
 
+import sys
+sys.path.append("/home/ubuntu/langchain-ChatGLM/chains")
+from embeddings import MyEmbeddings
+
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
 DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
@@ -54,7 +58,11 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
 def similarity_search_with_score_by_vector(
         self, embedding: List[float], k: int = 4
 ) -> List[Tuple[Document, float]]:
-    scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
+    arr=np.array([embedding],dtype=np.float32)
+    print(arr.shape)
+    arr = np.squeeze(arr)
+    scores, indices = self.index.search(arr, k)
+
     docs = []
     id_set = set()
     store_len = len(self.index_to_docstore_id)
@@ -138,7 +146,7 @@ class LocalDocQA:
                             llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
         self.llm.history_len = llm_history_len
 
-        self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
+        self.embeddings = MyEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
 
@@ -176,7 +184,7 @@ class LocalDocQA:
                 if len(failed_files) > 0:
                     logger.info("以下文件未能成功加载：")
                     for file in failed_files:
-                        logger.info(f"{file}\n")
+                        logger.info(file, end="\n")
 
         else:
             docs = []

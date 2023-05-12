@@ -193,6 +193,7 @@ Web UI 可以实现如下功能：
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
   - [x] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
   - [x] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
+  - [x] [ImageBind](https://github.com/facebookresearch/ImageBind)
 - [ ] Web UI
   - [x] 利用 gradio 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
