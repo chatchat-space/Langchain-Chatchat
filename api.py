@@ -253,15 +253,15 @@ async def no_knowledge_chat(
 ):
 
     for resp, history in local_doc_qa.llm._call(
-            query=question, chat_history=history, streaming=True
+            prompt=question, history=history, streaming=True
     ):
         pass
 
     return ChatMessage(
         question=question,
-        response=resp["result"],
+        response=resp,
         history=history,
-        source_documents=None,
+        source_documents=[],
     )
 
 async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
