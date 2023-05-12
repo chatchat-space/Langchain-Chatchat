@@ -1,6 +1,6 @@
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.document_loaders import UnstructuredFileLoader
+from langchain.document_loaders import UnstructuredFileLoader, UnstructuredImageLoader
 from configs.model_config import *
 import datetime
 from textsplitter import ChineseTextSplitter
@@ -10,7 +10,7 @@ import numpy as np
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
-from paddleocr import PaddleOCR
+from loader import UnstructuredPaddleImageLoader
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -26,8 +26,7 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
-        txt_file_path = image_ocr_txt(filepath)
-        loader = UnstructuredFileLoader(txt_file_path, mode="elements")
+        loader = UnstructuredPaddleImageLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
     else:
@@ -46,21 +45,6 @@ def write_check_file(filepath, docs):
         fout.write(str(i))
         fout.write('\n')
     fout.close()
-
-
-def image_ocr_txt(filepath, dir_path="tmp_files"):
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    filename = os.path.split(filepath)[-1]
-    ocr = PaddleOCR(lang="ch", use_gpu=False, show_log=False)
-    result = ocr.ocr(img=filepath)
-
-    ocr_result = [i[1][0] for line in result for i in line]
-    txt_file_path = os.path.join(dir_path, "%s.txt" % (filename))
-    fout = open(txt_file_path, 'w', encoding='utf-8')
-    fout.write("\n".join(ocr_result))
-    fout.close()
-    return txt_file_path
 
 
 def generate_prompt(related_docs: List[str], query: str,

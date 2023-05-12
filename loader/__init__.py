@@ -1,0 +1,1 @@
+from .image_loader import UnstructuredPaddleImageLoader
