@@ -11,6 +11,7 @@ from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
 from loader import UnstructuredPaddleImageLoader
+from loader import UnstructuredPaddlePDFLoader
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -22,8 +23,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
     elif filepath.lower().endswith(".pdf"):
-        loader = UnstructuredFileLoader(filepath, strategy="fast")
-        textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
+        loader = UnstructuredPaddlePDFLoader(filepath, mode="elements")
+        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
         loader = UnstructuredPaddleImageLoader(filepath, mode="elements")

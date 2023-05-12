@@ -1,3 +1,4 @@
+pymupdf
 paddlepaddle==2.4.2
 paddleocr
 langchain==0.0.146
