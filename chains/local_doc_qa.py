@@ -11,9 +11,7 @@ from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
 
-import sys
-sys.path.append("/home/ubuntu/langchain-ChatGLM/chains")
-from embeddings import MyEmbeddings
+from chains.modules.embeddings import MyEmbeddings
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -58,11 +56,9 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
 def similarity_search_with_score_by_vector(
         self, embedding: List[float], k: int = 4
 ) -> List[Tuple[Document, float]]:
-    arr=np.array([embedding],dtype=np.float32)
-    print(arr.shape)
-    arr = np.squeeze(arr)
-    scores, indices = self.index.search(arr, k)
-
+    embeding_arr = np.array([embedding],dtype=np.float32)
+    embeding_arr = np.squeeze(embeding_arr)
+    scores, indices = self.index.search(embeding_arr, k)
     docs = []
     id_set = set()
     store_len = len(self.index_to_docstore_id)
@@ -145,8 +141,11 @@ class LocalDocQA:
         self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
                             llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
         self.llm.history_len = llm_history_len
-
-        self.embeddings = MyEmbeddings(model_name=embedding_model_dict[embedding_model],
+        if embedding_model == "ImageBind":
+            self.embeddings = MyEmbeddings(model_name=embedding_model_dict[embedding_model],
+                                                model_kwargs={'device': embedding_device})
+        else:
+            self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
 
