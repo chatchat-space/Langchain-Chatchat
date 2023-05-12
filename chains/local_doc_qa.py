@@ -2,7 +2,7 @@ from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
 from configs.model_config import *
-import datetimeg
+import datetime
 from textsplitter import ChineseTextSplitter
 from typing import List, Tuple
 from langchain.docstore.document import Document
