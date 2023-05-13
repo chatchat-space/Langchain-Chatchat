@@ -1,3 +1,6 @@
+pymupdf
+paddlepaddle==2.4.2
+paddleocr
 langchain==0.0.146
 transformers==4.27.1
 unstructured[local-inference]

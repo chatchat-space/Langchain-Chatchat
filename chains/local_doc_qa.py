@@ -10,6 +10,8 @@ import numpy as np
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
+from loader import UnstructuredPaddleImageLoader
+from loader import UnstructuredPaddlePDFLoader
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -21,14 +23,29 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
     elif filepath.lower().endswith(".pdf"):
-        loader = UnstructuredFileLoader(filepath, strategy="fast")
+        loader = UnstructuredPaddlePDFLoader(filepath)
         textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
+    elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
+        loader = UnstructuredPaddleImageLoader(filepath, mode="elements")
+        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
+        docs = loader.load_and_split(text_splitter=textsplitter)
     else:
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
+    write_check_file(filepath, docs)
     return docs
+
+
+def write_check_file(filepath, docs):
+    fout = open('load_file.txt', 'a')
+    fout.write("filepath=%s,len=%s" % (filepath, len(docs)))
+    fout.write('\n')
+    for i in docs:
+        fout.write(str(i))
+        fout.write('\n')
+    fout.close()
 
 
 def generate_prompt(related_docs: List[str], query: str,
@@ -176,7 +193,7 @@ class LocalDocQA:
                 if len(failed_files) > 0:
                     logger.info("以下文件未能成功加载：")
                     for file in failed_files:
-                        logger.info(file, end="\n")
+                        logger.info(f"{file}\n")
 
         else:
             docs = []
@@ -212,7 +229,7 @@ class LocalDocQA:
             if not vs_path or not one_title or not one_conent:
                 logger.info("知识库添加错误，请确认知识库名字、标题、内容是否正确！")
                 return None, [one_title]
-            docs = [Document(page_content=one_conent+"\n", metadata={"source": one_title})]
+            docs = [Document(page_content=one_conent + "\n", metadata={"source": one_title})]
             if not one_content_segmentation:
                 text_splitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
                 docs = text_splitter.split_documents(docs)
