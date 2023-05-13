@@ -31,12 +31,27 @@
 ## 硬件需求
 
 - ChatGLM-6B 模型硬件需求
+
+    注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，模型文件下载至本地需要 15 GB 存储空间。
+
+    模型下载方法可参考 [常见问题](docs/FAQ.md) 中 Q8。
   
     | **量化等级**   | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
     | -------------- | ------------------------- | --------------------------------- |
     | FP16（无量化） | 13 GB                     | 14 GB                             |
     | INT8           | 8 GB                     | 9 GB                             |
     | INT4           | 6 GB                      | 7 GB                              |
+
+- MOSS 模型硬件需求
+    
+    注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，模型文件下载至本地需要 70 GB 存储空间
+
+    模型下载方法可参考 [常见问题](docs/FAQ.md) 中 Q8。
+
+    | **量化等级**  | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
+    |-------------------|-----------------------| --------------------------------- |
+    | FP16（无量化） | 68 GB             | -                     |
+    | INT8      | 20 GB          | -                     |
 
 - Embedding 模型硬件需求
 
@@ -66,6 +81,7 @@ docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatG
 
 本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
+vue前端需要node18环境
 ### 从本地加载模型
 
 请参考 [THUDM/ChatGLM-6B#从本地加载模型](https://github.com/THUDM/ChatGLM-6B#从本地加载模型)
@@ -97,19 +113,31 @@ $ python webui.py
 ```shell
 $ python api.py
 ```
+或成功部署 API 后，执行以下脚本体验基于 VUE 的前端页面
+```shell
+$ cd views 
 
+$ pnpm i
 
-注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，至少15G。
+$ npm run dev
+```
 
 执行后效果如下图所示：
-![webui](img/webui_0419.png)
+1. `对话` Tab 界面
+![](img/webui_0510_0.png)
+2. `知识库测试 Beta` Tab 界面
+![](img/webui_0510_1.png)
+3. `模型配置` Tab 界面
+![](img/webui_0510_2.png)
+
 Web UI 可以实现如下功能：
 
-1. 运行前自动读取`configs/model_config.py`中`LLM`及`Embedding`模型枚举及默认模型设置运行模型，如需重新加载模型，可在 `模型配置` 标签页重新选择后点击 `重新加载模型` 进行模型加载；
+1. 运行前自动读取`configs/model_config.py`中`LLM`及`Embedding`模型枚举及默认模型设置运行模型，如需重新加载模型，可在 `模型配置` Tab 重新选择后点击 `重新加载模型` 进行模型加载；
 2. 可手动调节保留对话历史长度、匹配知识库文段数量，可根据显存大小自行调节；
-3. 具备模式选择功能，可选择 `LLM对话` 与 `知识库问答` 模式进行对话，支持流式对话；
+3. `对话` Tab 具备模式选择功能，可选择 `LLM对话` 与 `知识库问答` 模式进行对话，支持流式对话；
 4. 添加 `配置知识库` 功能，支持选择已有知识库或新建知识库，并可向知识库中**新增**上传文件/文件夹，使用文件上传组件选择好文件后点击 `上传文件并加载知识库`，会将所选上传文档数据加载至知识库中，并基于更新后知识库进行问答；
-5. 后续版本中将会增加对知识库的修改或删除，及知识库中已导入文件的查看。
+5. 新增 `知识库测试 Beta` Tab，可用于测试不同文本切分方法与检索相关度阈值设置，暂不支持将测试参数作为 `对话` Tab 设置参数。
+6. 后续版本中将会增加对知识库的修改或删除，及知识库中已导入文件的查看。
 
 ### 常见问题
 
@@ -159,6 +187,7 @@ Web UI 可以实现如下功能：
   - [x] [THUDM/chatglm-6b-int4](https://huggingface.co/THUDM/chatglm-6b-int4)
   - [x] [THUDM/chatglm-6b-int4-qe](https://huggingface.co/THUDM/chatglm-6b-int4-qe)
   - [x] [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)
+  - [x] [fnlp/moss-moon-003-sft](https://huggingface.co/fnlp/moss-moon-003-sft)
 - [ ] 增加更多 Embedding 模型支持
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
@@ -178,6 +207,6 @@ Web UI 可以实现如下功能：
   - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
-![二维码](img/qr_code_14.jpg)
+![二维码](img/qr_code_17.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

@@ -82,6 +82,7 @@ docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatG
 本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
 vue前端需要node18环境
+
 ### 从本地加载模型
 
 请参考 [THUDM/ChatGLM-6B#从本地加载模型](https://github.com/THUDM/ChatGLM-6B#从本地加载模型)
@@ -177,6 +178,7 @@ Web UI 可以实现如下功能：
 
 - [ ] Langchain 应用
   - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
+  - [x] jpg 与 png 格式图片的 OCR 文字识别
   - [ ] 搜索引擎与本地网页接入
   - [ ] 结构化数据接入（如 csv、Excel、SQL 等）
   - [ ] 知识图谱/图数据库接入
@@ -200,6 +202,7 @@ Web UI 可以实现如下功能：
   - [ ] 增加知识库管理
     - [x] 选择知识库开始问答
     - [x] 上传文件/文件夹至知识库
+    - [x] 知识库测试
     - [ ] 删除知识库中文件
   - [ ] 利用 streamlit 实现 Web UI Demo
 - [ ] 增加 API 支持
