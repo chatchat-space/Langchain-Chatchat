@@ -11,7 +11,7 @@ class UnstructuredPaddleImageLoader(UnstructuredFileLoader):
 
     def _get_elements(self) -> List:
         def image_ocr_txt(filepath, dir_path="tmp_files"):
-            full_dir_path = os.path.join(filepath, dir_path)
+            full_dir_path = os.path.join(os.path.dirname(filepath), dir_path)
             if not os.path.exists(full_dir_path):
                 os.makedirs(full_dir_path)
             filename = os.path.split(filepath)[-1]
