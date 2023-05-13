@@ -63,7 +63,7 @@ async function onConversation() {
   const message = prompt.value
   if (usingContext.value) {
     for (let i = 0; i < dataSources.value.length; i = i + 2)
-      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text])
+      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
   }
   else { history.value.length = 0 }
 
@@ -124,7 +124,7 @@ async function onConversation() {
           question: message,
           history: history.value,
         })
-      const result = active.value ? res.data.response.text : res.data.response
+      const result = active.value ? `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}` : res.data.response
       updateChat(
         +uuid,
         dataSources.value.length - 1,
