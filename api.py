@@ -2,15 +2,12 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
-import tempfile
 from typing import List, Optional
 
 import nltk
 import pydantic
 import uvicorn
 from fastapi import Body, FastAPI, File, Form, Query, UploadFile, WebSocket
-from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing_extensions import Annotated
@@ -144,7 +141,7 @@ async def upload_files(
 
 
 async def list_docs(
-        knowledge_base_id: Optional[str] = Query(description="Knowledge Base Name", example="kb1")
+        knowledge_base_id: Optional[str] = Query(default=None, description="Knowledge Base Name", example="kb1")
 ):
     if knowledge_base_id:
         local_doc_folder = get_folder_path(knowledge_base_id)
