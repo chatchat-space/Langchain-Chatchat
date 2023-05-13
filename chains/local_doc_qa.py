@@ -39,7 +39,11 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
 
 
 def write_check_file(filepath, docs):
-    fout = open('load_file.txt', 'a')
+    folder_path = os.path.join(os.path.dirname(filepath), "tmp_files")
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    fp = os.path.join(folder_path, 'load_file.txt')
+    fout = open(fp, 'a')
     fout.write("filepath=%s,len=%s" % (filepath, len(docs)))
     fout.write('\n')
     for i in docs:
