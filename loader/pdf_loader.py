@@ -12,13 +12,14 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
 
     def _get_elements(self) -> List:
         def pdf_ocr_txt(filepath, dir_path="tmp_files"):
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
+            full_dir_path = os.path.join(filepath, dir_path)
+            if not os.path.exists(full_dir_path):
+                os.makedirs(full_dir_path)
             filename = os.path.split(filepath)[-1]
             ocr = PaddleOCR(lang="ch", use_gpu=False, show_log=False)
             doc = fitz.open(filepath)
-            txt_file_path = os.path.join(dir_path, "%s.txt" % (filename))
-            img_name = './img/.tmp.png'
+            txt_file_path = os.path.join(full_dir_path, "%s.txt" % (filename))
+            img_name = os.path.join(full_dir_path, 'tmp.png')
             with open(txt_file_path, 'w', encoding='utf-8') as fout:
 
                 for i in range(doc.page_count):
@@ -42,3 +43,10 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
         txt_file_path = pdf_ocr_txt(self.file_path)
         from unstructured.partition.text import partition_text
         return partition_text(filename=txt_file_path, **self.unstructured_kwargs)
+
+if __name__ == "__main__":
+    filepath = "../content/samples/test.pdf"
+    loader = UnstructuredPaddlePDFLoader(filepath, mode="elements")
+    docs = loader.load()
+    for doc in docs:
+        print(doc)
