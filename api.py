@@ -339,14 +339,14 @@ def api_start(host, port):
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse)(list_docs)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse)(delete_docs)
 
-    # local_doc_qa = LocalDocQA()
-    # local_doc_qa.init_cfg(
-    #     llm_model=LLM_MODEL,
-    #     embedding_model=EMBEDDING_MODEL,
-    #     embedding_device=EMBEDDING_DEVICE,
-    #     llm_history_len=LLM_HISTORY_LEN,
-    #     top_k=VECTOR_SEARCH_TOP_K,
-    # )
+    local_doc_qa = LocalDocQA()
+    local_doc_qa.init_cfg(
+        llm_model=LLM_MODEL,
+        embedding_model=EMBEDDING_MODEL,
+        embedding_device=EMBEDDING_DEVICE,
+        llm_history_len=LLM_HISTORY_LEN,
+        top_k=VECTOR_SEARCH_TOP_K,
+    )
     uvicorn.run(app, host=host, port=port)
 
 
