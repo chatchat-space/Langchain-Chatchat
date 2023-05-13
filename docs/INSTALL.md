@@ -29,7 +29,14 @@ $ git clone https://github.com/imClumsyPanda/langchain-ChatGLM.git
 # 进入目录
 $ cd langchain-ChatGLM
 
+# 项目中 pdf 加载由先前的 detectron2 替换为使用 paddleocr，如果之前有安装过 detectron2 需要先完成卸载避免引发 tools 冲突
+$ pip uninstall detectron2
+
 # 安装依赖
 $ pip install -r requirements.txt
+
+# 验证paddleocr是否成功，首次运行会下载约18M模型到~/.paddleocr
+$ python loader/image_loader.py
+
 ```
 注：使用 `langchain.document_loaders.UnstructuredFileLoader` 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。

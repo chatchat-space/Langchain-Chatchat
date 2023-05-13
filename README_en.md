@@ -121,7 +121,13 @@ $ python api.py
 Note: Before executing, check the remaining space in the `$HOME/.cache/huggingface/` folder, at least 15G.
 
 The resulting interface is shown below:
-![webui](img/webui_0419.png)
+
+![](img/webui_0510_0.png)
+
+![](img/webui_0510_1.png)
+
+![](img/webui_0510_2.png)
+
 The Web UI supports the following features:
 
 1. Automatically reads the `LLM` and `embedding` model enumerations in `configs/model_config.py`, allowing you to select and reload the model by clicking `重新加载模型`.

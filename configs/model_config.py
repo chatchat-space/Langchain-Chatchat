@@ -29,6 +29,7 @@ llm_model_dict = {
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b-int8": "THUDM/chatglm-6b-int8",
     "chatglm-6b": "THUDM/chatglm-6b",
+    "moss": "fnlp/moss-moon-003-sft",
 }
 
 # LLM model name
@@ -46,6 +47,9 @@ USE_PTUNING_V2 = False
 
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+# MOSS load in 8bit
+LOAD_IN_8BIT = True
 
 VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
 
@@ -69,6 +73,9 @@ LLM_HISTORY_LEN = 3
 # return top-k text chunk from vector store
 VECTOR_SEARCH_TOP_K = 5
 
+# 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
+VECTOR_SEARCH_SCORE_THRESHOLD = 0
+
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
 FLAG_USER_NAME = uuid.uuid4().hex
@@ -80,3 +87,7 @@ embedding device: {EMBEDDING_DEVICE}
 dir: {os.path.dirname(os.path.dirname(__file__))}
 flagging username: {FLAG_USER_NAME}
 """)
+
+# 是否开启跨域，默认为False，如果需要开启，请设置为True
+# is open cross domain
+OPEN_CROSS_DOMAIN = False
