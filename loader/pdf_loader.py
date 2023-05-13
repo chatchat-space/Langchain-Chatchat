@@ -44,6 +44,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
         from unstructured.partition.text import partition_text
         return partition_text(filename=txt_file_path, **self.unstructured_kwargs)
 
+
 if __name__ == "__main__":
     filepath = "../content/samples/test.pdf"
     loader = UnstructuredPaddlePDFLoader(filepath, mode="elements")
