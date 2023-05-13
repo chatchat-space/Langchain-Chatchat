@@ -1,4 +1,3 @@
-import qs from 'qs'
 import { api } from './api'
 
 export const chat = (params: any) => {
@@ -11,9 +10,9 @@ export const chat = (params: any) => {
 
 export const chatfile = (params: any) => {
   return api({
-    url: '/chatfile',
+    url: '/local_doc_qa/local_doc_chat',
     method: 'post',
-    data: qs.stringify(params),
+    data: JSON.stringify(params),
   })
 }
 

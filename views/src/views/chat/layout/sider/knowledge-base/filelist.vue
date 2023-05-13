@@ -41,7 +41,7 @@ function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEve
   <NUpload
     multiple
     directory-dnd
-    action="http://192.168.1.128:1002/api/local_doc_qa/upload_file"
+    action="http://127.0.0.1:1002/api/local_doc_qa/upload_file"
     :headers="{
       'naive-info': 'hello!',
     }"

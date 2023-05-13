@@ -3,8 +3,13 @@ import { NButton, NForm, NFormItem, NInput } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import filelist from './filelist.vue'
 import { getfilelist } from '@/api/chat'
+import { idStore } from '@/store/modules/knowledgebaseid/id'
 const items = ref<any>([])
+const choice = ref('')
+const store = idStore()
+
 onMounted(async () => {
+  choice.value = store.knowledgeid
   const res = await getfilelist({})
   res.data.data.forEach((item: any) => {
     items.value.push({
@@ -28,6 +33,9 @@ const rules = {
   },
 }
 const handleValidateClick = (item: any) => {
+  // console.log(item)
+  choice.value = item
+  store.knowledgeid = choice.value
   items.value.forEach((res: { value: any; show: boolean }) => {
     if (res.value === item)
       res.show = !res.show
@@ -46,6 +54,9 @@ const handleClick = () => {
 </script>
 
 <template>
+  <NButton block size="large">
+    对话知识库：{{ choice }}
+  </NButton>
   <NForm
     ref="formRef"
     inline

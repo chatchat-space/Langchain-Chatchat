@@ -15,6 +15,7 @@ import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
 import { t } from '@/locales'
 import { chat, chatfile } from '@/api/chat'
+import { idStore } from '@/store/modules/knowledgebaseid/id'
 let controller = new AbortController()
 
 // const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
@@ -22,7 +23,7 @@ let controller = new AbortController()
 const route = useRoute()
 const dialog = useDialog()
 const ms = useMessage()
-
+const idstore = idStore()
 const chatStore = useChatStore()
 const history = ref<any>([])
 const { isMobile } = useBasicLayout()
@@ -60,9 +61,12 @@ function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
-  dataSources.value.forEach((item) => {
-    console.log(item)
-  })
+  if (usingContext.value) {
+    for (let i = 0; i < dataSources.value.length; i = i + 2)
+      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text])
+  }
+  else { history.value.length = 0 }
+
   if (loading.value)
     return
 
@@ -112,6 +116,7 @@ async function onConversation() {
     const fetchChatAPIOnce = async () => {
       const res = active.value
         ? await chatfile({
+          knowledge_base_id: idstore.knowledgeid,
           question: message,
           history: history.value,
         })
@@ -266,7 +271,11 @@ async function onRegenerate(index: number) {
     const lastText = ''
     const fetchChatAPIOnce = async () => {
       const res = active.value
-        ? await chatfile({ message })
+        ? await chatfile({
+          knowledge_base_id: idstore.knowledgeid,
+          question: message,
+          history: history.value,
+        })
         : await chat({
           question: message,
           history: history.value,
