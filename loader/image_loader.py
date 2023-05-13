@@ -30,7 +30,7 @@ class UnstructuredPaddleImageLoader(UnstructuredFileLoader):
       
       
 if __name__ == "__main__":
-    filepath = "../content/samples/test.jpg"
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content", "samples", "test.jpg")
     loader = UnstructuredPaddleImageLoader(filepath, mode="elements")
     docs = loader.load()
     for doc in docs:

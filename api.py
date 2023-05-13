@@ -181,7 +181,7 @@ async def delete_docs(
         if os.path.exists(doc_path):
             os.remove(doc_path)
         else:
-            return {"code": 1, "msg": f"document {doc_name} not found"}
+            BaseResponse(code=1, msg=f"document {doc_name} not found")
 
         remain_docs = await list_docs(knowledge_base_id)
         if remain_docs["code"] != 0 or len(remain_docs["data"]) == 0:
@@ -211,24 +211,30 @@ async def local_doc_chat(
 ):
     vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
     if not os.path.exists(vs_path):
-        raise ValueError(f"Knowledge base {knowledge_base_id} not found")
+        # return BaseResponse(code=1, msg=f"Knowledge base {knowledge_base_id} not found")
+        return ChatMessage(
+            question=question,
+            response=f"Knowledge base {knowledge_base_id} not found",
+            history=history,
+            source_documents=[],
+        )
+    else:
+        for resp, history in local_doc_qa.get_knowledge_based_answer(
+                query=question, vs_path=vs_path, chat_history=history, streaming=True
+        ):
+            pass
+        source_documents = [
+            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+            f"""相关度：{doc.metadata['score']}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
 
-    for resp, history in local_doc_qa.get_knowledge_based_answer(
-            query=question, vs_path=vs_path, chat_history=history, streaming=True
-    ):
-        pass
-    source_documents = [
-        f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-        f"""相关度：{doc.metadata['score']}\n\n"""
-        for inum, doc in enumerate(resp["source_documents"])
-    ]
-
-    return ChatMessage(
-        question=question,
-        response=resp["result"],
-        history=history,
-        source_documents=source_documents,
-    )
+        return ChatMessage(
+            question=question,
+            response=resp["result"],
+            history=history,
+            source_documents=source_documents,
+        )
 
 
 async def chat(
