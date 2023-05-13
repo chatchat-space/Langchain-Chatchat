@@ -36,7 +36,7 @@ $ pip uninstall detectron2
 $ pip install -r requirements.txt
 
 # 验证paddleocr是否成功，首次运行会下载约18M模型到~/.paddleocr
-$ python loader/image_loader.py
+$ cd loader && python image_loader.py
 
 ```
 注：使用 `langchain.document_loaders.UnstructuredFileLoader` 进行非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。
