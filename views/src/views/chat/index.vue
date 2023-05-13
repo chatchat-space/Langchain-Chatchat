@@ -13,19 +13,18 @@ import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
-import { fetchChatAPIProcess } from '@/api'
 import { t } from '@/locales'
 import { chat, chatfile } from '@/api/chat'
 let controller = new AbortController()
 
-const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
+// const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
 const route = useRoute()
 const dialog = useDialog()
 const ms = useMessage()
 
 const chatStore = useChatStore()
-
+const history = ref<any>([])
 const { isMobile } = useBasicLayout()
 const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
 const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom } = useScroll()
@@ -61,7 +60,9 @@ function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
-
+  dataSources.value.forEach((item) => {
+    console.log(item)
+  })
   if (loading.value)
     return
 
@@ -110,13 +111,13 @@ async function onConversation() {
     const lastText = ''
     const fetchChatAPIOnce = async () => {
       const res = active.value
-        ? await chatfile({ message })
+        ? await chatfile({
+          question: message,
+          history: history.value,
+        })
         : await chat({
           question: message,
-          history: [[
-            '工伤保险是什么？',
-            '工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。',
-          ]],
+          history: history.value,
         })
       const result = active.value ? res.data.response.text : res.data.response
       updateChat(
@@ -230,7 +231,6 @@ async function onConversation() {
     loading.value = false
   }
 }
-
 async function onRegenerate(index: number) {
   if (loading.value)
     return
@@ -239,7 +239,7 @@ async function onRegenerate(index: number) {
 
   const { requestOptions } = dataSources.value[index]
 
-  let message = requestOptions?.prompt ?? ''
+  const message = requestOptions?.prompt ?? ''
 
   let options: Chat.ConversationRequest = {}
 
@@ -263,48 +263,30 @@ async function onRegenerate(index: number) {
   )
 
   try {
-    let lastText = ''
+    const lastText = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
-        options,
-        signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            updateChat(
-              +uuid,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-              },
-            )
-
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-          }
-          catch (error) {
-            //
-          }
+      const res = active.value
+        ? await chatfile({ message })
+        : await chat({
+          question: message,
+          history: history.value,
+        })
+      const result = active.value ? res.data.response.text : res.data.response
+      updateChat(
+        +uuid,
+        dataSources.value.length - 1,
+        {
+          dateTime: new Date().toLocaleString(),
+          text: lastText + (result ?? ''),
+          inversion: false,
+          error: false,
+          loading: false,
+          conversationOptions: null,
+          requestOptions: { prompt: message, options: { ...options } },
         },
-      })
+      )
+      scrollToBottomIfAtBottom()
+      loading.value = false
       updateChatSome(+uuid, index, { loading: false })
     }
     await fetchChatAPIOnce()
