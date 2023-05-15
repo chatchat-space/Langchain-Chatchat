@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 from typing import List, Optional
+import urllib
 
 import nltk
 import pydantic
@@ -169,24 +170,27 @@ async def list_docs(
 
 
 async def delete_docs(
-        knowledge_base_id: str = Form(...,
+        knowledge_base_id: str = Query(...,
                                       description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
                                       example="kb1"),
-        doc_name: Optional[str] = Form(
+        doc_name: Optional[str] = Query(
             None, description="doc name", example="doc_name_1.pdf"
         ),
 ):
+    knowledge_base_id = urllib.parse.unquote(knowledge_base_id)
     if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, knowledge_base_id)):
         return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
     if doc_name:
         doc_path = get_file_path(knowledge_base_id, doc_name)
         if os.path.exists(doc_path):
             os.remove(doc_path)
+            return BaseResponse(code=200, msg=f"document {doc_name} delete success")
         else:
-            BaseResponse(code=1, msg=f"document {doc_name} not found")
+            return BaseResponse(code=1, msg=f"document {doc_name} not found")
 
         remain_docs = await list_docs(knowledge_base_id)
-        if remain_docs["code"] != 0 or len(remain_docs["data"]) == 0:
+        remain_docs = remain_docs.json()
+        if len(remain_docs["data"]) == 0:
             shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
         else:
             local_doc_qa.init_knowledge_vector_store(
@@ -194,7 +198,7 @@ async def delete_docs(
             )
     else:
         shutil.rmtree(get_folder_path(knowledge_base_id))
-    return BaseResponse()
+        return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
 
 
 async def local_doc_chat(
