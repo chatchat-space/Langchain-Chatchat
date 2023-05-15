@@ -221,7 +221,12 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 
 model_status = init_model()
 
-with gr.Blocks(css=block_css) as demo:
+default_theme_args = dict(
+    font=["Source Sans Pro", 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    font_mono=['IBM Plex Mono', 'ui-monospace', 'Consolas', 'monospace'],
+)
+
+with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as demo:
     vs_path, file_status, model_status, vs_list = gr.State(
         os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""), gr.State(""), gr.State(
         model_status), gr.State(vs_list)
