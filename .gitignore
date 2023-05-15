@@ -172,3 +172,5 @@ llm/*
 embedding/*
 
 pyrightconfig.json
+loader/tmp_files
+flagged/*
