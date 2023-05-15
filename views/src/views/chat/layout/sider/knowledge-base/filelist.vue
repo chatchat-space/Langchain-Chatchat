@@ -1,33 +1,23 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NInput, NPopconfirm, NScrollbar } from 'naive-ui'
+import { onMounted, ref, toRef } from 'vue'
+import { NInput, NP, NPopconfirm, NScrollbar, NText, NUpload, NUploadDragger } from 'naive-ui'
 import { SvgIcon } from '@/components/common'
-import { useAppStore, useChatStore } from '@/store'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { deletefile, getfilelist } from '@/api/chat'
+import { useChatStore } from '@/store'
+import { deletefile, getfilelist, web_url } from '@/api/chat'
+const knowledge = defineProps({
+  knowledgebaseid: {
+    type: String, // 类型字符串
+  },
+})
+const knowledge_base_id = toRef(knowledge, 'knowledgebaseid')
 
-const { isMobile } = useBasicLayout()
-
-const appStore = useAppStore()
 const chatStore = useChatStore()
-const dataSources = ref<any[]>([])
+const dataSources = ref<any>([])
 
 onMounted(async () => {
-  const res = await getfilelist()
+  const res = await getfilelist(knowledge_base_id.value)
   dataSources.value = res.data.data
 })
-
-async function handleSelect({ uuid }: Chat.History) {
-  if (isActive(uuid))
-    return
-
-  if (chatStore.active)
-    chatStore.updateHistory(chatStore.active, { isEdit: false })
-  await chatStore.setActive(uuid)
-
-  if (isMobile.value)
-    appStore.setSiderCollapsed(true)
-}
 
 /* function handleEdit({ uuid }: Chat.History, isEdit: boolean, event?: MouseEvent) {
   event?.stopPropagation()
@@ -35,8 +25,8 @@ async function handleSelect({ uuid }: Chat.History) {
 } */
 
 async function handleDelete(item: any) {
-  /* const mid =  */await deletefile({ knowledge_base_id: '123', doc_name: item })
-  const res = await getfilelist()
+  /* const mid =  */await deletefile({ knowledge_base_id: knowledge_base_id.value, doc_name: item })
+  const res = await getfilelist(knowledge_base_id.value)
   dataSources.value = res.data.data
 }
 
@@ -45,13 +35,35 @@ function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEve
   if (event.key === 'Enter')
     chatStore.updateHistory(uuid, { isEdit })
 }
-
-function isActive(uuid: number) {
-  return chatStore.active === uuid
-}
+console.log(`${web_url()}/api/local_doc_qa/upload_file`)
 </script>
 
 <template>
+  <NUpload
+    multiple
+    directory-dnd
+    :action="`${web_url()}/api/local_doc_qa/upload_file`"
+    :headers="{
+      'naive-info': 'hello!',
+    }"
+    :data="{
+      knowledge_base_id: knowledge.knowledgebaseid as string,
+    }"
+  >
+    <NUploadDragger>
+      <!-- <div style="margin-bottom: 12px">
+        <NIcon size="48" :depth="3">
+          <archive-icon />
+        </NIcon>
+      </div> -->
+      <NText style="font-size: 16px">
+        点击或者拖动文件到该区域来上传
+      </NText>
+      <NP depth="3" style="margin: 8px 0 0 0">
+        在弹出的文件选择框，按住ctrl或shift进行多选
+      </NP>
+    </NUploadDragger>
+  </NUpload>
   <NScrollbar class="px-4">
     <div class="flex flex-col gap-2 text-sm">
       <template v-if="!dataSources.length">
@@ -64,8 +76,6 @@ function isActive(uuid: number) {
         <div v-for="(item, index) of dataSources" :key="index">
           <a
             class="relative flex items-center gap-3 px-3 py-3 break-all border rounded-md cursor-pointer hover:bg-neutral-100 group dark:border-neutral-800 dark:hover:bg-[#24272e]"
-            :class="isActive(item.uuid) && ['border-[#4b9e5f]', 'bg-neutral-100', 'text-[#4b9e5f]', 'dark:bg-[#24272e]', 'dark:border-[#4b9e5f]', 'pr-14']"
-            @click="handleSelect(item)"
           >
             <span>
               <SvgIcon icon="ri:message-3-line" />
@@ -91,10 +101,10 @@ function isActive(uuid: number) {
                 <NPopconfirm placement="bottom" @positive-click="handleDelete(item)">
                   <template #trigger>
                     <button class="p-1">
-                      <SvgIcon icon="ri:delete-bin-line" />
+                      <!--  <SvgIcon icon="ri:delete-bin-line" /> -->
                     </button>
                   </template>
-                  {{ $t('chat.deleteHistoryConfirm') }}
+                  确定删除此文件？
                 </NPopconfirm>
               </template>
             </div>

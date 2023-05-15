@@ -1,9 +1,8 @@
-import qs from 'qs'
 import { api } from './api'
 
 export const chat = (params: any) => {
   return api({
-    url: '/chat-docs/chatno',
+    url: '/chat',
     method: 'post',
     data: JSON.stringify(params),
   })
@@ -11,27 +10,28 @@ export const chat = (params: any) => {
 
 export const chatfile = (params: any) => {
   return api({
-    url: '/chatfile',
+    url: '/local_doc_qa/local_doc_chat',
     method: 'post',
-    data: qs.stringify(params),
+    data: JSON.stringify(params),
   })
 }
 
-export const getfilelist = () => {
+export const getfilelist = (knowledge_base_id: any) => {
   return api({
-    url: '/chat-docs/list',
+    url: '/local_doc_qa/list_files',
     method: 'get',
-    params: {
-      knowledge_base_id: '123',
-    },
+    params: { knowledge_base_id },
 
   })
 }
 
 export const deletefile = (params: any) => {
   return api({
-    url: '/chat-docs/delete',
+    url: '/local_doc_qa/delete_file',
     method: 'post',
     data: JSON.stringify(params),
   })
+}
+export const web_url = () => {
+  return window.location.origin
 }

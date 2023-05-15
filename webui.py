@@ -33,7 +33,7 @@ flag_csv_logger = gr.CSVLogger()
 def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
                vector_search_top_k=VECTOR_SEARCH_TOP_K, chunk_conent: bool = True,
                chunk_size=CHUNK_SIZE, streaming: bool = STREAMING):
-    if mode == "知识库问答" and os.path.exists(vs_path):
+    if mode == "知识库问答" and vs_path is not None and os.path.exists(vs_path):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=query, vs_path=vs_path, chat_history=history, streaming=streaming):
             source = "\n\n"
@@ -128,7 +128,7 @@ def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_conte
             vs_path, loaded_files = local_doc_qa.one_knowledge_add(vs_path, files, one_conent, one_content_segmentation,
                                                                    sentence_size)
         if len(loaded_files):
-            file_status = f"已添加 {'、'.join([os.path.split(i)[-1] for i in loaded_files])} 内容至知识库，并已加载知识库，请开始提问"
+            file_status = f"已添加 {'、'.join([os.path.split(i)[-1] for i in loaded_files if i])} 内容至知识库，并已加载知识库，请开始提问"
         else:
             file_status = "文件未成功加载，请重新上传文件"
     else:
@@ -221,7 +221,12 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 
 model_status = init_model()
 
-with gr.Blocks(css=block_css) as demo:
+default_theme_args = dict(
+    font=["Source Sans Pro", 'ui-sans-serif', 'system-ui', 'sans-serif'],
+    font_mono=['IBM Plex Mono', 'ui-monospace', 'Consolas', 'monospace'],
+)
+
+with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as demo:
     vs_path, file_status, model_status, vs_list = gr.State(
         os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""), gr.State(""), gr.State(
         model_status), gr.State(vs_list)
