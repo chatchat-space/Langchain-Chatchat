@@ -18,4 +18,5 @@ uvicorn
 peft
 pypinyin
 bitsandbytes
+click~=8.1.3
 tabulate
