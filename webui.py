@@ -4,9 +4,9 @@ import shutil
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
-import uuid
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+
 
 def get_vs_list():
     lst_default = ["新建知识库"]
@@ -195,6 +195,7 @@ def add_vs_name(vs_name, vs_list, chatbot):
         return gr.update(visible=True, choices=[vs_name] + vs_list, value=vs_name), [vs_name] + vs_list, gr.update(
             visible=False), gr.update(visible=False), gr.update(visible=True), chatbot
 
+
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
@@ -219,7 +220,6 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 """
 
 model_status = init_model()
-default_path =  os.path.join(VS_ROOT_PATH, vs_list[0]) if len(vs_list) > 1 else ""
 
 default_theme_args = dict(
     font=["Source Sans Pro", 'ui-sans-serif', 'system-ui', 'sans-serif'],
