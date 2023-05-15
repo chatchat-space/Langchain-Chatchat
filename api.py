@@ -85,6 +85,7 @@ def get_vs_path(local_doc_id: str):
 def get_file_path(local_doc_id: str, doc_name: str):
     return os.path.join(UPLOAD_ROOT_PATH, local_doc_id, doc_name)
 
+
 async def upload_file(
         file: UploadFile = File(description="A single binary file"),
         knowledge_base_id: str = Form(..., description="Knowledge Base Name", example="kb1"),
@@ -111,6 +112,7 @@ async def upload_file(
     else:
         file_status = "文件上传失败，请重新上传"
         return BaseResponse(code=500, msg=file_status)
+
 
 async def upload_files(
         files: Annotated[
@@ -308,13 +310,9 @@ async def document():
     return RedirectResponse(url="/docs")
 
 
-def main():
+def api_start(host, port):
     global app
     global local_doc_qa
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7861)
-    args = parser.parse_args()
 
     app = FastAPI()
     # Add CORS middleware to allow all origins
@@ -340,7 +338,6 @@ def main():
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse)(list_docs)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse)(delete_docs)
 
-
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
         llm_model=LLM_MODEL,
@@ -349,8 +346,12 @@ def main():
         llm_history_len=LLM_HISTORY_LEN,
         top_k=VECTOR_SEARCH_TOP_K,
     )
-    uvicorn.run(app, host=args.host, port=args.port)
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=7861)
+    args = parser.parse_args()
+    api_start(args.host, args.port)

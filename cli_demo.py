@@ -8,7 +8,8 @@ nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 # Show reply with source text from input document
 REPLY_WITH_SOURCE = True
 
-if __name__ == "__main__":
+
+def main():
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(llm_model=LLM_MODEL,
                           embedding_model=EMBEDDING_MODEL,
@@ -41,3 +42,7 @@ if __name__ == "__main__":
                            for inum, doc in
                            enumerate(resp["source_documents"])]
             print("\n\n" + "\n\n".join(source_text))
+
+
+if __name__ == "__main__":
+    main()
