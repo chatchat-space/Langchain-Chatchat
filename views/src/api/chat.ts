@@ -32,3 +32,6 @@ export const deletefile = (params: any) => {
     data: JSON.stringify(params),
   })
 }
+export const web_url = () => {
+  return window.location.origin
+}
