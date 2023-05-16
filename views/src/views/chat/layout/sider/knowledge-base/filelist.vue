@@ -25,7 +25,7 @@ onMounted(async () => {
 } */
 
 async function handleDelete(item: any) {
-  /* const mid =  */await deletefile(knowledge_base_id.value, item)
+  /* const mid =  */await deletefile({ knowledge_base_id: knowledge_base_id.value, doc_name: item })
   const res = await getfilelist(knowledge_base_id.value)
   dataSources.value = res.data.data
 }
@@ -41,7 +41,7 @@ function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEve
   <NUpload
     multiple
     directory-dnd
-    :action="`${web_url()}${setapi()}/local_doc_qa/upload_file`"
+    :action="setapi() === undefined ? `${web_url()}/api/local_doc_qa/upload_file` : `${setapi()}local_doc_qa/upload_file`"
     :headers="{
       'naive-info': 'hello!',
     }"
