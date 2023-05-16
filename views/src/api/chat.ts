@@ -35,3 +35,6 @@ export const deletefile = (params: any) => {
 export const web_url = () => {
   return window.location.origin
 }
+export const setapi = () => {
+  return window.baseApi
+}

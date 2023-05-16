@@ -3,7 +3,7 @@ import { onMounted, ref, toRef } from 'vue'
 import { NInput, NP, NPopconfirm, NScrollbar, NText, NUpload, NUploadDragger } from 'naive-ui'
 import { SvgIcon } from '@/components/common'
 import { useChatStore } from '@/store'
-import { deletefile, getfilelist, web_url } from '@/api/chat'
+import { deletefile, getfilelist, setapi, web_url } from '@/api/chat'
 const knowledge = defineProps({
   knowledgebaseid: {
     type: String, // 类型字符串
@@ -41,7 +41,7 @@ function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEve
   <NUpload
     multiple
     directory-dnd
-    :action="`${web_url()}/api/local_doc_qa/upload_file`"
+    :action="`${web_url()}${setapi()}/local_doc_qa/upload_file`"
     :headers="{
       'naive-info': 'hello!',
     }"
