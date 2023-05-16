@@ -13,10 +13,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
+
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
                                   EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
+from agent import bing_search as agent_bing_search
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -314,6 +316,23 @@ async def document():
     return RedirectResponse(url="/docs")
 
 
+async def bing_search(
+        search_text: str = Query(default=None, description="text you want to search", example="langchain")
+):
+    results = agent_bing_search(search_text)
+    result_str = ''
+    for result in results:
+        for k, v in result.items():
+            result_str += "%s: %s\n" % (k, v)
+        result_str += '\n'
+
+    return ChatMessage(
+        question=search_text,
+        response=result_str,
+        history=[],
+        source_documents=[],
+    )
+
 def api_start(host, port):
     global app
     global local_doc_qa
@@ -341,6 +360,8 @@ def api_start(host, port):
     app.post("/local_doc_qa/local_doc_chat", response_model=ChatMessage)(local_doc_chat)
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse)(list_docs)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse)(delete_docs)
+
+    app.get("/bing_search", response_model=ChatMessage)(bing_search)
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(

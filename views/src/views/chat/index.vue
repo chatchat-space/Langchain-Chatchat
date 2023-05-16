@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { NAutoComplete, NButton, NInput, NSwitch, useDialog, useMessage } from 'naive-ui'
+import { NAutoComplete, NButton, NInput, NRadioButton, NRadioGroup, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -14,7 +14,7 @@ import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
 import { t } from '@/locales'
-import { chat, chatfile } from '@/api/chat'
+import { bing_search, chat, chatfile } from '@/api/chat'
 import { idStore } from '@/store/modules/knowledgebaseid/id'
 let controller = new AbortController()
 
@@ -39,6 +39,7 @@ const conversationList = computed(() => dataSources.value.filter(item => (!item.
 const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
+const search = ref<boolean>('对话')
 
 // 添加PromptStore
 const promptStore = usePromptStore()
@@ -55,15 +56,70 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
-function handleSubmit() {
-  onConversation()
+async function handleSubmit() {
+  if (search.value == 'Bing搜索') {
+    loading.value = true
+    const options: Chat.ConversationRequest = {}
+    const lastText = ''
+    const message = prompt.value
+
+    addChat(
+      +uuid,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: message,
+        inversion: true,
+        error: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: null },
+      },
+    )
+    scrollToBottom()
+    const res = await bing_search(prompt.value)
+
+    const result = active.value ? `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}` : res.data.response
+    addChat(
+      +uuid,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: '',
+        loading: true,
+        inversion: false,
+        error: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: { ...options } },
+      },
+    )
+    scrollToBottom()
+    updateChat(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: lastText + (result ?? ''),
+        inversion: false,
+        error: false,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: { ...options } },
+      },
+    )
+    prompt.value = ''
+    scrollToBottomIfAtBottom()
+    loading.value = false
+  }
+  else {
+    onConversation()
+  }
 }
 
 async function onConversation() {
   const message = prompt.value
   if (usingContext.value) {
-    for (let i = 0; i < dataSources.value.length; i = i + 2)
-      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
+    for (let i = 0; i < dataSources.value.length; i = i + 2) {
+      if (!i)
+        history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
+    }
   }
   else { history.value.length = 0 }
 
@@ -480,6 +536,13 @@ onUnmounted(() => {
   if (loading.value)
     controller.abort()
 })
+function searchfun() {
+  if (search.value == '知识库')
+    active.value = true
+
+  else
+    active.value = false
+}
 </script>
 
 <template>
@@ -532,14 +595,11 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <NSwitch v-model:value="active">
-            <template #checked>
-              知识库
-            </template>
-            <template #unchecked>
-              知识库&nbsp;&nbsp;
-            </template>
-          </NSwitch>
+          <NRadioGroup v-model:value="search" @change="searchfun">
+            <NRadioButton value="对话" label="对话" />
+            <NRadioButton value="知识库" label="知识库" />
+            <NRadioButton value="Bing搜索" label="Bing搜索" />
+          </NRadioGroup>
           <HoverButton @click="handleClear">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:delete-bin-line" />
