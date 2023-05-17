@@ -49,9 +49,13 @@ cli.bat start webui
 ```shell
 cli.bat start api 
 ```
+### 环境参数配置
 
-可以设置使用配置文件的方式(配置文件在当前工程目录忽略后缀.yaml输入)
+可以设置使用配置文件的方式启动(配置文件在当前工程目录忽略后缀.yaml输入 默认为api_config.yaml)
 ```shell
 cli.bat start api -c api_config
 ```
-
+环境变量覆盖配置(配置名称为yaml中的:替换为.)
+```shell
+export llm.model_name=chatglm-6b
+```

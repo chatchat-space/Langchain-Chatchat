@@ -123,9 +123,9 @@ $ pnpm i
 $ npm run dev
 ```
 
-cli 工具命令行方式启动api支持配置文件([文档链接](docs%2Fcli.md))
+cli 工具命令行方式启动api支持配置文件([更多用法文档链接](docs%2Fcli.md))
 ```shell
-cli.sh start -c api_config
+cli.sh start api -c api_config
 ```
 
 执行后效果如下图所示：
