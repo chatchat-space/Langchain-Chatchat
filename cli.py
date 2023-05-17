@@ -2,6 +2,7 @@ import click
 
 from api import api_start as api_start
 from configs.model_config import llm_model_dict, embedding_model_dict
+from core.config import ConfigWarp
 
 
 @click.group()
@@ -39,10 +40,17 @@ def start():
 
 
 @start.command(name="api", context_settings=dict(help_option_names=['-h', '--help']))
-@click.option('-i', '--ip', default='0.0.0.0', show_default=True, type=str, help='api_server listen address.')
-@click.option('-p', '--port', default=7861, show_default=True, type=int, help='api_server listen port.')
-def start_api(ip, port):
-    api_start(host=ip, port=port)
+@click.option('-i', '--ip', show_default=True, type=str, help='api_server listen address.')
+@click.option('-p', '--port', show_default=True, type=int, help='api_server listen port.')
+@click.option('-c', '--config', default='api_config', show_default=True, type=str, help='use config name ignore .yaml')
+def start_api(ip, port, config):
+    overrides = []
+    if ip is not None:
+        overrides.append('api_server.host=' + ip)
+    if port is not None:
+        overrides.append('api_server.host=' + port)
+    cfg = ConfigWarp(config, overrides=overrides)
+    api_start(cfg)
 
 
 @start.command(name="cli", context_settings=dict(help_option_names=['-h', '--help']))

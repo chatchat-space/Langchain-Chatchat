@@ -24,6 +24,9 @@ cli.bat embedding ls
 ### start 启动管理
 
 查看启动选择
+```shell
+cli.bat start
+```
 
 ```shell
 cli.bat start
@@ -45,5 +48,10 @@ cli.bat start webui
 
 ```shell
 cli.bat start api 
+```
+
+可以设置使用配置文件的方式(配置文件在当前工程目录忽略后缀.yaml输入)
+```shell
+cli.bat start api -c api_config
 ```
 

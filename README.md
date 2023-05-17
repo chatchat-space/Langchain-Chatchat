@@ -123,6 +123,11 @@ $ pnpm i
 $ npm run dev
 ```
 
+cli 工具命令行方式启动api支持配置文件([文档链接](docs%2Fcli.md))
+```shell
+cli.sh start -c api_config
+```
+
 执行后效果如下图所示：
 1. `对话` Tab 界面
 ![](img/webui_0510_0.png)

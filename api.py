@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import json
 import os
@@ -16,6 +17,8 @@ from chains.local_doc_qa import LocalDocQA
 from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
                                   EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
+
+from core.config import ConfigWarp
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -306,11 +309,12 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+
 async def document():
     return RedirectResponse(url="/docs")
 
 
-def api_start(host, port):
+def api_start(config: ConfigWarp):
     global app
     global local_doc_qa
 
@@ -340,18 +344,24 @@ def api_start(host, port):
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
-        llm_model=LLM_MODEL,
-        embedding_model=EMBEDDING_MODEL,
-        embedding_device=EMBEDDING_DEVICE,
-        llm_history_len=LLM_HISTORY_LEN,
-        top_k=VECTOR_SEARCH_TOP_K,
+        llm_model=config.get_val('llm.model_name', LLM_MODEL),
+        embedding_model=config.get_val('embedding.model_name', EMBEDDING_MODEL),
+        embedding_device=config.get_val('embedding.device', EMBEDDING_DEVICE),
+        llm_history_len=config.get_val('llm.history_len', LLM_HISTORY_LEN),
+        top_k=config.get_val('vector.search_top_k', VECTOR_SEARCH_TOP_K),
     )
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=config.get_val('api_server.host'), port=config.get_val('api_server.port'))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7861)
+    host = parser.add_argument("--host", type=str)
+    port = parser.add_argument("--port", type=int)
     args = parser.parse_args()
-    api_start(args.host, args.port)
+    overrides = []
+    if args.host is not None:
+        overrides.append('api_server.host='+args.host)
+    if args.port is not None:
+        overrides.append('api_server.host='+args.port)
+    cfg = ConfigWarp('api_config', overrides=overrides)
+    api_start(cfg)
