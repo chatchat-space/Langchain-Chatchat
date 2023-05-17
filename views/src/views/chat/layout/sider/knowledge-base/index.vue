@@ -34,7 +34,6 @@ const rules = {
   },
 }
 const handleValidateClick = (item: any) => {
-  // console.log(item)
   choice.value = item
   store.knowledgeid = choice.value
   items.value.forEach((res: { value: any; show: boolean }) => {
