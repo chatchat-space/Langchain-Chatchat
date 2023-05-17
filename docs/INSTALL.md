@@ -32,6 +32,10 @@ $ cd langchain-ChatGLM
 # 项目中 pdf 加载由先前的 detectron2 替换为使用 paddleocr，如果之前有安装过 detectron2 需要先完成卸载避免引发 tools 冲突
 $ pip uninstall detectron2
 
+# 检查paddleocr依赖，linux环境下paddleocr依赖libX11，libXext
+$ yum install libX11
+$ yum install libXext
+
 # 安装依赖
 $ pip install -r requirements.txt
 
