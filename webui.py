@@ -1,9 +1,17 @@
 import gradio as gr
 import os
 import shutil
+
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
+from models.base import (BaseAnswer,
+                         AnswerResult,
+                         AnswerResultStream,
+                         AnswerResultQueueSentinelTokenListenerQueue)
+import models.shared as shared
+from models.loader.args import parser
+from models.loader import LoaderCheckPoint
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -69,7 +77,11 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
             yield history + [[query,
                               "请选择知识库后进行测试，当前未选择知识库。"]], ""
     else:
-        for resp, history in local_doc_qa.llm._call(query, history, streaming=streaming):
+        for answer_result in local_doc_qa.llm.generatorAnswer(prompt=query, history=history,
+                                                              streaming=streaming):
+
+            resp = answer_result.llm_output["answer"]
+            history = answer_result.history
             history[-1][-1] = resp + (
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
             yield history, ""
@@ -77,10 +89,12 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
     flag_csv_logger.flag([query, vs_path, history, mode], username=FLAG_USER_NAME)
 
 
-def init_model():
+def init_model(llm_model: BaseAnswer = None):
     try:
-        local_doc_qa.init_cfg()
-        local_doc_qa.llm._call("你好")
+        local_doc_qa.init_cfg(llm_model=llm_model)
+        generator = local_doc_qa.llm.generatorAnswer("你好")
+        for answer_result in generator:
+            print(answer_result.llm_output)
         reply = """模型已成功加载，可以开始对话，或从右侧选择模式后开始对话"""
         logger.info(reply)
         return reply
@@ -95,14 +109,13 @@ def init_model():
         return reply
 
 
-def reinit_model(llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora, top_k, history):
+def reinit_model(llm_model, embedding_model, llm_history_len, no_remote_model, use_ptuning_v2, use_lora, top_k, history):
     try:
-        local_doc_qa.init_cfg(llm_model=llm_model,
+        llm_model_ins = shared.loaderLLM(llm_model, no_remote_model, use_ptuning_v2)
+        llm_model_ins.history_len = llm_history_len
+        local_doc_qa.init_cfg(llm_model=llm_model_ins,
                               embedding_model=embedding_model,
-                              llm_history_len=llm_history_len,
-                              use_ptuning_v2=use_ptuning_v2,
-                              use_lora=use_lora,
-                              top_k=top_k, )
+                              top_k=top_k)
         model_status = """模型已成功重新加载，可以开始对话，或从右侧选择模式后开始对话"""
         logger.info(model_status)
     except Exception as e:
@@ -219,7 +232,17 @@ init_message = f"""欢迎使用 langchain-ChatGLM Web UI！
 知识库暂不支持文件删除，该功能将在后续版本中推出。
 """
 
-model_status = init_model()
+# 初始化消息
+args = None
+args = parser.parse_args()
+
+args_dict = vars(args)
+shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+llm_model_ins = shared.loaderLLM()
+llm_model_ins.set_history_len(LLM_HISTORY_LEN)
+
+model_status = init_model(llm_model=llm_model_ins)
+
 
 default_theme_args = dict(
     font=["Source Sans Pro", 'ui-sans-serif', 'system-ui', 'sans-serif'],
@@ -399,6 +422,10 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                              label="LLM 模型",
                              value=LLM_MODEL,
                              interactive=True)
+        no_remote_model = gr.Checkbox(shared.LoaderCheckPoint.no_remote_model,
+                                      label="加载本地模型",
+                                      interactive=True)
+
         llm_history_len = gr.Slider(0, 10,
                                     value=LLM_HISTORY_LEN,
                                     step=1,
@@ -418,7 +445,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                           label="向量匹配 top k", interactive=True)
         load_model_button = gr.Button("重新加载模型")
         load_model_button.click(reinit_model, show_progress=True,
-                                inputs=[llm_model, embedding_model, llm_history_len, use_ptuning_v2, use_lora,
+                                inputs=[llm_model, embedding_model, llm_history_len, no_remote_model, use_ptuning_v2, use_lora,
                                         top_k, chatbot], outputs=chatbot)
 
 (demo

@@ -22,14 +22,54 @@ EMBEDDING_MODEL = "text2vec"
 # Embedding running device
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
+
 # supported LLM models
+"""
+llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
+"""
 llm_model_dict = {
-    "chatyuan": "ClueAI/ChatYuan-large-v2",
-    "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
-    "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
-    "chatglm-6b-int8": "THUDM/chatglm-6b-int8",
-    "chatglm-6b": "THUDM/chatglm-6b",
-    "moss": "fnlp/moss-moon-003-sft",
+    "chatglm-6b-int4-qe": {
+        "name": "chatglm-6b-int4-qe",
+        "remote-checkpoint": "THUDM/chatglm-6b-int4-qe",
+        "path": None,
+        "provides": "ChatGLM"
+    },
+    "chatglm-6b-int4": {
+        "name": "chatglm-6b-int4",
+        "remote-checkpoint": "THUDM/chatglm-6b-int4",
+        "path": None,
+        "provides": "ChatGLM"
+    },
+    "chatglm-6b": {
+        "name": "chatglm-6b",
+        "remote-checkpoint": "THUDM/chatglm-6b-int4",
+        "path": None,
+        "provides": "ChatGLM"
+    },
+    "llama-7b-hf": {
+        "name": "llama-7b-hf",
+        "remote-checkpoint": "llama-7b-hf",
+        "path": None,
+        "provides": "LLamaLLM"
+    },
+    "vicuna-13b-hf": {
+        "name": "vicuna-13b-hf",
+        "remote-checkpoint": "vicuna-13b-hf",
+        "path": None,
+        "provides": "LLamaLLM"
+    },
+    "chatyuan": {
+        "name": "chatyuan",
+        "remote-checkpoint": "ClueAI/ChatYuan-large-v2",
+        "path": None,
+        "provides": None
+    },
+    "chatglm-6b-int8":{
+        "name": "chatglm-6b-int8",
+        "remote-checkpoint":  "THUDM/chatglm-6b-int8",
+        "path": None,
+        "provides": "ChatGLM"
+    },
 }
 
 # LLM model name

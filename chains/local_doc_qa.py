@@ -12,10 +12,14 @@ from tqdm import tqdm
 from pypinyin import lazy_pinyin
 from loader import UnstructuredPaddleImageLoader
 from loader import UnstructuredPaddlePDFLoader
+from models.base import (BaseAnswer,
+                         AnswerResult,
+                         AnswerResultStream,
+                         AnswerResultQueueSentinelTokenListenerQueue)
+from models.loader.args import parser
+from models.loader import LoaderCheckPoint
+import models.shared as shared
 
-DEVICE_ = EMBEDDING_DEVICE
-DEVICE_ID = "0" if torch.cuda.is_available() else None
-DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
 
 
 def load_file(filepath, sentence_size=SENTENCE_SIZE):
@@ -132,7 +136,7 @@ def similarity_search_with_score_by_vector(
 
 
 class LocalDocQA:
-    llm: object = None
+    llm: BaseAnswer = None
     embeddings: object = None
     top_k: int = VECTOR_SEARCH_TOP_K
     chunk_size: int = CHUNK_SIZE
@@ -142,23 +146,10 @@ class LocalDocQA:
     def init_cfg(self,
                  embedding_model: str = EMBEDDING_MODEL,
                  embedding_device=EMBEDDING_DEVICE,
-                 llm_history_len: int = LLM_HISTORY_LEN,
-                 llm_model: str = LLM_MODEL,
-                 llm_device=LLM_DEVICE,
+                 llm_model: BaseAnswer = None,
                  top_k=VECTOR_SEARCH_TOP_K,
-                 use_ptuning_v2: bool = USE_PTUNING_V2,
-                 use_lora: bool = USE_LORA,
                  ):
-        if llm_model.startswith('moss'):
-            from models.moss_llm import MOSS
-            self.llm = MOSS()
-        else:
-            from models.chatglm_llm import ChatGLM
-            self.llm = ChatGLM()
-        self.llm.load_model(model_name_or_path=llm_model_dict[llm_model],
-                            llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
-        self.llm.history_len = llm_history_len
-
+        self.llm = llm_model
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
@@ -259,16 +250,16 @@ class LocalDocQA:
         torch_gc()
         prompt = generate_prompt(related_docs_with_score, query)
 
-        for result, history in self.llm._call(prompt=prompt,
-                                              history=chat_history,
-                                              streaming=streaming):
-            torch_gc()
+        for answer_result in self.llm.generatorAnswer(prompt=prompt, history=chat_history,
+                                                      streaming=streaming):
+            resp = answer_result.llm_output["answer"]
+            history = answer_result.history
             history[-1][0] = query
             response = {"query": query,
-                        "result": result,
+                        "result": resp,
                         "source_documents": related_docs_with_score}
             yield response, history
-            torch_gc()
+
 
     # query      查询内容
     # vs_path    知识库路径
@@ -297,10 +288,19 @@ class LocalDocQA:
 
 
 if __name__ == "__main__":
+    # 初始化消息
+    args = None
+    args = parser.parse_args(args=['--model-dir', '/media/checkpoint/',  '--model', 'chatglm-6b', '--no-remote-model'])
+
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+    llm_model_ins = shared.loaderLLM()
+    llm_model_ins.set_history_len(LLM_HISTORY_LEN)
+
     local_doc_qa = LocalDocQA()
-    local_doc_qa.init_cfg()
+    local_doc_qa.init_cfg(llm_model=llm_model_ins)
     query = "本项目使用的embedding模型是什么，消耗多少显存"
-    vs_path = "/Users/liuqian/Downloads/glm-dev/vector_store/aaa"
+    vs_path = "/media/gpt4-pdf-chatbot-langchain/dev-langchain-ChatGLM/vector_store/test"
     last_print_len = 0
     for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
                                                                  vs_path=vs_path,
