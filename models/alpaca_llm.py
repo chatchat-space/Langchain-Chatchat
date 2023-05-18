@@ -106,7 +106,9 @@ class LLAMA(LLM):
               #max_length:int = MAX_LENGTH,
               #temperature: float = TEMPERATURE,
               #top_p:float = TOP_P,
-              streaming: bool = STREAMING,):  # -> Tuple[str, List[List[str]]]:
+              streaming: bool = STREAMING,
+              **kwargs
+              ):  # -> Tuple[str, List[List[str]]]:
         if history:
             history = [i for i in history if i[0] is not None]
 
@@ -116,9 +118,9 @@ class LLAMA(LLM):
                 self.tokenizer, 
                 prompt, 
                 history=history[-self.history_len:] if self.history_len > 0 else [],
-                max_length=self.max_token,
-                temperature=self.temperature,
-                top_p=self.top_p,
+                max_length=kwargs.get('max_length') if kwargs.get('max_length') else self.max_token,
+                temperature=kwargs.get('temperature') if kwargs.get('temperature') else self.temperature,
+                top_p=kwargs.get('top_p') if kwargs.get('top_p') else self.top_p,
                 device=DEVICE)  
             
         torch_gc()

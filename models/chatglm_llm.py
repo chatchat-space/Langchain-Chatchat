@@ -67,15 +67,19 @@ class ChatGLM(LLM):
     def _call(self,
               prompt: str,
               history: List[List[str]] = [],
-              streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
+              streaming: bool = STREAMING,
+              **kwargs,):  # -> Tuple[str, List[List[str]]]:
+        max_length = kwargs.get('max_length') if kwargs.get('max_length') else self.max_token
+        top_p=kwargs.get('top_p') if kwargs.get('top_p') else self.top_p
+        temperature=kwargs.get('temperature') if kwargs.get('temperature') else self.temperature
         if streaming:
             for inum, (stream_resp, _) in enumerate(self.model.stream_chat(
                     self.tokenizer,
                     prompt,
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
-                    max_length=self.max_token,
-                    temperature=self.temperature,
-                    top_p=self.top_p,
+                    max_length=max_length,
+                    temperature=temperature,
+                    top_p=top_p,
             )):
                 torch_gc()
                 if inum == 0:
@@ -89,9 +93,9 @@ class ChatGLM(LLM):
                 self.tokenizer,
                 prompt,
                 history=history[-self.history_len:] if self.history_len > 0 else [],
-                max_length=self.max_token,
-                temperature=self.temperature,
-                top_p=self.top_p,
+                max_length=max_length,
+                temperature=temperature,
+                top_p=top_p,
             )
             torch_gc()
             history += [[prompt, response]]

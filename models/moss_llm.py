@@ -68,7 +68,9 @@ class MOSS(LLM):
     def _call(self,
               prompt: str,
               history: List[List[str]] = [],
-              streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
+              streaming: bool = STREAMING,
+              **kwargs,
+              ):  # -> Tuple[str, List[List[str]]]:
         if len(history) > 0:
             history = history[-self.history_len:-1] if self.history_len > 0 else []
             prompt_w_history = str(history)
@@ -82,11 +84,11 @@ class MOSS(LLM):
             outputs = self.model.generate(
                 inputs.input_ids.cuda(),
                 attention_mask=inputs.attention_mask.cuda(),
-                max_length=self.max_token,
+                max_length=kwargs.get('max_length') if kwargs.get('max_length') else self.max_token,
                 do_sample=True,
                 top_k=40,
-                top_p=self.top_p,
-                temperature=self.temperature,
+                top_p=kwargs.get('top_p') if kwargs.get('top_p') else self.top_p,
+                temperature=kwargs.get('temperature') if kwargs.get('temperature') else self.temperature,
                 repetition_penalty=1.02,
                 num_return_sequences=1,
                 eos_token_id=106068,
