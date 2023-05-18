@@ -30,12 +30,23 @@ local_doc_qa = LocalDocQA()
 flag_csv_logger = gr.CSVLogger()
 
 
-def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
+def get_answer(query, vs_path, history, mode,
+               max_length = MAX_LENGTH,
+               top_p = TOP_P,
+               temperature = TEMPERATURE,
+               score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
                vector_search_top_k=VECTOR_SEARCH_TOP_K, chunk_conent: bool = True,
-               chunk_size=CHUNK_SIZE, streaming: bool = STREAMING):
+               chunk_size=CHUNK_SIZE, streaming: bool = STREAMING,
+               
+               ):
+    kwargs = {
+        "max_length":max_length,
+        "top_p": top_p,
+        "temperature": temperature
+    }
     if mode == "知识库问答" and vs_path is not None and os.path.exists(vs_path):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=query, vs_path=vs_path, chat_history=history, streaming=streaming):
+                query=query, vs_path=vs_path, chat_history=history, streaming=streaming, **kwargs):
             source = "\n\n"
             source += "".join(
                 [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
@@ -69,7 +80,7 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
             yield history + [[query,
                               "请选择知识库后进行测试，当前未选择知识库。"]], ""
     else:
-        for resp, history in local_doc_qa.llm._call(query, history, streaming=streaming):
+        for resp, history in local_doc_qa.llm._call(query, history, streaming=streaming,**kwargs):
             history[-1][-1] = resp + (
                 "\n\n当前知识库为空，如需基于知识库进行问答，请先加载知识库后，再进行提问。" if mode == "知识库问答" else "")
             yield history, ""
@@ -182,6 +193,8 @@ def change_chunk_conent(mode, label_conent, history):
     else:
         return gr.update(visible=False), history + [[None, f"【已关闭{conent}】"]]
 
+def reset_state():
+    return [], []
 
 def add_vs_name(vs_name, vs_list, chatbot):
     if vs_name in vs_list:
@@ -249,6 +262,13 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                 mode.change(fn=change_mode,
                             inputs=[mode, chatbot],
                             outputs=[vs_setting, knowledge_set, chatbot])
+                with gr.Column(scale=1):
+                    emptyBtn = gr.Button("Clear History")
+                    max_length = gr.Slider(0, 4096, value=MAX_LENGTH, step=1.0, label="Maximum length", interactive=True)
+                    top_p = gr.Slider(0, 1, value=TOP_P, step=0.01, label="Top P", interactive=True)
+                    temperature = gr.Slider(0.01, 1, value=TEMPERATURE, step=0.01, label="Temperature", interactive=True)
+                history = gr.State([])
+                emptyBtn.click(reset_state, outputs=[chatbot, history], show_progress=True)
                 with vs_setting:
                     select_vs = gr.Dropdown(vs_list.value,
                                             label="请选择要加载的知识库",
@@ -295,8 +315,9 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                                      vs_add],
                                              outputs=[vs_path, folder_files, chatbot], )
                     flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
+                    #kwargs = {"max_length":max_length, "temperature":temperature, "top_p":top_p}
                     query.submit(get_answer,
-                                 [query, vs_path, chatbot, mode],
+                                 [query, vs_path, chatbot, mode, max_length, top_p, temperature],
                                  [chatbot, query])
     with gr.Tab("知识库测试 Beta"):
         with gr.Row():
@@ -391,7 +412,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                              outputs=[vs_path, files, chatbot], )
                     flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
                     query.submit(get_answer,
-                                 [query, vs_path, chatbot, mode, score_threshold, vector_search_top_k, chunk_conent,
+                                 [query, vs_path, chatbot, mode, max_length, top_p, temperature, score_threshold, vector_search_top_k, chunk_conent,
                                   chunk_sizes],
                                  [chatbot, query])
     with gr.Tab("模型配置"):
