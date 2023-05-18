@@ -65,7 +65,7 @@ class LoaderCheckPoint:
         self.tokenizer = None
         self.model_dir = params.get('model_dir', '')
         self.lora_dir = params.get('lora_dir', '')
-        self.ptuning_dir = params.get('ptuning_dir', '')
+        self.ptuning_dir = params.get('ptuning_dir', 'ptuning-v2')
         self.cpu = params.get('cpu', False)
         self.gpu_memory = params.get('gpu_memory', None)
         self.cpu_memory = params.get('cpu_memory', None)
