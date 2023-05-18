@@ -19,6 +19,9 @@ from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVI
                                   EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 from agent import bing_search as agent_bing_search
+import models.shared as shared
+from models.loader.args import parser
+from models.loader import LoaderCheckPoint
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -173,8 +176,8 @@ async def list_docs(
 
 async def delete_docs(
         knowledge_base_id: str = Query(...,
-                                      description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
-                                      example="kb1"),
+                                       description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
+                                       example="kb1"),
         doc_name: Optional[str] = Query(
             None, description="doc name", example="doc_name_1.pdf"
         ),
@@ -258,9 +261,12 @@ async def chat(
             ],
         ),
 ):
-    for resp, history in local_doc_qa.llm._call(
-            prompt=question, history=history, streaming=True
-    ):
+
+    for answer_result in local_doc_qa.llm.generatorAnswer(prompt=question, history=history,
+                                                          streaming=True):
+
+        resp = answer_result.llm_output["answer"]
+        history = answer_result.history
         pass
 
     return ChatMessage(
@@ -312,6 +318,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+
 async def document():
     return RedirectResponse(url="/docs")
 
@@ -333,9 +340,13 @@ async def bing_search(
         source_documents=[],
     )
 
+
 def api_start(host, port):
     global app
     global local_doc_qa
+
+    llm_model_ins = shared.loaderLLM()
+    llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     app = FastAPI()
     # Add CORS middleware to allow all origins
@@ -365,18 +376,22 @@ def api_start(host, port):
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
-        llm_model=LLM_MODEL,
+        llm_model=llm_model_ins,
         embedding_model=EMBEDDING_MODEL,
         embedding_device=EMBEDDING_DEVICE,
-        llm_history_len=LLM_HISTORY_LEN,
         top_k=VECTOR_SEARCH_TOP_K,
     )
     uvicorn.run(app, host=host, port=port)
 
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
-    args = parser.parse_args()
+    # 初始化消息
+    args = None
+    args = parser.parse_args(args=['--model-dir', '/media/checkpoint/',  '--model', 'chatglm-6b', '--no-remote-model'])
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     api_start(args.host, args.port)
