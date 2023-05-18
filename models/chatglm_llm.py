@@ -69,7 +69,7 @@ class ChatGLM(LLM):
               history: List[List[str]] = [],
               streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
         if streaming:
-            history += []
+            history += [[]]
             for stream_resp, _ in self.model.stream_chat(
                     self.tokenizer,
                     prompt,
