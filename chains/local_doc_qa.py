@@ -152,6 +152,9 @@ class LocalDocQA:
         if llm_model.startswith('moss'):
             from models.moss_llm import MOSS
             self.llm = MOSS()
+        elif llm_model.startswith('alpaca') or llm_model.startswith('llama'):
+            from models.alpaca_llm import LLAMA
+            self.llm = LLAMA()
         else:
             from models.chatglm_llm import ChatGLM
             self.llm = ChatGLM()

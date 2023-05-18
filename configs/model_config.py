@@ -30,10 +30,12 @@ llm_model_dict = {
     "chatglm-6b-int8": "THUDM/chatglm-6b-int8",
     "chatglm-6b": "THUDM/chatglm-6b",
     "moss": "fnlp/moss-moon-003-sft",
+    "alpaca-7b":'chavinlo/alpaca-native',
+    "llama-7b":"yahma/llama-7b-hf",
 }
 
 # LLM model name
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "alpaca-7b"
 
 # LLM lora path，默认为空，如果有请直接指定文件夹路径
 LLM_LORA_PATH = ""
