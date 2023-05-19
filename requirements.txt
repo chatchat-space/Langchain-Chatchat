@@ -1,7 +1,7 @@
 pymupdf
 paddlepaddle==2.4.2
 paddleocr
-langchain==0.0.146
+langchain==0.0.174
 transformers==4.29.1
 unstructured[local-inference]
 layoutparser[layoutmodels,tesseract]
