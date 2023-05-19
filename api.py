@@ -391,7 +391,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=7861)
     # 初始化消息
     args = None
-    args = parser.parse_args(args=['--model-dir', '/media/checkpoint/',  '--model', 'chatglm-6b', '--no-remote-model'])
+    args = parser.parse_args()
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     api_start(args.host, args.port)
