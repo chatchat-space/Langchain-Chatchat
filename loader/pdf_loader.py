@@ -19,7 +19,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             ocr = PaddleOCR(lang="ch", use_gpu=False, show_log=False)
             doc = fitz.open(filepath)
             txt_file_path = os.path.join(full_dir_path, "%s.txt" % (filename))
-            img_name = os.path.join(full_dir_path, '.tmp.png')
+            img_name = os.path.join(full_dir_path, 'tmp.png')
             with open(txt_file_path, 'w', encoding='utf-8') as fout:
 
                 for i in range(doc.page_count):
