@@ -29,7 +29,6 @@ class LimitedLengthDict(dict):
 
 
 class FixedLengthQueue:
-
     # 停止符号列表
     stop_sequence: Optional[str] = []
     # 缓冲区
@@ -169,7 +168,6 @@ class Iteratorize:
         instance = super().__new__(cls)
         # 在这里可以对实例进行额外的设置
         return instance
-
 
     def __init__(self, func, kwargs={}, callback=None):
         self.mfunc = func
