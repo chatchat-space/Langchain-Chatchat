@@ -40,9 +40,15 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
+    "chatglm-6b-int8": {
+        "name": "chatglm-6b-int8",
+        "pretrained_model_name": "THUDM/chatglm-6b-int8",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
     "chatglm-6b": {
         "name": "chatglm-6b",
-        "pretrained_model_name": "THUDM/chatglm-6b-int4",
+        "pretrained_model_name": "THUDM/chatglm-6b",
         "local_model_path": None,
         "provides": "ChatGLM"
     },
@@ -64,12 +70,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": None
     },
-    "chatglm-6b-int8":{
-        "name": "chatglm-6b-int8",
-        "pretrained_model_name":  "THUDM/chatglm-6b-int8",
+    "moss": {
+        "name": "moss",
+        "pretrained_model_name": "fnlp/moss-moon-003-sft",
         "local_model_path": None,
-        "provides": "ChatGLM"
-    },
+        "provides": "MOSSLLM"
+    }
 }
 
 # LLM model name
