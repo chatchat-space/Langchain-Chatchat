@@ -69,19 +69,17 @@ class ChatGLM(LLM):
               history: List[List[str]] = [],
               streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
         if streaming:
-            for inum, (stream_resp, _) in enumerate(self.model.stream_chat(
+            history += [[]]
+            for stream_resp, _ in self.model.stream_chat(
                     self.tokenizer,
                     prompt,
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     temperature=self.temperature,
                     top_p=self.top_p,
-            )):
+            ):
                 torch_gc()
-                if inum == 0:
-                    history += [[prompt, stream_resp]]
-                else:
-                    history[-1] = [prompt, stream_resp]
+                history[-1] = [prompt, stream_resp]
                 yield stream_resp, history
                 torch_gc()
         else:
