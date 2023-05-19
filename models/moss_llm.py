@@ -1,5 +1,5 @@
 from abc import ABC
-
+import transformers
 from langchain.llms.base import LLM
 from typing import Optional, List
 from models.loader import LoaderCheckPoint
