@@ -210,6 +210,6 @@ Web UI 可以实现如下功能：
   - [ ] 实现调用 API 的 Web UI Demo
 
 ## 项目交流群
-![二维码](img/qr_code_20.jpg)
+![二维码](img/qr_code_21.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
