@@ -5,7 +5,10 @@ from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from paddleocr import PaddleOCR
 import os
 import fitz
+import nltk
+from configs.model_config import NLTK_DATA_PATH
 
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
     """Loader that uses unstructured to load image files, such as PNGs and JPGs."""
