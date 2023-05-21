@@ -41,7 +41,19 @@ flag_csv_logger = gr.CSVLogger()
 def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
                vector_search_top_k=VECTOR_SEARCH_TOP_K, chunk_conent: bool = True,
                chunk_size=CHUNK_SIZE, streaming: bool = STREAMING):
-    if mode == "知识库问答" and vs_path is not None and os.path.exists(vs_path):
+    if mode == "Bing搜索问答":
+        for resp, history in local_doc_qa.get_search_result_based_answer(
+                query=query, chat_history=history, streaming=streaming):
+            source = "\n\n"
+            source += "".join(
+                [f"""<details> <summary>出处 [{i + 1}] <a href="{doc.metadata["source"]}" target="_blank">{doc.metadata["source"]}</a> </summary>\n"""
+                 f"""{doc.page_content}\n"""
+                 f"""</details>"""
+                 for i, doc in
+                 enumerate(resp["source_documents"])])
+            history[-1][-1] += source
+            yield history, ""
+    elif mode == "知识库问答" and vs_path is not None and os.path.exists(vs_path):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=query, vs_path=vs_path, chat_history=history, streaming=streaming):
             source = "\n\n"
@@ -264,7 +276,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交").style(container=False)
             with gr.Column(scale=5):
-                mode = gr.Radio(["LLM 对话", "知识库问答"],
+                mode = gr.Radio(["LLM 对话", "知识库问答", "Bing搜索问答"],
                                 label="请选择使用模式",
                                 value="知识库问答", )
                 knowledge_set = gr.Accordion("知识库设定", visible=False)
