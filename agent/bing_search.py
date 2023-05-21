@@ -1,20 +1,19 @@
 #coding=utf8
 
-import os
 from langchain.utilities import BingSearchAPIWrapper
+from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
 
 
-env_bing_key = os.environ.get("BING_SUBSCRIPTION_KEY")
-env_bing_url = os.environ.get("BING_SEARCH_URL")
-
-
-def search(text, result_len=3):
-    if not (env_bing_key and env_bing_url):
-        return [{"snippet":"please set BING_SUBSCRIPTION_KEY and BING_SEARCH_URL in os ENV",
-            "title": "env inof not fould", "link":"https://python.langchain.com/en/latest/modules/agents/tools/examples/bing_search.html"}]
-    search = BingSearchAPIWrapper()
+def bing_search(text, result_len=3):
+    if not (BING_SEARCH_URL and BING_SUBSCRIPTION_KEY):
+        return [{"snippet": "please set BING_SUBSCRIPTION_KEY and BING_SEARCH_URL in os ENV",
+                 "title": "env inof not fould",
+                 "link": "https://python.langchain.com/en/latest/modules/agents/tools/examples/bing_search.html"}]
+    search = BingSearchAPIWrapper(bing_subscription_key=BING_SUBSCRIPTION_KEY,
+                                  bing_search_url=BING_SEARCH_URL)
     return search.results(text, result_len)
 
 
 if __name__ == "__main__":
-    r = search('python')
+    r = bing_search('python')
+    print(r)
