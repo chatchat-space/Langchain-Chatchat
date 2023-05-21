@@ -139,9 +139,9 @@ class LoaderCheckPoint:
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
-                print(
-                    "Warning: torch.cuda.is_available() returned False.\nThis means that no GPU has been "
-                    "detected.\nFalling back to CPU mode.\n")
+                # print(
+                #     "Warning: torch.cuda.is_available() returned False.\nThis means that no GPU has been "
+                #     "detected.\nFalling back to CPU mode.\n")
                 model = (
                     AutoModel.from_pretrained(
                         checkpoint,
