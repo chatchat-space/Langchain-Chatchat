@@ -1,24 +1,33 @@
 pymupdf
 paddlepaddle==2.4.2
-paddleocr
+paddleocr~=2.6.1.3
 langchain==0.0.174
 transformers==4.29.1
 unstructured[local-inference]
 layoutparser[layoutmodels,tesseract]
-nltk
+nltk~=3.8.1
 sentence-transformers
 beautifulsoup4
 icetk
 cpm_kernels
 faiss-cpu
-accelerate
+accelerate~=0.18.0
 gradio==3.28.3
-fastapi
-uvicorn
-peft
-pypinyin
+fastapi~=0.95.0
+uvicorn~=0.21.1
+peft~=0.3.0
+pypinyin~=0.48.0
 click~=8.1.3
 tabulate
+azure-core
 bitsandbytes; platform_system != "Windows"
 llama-cpp-python==0.1.34; platform_system != "Windows"
 https://github.com/abetlen/llama-cpp-python/releases/download/v0.1.34/llama_cpp_python-0.1.34-cp310-cp310-win_amd64.whl; platform_system == "Windows"
+
+torch~=2.0.0
+pydantic~=1.10.7
+starlette~=0.26.1
+numpy~=1.23.5
+tqdm~=4.65.0
+requests~=2.28.2
+tenacity~=8.2.2
