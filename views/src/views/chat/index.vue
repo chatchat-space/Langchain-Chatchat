@@ -116,6 +116,7 @@ async function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
+	history.value = []
   if (usingContext.value) {
     for (let i = 0; i < dataSources.value.length; i = i + 2) {
       if (!i)

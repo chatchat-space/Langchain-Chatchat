@@ -54,7 +54,7 @@ class ChatGLM(BaseAnswer, LLM, ABC):
         stopping_criteria_list.append(listenerQueue)
 
         if streaming:
-
+            history += [[]]
             for inum, (stream_resp, _) in enumerate(self.checkPoint.model.stream_chat(
                     self.checkPoint.tokenizer,
                     prompt,
@@ -64,10 +64,7 @@ class ChatGLM(BaseAnswer, LLM, ABC):
                     stopping_criteria=stopping_criteria_list
             )):
                 self.checkPoint.clear_torch_cache()
-                if inum == 0:
-                    history += [[prompt, stream_resp]]
-                else:
-                    history[-1] = [prompt, stream_resp]
+                history[-1] = [prompt, stream_resp]
                 answer_result = AnswerResult()
                 answer_result.history = history
                 answer_result.llm_output = {"answer": stream_resp}
