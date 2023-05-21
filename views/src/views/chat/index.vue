@@ -61,6 +61,7 @@ function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
+	history.value = []
   if (usingContext.value) {
     for (let i = 0; i < dataSources.value.length; i = i + 2)
       history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
