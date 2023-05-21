@@ -52,18 +52,7 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
-    "llama-7b-hf": {
-        "name": "llama-7b-hf",
-        "pretrained_model_name": "llama-7b-hf",
-        "local_model_path": None,
-        "provides": "LLamaLLM"
-    },
-    "vicuna-13b-hf": {
-        "name": "vicuna-13b-hf",
-        "pretrained_model_name": "vicuna-13b-hf",
-        "local_model_path": None,
-        "provides": "LLamaLLM"
-    },
+
     "chatyuan": {
         "name": "chatyuan",
         "pretrained_model_name": "ClueAI/ChatYuan-large-v2",
