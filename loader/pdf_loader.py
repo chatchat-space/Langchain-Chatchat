@@ -29,7 +29,8 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
                     img_list = page.get_images()
                     for img in img_list:
                         pix = fitz.Pixmap(doc, img[0])
-
+                        if pix.n - pix.alpha >= 4:
+                            pix = fitz.Pixmap(fitz.csRGB, pix)
                         pix.save(img_name)
 
                         result = ocr.ocr(img_name)
