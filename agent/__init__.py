@@ -1,2 +1,1 @@
-#from .chatglm_with_shared_memory_openai_llm import *
-from agent.bing_search import search as bing_search
+from agent.bing_search import bing_search
