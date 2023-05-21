@@ -24,9 +24,7 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 
 
 # supported LLM models
-"""
-llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
-"""
+# llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
 llm_model_dict = {
     "chatglm-6b-int4-qe": {
         "name": "chatglm-6b-int4-qe",
