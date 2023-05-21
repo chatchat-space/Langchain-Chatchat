@@ -15,7 +15,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             full_dir_path = os.path.join(os.path.dirname(filepath), dir_path)
             if not os.path.exists(full_dir_path):
                 os.makedirs(full_dir_path)
-            ocr = PaddleOCR(lang="ch", use_gpu=False, show_log=False)
+            ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False)
             doc = fitz.open(filepath)
             txt_file_path = os.path.join(full_dir_path, f"{os.path.split(filepath)[-1]}.txt")
             img_name = os.path.join(full_dir_path, 'tmp.png')
