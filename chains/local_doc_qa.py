@@ -301,7 +301,9 @@ class LocalDocQA:
         vector_store.score_threshold = self.score_threshold
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
         
-        ###########################################精排 之前faiss检索作为粗排 需要设置config参数
+        ###########################################精排 之前faiss检索作为粗排 需要设置model_config参数VECTOR_SEARCH_TOP_K =300
+        ###########################################原理：粗排：faiss+semantic search 检索得到大量相关文档，需要设置ECTOR_SEARCH_TOP为300，然后合并文档，重新切分，
+        #############################################利用knn+ semantic search 进行二次检索，输入到prompt
         ####提取文档
         related_docs = get_docs_with_score(related_docs_with_score)
         text_batch0=[]
