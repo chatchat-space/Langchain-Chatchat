@@ -21,6 +21,7 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer, CrossEncoder, util
+from sklearn.neighbors import NearestNeighbors
 
 class SemanticSearch:
     def __init__(self):
