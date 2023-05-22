@@ -113,7 +113,6 @@ class LoaderCheckPoint:
                 if num_gpus < 2 and self.device_map is None:
                     model = (
                         LoaderClass.from_pretrained(checkpoint,
-                                                    low_cpu_mem_usage=True,
                                                     config=self.model_config,
                                                     torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
                                                     trust_remote_code=True)
@@ -124,7 +123,6 @@ class LoaderCheckPoint:
                     from accelerate import dispatch_model
 
                     model = LoaderClass.from_pretrained(checkpoint,
-                                                        low_cpu_mem_usage=True,
                                                         config=self.model_config,
                                                         torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
                                                         trust_remote_code=True).half()
