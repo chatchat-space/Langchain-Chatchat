@@ -249,7 +249,7 @@ async def local_doc_chat(
 
 async def bing_search_chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: List[List[str]] = Body(
+        history: Optional[List[List[str]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -265,7 +265,7 @@ async def bing_search_chat(
     ):
         pass
     source_documents = [
-        f"""出处 [{inum + 1}] <a href="{doc.metadata["source"]}" target="_blank">{doc.metadata["source"]}</a> \n\n{doc.page_content}\n\n"""
+        f"""出处 [{inum + 1}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
         for inum, doc in enumerate(resp["source_documents"])
     ]
 

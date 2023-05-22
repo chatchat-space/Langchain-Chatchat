@@ -40,7 +40,7 @@ const conversationList = computed(() => dataSources.value.filter(item => (!item.
 const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
-const search = ref<boolean>('对话')
+const search = ref<string>('对话')
 
 // 添加PromptStore
 const promptStore = usePromptStore()
@@ -58,7 +58,7 @@ dataSources.value.forEach((item, index) => {
 })
 
 async function handleSubmit() {
-  if (search.value == 'Bing搜索') {
+  if (search.value === 'Bing搜索') {
     loading.value = true
     const options: Chat.ConversationRequest = {}
     const lastText = ''
@@ -76,9 +76,9 @@ async function handleSubmit() {
       },
     )
     scrollToBottom()
-    const res = await bing_search(prompt.value)
+    const res = await bing_search({ question: prompt.value })
 
-    const result = active.value ? `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}` : res.data.response
+    const result = `${res.data.response}\n\n数据来源：\n\n${res.data.source_documents}`
     addChat(
       +uuid,
       {
@@ -116,12 +116,10 @@ async function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
-	history.value = []
+  history.value = []
   if (usingContext.value) {
-    for (let i = 0; i < dataSources.value.length; i = i + 2) {
-      if (!i)
-        history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
-    }
+    for (let i = 0; i < dataSources.value.length; i = i + 2)
+      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
   }
   else { history.value.length = 0 }
 
@@ -589,7 +587,7 @@ onUnmounted(() => {
     controller.abort()
 })
 function searchfun() {
-  if (search.value == '知识库')
+  if (search.value === '知识库')
     active.value = true
 
   else
