@@ -312,8 +312,8 @@ class LocalDocQA:
             cut_txt = " ".join([w for w in list(related_docs[i].page_content)])
             cut_txt =cut_txt.replace(" ", "")
             text_batch0.append(cut_txt) 
-       ######文档去重
-       text_batch_new=[]
+        ######文档去重
+        text_batch_new=[]
         for i in range(len(text_batch0)):
             if text_batch0[i] in text_batch_new:
                 continue
