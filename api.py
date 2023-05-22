@@ -265,7 +265,7 @@ async def bing_search_chat(
     ):
         pass
     source_documents = [
-        f"""出处 [{inum + 1}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+        f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
         for inum, doc in enumerate(resp["source_documents"])
     ]
 
