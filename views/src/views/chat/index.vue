@@ -78,7 +78,7 @@ async function handleSubmit() {
     scrollToBottom()
     const res = await bing_search({ question: prompt.value })
 
-    const result = `${res.data.response}\n\n数据来源：\n\n${res.data.source_documents}`
+    const result = `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}`
     addChat(
       +uuid,
       {
