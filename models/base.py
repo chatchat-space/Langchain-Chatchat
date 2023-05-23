@@ -175,15 +175,6 @@ class BaseAnswer(ABC):
         def generate_with_streaming(**kwargs):
             return Iteratorize(generate_with_callback, kwargs)
 
-        """
-        eos_token_id是指定token（例如，"</s>"），
-        用于表示序列的结束。在生成文本任务中，生成器在生成序列时，将不断地生成token，直到生成此特殊的eos_token_id，表示序列生成已经完成。
-        在Hugging Face Transformer模型中，eos_token_id是由tokenizer自动添加到输入中的。
-        在模型生成输出时，如果模型生成了eos_token_id，则生成过程将停止并返回生成的序列。
-        """
-        eos_token_ids = [
-            self._check_point.tokenizer.eos_token_id] if self._check_point.tokenizer.eos_token_id is not None else []
-
         with generate_with_streaming(prompt=prompt, history=history, streaming=streaming) as generator:
             for answerResult in generator:
                 if answerResult.listenerToken:

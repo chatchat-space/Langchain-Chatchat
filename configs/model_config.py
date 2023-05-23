@@ -62,11 +62,33 @@ llm_model_dict = {
         "pretrained_model_name": "fnlp/moss-moon-003-sft",
         "local_model_path": None,
         "provides": "MOSSLLM"
+    },
+    "vicuna-13b-hf": {
+        "name": "vicuna-13b-hf",
+        "pretrained_model_name": "vicuna-13b-hf",
+        "local_model_path": None,
+        "provides": "LLamaLLM"
+    },
+    "fastChat": {
+        "name": "fastChat",
+        "pretrained_model_name": "fastChat",
+        "local_model_path": None,
+        "provides": "FastChatLLM"
     }
 }
 
-# LLM model name
+# LLM 名称
 LLM_MODEL = "chatglm-6b"
+# 如果你需要加载本地的model，指定这个参数  ` --no-remote-model`，或者下方参数修改为 `True`
+NO_REMOTE_MODEL = False
+# 量化加载8bit 模型
+LOAD_IN_8BIT = False
+# Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
+BF16 = False
+# 本地模型存放的位置
+MODEL_DIR = "model/"
+# 本地lora存放的位置
+LORA_DIR = "loras/"
 
 # LLM lora path，默认为空，如果有请直接指定文件夹路径
 LLM_LORA_PATH = ""
