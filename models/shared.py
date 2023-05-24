@@ -4,8 +4,6 @@ from models.loader.args import parser
 from models.loader import LoaderCheckPoint
 from configs.model_config import (llm_model_dict, LLM_MODEL)
 from models.base import BaseAnswer
-"""迭代器是否停止状态"""
-stop_everything = False
 
 loaderCheckPoint: LoaderCheckPoint = None
 
@@ -36,7 +34,10 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     loaderCheckPoint.model_path = llm_model_info["local_model_path"]
 
-    loaderCheckPoint.reload_model()
+    if 'fastChat' in loaderCheckPoint.model_name:
+        loaderCheckPoint.unload_model()
+    else:
+        loaderCheckPoint.reload_model()
 
     provides_class = getattr(sys.modules['models'], llm_model_info['provides'])
     modelInsLLM = provides_class(checkPoint=loaderCheckPoint)

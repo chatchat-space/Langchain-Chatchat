@@ -129,6 +129,8 @@ VUE 前端界面如下图所示：
 ![](img/vue_0521_0.png)
 2. `知识库问答` 界面
 ![](img/vue_0521_1.png)
+3. `Bing搜索` 界面
+![](img/vue_0521_2.png)
 
 WebUI 界面如下图所示：
 1. `对话` Tab 界面
@@ -219,6 +221,6 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-![二维码](img/qr_code_21.jpg)
+![二维码](img/qr_code_22.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
