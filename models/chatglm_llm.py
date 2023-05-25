@@ -63,7 +63,7 @@ class ChatGLM(BaseAnswer, LLM, ABC):
                     temperature=self.temperature,
                     stopping_criteria=stopping_criteria_list
             )):
-                self.checkPoint.clear_torch_cache()
+#                 self.checkPoint.clear_torch_cache()
                 history[-1] = [prompt, stream_resp]
                 answer_result = AnswerResult()
                 answer_result.history = history
