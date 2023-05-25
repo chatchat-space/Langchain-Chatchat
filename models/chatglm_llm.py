@@ -5,9 +5,7 @@ from langchain.llms.base import LLM
 from typing import Optional, List
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 
 
 import transformers
@@ -43,15 +41,9 @@ class ChatGLM(BaseAnswer, LLM, ABC):
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         pass
 
-    def _generate_answer(self, prompt: str,
+    def generatorAnswer(self, prompt: str,
                          history: List[List[str]] = [],
-                         streaming: bool = False,
-                         generate_with_callback: AnswerResultStream = None) -> None:
-        # Create the StoppingCriteriaList with the stopping strings
-        stopping_criteria_list = transformers.StoppingCriteriaList()
-        # 定义模型stopping_criteria 队列，在每次响应时将 torch.LongTensor, torch.FloatTensor同步到AnswerResult
-        listenerQueue = AnswerResultQueueSentinelTokenListenerQueue()
-        stopping_criteria_list.append(listenerQueue)
+                         streaming: bool = False):
 
         if streaming:
             history += [[]]
@@ -60,34 +52,27 @@ class ChatGLM(BaseAnswer, LLM, ABC):
                     prompt,
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
-                    temperature=self.temperature,
-                    stopping_criteria=stopping_criteria_list
+                    temperature=self.temperature
             )):
                 # self.checkPoint.clear_torch_cache()
                 history[-1] = [prompt, stream_resp]
                 answer_result = AnswerResult()
                 answer_result.history = history
                 answer_result.llm_output = {"answer": stream_resp}
-                if listenerQueue.listenerQueue.__len__() > 0:
-                    answer_result.listenerToken = listenerQueue.listenerQueue.pop()
-                generate_with_callback(answer_result)
+                yield answer_result
         else:
             response, _ = self.checkPoint.model.chat(
                 self.checkPoint.tokenizer,
                 prompt,
                 history=history[-self.history_len:] if self.history_len > 0 else [],
                 max_length=self.max_token,
-                temperature=self.temperature,
-                stopping_criteria=stopping_criteria_list
+                temperature=self.temperature
             )
             self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
             answer_result = AnswerResult()
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
-            if listenerQueue.listenerQueue.__len__() > 0:
-                answer_result.listenerToken = listenerQueue.listenerQueue.pop()
-
-            generate_with_callback(answer_result)
+            yield answer_result
 
 

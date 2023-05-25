@@ -5,9 +5,7 @@ from langchain.llms.base import LLM
 
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 
 
 class FastChatLLM(BaseAnswer, LLM, ABC):
@@ -40,10 +38,9 @@ class FastChatLLM(BaseAnswer, LLM, ABC):
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         pass
 
-    def _generate_answer(self, prompt: str,
+    def generatorAnswer(self, prompt: str,
                          history: List[List[str]] = [],
-                         streaming: bool = False,
-                         generate_with_callback: AnswerResultStream = None) -> None:
+                         streaming: bool = False):
 
         response = "fastchat 响应结果"
         history += [[prompt, response]]
@@ -51,4 +48,4 @@ class FastChatLLM(BaseAnswer, LLM, ABC):
         answer_result.history = history
         answer_result.llm_output = {"answer": response}
 
-        generate_with_callback(answer_result)
+        yield answer_result

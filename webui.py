@@ -6,9 +6,7 @@ from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 import models.shared as shared
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint

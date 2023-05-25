@@ -9,9 +9,7 @@ from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaL
 from typing import Optional, List, Dict, Any
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 
 
 class InvalidScoreLogitsProcessor(LogitsProcessor):
@@ -178,23 +176,15 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
         self.history = self.history + [[None, reply]]
         return reply
 
-    def _generate_answer(self, prompt: str,
+    def generatorAnswer(self, prompt: str,
                          history: List[List[str]] = [],
-                         streaming: bool = False,
-                         generate_with_callback: AnswerResultStream = None) -> None:
+                         streaming: bool = False):
         if history:
             self.history = history
-        # Create the StoppingCriteriaList with the stopping strings
-        self.stopping_criteria = transformers.StoppingCriteriaList()
-        # 定义模型stopping_criteria 队列，在每次响应时将 torch.LongTensor, torch.FloatTensor同步到AnswerResult
-        listenerQueue = AnswerResultQueueSentinelTokenListenerQueue()
-        self.stopping_criteria.append(listenerQueue)
         # TODO 需要实现chat对话模块和注意力模型，目前_call为langchain的LLM拓展的api，默认为无提示词模式，如果需要操作注意力模型，可以参考chat_glm的实现
         softprompt = self.generate_softprompt_history_tensors(prompt)
         response = self._call(prompt=softprompt, stop=['\n###'])
         answer_result = AnswerResult()
         answer_result.history = self.history
-        if listenerQueue.listenerQueue.__len__() > 0:
-            answer_result.listenerToken = listenerQueue.listenerQueue.pop()
         answer_result.llm_output = {"answer": response}
-        generate_with_callback(answer_result)
+        yield answer_result

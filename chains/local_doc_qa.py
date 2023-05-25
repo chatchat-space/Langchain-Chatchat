@@ -12,9 +12,7 @@ from tqdm import tqdm
 from pypinyin import lazy_pinyin
 from loader import UnstructuredPaddleImageLoader, UnstructuredPaddlePDFLoader
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
 import models.shared as shared
