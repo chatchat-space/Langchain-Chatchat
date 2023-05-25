@@ -1,14 +1,9 @@
-
 from abc import ABC
-
 from langchain.llms.base import LLM
 from typing import Optional, List
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult)
-
-
-import transformers
 
 
 class ChatGLM(BaseAnswer, LLM, ABC):
