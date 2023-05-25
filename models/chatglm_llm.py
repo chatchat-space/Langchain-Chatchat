@@ -39,7 +39,14 @@ class ChatGLM(BaseAnswer, LLM, ABC):
         self.history_len = history_len
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        pass
+        response, _ = self.checkPoint.model.chat(
+            self.checkPoint.tokenizer,
+            prompt,
+            history=[],
+            max_length=self.max_token,
+            temperature=self.temperature
+        )
+        return response
 
     def generatorAnswer(self, prompt: str,
                          history: List[List[str]] = [],
