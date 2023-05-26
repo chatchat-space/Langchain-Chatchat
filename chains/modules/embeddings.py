@@ -20,7 +20,7 @@ class MyEmbeddings(Embeddings):
         self.model.to(device)
         
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Compute doc embeddings using a HuggingFace transformer model.
+        """Compute doc embeddings using ImageBind .
 
         Args:
             texts: The list of texts to embed.
@@ -35,7 +35,7 @@ class MyEmbeddings(Embeddings):
         return embeddings[ModalityType.TEXT].tolist()
 
     def embed_query(self, text: str) -> List[float]:
-        """Compute query embeddings using a HuggingFace transformer model.
+        """Compute query embeddings using ImageBind.
 
         Args:
             text: The text to embed.
