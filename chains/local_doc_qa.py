@@ -1,3 +1,4 @@
+
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader
@@ -56,9 +57,9 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
 def similarity_search_with_score_by_vector(
         self, embedding: List[float], k: int = 4
 ) -> List[Tuple[Document, float]]:
-    embeding_arr = np.array([embedding],dtype=np.float32)
-    embeding_arr = np.squeeze(embeding_arr)
-    scores, indices = self.index.search(embeding_arr, k)
+    em =   np.array([embedding],dtype=np.float32) 
+    em = np.squeeze(em)
+    scores, indices = self.index.search(em, k)
     docs = []
     id_set = set()
     store_len = len(self.index_to_docstore_id)
@@ -142,8 +143,7 @@ class LocalDocQA:
                             llm_device=llm_device, use_ptuning_v2=use_ptuning_v2, use_lora=use_lora)
         self.llm.history_len = llm_history_len
         if embedding_model == "ImageBind":
-            self.embeddings = MyEmbeddings(model_name=embedding_model_dict[embedding_model],
-                                                model_kwargs={'device': embedding_device})
+            self.embeddings = MyEmbeddings()
         else:
             self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
@@ -284,9 +284,9 @@ class LocalDocQA:
 
 if __name__ == "__main__":
     local_doc_qa = LocalDocQA()
-    local_doc_qa.init_cfg()
+    local_doc_qa.init_cfg(embedding_model="ImageBind")
     query = "本项目使用的embedding模型是什么，消耗多少显存"
-    vs_path = "/Users/liuqian/Downloads/glm-dev/vector_store/aaa"
+    vs_path = "/home/ubuntu/langchain-ChatGLM/vector_store/test_FAISS_20230516_172601"
     last_print_len = 0
     for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
                                                                  vs_path=vs_path,

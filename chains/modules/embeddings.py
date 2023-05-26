@@ -1,18 +1,20 @@
-from langchain.embeddings import HuggingFaceEmbeddings
-from ImageBind import data
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Extra, Field
+
 import torch
+from langchain.embeddings.base import Embeddings
+
+from ImageBind import data
 from ImageBind.models import imagebind_model
 from ImageBind.models.imagebind_model import ModalityType
-from typing import Any, List
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
+class MyEmbeddings(Embeddings):
 
-
-
-class MyEmbeddings(HuggingFaceHubEmbeddings):
-    def __init__(self, **kwargs: Any):
+    def __init__(self, model = None , **kwargs: Any ):
         super().__init__(**kwargs)
+        self.model = model
         self.model = imagebind_model.imagebind_huge(pretrained=True)
         self.model.eval()
         self.model.to(device)
@@ -46,3 +48,11 @@ class MyEmbeddings(HuggingFaceHubEmbeddings):
         with torch.no_grad():
             embedding = self.model(inputs)
         return embedding[ModalityType.TEXT].tolist()
+
+
+
+if __name__ == "__main__":
+    li = "Mary has a little sheep."
+    eb = MyEmbeddings( )
+    vc = eb.embed_query(li)
+    print(vc)
