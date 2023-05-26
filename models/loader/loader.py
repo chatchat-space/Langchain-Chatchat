@@ -130,11 +130,8 @@ class LoaderCheckPoint:
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
-                # print(
-                #     "Warning: torch.cuda.is_available() returned False.\nThis means that no GPU has been "
-                #     "detected.\nFalling back to CPU mode.\n")
                 model = (
-                    AutoModel.from_pretrained(
+                    LoaderClass.from_pretrained(
                         checkpoint,
                         config=self.model_config,
                         trust_remote_code=True)
@@ -202,7 +199,11 @@ class LoaderCheckPoint:
                 ) from exc
         # Custom
         else:
-            pass
+
+            print(
+                "Warning: self.llm_device is False.\nThis means that no use GPU  bring to be load CPU mode\n")
+            params = {"low_cpu_mem_usage": True, "torch_dtype": torch.float32, "trust_remote_code": True}
+            model = LoaderClass.from_pretrained(checkpoint, **params).to(self.llm_device, dtype=float)
 
         # Loading the tokenizer
         if type(model) is transformers.LlamaForCausalLM:
