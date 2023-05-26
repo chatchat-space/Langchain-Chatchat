@@ -19,7 +19,7 @@ peft~=0.3.0
 pypinyin~=0.48.0
 click~=8.1.3
 tabulate
-llama_index
+feedparser
 azure-core
 bitsandbytes; platform_system != "Windows"
 #llama-cpp-python==0.1.34; platform_system != "Windows"
