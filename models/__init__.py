@@ -2,3 +2,4 @@ from .chatglm_llm import ChatGLM
 from .llama_llm import LLamaLLM
 from .moss_llm import MOSSLLM
 from .fastchat_llm import FastChatLLM
+from .lavis_blip2_vicuna_llm import LavisBlip2VicunaLLM

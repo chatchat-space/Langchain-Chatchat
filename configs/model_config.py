@@ -74,6 +74,12 @@ llm_model_dict = {
         "pretrained_model_name": "fastChat",
         "local_model_path": None,
         "provides": "FastChatLLM"
+    },
+    "LavisBlip2Vicuna": {
+        "name": "LavisBlip2Vicuna",
+        "pretrained_model_name": "blip2_vicuna_instruct",
+        "local_model_path": None,
+        "provides": "LavisBlip2VicunaLLM"
     }
 }
 
