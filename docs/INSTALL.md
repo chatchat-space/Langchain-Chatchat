@@ -1,11 +1,3 @@
-<!--
- * @Author: YuhaoWU wuyuhao2019@126.com
- * @Date: 2023-05-27 11:24:52
- * @LastEditors: YuhaoWU wuyuhao2019@126.com
- * @LastEditTime: 2023-05-28 11:34:10
- * @FilePath: /kenny_langchain-ChatGLM/docs/INSTALL.md
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 # 安装
 
 ## 环境检查
