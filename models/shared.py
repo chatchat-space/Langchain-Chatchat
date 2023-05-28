@@ -36,7 +36,7 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     if 'fastChat' in loaderCheckPoint.model_name:
         loaderCheckPoint.unload_model()
-    if 'LavisBlip2Vicuna' in loaderCheckPoint.model_name:
+    elif 'LavisBlip2Vicuna' in loaderCheckPoint.model_name:
         loaderCheckPoint.unload_model()
     else:
         loaderCheckPoint.reload_model()

@@ -84,8 +84,7 @@ class LavisBlip2VicunaLLM(LavisBlip2Multimodal, LLM, ABC):
                         streaming: bool = False):
         image_tensor = self.prepare_image_vis_processors()
         # 处理历史对话
-        if history:
-            self.history = history
+        self.history = history
         prompt = self.history_to_prompt(prompt)
         print(prompt)
         response = self.model.generate(
