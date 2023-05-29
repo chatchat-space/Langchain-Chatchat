@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 import shutil
@@ -230,7 +229,7 @@ async def local_doc_chat(
         )
     else:
         for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=question, vs_path=vs_path, chat_history=history, streaming=True
+                query=question, vs_path=vs_path, chat_history=history, streaming=False
         ):
             pass
         source_documents = [
@@ -276,6 +275,7 @@ async def bing_search_chat(
         source_documents=source_documents,
     )
 
+
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
         history: List[List[str]] = Body(
@@ -303,26 +303,43 @@ async def chat(
     )
 
 
-async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
+async def stream_chat(websocket: WebSocket):
     await websocket.accept()
-    turn = 1
     while True:
         input_json = await websocket.receive_json()
-        question, history, knowledge_base_id = input_json[""], input_json["history"], input_json["knowledge_base_id"]
+        question, history, knowledge_base_id = input_json["question"], input_json["history"], input_json[
+            "knowledge_base_id"]
         vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
+        source_documents = []
 
         if not os.path.exists(vs_path):
-            await websocket.send_json({"error": f"Knowledge base {knowledge_base_id} not found"})
-            await websocket.close()
-            return
-
-        await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
-
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "question": question,
+                        "response": f"Knowledge base {knowledge_base_id} not found",
+                        "flag": "error",
+                        "sources_documents": source_documents,
+                    },
+                    ensure_ascii=False,
+                )
+            )
+            continue
         last_print_len = 0
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
-            await websocket.send_text(resp["result"][last_print_len:])
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "question": question,
+                        "response": resp["result"][last_print_len:],
+                        "flag": "doing",
+                        "sources_documents": source_documents,
+                    },
+                    ensure_ascii=False,
+                )
+            )
             last_print_len = len(resp["result"])
 
         source_documents = [
@@ -335,21 +352,17 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
             json.dumps(
                 {
                     "question": question,
-                    "turn": turn,
+                    "response": resp["result"],
                     "flag": "end",
                     "sources_documents": source_documents,
                 },
                 ensure_ascii=False,
             )
         )
-        turn += 1
 
 
 async def document():
     return RedirectResponse(url="/docs")
-
-
-
 
 
 def api_start(host, port):
@@ -371,7 +384,7 @@ def api_start(host, port):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    app.websocket("/local_doc_qa/stream-chat/{knowledge_base_id}")(stream_chat)
+    app.websocket("/local_doc_qa/stream-chat")(stream_chat)
 
     app.get("/", response_model=BaseResponse)(document)
 
