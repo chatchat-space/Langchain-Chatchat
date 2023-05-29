@@ -1,0 +1,35 @@
+edition: 1.0.0
+name: my-framework-app
+access: default
+services:
+  framework:
+    component: fc
+    props:
+      region: cn-hangzhou
+      service:
+        name: serverless-devs-application
+      function:
+        name: langchain-ChatGLM-migt
+        description: Initialize
+        runtime: python3.10
+        memorySize: 32768
+        cpu: 16
+        timeout: 60
+        codeUri: ./
+        diskSize: 10240
+        caPort: 7860
+        customRuntimeConfig:
+          command:
+            - python webui.py
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - HEAD
+              - PATCH
