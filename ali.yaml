@@ -9,7 +9,7 @@ services:
       service:
         name: serverless-devs-application
       function:
-        name: langchain-ChatGLM-migt
+        name: langchain-ChatGLM-dn3b
         description: Initialize
         runtime: python3.10
         memorySize: 32768
