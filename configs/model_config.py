@@ -69,11 +69,11 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "LLamaLLM"
     },
-    "fastChat": {
-        "name": "fastChat",
-        "pretrained_model_name": "fastChat",
+    "fastChatOpenAI": {
+        "name": "FastChatOpenAI",
+        "pretrained_model_name": "FastChatOpenAI",
         "local_model_path": None,
-        "provides": "FastChatLLM"
+        "provides": "FastChatOpenAILLM"
     }
 }
 

@@ -1,5 +1,5 @@
 import sys
-
+from typing import Any
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
 from configs.model_config import (llm_model_dict, LLM_MODEL)
@@ -8,7 +8,7 @@ from models.base import BaseAnswer
 loaderCheckPoint: LoaderCheckPoint = None
 
 
-def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_v2: bool = False) -> BaseAnswer:
+def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_v2: bool = False) -> Any:
     """
     init llm_model_ins LLM
     :param llm_model: model_name
@@ -34,7 +34,7 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     loaderCheckPoint.model_path = llm_model_info["local_model_path"]
 
-    if 'fastChat' in loaderCheckPoint.model_name:
+    if 'FastChat' in loaderCheckPoint.model_name:
         loaderCheckPoint.unload_model()
     else:
         loaderCheckPoint.reload_model()
