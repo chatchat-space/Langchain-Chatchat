@@ -3,7 +3,7 @@ import { onMounted, ref, toRef } from 'vue'
 import { NInput, NP, NPopconfirm, NScrollbar, NText, NUpload, NUploadDragger } from 'naive-ui'
 import { SvgIcon } from '@/components/common'
 import { useChatStore } from '@/store'
-import { deletefile, getfilelist, web_url } from '@/api/chat'
+import { deletefile, getfilelist, setapi, web_url } from '@/api/chat'
 const knowledge = defineProps({
   knowledgebaseid: {
     type: String, // 类型字符串
@@ -35,14 +35,13 @@ function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEve
   if (event.key === 'Enter')
     chatStore.updateHistory(uuid, { isEdit })
 }
-console.log(`${web_url()}/api/local_doc_qa/upload_file`)
 </script>
 
 <template>
   <NUpload
     multiple
     directory-dnd
-    :action="`${web_url()}/api/local_doc_qa/upload_file`"
+    :action="setapi() === undefined ? `${web_url()}/api/local_doc_qa/upload_file` : `${setapi()}local_doc_qa/upload_file`"
     :headers="{
       'naive-info': 'hello!',
     }"
@@ -51,11 +50,6 @@ console.log(`${web_url()}/api/local_doc_qa/upload_file`)
     }"
   >
     <NUploadDragger>
-      <!-- <div style="margin-bottom: 12px">
-        <NIcon size="48" :depth="3">
-          <archive-icon />
-        </NIcon>
-      </div> -->
       <NText style="font-size: 16px">
         点击或者拖动文件到该区域来上传
       </NText>
@@ -73,8 +67,9 @@ console.log(`${web_url()}/api/local_doc_qa/upload_file`)
         </div>
       </template>
       <template v-else>
-        <div v-for="(item, index) of dataSources" :key="index">
+        <div v-for="(item, index) of dataSources" :key="index" class="flex items-center">
           <a
+            style="width:90%"
             class="relative flex items-center gap-3 px-3 py-3 break-all border rounded-md cursor-pointer hover:bg-neutral-100 group dark:border-neutral-800 dark:hover:bg-[#24272e]"
           >
             <span>
@@ -88,27 +83,28 @@ console.log(`${web_url()}/api/local_doc_qa/upload_file`)
               />
               <span v-else>{{ item }}</span>
             </div>
-            <div class="absolute z-10 flex visible right-1">
-              <template v-if="item.isEdit">
-                <!-- <button class="p-1" @click="handleEdit(item, false, $event)">
+
+          </a>
+          <div class="absolute z-10 flex visible right-1">
+            <template v-if="item.isEdit">
+              <!-- <button class="p-1" @click="handleEdit(item, false, $event)">
                   <SvgIcon icon="ri:save-line" />
                 </button> -->
-              </template>
-              <template v-else>
-                <!--  <button class="p-1">
+            </template>
+            <template v-else>
+              <!--  <button class="p-1">
                   <SvgIcon icon="ri:edit-line" @click="handleEdit(item, true, $event)" />
                 </button> -->
-                <NPopconfirm placement="bottom" @positive-click="handleDelete(item)">
-                  <template #trigger>
-                    <button class="p-1">
-                      <!--  <SvgIcon icon="ri:delete-bin-line" /> -->
-                    </button>
-                  </template>
-                  确定删除此文件？
-                </NPopconfirm>
-              </template>
-            </div>
-          </a>
+              <NPopconfirm placement="bottom" @positive-click="handleDelete(item)">
+                <template #trigger>
+                  <button class="p-1">
+                    <SvgIcon icon="ri:delete-bin-line" />
+                  </button>
+                </template>
+                确定删除此文件？
+              </NPopconfirm>
+            </template>
+          </div>
         </div>
       </template>
     </div>

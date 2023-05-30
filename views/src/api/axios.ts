@@ -5,11 +5,7 @@ import axios from 'axios'
 import { useMessage } from 'naive-ui'
 const instance = axios.create({
   // process.env.NODE_ENV === 'development' 来判断是否开发环境
-  baseURL: '/api',
-  /*  process.env.USAGE === 'development'
-      ?
-      window.baseApi ?? '/api'
-      : 'http://192.168.1.99:51798', */
+  baseURL: window.baseApi ?? '/api',
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
   },

@@ -4,7 +4,10 @@ from typing import List
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from paddleocr import PaddleOCR
 import os
+import nltk
+from configs.model_config import NLTK_DATA_PATH
 
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 class UnstructuredPaddleImageLoader(UnstructuredFileLoader):
     """Loader that uses unstructured to load image files, such as PNGs and JPGs."""
@@ -15,7 +18,7 @@ class UnstructuredPaddleImageLoader(UnstructuredFileLoader):
             if not os.path.exists(full_dir_path):
                 os.makedirs(full_dir_path)
             filename = os.path.split(filepath)[-1]
-            ocr = PaddleOCR(lang="ch", use_gpu=False, show_log=False)
+            ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False)
             result = ocr.ocr(img=filepath)
 
             ocr_result = [i[1][0] for line in result for i in line]

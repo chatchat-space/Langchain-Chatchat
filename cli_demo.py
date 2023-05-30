@@ -2,7 +2,9 @@ from configs.model_config import *
 from chains.local_doc_qa import LocalDocQA
 import os
 import nltk
-
+from models.loader.args import parser
+import models.shared as shared
+from models.loader import LoaderCheckPoint
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 # Show reply with source text from input document
@@ -10,11 +12,17 @@ REPLY_WITH_SOURCE = True
 
 
 def main():
+    args = None
+    args = parser.parse_args()
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+    llm_model_ins = shared.loaderLLM()
+    llm_model_ins.history_len = LLM_HISTORY_LEN
+
     local_doc_qa = LocalDocQA()
-    local_doc_qa.init_cfg(llm_model=LLM_MODEL,
+    local_doc_qa.init_cfg(llm_model=llm_model_ins,
                           embedding_model=EMBEDDING_MODEL,
                           embedding_device=EMBEDDING_DEVICE,
-                          llm_history_len=LLM_HISTORY_LEN,
                           top_k=VECTOR_SEARCH_TOP_K)
     vs_path = None
     while not vs_path:

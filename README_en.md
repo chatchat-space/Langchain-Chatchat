@@ -120,9 +120,26 @@ $ python api.py
 ```
 Note: Before executing, check the remaining space in the `$HOME/.cache/huggingface/` folder, at least 15G.
 
-The resulting interface is shown below:
+Or execute following command to run VUE after api.py executed
+```shell
+$ cd views 
 
-![](img/webui_0510_0.png)
+$ pnpm i
+
+$ npm run dev
+```
+
+VUE interface screenshots:
+
+![](img/vue_0521_0.png)
+
+![](img/vue_0521_1.png)
+
+![](img/vue_0521_2.png)
+
+Web UI interface screenshots:
+
+![img.png](img/webui_0521_0.png)
 
 ![](img/webui_0510_1.png)
 

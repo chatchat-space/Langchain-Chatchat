@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 from typing import List, Optional
+import urllib
 
 import nltk
 import pydantic
@@ -12,10 +13,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
+
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
-                                  EMBEDDING_MODEL, LLM_MODEL, NLTK_DATA_PATH,
+                                  EMBEDDING_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
+import models.shared as shared
+from models.loader.args import parser
+from models.loader import LoaderCheckPoint
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -169,24 +174,27 @@ async def list_docs(
 
 
 async def delete_docs(
-        knowledge_base_id: str = Form(...,
-                                      description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
-                                      example="kb1"),
-        doc_name: Optional[str] = Form(
+        knowledge_base_id: str = Query(...,
+                                       description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
+                                       example="kb1"),
+        doc_name: Optional[str] = Query(
             None, description="doc name", example="doc_name_1.pdf"
         ),
 ):
+    knowledge_base_id = urllib.parse.unquote(knowledge_base_id)
     if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, knowledge_base_id)):
         return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
     if doc_name:
         doc_path = get_file_path(knowledge_base_id, doc_name)
         if os.path.exists(doc_path):
             os.remove(doc_path)
+            return BaseResponse(code=200, msg=f"document {doc_name} delete success")
         else:
-            BaseResponse(code=1, msg=f"document {doc_name} not found")
+            return BaseResponse(code=1, msg=f"document {doc_name} not found")
 
         remain_docs = await list_docs(knowledge_base_id)
-        if remain_docs["code"] != 0 or len(remain_docs["data"]) == 0:
+        remain_docs = remain_docs.json()
+        if len(remain_docs["data"]) == 0:
             shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
         else:
             local_doc_qa.init_knowledge_vector_store(
@@ -194,7 +202,7 @@ async def delete_docs(
             )
     else:
         shutil.rmtree(get_folder_path(knowledge_base_id))
-    return BaseResponse()
+        return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
 
 
 async def local_doc_chat(
@@ -239,6 +247,35 @@ async def local_doc_chat(
         )
 
 
+async def bing_search_chat(
+        question: str = Body(..., description="Question", example="工伤保险是什么？"),
+        history: Optional[List[List[str]]] = Body(
+            [],
+            description="History of previous questions and answers",
+            example=[
+                [
+                    "工伤保险是什么？",
+                    "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
+                ]
+            ],
+        ),
+):
+    for resp, history in local_doc_qa.get_search_result_based_answer(
+            query=question, chat_history=history, streaming=True
+    ):
+        pass
+    source_documents = [
+        f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+        for inum, doc in enumerate(resp["source_documents"])
+    ]
+
+    return ChatMessage(
+        question=question,
+        response=resp["result"],
+        history=history,
+        source_documents=source_documents,
+    )
+
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
         history: List[List[str]] = Body(
@@ -252,9 +289,10 @@ async def chat(
             ],
         ),
 ):
-    for resp, history in local_doc_qa.llm._call(
-            prompt=question, history=history, streaming=True
-    ):
+    for answer_result in local_doc_qa.llm.generatorAnswer(prompt=question, history=history,
+                                                          streaming=True):
+        resp = answer_result.llm_output["answer"]
+        history = answer_result.history
         pass
 
     return ChatMessage(
@@ -306,13 +344,20 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+
 async def document():
     return RedirectResponse(url="/docs")
+
+
+
 
 
 def api_start(host, port):
     global app
     global local_doc_qa
+
+    llm_model_ins = shared.loaderLLM()
+    llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     app = FastAPI()
     # Add CORS middleware to allow all origins
@@ -335,23 +380,26 @@ def api_start(host, port):
     app.post("/local_doc_qa/upload_file", response_model=BaseResponse)(upload_file)
     app.post("/local_doc_qa/upload_files", response_model=BaseResponse)(upload_files)
     app.post("/local_doc_qa/local_doc_chat", response_model=ChatMessage)(local_doc_chat)
+    app.post("/local_doc_qa/bing_search_chat", response_model=ChatMessage)(bing_search_chat)
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse)(list_docs)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse)(delete_docs)
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
-        llm_model=LLM_MODEL,
+        llm_model=llm_model_ins,
         embedding_model=EMBEDDING_MODEL,
         embedding_device=EMBEDDING_DEVICE,
-        llm_history_len=LLM_HISTORY_LEN,
         top_k=VECTOR_SEARCH_TOP_K,
     )
     uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
+    # 初始化消息
+    args = None
     args = parser.parse_args()
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     api_start(args.host, args.port)

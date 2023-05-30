@@ -18,6 +18,7 @@
 
 ![实现原理图2](img/langchain+chatglm2.png)
 
+
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
 🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM)
@@ -33,7 +34,7 @@
 - ChatGLM-6B 模型硬件需求
 
     注：如未将模型下载至本地，请执行前检查`$HOME/.cache/huggingface/`文件夹剩余空间，模型文件下载至本地需要 15 GB 存储空间。
-
+    注：一些其它的可选启动项见[项目启动选项](docs/StartOption.md)
     模型下载方法可参考 [常见问题](docs/FAQ.md) 中 Q8。
   
     | **量化等级**   | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
@@ -123,9 +124,17 @@ $ pnpm i
 $ npm run dev
 ```
 
-执行后效果如下图所示：
+VUE 前端界面如下图所示：
+1. `对话` 界面
+![](img/vue_0521_0.png)
+2. `知识库问答` 界面
+![](img/vue_0521_1.png)
+3. `Bing搜索` 界面
+![](img/vue_0521_2.png)
+
+WebUI 界面如下图所示：
 1. `对话` Tab 界面
-![](img/webui_0510_0.png)
+![](img/webui_0521_0.png)
 2. `知识库测试 Beta` Tab 界面
 ![](img/webui_0510_1.png)
 3. `模型配置` Tab 界面
@@ -179,7 +188,8 @@ Web UI 可以实现如下功能：
 - [ ] Langchain 应用
   - [x] 接入非结构化文档（已支持 md、pdf、docx、txt 文件格式）
   - [x] jpg 与 png 格式图片的 OCR 文字识别
-  - [ ] 搜索引擎与本地网页接入
+  - [x] 搜索引擎接入
+  - [ ] 本地网页接入
   - [ ] 结构化数据接入（如 csv、Excel、SQL 等）
   - [ ] 知识图谱/图数据库接入
   - [ ] Agent 实现
@@ -204,12 +214,13 @@ Web UI 可以实现如下功能：
     - [x] 上传文件/文件夹至知识库
     - [x] 知识库测试
     - [ ] 删除知识库中文件
-  - [ ] 利用 streamlit 实现 Web UI Demo
+  - [x] 支持搜索引擎问答
 - [ ] 增加 API 支持
   - [x] 利用 fastapi 实现 API 部署方式
   - [ ] 实现调用 API 的 Web UI Demo
+- [x] VUE 前端
 
 ## 项目交流群
-![二维码](img/qr_code_20.jpg)
+![二维码](img/qr_code_23.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

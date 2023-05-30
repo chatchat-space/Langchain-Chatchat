@@ -1,8 +1,9 @@
 <script setup lang='ts'>
-import { NButton, NForm, NFormItem, NInput } from 'naive-ui'
+import { NButton, NForm, NFormItem, NInput, NPopconfirm } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import filelist from './filelist.vue'
-import { getfilelist } from '@/api/chat'
+import { SvgIcon } from '@/components/common'
+import { deletefile, getfilelist } from '@/api/chat'
 import { idStore } from '@/store/modules/knowledgebaseid/id'
 const items = ref<any>([])
 const choice = ref('')
@@ -33,7 +34,6 @@ const rules = {
   },
 }
 const handleValidateClick = (item: any) => {
-  // console.log(item)
   choice.value = item
   store.knowledgeid = choice.value
   items.value.forEach((res: { value: any; show: boolean }) => {
@@ -50,6 +50,17 @@ const handleClick = () => {
       show: false,
     })
   }
+}
+async function handleDelete(item: any) {
+  await deletefile(item.value)
+  const res = await getfilelist({})
+  items.value = []
+  res.data.data.forEach((item: any) => {
+    items.value.push({
+      value: item,
+      show: false,
+    })
+  })
 }
 </script>
 
@@ -74,9 +85,25 @@ const handleClick = () => {
     </NFormItem>
   </NForm>
   <div v-for="item in items" :key="item.value">
-    <NButton block size="large" @click="handleValidateClick(item.value)">
-      {{ item.value }}
-    </NButton>
+    <div class="flex items-center">
+      <NButton block size="large" style="width:90%" @click="handleValidateClick(item.value)">
+        {{ item.value }}
+      </NButton>
+      <div class="absolute z-10 flex visible right-1">
+        <template v-if="item.isEdit" />
+        <template v-else>
+          <NPopconfirm placement="bottom" @positive-click="handleDelete(item)">
+            <template #trigger>
+              <button class="p-1">
+                <SvgIcon icon="ri:delete-bin-line" />
+              </button>
+            </template>
+            确定删除此文件？
+          </NPopconfirm>
+        </template>
+      </div>
+    </div>
+
     <div v-if="item.show" class="p-2 flex-1 min-h-0 pb-4 overflow-hidden">
       <filelist v-if="item.value" :knowledgebaseid="item.value" />
     </div>
