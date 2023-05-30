@@ -68,11 +68,12 @@ def generate_prompt(related_docs: List[str],
     return prompt
 
 
-def seperate_list(ls: List[int]) -> List[List[int]]:
+def seperate_list(id_dict) -> List[List[int]]:
+    ls = sorted(list(id_dict.keys()))
     lists = []
     ls1 = [ls[0]]
     for i in range(1, len(ls)):
-        if ls[i - 1] + 1 == ls[i]:
+        if ls[i - 1] + 1 == ls[i] and id_dict[ls[i - 1]] == id_dict[ls[i]]:
             ls1.append(ls[i])
         else:
             lists.append(ls1)
@@ -81,12 +82,10 @@ def seperate_list(ls: List[int]) -> List[List[int]]:
     return lists
 
 
-def similarity_search_with_score_by_vector(
-        self, embedding: List[float], k: int = 4
-) -> List[Tuple[Document, float]]:
+def similarity_search_with_score_by_vector(self, embedding: List[float], k: int = 4) -> List[Tuple[Document, float]]:
     scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
     docs = []
-    id_set = set()
+    id_dict = {}
     store_len = len(self.index_to_docstore_id)
     for j, i in enumerate(indices[0]):
         if i == -1 or 0 < self.score_threshold < scores[0][j]:
@@ -100,7 +99,7 @@ def similarity_search_with_score_by_vector(
             doc.metadata["score"] = int(scores[0][j])
             docs.append(doc)
             continue
-        id_set.add(i)
+        id_dict[i] = doc.metadata["source"]
         docs_len = len(doc.page_content)
         for k in range(1, max(i, store_len - i)):
             break_flag = False
@@ -113,15 +112,14 @@ def similarity_search_with_score_by_vector(
                         break
                     elif doc0.metadata["source"] == doc.metadata["source"]:
                         docs_len += len(doc0.page_content)
-                        id_set.add(l)
+                        id_dict[l] = doc.metadata["source"]
             if break_flag:
                 break
     if not self.chunk_conent:
         return docs
-    if len(id_set) == 0 and self.score_threshold > 0:
+    if len(id_dict) == 0 and self.score_threshold > 0:
         return []
-    id_list = sorted(list(id_set))
-    id_lists = seperate_list(id_list)
+    id_lists = seperate_list(id_dict)
     for id_seq in id_lists:
         for id in id_seq:
             if id == id_seq[0]:
@@ -340,8 +338,8 @@ if __name__ == "__main__":
                                                                      streaming=True):
         print(resp["result"][last_print_len:], end="", flush=True)
         last_print_len = len(resp["result"])
-    source_text = [f"""出处 [{inum + 1}] {doc.metadata['source'] if doc.metadata['source'].startswith("http") 
-                   else os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+    source_text = [f"""出处 [{inum + 1}] {doc.metadata['source'] if doc.metadata['source'].startswith("http")
+    else os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                    # f"""相关度：{doc.metadata['score']}\n\n"""
                    for inum, doc in
                    enumerate(resp["source_documents"])]
