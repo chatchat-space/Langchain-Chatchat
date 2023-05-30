@@ -18,6 +18,21 @@ from models.loader import LoaderCheckPoint
 import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
+from functools import lru_cache
+
+
+# patch HuggingFaceEmbeddings to make it hashable
+def _embeddings_hash(self):
+    return hash(self.model_name)
+
+
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+
+
+# will keep CACHED_VS_NUM of vector store caches
+@lru_cache(CACHED_VS_NUM)
+def load_vector_store(vs_path, embeddings):
+    return FAISS.load_local(vs_path, embeddings)
 
 
 def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
@@ -238,7 +253,7 @@ class LocalDocQA:
         if len(docs) > 0:
             logger.info("文件加载完毕，正在生成向量库")
             if vs_path and os.path.isdir(vs_path):
-                vector_store = FAISS.load_local(vs_path, self.embeddings)
+                vector_store = load_vector_store(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
                 torch_gc()
             else:
@@ -264,7 +279,7 @@ class LocalDocQA:
                 text_splitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
                 docs = text_splitter.split_documents(docs)
             if os.path.isdir(vs_path):
-                vector_store = FAISS.load_local(vs_path, self.embeddings)
+                vector_store = load_vector_store(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
             else:
                 vector_store = FAISS.from_documents(docs, self.embeddings)  ##docs 为Document列表
@@ -276,7 +291,7 @@ class LocalDocQA:
             return None, [one_title]
 
     def get_knowledge_based_answer(self, query, vs_path, chat_history=[], streaming: bool = STREAMING):
-        vector_store = FAISS.load_local(vs_path, self.embeddings)
+        vector_store = load_vector_store(vs_path, self.embeddings)
         FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector
         vector_store.chunk_size = self.chunk_size
         vector_store.chunk_conent = self.chunk_conent
@@ -304,7 +319,7 @@ class LocalDocQA:
     def get_knowledge_based_conent_test(self, query, vs_path, chunk_conent,
                                         score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
                                         vector_search_top_k=VECTOR_SEARCH_TOP_K, chunk_size=CHUNK_SIZE):
-        vector_store = FAISS.load_local(vs_path, self.embeddings)
+        vector_store = load_vector_store(vs_path, self.embeddings)
         FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector
         vector_store.chunk_conent = chunk_conent
         vector_store.score_threshold = score_threshold
