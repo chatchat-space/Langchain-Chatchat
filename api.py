@@ -196,7 +196,7 @@ async def delete_docs(
                 local_doc_qa.init_knowledge_vector_store(
                     get_folder_path(knowledge_base_id), get_vs_path(knowledge_base_id)
                 )
-            
+
             return BaseResponse(code=200, msg=f"document {doc_name} delete success")
         else:
             return BaseResponse(code=1, msg=f"document {doc_name} not found")
@@ -345,10 +345,12 @@ async def stream_chat(websocket: WebSocket):
             last_print_len = len(resp["result"])
 
         source_documents = [
-            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-            f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
-        ]
+            json.dumps(
+                {
+                    "source": os.path.split(doc.metadata['source'])[-1],
+                    "content": doc.page_content
+                },
+                ensure_ascii=False) for doc in resp["source_documents"]]
 
         await websocket.send_text(
             json.dumps(
