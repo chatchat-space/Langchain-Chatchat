@@ -111,9 +111,9 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             messages=self.build_message_list(prompt)
         )
 
-        self.history += [[prompt, completion.choices[0].message.content]]
+        history += [[prompt, completion.choices[0].message.content]]
         answer_result = AnswerResult()
-        answer_result.history = self.history
+        answer_result.history = history
         answer_result.llm_output = {"answer": completion.choices[0].message.content}
 
         yield answer_result

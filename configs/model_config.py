@@ -69,12 +69,23 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "LLamaLLM"
     },
-    "fastChatOpenAI": {
+    "fast-chat-chatglm-6b": {
         "name": "FastChatOpenAI",
         "pretrained_model_name": "FastChatOpenAI",
         "local_model_path": None,
-        "provides": "FastChatOpenAILLM"
-    }
+        "provides": "FastChatOpenAILLM",
+        "api_base_url": "http://localhost:8000/v1",
+        "model_name": "chatglm-6b"
+    },
+
+    "fast-chat-vicuna-13b-hf": {
+        "name": "FastChatOpenAI",
+        "pretrained_model_name": "vicuna-13b-hf",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLM",
+        "api_base_url": "http://localhost:8000/v1",
+        "model_name": "vicuna-13b-hf"
+    },
 }
 
 # LLM 名称

@@ -18,14 +18,13 @@ async def dispatch(args: Namespace):
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
 
     llm_model_ins = shared.loaderLLM()
-    llm_model_ins.set_api_base_url("http://localhost:8000/v1")
-    llm_model_ins.call_model_name("chatglm-6b")
+
     history = [
         ("which city is this?", "tokyo"),
         ("why?", "she's japanese"),
 
     ]
-    for answer_result in llm_model_ins.generatorAnswer(prompt="她在做什么? ", history=history,
+    for answer_result in llm_model_ins.generatorAnswer(prompt="你好? ", history=history,
                                                        streaming=False):
         resp = answer_result.llm_output["answer"]
 
