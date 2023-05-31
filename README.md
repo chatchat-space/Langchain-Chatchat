@@ -195,21 +195,22 @@ Web UI 可以实现如下功能：
   - [ ] 结构化数据接入（如 csv、Excel、SQL 等）
   - [ ] 知识图谱/图数据库接入
   - [ ] Agent 实现
-- [ ] 增加更多 LLM 模型支持
+- [x] 增加更多 LLM 模型支持
   - [x] [THUDM/chatglm-6b](https://huggingface.co/THUDM/chatglm-6b)
   - [x] [THUDM/chatglm-6b-int8](https://huggingface.co/THUDM/chatglm-6b-int8)
   - [x] [THUDM/chatglm-6b-int4](https://huggingface.co/THUDM/chatglm-6b-int4)
   - [x] [THUDM/chatglm-6b-int4-qe](https://huggingface.co/THUDM/chatglm-6b-int4-qe)
   - [x] [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)
   - [x] [fnlp/moss-moon-003-sft](https://huggingface.co/fnlp/moss-moon-003-sft)
-  - [ ] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
+  - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
 - [ ] 增加更多 Embedding 模型支持
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
   - [x] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
   - [x] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [ ] Web UI
-  - [x] 利用 gradio 实现 Web UI DEMO
+  - [x] 基于 gradio 实现 Web UI DEMO
+  - [x] 基于 streamlit 实现 Web UI DEMO
   - [x] 添加输出内容及错误提示
   - [x] 引用标注
   - [ ] 增加知识库管理
