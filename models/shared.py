@@ -34,7 +34,7 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     loaderCheckPoint.model_path = llm_model_info["local_model_path"]
 
-    if 'FastChatOpenAILLM' in llm_model_info["local_model_path"]:
+    if 'FastChatOpenAILLM' in llm_model_info["provides"]:
         loaderCheckPoint.unload_model()
     else:
         loaderCheckPoint.reload_model()
@@ -43,5 +43,5 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
     modelInsLLM = provides_class(checkPoint=loaderCheckPoint)
     if 'FastChatOpenAILLM' in llm_model_info["provides"]:
         modelInsLLM.set_api_base_url(llm_model_info['api_base_url'])
-        modelInsLLM.call_model_name(llm_model_info['model_name'])
+        modelInsLLM.call_model_name(llm_model_info['name'])
     return modelInsLLM

@@ -70,21 +70,19 @@ llm_model_dict = {
         "provides": "LLamaLLM"
     },
     "fast-chat-chatglm-6b": {
-        "name": "FastChatOpenAI",
+        "name": "chatglm-6b",
         "pretrained_model_name": "FastChatOpenAI",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",
-        "api_base_url": "http://localhost:8000/v1",
-        "model_name": "chatglm-6b"
+        "api_base_url": "http://localhost:8000/v1"
     },
 
     "fast-chat-vicuna-13b-hf": {
-        "name": "FastChatOpenAI",
+        "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",
-        "api_base_url": "http://localhost:8000/v1",
-        "model_name": "vicuna-13b-hf"
+        "api_base_url": "http://localhost:8000/v1"
     },
 }
 
