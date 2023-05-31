@@ -345,12 +345,10 @@ async def stream_chat(websocket: WebSocket):
             last_print_len = len(resp["result"])
 
         source_documents = [
-            json.dumps(
-                {
-                    "source": os.path.split(doc.metadata['source'])[-1],
-                    "content": doc.page_content
-                },
-                ensure_ascii=False) for doc in resp["source_documents"]]
+            {
+                "source": os.path.split(doc.metadata['source'])[-1],
+                "content": doc.page_content
+            } for doc in resp["source_documents"]]
 
         await websocket.send_text(
             json.dumps(
