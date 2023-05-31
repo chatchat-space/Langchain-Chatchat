@@ -252,7 +252,7 @@ class LocalDocQA:
                     logger.info(f"{file} 未能成功加载")
         if len(docs) > 0:
             logger.info("文件加载完毕，正在生成向量库")
-            if vs_path and os.path.isdir(vs_path):
+            if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
                 vector_store = load_vector_store(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
                 torch_gc()
