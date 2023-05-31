@@ -134,6 +134,7 @@ def similarity_search_with_score_by_vector(self, embedding: List[float], k: int 
         doc_score = min([scores[0][id] for id in [indices[0].tolist().index(i) for i in id_seq if i in indices[0]]])
         doc.metadata["score"] = int(doc_score)
         docs.append(doc)
+    docs.sort(key=lambda doc: doc.metadata["score"])
     torch_gc()
     return docs
 
