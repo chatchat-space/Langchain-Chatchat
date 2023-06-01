@@ -1,14 +1,12 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../')
 import asyncio
 from argparse import Namespace
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
 
-from langchain.agents import initialize_agent, Tool
-from langchain.agents import AgentType
 
 import models.shared as shared
 

@@ -4,18 +4,11 @@ import os
 import re
 import time
 from pathlib import Path
-from peft import PeftModel
 from typing import Optional, List, Dict, Tuple, Union
 import torch
 import transformers
-
 from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
-                          AutoTokenizer, BitsAndBytesConfig, LlamaTokenizer)
-from transformers.dynamic_module_utils import get_class_from_dynamic_module
-from transformers.modeling_utils import no_init_weights
-from transformers.utils import ContextManagers
-from accelerate import init_empty_weights
-from accelerate.utils import get_balanced_memory, infer_auto_device_map
+                          AutoTokenizer, LlamaTokenizer)
 from configs.model_config import LLM_DEVICE
 
 
@@ -104,7 +97,7 @@ class LoaderCheckPoint:
             LoaderClass = AutoModelForCausalLM
 
         # Load the model in simple 16-bit mode by default
-        if not any([self.llm_device.lower()=="cpu",
+        if not any([self.llm_device.lower() == "cpu",
                     self.load_in_8bit, self.is_llamacpp]):
 
             if torch.cuda.is_available() and self.llm_device.lower().startswith("cuda"):
@@ -137,11 +130,8 @@ class LoaderCheckPoint:
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
-                # print(
-                #     "Warning: torch.cuda.is_available() returned False.\nThis means that no GPU has been "
-                #     "detected.\nFalling back to CPU mode.\n")
                 model = (
-                    AutoModel.from_pretrained(
+                    LoaderClass.from_pretrained(
                         checkpoint,
                         config=self.model_config,
                         trust_remote_code=True)
@@ -150,7 +140,15 @@ class LoaderCheckPoint:
                 )
 
         elif self.is_llamacpp:
-            from models.extensions.llamacpp_model_alternative import LlamaCppModel
+
+            try:
+                from models.extensions.llamacpp_model_alternative import LlamaCppModel
+
+            except ImportError as exc:
+                raise ValueError(
+                    "Could not import depend python package "
+                    "Please install it with `pip install llama-cpp-python`."
+                ) from exc
 
             model_file = list(checkpoint.glob('ggml*.bin'))[0]
             print(f"llama.cpp weights detected: {model_file}\n")
@@ -158,8 +156,19 @@ class LoaderCheckPoint:
             model, tokenizer = LlamaCppModel.from_pretrained(model_file)
             return model, tokenizer
 
-        # Custom
-        else:
+        elif self.load_in_8bit:
+            try:
+                from accelerate import init_empty_weights
+                from accelerate.utils import get_balanced_memory, infer_auto_device_map
+                from transformers import BitsAndBytesConfig
+
+            except ImportError as exc:
+                raise ValueError(
+                    "Could not import depend python package "
+                    "Please install it with `pip install transformers` "
+                    "`pip install bitsandbytes``pip install accelerate`."
+                ) from exc
+
             params = {"low_cpu_mem_usage": True}
 
             if not self.llm_device.lower().startswith("cuda"):
@@ -167,30 +176,34 @@ class LoaderCheckPoint:
             else:
                 params["device_map"] = 'auto'
                 params["trust_remote_code"] = True
-                if self.load_in_8bit:
-                    params['quantization_config'] = BitsAndBytesConfig(load_in_8bit=True,
-                                                                       llm_int8_enable_fp32_cpu_offload=False)
-                elif self.bf16:
-                    params["torch_dtype"] = torch.bfloat16
-                else:
-                    params["torch_dtype"] = torch.float16
+                params['quantization_config'] = BitsAndBytesConfig(load_in_8bit=True,
+                                                                   llm_int8_enable_fp32_cpu_offload=False)
 
-            if self.load_in_8bit and params.get('max_memory', None) is not None and params['device_map'] == 'auto':
-                config = AutoConfig.from_pretrained(checkpoint)
-                with init_empty_weights():
-                    model = LoaderClass.from_config(config)
-                model.tie_weights()
-                if self.device_map is not None:
-                    params['device_map'] = self.device_map
-                else:
-                    params['device_map'] = infer_auto_device_map(
-                        model,
-                        dtype=torch.int8,
-                        max_memory=params['max_memory'],
-                        no_split_module_classes=model._no_split_modules
-                    )
+            with init_empty_weights():
+                model = LoaderClass.from_config(self.model_config,trust_remote_code = True)
+            model.tie_weights()
+            if self.device_map is not None:
+                params['device_map'] = self.device_map
+            else:
+                params['device_map'] = infer_auto_device_map(
+                    model,
+                    dtype=torch.int8,
+                    no_split_module_classes=model._no_split_modules
+                )
+            try:
 
-            model = LoaderClass.from_pretrained(checkpoint, **params)
+                model = LoaderClass.from_pretrained(checkpoint, **params)
+            except ImportError as exc:
+                raise ValueError(
+                    "如果开启了8bit量化加载,项目无法启动，参考此位置，选择合适的cuda版本，https://github.com/TimDettmers/bitsandbytes/issues/156"
+                ) from exc
+        # Custom
+        else:
+
+            print(
+                "Warning: self.llm_device is False.\nThis means that no use GPU  bring to be load CPU mode\n")
+            params = {"low_cpu_mem_usage": True, "torch_dtype": torch.float32, "trust_remote_code": True}
+            model = LoaderClass.from_pretrained(checkpoint, **params).to(self.llm_device, dtype=float)
 
         # Loading the tokenizer
         if type(model) is transformers.LlamaForCausalLM:
@@ -247,6 +260,20 @@ class LoaderCheckPoint:
         return device_map
 
     def moss_auto_configure_device_map(self, num_gpus: int, model_name) -> Dict[str, int]:
+        try:
+
+            from accelerate import init_empty_weights
+            from accelerate.utils import get_balanced_memory, infer_auto_device_map
+            from transformers.dynamic_module_utils import get_class_from_dynamic_module
+            from transformers.modeling_utils import no_init_weights
+            from transformers.utils import ContextManagers
+        except ImportError as exc:
+            raise ValueError(
+                "Could not import depend python package "
+                "Please install it with `pip install transformers` "
+                "`pip install bitsandbytes``pip install accelerate`."
+            ) from exc
+
         checkpoint = Path(f'{self.model_dir}/{model_name}')
 
         if self.model_path:
@@ -271,6 +298,16 @@ class LoaderCheckPoint:
             return device_map
 
     def _add_lora_to_model(self, lora_names):
+
+        try:
+
+            from peft import PeftModel
+
+        except ImportError as exc:
+            raise ValueError(
+                "Could not import depend python package. "
+                "Please install it with `pip install peft``pip install accelerate`."
+            ) from exc
         # 目前加载的lora
         prior_set = set(self.lora_names)
         # 需要加载的

@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import sys
 import warnings
+from abc import ABC
 from typing import (
     AbstractSet,
     Any,
@@ -32,13 +33,13 @@ from tenacity import (
 from langchain.llms.base import BaseLLM
 from langchain.schema import Generation, LLMResult
 from langchain.utils import get_from_dict_or_env
-
+from models.base import (RemoteRpcModel,
+                         AnswerResult)
+from models.loader import LoaderCheckPoint
 import requests
 import json
 
-
 logger = logging.getLogger(__name__)
-FAST_CHAT_API = "http://localhost:21002/worker_generate_stream"
 
 
 def _streaming_response_template() -> Dict[str, Any]:
@@ -60,6 +61,7 @@ def _update_response(response: Dict[str, Any], stream_response: Dict[str, Any]) 
 class BaseFastChat(BaseLLM):
     """Wrapper around FastChat large language models."""
 
+    api_base_url: str = "http://localhost:21002/worker_generate_stream"
     model_name: str = "text-davinci-003"
     """Model name to use."""
     temperature: float = 0.7
@@ -151,11 +153,11 @@ class BaseFastChat(BaseLLM):
 
                 response_template = _streaming_response_template()
                 response = requests.post(
-                    FAST_CHAT_API,
+                    self.api_base_url,
                     headers=headers,
                     json=params,
                     stream=True,
-                    )
+                )
                 for stream_resp in response.iter_lines(
                         chunk_size=8192, decode_unicode=False, delimiter=b"\0"
                 ):
@@ -174,11 +176,11 @@ class BaseFastChat(BaseLLM):
             else:
                 response_template = _streaming_response_template()
                 response = requests.post(
-                    FAST_CHAT_API,
+                    self.api_base_url,
                     headers=headers,
                     json=params,
                     stream=True,
-                    )
+                )
                 for stream_resp in response.iter_lines(
                         chunk_size=8192, decode_unicode=False, delimiter=b"\0"
                 ):
@@ -217,11 +219,11 @@ class BaseFastChat(BaseLLM):
 
                 response_template = _streaming_response_template()
                 response = requests.post(
-                    FAST_CHAT_API,
+                    self.api_base_url,
                     headers=headers,
                     json=params,
                     stream=True,
-                    )
+                )
                 for stream_resp in response.iter_lines(
                         chunk_size=8192, decode_unicode=False, delimiter=b"\0"
                 ):
@@ -240,11 +242,11 @@ class BaseFastChat(BaseLLM):
             else:
                 response_template = _streaming_response_template()
                 response = requests.post(
-                    FAST_CHAT_API,
+                    self.api_base_url,
                     headers=headers,
                     json=params,
                     stream=True,
-                    )
+                )
                 for stream_resp in response.iter_lines(
                         chunk_size=8192, decode_unicode=False, delimiter=b"\0"
                 ):
@@ -330,7 +332,7 @@ class BaseFastChat(BaseLLM):
 
         headers = {"User-Agent": "fastchat Client"}
         response = requests.post(
-            FAST_CHAT_API,
+            self.api_base_url,
             headers=headers,
             json=params,
             stream=True,
@@ -340,7 +342,7 @@ class BaseFastChat(BaseLLM):
         ):
             if stream_resp:
                 data = json.loads(stream_resp.decode("utf-8"))
-                skip_echo_len = len(_prompts[0])
+                skip_echo_len = len(prompt)
                 output = data["text"][skip_echo_len:].strip()
                 data["text"] = output
                 yield data
@@ -438,22 +440,63 @@ class BaseFastChat(BaseLLM):
         return max_size - num_tokens
 
 
-class FastChat(BaseFastChat):
-    """Wrapper around OpenAI large language models.
-
-    To use, you should have the ``openai`` python package installed, and the
-    environment variable ``OPENAI_API_KEY`` set with your API key.
-
-    Any parameters that are valid to be passed to the openai.create call can be passed
-    in, even if not explicitly saved on this class.
+class FastChatAPILLM(RemoteRpcModel, BaseFastChat, ABC):
+    """Wrapper around FastChat large language models.
 
     Example:
         .. code-block:: python
 
-            from langchain.llms import OpenAI
             openai = FastChat(model_name="vicuna")
     """
+    checkPoint: LoaderCheckPoint = None
+
+    history_len: int = 10
+
+    def __init__(self, checkPoint: LoaderCheckPoint = None):
+        super().__init__()
+        self.checkPoint = checkPoint
 
     @property
     def _invocation_params(self) -> Dict[str, Any]:
         return {**{"model": self.model_name}, **super()._invocation_params}
+
+    @property
+    def _check_point(self) -> LoaderCheckPoint:
+        return self.checkPoint
+
+    @property
+    def _history_len(self) -> int:
+        return self.history_len
+
+    def set_history_len(self, history_len: int = 10) -> None:
+        self.history_len = history_len
+
+    @property
+    def _api_key(self) -> str:
+        pass
+
+    @property
+    def _api_base_url(self) -> str:
+        return self.api_base_url
+
+    def set_api_key(self, api_key: str):
+        pass
+
+    def set_api_base_url(self, api_base_url: str):
+        self.api_base_url = api_base_url
+
+    def call_model_name(self, model_name):
+        self.model_name = model_name
+
+    def generatorAnswer(self, prompt: str,
+                        history: List[List[str]] = [],
+                        streaming: bool = False):
+        generator = self.stream("Tell me a joke.")
+        for token in generator:
+            yield token
+
+            history += [[prompt, token["text"]]]
+            answer_result = AnswerResult()
+            answer_result.history = history
+            answer_result.llm_output = {"answer": token["text"]}
+            yield answer_result

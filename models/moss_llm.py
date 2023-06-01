@@ -3,9 +3,7 @@ from langchain.llms.base import LLM
 from typing import Optional, List
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult,
-                         AnswerResultStream,
-                         AnswerResultQueueSentinelTokenListenerQueue)
+                         AnswerResult)
 
 import torch
 
@@ -53,10 +51,9 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
         pass
 
-    def _generate_answer(self, prompt: str,
+    def generatorAnswer(self, prompt: str,
                          history: List[List[str]] = [],
-                         streaming: bool = False,
-                         generate_with_callback: AnswerResultStream = None) -> None:
+                         streaming: bool = False):
         if len(history) > 0:
             history = history[-self.history_len:-1] if self.history_len > 0 else []
             prompt_w_history = str(history)
@@ -86,6 +83,6 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
 
-            generate_with_callback(answer_result)
+            yield answer_result
 
 

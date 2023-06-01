@@ -119,3 +119,24 @@ Q10: 执行`python cli_demo.py`过程中，显卡内存爆了，提示"OutOfMemo
 A10: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。
 
 ---
+
+Q11: 执行 `pip install -r requirements.txt` 过程中遇到 python 包，如 langchain 找不到对应版本的问题
+
+A11: 更换 pypi 源后重新安装，如阿里源、清华源等，网络条件允许时建议直接使用 pypi.org 源，具体操作命令如下：
+
+```shell
+# 使用 pypi 源
+$ pip install -r requirements.txt -i https://pypi.python.org/simple
+```
+或
+```shell
+# 使用阿里源
+$ pip install -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/
+```
+或
+```shell
+# 使用清华源
+$ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+```
+
+---
