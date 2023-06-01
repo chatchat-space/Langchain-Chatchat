@@ -354,8 +354,8 @@ async def stream_chat(websocket: WebSocket):
             } for doc in resp["source_documents"]]
 
         extent_prompt = "%s \n请就上述内容，进一步给出用户感兴趣的、有深度的3个简短问题" % (resp["result"])
-        extent_answer_result = local_doc_qa.llm.generatorAnswer(prompt=extent_prompt, history=[], streaming=False)
-        print(extent_answer_result.llm_output["answer"])
+        for extent_answer_result in local_doc_qa.llm.generatorAnswer(prompt=extent_prompt, history=[], streaming=False):
+            pass
         extend_questions = extent_answer_result.llm_output["answer"].split('\n')
 
         await websocket.send_text(
