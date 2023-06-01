@@ -313,6 +313,7 @@ async def stream_chat(websocket: WebSocket):
             "knowledge_base_id"]
         vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
         source_documents = []
+        extend_questions = []
 
         if not os.path.exists(vs_path):
             await websocket.send_text(
@@ -322,6 +323,7 @@ async def stream_chat(websocket: WebSocket):
                         "response": f"Knowledge base {knowledge_base_id} not found",
                         "flag": "error",
                         "sources_documents": source_documents,
+                        "extend_questions": extend_questions,
                     },
                     ensure_ascii=False,
                 )
@@ -338,6 +340,7 @@ async def stream_chat(websocket: WebSocket):
                         "response": resp["result"][last_print_len:],
                         "flag": "doing",
                         "sources_documents": source_documents,
+                        "extend_questions": extend_questions,
                     },
                     ensure_ascii=False,
                 )
@@ -350,6 +353,11 @@ async def stream_chat(websocket: WebSocket):
                 "content": doc.page_content
             } for doc in resp["source_documents"]]
 
+        extent_prompt = "%s \n请就上述内容，进一步给出用户感兴趣的、有深度的3个简短问题" % (resp["result"])
+        extent_answer_result = local_doc_qa.llm.generatorAnswer(prompt=extent_prompt, history=[], streaming=False)
+        print(extent_answer_result.llm_output["answer"])
+        extend_questions = extent_answer_result.llm_output["answer"].split('\n')
+
         await websocket.send_text(
             json.dumps(
                 {
@@ -357,6 +365,7 @@ async def stream_chat(websocket: WebSocket):
                     "response": resp["result"],
                     "flag": "end",
                     "sources_documents": source_documents,
+                    "extend_questions": extend_questions,
                 },
                 ensure_ascii=False,
             )
