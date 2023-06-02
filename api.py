@@ -305,11 +305,14 @@ async def chat(
     )
 
 
-def is_valid_question(input_str):
-    if len(input_str) > 2 and input_str[:2] in set(['1.', '2.', '3.']):
-        return True
-    else:
-        return False
+def check_and_trim_questions(raw_list):
+    ans = []
+    for raw_str in raw_list:
+        if len(raw_str) > 2 and raw_str[:2] in set(['1.', '2.', '3.']):
+            tmp = raw_str[2:].strip()
+            if tmp:
+                ans.append(tmp)
+    return ans
 
 
 async def stream_chat(websocket: WebSocket):
@@ -363,7 +366,7 @@ async def stream_chat(websocket: WebSocket):
         extent_prompt = "%s \n请就上述内容，进一步给出用户感兴趣的、有深度的3个简短问题" % (resp["result"])
         for extent_answer_result in local_doc_qa.llm.generatorAnswer(prompt=extent_prompt, history=[], streaming=False):
             raw_extend_questions = extent_answer_result.llm_output["answer"].split('\n')
-        extend_questions = list(filter(is_valid_question, raw_extend_questions))
+        extend_questions = check_and_trim_questions(raw_extend_questions)
 
         await websocket.send_text(
             json.dumps(
