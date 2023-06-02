@@ -490,6 +490,12 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
         load_knowlege_button = gr.Button("重新构建知识库")
         load_knowlege_button.click(reinit_vector_store, show_progress=True,
                                    inputs=[select_vs, chatbot], outputs=chatbot)
+    demo.load(
+        fn=refresh_vs_list,
+        outputs=[select_vs],
+        queue=False,
+        show_progress=False
+    )
 (demo
  .queue(concurrency_count=3)
  .launch(server_name='0.0.0.0',
