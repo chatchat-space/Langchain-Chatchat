@@ -10,6 +10,7 @@ from configs.model_config import NLTK_DATA_PATH
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
+
 class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
     """Loader that uses unstructured to load image files, such as PNGs and JPGs."""
 
@@ -25,7 +26,9 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             with open(txt_file_path, 'w', encoding='utf-8') as fout:
                 for i in range(doc.page_count):
                     page = doc[i]
-                    text = page.get_text("")
+                    raw_text = page.get_text("blocks")
+                    text_lines = [' '.join(i[4].split('\n')) for i in raw_text]
+                    text = '\n'.join(text_lines)
                     fout.write(text)
                     fout.write("\n")
 
