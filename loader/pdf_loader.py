@@ -42,6 +42,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
                         result = ocr.ocr(img_name)
                         ocr_result = [i[1][0] for line in result for i in line]
                         fout.write("\n".join(ocr_result))
+                    fout.write("\n")
             if os.path.exists(img_name):
                 os.remove(img_name)
             return txt_file_path
