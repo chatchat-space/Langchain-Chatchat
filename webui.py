@@ -249,7 +249,7 @@ def reinit_vector_store(vs_id, history):
 
 
 def refresh_vs_list():
-    return gr.update(choices=get_vs_list())
+    return gr.update(choices=get_vs_list()), gr.update(choices=get_vs_list())
 
 
 block_css = """.importantButton {
@@ -393,7 +393,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                         outputs=[chunk_sizes, chatbot])
                 with vs_setting:
                     vs_refresh = gr.Button("更新已有知识库选项")
-                    select_vs = gr.Dropdown(get_vs_list(),
+                    select_vs_test = gr.Dropdown(get_vs_list(),
                                             label="请选择要加载的知识库",
                                             interactive=True,
                                             value=get_vs_list()[0] if len(get_vs_list()) > 0 else None)
@@ -431,25 +431,25 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                     # 将上传的文件保存到content文件夹下,并更新下拉框
                     vs_refresh.click(fn=refresh_vs_list,
                                      inputs=[],
-                                     outputs=select_vs)
+                                     outputs=select_vs_test)
                     vs_add.click(fn=add_vs_name,
                                  inputs=[vs_name, chatbot],
-                                 outputs=[select_vs, vs_name, vs_add, file2vs, chatbot])
-                    select_vs.change(fn=change_vs_name_input,
-                                     inputs=[select_vs, chatbot],
+                                 outputs=[select_vs_test, vs_name, vs_add, file2vs, chatbot])
+                    select_vs_test.change(fn=change_vs_name_input,
+                                     inputs=[select_vs_test, chatbot],
                                      outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
-                                           inputs=[select_vs, files, sentence_size, chatbot, vs_add, vs_add],
+                                           inputs=[select_vs_test, files, sentence_size, chatbot, vs_add, vs_add],
                                            outputs=[vs_path, files, chatbot], )
                     load_folder_button.click(get_vector_store,
                                              show_progress=True,
-                                             inputs=[select_vs, folder_files, sentence_size, chatbot, vs_add,
+                                             inputs=[select_vs_test, folder_files, sentence_size, chatbot, vs_add,
                                                      vs_add],
                                              outputs=[vs_path, folder_files, chatbot], )
                     load_conent_button.click(get_vector_store,
                                              show_progress=True,
-                                             inputs=[select_vs, one_title, sentence_size, chatbot,
+                                             inputs=[select_vs_test, one_title, sentence_size, chatbot,
                                                      one_conent, one_content_segmentation],
                                              outputs=[vs_path, files, chatbot], )
                     flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
@@ -490,6 +490,14 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
         load_knowlege_button = gr.Button("重新构建知识库")
         load_knowlege_button.click(reinit_vector_store, show_progress=True,
                                    inputs=[select_vs, chatbot], outputs=chatbot)
+    demo.load(
+        fn=refresh_vs_list,
+        inputs=None,
+        outputs=[select_vs, select_vs_test],
+        queue=True,
+        show_progress=False,
+    )
+
 (demo
  .queue(concurrency_count=3)
  .launch(server_name='0.0.0.0',
