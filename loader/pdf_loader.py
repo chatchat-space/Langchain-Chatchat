@@ -15,6 +15,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
     """Loader that uses unstructured to load image files, such as PNGs and JPGs."""
 
     def _get_elements(self) -> List:
+
         def pdf_ocr_txt(filepath, dir_path="tmp_files"):
             full_dir_path = os.path.join(os.path.dirname(filepath), dir_path)
             if not os.path.exists(full_dir_path):
@@ -26,23 +27,29 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             with open(txt_file_path, 'w', encoding='utf-8') as fout:
                 for i in range(doc.page_count):
                     page = doc[i]
-                    raw_text = page.get_text("blocks")
-                    text_lines = [' '.join(i[4].split('\n')) for i in raw_text]
-                    text = '\n'.join(text_lines)
-                    fout.write(text)
-                    fout.write("\n")
 
-                    img_list = page.get_images()
-                    for img in img_list:
-                        pix = fitz.Pixmap(doc, img[0])
-                        if pix.n - pix.alpha >= 4:
-                            pix = fitz.Pixmap(fitz.csRGB, pix)
-                        pix.save(img_name)
+                    d = page.get_text("dict", sort=True)
+                    for cur_block in d["blocks"]:
+                        if cur_block['type'] == 0:
+                            block_text = []
+                            for line in cur_block['lines']:
+                                for span in line['spans']:
+                                    block_text.append(span['text'])
+                            fout.write(''.join(block_text))
+                            fout.write('\n')
+                        elif cur_block['type'] == 1:
+                            pix = fitz.Pixmap(cur_block['image'])
+                            if pix.n - pix.alpha >= 4:
+                                pix = fitz.Pixmap(fitz.csRGB, pix)
+                            pix.save(img_name)
 
-                        result = ocr.ocr(img_name)
-                        ocr_result = [i[1][0] for line in result for i in line]
-                        fout.write("\n".join(ocr_result))
-                    fout.write("\n")
+                            result = ocr.ocr(img_name)
+                            ocr_result = [i[1][0] for line in result for i in line]
+                            fout.write("\n".join(ocr_result))
+                            fout.write("\n")
+                        else:
+                            print(cur_block['type'])
+
             if os.path.exists(img_name):
                 os.remove(img_name)
             return txt_file_path
