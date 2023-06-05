@@ -24,13 +24,14 @@ class ChineseTextSplitter(CharacterTextSplitter):
                 sent_list.append(ele)
         return sent_list
 
-    def split_text(self, text: str) -> List[str]:   ##此处需要进一步优化逻辑
+    def split_text(self, text: str) -> List[str]:  ##此处需要进一步优化逻辑
         if self.pdf:
             text = re.sub(r"\n{3,}", r"\n", text)
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
 
         text = re.sub(r'([;；!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
+        text = re.sub(r'(\. )([^”’])', r"\1\n\2", text)  # 英文句号容易和小数点歧义
         text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
         text = re.sub(r'(\…{2})([^"’”」』])', r"\1\n\2", text)  # 中文省略号
         text = re.sub(r'([;；!?。！？\?]["’”」』]{0,2})([^;；!?，。！？\?])', r'\1\n\2', text)
