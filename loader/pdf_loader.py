@@ -55,7 +55,8 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
         def pdf_markdown_txt(pdfpath, txt_file_path, docx_file):
             # pdf -> docx
             cv = Converter(pdfpath)
-            cv.convert(docx_file, debug=False, ignore_page_error=True, multi_processing=False,
+            cv.convert(docx_file, debug=False, ignore_page_error=True, multi_processing=True,
+                       cpu_count=8,
                        extract_stream_table=True,
                        parse_lattice_table=True,
                        parse_stream_table=True,
