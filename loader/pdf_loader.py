@@ -126,15 +126,15 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
                 fout.write('\n')
 
         dir_path = "tmp_files"
-        full_dir_path = os.path.join(os.path.dirname(filepath), dir_path)
+        full_dir_path = os.path.join(os.path.dirname(self.file_path), dir_path)
         if not os.path.exists(full_dir_path):
             os.makedirs(full_dir_path)
 
-        txt_file_path = os.path.join(full_dir_path, f"{os.path.split(filepath)[-1]}.txt")
+        txt_file_path = os.path.join(full_dir_path, f"{os.path.split(self.file_path)[-1]}.txt")
         with open(txt_file_path, 'w', encoding='utf-8') as _:
             pass
         img_name = os.path.join(full_dir_path, 'tmp.png')
-        docx_file = os.path.join(full_dir_path, f"{os.path.split(filepath)[-1]}.docx")
+        docx_file = os.path.join(full_dir_path, f"{os.path.split(self.file_path)[-1]}.docx")
 
         pdf_markdown_txt(self.file_path, txt_file_path, docx_file)
         pdf_ocr_txt(self.file_path, txt_file_path, img_name)
