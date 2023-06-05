@@ -30,6 +30,17 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
 
+        result = []
+        paragraphs = text.split('\n')
+        for paragraph in paragraphs:
+            result.extend(self.split_text_paragraph(paragraph))
+        return result
+
+    def split_text_paragraph(self, text: str) -> List[str]:  ##此处需要进一步优化逻辑
+        # markdown table
+        if len(text.strip()) > 2 and text.strip().startswith('|') and text.strip().endswith('|'):
+            return [text.strip()]
+
         text = re.sub(r'([;；!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
         text = re.sub(r'(\. )([^”’])', r"\1\n\2", text)  # 英文句号容易和小数点歧义
         text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
