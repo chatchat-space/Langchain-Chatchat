@@ -20,6 +20,7 @@ from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVI
 import models.shared as shared
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
+import re
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -309,9 +310,9 @@ def check_and_trim_questions(raw_list):
     ans = []
     for raw_str in raw_list:
         if len(raw_str) > 2 and raw_str[:2] in set(['1.', '2.', '3.']):
-            tmp = raw_str[2:].strip()
+            tmp = re.split('[？?]', raw_str[2:].strip())[0]
             if tmp:
-                ans.append(tmp)
+                ans.append(tmp + '？')
     return ans
 
 
