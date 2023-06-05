@@ -26,8 +26,8 @@ class ChineseTextSplitter(CharacterTextSplitter):
 
     def split_text(self, text: str) -> List[str]:  ##此处需要进一步优化逻辑
         # markdown table
-        if len(text) > 2 and text.startswith('|') and text.endswith('|'):
-            return [text]
+        if len(text.strip()) > 2 and text.strip().startswith('|') and text.strip().endswith('|'):
+            return [text.strip()]
         if self.pdf:
             text = re.sub(r"\n{3,}", r"\n", text)
             text = re.sub('\s', " ", text)
