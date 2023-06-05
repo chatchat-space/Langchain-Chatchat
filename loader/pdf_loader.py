@@ -63,7 +63,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             cv.close()
 
             # docx -> plain text with grid tables
-            pdoc_args = ['--no-highlight', '--wrap=none', '--columns=128', '--extract-media=tmp_media']
+            pdoc_args = ['--no-highlight', '--wrap=none', '--columns=128']
             format = "plain-simple_tables-multiline_tables-pipe_tables" \
                      "+grid_tables-escaped_line_breaks-table_captions-smart-auto_identifiers"
             outputfilename = docx_file + '.txt'
