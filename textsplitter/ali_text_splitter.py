@@ -4,9 +4,10 @@ from typing import List
 
 
 class AliTextSplitter(CharacterTextSplitter):
-    def __init__(self, pdf: bool = False, **kwargs):
+    def __init__(self, pdf: bool = False, sentence_size: int = SENTENCE_SIZE, **kwargs):
         super().__init__(**kwargs)
         self.pdf = pdf
+        self.sentence_size = sentence_size
 
     def split_text(self, text: str) -> List[str]:
         # use_document_segmentation参数指定是否用语义切分文档，此处采取的文档语义分割模型为达摩院开源的nlp_bert_document-segmentation_chinese-base，论文见https://arxiv.org/abs/2107.09278
