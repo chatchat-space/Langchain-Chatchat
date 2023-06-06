@@ -139,7 +139,7 @@ class PDFTextLoader(BaseLoader):
         pdf_ocr_txt(self.file_path, txt_file_path, img_name)
 
         text = ""
-        with open(txt_file_path, 'utf-8') as f:
+        with open(txt_file_path, encoding='utf-8') as f:
             text = f.read()
 
         metadata = {"source": self.file_path}
