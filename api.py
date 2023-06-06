@@ -311,7 +311,7 @@ def check_and_trim_questions(raw_list):
     for raw_str in raw_list:
         if len(raw_str) > 2 and raw_str[:2] in set(['1.', '2.', '3.']):
             tmp = re.split('[？?]', raw_str[2:].strip())[0]
-            if tmp:
+            if tmp and len(tmp) < 35:
                 ans.append(tmp + '？')
     return ans
 
