@@ -1,7 +1,3 @@
-"""Loader that loads image files."""
-from typing import List
-
-from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from paddleocr import PaddleOCR
 import os
 import fitz
@@ -10,15 +6,18 @@ from configs.model_config import NLTK_DATA_PATH
 from pdf2docx import Converter
 import pypandoc
 import re
+from typing import List
+from langchain.docstore.document import Document
+from langchain.document_loaders.base import BaseLoader
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
-class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
-    """Loader that uses unstructured to load image files, such as PNGs and JPGs."""
+class PDFTextLoader(BaseLoader):
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
-    def _get_elements(self) -> List:
-
+    def load(self) -> List[Document]:
         def pdf_ocr_txt(pdfpath, txt_file_path, img_name):
             ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False)
             doc = fitz.open(pdfpath)
@@ -139,13 +138,17 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
         pdf_markdown_txt(self.file_path, txt_file_path, docx_file)
         pdf_ocr_txt(self.file_path, txt_file_path, img_name)
 
-        from unstructured.partition.text import partition_text
-        return partition_text(filename=txt_file_path, **self.unstructured_kwargs)
+        text = ""
+        with open(txt_file_path, 'utf-8') as f:
+            text = f.read()
+
+        metadata = {"source": self.file_path}
+        return [Document(page_content=text, metadata=metadata)]
 
 
 if __name__ == "__main__":
     filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content", "samples", "test.pdf")
-    loader = UnstructuredPaddlePDFLoader(filepath, mode="elements")
+    loader = PDFTextLoader(filepath)
     docs = loader.load()
     for doc in docs:
         print(doc)
