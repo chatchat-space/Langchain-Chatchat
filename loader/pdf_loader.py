@@ -7,6 +7,7 @@ import os
 import fitz
 import nltk
 from configs.model_config import NLTK_DATA_PATH
+import tempfile
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -18,10 +19,13 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
             full_dir_path = os.path.join(os.path.dirname(filepath), dir_path)
             if not os.path.exists(full_dir_path):
                 os.makedirs(full_dir_path)
-            ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False)
+            ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False,
+                            det_model_dir="/modules/PaddleOCRModels/ch_PP-OCRv3_det_infer",
+                            cls_model_dir="/modules/PaddleOCRModels/ch_ppocr_mobile_v2.0_cls_infer",
+                            rec_model_dir="/modules/PaddleOCRModels/ch_PP-OCRv3_rec_infer")
             doc = fitz.open(filepath)
             txt_file_path = os.path.join(full_dir_path, f"{os.path.split(filepath)[-1]}.txt")
-            img_name = os.path.join(full_dir_path, 'tmp.png')
+            # img_name = os.path.join(full_dir_path, 'tmp.png')
             with open(txt_file_path, 'w', encoding='utf-8') as fout:
                 for i in range(doc.page_count):
                     page = doc[i]
@@ -34,6 +38,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
                         pix = fitz.Pixmap(doc, img[0])
                         if pix.n - pix.alpha >= 4:
                             pix = fitz.Pixmap(fitz.csRGB, pix)
+                        fd, img_name = tempfile.mkstemp()
                         pix.save(img_name)
 
                         result = ocr.ocr(img_name)

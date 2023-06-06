@@ -19,7 +19,8 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from functools import lru_cache
-
+from multiprocessing import Pool
+from multiprocessing import cpu_count
 
 # patch HuggingFaceEmbeddings to make it hashable
 def _embeddings_hash(self):
@@ -81,12 +82,22 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
     write_check_file(filepath, docs)
     return docs
 
+def load_file_wrapper(fullfilepath):
+    print(f"正在导入{fullfilepath}")
+    try:
+        doc = load_file(fullfilepath[0], SENTENCE_SIZE)
+        return True, doc, fullfilepath[0]
+    except Exception as e:
+        logger.error(e)
+        return False, fullfilepath[1]
+
 
 def write_check_file(filepath, docs):
     folder_path = os.path.join(os.path.dirname(filepath), "tmp_files")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    fp = os.path.join(folder_path, 'load_file.txt')
+    # fp = os.path.join(folder_path, 'load_file.txt')
+    fp = os.path.join(folder_path, os.path.basename(filepath)+".load.txt")
     with open(fp, 'a+', encoding='utf-8') as fout:
         fout.write("filepath=%s,len=%s" % (filepath, len(docs)))
         fout.write('\n')
@@ -205,6 +216,7 @@ class LocalDocQA:
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
 
+
     def init_knowledge_vector_store(self,
                                     filepath: str or List[str],
                                     vs_path: str or os.PathLike = None,
@@ -227,13 +239,24 @@ class LocalDocQA:
                     return None
             elif os.path.isdir(filepath):
                 docs = []
-                for fullfilepath, file in tqdm(zip(*tree(filepath, ignore_dir_names=['tmp_files'])), desc="加载文件"):
-                    try:
-                        docs += load_file(fullfilepath, sentence_size)
-                        loaded_files.append(fullfilepath)
-                    except Exception as e:
-                        logger.error(e)
-                        failed_files.append(file)
+                pool_size = cpu_count()
+                pool_size = pool_size if pool_size<4 else pool_size-2
+                pool = Pool(pool_size)
+                # for fullfilepath, file in tqdm(zip(*tree(filepath, ignore_dir_names=['tmp_files'])), desc="加载文件"):
+                #     try:
+                #         docs += load_file(fullfilepath, sentence_size)
+                #         loaded_files.append(fullfilepath)
+                #     except Exception as e:
+                #         logger.error(e)
+                #         failed_files.append(file)
+                tree_files = zip(*tree(filepath, ignore_dir_names=['tmp_files']))
+                results = pool.map(load_file_wrapper, tree_files)
+                for rs in results:
+                    if rs[0]:
+                        docs += rs[1]
+                        loaded_files.append(rs[2])
+                    else:
+                        failed_files.append(rs[1])
 
                 if len(failed_files) > 0:
                     logger.info("以下文件未能成功加载：")
@@ -264,10 +287,10 @@ class LocalDocQA:
                 torch_gc()
 
             vector_store.save_local(vs_path)
-            return vs_path, loaded_files
+            return vs_path, loaded_files, failed_files
         else:
             logger.info("文件均未成功加载，请检查依赖包或替换为其他文件再次上传。")
-            return None, loaded_files
+            return None, loaded_files, failed_files
 
     def one_knowledge_add(self, vs_path, one_title, one_conent, one_content_segmentation, sentence_size):
         try:
