@@ -4,6 +4,10 @@ from typing import List
 from configs.model_config import SENTENCE_SIZE
 
 
+def is_markdown_table(line):
+    return len(line) > 2 and line.startswith('|') and line.endswith('|')
+
+
 class ChineseTextSplitter(CharacterTextSplitter):
     def __init__(self, pdf: bool = False, sentence_size: int = SENTENCE_SIZE, **kwargs):
         super().__init__(**kwargs)
@@ -30,16 +34,25 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
 
-        result = []
+        raw_result = []
         paragraphs = text.split("\n")
         for paragraph in paragraphs:
-            result.extend(self.split_text_paragraph(paragraph))
+            raw_result.extend(self.split_text_paragraph(paragraph))
+        # markdown table合并起来
+        result = []
+        for line in raw_result:
+            if is_markdown_table(line):
+                if is_markdown_table(result[-1]):
+                    result[-1] += '\n' + line
+                else:
+                    result.append(line)
+            else:
+                result.append(line)
         return result
 
     def split_text_paragraph(self, text: str) -> List[str]:  ##此处需要进一步优化逻辑
-        # markdown table
-        if len(text.strip()) > 2 and text.strip().startswith('|') and text.strip().endswith('|'):
-            return [text.strip()]
+        if is_markdown_table(text):
+            return [text]
 
         text = re.sub(r'([;；!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
         text = re.sub(r'(\. )([^”’])', r"\1\n\2", text)  # 英文句号容易和小数点歧义
