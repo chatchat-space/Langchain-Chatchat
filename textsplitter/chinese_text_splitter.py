@@ -31,7 +31,7 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub("\n\n", "", text)
 
         result = []
-        paragraphs = text.split('\n')
+        paragraphs = text.split("\n")
         for paragraph in paragraphs:
             result.extend(self.split_text_paragraph(paragraph))
         return result
