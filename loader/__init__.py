@@ -1,5 +1,5 @@
 from .image_loader import UnstructuredPaddleImageLoader
-from .pdf_loader import UnstructuredPaddlePDFLoader
+from .pdf_loader import PDFTextLoader
 from .dialogue import (
     Person,
     Dialogue,
@@ -9,6 +9,6 @@ from .dialogue import (
 
 __all__ = [
     "UnstructuredPaddleImageLoader",
-    "UnstructuredPaddlePDFLoader",
+    "PDFTextLoader",
     "DialogueLoader",
 ]

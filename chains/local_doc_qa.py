@@ -10,7 +10,7 @@ import numpy as np
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
-from loader import UnstructuredPaddleImageLoader, UnstructuredPaddlePDFLoader
+from loader import UnstructuredPaddleImageLoader, PDFTextLoader
 from models.base import (BaseAnswer,
                          AnswerResult)
 from models.loader.args import parser
@@ -67,8 +67,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".pdf"):
-        loader = UnstructuredPaddlePDFLoader(filepath)
-        textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
+        loader = PDFTextLoader(filepath)
+        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
         loader = UnstructuredPaddleImageLoader(filepath, mode="elements")
