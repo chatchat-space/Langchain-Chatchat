@@ -55,7 +55,7 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
                          history: List[List[str]] = [],
                          streaming: bool = False):
         if len(history) > 0:
-            history = history[-self.history_len:-1] if self.history_len > 0 else []
+            history = history[-self.history_len:] if self.history_len > 0 else []
             prompt_w_history = str(history)
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
         else:
