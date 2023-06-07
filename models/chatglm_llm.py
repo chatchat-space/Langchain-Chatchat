@@ -44,15 +44,15 @@ class ChatGLM(BaseAnswer, LLM, ABC):
         return response
 
     def generatorAnswer(self, prompt: str,
-                         history: List[List[str]] = [],
-                         streaming: bool = False):
+                        history: List[List[str]] = [],
+                        streaming: bool = False):
 
         if streaming:
             history += [[]]
             for inum, (stream_resp, _) in enumerate(self.checkPoint.model.stream_chat(
                     self.checkPoint.tokenizer,
                     prompt,
-                    history=history[-self.history_len:-1] if self.history_len > 1 else [],
+                    history=history[-self.history_len - 1:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     temperature=self.temperature
             )):
@@ -76,5 +76,3 @@ class ChatGLM(BaseAnswer, LLM, ABC):
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
             yield answer_result
-
-

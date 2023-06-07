@@ -10,7 +10,7 @@ import numpy as np
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
-from loader import UnstructuredPaddleImageLoader, UnstructuredPaddlePDFLoader
+from loader import UnstructuredPaddleImageLoader, PDFTextLoader
 from models.base import (BaseAnswer,
                          AnswerResult)
 from models.loader.args import parser
@@ -67,8 +67,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".pdf"):
-        loader = UnstructuredPaddlePDFLoader(filepath)
-        textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
+        loader = PDFTextLoader(filepath)
+        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
         loader = UnstructuredPaddleImageLoader(filepath, mode="elements")
@@ -104,11 +104,12 @@ def generate_prompt(related_docs: List[str],
     return prompt
 
 
-def seperate_list(ls: List[int]) -> List[List[int]]:
+def seperate_list(id_dict) -> List[List[int]]:
+    ls = sorted(list(id_dict.keys()))
     lists = []
     ls1 = [ls[0]]
     for i in range(1, len(ls)):
-        if ls[i - 1] + 1 == ls[i]:
+        if ls[i - 1] + 1 == ls[i] and id_dict[ls[i - 1]] == id_dict[ls[i]]:
             ls1.append(ls[i])
         else:
             lists.append(ls1)
@@ -122,7 +123,7 @@ def similarity_search_with_score_by_vector(
 ) -> List[Tuple[Document, float]]:
     scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
     docs = []
-    id_set = set()
+    id_dict = {}
     store_len = len(self.index_to_docstore_id)
     for j, i in enumerate(indices[0]):
         if i == -1 or 0 < self.score_threshold < scores[0][j]:
@@ -136,7 +137,7 @@ def similarity_search_with_score_by_vector(
             doc.metadata["score"] = int(scores[0][j])
             docs.append(doc)
             continue
-        id_set.add(i)
+        id_dict[i] = doc.metadata["source"]
         docs_len = len(doc.page_content)
         for k in range(1, max(i, store_len - i)):
             break_flag = False
@@ -144,20 +145,19 @@ def similarity_search_with_score_by_vector(
                 if 0 <= l < len(self.index_to_docstore_id):
                     _id0 = self.index_to_docstore_id[l]
                     doc0 = self.docstore.search(_id0)
-                    if docs_len + len(doc0.page_content) > self.chunk_size:
+                    if docs_len > self.chunk_size:
                         break_flag = True
                         break
                     elif doc0.metadata["source"] == doc.metadata["source"]:
                         docs_len += len(doc0.page_content)
-                        id_set.add(l)
+                        id_dict[l] = doc.metadata["source"]
             if break_flag:
                 break
     if not self.chunk_conent:
         return docs
-    if len(id_set) == 0 and self.score_threshold > 0:
+    if len(id_dict) == 0 and self.score_threshold > 0:
         return []
-    id_list = sorted(list(id_set))
-    id_lists = seperate_list(id_list)
+    id_lists = seperate_list(id_dict)
     for id_seq in id_lists:
         for id in id_seq:
             if id == id_seq[0]:
@@ -166,12 +166,13 @@ def similarity_search_with_score_by_vector(
             else:
                 _id0 = self.index_to_docstore_id[id]
                 doc0 = self.docstore.search(_id0)
-                doc.page_content += " " + doc0.page_content
+                doc.page_content += "\n" + doc0.page_content
         if not isinstance(doc, Document):
             raise ValueError(f"Could not find document for id {_id}, got {doc}")
         doc_score = min([scores[0][id] for id in [indices[0].tolist().index(i) for i in id_seq if i in indices[0]]])
         doc.metadata["score"] = int(doc_score)
         docs.append(doc)
+    docs.sort(key=lambda doc: doc.metadata["score"])
     torch_gc()
     return docs
 
@@ -278,7 +279,7 @@ class LocalDocQA:
             if not one_content_segmentation:
                 text_splitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
                 docs = text_splitter.split_documents(docs)
-            if os.path.isdir(vs_path) and os.path.isfile(vs_path+"/index.faiss"):
+            if os.path.isdir(vs_path) and os.path.isfile(vs_path + "/index.faiss"):
                 vector_store = load_vector_store(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
             else:
@@ -298,7 +299,7 @@ class LocalDocQA:
         vector_store.score_threshold = self.score_threshold
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
         torch_gc()
-        if len(related_docs_with_score)>0:
+        if len(related_docs_with_score) > 0:
             prompt = generate_prompt(related_docs_with_score, query)
         else:
             prompt = query
@@ -378,8 +379,8 @@ if __name__ == "__main__":
                                                                      streaming=True):
         print(resp["result"][last_print_len:], end="", flush=True)
         last_print_len = len(resp["result"])
-    source_text = [f"""出处 [{inum + 1}] {doc.metadata['source'] if doc.metadata['source'].startswith("http") 
-                   else os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+    source_text = [f"""出处 [{inum + 1}] {doc.metadata['source'] if doc.metadata['source'].startswith("http")
+    else os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                    # f"""相关度：{doc.metadata['score']}\n\n"""
                    for inum, doc in
                    enumerate(resp["source_documents"])]

@@ -174,7 +174,7 @@ def change_vs_name_input(vs_id, history):
         else:
             file_status = f"已选择知识库{vs_id}，当前知识库中未上传文件，请先上传文件后，再开始提问"
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), \
-               vs_path, history + [[None, file_status]]
+            vs_path, history + [[None, file_status]]
 
 
 knowledge_base_test_mode_info = ("【注意】\n\n"
@@ -394,9 +394,9 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                 with vs_setting:
                     vs_refresh = gr.Button("更新已有知识库选项")
                     select_vs_test = gr.Dropdown(get_vs_list(),
-                                            label="请选择要加载的知识库",
-                                            interactive=True,
-                                            value=get_vs_list()[0] if len(get_vs_list()) > 0 else None)
+                                                 label="请选择要加载的知识库",
+                                                 interactive=True,
+                                                 value=get_vs_list()[0] if len(get_vs_list()) > 0 else None)
                     vs_name = gr.Textbox(label="请输入新建知识库名称，当前知识库命名暂不支持中文",
                                          lines=1,
                                          interactive=True,
@@ -436,8 +436,8 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                  inputs=[vs_name, chatbot],
                                  outputs=[select_vs_test, vs_name, vs_add, file2vs, chatbot])
                     select_vs_test.change(fn=change_vs_name_input,
-                                     inputs=[select_vs_test, chatbot],
-                                     outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
+                                          inputs=[select_vs_test, chatbot],
+                                          outputs=[vs_name, vs_add, file2vs, vs_path, chatbot])
                     load_file_button.click(get_vector_store,
                                            show_progress=True,
                                            inputs=[select_vs_test, files, sentence_size, chatbot, vs_add, vs_add],
