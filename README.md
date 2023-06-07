@@ -82,7 +82,7 @@ docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatG
 
 ### 软件需求
 
-本项目已在 Python 3.8 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
+本项目已在 Python 3.8.1 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
 vue前端需要node18环境
 
@@ -227,6 +227,6 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-![二维码](img/qr_code_26.jpg)
+![二维码](img/qr_code_27.jpg)
 
 🎉 langchain-ChatGLM 项目交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

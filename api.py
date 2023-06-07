@@ -310,7 +310,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
     turn = 1
     while True:
         input_json = await websocket.receive_json()
-        question, history, knowledge_base_id = input_json[""], input_json["history"], input_json["knowledge_base_id"]
+        question, history, knowledge_base_id = input_json["question"], input_json["history"], input_json["knowledge_base_id"]
         vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
 
         if not os.path.exists(vs_path):
