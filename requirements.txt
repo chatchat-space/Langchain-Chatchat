@@ -33,5 +33,5 @@ numpy~=1.23.5
 tqdm~=4.65.0
 requests~=2.28.2
 tenacity~=8.2.2
-pdf2docx
+git+https://github.com/zhenkaivip/pdf2docx.git
 pypandoc_binary

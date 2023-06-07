@@ -18,7 +18,7 @@ class PDFTextLoader(BaseLoader):
         self.file_path = file_path
 
     def load(self) -> List[Document]:
-        def pdf_ocr_txt(pdfpath, txt_file_path, img_name):
+        def pdf_ocr_txt(pdfpath, txt_file_path, img_name, error_pages):
             ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False, show_log=False)
             doc = fitz.open(pdfpath)
 
@@ -29,6 +29,9 @@ class PDFTextLoader(BaseLoader):
                     d = page.get_text("dict", sort=True)
                     for cur_block in d["blocks"]:
                         if cur_block['type'] == 0:
+                            # 文本内容，不是上步的错误页面，则跳过
+                            if i not in error_pages:
+                                continue
                             block_text = []
                             for line in cur_block['lines']:
                                 for span in line['spans']:
@@ -59,6 +62,7 @@ class PDFTextLoader(BaseLoader):
                        parse_lattice_table=True,
                        parse_stream_table=True,
                        delete_end_line_hyphen=True)
+            error_pages = cv.get_error_pages()
             cv.close()
 
             # docx -> plain text with grid tables
@@ -123,6 +127,7 @@ class PDFTextLoader(BaseLoader):
             with open(txt_file_path, 'a+', encoding='utf-8') as fout:
                 fout.write('\n'.join(newlines))
                 fout.write('\n')
+            return error_pages
 
         dir_path = "tmp_files"
         full_dir_path = os.path.join(os.path.dirname(self.file_path), dir_path)
@@ -135,8 +140,8 @@ class PDFTextLoader(BaseLoader):
         img_name = os.path.join(full_dir_path, 'tmp.png')
         docx_file = os.path.join(full_dir_path, f"{os.path.split(self.file_path)[-1]}.docx")
 
-        pdf_markdown_txt(self.file_path, txt_file_path, docx_file)
-        pdf_ocr_txt(self.file_path, txt_file_path, img_name)
+        error_pages = pdf_markdown_txt(self.file_path, txt_file_path, docx_file)
+        pdf_ocr_txt(self.file_path, txt_file_path, img_name, error_pages)
 
         text = ""
         with open(txt_file_path, encoding='utf-8') as f:
