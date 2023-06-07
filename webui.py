@@ -87,7 +87,7 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
             yield history + [[query,
                               "请选择知识库后进行测试，当前未选择知识库。"]], ""
     else:
-        for answer_result in local_doc_qa.llm.generatorAnswer(prompt=query, history=history[:-1],
+        for answer_result in local_doc_qa.llm.generatorAnswer(prompt=query, history=history,
                                                               streaming=streaming):
             resp = answer_result.llm_output["answer"]
             history = answer_result.history
