@@ -22,7 +22,6 @@ EMBEDDING_MODEL = "text2vec"
 # Embedding running device
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-
 # supported LLM models
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
 llm_model_dict = {
@@ -87,6 +86,14 @@ llm_model_dict = {
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
     },
+    # 通过 fastchat 调用的模型请参考如下格式
+    "fastchat-gpt-3.5-turbo": {
+        "name": "gpt-3.5-turbo",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "gpt-3.5-turbo",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "api_base_url": "https://api.openai-proxy.com/v1"  # "name"修改为fastchat服务中的"api_base_url"
+    },
 }
 
 # LLM 名称
@@ -114,7 +121,6 @@ USE_PTUNING_V2 = False
 
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-
 
 VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
 

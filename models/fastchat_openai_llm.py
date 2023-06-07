@@ -97,23 +97,37 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
 
         try:
             import openai
-            # Not support yet
-            openai.api_key = "EMPTY"
+            # export OPENAI_API_KEY="XXX" in .bashrc
             openai.api_base = self.api_base_url
         except ImportError:
             raise ValueError(
                 "Could not import openai python package. "
                 "Please install it with `pip install openai`."
             )
-        # create a chat completion
-        completion = openai.ChatCompletion.create(
-            model=self.model_name,
-            messages=self.build_message_list(prompt)
-        )
+        if streaming:
+            history += [[]]
+            final_resp = ""
+            for stream_resp in openai.ChatCompletion.create(
+                    model=self.model_name,
+                    messages=self.build_message_list(prompt),
+                    stream=True
+            ):
+                final_resp += stream_resp.choices[0].delta.get('content', '')
+                history[-1] = [prompt, final_resp]
+                answer_result = AnswerResult()
+                answer_result.history = history
+                answer_result.llm_output = {"answer": final_resp}
+                yield answer_result
+        else:
+            # create a chat completion
+            completion = openai.ChatCompletion.create(
+                model=self.model_name,
+                messages=self.build_message_list(prompt)
+            )
 
-        history += [[prompt, completion.choices[0].message.content]]
-        answer_result = AnswerResult()
-        answer_result.history = history
-        answer_result.llm_output = {"answer": completion.choices[0].message.content}
+            history += [[prompt, completion.choices[0].message.content]]
+            answer_result = AnswerResult()
+            answer_result.history = history
+            answer_result.llm_output = {"answer": completion.choices[0].message.content}
 
-        yield answer_result
+            yield answer_result
