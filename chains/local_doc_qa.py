@@ -143,7 +143,7 @@ def similarity_search_with_score_by_vector(self, embedding: List[float], k: int 
                 if 0 <= l < len(self.index_to_docstore_id):
                     _id0 = self.index_to_docstore_id[l]
                     doc0 = self.docstore.search(_id0)
-                    if docs_len + len(doc0.page_content) > self.chunk_size:
+                    if docs_len > self.chunk_size:
                         break_flag = True
                         break
                     elif doc0.metadata["source"] == doc.metadata["source"]:
