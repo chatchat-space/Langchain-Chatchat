@@ -46,8 +46,10 @@ class PDFTextLoader(BaseLoader):
 
                             result = ocr.ocr(img_name)
                             ocr_result = [i[1][0] for line in result for i in line]
+                            fout.write("<ocr_from_page%s>\n" % (i))
                             fout.write("\n".join(ocr_result))
                             fout.write("\n")
+                            fout.write("</ocr_from_page%s>\n" % (i))
                         else:
                             print(cur_block['type'])
 
