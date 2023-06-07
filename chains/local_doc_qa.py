@@ -278,7 +278,7 @@ class LocalDocQA:
             if not one_content_segmentation:
                 text_splitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
                 docs = text_splitter.split_documents(docs)
-            if os.path.isdir(vs_path):
+            if os.path.isdir(vs_path) and os.path.isfile(vs_path+"/index.faiss"):
                 vector_store = load_vector_store(vs_path, self.embeddings)
                 vector_store.add_documents(docs)
             else:
@@ -298,7 +298,10 @@ class LocalDocQA:
         vector_store.score_threshold = self.score_threshold
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
         torch_gc()
-        prompt = generate_prompt(related_docs_with_score, query)
+        if len(related_docs_with_score)>0:
+            prompt = generate_prompt(related_docs_with_score, query)
+        else:
+            prompt = query
 
         for answer_result in self.llm.generatorAnswer(prompt=prompt, history=chat_history,
                                                       streaming=streaming):
