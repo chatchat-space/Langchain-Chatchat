@@ -17,7 +17,6 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
     :return:
     """
     pre_model_name = loaderCheckPoint.model_name
-    llm_model_info = llm_model_dict[pre_model_name]
 
     if no_remote_model:
         loaderCheckPoint.no_remote_model = no_remote_model
@@ -26,6 +25,8 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     if llm_model:
         llm_model_info = llm_model_dict[llm_model]
+    else:
+        llm_model_info = llm_model_dict[pre_model_name]
 
     if loaderCheckPoint.no_remote_model:
         loaderCheckPoint.model_name = llm_model_info['name']
