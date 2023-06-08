@@ -35,14 +35,13 @@ parser = argparse.ArgumentParser(prog='langchina-ChatGLM',
                                  description='About langchain-ChatGLM, local knowledge based ChatGLM with langchain ｜ '
                                              '基于本地知识库的 ChatGLM 问答')
 
-parser.add_argument('--no-remote-model', action='store_true', default=NO_REMOTE_MODEL, help='remote in the model on '
-                                                                                            'loader checkpoint, '
-                                                                                            'if your load local '
-                                                                                            'model to add the ` '
-                                                                                            '--no-remote-model`')
-parser.add_argument('--model', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
+parser.add_argument('--no-remote-model', action='store_true', help='remote in the model on '
+                                                                   'loader checkpoint, '
+                                                                   'if your load local '
+                                                                   'model to add the ` '
+                                                                   '--no-remote-model`')
+parser.add_argument('--model-name', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
 parser.add_argument('--lora', type=str, help='Name of the LoRA to apply to the model by default.')
-parser.add_argument("--model-dir", type=str, default=MODEL_DIR, help="Path to directory with all the models")
 parser.add_argument("--lora-dir", type=str, default=LORA_DIR, help="Path to directory with all the loras")
 
 # Accelerate/transformers

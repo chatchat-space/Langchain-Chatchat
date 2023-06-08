@@ -26,7 +26,6 @@ class LoaderCheckPoint:
     model: object = None
     model_config: object = None
     lora_names: set = []
-    model_dir: str = None
     lora_dir: str = None
     ptuning_dir: str = None
     use_ptuning_v2: bool = False
@@ -45,28 +44,30 @@ class LoaderCheckPoint:
         模型初始化
         :param params:
         """
-        self.model_path = None
         self.model = None
         self.tokenizer = None
         self.params = params or {}
+        self.model_name = params.get('model_name', False)
+        self.model_path = params.get('model_path', None)
         self.no_remote_model = params.get('no_remote_model', False)
-        self.model_name = params.get('model', '')
         self.lora = params.get('lora', '')
         self.use_ptuning_v2 = params.get('use_ptuning_v2', False)
-        self.model_dir = params.get('model_dir', '')
         self.lora_dir = params.get('lora_dir', '')
         self.ptuning_dir = params.get('ptuning_dir', 'ptuning-v2')
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
     def _load_model_config(self, model_name):
-        checkpoint = Path(f'{self.model_dir}/{model_name}')
 
         if self.model_path:
             checkpoint = Path(f'{self.model_path}')
         else:
             if not self.no_remote_model:
                 checkpoint = model_name
+            else:
+                raise ValueError(
+                    "本地模型local_model_path未配置路径"
+                )
 
         model_config = AutoConfig.from_pretrained(checkpoint, trust_remote_code=True)
 
@@ -81,16 +82,17 @@ class LoaderCheckPoint:
         print(f"Loading {model_name}...")
         t0 = time.time()
 
-        checkpoint = Path(f'{self.model_dir}/{model_name}')
-
-        self.is_llamacpp = len(list(checkpoint.glob('ggml*.bin'))) > 0
-
         if self.model_path:
             checkpoint = Path(f'{self.model_path}')
         else:
             if not self.no_remote_model:
                 checkpoint = model_name
+            else:
+                raise ValueError(
+                    "本地模型local_model_path未配置路径"
+                )
 
+        self.is_llamacpp = len(list(Path(f'{checkpoint}').glob('ggml*.bin'))) > 0
         if 'chatglm' in model_name.lower():
             LoaderClass = AutoModel
         else:
@@ -274,13 +276,16 @@ class LoaderCheckPoint:
                 "`pip install bitsandbytes``pip install accelerate`."
             ) from exc
 
-        checkpoint = Path(f'{self.model_dir}/{model_name}')
-
         if self.model_path:
             checkpoint = Path(f'{self.model_path}')
         else:
             if not self.no_remote_model:
                 checkpoint = model_name
+            else:
+                raise ValueError(
+                    "本地模型local_model_path未配置路径"
+                )
+
         cls = get_class_from_dynamic_module(class_reference="fnlp/moss-moon-003-sft--modeling_moss.MossForCausalLM",
                                             pretrained_model_name_or_path=checkpoint)
 
