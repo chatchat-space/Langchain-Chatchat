@@ -205,11 +205,13 @@ Web UI 可以实现如下功能：
   - [x] [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)
   - [x] [fnlp/moss-moon-003-sft](https://huggingface.co/fnlp/moss-moon-003-sft)
   - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
-- [ ] 增加更多 Embedding 模型支持
+- [x] 增加更多 Embedding 模型支持
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
   - [x] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
   - [x] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
+  - [x] [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
+  - [x] [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
 - [ ] Web UI
   - [x] 基于 gradio 实现 Web UI DEMO
   - [x] 基于 streamlit 实现 Web UI DEMO
