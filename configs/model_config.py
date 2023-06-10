@@ -47,7 +47,7 @@ llm_model_dict = {
     "chatglm-6b": {
         "name": "chatglm-6b",
         "pretrained_model_name": "THUDM/chatglm-6b",
-        "local_model_path": None,
+        "local_model_path": "/media/checkpoint/chatglm-6b",
         "provides": "ChatGLM"
     },
 
@@ -66,7 +66,7 @@ llm_model_dict = {
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
-        "local_model_path": None,
+        "local_model_path": "/media/checkpoint/vicuna-13b-hf",
         "provides": "LLamaLLM"
     },
 
