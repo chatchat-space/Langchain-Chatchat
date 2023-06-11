@@ -69,7 +69,25 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         self.model_name = model_name
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        pass
+        print(f"__call:{prompt}")
+        try:
+            import openai
+            # Not support yet
+            openai.api_key = "EMPTY"
+            openai.api_base = self.api_base_url
+        except ImportError:
+            raise ValueError(
+                "Could not import openai python package. "
+                "Please install it with `pip install openai`."
+            )
+        # create a chat completion
+        completion = openai.ChatCompletion.create(
+            model=self.model_name,
+            messages=self.build_message_list(prompt)
+        )
+        print(f"response:{completion.choices[0].message.content}")
+        print(f"+++++++++++++++++++++++++++++++++++")
+        return completion.choices[0].message.content
 
     # 将历史对话数组转换为文本格式
     def build_message_list(self, query) -> Collection[Dict[str, str]]:

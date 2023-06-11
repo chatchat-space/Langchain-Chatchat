@@ -9,11 +9,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
+# 在以下字典中修改属性值，以指定本地embedding模型存储位置
+# 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
+# 此处请写绝对路径
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
     "text2vec-base": "shibing624/text2vec-base-chinese",
     "text2vec": "GanymedeNil/text2vec-large-chinese",
+    "m3e-small": "moka-ai/m3e-small",
+    "m3e-base": "moka-ai/m3e-base",
 }
 
 # Embedding model name
@@ -25,6 +30,9 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 
 # supported LLM models
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
+# 在以下字典中修改属性值，以指定本地 LLM 模型存储位置
+# 如将 "chatglm-6b" 的 "local_model_path" 由 None 修改为 "User/Downloads/chatglm-6b"
+# 此处请写绝对路径
 llm_model_dict = {
     "chatglm-6b-int4-qe": {
         "name": "chatglm-6b-int4-qe",
@@ -66,7 +74,7 @@ llm_model_dict = {
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
-        "local_model_path": None,
+        "local_model_path": "/media/checkpoint/vicuna-13b-hf",
         "provides": "LLamaLLM"
     },
 

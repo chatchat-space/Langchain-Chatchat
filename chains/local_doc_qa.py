@@ -4,9 +4,7 @@ from langchain.document_loaders import UnstructuredFileLoader, TextLoader, CSVLo
 from configs.model_config import *
 import datetime
 from textsplitter import ChineseTextSplitter
-from typing import List, Tuple, Dict
-from langchain.docstore.document import Document
-import numpy as np
+from typing import List
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
