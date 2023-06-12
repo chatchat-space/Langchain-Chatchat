@@ -64,7 +64,7 @@ def start_api(ip, port):
     # 然后在cli.py里初始化
 
 @start.command(name="cli", context_settings=dict(help_option_names=['-h', '--help']))
-def start_cli(info):
+def start_cli():
     print("通过cli.py调用cli_demo...")
 
     from models import shared
@@ -79,8 +79,7 @@ def start_cli(info):
 # 故建议不要通过以上命令启动webui,将下述语句注释掉
 
 @start.command(name="webui", context_settings=dict(help_option_names=['-h', '--help']))
-@click.option('-i', '--info', default="start client", show_default=True, type=str)
-def start_webui(info):
+def start_webui():
     print(info)
     import webui
 
