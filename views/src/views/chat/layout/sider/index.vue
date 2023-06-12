@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
 import { computed, ref, watch } from 'vue'
-import { NButton, NLayoutSider, NUpload } from 'naive-ui'
+import { NButton, NLayoutSider, NRadioButton, NRadioGroup } from 'naive-ui'
 import List from './List.vue'
-import filelist from './filelist.vue'
+import Knowledge from './knowledge-base/index.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
@@ -46,6 +46,25 @@ const mobileSafeArea = computed(() => {
   }
   return {}
 })
+
+const songs = [
+  {
+    value: 1,
+    label: '会话',
+  },
+  {
+    value: 2,
+    label: '模型',
+  },
+  {
+    value: 3,
+    label: '知识库',
+  },
+  {
+    value: 4,
+    label: '提示词',
+  },
+]
 //
 watch(
   isMobile,
@@ -75,39 +94,20 @@ watch(
     <div class="flex flex-col h-full " :style="mobileSafeArea">
       <main class="flex flex-col flex-1 min-h-0">
         <div class="  flex justify-between">
-          <NButton dashed @click="menu = 1">
-            会话
-          </NButton>
-          <NButton dashed @click="menu = 2">
-            模型
-          </NButton>
-          <NButton dashed @click="menu = 3">
-            知识库
-          </NButton>
-          <NButton dashed @click="menu = 4">
-            提示词
-          </NButton>
+          <NRadioGroup v-model:value="menu" name="radiobuttongroup1">
+            <NRadioButton
+              v-for="song in songs"
+              :key="song.value"
+              :value="song.value"
+              :label="song.label"
+            />
+          </NRadioGroup>
         </div>
 
         <!-- 知识库界面 -->
         <div v-if="menu === 3">
           <div class="p-4">
-            <NUpload
-              action="http://127.0.0.1:1002/api/chat-docs/uploadone"
-              :headers="{
-                'naive-info': 'hello!',
-              }"
-              :data="{
-                knowledge_base_id: '123',
-              }"
-            >
-              <NButton block>
-                文件上传
-              </NButton>
-            </NUpload>
-          </div>
-          <div class="p-2 flex-1 min-h-0 pb-4 overflow-hidden">
-            <filelist />
+            <Knowledge />
           </div>
         </div>
         <!-- 会话界面 -->
@@ -121,11 +121,6 @@ watch(
             <List />
           </div>
         </div>
-        <!--  <div class="p-4">
-          <NButton block @click="show = true">
-            {{ $t('store.siderButton') }}
-          </NButton>
-        </div> -->
       </main>
     </div>
   </NLayoutSider>

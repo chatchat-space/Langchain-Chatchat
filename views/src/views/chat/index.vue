@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { NAutoComplete, NButton, NInput, NSwitch, useDialog, useMessage } from 'naive-ui'
+import { NAutoComplete, NButton, NDropdown, NInput, NRadioButton, NRadioGroup, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -11,21 +11,22 @@ import { useChat } from './hooks/useChat'
 import { useUsingContext } from './hooks/useUsingContext'
 import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
+import { useIconRender } from '@/hooks/useIconRender'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
-import { fetchChatAPIProcess } from '@/api'
 import { t } from '@/locales'
-import { chat, chatfile } from '@/api/chat'
+import { bing_search, chat, chatfile } from '@/api/chat'
+import { idStore } from '@/store/modules/knowledgebaseid/id'
 let controller = new AbortController()
-
-const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
+const { iconRender } = useIconRender()
+// const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
 const route = useRoute()
 const dialog = useDialog()
 const ms = useMessage()
-
+const idstore = idStore()
 const chatStore = useChatStore()
-
+const history = ref<any>([])
 const { isMobile } = useBasicLayout()
 const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
 const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom } = useScroll()
@@ -39,6 +40,7 @@ const conversationList = computed(() => dataSources.value.filter(item => (!item.
 const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
+const search = ref<string>('对话')
 
 // 添加PromptStore
 const promptStore = usePromptStore()
@@ -55,12 +57,71 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
-function handleSubmit() {
-  onConversation()
+async function handleSubmit() {
+  if (search.value === 'Bing搜索') {
+    loading.value = true
+    const options: Chat.ConversationRequest = {}
+    const lastText = ''
+    const message = prompt.value
+
+    addChat(
+      +uuid,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: message,
+        inversion: true,
+        error: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: null },
+      },
+    )
+    scrollToBottom()
+    const res = await bing_search({ question: prompt.value })
+
+    const result = `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}`
+    addChat(
+      +uuid,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: '',
+        loading: true,
+        inversion: false,
+        error: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: { ...options } },
+      },
+    )
+    scrollToBottom()
+    updateChat(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: lastText + (result ?? ''),
+        inversion: false,
+        error: false,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: { prompt: message, options: { ...options } },
+      },
+    )
+    prompt.value = ''
+    scrollToBottomIfAtBottom()
+    loading.value = false
+  }
+  else {
+    onConversation()
+  }
 }
 
 async function onConversation() {
   const message = prompt.value
+  history.value = []
+  if (usingContext.value) {
+    for (let i = 0; i < dataSources.value.length; i = i + 2)
+      history.value.push([dataSources.value[i].text, dataSources.value[i + 1].text.split('\n\n数据来源：\n\n>')[0]])
+  }
+  else { history.value.length = 0 }
 
   if (loading.value)
     return
@@ -110,15 +171,16 @@ async function onConversation() {
     const lastText = ''
     const fetchChatAPIOnce = async () => {
       const res = active.value
-        ? await chatfile({ message })
+        ? await chatfile({
+          knowledge_base_id: idstore.knowledgeid,
+          question: message,
+          history: history.value,
+        })
         : await chat({
           question: message,
-          history: [[
-            '工伤保险是什么？',
-            '工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。',
-          ]],
+          history: history.value,
         })
-      const result = active.value ? res.data.response.text : res.data.response
+      const result = active.value ? `${res.data.response}\n\n数据来源：\n\n>${res.data.source_documents.join('>')}` : res.data.response
       updateChat(
         +uuid,
         dataSources.value.length - 1,
@@ -230,7 +292,6 @@ async function onConversation() {
     loading.value = false
   }
 }
-
 async function onRegenerate(index: number) {
   if (loading.value)
     return
@@ -239,7 +300,7 @@ async function onRegenerate(index: number) {
 
   const { requestOptions } = dataSources.value[index]
 
-  let message = requestOptions?.prompt ?? ''
+  const message = requestOptions?.prompt ?? ''
 
   let options: Chat.ConversationRequest = {}
 
@@ -263,48 +324,34 @@ async function onRegenerate(index: number) {
   )
 
   try {
-    let lastText = ''
+    const lastText = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
-        options,
-        signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            updateChat(
-              +uuid,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-              },
-            )
-
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-          }
-          catch (error) {
-            //
-          }
+      const res = active.value
+        ? await chatfile({
+          knowledge_base_id: idstore.knowledgeid,
+          question: message,
+          history: history.value,
+        })
+        : await chat({
+          question: message,
+          history: history.value,
+        })
+      const result = active.value ? res.data.response.text : res.data.response
+      updateChat(
+        +uuid,
+        dataSources.value.length - 1,
+        {
+          dateTime: new Date().toLocaleString(),
+          text: lastText + (result ?? ''),
+          inversion: false,
+          error: false,
+          loading: false,
+          conversationOptions: null,
+          requestOptions: { prompt: message, options: { ...options } },
         },
-      })
+      )
+      scrollToBottomIfAtBottom()
+      loading.value = false
       updateChatSome(+uuid, index, { loading: false })
     }
     await fetchChatAPIOnce()
@@ -478,7 +525,57 @@ const footerClass = computed(() => {
     classes = ['sticky', 'left-0', 'bottom-0', 'right-0', 'p-2', 'pr-3', 'overflow-hidden']
   return classes
 })
+const options = computed(() => {
+  const common = [
+    {
+      label: '对话',
+      key: '对话',
+      icon: iconRender({ icon: 'ri-chat-1-line' }),
+    },
+    {
+      label: '知识库',
+      key: '知识库',
+      icon: iconRender({ icon: 'ri-store-2-line' }),
+    },
+    {
+      label: 'Bing搜索',
+      key: 'Bing搜索',
+      icon: iconRender({ icon: 'ri-search-line' }),
+    },
+    {
+      type: 'divider',
+      key: 'd1',
+    },
+    {
+      label: '清除会话',
+      key: '清除会话',
+      icon: iconRender({ icon: 'ri:delete-bin-line' }),
+    },
+  ]
 
+  return common
+})
+function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
+  if (key == '清除会话') {
+    handleClear()
+  }
+  else {
+    search.value = key
+    searchfun()
+    ms.success(`切换${key}成功！`)
+  }
+
+  // switch (key) {
+  //   case 'copyText':
+  //     handleCopy()
+  //     return
+  //   case 'toggleRenderType':
+  //     asRawText.value = !asRawText.value
+  //     return
+  //   case 'delete':
+  //     emit('delete')
+  // }
+}
 onMounted(() => {
   scrollToBottom()
   if (inputRef.value && !isMobile.value)
@@ -489,6 +586,13 @@ onUnmounted(() => {
   if (loading.value)
     controller.abort()
 })
+function searchfun() {
+  if (search.value === '知识库')
+    active.value = true
+
+  else
+    active.value = false
+}
 </script>
 
 <template>
@@ -541,19 +645,27 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <NSwitch v-model:value="active">
-            <template #checked>
-              知识库
-            </template>
-            <template #unchecked>
-              知识库&nbsp;&nbsp;
-            </template>
-          </NSwitch>
-          <HoverButton @click="handleClear">
+          <NRadioGroup v-if="!isMobile" v-model:value="search" @change="searchfun">
+            <NRadioButton value="对话" label="对话" />
+            <NRadioButton value="知识库" label="知识库" />
+            <NRadioButton value="Bing搜索" label="Bing搜索" />
+          </NRadioGroup>
+          <HoverButton v-if="!isMobile" @click="handleClear">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:delete-bin-line" />
             </span>
           </HoverButton>
+          <NDropdown
+            v-if="isMobile"
+            :trigger="isMobile ? 'click' : 'hover'"
+            :placement="!inversion ? 'right' : 'left'"
+            :options="options"
+            @select="handleSelect"
+          >
+            <button>
+              <SvgIcon icon="ri:more-2-fill" />
+            </button>
+          </NDropdown>
           <HoverButton v-if="!isMobile" @click="handleExport">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:download-2-line" />
@@ -591,3 +703,27 @@ onUnmounted(() => {
     </footer>
   </div>
 </template>
+
+<style>
+#app{
+  background-image: url(../../assets/bg.jpg);
+  background-size:100% 100%;
+
+}
+.bg-green-50{
+  background-color: rgba(250, 250, 250, 0);
+}
+.n-layout{
+  background-color: rgba(250, 250, 250, 0.5);
+}
+.n-layout-sider{
+  background-color: rgba(250, 250, 250, 0.5);
+}
+.n-switch__button{
+  font-size: 10px;
+}
+.shadow-md{
+  box-shadow: 0 12px 40px 0 rgba(148,186,215,.2);
+  border: 1px solid ;
+}
+</style>

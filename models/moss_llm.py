@@ -1,20 +1,11 @@
-import json
+from abc import ABC
 from langchain.llms.base import LLM
-from typing import List, Dict, Optional
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
-from transformers.dynamic_module_utils import get_class_from_dynamic_module
-from transformers.modeling_utils import no_init_weights
-from transformers.utils import ContextManagers
+from typing import Optional, List
+from models.loader import LoaderCheckPoint
+from models.base import (BaseAnswer,
+                         AnswerResult)
+
 import torch
-from configs.model_config import *
-from utils import torch_gc
-
-from accelerate import init_empty_weights
-from accelerate.utils import get_balanced_memory, infer_auto_device_map
-
-DEVICE_ = LLM_DEVICE
-DEVICE_ID = "0" if torch.cuda.is_available() else None
-DEVICE = f"{DEVICE_}:{DEVICE_ID}" if DEVICE_ID else DEVICE_
 
 META_INSTRUCTION = \
     """You are an AI assistant whose name is MOSS.
@@ -30,56 +21,50 @@ META_INSTRUCTION = \
     """
 
 
-def auto_configure_device_map() -> Dict[str, int]:
-    cls = get_class_from_dynamic_module(class_reference="fnlp/moss-moon-003-sft--modeling_moss.MossForCausalLM",
-                                        pretrained_model_name_or_path=llm_model_dict['moss'])
-
-    with ContextManagers([no_init_weights(_enable=True), init_empty_weights()]):
-        model_config = AutoConfig.from_pretrained(llm_model_dict['moss'], trust_remote_code=True)
-        model = cls(model_config)
-        max_memory = get_balanced_memory(model, dtype=torch.int8 if LOAD_IN_8BIT else None,
-                                         low_zero=False, no_split_module_classes=model._no_split_modules)
-        device_map = infer_auto_device_map(
-            model, dtype=torch.float16 if not LOAD_IN_8BIT else torch.int8, max_memory=max_memory,
-            no_split_module_classes=model._no_split_modules)
-        device_map["transformer.wte"] = 0
-        device_map["transformer.drop"] = 0
-        device_map["transformer.ln_f"] = 0
-        device_map["lm_head"] = 0
-        return device_map
-
-
-class MOSS(LLM):
+class MOSSLLM(BaseAnswer, LLM, ABC):
     max_token: int = 2048
     temperature: float = 0.7
     top_p = 0.8
     # history = []
-    tokenizer: object = None
-    model: object = None
+    checkPoint: LoaderCheckPoint = None
     history_len: int = 10
 
-    def __init__(self):
+    def __init__(self, checkPoint: LoaderCheckPoint = None):
         super().__init__()
+        self.checkPoint = checkPoint
 
     @property
     def _llm_type(self) -> str:
         return "MOSS"
 
-    def _call(self,
-              prompt: str,
-              history: List[List[str]] = [],
-              streaming: bool = STREAMING):  # -> Tuple[str, List[List[str]]]:
+    @property
+    def _check_point(self) -> LoaderCheckPoint:
+        return self.checkPoint
+
+    @property
+    def set_history_len(self) -> int:
+        return self.history_len
+
+    def _set_history_len(self, history_len: int) -> None:
+        self.history_len = history_len
+
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        pass
+
+    def generatorAnswer(self, prompt: str,
+                         history: List[List[str]] = [],
+                         streaming: bool = False):
         if len(history) > 0:
-            history = history[-self.history_len:-1] if self.history_len > 0 else []
+            history = history[-self.history_len:] if self.history_len > 0 else []
             prompt_w_history = str(history)
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
         else:
             prompt_w_history = META_INSTRUCTION
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
 
-        inputs = self.tokenizer(prompt_w_history, return_tensors="pt")
+        inputs = self.checkPoint.tokenizer(prompt_w_history, return_tensors="pt")
         with torch.no_grad():
-            outputs = self.model.generate(
+            outputs = self.checkPoint.model.generate(
                 inputs.input_ids.cuda(),
                 attention_mask=inputs.attention_mask.cuda(),
                 max_length=self.max_token,
@@ -92,78 +77,12 @@ class MOSS(LLM):
                 eos_token_id=106068,
                 pad_token_id=self.tokenizer.pad_token_id)
             response = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-            torch_gc()
+            self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
-            yield response, history
-            torch_gc()
+            answer_result = AnswerResult()
+            answer_result.history = history
+            answer_result.llm_output = {"answer": response}
 
-    def load_model(self,
-                   model_name_or_path: str = "fnlp/moss-moon-003-sft",
-                   llm_device=LLM_DEVICE,
-                   use_ptuning_v2=False,
-                   use_lora=False,
-                   device_map: Optional[Dict[str, int]] = None,
-                   **kwargs):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name_or_path,
-            trust_remote_code=True
-        )
-
-        model_config = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=True)
-
-        if use_ptuning_v2:
-            try:
-                prefix_encoder_file = open('ptuning-v2/config.json', 'r')
-                prefix_encoder_config = json.loads(prefix_encoder_file.read())
-                prefix_encoder_file.close()
-                model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
-                model_config.prefix_projection = prefix_encoder_config['prefix_projection']
-            except Exception as e:
-                print(e)
-                print("加载PrefixEncoder config.json失败")
-
-        if torch.cuda.is_available() and llm_device.lower().startswith("cuda"):
-            # accelerate自动多卡部署
-            self.model = AutoModelForCausalLM.from_pretrained(model_name_or_path, config=model_config,
-                                                              load_in_8bit=LOAD_IN_8BIT, trust_remote_code=True,
-                                                              device_map=auto_configure_device_map(), **kwargs)
-
-            if LLM_LORA_PATH and use_lora:
-                from peft import PeftModel
-                self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
-
-        else:
-            self.model = self.model.float().to(llm_device)
-            if LLM_LORA_PATH and use_lora:
-                from peft import PeftModel
-                self.model = PeftModel.from_pretrained(self.model, LLM_LORA_PATH)
-
-        if use_ptuning_v2:
-            try:
-                prefix_state_dict = torch.load('ptuning-v2/pytorch_model.bin')
-                new_prefix_state_dict = {}
-                for k, v in prefix_state_dict.items():
-                    if k.startswith("transformer.prefix_encoder."):
-                        new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
-                self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
-                self.model.transformer.prefix_encoder.float()
-            except Exception as e:
-                print(e)
-                print("加载PrefixEncoder模型参数失败")
-
-        self.model = self.model.eval()
+            yield answer_result
 
 
-if __name__ == "__main__":
-    llm = MOSS()
-    llm.load_model(model_name_or_path=llm_model_dict['moss'],
-                   llm_device=LLM_DEVICE, )
-    last_print_len = 0
-    # for resp, history in llm._call("你好", streaming=True):
-    #     print(resp[last_print_len:], end="", flush=True)
-    #     last_print_len = len(resp)
-    for resp, history in llm._call("你好", streaming=False):
-        print(resp)
-    import time
-    time.sleep(10)
-    pass
