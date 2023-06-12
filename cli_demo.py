@@ -12,10 +12,7 @@ REPLY_WITH_SOURCE = True
 
 
 def main():
-    args = None
-    args = parser.parse_args()
-    args_dict = vars(args)
-    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+
     llm_model_ins = shared.loaderLLM()
     llm_model_ins.history_len = LLM_HISTORY_LEN
 
@@ -53,4 +50,17 @@ def main():
 
 
 if __name__ == "__main__":
+#     # 通过cli.py调用cli_demo时需要在cli.py里初始化模型，否则会报错：
+    # langchain-ChatGLM: error: unrecognized arguments: start cli
+    # 为此需要先将
+    # args = None
+    # args = parser.parse_args()
+    # args_dict = vars(args)
+    # shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+    # 语句从main函数里取出放到函数外部
+    # 然后在cli.py里初始化
+    args = None
+    args = parser.parse_args()
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     main()
