@@ -42,6 +42,14 @@ def start():
 @click.option('-i', '--ip', default='0.0.0.0', show_default=True, type=str, help='api_server listen address.')
 @click.option('-p', '--port', default=7861, show_default=True, type=int, help='api_server listen port.')
 def start_api(ip, port):
+    # 调用api_start之前需要先loadCheckPoint,并传入加载检查点的参数，
+    # 理论上可以用click包进行包装，但过于繁琐，改动较大，
+    # 此处仍用parser包，并以models.loader.args.DEFAULT_ARGS的参数为默认参数
+    # 如有改动需要可以更改models.loader.args.DEFAULT_ARGS
+    from models import shared
+    from models.loader import LoaderCheckPoint
+    from models.loader.args import DEFAULT_ARGS
+    shared.loaderCheckPoint = LoaderCheckPoint(DEFAULT_ARGS)
     api_start(host=ip, port=port)
 
 
