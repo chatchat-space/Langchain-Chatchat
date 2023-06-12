@@ -1,6 +1,7 @@
 import click
 
 from api import api_start as api_start
+from cli_demo import main as cli_start
 from configs.model_config import llm_model_dict, embedding_model_dict
 
 
@@ -54,13 +55,19 @@ def start_api(ip, port):
 
 
 @start.command(name="cli", context_settings=dict(help_option_names=['-h', '--help']))
-def start_cli():
-    import cli_demo
-    cli_demo.main()
+@click.option('-i', '--info', default="start client", show_default=True, type=str)
+def start_cli(info):
+    print(info)
+
+    from models.loader.args import parser
+    cli_start()
+    
 
 
 @start.command(name="webui", context_settings=dict(help_option_names=['-h', '--help']))
-def start_webui():
+@click.option('-i', '--info', default="start client", show_default=True, type=str)
+def start_webui(info):
+    print(info)
     import webui
 
 

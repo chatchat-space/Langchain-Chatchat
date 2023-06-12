@@ -31,7 +31,7 @@ def dir_path(string):
     return s
 
 
-parser = argparse.ArgumentParser(prog='langchina-ChatGLM',
+parser = argparse.ArgumentParser(prog='langchain-ChatGLM',
                                  description='About langchain-ChatGLM, local knowledge based ChatGLM with langchain ｜ '
                                              '基于本地知识库的 ChatGLM 问答')
 
