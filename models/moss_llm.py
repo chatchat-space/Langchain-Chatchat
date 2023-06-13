@@ -75,8 +75,8 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
                 repetition_penalty=1.02,
                 num_return_sequences=1,
                 eos_token_id=106068,
-                pad_token_id=self.tokenizer.pad_token_id)
-            response = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+                pad_token_id=self.checkPoint.tokenizer.pad_token_id)
+            response = self.checkPoint.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
             self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
             answer_result = AnswerResult()

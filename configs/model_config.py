@@ -74,7 +74,7 @@ llm_model_dict = {
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
-        "local_model_path": "/media/checkpoint/vicuna-13b-hf",
+        "local_model_path": None,
         "provides": "LLamaLLM"
     },
 
