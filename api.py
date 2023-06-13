@@ -153,7 +153,8 @@ async def list_docs(
     if knowledge_base_id:
         local_doc_folder = get_folder_path(knowledge_base_id)
         if not os.path.exists(local_doc_folder):
-            return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
+            return ListDocsResponse(data=[])
+            # return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
         all_doc_names = [
             doc
             for doc in os.listdir(local_doc_folder)
