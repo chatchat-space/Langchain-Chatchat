@@ -49,7 +49,7 @@ class UnstructuredPaddlePDFLoader(UnstructuredFileLoader):
 
 
 if __name__ == "__main__":
-    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content", "samples", "test.pdf")
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base", "samples", "content", "test.pdf")
     loader = UnstructuredPaddlePDFLoader(filepath, mode="elements")
     docs = loader.load()
     for doc in docs:

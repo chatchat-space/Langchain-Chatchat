@@ -20,9 +20,9 @@ nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 def get_vs_list():
     lst_default = ["新建知识库"]
-    if not os.path.exists(VS_ROOT_PATH):
+    if not os.path.exists(KB_ROOT_PATH):
         return lst_default
-    lst = os.listdir(VS_ROOT_PATH)
+    lst = os.listdir(KB_ROOT_PATH)
     if not lst:
         return lst_default
     lst.sort()
@@ -144,18 +144,18 @@ def init_model(llm_model: str = 'chat-glm-6b', embedding_model: str = 'text2vec'
 
 
 def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_content_segmentation):
-    vs_path = os.path.join(VS_ROOT_PATH, vs_id)
+    vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
     filelist = []
-    if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_id)):
-        os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_id))
+    if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_id, "content")):
+        os.makedirs(os.path.join(KB_ROOT_PATH, vs_id, "content"))
     if local_doc_qa.llm and local_doc_qa.embeddings:
         if isinstance(files, list):
             for file in files:
                 filename = os.path.split(file.name)[-1]
                 shutil.move(file.name, os.path.join(
-                    UPLOAD_ROOT_PATH, vs_id, filename))
+                    KB_ROOT_PATH, vs_id, "content", filename))
                 filelist.append(os.path.join(
-                    UPLOAD_ROOT_PATH, vs_id, filename))
+                    KB_ROOT_PATH, vs_id, "content", filename))
             vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(
                 filelist, vs_path, sentence_size)
         else:
@@ -516,7 +516,7 @@ with st.form('my_form', clear_on_submit=True):
                 last_response = output_messages()
                 for history, _ in answer(q,
                                          vs_path=os.path.join(
-                                             VS_ROOT_PATH, vs_path),
+                                             KB_ROOT_PATH, vs_path, "vector_store"),
                                          history=[],
                                          mode=mode,
                                          score_threshold=score_threshold,

@@ -15,7 +15,7 @@ from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 
 from chains.local_doc_qa import LocalDocQA
-from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVICE,
+from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
                                   EMBEDDING_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 import models.shared as shared
@@ -80,15 +80,15 @@ class ChatMessage(BaseModel):
 
 
 def get_folder_path(local_doc_id: str):
-    return os.path.join(UPLOAD_ROOT_PATH, local_doc_id)
+    return os.path.join(KB_ROOT_PATH, local_doc_id, "content")
 
 
 def get_vs_path(local_doc_id: str):
-    return os.path.join(VS_ROOT_PATH, local_doc_id)
+    return os.path.join(KB_ROOT_PATH, local_doc_id, "vector_store")
 
 
 def get_file_path(local_doc_id: str, doc_name: str):
-    return os.path.join(UPLOAD_ROOT_PATH, local_doc_id, doc_name)
+    return os.path.join(KB_ROOT_PATH, local_doc_id, "content", doc_name)
 
 
 async def upload_file(
@@ -147,64 +147,76 @@ async def upload_files(
     return BaseResponse(code=500, msg=file_status)
 
 
+async def list_kbs():
+    # Get List of Knowledge Base
+    if not os.path.exists(KB_ROOT_PATH):
+        all_doc_ids = []
+    else:
+        all_doc_ids = [
+            folder
+            for folder in os.listdir(KB_ROOT_PATH)
+            if os.path.isdir(os.path.join(KB_ROOT_PATH, folder))
+               and os.path.exists(os.path.join(KB_ROOT_PATH, folder, "vector_store", "index.faiss"))
+        ]
+
+    return ListDocsResponse(data=all_doc_ids)
+
+
 async def list_docs(
         knowledge_base_id: Optional[str] = Query(default=None, description="Knowledge Base Name", example="kb1")
 ):
-    if knowledge_base_id:
-        local_doc_folder = get_folder_path(knowledge_base_id)
-        if not os.path.exists(local_doc_folder):
-            return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
-        all_doc_names = [
-            doc
-            for doc in os.listdir(local_doc_folder)
-            if os.path.isfile(os.path.join(local_doc_folder, doc))
-        ]
-        return ListDocsResponse(data=all_doc_names)
-    else:
-        if not os.path.exists(UPLOAD_ROOT_PATH):
-            all_doc_ids = []
-        else:
-            all_doc_ids = [
-                folder
-                for folder in os.listdir(UPLOAD_ROOT_PATH)
-                if os.path.isdir(os.path.join(UPLOAD_ROOT_PATH, folder))
-            ]
+    local_doc_folder = get_folder_path(knowledge_base_id)
+    if not os.path.exists(local_doc_folder):
+        return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
+    all_doc_names = [
+        doc
+        for doc in os.listdir(local_doc_folder)
+        if os.path.isfile(os.path.join(local_doc_folder, doc))
+    ]
+    return ListDocsResponse(data=all_doc_names)
 
-        return ListDocsResponse(data=all_doc_ids)
+
+async def delete_kbs(
+        knowledge_base_id: str = Query(...,
+                                       description="Knowledge Base Name",
+                                       example="kb1"),
+):
+    # TODO: 确认是否支持批量删除知识库
+    knowledge_base_id = urllib.parse.unquote(knowledge_base_id)
+    if not os.path.exists(get_folder_path(knowledge_base_id)):
+        return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
+    shutil.rmtree(get_folder_path(knowledge_base_id))
+    return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
 
 
 async def delete_docs(
         knowledge_base_id: str = Query(...,
                                        description="Knowledge Base Name",
                                        example="kb1"),
-        doc_name: Optional[str] = Query(
+        doc_name: str = Query(
             None, description="doc name", example="doc_name_1.pdf"
         ),
 ):
+    # TODO: 确认是否支持批量删除文件
     knowledge_base_id = urllib.parse.unquote(knowledge_base_id)
-    if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, knowledge_base_id)):
+    if not os.path.exists(get_folder_path(knowledge_base_id)):
         return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
-    if doc_name:
-        doc_path = get_file_path(knowledge_base_id, doc_name)
-        if os.path.exists(doc_path):
-            os.remove(doc_path)
+    doc_path = get_file_path(knowledge_base_id, doc_name)
+    if os.path.exists(doc_path):
+        os.remove(doc_path)
 
-            # 删除上传的文件后重新生成知识库（FAISS）内的数据
-            remain_docs = await list_docs(knowledge_base_id)
-            if len(remain_docs.data) == 0:
-                shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
-            else:
-                local_doc_qa.init_knowledge_vector_store(
-                    get_folder_path(knowledge_base_id), get_vs_path(knowledge_base_id)
-                )
-            
-            return BaseResponse(code=200, msg=f"document {doc_name} delete success")
+        # 删除上传的文件后重新生成知识库（FAISS）内的数据
+        # TODO: 删除向量库中对应文件
+        remain_docs = await list_docs(knowledge_base_id)
+        if len(remain_docs.data) == 0:
+            shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
         else:
-            return BaseResponse(code=1, msg=f"document {doc_name} not found")
-
+            local_doc_qa.init_knowledge_vector_store(
+                get_folder_path(knowledge_base_id), get_vs_path(knowledge_base_id)
+            )
+        return BaseResponse(code=200, msg=f"document {doc_name} delete success")
     else:
-        shutil.rmtree(get_folder_path(knowledge_base_id))
-        return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
+        return BaseResponse(code=1, msg=f"document {doc_name} not found")
 
 
 async def local_doc_chat(
@@ -221,7 +233,7 @@ async def local_doc_chat(
             ],
         ),
 ):
-    vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
+    vs_path = get_vs_path(knowledge_base_id)
     if not os.path.exists(vs_path):
         # return BaseResponse(code=1, msg=f"Knowledge base {knowledge_base_id} not found")
         return ChatMessage(
@@ -278,6 +290,7 @@ async def bing_search_chat(
         source_documents=source_documents,
     )
 
+
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
         history: List[List[str]] = Body(
@@ -310,8 +323,9 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
     turn = 1
     while True:
         input_json = await websocket.receive_json()
-        question, history, knowledge_base_id = input_json["question"], input_json["history"], input_json["knowledge_base_id"]
-        vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
+        question, history, knowledge_base_id = input_json["question"], input_json["history"], input_json[
+            "knowledge_base_id"]
+        vs_path = get_vs_path(knowledge_base_id)
 
         if not os.path.exists(vs_path):
             await websocket.send_json({"error": f"Knowledge base {knowledge_base_id} not found"})
@@ -349,9 +363,6 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
 
 async def document():
     return RedirectResponse(url="/docs")
-
-
-
 
 
 def api_start(host, port):

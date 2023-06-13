@@ -187,8 +187,9 @@ class LocalDocQA:
                 torch_gc()
             else:
                 if not vs_path:
-                    vs_path = os.path.join(VS_ROOT_PATH,
-                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""")
+                    vs_path = os.path.join(KB_ROOT_PATH,
+                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
+                                           "vector_store")
                 vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
                 torch_gc()
 

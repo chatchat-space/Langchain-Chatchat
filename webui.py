@@ -16,9 +16,9 @@ nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 def get_vs_list():
     lst_default = ["新建知识库"]
-    if not os.path.exists(VS_ROOT_PATH):
+    if not os.path.exists(KB_ROOT_PATH):
         return lst_default
-    lst = os.listdir(VS_ROOT_PATH)
+    lst = os.listdir(KB_ROOT_PATH)
     if not lst:
         return lst_default
     lst.sort()
@@ -141,14 +141,14 @@ def reinit_model(llm_model, embedding_model, llm_history_len, no_remote_model, u
 
 
 def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_content_segmentation):
-    vs_path = os.path.join(VS_ROOT_PATH, vs_id)
+    vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
     filelist = []
     if local_doc_qa.llm and local_doc_qa.embeddings:
         if isinstance(files, list):
             for file in files:
                 filename = os.path.split(file.name)[-1]
-                shutil.move(file.name, os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
-                filelist.append(os.path.join(UPLOAD_ROOT_PATH, vs_id, filename))
+                shutil.move(file.name, os.path.join(KB_ROOT_PATH, vs_id, "content", filename))
+                filelist.append(os.path.join(KB_ROOT_PATH, vs_id, "content", filename))
             vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path, sentence_size)
         else:
             vs_path, loaded_files = local_doc_qa.one_knowledge_add(vs_path, files, one_conent, one_content_segmentation,
@@ -168,7 +168,7 @@ def change_vs_name_input(vs_id, history):
     if vs_id == "新建知识库":
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=False), None, history
     else:
-        vs_path = os.path.join(VS_ROOT_PATH, vs_id)
+        vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
         if "index.faiss" in os.listdir(vs_path):
             file_status = f"已加载知识库{vs_id}，请开始提问"
         else:
@@ -220,11 +220,11 @@ def add_vs_name(vs_name, chatbot):
             visible=False), chatbot
     else:
         # 新建上传文件存储路径
-        if not os.path.exists(os.path.join(UPLOAD_ROOT_PATH, vs_name)):
-            os.makedirs(os.path.join(UPLOAD_ROOT_PATH, vs_name))
+        if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_name, "content")):
+            os.makedirs(os.path.join(KB_ROOT_PATH, vs_name, "content"))
         # 新建向量库存储路径
-        if not os.path.exists(os.path.join(VS_ROOT_PATH, vs_name)):
-            os.makedirs(os.path.join(VS_ROOT_PATH, vs_name))
+        if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_name, "vector_store")):
+            os.makedirs(os.path.join(KB_ROOT_PATH, vs_name, "vector_store"))
         vs_status = f"""已新增知识库"{vs_name}",将在上传文件并载入成功后进行存储。请在开始对话前，先完成文件上传。 """
         chatbot = chatbot + [[None, vs_status]]
         return gr.update(visible=True, choices=get_vs_list(), value=vs_name), gr.update(
@@ -234,12 +234,13 @@ def add_vs_name(vs_name, chatbot):
 # 自动化加载固定文件间中文件
 def reinit_vector_store(vs_id, history):
     try:
-        shutil.rmtree(VS_ROOT_PATH)
-        vs_path = os.path.join(VS_ROOT_PATH, vs_id)
+        shutil.rmtree(os.path.join(KB_ROOT_PATH, vs_id, "vector_store"))
+        vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
         sentence_size = gr.Number(value=SENTENCE_SIZE, precision=0,
                                   label="文本入库分句长度限制",
                                   interactive=True, visible=True)
-        vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(UPLOAD_ROOT_PATH, vs_path, sentence_size)
+        vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(os.path.join(KB_ROOT_PATH, vs_id, "content"),
+                                                                         vs_path, sentence_size)
         model_status = """知识库构建成功"""
     except Exception as e:
         logger.error(e)
@@ -285,7 +286,7 @@ default_theme_args = dict(
 
 with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as demo:
     vs_path, file_status, model_status = gr.State(
-        os.path.join(VS_ROOT_PATH, get_vs_list()[0]) if len(get_vs_list()) > 1 else ""), gr.State(""), gr.State(
+        os.path.join(KB_ROOT_PATH, get_vs_list()[0], "vector_store") if len(get_vs_list()) > 1 else ""), gr.State(""), gr.State(
         model_status)
     gr.Markdown(webui_title)
     with gr.Tab("对话"):

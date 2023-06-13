@@ -119,10 +119,8 @@ USE_PTUNING_V2 = False
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-
-VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
-
-UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content")
+# 知识库默认存储路径
+KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
 
 # 基于上下文的prompt模版，请务必保留"{question}"和"{context}"
 PROMPT_TEMPLATE = """已知信息：
@@ -139,10 +137,10 @@ SENTENCE_SIZE = 100
 # 匹配后单段上下文长度
 CHUNK_SIZE = 250
 
-# LLM input history length
+# 传入LLM的历史记录长度
 LLM_HISTORY_LEN = 3
 
-# return top-k text chunk from vector store
+# 知识库检索时返回的匹配内容条数
 VECTOR_SEARCH_TOP_K = 5
 
 # 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
