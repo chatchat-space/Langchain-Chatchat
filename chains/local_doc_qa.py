@@ -282,6 +282,21 @@ class LocalDocQA:
                         "source_documents": result_docs}
             yield response, history
 
+    def delete_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.delete_doc(filepath)
+        return status
+
+    def update_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path,
+                                      docs: List[Document],):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.update_doc(filepath, docs)
+        return status
+
 
 if __name__ == "__main__":
     # 初始化消息

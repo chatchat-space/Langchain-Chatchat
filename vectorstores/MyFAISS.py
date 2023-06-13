@@ -108,14 +108,20 @@ class MyFAISS(FAISS, VectorStore):
         return docs
 
     def delete_doc(self, source):
-        ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
-        for id in ids:
-            index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
-            self.index_to_docstore_id.pop(index)
-            self.docstore._dict.pop(id)
-        return f"{len(ids)} docs deleted"
+        try:
+            ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
+            for id in ids:
+                index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
+                self.index_to_docstore_id.pop(index)
+                self.docstore._dict.pop(id)
+            return f"docs delete success"
+        except:
+            return f"docs delete fail"
 
     def update_doc(self, source, new_docs):
-        delete_len = self.delete_doc(source)
-        ls = self.add_documents(new_docs)
-        return f"{delete_len} docs deleted, {len(ls)} added", ls
+        try:
+            delete_len = self.delete_doc(source)
+            ls = self.add_documents(new_docs)
+            return f"docs update success"
+        except:
+            return f"docs update fail"
