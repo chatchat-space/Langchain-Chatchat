@@ -12,7 +12,8 @@ if __name__ == "__main__":
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(embedding_model="ImageBind")
     query = "本项目使用的embedding模型是什么，消耗多少显存"
-    vs_path = "/home/ubuntu/langchain-ChatGLM/vector_store/test_FAISS_20230526_181937"
+    filepath = "/home/ubuntu/langchain-ChatGLM/docs"
+    vs_path, _ = local_doc_qa.init_knowledge_vector_store(filepath)
     last_print_len = 0
     for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
                                                                  vs_path=vs_path,
