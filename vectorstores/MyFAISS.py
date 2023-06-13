@@ -46,6 +46,7 @@ class MyFAISS(FAISS, VectorStore):
         docs = []
         id_set = set()
         store_len = len(self.index_to_docstore_id)
+        rearrange_id_list = False
         for j, i in enumerate(indices[0]):
             if i == -1 or 0 < self.score_threshold < scores[0][j]:
                 # This happens when not enough docs are returned.
@@ -53,11 +54,13 @@ class MyFAISS(FAISS, VectorStore):
             _id = self.index_to_docstore_id[i]
             doc = self.docstore.search(_id)
             if (not self.chunk_conent) or ("context_expand" in doc.metadata and not doc.metadata["context_expand"]):
+                # 匹配出的文本如果不需要扩展上下文则执行如下代码
                 if not isinstance(doc, Document):
                     raise ValueError(f"Could not find document for id {_id}, got {doc}")
                 doc.metadata["score"] = int(scores[0][j])
                 docs.append(doc)
                 continue
+
             id_set.add(i)
             docs_len = len(doc.page_content)
             for k in range(1, max(i, store_len - i)):
@@ -72,15 +75,17 @@ class MyFAISS(FAISS, VectorStore):
                     if l not in id_set and 0 <= l < len(self.index_to_docstore_id):
                         _id0 = self.index_to_docstore_id[l]
                         doc0 = self.docstore.search(_id0)
-                        if docs_len + len(doc0.page_content) > self.chunk_size or doc0.metadata["source"] != doc.metadata["source"]:
+                        if docs_len + len(doc0.page_content) > self.chunk_size or doc0.metadata["source"] != \
+                                doc.metadata["source"]:
                             break_flag = True
                             break
                         elif doc0.metadata["source"] == doc.metadata["source"]:
                             docs_len += len(doc0.page_content)
                             id_set.add(l)
+                            rearrange_id_list = True
                 if break_flag:
                     break
-        if (not self.chunk_conent) or ("add_context" in doc.metadata and not doc.metadata["add_context"]):
+        if (not self.chunk_conent) or (not rearrange_id_list):
             return docs
         if len(id_set) == 0 and self.score_threshold > 0:
             return []
@@ -101,3 +106,16 @@ class MyFAISS(FAISS, VectorStore):
             doc.metadata["score"] = int(doc_score)
             docs.append(doc)
         return docs
+
+    def delete_doc(self, source):
+        ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
+        for id in ids:
+            index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
+            self.index_to_docstore_id.pop(index)
+            self.docstore._dict.pop(id)
+        return f"{len(ids)} docs deleted"
+
+    def update_doc(self, source, new_docs):
+        delete_len = self.delete_doc(source)
+        ls = self.add_documents(new_docs)
+        return f"{delete_len} docs deleted, {len(ls)} added", ls
