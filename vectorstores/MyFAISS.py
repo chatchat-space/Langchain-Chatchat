@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Tuple, Dict
 from langchain.docstore.base import Docstore
 from langchain.docstore.document import Document
 import numpy as np
+import copy
 
 
 class MyFAISS(FAISS, VectorStore):
@@ -95,7 +96,8 @@ class MyFAISS(FAISS, VectorStore):
             for id in id_seq:
                 if id == id_seq[0]:
                     _id = self.index_to_docstore_id[id]
-                    doc = self.docstore.search(_id)
+                    # doc = self.docstore.search(_id)
+                    doc = copy.deepcopy(self.docstore.search(_id))
                 else:
                     _id0 = self.index_to_docstore_id[id]
                     doc0 = self.docstore.search(_id0)
