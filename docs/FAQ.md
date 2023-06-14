@@ -146,7 +146,6 @@ $ pip install -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/
 $ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 ```
 
-
 Q12 启动api.py时upload_file接口抛出 `partially initialized module 'charset_normalizer' has no attribute 'md__mypyc' (most likely due to a circular import)`
 
 这是由于 charset_normalizer模块版本过高导致的，需要降低低charset_normalizer的版本,测试在charset_normalizer==2.1.0上可用。
@@ -174,3 +173,7 @@ download_with_progressbar(url, tmp_path)
 然后按照给定网址，如"https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_rec_infer.tar"手动下载文件，上传到对应的文件夹中，如“.paddleocr/whl/rec/ch/ch_PP-OCRv3_rec_infer/ch_PP-OCRv3_rec_infer.tar”.
 
 ---
+
+Q14 调用api中的 `bing_search_chat`接口时，报出 `Failed to establish a new connection: [Errno 110] Connection timed out`
+
+这是因为服务器加了防火墙，需要联系管理员加白名单，如果公司的服务器的话，就别想了GG--!
