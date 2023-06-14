@@ -17,6 +17,7 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from functools import lru_cache
+from textsplitter.zh_title_enhance import *
 
 
 # patch HuggingFaceEmbeddings to make it hashable
@@ -79,6 +80,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
+    if OPEN_ZH_TITLE_ENHANCE:
+        docs = zh_title_enhance(docs)
     write_check_file(filepath, docs)
     return docs
 
