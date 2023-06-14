@@ -305,7 +305,7 @@ async def chat(
     )
 
 
-async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
+async def stream_chat(websocket: WebSocket):
     await websocket.accept()
     turn = 1
     while True:
@@ -408,11 +408,15 @@ def api_start(host, port):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    app.websocket("/local_doc_qa/stream-chat/{knowledge_base_id}")(stream_chat)
+    # 修改了stream_chat的接口，直接通过ws://localhost:7861/local_doc_qa/stream_chat建立连接，在请求体中选择knowledge_base_id
+    app.websocket("/local_doc_qa/stream_chat")(stream_chat)
 
     app.get("/", response_model=BaseResponse)(document)
 
-    #     # 增加基于bing搜索的流式问答
+    # 增加基于bing搜索的流式问答
+    # 需要说明的是，如果想测试websocket的流式问答，需要使用支持websocket的测试工具，如postman,insomnia
+    # 强烈推荐开源的insomnia
+    # 在测试时选择new websocket request,并将url的协议改为ws,如ws://localhost:7861/local_doc_qa/stream_chat_bing
     app.websocket("/local_doc_qa/stream_chat_bing")(stream_chat_bing)
 
     app.post("/chat", response_model=ChatMessage)(chat)
