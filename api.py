@@ -346,6 +346,41 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+async def stream_chat_bing(websocket: WebSocket):
+    """
+    基于bing搜索的流式问答
+    """
+    await websocket.accept()
+    turn = 1
+    while True:
+        input_json = await websocket.receive_json()
+        question, history = input_json["question"], input_json["history"]
+
+        await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
+
+        last_print_len = 0
+        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history, streaming=True):
+            await websocket.send_text(resp["result"][last_print_len:])
+            last_print_len = len(resp["result"])
+
+        source_documents = [
+            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+            f"""相关度：{doc.metadata['score']}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+
+        await websocket.send_text(
+            json.dumps(
+                {
+                    "question": question,
+                    "turn": turn,
+                    "flag": "end",
+                    "sources_documents": source_documents,
+                },
+                ensure_ascii=False,
+            )
+        )
+        turn += 1
 
 async def document():
     return RedirectResponse(url="/docs")
@@ -376,6 +411,9 @@ def api_start(host, port):
     app.websocket("/local_doc_qa/stream-chat/{knowledge_base_id}")(stream_chat)
 
     app.get("/", response_model=BaseResponse)(document)
+
+    #     # 增加基于bing搜索的流式问答
+    app.websocket("/local_doc_qa/stream_chat_bing")(stream_chat_bing)
 
     app.post("/chat", response_model=ChatMessage)(chat)
 
