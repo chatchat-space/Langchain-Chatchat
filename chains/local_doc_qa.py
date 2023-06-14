@@ -297,6 +297,16 @@ class LocalDocQA:
         status = vector_store.update_doc(filepath, docs)
         return status
 
+    def list_file_from_vector_store(self,
+                                    vs_path,
+                                    fullpath=False):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        docs = vector_store.list_docs()
+        if fullpath:
+            return docs
+        else:
+            return [os.path.split(doc)[-1] for doc in docs]
+
 
 if __name__ == "__main__":
     # 初始化消息

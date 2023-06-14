@@ -1,7 +1,7 @@
 from langchain.vectorstores import FAISS
 from langchain.vectorstores.base import VectorStore
 from langchain.vectorstores.faiss import dependable_faiss_import
-from typing import Any, Callable, List, Tuple, Dict
+from typing import Any, Callable, List, Dict
 from langchain.docstore.base import Docstore
 from langchain.docstore.document import Document
 import numpy as np
@@ -109,15 +109,22 @@ class MyFAISS(FAISS, VectorStore):
             docs.append(doc)
         return docs
 
-    def delete_doc(self, source):
+    def delete_doc(self, source: str or List[str]):
         try:
-            ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
-            for id in ids:
-                index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
-                self.index_to_docstore_id.pop(index)
-                self.docstore._dict.pop(id)
-            return f"docs delete success"
-        except:
+            if isinstance(source, str):
+                ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
+            else:
+                ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] in source]
+            if len(ids) == 0:
+                return f"docs delete fail"
+            else:
+                for id in ids:
+                    index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
+                    self.index_to_docstore_id.pop(index)
+                    self.docstore._dict.pop(id)
+                return f"docs delete success"
+        except Exception as e:
+            print(e)
             return f"docs delete fail"
 
     def update_doc(self, source, new_docs):
@@ -125,5 +132,9 @@ class MyFAISS(FAISS, VectorStore):
             delete_len = self.delete_doc(source)
             ls = self.add_documents(new_docs)
             return f"docs update success"
-        except:
+        except Exception as e:
+            print(e)
             return f"docs update fail"
+
+    def list_docs(self):
+        return list(set(v.metadata["source"] for v in self.docstore._dict.values()))
