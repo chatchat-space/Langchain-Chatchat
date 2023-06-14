@@ -66,7 +66,7 @@ def is_possible_title(
 
     return True
 
-def zh_tittle_enhance(docs: Document) -> Document:
+def zh_title_enhance(docs: Document) -> Document:
     title = None
     if len(docs) > 0:
         for doc in docs:
