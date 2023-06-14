@@ -173,12 +173,13 @@ def change_vs_name_input(vs_id, history):
             file_status = f"已加载知识库{vs_id}，请开始提问"
             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), \
                    vs_path, history + [[None, file_status]], \
-                   gr.update(choices=local_doc_qa.list_file_from_vector_store(vs_path)), gr.update(visible=True)
+                   gr.update(choices=local_doc_qa.list_file_from_vector_store(vs_path), value=[]), \
+                   gr.update(visible=True)
         else:
             file_status = f"已选择知识库{vs_id}，当前知识库中未上传文件，请先上传文件后，再开始提问"
             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), \
                    vs_path, history + [[None, file_status]], \
-                   gr.update(choices=[]), gr.update(visible=True)
+                   gr.update(choices=[], value=[]), gr.update(visible=True, value=[])
 
 
 knowledge_base_test_mode_info = ("【注意】\n\n"
@@ -262,9 +263,10 @@ def delete_file(vs_id, files_to_delete, chatbot):
     docs_path = [os.path.join(content_path, file) for file in files_to_delete]
     status = local_doc_qa.delete_file_from_vector_store(vs_path=vs_path,
                                                         filepath=docs_path)
-    for doc_path in docs_path:
-        if os.path.exists(doc_path):
-            os.remove(doc_path)
+    if "fail" not in status:
+        for doc_path in docs_path:
+            if os.path.exists(doc_path):
+                os.remove(doc_path)
     rested_files = local_doc_qa.list_file_from_vector_store(vs_path)
     if "fail" in status:
         vs_status = "文件删除失败。"
@@ -274,7 +276,7 @@ def delete_file(vs_id, files_to_delete, chatbot):
         vs_status = f"文件删除成功，知识库{vs_id}中无已上传文件，请先上传文件后，再开始提问。"
     logger.info(",".join(files_to_delete)+vs_status)
     chatbot = chatbot + [[None, vs_status]]
-    return gr.update(choices=local_doc_qa.list_file_from_vector_store(vs_path)), chatbot
+    return gr.update(choices=local_doc_qa.list_file_from_vector_store(vs_path), value=[]), chatbot
 
 
 def delete_vs(vs_id, chatbot):
