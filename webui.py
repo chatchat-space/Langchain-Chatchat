@@ -259,8 +259,12 @@ def refresh_vs_list():
 def delete_file(vs_id, files_to_delete, chatbot):
     vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
     content_path = os.path.join(KB_ROOT_PATH, vs_id, "content")
+    docs_path = [os.path.join(content_path, file) for file in files_to_delete]
     status = local_doc_qa.delete_file_from_vector_store(vs_path=vs_path,
-                                                        filepath=[os.path.join(content_path, file) for file in files_to_delete])
+                                                        filepath=docs_path)
+    for doc_path in docs_path:
+        if os.path.exists(doc_path):
+            os.remove(doc_path)
     rested_files = local_doc_qa.list_file_from_vector_store(vs_path)
     if "fail" in status:
         vs_status = "文件删除失败。"
