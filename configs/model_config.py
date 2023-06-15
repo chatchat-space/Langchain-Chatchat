@@ -83,6 +83,7 @@ llm_model_dict = {
         "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm-6b",
         "local_model_path": None,
+        "mode": "remote",
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
     },
@@ -92,8 +93,20 @@ llm_model_dict = {
         "name": "vicuna-13b-hf",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
+        "mode": "remote",
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
+    },
+
+    # openai api
+    "openai": {
+        "name": "gpt-3.5-turbo",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "gpt-3.5-turbo",
+        "local_model_path": None,
+        "mode": "remote",
+        "provides": "OpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "api_base_url": "https://api.openapi.com/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": ""
     },
 }
 
