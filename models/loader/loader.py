@@ -30,6 +30,16 @@ class LoaderCheckPoint:
     ptuning_dir: str = None
     use_ptuning_v2: bool = False
     # 如果开启了8bit量化加载,项目无法启动，参考此位置，选择合适的cuda版本，https://github.com/TimDettmers/bitsandbytes/issues/156
+    # 另一个原因可能是由于bitsandbytes安装时选择了系统环境变量里不匹配的cuda版本，
+    # 例如PATH下存在cuda10.2和cuda11.2，bitsandbytes安装时选择了10.2，而torch等安装依赖的版本是11.2
+    # 因此主要的解决思路是清理环境变量里PATH下的不匹配的cuda版本，一劳永逸的方法是：
+    # 0. 在终端执行`pip uninstall bitsandbytes`
+    # 1. 删除.bashrc文件下关于PATH的条目
+    # 2. 在终端执行 `echo $PATH >> .bashrc` 
+    # 3. 删除.bashrc文件下PATH中关于不匹配的cuda版本路径
+    # 4. 在终端执行`source .bashrc`
+    # 5. 再执行`pip install bitsandbytes`
+    
     load_in_8bit: bool = False
     is_llamacpp: bool = False
     bf16: bool = False
@@ -99,6 +109,8 @@ class LoaderCheckPoint:
             LoaderClass = AutoModelForCausalLM
 
         # Load the model in simple 16-bit mode by default
+        # 如果加载没问题，但在推理时报错RuntimeError: CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`
+        # 那还是因为显存不够，此时只能考虑--load-in-8bit,或者配置默认模型为`chatglm-6b-int8`
         if not any([self.llm_device.lower() == "cpu",
                     self.load_in_8bit, self.is_llamacpp]):
 
