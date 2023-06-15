@@ -38,6 +38,8 @@ def main():
         temp = local_doc_qa.init_knowledge_vector_store(filepath)
         if temp is not None:
             vs_path,loaded_files = temp
+            # 如果loaded_files和len(filepath)不一致，则说明部分文件没有加载成功
+            # 如果是路径错误，则应该支持重新加载
             if len(loaded_files) != len(filepath):
                 reload_flag = eval(input("部分文件加载失败，若提示路径不存在，可重新加载，是否重新加载，输入True或False: "))
                 if reload_flag:
