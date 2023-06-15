@@ -187,8 +187,9 @@ class LocalDocQA:
                 torch_gc()
             else:
                 if not vs_path:
-                    vs_path = os.path.join(VS_ROOT_PATH,
-                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""")
+                    vs_path = os.path.join(KB_ROOT_PATH,
+                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
+                                           "vector_store")
                 vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
                 torch_gc()
 
@@ -282,6 +283,31 @@ class LocalDocQA:
                         "result": resp,
                         "source_documents": result_docs}
             yield response, history
+
+    def delete_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.delete_doc(filepath)
+        return status
+
+    def update_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path,
+                                      docs: List[Document],):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.update_doc(filepath, docs)
+        return status
+
+    def list_file_from_vector_store(self,
+                                    vs_path,
+                                    fullpath=False):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        docs = vector_store.list_docs()
+        if fullpath:
+            return docs
+        else:
+            return [os.path.split(doc)[-1] for doc in docs]
 
 
 if __name__ == "__main__":

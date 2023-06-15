@@ -98,9 +98,10 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
         """
         formatted_history = ''
         history = history[-self.history_len:] if self.history_len > 0 else []
-        for i, (old_query, response) in enumerate(history):
-            formatted_history += "[Round {}]\n问：{}\n答：{}\n".format(i, old_query, response)
-        formatted_history += "[Round {}]\n问：{}\n答：".format(len(history), query)
+        if len(history) > 0:
+            for i, (old_query, response) in enumerate(history):
+                formatted_history += "### Human：{}\n### Assistant：{}\n".format(old_query, response)
+        formatted_history += "### Human：{}\n### Assistant：".format(query)
         return formatted_history
 
     def prepare_inputs_for_generation(self,
@@ -140,12 +141,13 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
             "max_new_tokens": self.max_new_tokens,
             "num_beams": self.num_beams,
             "top_p": self.top_p,
+            "do_sample": True,
             "top_k": self.top_k,
             "repetition_penalty": self.repetition_penalty,
             "encoder_repetition_penalty": self.encoder_repetition_penalty,
             "min_length": self.min_length,
             "temperature": self.temperature,
-            "eos_token_id": self.eos_token_id,
+            "eos_token_id": self.checkPoint.tokenizer.eos_token_id,
             "logits_processor": self.logits_processor}
 
         #  向量转换
@@ -178,6 +180,6 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
         response = self._call(prompt=softprompt, stop=['\n###'])
 
         answer_result = AnswerResult()
-        answer_result.history = history + [[None, response]]
+        answer_result.history = history + [[prompt, response]]
         answer_result.llm_output = {"answer": response}
         yield answer_result
