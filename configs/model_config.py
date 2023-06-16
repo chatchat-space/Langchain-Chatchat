@@ -89,7 +89,7 @@ llm_model_dict = {
 
     },
     # 实测加载bigscience/bloom-3b需要170秒左右，暂不清楚为什么这么慢
-    # 猜测可能与它要加载专有token有关
+    # 应与它要加载专有token有关
     "bloom-3b":{
         "name" : "bloom-3b",
         "pretrained_model_name": "bigscience/bloom-3b",
@@ -98,16 +98,16 @@ llm_model_dict = {
 
     },    
     # llama-cpp模型
-    # https://github.com/abetlen/llama-cpp-python/issues/204
+    # 参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1":{
         "name": "ggml-vicuna-13b-1.1",
         "pretrained_model_name": "lmsys/vicuna-13b-delta-v1.1",
         # 这里需要下载好模型的路径,如果下载模型是默认路径则它会下载到用户工作区的
         # /.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/
-        # 还有就是由于加载模型的方式设置的比较严格，下载完成后仍需手动修改模型的文件名
+        # 还有就是由于本项目加载模型的方式设置的比较严格，下载完成后仍需手动修改模型的文件名
         # 将其设置为与Huggface Hub一致的文件名
         # 此外新旧llama-cpp-python对ggml的支持不太一致
-        # 需要从https://github.com/abetlen/llama-cpp-python/releases/tag/v0.1.49下载对应的wheel安装
+        # 需要从https://github.com/abetlen/llama-cpp-python/releases/tag/v0.1.63下载对应的wheel安装
         # 实测pip install 不好使
         "local_model_path":f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/''',
         "provides": "LLamaLLM"
