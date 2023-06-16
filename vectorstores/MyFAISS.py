@@ -52,7 +52,11 @@ class MyFAISS(FAISS, VectorStore):
             if i == -1 or 0 < self.score_threshold < scores[0][j]:
                 # This happens when not enough docs are returned.
                 continue
-            _id = self.index_to_docstore_id[i]
+            if i in self.index_to_docstore_id:
+               _id = self.index_to_docstore_id[i]
+            # 执行接下来的操作
+            else:
+               continue 
             doc = self.docstore.search(_id)
             if (not self.chunk_conent) or ("context_expand" in doc.metadata and not doc.metadata["context_expand"]):
                 # 匹配出的文本如果不需要扩展上下文则执行如下代码
