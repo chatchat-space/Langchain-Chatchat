@@ -31,6 +31,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
     checkPoint: LoaderCheckPoint = None
     history = []
     history_len: int = 10
+    api_key: str = ""
 
     def __init__(self, checkPoint: LoaderCheckPoint = None):
         super().__init__()
@@ -73,7 +74,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         try:
             import openai
             # Not support yet
-            openai.api_key = "EMPTY"
+            # openai.api_key = "EMPTY"
+            openai.key = self.api_key
             openai.api_base = self.api_base_url
         except ImportError:
             raise ValueError(
