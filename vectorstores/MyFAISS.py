@@ -6,6 +6,7 @@ from langchain.docstore.base import Docstore
 from langchain.docstore.document import Document
 import numpy as np
 import copy
+import os
 
 
 class MyFAISS(FAISS, VectorStore):
@@ -113,8 +114,10 @@ class MyFAISS(FAISS, VectorStore):
         try:
             if isinstance(source, str):
                 ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
+                vs_path = os.path.join(os.path.split(os.path.split(source)[0])[0], "vector_store")
             else:
                 ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] in source]
+                vs_path = os.path.join(os.path.split(os.path.split(source[0])[0])[0], "vector_store")
             if len(ids) == 0:
                 return f"docs delete fail"
             else:
@@ -122,6 +125,9 @@ class MyFAISS(FAISS, VectorStore):
                     index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
                     self.index_to_docstore_id.pop(index)
                     self.docstore._dict.pop(id)
+                # TODO: 从 self.index 中删除对应id
+                # self.index.reset()
+                self.save_local(vs_path)
                 return f"docs delete success"
         except Exception as e:
             print(e)
