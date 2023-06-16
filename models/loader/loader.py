@@ -133,8 +133,7 @@ class LoaderCheckPoint:
                     )
                 else:
                     from accelerate import dispatch_model,infer_auto_device_map
-                    # 实测加载bigscience/bloom-3b需要170秒左右，暂不清楚为什么这么慢
-                    # 猜测可能与它要加载专有token有关
+
                     model = LoaderClass.from_pretrained(checkpoint,
                                                         config=self.model_config,
                                                         torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
@@ -146,7 +145,10 @@ class LoaderCheckPoint:
                         elif 'moss' in model_name.lower():
                             self.device_map = self.moss_auto_configure_device_map(num_gpus, model_name)
                         else:
-                            # 应自动指定，而非调用chatglm的配置方式
+                            # 对于chaglm和moss意外的模型应使用自动指定，而非调用chatglm的配置方式
+                            # 其他模型定义的层类几乎不可能与chatglm和moss一致，使用chatglm_auto_configure_device_map
+                            # 百分百会报错，使用infer_auto_device_map虽然可能导致负载不均衡，但至少不会报错
+                            # 实测在bloom模型上如此
                             self.device_map = infer_auto_device_map(model,
                                                                     dtype=torch.int8,
                                                                     no_split_module_classes=model._no_split_modules)
@@ -177,9 +179,12 @@ class LoaderCheckPoint:
             print(f"llama.cpp weights detected: {model_file}\n")
 
             model = Llama(model_path=model_file._str)
-            # llama_cpp里没有tokenizer，还是需要自己加载tokenizer
-            # todo 后续测试两类tokenizer是不是兼容
-            tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            # llama_cpp里没有tokenizer，还是需要自己加载tokenizer,
+            # 实测llama-cpp-vicuna13b-q5_1加载tokenizer的速度极慢，应存在优化空间
+            # 但需要对huggingface的AutoTokenizer进行优化
+            tokenizer = model.tokenizer
+            # todo 此处调用model自带的tokenizer，但后续可以测试两类tokenizer是不是兼容
+            # tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             return model, tokenizer
 
         elif self.load_in_8bit:
@@ -444,5 +449,6 @@ class LoaderCheckPoint:
                 self.model.transformer.prefix_encoder.float()
             except Exception as e:
                 print("加载PrefixEncoder模型参数失败")
-
-        self.model = self.model.eval()
+        # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
+        if not self.is_llamacpp:
+            self.model = self.model.eval()

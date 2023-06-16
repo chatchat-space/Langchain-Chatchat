@@ -109,7 +109,7 @@ llm_model_dict = {
         # 此外新旧llama-cpp-python对ggml的支持不太一致
         # 需要从https://github.com/abetlen/llama-cpp-python/releases/tag/v0.1.49下载对应的wheel安装
         # 实测pip install 不好使
-        "local_model_path":f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/ggml-vic13b-q5_1.bin''',
+        "local_model_path":f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/''',
         "provides": "LLamaLLM"
     },
 
