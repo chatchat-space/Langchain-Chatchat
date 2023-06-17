@@ -17,7 +17,7 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from functools import lru_cache
-from textsplitter.zh_title_enhance import *
+from textsplitter.zh_title_enhance import zh_title_enhance
 
 
 # patch HuggingFaceEmbeddings to make it hashable
