@@ -24,6 +24,16 @@ export const getKbsList = () => {
   })
 }
 
+export const deleteKb = (knowledge_base_id: any) => {
+  return api({
+    url: '/local_doc_qa/delete_knowledge_base',
+    method: 'delete',
+    params: {
+      knowledge_base_id,
+    },
+  })
+}
+
 export const getfilelist = (knowledge_base_id: any) => {
   return api({
     url: '/local_doc_qa/list_files',
