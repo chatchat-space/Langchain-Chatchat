@@ -80,7 +80,7 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
-    if OPEN_ZH_TITLE_ENHANCE:
+    if ZH_TITLE_ENHANCE:
         docs = zh_title_enhance(docs)
     write_check_file(filepath, docs)
     return docs
