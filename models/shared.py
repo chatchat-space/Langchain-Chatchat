@@ -33,14 +33,14 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
 
     loaderCheckPoint.model_path = llm_model_info["local_model_path"]
 
-    if 'remote' == llm_model_info["mode"]:
+    if 'mode' in llm_model_info and llm_model_info["mode"] == 'remote':
         loaderCheckPoint.unload_model()
     else:
         loaderCheckPoint.reload_model()
 
     provides_class = getattr(sys.modules['models'], llm_model_info['provides'])
     modelInsLLM = provides_class(checkPoint=loaderCheckPoint)
-    if 'remote' == llm_model_info["mode"]:
+    if 'mode' in llm_model_info and llm_model_info["mode"] == 'remote':
         modelInsLLM.set_api_base_url(llm_model_info['api_base_url'])
         modelInsLLM.set_api_key(llm_model_info['api_key'])
         modelInsLLM.call_model_name(llm_model_info['name'])
