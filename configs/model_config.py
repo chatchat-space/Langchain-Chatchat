@@ -97,18 +97,17 @@ llm_model_dict = {
         "provides": "ChatGLM"
 
     },    
-    # llama-cpp模型
-    # 参考https://github.com/abetlen/llama-cpp-python/issues/204
-    "ggml-vicuna-13b-1.1":{
-        "name": "ggml-vicuna-13b-1.1",
+    # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
+    "ggml-vicuna-13b-1.1-q5":{
+        "name": "ggml-vicuna-13b-1.1-q5",
         "pretrained_model_name": "lmsys/vicuna-13b-delta-v1.1",
         # 这里需要下载好模型的路径,如果下载模型是默认路径则它会下载到用户工作区的
         # /.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/
         # 还有就是由于本项目加载模型的方式设置的比较严格，下载完成后仍需手动修改模型的文件名
         # 将其设置为与Huggface Hub一致的文件名
-        # 此外新旧llama-cpp-python对ggml的支持不太一致
-        # 需要从https://github.com/abetlen/llama-cpp-python/releases/tag/v0.1.63下载对应的wheel安装
-        # 实测pip install 不好使
+        # 此外不同时期的ggml格式并不兼容，因此不同时期的ggml需要安装不同的llama-cpp-python库，且实测pip install 不好使
+        # 需要手动从https://github.com/abetlen/llama-cpp-python/releases/tag/下载对应的wheel安装
+        # 实测v0.1.63与本模型的vicuna/ggml-vicuna-13b-1.1/ggml-vic13b-q5_1.bin可以兼容
         "local_model_path":f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/''',
         "provides": "LLamaLLM"
     },
@@ -144,7 +143,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "ggml-vicuna-13b-1.1-q5"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.

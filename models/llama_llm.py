@@ -6,14 +6,15 @@ import torch
 import transformers
 from transformers.generation.logits_process import LogitsProcessor
 from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any,Union
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult)
 
 
 class InvalidScoreLogitsProcessor(LogitsProcessor):
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def __call__(self, input_ids: Union[torch.LongTensor,list], scores: torch.FloatTensor) -> torch.FloatTensor:
+        input_ids = torch.tensor(input_ids) if isinstance(input_ids,list) else input_ids
         if torch.isnan(scores).any() or torch.isinf(scores).any():
             scores.zero_()
             scores[..., 5] = 5e4
@@ -163,8 +164,15 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
             self.stopping_criteria = transformers.StoppingCriteriaList()
         # 观测输出
         gen_kwargs.update({'stopping_criteria': self.stopping_criteria})
+        if "llama_cpp" in self.checkPoint.model.__str__():
+            import inspect
 
-        output_ids = self.checkPoint.model.generate(**gen_kwargs)
+            common_kwargs_keys = set(inspect.getfullargspec(self.checkPoint.model.generate).args)&set(gen_kwargs.keys())
+            common_kwargs = {key:gen_kwargs[key] for key in common_kwargs_keys}
+            output_ids = torch.tensor([list(self.checkPoint.model.generate(input_id_i.cpu(),**common_kwargs)) for input_id_i in input_ids])
+
+        else:
+            output_ids = self.checkPoint.model.generate(**gen_kwargs)
         new_tokens = len(output_ids[0]) - len(input_ids[0])
         reply = self.decode(output_ids[0][-new_tokens:])
         print(f"response:{reply}")

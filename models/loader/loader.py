@@ -179,12 +179,15 @@ class LoaderCheckPoint:
             print(f"llama.cpp weights detected: {model_file}\n")
 
             model = Llama(model_path=model_file._str)
-            # llama_cpp里没有tokenizer，还是需要自己加载tokenizer,
-            # 实测llama-cpp-vicuna13b-q5_1加载tokenizer的速度极慢，应存在优化空间
+
+            # 实测llama-cpp-vicuna13b-q5_1的AutoTokenizer加载tokenizer的速度极慢，应存在优化空间
             # 但需要对huggingface的AutoTokenizer进行优化
-            tokenizer = model.tokenizer
-            # todo 此处调用model自带的tokenizer，但后续可以测试两类tokenizer是不是兼容
-            # tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
+            # tokenizer = model.tokenizer
+            # todo 此处调用AutoTokenizer的tokenizer，但后续可以测试自带tokenizer是不是兼容
+            #* -> 自带的tokenizer不与transoformers的tokenizer兼容,无法使用
+
+            tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             return model, tokenizer
 
         elif self.load_in_8bit:
