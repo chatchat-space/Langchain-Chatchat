@@ -7,6 +7,7 @@ from langchain.docstore.document import Document
 import numpy as np
 import copy
 import os
+from configs.model_config import *
 
 
 class MyFAISS(FAISS, VectorStore):
@@ -23,6 +24,9 @@ class MyFAISS(FAISS, VectorStore):
                          docstore=docstore,
                          index_to_docstore_id=index_to_docstore_id,
                          normalize_L2=normalize_L2)
+        self.score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD
+        self.chunk_size = CHUNK_SIZE
+        self.chunk_conent = False
 
     def seperate_list(self, ls: List[int]) -> List[List[int]]:
         # TODO: 增加是否属于同一文档的判断
