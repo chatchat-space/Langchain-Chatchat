@@ -14,7 +14,6 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
-from sse_starlette.sse import EventSourceResponse
 
 from chains.local_doc_qa import LocalDocQA
 from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
