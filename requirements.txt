@@ -33,5 +33,4 @@ numpy~=1.23.5
 tqdm~=4.65.0
 requests~=2.28.2
 tenacity~=8.2.2
-# 默认下载的charset_normalizer模块版本过高会抛出，`artially initialized module 'charset_normalizer' has no attribute 'md__mypyc' (most likely due to a circular import)`
 charset_normalizer==2.1.0

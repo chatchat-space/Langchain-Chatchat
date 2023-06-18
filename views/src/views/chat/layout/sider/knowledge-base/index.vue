@@ -3,7 +3,7 @@ import { NButton, NForm, NFormItem, NInput, NPopconfirm } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import filelist from './filelist.vue'
 import { SvgIcon } from '@/components/common'
-import { getkblist, deletekb} from '@/api/chat'
+import { deletefile, getfilelist } from '@/api/chat'
 import { idStore } from '@/store/modules/knowledgebaseid/id'
 const items = ref<any>([])
 const choice = ref('')
@@ -11,7 +11,7 @@ const store = idStore()
 
 onMounted(async () => {
   choice.value = store.knowledgeid
-  const res = await getkblist({})
+  const res = await getfilelist({})
   res.data.data.forEach((item: any) => {
     items.value.push({
       value: item,
@@ -52,8 +52,8 @@ const handleClick = () => {
   }
 }
 async function handleDelete(item: any) {
-  await deletekb(item.value)
-  const res = await getkblist({})
+  await deletefile(item.value)
+  const res = await getfilelist({})
   items.value = []
   res.data.data.forEach((item: any) => {
     items.value.push({
