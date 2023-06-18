@@ -13,7 +13,6 @@ cpm_kernels
 faiss-cpu
 gradio==3.28.3
 fastapi~=0.95.0
-sse_starlette
 uvicorn~=0.21.1
 pypinyin~=0.48.0
 click~=8.1.3
