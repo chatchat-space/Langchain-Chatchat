@@ -108,7 +108,7 @@ class LoaderCheckPoint:
                 )
 
         self.is_llamacpp = len(list(Path(f'{checkpoint}').glob('ggml*.bin'))) > 0
-        if 'chatglm' in model_name.lower():
+        if 'chatglm' in model_name.lower() or "chatyuan" in model_name.lower():
             LoaderClass = AutoModel
         else:
             LoaderClass = AutoModelForCausalLM

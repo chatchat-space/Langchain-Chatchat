@@ -63,7 +63,7 @@ llm_model_dict = {
         "name": "chatyuan",
         "pretrained_model_name": "ClueAI/ChatYuan-large-v2",
         "local_model_path": None,
-        "provides": None
+        "provides": "MOSSLLM"
     },
     "moss": {
         "name": "moss",
@@ -85,7 +85,7 @@ llm_model_dict = {
         "name" : "bloomz-7b1",
         "pretrained_model_name": "bigscience/bloomz-7b1",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "MOSSLLM"
 
     },
     # 实测加载bigscience/bloom-3b需要170秒左右，暂不清楚为什么这么慢
@@ -94,9 +94,15 @@ llm_model_dict = {
         "name" : "bloom-3b",
         "pretrained_model_name": "bigscience/bloom-3b",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "MOSSLLM"
 
-    },    
+    },   
+    "baichuan-7b":{
+        "name":"baichuan-7b",
+        "pretrained_model_name":"baichuan-inc/baichuan-7B",
+        "local_model_path":None,
+        "provides":"MOSSLLM"
+    }, 
     # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1-q5":{
         "name": "ggml-vicuna-13b-1.1-q5",
@@ -143,7 +149,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "fastchat-chatglm-6b"
+LLM_MODEL = "chatyuan"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.

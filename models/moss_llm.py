@@ -6,7 +6,7 @@ from models.base import (BaseAnswer,
                          AnswerResult)
 
 import torch
-
+# todo 建议重写instruction,在该instruction下，各模型的表现比较差
 META_INSTRUCTION = \
     """You are an AI assistant whose name is MOSS.
     - MOSS is a conversational language model that is developed by Fudan University. It is designed to be helpful, honest, and harmless.
@@ -20,7 +20,7 @@ META_INSTRUCTION = \
     Capabilities and tools that MOSS can possess.
     """
 
-
+# todo 在MOSSLLM类下，各模型的响应速度很慢，后续要检查一下原因
 class MOSSLLM(BaseAnswer, LLM, ABC):
     max_token: int = 2048
     temperature: float = 0.7
@@ -42,10 +42,11 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
         return self.checkPoint
 
     @property
-    def set_history_len(self) -> int:
+    def _history_len(self) -> int:
+
         return self.history_len
 
-    def _set_history_len(self, history_len: int) -> None:
+    def set_history_len(self, history_len: int) -> None:
         self.history_len = history_len
 
     def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
@@ -59,11 +60,13 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
             prompt_w_history = str(history)
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
         else:
-            prompt_w_history = META_INSTRUCTION
+            prompt_w_history = META_INSTRUCTION.replace("MOSS", self.checkPoint.model_name.split("/")[-1])
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
 
         inputs = self.checkPoint.tokenizer(prompt_w_history, return_tensors="pt")
         with torch.no_grad():
+            # max_length似乎可以设的小一些，而repetion_penalty应大一些，否则chatyuan,bloom等模型为满足max会重复输出
+            # 
             outputs = self.checkPoint.model.generate(
                 inputs.input_ids.cuda(),
                 attention_mask=inputs.attention_mask.cuda(),
