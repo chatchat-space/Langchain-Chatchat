@@ -29,7 +29,7 @@
 
 ## 变更日志
 
-参见 [变更日志](docs/CHANGELOG.md)。
+参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
 ## 硬件需求
 
