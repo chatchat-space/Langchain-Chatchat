@@ -131,6 +131,12 @@ class LoaderCheckPoint:
                         .half()
                         .cuda()
                     )
+                # 支持自定义cuda设备
+                elif ":" in self.llm_device:
+                    model = LoaderClass.from_pretrained(checkpoint,
+                                                    config=self.model_config,
+                                                    torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
+                                                    trust_remote_code=True).half().to(self.llm_device)
                 else:
                     from accelerate import dispatch_model,infer_auto_device_map
 
@@ -405,7 +411,7 @@ class LoaderCheckPoint:
                     print(
                         "如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
             elif torch.has_cuda:
-                device_id = "0" if torch.cuda.is_available() else None
+                device_id = "0" if torch.cuda.is_available() and (":" not in self.llm_device) else None
                 CUDA_DEVICE = f"{self.llm_device}:{device_id}" if device_id else self.llm_device
                 with torch.cuda.device(CUDA_DEVICE):
                     torch.cuda.empty_cache()
