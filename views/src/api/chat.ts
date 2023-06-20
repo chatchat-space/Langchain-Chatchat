@@ -16,6 +16,24 @@ export const chatfile = (params: any) => {
   })
 }
 
+export const getKbsList = () => {
+  return api({
+    url: '/local_doc_qa/list_knowledge_base',
+    method: 'get',
+
+  })
+}
+
+export const deleteKb = (knowledge_base_id: any) => {
+  return api({
+    url: '/local_doc_qa/delete_knowledge_base',
+    method: 'delete',
+    params: {
+      knowledge_base_id,
+    },
+  })
+}
+
 export const getfilelist = (knowledge_base_id: any) => {
   return api({
     url: '/local_doc_qa/list_files',
@@ -35,8 +53,8 @@ export const bing_search = (params: any) => {
 export const deletefile = (params: any) => {
   return api({
     url: '/local_doc_qa/delete_file',
-    method: 'post',
-    data: JSON.stringify(params),
+    method: 'delete',
+    params,
   })
 }
 export const web_url = () => {
