@@ -15,7 +15,7 @@ COPY . /app
 
 RUN pnpm run build
 
-
+FROM frontend AS final
 
 COPY --from=frontend /app/dist /app/public
 

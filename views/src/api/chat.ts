@@ -63,3 +63,18 @@ export const web_url = () => {
 export const setapi = () => {
   return window.baseApi
 }
+export const getkblist = (knowledge_base_id: any) => {
+  return api({
+    url: '/local_doc_qa/list_knowledge_base',
+    method: 'get',
+    params: {},
+
+  })
+}
+export const deletekb = (params: any) => {
+  return api({
+    url: '/local_doc_qa/delete_knowledge_base',
+    method: 'post',
+    data: JSON.stringify(params),
+  })
+}
