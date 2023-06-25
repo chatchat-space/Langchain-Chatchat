@@ -58,6 +58,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
+    "chatglm2-6b": {
+        "name": "chatglm2-6b",
+        "pretrained_model_name": "THUDM/chatglm2-6b",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
 
     "chatyuan": {
         "name": "chatyuan",
@@ -82,6 +88,13 @@ llm_model_dict = {
     "fastchat-chatglm-6b": {
         "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm-6b",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
+    },
+    "fastchat-chatglm2-6b": {
+        "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm2-6b",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
