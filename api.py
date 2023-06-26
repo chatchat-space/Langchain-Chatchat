@@ -413,7 +413,7 @@ def api_start(host, port):
     global app
     global local_doc_qa
 
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
     llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     app = FastAPI()
@@ -445,12 +445,7 @@ def api_start(host, port):
     app.post("/local_doc_qa/update_file", response_model=BaseResponse)(update_doc)
 
     local_doc_qa = LocalDocQA()
-    local_doc_qa.init_cfg(
-        llm_model=llm_model_ins,
-        embedding_model=EMBEDDING_MODEL,
-        embedding_device=EMBEDDING_DEVICE,
-        top_k=VECTOR_SEARCH_TOP_K,
-    )
+    local_doc_qa.init_cfg(llm_model=llm_model_ins, embedding_model_path=args_dict.get('embedding_model_path', None))
     uvicorn.run(app, host=host, port=port)
 
 

@@ -8,7 +8,7 @@ from models.base import BaseAnswer
 loaderCheckPoint: LoaderCheckPoint = None
 
 
-def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_v2: bool = False) -> Any:
+def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_v2: bool = False, params: dict = None) -> Any:
     """
     init llm_model_ins LLM
     :param llm_model: model_name
@@ -32,7 +32,11 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
     else:
         loaderCheckPoint.model_name = llm_model_info['pretrained_model_name']
 
-    loaderCheckPoint.model_path = llm_model_info["local_model_path"]
+    param_model_path = params.get('model_path', None)
+    if param_model_path is not None:
+        loaderCheckPoint.model_path = param_model_path
+    else:
+        loaderCheckPoint.model_path = llm_model_info["local_model_path"]
 
     if 'FastChatOpenAILLM' in llm_model_info["provides"]:
         loaderCheckPoint.unload_model()

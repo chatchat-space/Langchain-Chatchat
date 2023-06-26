@@ -16,7 +16,7 @@ async def dispatch(args: Namespace):
 
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
     if not os.path.isfile(args.dialogue_path):
         raise FileNotFoundError(f'Invalid dialogue file path for demo mode: "{args.dialogue_path}"')
     llm = OpenAI(temperature=0)

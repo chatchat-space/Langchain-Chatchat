@@ -33,7 +33,7 @@ async def dispatch(args: Namespace):
     args_dict = vars(args)
 
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
 
     template = """This is a conversation between a human and a bot:
     

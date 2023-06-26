@@ -128,12 +128,18 @@ class LocalDocQA:
 
     def init_cfg(self,
                  embedding_model: str = EMBEDDING_MODEL,
+                 embedding_model_path: str = None,
                  embedding_device=EMBEDDING_DEVICE,
                  llm_model: BaseAnswer = None,
                  top_k=VECTOR_SEARCH_TOP_K,
                  ):
         self.llm = llm_model
-        self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
+        if embedding_model_path:
+            embedding_model_name = embedding_model_path
+        else:
+            embedding_model_name = embedding_model_dict[embedding_model]
+
+        self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name,
                                                 model_kwargs={'device': embedding_device})
         self.top_k = top_k
 
@@ -318,11 +324,11 @@ if __name__ == "__main__":
 
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
     llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     local_doc_qa = LocalDocQA()
-    local_doc_qa.init_cfg(llm_model=llm_model_ins)
+    local_doc_qa.init_cfg(llm_model=llm_model_ins, embedding_model_path=args_dict.get('embedding_model_path', None))
     query = "本项目使用的embedding模型是什么，消耗多少显存"
     vs_path = "/media/gpt4-pdf-chatbot-langchain/dev-langchain-ChatGLM/vector_store/test"
     last_print_len = 0

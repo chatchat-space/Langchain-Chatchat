@@ -100,7 +100,7 @@ def init_model():
 
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
     llm_model_ins.set_history_len(LLM_HISTORY_LEN)
     try:
         local_doc_qa.init_cfg(llm_model=llm_model_ins)

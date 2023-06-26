@@ -104,7 +104,7 @@ def init_model(llm_model: str = 'chat-glm-6b', embedding_model: str = 'text2vec'
     args_dict = vars(args)
     args_dict.update(model=llm_model)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
     llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     try:

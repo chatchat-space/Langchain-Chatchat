@@ -17,7 +17,7 @@ async def dispatch(args: Namespace):
 
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
 
-    llm_model_ins = shared.loaderLLM()
+    llm_model_ins = shared.loaderLLM(params=args_dict)
 
     history = [
         ("which city is this?", "tokyo"),
