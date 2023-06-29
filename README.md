@@ -23,7 +23,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong ）
+🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong🌲 ）
 
 💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 
 
@@ -65,7 +65,7 @@
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
 
 ## Docker 整合包
-🐳 Docker镜像地址：`registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 `（感谢 @InkSong🌲）
+🐳 Docker镜像地址：`registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 `🌲
 
 💻 一行命令运行：
 ```shell
