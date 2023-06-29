@@ -139,7 +139,7 @@ KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowled
 PROMPT_TEMPLATE = """已知信息：
 {context} 
 
-根据上述已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题” 或 “没有提供足够的相关信息”，不允许在答案中添加编造成分，答案请使用中文。 问题是：{question}"""
+根据已知信息，找到与问题匹配的答案，只需要简洁的来回答我的问题，不要举例，更不要添加已知信息里不存在的内容。如果在已知信息里匹配不到答案，则通过模型回答问题，并在答案前加上“知识库中找不到答案，我来尝试回答您的问题：”  我的问题是：{question}"""
 
 # 缓存知识库数量
 CACHED_VS_NUM = 1
@@ -148,7 +148,7 @@ CACHED_VS_NUM = 1
 SENTENCE_SIZE = 100
 
 # 匹配后单段上下文长度
-CHUNK_SIZE = 250
+CHUNK_SIZE = 1000
 
 # 传入LLM的历史记录长度
 LLM_HISTORY_LEN = 3
