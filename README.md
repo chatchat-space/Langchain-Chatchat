@@ -23,6 +23,9 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
+🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong ）
+💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 
+
 🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM)
 
 📓 [ModelWhale 在线运行项目](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
@@ -230,7 +233,7 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-<img src="img/qr_code_37.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_38.jpg" alt="二维码" width="300" height="300" />
 
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
