@@ -91,8 +91,20 @@ sudo systemctl restart docker
 ```
 安装完成后，可以使用以下命令编译镜像和启动容器：
 ```
-docker build -f Dockerfile-cuda -t chatglm-cuda:latest .
-docker run --gpus all -d --name chatglm -p 7860:7860  chatglm-cuda:latest
+alias go2chatGML="docker exec -it $(docker ps | grep kanami | awk '{print $1}' ) bash "
+alias runChatGML="docker run --gpus all -d --name kanami -p 7860:7860  chatglm-cuda:kanami"
+alias buildChatGMLIMAGE="docker build -f Dockerfile-cuda -t chatglm-cuda:kanami ."
+# 构建镜像
+docker build -f Dockerfile-cuda -t chatglm-cuda:kanami .
+# 跑镜像
+docker run --gpus all -d --name kanami -p 7860:7860  chatglm-cuda:kanami
+# 进入容器中
+docker exec -it $(docker ps | grep kanami | awk '{print $1}' ) bash
+# 快捷命令加入到  ~/.bashrc 中
+alias go2chatGML="docker exec -it $(docker ps | grep kanami | awk '{print $1}' ) bash "
+alias runChatGML="docker run --gpus all -d --name kanami -p 7860:7860  chatglm-cuda:kanami"
+alias buildChatGMLIMAGE="docker build -f Dockerfile-cuda -t chatglm-cuda:kanami ."
+
 
 #若要使用离线模型，请配置好模型路径，然后此repo挂载到Container
 docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatGLM:/chatGLM  chatglm-cuda:latest
