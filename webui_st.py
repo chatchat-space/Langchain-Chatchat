@@ -143,7 +143,7 @@ def init_model(llm_model: str = 'chat-glm-6b', embedding_model: str = 'text2vec'
 #     return history + [[None, model_status]]
 
 
-def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_content_segmentation):
+def get_vector_store(local_doc_qa, vs_id, files, sentence_size, history, one_conent, one_content_segmentation):
     vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
     filelist = []
     if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_id, "content")):
@@ -455,6 +455,8 @@ with st.sidebar:
             cols = st.columns([12, 10])
             kb_name = cols[0].text_input(
                 '新知识库名称', placeholder='新知识库名称', label_visibility='collapsed')
+            if 'kb_name' not in st.session_state:
+                st.session_state.kb_name = kb_name
             cols[1].button('新建知识库', on_click=on_new_kb)
             vs_path = st.selectbox(
                 '选择知识库', vs_list, on_change=on_vs_change, key='vs_path')
