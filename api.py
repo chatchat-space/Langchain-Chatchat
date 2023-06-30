@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 import os
 import shutil
@@ -384,6 +385,10 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         ):
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
+            # yield control to the event loop, make sure the client receive the message
+            # see
+            # https://websockets.readthedocs.io/en/stable/faq/asyncio.html#why-does-my-program-never-receive-any-messages
+            await asyncio.sleep(0)
 
         source_documents = [
             f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
