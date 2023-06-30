@@ -15,7 +15,7 @@ from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 
 from chains.local_doc_qa import LocalDocQA
-from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
+from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE, SENTENCE_SIZE,
                                   EMBEDDING_MODEL, NLTK_DATA_PATH,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 import models.shared as shared
@@ -89,7 +89,7 @@ def get_vs_path(local_doc_id: str):
 
 def get_file_path(local_doc_id: str, doc_name: str):
     return os.path.join(KB_ROOT_PATH, local_doc_id, "content", doc_name)
-
+    
 
 async def upload_file(
         file: UploadFile = File(description="A single binary file"),
@@ -118,6 +118,39 @@ async def upload_file(
         file_status = "文件上传失败，请重新上传"
         return BaseResponse(code=500, msg=file_status)
 
+async def new_kb(
+        knowledge_base_id: str = Form(..., description="Knowledge Base Name", example="kb1")
+):
+    content_path = get_folder_path(knowledge_base_id)
+    if not os.path.exists(content_path):
+        os.makedirs(content_path)
+
+    if os.path.exists(content_path) > 0:
+        new_status = f"知识库 {knowledge_base_id} 已创建成功。"
+        return BaseResponse(code=200, msg=new_status)
+    else:
+        new_status = "知识库创建失败，请重新创建"
+        return BaseResponse(code=500, msg=new_status)
+
+# 自动化加载固定文件间中文件
+async def reinit_vs(
+        knowledge_base_id: str = Form(..., description="Knowledge Base Name", example="kb1")):
+    try:
+        vs_path = get_vs_path(knowledge_base_id)
+        if os.path.exists(vs_path):
+            shutil.rmtree(vs_path)
+        content_path = get_folder_path(knowledge_base_id)
+        vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(content_path, vs_path, SENTENCE_SIZE)
+        model_status = True
+    except Exception as e:
+        print(e)
+        model_status = False
+    if model_status == True:
+        init_status = f"知识库 {knowledge_base_id} 已刷新成功。"
+        return BaseResponse(code=200, msg=init_status)
+    else:
+        init_status = "知识库刷新失败，请重新操作"
+        return BaseResponse(code=500, msg=init_status)
 
 async def upload_files(
         files: Annotated[
@@ -165,6 +198,8 @@ async def list_kbs():
 async def list_docs(
         knowledge_base_id: Optional[str] = Query(default=None, description="Knowledge Base Name", example="kb1")
 ):
+    print(knowledge_base_id)
+    print('******************************************')
     local_doc_folder = get_folder_path(knowledge_base_id)
     if not os.path.exists(local_doc_folder):
         return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
@@ -183,10 +218,13 @@ async def delete_kb(
 ):
     # TODO: 确认是否支持批量删除知识库
     knowledge_base_id = urllib.parse.unquote(knowledge_base_id)
-    if not os.path.exists(get_folder_path(knowledge_base_id)):
+    if not os.path.exists(os.path.join(KB_ROOT_PATH, knowledge_base_id)):
         return {"code": 1, "msg": f"Knowledge base {knowledge_base_id} not found"}
-    shutil.rmtree(get_folder_path(knowledge_base_id))
-    return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
+    shutil.rmtree(os.path.join(KB_ROOT_PATH, knowledge_base_id))
+    if not os.path.exists(os.path.join(KB_ROOT_PATH, knowledge_base_id)):
+        return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
+    else:
+        return BaseResponse(code=500, msg=f"Knowledge Base {knowledge_base_id} delete failed")
 
 
 async def delete_doc(
@@ -443,6 +481,8 @@ def api_start(host, port):
     app.delete("/local_doc_qa/delete_knowledge_base", response_model=BaseResponse)(delete_kb)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse)(delete_doc)
     app.post("/local_doc_qa/update_file", response_model=BaseResponse)(update_doc)
+    app.post("/local_doc_qa/new_knowledge_base", response_model=BaseResponse)(new_kb)
+    app.post("/local_doc_qa/reinit_vector_store", response_model=BaseResponse)(reinit_vs)
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
