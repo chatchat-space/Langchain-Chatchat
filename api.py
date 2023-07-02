@@ -4,7 +4,7 @@ import os
 import shutil
 from typing import List, Optional
 import urllib
-
+import asyncio
 import nltk
 import pydantic
 import uvicorn
@@ -382,6 +382,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
+            await asyncio.sleep(0)
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
 
