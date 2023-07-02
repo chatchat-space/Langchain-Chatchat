@@ -197,9 +197,8 @@ class LocalDocQA:
             return vs_path, loaded_files
         else:
             logger.info("文件均未成功加载，请检查依赖包或替换为其他文件再次上传。")
-            # 若len(docs) !> 0，必然是所有文件均未加载成功，loaded_files必然为[]，返回没有实际意义
-            # 而若只返回None,可以跟上文的异常返回值保持一致，更便于下游任务判断
-            return None
+
+            return None, loaded_files
 
     def one_knowledge_add(self, vs_path, one_title, one_conent, one_content_segmentation, sentence_size):
         try:
