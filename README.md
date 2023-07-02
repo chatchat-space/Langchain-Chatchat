@@ -23,6 +23,10 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
+🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong🌲 ）
+
+💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 
+
 🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM)
 
 📓 [ModelWhale 在线运行项目](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
@@ -59,6 +63,23 @@
 - Embedding 模型硬件需求
 
     本项目中默认选用的 Embedding 模型 [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese/tree/main) 约占用显存 3GB，也可修改为在 CPU 中运行。
+
+## Docker 整合包
+🐳 Docker镜像地址：`registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 `🌲
+
+💻 一行命令运行：
+```shell
+docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0
+```
+
+- 该版本镜像大小`25.2G`，使用[v0.1.16](https://github.com/imClumsyPanda/langchain-ChatGLM/releases/tag/v0.1.16)，以`nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04`为基础镜像
+- 该版本内置两个`embedding`模型：`m3e-base`，`text2vec-large-chinese`，内置`fastchat+chatglm-6b`
+- 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
+- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装`NVIDIA Driver`以及`NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用`docker logs -f <container id>`查看日志
+- 如遇到启动过程卡在`Waiting..`步骤，建议使用`docker exec -it <container id> bash`进入`/logs/`目录查看对应阶段日志
+![](img/docker_logs.png)
+
 
 ## Docker 部署
 为了能让容器使用主机GPU资源，需要在主机上安装 [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)。具体安装步骤如下：
@@ -230,7 +251,7 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-<img src="img/qr_code_36.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_39.jpg" alt="二维码" width="300" height="300" />
 
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
