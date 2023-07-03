@@ -108,6 +108,12 @@ llm_model_dict = {
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
     },
+    "chatglm2-6b-int4": {
+        "name": "chatglm2-6b-int4",
+        "pretrained_model_name": "THUDM/chatglm2-6b-int4",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
 }
 
 # LLM 名称
