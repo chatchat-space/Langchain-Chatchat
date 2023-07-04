@@ -445,7 +445,7 @@ async def document():
     return RedirectResponse(url="/docs")
 
 
-def api_start(host, port):
+def api_start(host, port, **kwargs):
     global app
     global local_doc_qa
 
@@ -494,15 +494,21 @@ def api_start(host, port):
         embedding_device=EMBEDDING_DEVICE,
         top_k=VECTOR_SEARCH_TOP_K,
     )
-    uvicorn.run(app, host=host, port=port)
+    if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
+        uvicorn.run(app, host=host, port=port, ssl_keyfile=kwargs.get("ssl_keyfile"),
+                    ssl_certfile=kwargs.get("ssl_certfile"))
+    else:
+        uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
+    parser.add_argument("--ssl_keyfile", type=str)
+    parser.add_argument("--ssl_certfile", type=str)
     # 初始化消息
     args = None
     args = parser.parse_args()
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    api_start(args.host, args.port)
+    api_start(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
