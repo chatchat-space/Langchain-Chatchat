@@ -404,6 +404,31 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+# LLM流式问答
+async def stream_llm_chat(websocket: WebSocket):
+    await websocket.accept()
+    turn = 1
+    while True:
+        input_json = await websocket.receive_json()
+        question, history = input_json["question"], input_json["history"]
+        await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
+        last_print_len = 0
+        for answer_result in local_doc_qa.llm.generatorAnswer(prompt=question, history=history,
+                                                          streaming=True):
+            await websocket.send_text(answer_result.llm_output["answer"][last_print_len:])
+            last_print_len = len(answer_result.llm_output["answer"])
+
+        await websocket.send_text(
+            json.dumps(
+                {
+                    "question": question,
+                    "turn": turn,
+                    "flag": "end",
+                },
+                ensure_ascii=False,
+            )
+        )
+        turn += 1
 
 async def document():
     return RedirectResponse(url="/docs")
@@ -429,7 +454,8 @@ def api_start(host, port):
             allow_headers=["*"],
         )
     app.websocket("/local_doc_qa/stream-chat/{knowledge_base_id}")(stream_chat)
-
+    app.websocket("/stream_llm_chat")(stream_llm_chat)
+  
     app.get("/", response_model=BaseResponse)(document)
 
     app.post("/chat", response_model=ChatMessage)(chat)
