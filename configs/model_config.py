@@ -69,7 +69,7 @@ llm_model_dict = {
         "name": "chatyuan",
         "pretrained_model_name": "ClueAI/ChatYuan-large-v2",
         "local_model_path": None,
-        "provides": None
+        "provides": "MOSSLLM"
     },
     "moss": {
         "name": "moss",
@@ -82,6 +82,46 @@ llm_model_dict = {
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
         "provides": "LLamaLLM"
+    },    
+    # 直接调用返回requests.exceptions.ConnectionError错误，需要通过huggingface_hub包里的snapshot_download函数
+    # 下载模型，如果snapshot_download还是返回网络错误，多试几次，一般是可以的，
+    # 如果仍然不行，则应该是网络加了防火墙(在服务器上这种情况比较常见)，基本只能从别的设备上下载，
+    # 然后转移到目标设备了.
+    "bloomz-7b1":{
+        "name" : "bloomz-7b1",
+        "pretrained_model_name": "bigscience/bloomz-7b1",
+        "local_model_path": None,
+        "provides": "MOSSLLM"
+
+    },
+    # 实测加载bigscience/bloom-3b需要170秒左右，暂不清楚为什么这么慢
+    # 应与它要加载专有token有关
+    "bloom-3b":{
+        "name" : "bloom-3b",
+        "pretrained_model_name": "bigscience/bloom-3b",
+        "local_model_path": None,
+        "provides": "MOSSLLM"
+
+    },   
+    "baichuan-7b":{
+        "name":"baichuan-7b",
+        "pretrained_model_name":"baichuan-inc/baichuan-7B",
+        "local_model_path":None,
+        "provides":"MOSSLLM"
+    }, 
+    # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
+    "ggml-vicuna-13b-1.1-q5":{
+        "name": "ggml-vicuna-13b-1.1-q5",
+        "pretrained_model_name": "lmsys/vicuna-13b-delta-v1.1",
+        # 这里需要下载好模型的路径,如果下载模型是默认路径则它会下载到用户工作区的
+        # /.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/
+        # 还有就是由于本项目加载模型的方式设置的比较严格，下载完成后仍需手动修改模型的文件名
+        # 将其设置为与Huggface Hub一致的文件名
+        # 此外不同时期的ggml格式并不兼容，因此不同时期的ggml需要安装不同的llama-cpp-python库，且实测pip install 不好使
+        # 需要手动从https://github.com/abetlen/llama-cpp-python/releases/tag/下载对应的wheel安装
+        # 实测v0.1.63与本模型的vicuna/ggml-vicuna-13b-1.1/ggml-vic13b-q5_1.bin可以兼容
+        "local_model_path":f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/''',
+        "provides": "LLamaLLM"
     },
 
     # 通过 fastchat 调用的模型请参考如下格式
@@ -90,7 +130,8 @@ llm_model_dict = {
         "pretrained_model_name": "chatglm-6b",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
-        "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
+        "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
     },
     "fastchat-chatglm2-6b": {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
@@ -106,8 +147,18 @@ llm_model_dict = {
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
-        "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
+        "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
     },
+    "openai-chatgpt-3.5":{
+        "name": "gpt-3.5-turbo",
+        "pretrained_model_name": "gpt-3.5-turbo",
+        "provides":"FastChatOpenAILLM",
+        "local_model_path": None,
+        "api_base_url": "https://api.openapi.com/v1",
+        "api_key": ""
+    },
+
 }
 
 # LLM 名称

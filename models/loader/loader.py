@@ -67,9 +67,11 @@ class LoaderCheckPoint:
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
+
     def _load_model_config(self, model_name):
 
         if self.model_path:
+            self.model_path = re.sub("\s","",self.model_path)
             checkpoint = Path(f'{self.model_path}')
         else:
             if not self.no_remote_model:
@@ -78,10 +80,12 @@ class LoaderCheckPoint:
                 raise ValueError(
                     "本地模型local_model_path未配置路径"
                 )
-
-        model_config = AutoConfig.from_pretrained(checkpoint, trust_remote_code=True)
-
-        return model_config
+        try:
+            model_config = AutoConfig.from_pretrained(checkpoint, trust_remote_code=True)
+            return model_config
+        except Exception as e:
+            print(e)
+            return checkpoint
 
     def _load_model(self, model_name):
         """
@@ -93,6 +97,7 @@ class LoaderCheckPoint:
         t0 = time.time()
 
         if self.model_path:
+            self.model_path = re.sub("\s","",self.model_path)
             checkpoint = Path(f'{self.model_path}')
         else:
             if not self.no_remote_model:
@@ -103,7 +108,7 @@ class LoaderCheckPoint:
                 )
 
         self.is_llamacpp = len(list(Path(f'{checkpoint}').glob('ggml*.bin'))) > 0
-        if 'chatglm' in model_name.lower():
+        if 'chatglm' in model_name.lower() or "chatyuan" in model_name.lower():
             LoaderClass = AutoModel
         else:
             LoaderClass = AutoModelForCausalLM
@@ -126,8 +131,14 @@ class LoaderCheckPoint:
                         .half()
                         .cuda()
                     )
+                # 支持自定义cuda设备
+                elif ":" in self.llm_device:
+                    model = LoaderClass.from_pretrained(checkpoint,
+                                                    config=self.model_config,
+                                                    torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
+                                                    trust_remote_code=True).half().to(self.llm_device)
                 else:
-                    from accelerate import dispatch_model
+                    from accelerate import dispatch_model,infer_auto_device_map
 
                     model = LoaderClass.from_pretrained(checkpoint,
                                                         config=self.model_config,
@@ -140,7 +151,13 @@ class LoaderCheckPoint:
                         elif 'moss' in model_name.lower():
                             self.device_map = self.moss_auto_configure_device_map(num_gpus, model_name)
                         else:
-                            self.device_map = self.chatglm_auto_configure_device_map(num_gpus)
+                            # 对于chaglm和moss意外的模型应使用自动指定，而非调用chatglm的配置方式
+                            # 其他模型定义的层类几乎不可能与chatglm和moss一致，使用chatglm_auto_configure_device_map
+                            # 百分百会报错，使用infer_auto_device_map虽然可能导致负载不均衡，但至少不会报错
+                            # 实测在bloom模型上如此
+                            self.device_map = infer_auto_device_map(model,
+                                                                    dtype=torch.int8,
+                                                                    no_split_module_classes=model._no_split_modules)
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
@@ -156,7 +173,7 @@ class LoaderCheckPoint:
         elif self.is_llamacpp:
 
             try:
-                from models.extensions.llamacpp_model_alternative import LlamaCppModel
+                from llama_cpp import Llama
 
             except ImportError as exc:
                 raise ValueError(
@@ -167,7 +184,16 @@ class LoaderCheckPoint:
             model_file = list(checkpoint.glob('ggml*.bin'))[0]
             print(f"llama.cpp weights detected: {model_file}\n")
 
-            model, tokenizer = LlamaCppModel.from_pretrained(model_file)
+            model = Llama(model_path=model_file._str)
+
+            # 实测llama-cpp-vicuna13b-q5_1的AutoTokenizer加载tokenizer的速度极慢，应存在优化空间
+            # 但需要对huggingface的AutoTokenizer进行优化
+
+            # tokenizer = model.tokenizer
+            # todo 此处调用AutoTokenizer的tokenizer，但后续可以测试自带tokenizer是不是兼容
+            #* -> 自带的tokenizer不与transoformers的tokenizer兼容,无法使用
+
+            tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             return model, tokenizer
 
         elif self.load_in_8bit:
@@ -396,7 +422,7 @@ class LoaderCheckPoint:
                     print(
                         "如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
             elif torch.has_cuda:
-                device_id = "0" if torch.cuda.is_available() else None
+                device_id = "0" if torch.cuda.is_available() and (":" not in self.llm_device) else None
                 CUDA_DEVICE = f"{self.llm_device}:{device_id}" if device_id else self.llm_device
                 with torch.cuda.device(CUDA_DEVICE):
                     torch.cuda.empty_cache()
@@ -443,5 +469,6 @@ class LoaderCheckPoint:
                 self.model.transformer.prefix_encoder.float()
             except Exception as e:
                 print("加载PrefixEncoder模型参数失败")
-
-        self.model = self.model.eval()
+        # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
+        if not self.is_llamacpp:
+            self.model = self.model.eval()

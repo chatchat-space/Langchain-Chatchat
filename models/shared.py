@@ -44,4 +44,5 @@ def loaderLLM(llm_model: str = None, no_remote_model: bool = False, use_ptuning_
     if 'FastChatOpenAILLM' in llm_model_info["provides"]:
         modelInsLLM.set_api_base_url(llm_model_info['api_base_url'])
         modelInsLLM.call_model_name(llm_model_info['name'])
+        modelInsLLM.set_api_key(llm_model_info['api_key'])
     return modelInsLLM
