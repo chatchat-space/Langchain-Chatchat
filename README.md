@@ -243,7 +243,7 @@ Web UI 可以实现如下功能：
     - [x] 选择知识库开始问答
     - [x] 上传文件/文件夹至知识库
     - [x] 知识库测试
-    - [ ] 删除知识库中文件
+    - [x] 删除知识库中文件
   - [x] 支持搜索引擎问答
 - [ ] 增加 API 支持
   - [x] 利用 fastapi 实现 API 部署方式
@@ -251,7 +251,7 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-<img src="img/qr_code_39.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_42.jpg" alt="二维码" width="300" height="300" />
 
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
