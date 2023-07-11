@@ -6,6 +6,8 @@ from langchain.docstore.base import Docstore
 from langchain.docstore.document import Document
 import numpy as np
 import copy
+import os
+from configs.model_config import *
 
 
 class MyFAISS(FAISS, VectorStore):
@@ -22,6 +24,9 @@ class MyFAISS(FAISS, VectorStore):
                          docstore=docstore,
                          index_to_docstore_id=index_to_docstore_id,
                          normalize_L2=normalize_L2)
+        self.score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD
+        self.chunk_size = CHUNK_SIZE
+        self.chunk_conent = False
 
     def seperate_list(self, ls: List[int]) -> List[List[int]]:
         # TODO: 增加是否属于同一文档的判断
@@ -52,7 +57,11 @@ class MyFAISS(FAISS, VectorStore):
             if i == -1 or 0 < self.score_threshold < scores[0][j]:
                 # This happens when not enough docs are returned.
                 continue
-            _id = self.index_to_docstore_id[i]
+            if i in self.index_to_docstore_id:
+                _id = self.index_to_docstore_id[i]
+            # 执行接下来的操作
+            else:
+                continue
             doc = self.docstore.search(_id)
             if (not self.chunk_conent) or ("context_expand" in doc.metadata and not doc.metadata["context_expand"]):
                 # 匹配出的文本如果不需要扩展上下文则执行如下代码
@@ -113,8 +122,10 @@ class MyFAISS(FAISS, VectorStore):
         try:
             if isinstance(source, str):
                 ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] == source]
+                vs_path = os.path.join(os.path.split(os.path.split(source)[0])[0], "vector_store")
             else:
                 ids = [k for k, v in self.docstore._dict.items() if v.metadata["source"] in source]
+                vs_path = os.path.join(os.path.split(os.path.split(source[0])[0])[0], "vector_store")
             if len(ids) == 0:
                 return f"docs delete fail"
             else:
@@ -122,6 +133,9 @@ class MyFAISS(FAISS, VectorStore):
                     index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
                     self.index_to_docstore_id.pop(index)
                     self.docstore._dict.pop(id)
+                # TODO: 从 self.index 中删除对应id
+                # self.index.reset()
+                self.save_local(vs_path)
                 return f"docs delete success"
         except Exception as e:
             print(e)

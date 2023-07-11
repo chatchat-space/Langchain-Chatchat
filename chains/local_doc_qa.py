@@ -17,6 +17,7 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from functools import lru_cache
+from textsplitter.zh_title_enhance import zh_title_enhance
 
 
 # patch HuggingFaceEmbeddings to make it hashable
@@ -56,7 +57,7 @@ def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
     return ret_list, [os.path.basename(p) for p in ret_list]
 
 
-def load_file(filepath, sentence_size=SENTENCE_SIZE):
+def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_TITLE_ENHANCE):
     if filepath.lower().endswith(".md"):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
@@ -79,6 +80,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
+    if using_zh_title_enhance:
+        docs = zh_title_enhance(docs)
     write_check_file(filepath, docs)
     return docs
 

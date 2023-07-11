@@ -6,14 +6,17 @@ import torch
 import transformers
 from transformers.generation.logits_process import LogitsProcessor
 from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any,Union
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult)
 
 
 class InvalidScoreLogitsProcessor(LogitsProcessor):
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def __call__(self, input_ids: Union[torch.LongTensor,list], scores: Union[torch.FloatTensor,list]) -> torch.FloatTensor:
+        # llama-cpp模型返回的是list,为兼容性考虑，需要判断input_ids和scores的类型，将list转换为torch.Tensor
+        input_ids = torch.tensor(input_ids) if isinstance(input_ids,list) else input_ids
+        scores = torch.tensor(scores) if isinstance(scores,list) else scores
         if torch.isnan(scores).any() or torch.isinf(scores).any():
             scores.zero_()
             scores[..., 5] = 5e4
@@ -163,8 +166,21 @@ class LLamaLLM(BaseAnswer, LLM, ABC):
             self.stopping_criteria = transformers.StoppingCriteriaList()
         # 观测输出
         gen_kwargs.update({'stopping_criteria': self.stopping_criteria})
+        # llama-cpp模型的参数与transformers的参数字段有较大差异，直接调用会返回不支持的字段错误
+        # 因此需要先判断模型是否是llama-cpp模型，然后取gen_kwargs与模型generate方法字段的交集
+        # 仅将交集字段传给模型以保证兼容性
+        # todo llama-cpp模型在本框架下兼容性较差，后续可以考虑重写一个llama_cpp_llm.py模块
+        if "llama_cpp" in self.checkPoint.model.__str__():
+            import inspect
 
-        output_ids = self.checkPoint.model.generate(**gen_kwargs)
+            common_kwargs_keys = set(inspect.getfullargspec(self.checkPoint.model.generate).args)&set(gen_kwargs.keys())
+            common_kwargs = {key:gen_kwargs[key] for key in common_kwargs_keys}
+            #? llama-cpp模型的generate方法似乎只接受.cpu类型的输入，响应很慢，慢到哭泣
+            #?为什么会不支持GPU呢，不应该啊？
+            output_ids = torch.tensor([list(self.checkPoint.model.generate(input_id_i.cpu(),**common_kwargs)) for input_id_i in input_ids])
+
+        else:
+            output_ids = self.checkPoint.model.generate(**gen_kwargs)
         new_tokens = len(output_ids[0]) - len(input_ids[0])
         reply = self.decode(output_ids[0][-new_tokens:])
         print(f"response:{reply}")
