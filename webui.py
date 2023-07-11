@@ -218,7 +218,12 @@ def change_chunk_conent(mode, label_conent, history):
 
 
 def add_vs_name(vs_name, chatbot):
-    if vs_name in get_vs_list():
+    if vs_name is None or vs_name.strip() == "" :
+        vs_status = "知识库名称不能为空，请重新填写知识库名称"
+        chatbot = chatbot + [[None, vs_status]]
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(
+            visible=False), chatbot, gr.update(visible=False)
+    elif vs_name in get_vs_list():
         vs_status = "与已有知识库名称冲突，请重新选择其他名称后提交"
         chatbot = chatbot + [[None, vs_status]]
         return gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(
