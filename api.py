@@ -4,7 +4,7 @@ import os
 import shutil
 from typing import List, Optional
 import urllib
-
+import asyncio
 import nltk
 import pydantic
 import uvicorn
@@ -398,7 +398,7 @@ async def chat(
     )
 
 
-async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
+async def stream_chat(websocket: WebSocket):
     await websocket.accept()
     turn = 1
     while True:
@@ -418,6 +418,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
+            await asyncio.sleep(0)
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
 
@@ -440,12 +441,47 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         )
         turn += 1
 
+async def stream_chat_bing(websocket: WebSocket):
+    """
+    基于bing搜索的流式问答
+    """
+    await websocket.accept()
+    turn = 1
+    while True:
+        input_json = await websocket.receive_json()
+        question, history = input_json["question"], input_json["history"]
+
+        await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
+
+        last_print_len = 0
+        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history, streaming=True):
+            await websocket.send_text(resp["result"][last_print_len:])
+            last_print_len = len(resp["result"])
+
+        source_documents = [
+            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+            f"""相关度：{doc.metadata['score']}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+
+        await websocket.send_text(
+            json.dumps(
+                {
+                    "question": question,
+                    "turn": turn,
+                    "flag": "end",
+                    "sources_documents": source_documents,
+                },
+                ensure_ascii=False,
+            )
+        )
+        turn += 1
 
 async def document():
     return RedirectResponse(url="/docs")
 
 
-def api_start(host, port):
+def api_start(host, port, **kwargs):
     global app
     global local_doc_qa
 
@@ -464,9 +500,16 @@ def api_start(host, port):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    app.websocket("/local_doc_qa/stream-chat/{knowledge_base_id}")(stream_chat)
+    # 修改了stream_chat的接口，直接通过ws://localhost:7861/local_doc_qa/stream_chat建立连接，在请求体中选择knowledge_base_id
+    app.websocket("/local_doc_qa/stream_chat")(stream_chat)
 
     app.get("/", response_model=BaseResponse, summary="swagger 文档")(document)
+
+    # 增加基于bing搜索的流式问答
+    # 需要说明的是，如果想测试websocket的流式问答，需要使用支持websocket的测试工具，如postman,insomnia
+    # 强烈推荐开源的insomnia
+    # 在测试时选择new websocket request,并将url的协议改为ws,如ws://localhost:7861/local_doc_qa/stream_chat_bing
+    app.websocket("/local_doc_qa/stream_chat_bing")(stream_chat_bing)
 
     app.post("/chat", response_model=ChatMessage, summary="与模型对话")(chat)
 
@@ -487,15 +530,21 @@ def api_start(host, port):
         embedding_device=EMBEDDING_DEVICE,
         top_k=VECTOR_SEARCH_TOP_K,
     )
-    uvicorn.run(app, host=host, port=port)
+    if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
+        uvicorn.run(app, host=host, port=port, ssl_keyfile=kwargs.get("ssl_keyfile"),
+                    ssl_certfile=kwargs.get("ssl_certfile"))
+    else:
+        uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
+    parser.add_argument("--ssl_keyfile", type=str)
+    parser.add_argument("--ssl_certfile", type=str)
     # 初始化消息
     args = None
     args = parser.parse_args()
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    api_start(args.host, args.port)
+    api_start(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
