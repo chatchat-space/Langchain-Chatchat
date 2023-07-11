@@ -160,6 +160,14 @@ llm_model_dict = {
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
+    # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
+    #  Max retries exceeded with url: /v1/chat/completions
+    # 则需要将urllib3版本修改为1.25.11
+
+    # 如果报出：raise NewConnectionError(
+    # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>: 
+    # Failed to establish a new connection: [WinError 10060]
+    # 则是因为内地和香港的IP都被OPENAI封了，需要挂切换为日本、新加坡等地
     "openai-chatgpt-3.5": {
         "name": "gpt-3.5-turbo",
         "pretrained_model_name": "gpt-3.5-turbo",
