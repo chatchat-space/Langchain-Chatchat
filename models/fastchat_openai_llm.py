@@ -23,6 +23,7 @@ def _build_message_template() -> Dict[str, str]:
 
 
 class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
+
     api_base_url: str = "http://localhost:8000/v1"
     model_name: str = "chatglm-6b"
     max_token: int = 10000
@@ -31,8 +32,14 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
     checkPoint: LoaderCheckPoint = None
     history = []
     history_len: int = 10
+    api_key: str = ""
 
-    def __init__(self, checkPoint: LoaderCheckPoint = None):
+    def __init__(self, 
+                 checkPoint: LoaderCheckPoint = None,
+                #  api_base_url:str="http://localhost:8000/v1",
+                #  model_name:str="chatglm-6b",
+                #  api_key:str=""
+                 ):
         super().__init__()
         self.checkPoint = checkPoint
 
@@ -60,7 +67,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         return self.api_base_url
 
     def set_api_key(self, api_key: str):
-        pass
+        self.api_key = api_key
 
     def set_api_base_url(self, api_base_url: str):
         self.api_base_url = api_base_url
@@ -73,7 +80,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         try:
             import openai
             # Not support yet
-            openai.api_key = "EMPTY"
+            # openai.api_key = "EMPTY"
+            openai.key = self.api_key
             openai.api_base = self.api_base_url
         except ImportError:
             raise ValueError(
@@ -116,7 +124,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         try:
             import openai
             # Not support yet
-            openai.api_key = "EMPTY"
+            # openai.api_key = "EMPTY"
+            openai.api_key = self.api_key
             openai.api_base = self.api_base_url
         except ImportError:
             raise ValueError(
