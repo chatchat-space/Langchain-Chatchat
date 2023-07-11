@@ -65,6 +65,7 @@ class ChatGLM(BaseAnswer, LLM, ABC):
                 answer_result.history = history
                 answer_result.llm_output = {"answer": stream_resp}
                 yield answer_result
+            self.checkPoint.clear_torch_cache()
         else:
             response, _ = self.checkPoint.model.chat(
                 self.checkPoint.tokenizer,

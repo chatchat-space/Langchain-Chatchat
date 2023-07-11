@@ -58,6 +58,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
+    "chatglm2-6b": {
+        "name": "chatglm2-6b",
+        "pretrained_model_name": "THUDM/chatglm2-6b",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
 
     "chatyuan": {
         "name": "chatyuan",
@@ -126,6 +132,13 @@ llm_model_dict = {
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
+    },
+    "fastchat-chatglm2-6b": {
+        "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm2-6b",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
     },
 
     # 通过 fastchat 调用的模型请参考如下格式
@@ -225,3 +238,8 @@ BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 # 此外，如果是在服务器上，报Failed to establish a new connection: [Errno 110] Connection timed out
 # 是因为服务器加了防火墙，需要联系管理员加白名单，如果公司的服务器的话，就别想了GG
 BING_SUBSCRIPTION_KEY = ""
+
+# 是否开启中文标题加强，以及标题增强的相关配置
+# 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；
+# 然后将文本与往上一级的标题进行拼合，实现文本信息的增强。
+ZH_TITLE_ENHANCE = False
