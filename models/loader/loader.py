@@ -20,6 +20,7 @@ class LoaderCheckPoint:
     no_remote_model: bool = False
     # 模型名称
     model_name: str = None
+    pretrained_model_name: str = None
     tokenizer: object = None
     # 模型全路径
     model_path: str = None
@@ -35,11 +36,11 @@ class LoaderCheckPoint:
     # 因此主要的解决思路是清理环境变量里PATH下的不匹配的cuda版本，一劳永逸的方法是：
     # 0. 在终端执行`pip uninstall bitsandbytes`
     # 1. 删除.bashrc文件下关于PATH的条目
-    # 2. 在终端执行 `echo $PATH >> .bashrc` 
+    # 2. 在终端执行 `echo $PATH >> .bashrc`
     # 3. 删除.bashrc文件下PATH中关于不匹配的cuda版本路径
     # 4. 在终端执行`source .bashrc`
     # 5. 再执行`pip install bitsandbytes`
-    
+
     load_in_8bit: bool = False
     is_llamacpp: bool = False
     bf16: bool = False
@@ -67,48 +68,49 @@ class LoaderCheckPoint:
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
-
-    def _load_model_config(self, model_name):
+    def _load_model_config(self):
 
         if self.model_path:
-            self.model_path = re.sub("\s","",self.model_path)
+            self.model_path = re.sub("\s", "", self.model_path)
             checkpoint = Path(f'{self.model_path}')
         else:
-            if not self.no_remote_model:
-                checkpoint = model_name
-            else:
+            if self.no_remote_model:
                 raise ValueError(
                     "本地模型local_model_path未配置路径"
                 )
+            else:
+                checkpoint = self.pretrained_model_name
+
+        print(f"load_model_config {checkpoint}...")
         try:
+
             model_config = AutoConfig.from_pretrained(checkpoint, trust_remote_code=True)
             return model_config
         except Exception as e:
             print(e)
             return checkpoint
 
-    def _load_model(self, model_name):
+    def _load_model(self):
         """
         加载自定义位置的model
-        :param model_name:
         :return:
         """
-        print(f"Loading {model_name}...")
         t0 = time.time()
 
         if self.model_path:
-            self.model_path = re.sub("\s","",self.model_path)
+            self.model_path = re.sub("\s", "", self.model_path)
             checkpoint = Path(f'{self.model_path}')
         else:
-            if not self.no_remote_model:
-                checkpoint = model_name
-            else:
+            if self.no_remote_model:
                 raise ValueError(
                     "本地模型local_model_path未配置路径"
                 )
+            else:
+                checkpoint = self.pretrained_model_name
 
+        print(f"Loading {checkpoint}...")
         self.is_llamacpp = len(list(Path(f'{checkpoint}').glob('ggml*.bin'))) > 0
-        if 'chatglm' in model_name.lower() or "chatyuan" in model_name.lower():
+        if 'chatglm' in self.model_name.lower() or "chatyuan" in self.model_name.lower():
             LoaderClass = AutoModel
         else:
             LoaderClass = AutoModelForCausalLM
@@ -134,11 +136,11 @@ class LoaderCheckPoint:
                 # 支持自定义cuda设备
                 elif ":" in self.llm_device:
                     model = LoaderClass.from_pretrained(checkpoint,
-                                                    config=self.model_config,
-                                                    torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
-                                                    trust_remote_code=True).half().to(self.llm_device)
+                                                        config=self.model_config,
+                                                        torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
+                                                        trust_remote_code=True).half().to(self.llm_device)
                 else:
-                    from accelerate import dispatch_model,infer_auto_device_map
+                    from accelerate import dispatch_model, infer_auto_device_map
 
                     model = LoaderClass.from_pretrained(checkpoint,
                                                         config=self.model_config,
@@ -146,29 +148,29 @@ class LoaderCheckPoint:
                                                         trust_remote_code=True).half()
                     # 可传入device_map自定义每张卡的部署情况
                     if self.device_map is None:
-                        if 'chatglm' in model_name.lower():
+                        if 'chatglm' in self.model_name.lower():
                             self.device_map = self.chatglm_auto_configure_device_map(num_gpus)
-                        elif 'moss' in model_name.lower():
-                            self.device_map = self.moss_auto_configure_device_map(num_gpus, model_name)
+                        elif 'moss' in self.model_name.lower():
+                            self.device_map = self.moss_auto_configure_device_map(num_gpus, checkpoint)
                         else:
                             # 基于如下方式作为默认的多卡加载方案针对新模型基本不会失败
                             # 在chatglm2-6b,bloom-3b,blooz-7b1上进行了测试，GPU负载也相对均衡
                             from accelerate.utils import get_balanced_memory
-                            max_memory = get_balanced_memory(model, 
-                                                                dtype=torch.int8 if self.load_in_8bit else None,
-                                                            low_zero=False, 
-                                                            no_split_module_classes=model._no_split_modules)
-                            self.device_map = infer_auto_device_map(model, 
-                                                               dtype=torch.float16 if not self.load_in_8bit else torch.int8, 
-                                                               max_memory=max_memory,
-                                                               no_split_module_classes=model._no_split_modules)
+                            max_memory = get_balanced_memory(model,
+                                                             dtype=torch.int8 if self.load_in_8bit else None,
+                                                             low_zero=False,
+                                                             no_split_module_classes=model._no_split_modules)
+                            self.device_map = infer_auto_device_map(model,
+                                                                    dtype=torch.float16 if not self.load_in_8bit else torch.int8,
+                                                                    max_memory=max_memory,
+                                                                    no_split_module_classes=model._no_split_modules)
                             # 对于chaglm和moss意外的模型应使用自动指定，而非调用chatglm的配置方式
                             # 其他模型定义的层类几乎不可能与chatglm和moss一致，使用chatglm_auto_configure_device_map
                             # 百分百会报错，使用infer_auto_device_map虽然可能导致负载不均衡，但至少不会报错
                             # 实测在bloom模型上如此
-#                             self.device_map = infer_auto_device_map(model,
-#                                                                     dtype=torch.int8,
-#                                                                     no_split_module_classes=model._no_split_modules)
+                    #                             self.device_map = infer_auto_device_map(model,
+                    #                                                                     dtype=torch.int8,
+                    #                                                                     no_split_module_classes=model._no_split_modules)
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
@@ -202,7 +204,7 @@ class LoaderCheckPoint:
 
             # tokenizer = model.tokenizer
             # todo 此处调用AutoTokenizer的tokenizer，但后续可以测试自带tokenizer是不是兼容
-            #* -> 自带的tokenizer不与transoformers的tokenizer兼容,无法使用
+            # * -> 自带的tokenizer不与transoformers的tokenizer兼容,无法使用
 
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             return model, tokenizer
@@ -231,7 +233,7 @@ class LoaderCheckPoint:
                                                                    llm_int8_enable_fp32_cpu_offload=False)
 
             with init_empty_weights():
-                model = LoaderClass.from_config(self.model_config,trust_remote_code = True)
+                model = LoaderClass.from_config(self.model_config, trust_remote_code=True)
             model.tie_weights()
             if self.device_map is not None:
                 params['device_map'] = self.device_map
@@ -294,7 +296,7 @@ class LoaderCheckPoint:
         # 在调用chat或者stream_chat时,input_ids会被放到model.device上
         # 如果transformer.word_embeddings.device和model.device不同,则会导致RuntimeError
         # 因此这里将transformer.word_embeddings,transformer.final_layernorm,lm_head都放到第一张卡上
-        
+
         encode = ""
         if 'chatglm2' in self.model_name:
             device_map = {
@@ -302,13 +304,13 @@ class LoaderCheckPoint:
                 f"{layer_prefix}.rotary_pos_emb": 0,
                 f"{layer_prefix}.output_layer": 0,
                 f"{layer_prefix}.encoder.final_layernorm": 0,
-                f"base_model.model.output_layer": 0 
+                f"base_model.model.output_layer": 0
             }
             encode = ".encoder"
         else:
             device_map = {f'{layer_prefix}.word_embeddings': 0,
-                      f'{layer_prefix}.final_layernorm': 0, 'lm_head': 0,
-                      f'base_model.model.lm_head': 0, }
+                          f'{layer_prefix}.final_layernorm': 0, 'lm_head': 0,
+                          f'base_model.model.lm_head': 0, }
         used = 2
         gpu_target = 0
         for i in range(num_trans_layers):
@@ -321,7 +323,7 @@ class LoaderCheckPoint:
 
         return device_map
 
-    def moss_auto_configure_device_map(self, num_gpus: int, model_name) -> Dict[str, int]:
+    def moss_auto_configure_device_map(self, num_gpus: int, checkpoint) -> Dict[str, int]:
         try:
 
             from accelerate import init_empty_weights
@@ -335,16 +337,6 @@ class LoaderCheckPoint:
                 "Please install it with `pip install transformers` "
                 "`pip install bitsandbytes``pip install accelerate`."
             ) from exc
-
-        if self.model_path:
-            checkpoint = Path(f'{self.model_path}')
-        else:
-            if not self.no_remote_model:
-                checkpoint = model_name
-            else:
-                raise ValueError(
-                    "本地模型local_model_path未配置路径"
-                )
 
         cls = get_class_from_dynamic_module(class_reference="fnlp/moss-moon-003-sft--modeling_moss.MossForCausalLM",
                                             pretrained_model_name_or_path=checkpoint)
@@ -452,7 +444,7 @@ class LoaderCheckPoint:
 
     def reload_model(self):
         self.unload_model()
-        self.model_config = self._load_model_config(self.model_name)
+        self.model_config = self._load_model_config()
 
         if self.use_ptuning_v2:
             try:
@@ -464,7 +456,7 @@ class LoaderCheckPoint:
             except Exception as e:
                 print("加载PrefixEncoder config.json失败")
 
-        self.model, self.tokenizer = self._load_model(self.model_name)
+        self.model, self.tokenizer = self._load_model()
 
         if self.lora:
             self._add_lora_to_model([self.lora])

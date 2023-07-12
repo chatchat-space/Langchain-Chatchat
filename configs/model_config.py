@@ -37,61 +37,67 @@ llm_model_dict = {
         "name": "chatglm-6b-int4-qe",
         "pretrained_model_name": "THUDM/chatglm-6b-int4-qe",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b-int4": {
         "name": "chatglm-6b-int4",
         "pretrained_model_name": "THUDM/chatglm-6b-int4",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b-int8": {
         "name": "chatglm-6b-int8",
         "pretrained_model_name": "THUDM/chatglm-6b-int8",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b": {
         "name": "chatglm-6b",
         "pretrained_model_name": "THUDM/chatglm-6b",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b": {
         "name": "chatglm2-6b",
         "pretrained_model_name": "THUDM/chatglm2-6b",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-int4": {
         "name": "chatglm2-6b-int4",
         "pretrained_model_name": "THUDM/chatglm2-6b-int4",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-int8": {
         "name": "chatglm2-6b-int8",
         "pretrained_model_name": "THUDM/chatglm2-6b-int8",
         "local_model_path": None,
-        "provides": "ChatGLM"
+        "provides": "ChatGLMLLMChain"
     },
     "chatyuan": {
         "name": "chatyuan",
         "pretrained_model_name": "ClueAI/ChatYuan-large-v2",
         "local_model_path": None,
-        "provides": "MOSSLLM"
+        "provides": "MOSSLLMChain"
     },
     "moss": {
         "name": "moss",
         "pretrained_model_name": "fnlp/moss-moon-003-sft",
         "local_model_path": None,
-        "provides": "MOSSLLM"
+        "provides": "MOSSLLMChain"
     },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
-        "provides": "LLamaLLM"
+        "provides": "LLamaLLMChain"
+    },
+    "vicuna-7b-hf": {
+        "name": "vicuna-13b-hf",
+        "pretrained_model_name": "vicuna-13b-hf",
+        "local_model_path": None,
+        "provides": "LLamaLLMChain"
     },
     # 直接调用返回requests.exceptions.ConnectionError错误，需要通过huggingface_hub包里的snapshot_download函数
     # 下载模型，如果snapshot_download还是返回网络错误，多试几次，一般是可以的，
@@ -101,7 +107,7 @@ llm_model_dict = {
         "name": "bloomz-7b1",
         "pretrained_model_name": "bigscience/bloomz-7b1",
         "local_model_path": None,
-        "provides": "MOSSLLM"
+        "provides": "MOSSLLMChain"
 
     },
     # 实测加载bigscience/bloom-3b需要170秒左右，暂不清楚为什么这么慢
@@ -110,14 +116,14 @@ llm_model_dict = {
         "name": "bloom-3b",
         "pretrained_model_name": "bigscience/bloom-3b",
         "local_model_path": None,
-        "provides": "MOSSLLM"
+        "provides": "MOSSLLMChain"
 
     },
     "baichuan-7b": {
         "name": "baichuan-7b",
         "pretrained_model_name": "baichuan-inc/baichuan-7B",
         "local_model_path": None,
-        "provides": "MOSSLLM"
+        "provides": "MOSSLLMChain"
     },
     # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1-q5": {
@@ -131,7 +137,7 @@ llm_model_dict = {
         # 需要手动从https://github.com/abetlen/llama-cpp-python/releases/tag/下载对应的wheel安装
         # 实测v0.1.63与本模型的vicuna/ggml-vicuna-13b-1.1/ggml-vic13b-q5_1.bin可以兼容
         "local_model_path": f'''{"/".join(os.path.abspath(__file__).split("/")[:3])}/.cache/huggingface/hub/models--vicuna--ggml-vicuna-13b-1.1/blobs/''',
-        "provides": "LLamaLLM"
+        "provides": "LLamaLLMChain"
     },
 
     # 通过 fastchat 调用的模型请参考如下格式
@@ -139,7 +145,7 @@ llm_model_dict = {
         "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm-6b",
         "local_model_path": None,
-        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
@@ -147,7 +153,7 @@ llm_model_dict = {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm2-6b",
         "local_model_path": None,
-        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
     },
 
@@ -156,7 +162,7 @@ llm_model_dict = {
         "name": "vicuna-13b-hf",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
-        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
@@ -165,13 +171,13 @@ llm_model_dict = {
     # 则需要将urllib3版本修改为1.25.11
 
     # 如果报出：raise NewConnectionError(
-    # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>: 
+    # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
     # 则是因为内地和香港的IP都被OPENAI封了，需要挂切换为日本、新加坡等地
     "openai-chatgpt-3.5": {
         "name": "gpt-3.5-turbo",
         "pretrained_model_name": "gpt-3.5-turbo",
-        "provides": "FastChatOpenAILLM",
+        "provides": "FastChatOpenAILLMChain",
         "local_model_path": None,
         "api_base_url": "https://api.openapi.com/v1",
         "api_key": ""
@@ -226,7 +232,7 @@ LLM_HISTORY_LEN = 3
 VECTOR_SEARCH_TOP_K = 5
 
 # 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
-VECTOR_SEARCH_SCORE_THRESHOLD = 0
+VECTOR_SEARCH_SCORE_THRESHOLD = 390
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
