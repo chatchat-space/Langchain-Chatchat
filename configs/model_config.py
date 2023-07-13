@@ -87,6 +87,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "MOSSLLM"
     },
+    "moss-int4": {
+        "name": "moss",
+        "pretrained_model_name": "fnlp/moss-moon-003-sft-int4",
+        "local_model_path": None,
+        "provides": "MOSSLLM"
+    },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
@@ -197,6 +203,7 @@ STREAMING = True
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
+PTUNING_DIR='./ptuing-v2'
 
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
