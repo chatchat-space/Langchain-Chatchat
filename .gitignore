@@ -167,8 +167,11 @@ log/*
 vector_store/*
 content/*
 api_content/*
+knowledge_base/*
 
 llm/*
 embedding/*
 
 pyrightconfig.json
+loader/tmp_files
+flagged/*
