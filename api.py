@@ -384,8 +384,10 @@ async def chat(
             ],
         ),
 ):
-    for answer_result in local_doc_qa.llm.generatorAnswer(prompt=question, history=history,
-                                                          streaming=True):
+    answer_result_stream_result = local_doc_qa.llm_model_chain(
+        {"prompt": question, "history": history, "streaming": True})
+
+    for answer_result in answer_result_stream_result['answer_result_stream']:
         resp = answer_result.llm_output["answer"]
         history = answer_result.history
         pass
@@ -486,7 +488,6 @@ def api_start(host, port, **kwargs):
     global local_doc_qa
 
     llm_model_ins = shared.loaderLLM()
-    llm_model_ins.set_history_len(LLM_HISTORY_LEN)
 
     app = FastAPI()
     # Add CORS middleware to allow all origins

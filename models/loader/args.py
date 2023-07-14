@@ -1,3 +1,4 @@
+
 import argparse
 import os
 from configs.model_config import *
@@ -45,7 +46,6 @@ parser.add_argument('--lora', type=str, help='Name of the LoRA to apply to the m
 parser.add_argument("--lora-dir", type=str, default=LORA_DIR, help="Path to directory with all the loras")
 parser.add_argument('--use-ptuning-v2',type=str,default=False,help="whether use ptuning-v2 checkpoint")
 parser.add_argument("--ptuning-dir",type=str,default=PTUNING_DIR,help="the dir of ptuning-v2 checkpoint")
-
 # Accelerate/transformers
 parser.add_argument('--load-in-8bit', action='store_true', default=LOAD_IN_8BIT,
                     help='Load the model with 8-bit precision.')
