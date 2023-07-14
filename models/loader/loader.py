@@ -454,6 +454,7 @@ class LoaderCheckPoint:
                 self.model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 self.model_config.prefix_projection = prefix_encoder_config['prefix_projection']
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder config.json失败")
 
         self.model, self.tokenizer = self._load_model()
@@ -471,6 +472,7 @@ class LoaderCheckPoint:
                 self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
                 self.model.transformer.prefix_encoder.float()
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder模型参数失败")
         # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
         if not self.is_llamacpp:
