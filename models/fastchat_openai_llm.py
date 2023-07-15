@@ -52,16 +52,21 @@ def build_message_list(query, history: List[List[str]]) -> Collection[Dict[str, 
     system_build_message['role'] = 'system'
     system_build_message['content'] = "You are a helpful assistant."
     build_messages.append(system_build_message)
+    if history:
+        for i, (user, assistant) in enumerate(history):
+            if user:
 
-    for i, (old_query, response) in enumerate(history):
-        user_build_message = _build_message_template()
-        user_build_message['role'] = 'user'
-        user_build_message['content'] = old_query
-        system_build_message = _build_message_template()
-        system_build_message['role'] = 'assistant'
-        system_build_message['content'] = response
-        build_messages.append(user_build_message)
-        build_messages.append(system_build_message)
+                user_build_message = _build_message_template()
+                user_build_message['role'] = 'user'
+                user_build_message['content'] = user
+                build_messages.append(user_build_message)
+
+            if not assistant:
+                raise RuntimeError("历史数据结构不正确")
+            system_build_message = _build_message_template()
+            system_build_message['role'] = 'assistant'
+            system_build_message['content'] = assistant
+            build_messages.append(system_build_message)
 
     user_build_message = _build_message_template()
     user_build_message['role'] = 'user'
@@ -181,10 +186,10 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
                          run_manager: Optional[CallbackManagerForChainRun] = None,
                          generate_with_callback: AnswerResultStream = None) -> None:
 
-        history = inputs[self.history_key]
-        streaming = inputs[self.streaming_key]
+        history = inputs.get(self.history_key, [])
+        streaming = inputs.get(self.streaming_key, False)
         prompt = inputs[self.prompt_key]
-        stop = inputs.get("stop", None)
+        stop = inputs.get("stop", "stop")
         print(f"__call:{prompt}")
         try:
 
@@ -205,16 +210,18 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
             params = {"stream": streaming,
                       "model": self.model_name,
                       "stop": stop}
+            out_str = ""
             for stream_resp in self.completion_with_retry(
                     messages=msg,
                     **params
             ):
                 role = stream_resp["choices"][0]["delta"].get("role", "")
                 token = stream_resp["choices"][0]["delta"].get("content", "")
-                history += [[prompt, token]]
+                out_str += token
+                history[-1] = [prompt, out_str]
                 answer_result = AnswerResult()
                 answer_result.history = history
-                answer_result.llm_output = {"answer": token}
+                answer_result.llm_output = {"answer": out_str}
                 generate_with_callback(answer_result)
         else:
 
@@ -239,10 +246,10 @@ if __name__ == "__main__":
     chain = FastChatOpenAILLMChain()
 
     chain.set_api_key("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")
-    chain.set_api_base_url("https://api.openai.com/v1")
-    chain.call_model_name("gpt-3.5-turbo")
+    # chain.set_api_base_url("https://api.openai.com/v1")
+    # chain.call_model_name("gpt-3.5-turbo")
 
-    answer_result_stream_result = chain({"streaming": False,
+    answer_result_stream_result = chain({"streaming": True,
                                          "prompt": "你好",
                                          "history": []
                                          })
