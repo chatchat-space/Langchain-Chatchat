@@ -184,7 +184,7 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
         history = inputs[self.history_key]
         streaming = inputs[self.streaming_key]
         prompt = inputs[self.prompt_key]
-        stop = inputs['stop']
+        stop = inputs.get("stop", None)
         print(f"__call:{prompt}")
         try:
 
@@ -243,7 +243,6 @@ if __name__ == "__main__":
     chain.call_model_name("gpt-3.5-turbo")
 
     answer_result_stream_result = chain({"streaming": False,
-                                         "stop": "",
                                          "prompt": "你好",
                                          "history": []
                                          })
