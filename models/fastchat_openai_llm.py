@@ -28,9 +28,9 @@ def build_message_list(query, history: List[List[str]]) -> Collection[Dict[str, 
     for i, (old_query, response) in enumerate(history):
         user_build_message = _build_message_template()
         user_build_message['role'] = 'user'
-        user_build_message['content'] = old_query
+        user_build_message['content'] = old_query or 'Hello'
         system_build_message = _build_message_template()
-        system_build_message['role'] = 'system'
+        system_build_message['role'] = 'assistant'
         system_build_message['content'] = response
         build_messages.append(user_build_message)
         build_messages.append(system_build_message)
@@ -140,7 +140,9 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
         # create a chat completion
         completion = openai.ChatCompletion.create(
             model=self.model_name,
-            messages=build_message_list(prompt)
+            messages=build_message_list(prompt, history),
+            temporature=self.temperature,
+            top_p=self.top_p
         )
         print(f"response:{completion.choices[0].message.content}")
         print(f"+++++++++++++++++++++++++++++++++++")
