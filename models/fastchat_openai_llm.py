@@ -141,7 +141,7 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
         completion = openai.ChatCompletion.create(
             model=self.model_name,
             messages=build_message_list(prompt, history),
-            temporature=self.temperature,
+            temperature=self.temperature,
             top_p=self.top_p
         )
         print(f"response:{completion.choices[0].message.content}")
