@@ -11,7 +11,6 @@ from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
                           AutoTokenizer, LlamaTokenizer)
 from configs.model_config import LLM_DEVICE
 
-
 class LoaderCheckPoint:
     """
     加载自定义 model CheckPoint
@@ -68,6 +67,8 @@ class LoaderCheckPoint:
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
+        self.is_chatgmlcpp = "chatglm2-cpp" == self.model_name
+
     def _load_model_config(self):
 
         if self.model_path:
@@ -119,7 +120,7 @@ class LoaderCheckPoint:
         # 如果加载没问题，但在推理时报错RuntimeError: CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`
         # 那还是因为显存不够，此时只能考虑--load-in-8bit,或者配置默认模型为`chatglm-6b-int8`
         if not any([self.llm_device.lower() == "cpu",
-                    self.load_in_8bit, self.is_llamacpp]):
+                    self.load_in_8bit, self.is_llamacpp, self.is_chatgmlcpp]):
 
             if torch.cuda.is_available() and self.llm_device.lower().startswith("cuda"):
                 # 根据当前设备GPU数量决定是否进行多卡部署
@@ -183,11 +184,34 @@ class LoaderCheckPoint:
                     .to(self.llm_device)
                 )
 
+        elif self.is_chatgmlcpp :
+            try:
+                import chatglm_cpp
+            except ImportError as exc:
+                import platform
+                if platform.system() == "Darwin":
+                    raise ValueError(
+                        "Could not import depend python package "
+                        "Please install it with `pip install chatglm-cpp`."
+                    ) from exc
+                else :
+                    raise SystemError(
+                        f"chatglm-cpp not support {platform.system()}."
+                    ) from exc
+                
+            model = (
+                    LoaderClass.from_pretrained(
+                        checkpoint,
+                        config=self.model_config,
+                        trust_remote_code=True)
+                )
+            # model = chatglm_cpp.Pipeline(f'{self.model_path}/{self.model_name}.bin')
+            tokenizer = getattr(model, "tokenizer")
+            return model, tokenizer
+        
         elif self.is_llamacpp:
-
             try:
                 from llama_cpp import Llama
-
             except ImportError as exc:
                 raise ValueError(
                     "Could not import depend python package "
@@ -473,5 +497,5 @@ class LoaderCheckPoint:
             except Exception as e:
                 print("加载PrefixEncoder模型参数失败")
         # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
-        if not self.is_llamacpp:
+        if not self.is_llamacpp and not self.is_chatgmlcpp:
             self.model = self.model.eval()
