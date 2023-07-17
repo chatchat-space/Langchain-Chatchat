@@ -8,6 +8,7 @@ import asyncio
 import nltk
 import pydantic
 import uvicorn
+import concurrent.futures
 from fastapi import Body, FastAPI, File, Form, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -323,15 +324,22 @@ async def local_doc_chat(
             source_documents=[],
         )
     else:
-        for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=question, vs_path=vs_path, chat_history=history, streaming=True
-        ):
-            pass
-        source_documents = [
-            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-            f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
-        ]
+        def _sync_method(question, history):
+            # 同步方法的代码
+            for resp, history in local_doc_qa.get_knowledge_based_answer(
+                    query=question, vs_path=vs_path, chat_history=history, streaming=True
+            ):
+                pass
+            source_documents = [
+                f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+                f"""相关度：{doc.metadata['score']}\n\n"""
+                for inum, doc in enumerate(resp["source_documents"])
+            ]
+            return resp, source_documents
+
+        loop = asyncio.get_event_loop()
+        executor = concurrent.futures.ThreadPoolExecutor()
+        resp, source_documents = await loop.run_in_executor(executor, _sync_method, question, history)
 
         return ChatMessage(
             question=question,
@@ -354,22 +362,27 @@ async def bing_search_chat(
             ],
         ),
 ):
-    for resp, history in local_doc_qa.get_search_result_based_answer(
-            query=question, chat_history=history, streaming=True
-    ):
-        pass
-    source_documents = [
-        f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
-        for inum, doc in enumerate(resp["source_documents"])
-    ]
+    def _sync_method(question, history):
+        # 同步方法的代码
+        for resp, history in local_doc_qa.get_search_result_based_answer(
+                query=question, chat_history=history, streaming=True
+        ):
+            pass
+        source_documents = [
+            f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+        return resp, source_documents
 
+    loop = asyncio.get_event_loop()
+    executor = concurrent.futures.ThreadPoolExecutor()
+    resp, source_documents = await loop.run_in_executor(executor, _sync_method, question, history)
     return ChatMessage(
         question=question,
         response=resp["result"],
         history=history,
         source_documents=source_documents,
     )
-
 
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
@@ -384,21 +397,26 @@ async def chat(
             ],
         ),
 ):
-    answer_result_stream_result = local_doc_qa.llm_model_chain(
-        {"prompt": question, "history": history, "streaming": True})
+    def _sync_method(question, history):
+        # 同步方法的代码
+        answer_result_stream_result = local_doc_qa.llm_model_chain(
+            {"prompt": question, "history": history, "streaming": True})
 
-    for answer_result in answer_result_stream_result['answer_result_stream']:
-        resp = answer_result.llm_output["answer"]
-        history = answer_result.history
-        pass
+        for answer_result in answer_result_stream_result['answer_result_stream']:
+            resp = answer_result.llm_output["answer"]
+            history = answer_result.history
+            pass
+        return resp, history
 
+    loop = asyncio.get_event_loop()
+    executor = concurrent.futures.ThreadPoolExecutor()
+    resp, history = await loop.run_in_executor(executor, _sync_method, question, history)
     return ChatMessage(
         question=question,
         response=resp,
         history=history,
         source_documents=[],
     )
-
 
 async def stream_chat(websocket: WebSocket):
     await websocket.accept()
