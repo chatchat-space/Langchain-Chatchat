@@ -210,10 +210,6 @@ STREAMING = True
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
 PTUNING_DIR='./ptuing-v2'
-<<<<<<< HEAD
-=======
-
->>>>>>> f68d347c25b4bdd07f293c65a6e44a673a11f614
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
