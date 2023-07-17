@@ -150,7 +150,7 @@ def get_vector_store(local_doc_qa, vs_id, files, sentence_size, history, one_con
     filelist = []
     if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_id, "content")):
         os.makedirs(os.path.join(KB_ROOT_PATH, vs_id, "content"))
-    if local_doc_qa.llm and local_doc_qa.embeddings:
+    if local_doc_qa.llm_model_chain and local_doc_qa.embeddings:
         if isinstance(files, list):
             for file in files:
                 filename = os.path.split(file.name)[-1]
