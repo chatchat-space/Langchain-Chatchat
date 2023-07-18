@@ -94,8 +94,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
                 answer_result = AnswerResult()
                 answer_result.history = history
                 answer_result.llm_output = {"answer": stream_resp}
-                if listenerQueue.listenerQueue.__len__() > 0:
-                    answer_result.listenerToken = listenerQueue.listenerQueue.pop()
                 generate_with_callback(answer_result)
             self.checkPoint.clear_torch_cache()
         else:
@@ -114,8 +112,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
             answer_result = AnswerResult()
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
-            if listenerQueue.listenerQueue.__len__() > 0:
-                answer_result.listenerToken = listenerQueue.listenerQueue.pop()
 
             generate_with_callback(answer_result)
 

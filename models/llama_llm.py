@@ -186,7 +186,5 @@ class LLamaLLMChain(BaseAnswer, Chain, ABC):
         answer_result = AnswerResult()
         history += [[prompt, reply]]
         answer_result.history = history
-        if listenerQueue.listenerQueue.__len__() > 0:
-            answer_result.listenerToken = listenerQueue.listenerQueue.pop()
         answer_result.llm_output = {"answer": reply}
         generate_with_callback(answer_result)

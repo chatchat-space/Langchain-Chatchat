@@ -6,6 +6,7 @@ from queue import Queue
 from threading import Thread
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from models.loader import LoaderCheckPoint
+from pydantic import BaseModel
 import torch
 import transformers
 
@@ -23,13 +24,12 @@ class ListenerToken:
         self._scores = _scores
 
 
-class AnswerResult:
+class AnswerResult(BaseModel):
     """
     消息实体
     """
     history: List[List[str]] = []
     llm_output: Optional[dict] = None
-    listenerToken: ListenerToken = None
 
 
 class AnswerResultStream:
@@ -167,8 +167,6 @@ class BaseAnswer(ABC):
 
         with generate_with_streaming(inputs=inputs, run_manager=run_manager) as generator:
             for answerResult in generator:
-                if answerResult.listenerToken:
-                    output = answerResult.listenerToken.input_ids
                 yield answerResult
 
     @abstractmethod
