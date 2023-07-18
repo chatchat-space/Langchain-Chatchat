@@ -23,6 +23,7 @@ def get_vs_list():
     if not os.path.exists(KB_ROOT_PATH):
         return lst_default
     lst = os.listdir(KB_ROOT_PATH)
+    lst = [x for x in lst if os.path.isdir(os.path.join(KB_ROOT_PATH, x))]
     if not lst:
         return lst_default
     lst.sort()
