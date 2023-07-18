@@ -8,7 +8,6 @@ import asyncio
 import nltk
 import pydantic
 import uvicorn
-import concurrent.futures
 from fastapi import Body, FastAPI, File, Form, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -299,7 +298,6 @@ async def update_doc(
                 return BaseResponse(code=500, msg=file_status)
 
 
-
 async def local_doc_chat(
         knowledge_base_id: str = Body(..., description="Knowledge Base Name", example="kb1"),
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
@@ -337,9 +335,7 @@ async def local_doc_chat(
             ]
             return resp, source_documents
 
-        loop = asyncio.get_event_loop()
-        executor = concurrent.futures.ThreadPoolExecutor()
-        resp, source_documents = await loop.run_in_executor(executor, _sync_method, question, history)
+        resp, source_documents = await asyncio.to_thread(_sync_method, question=question, history=history)
 
         return ChatMessage(
             question=question,
@@ -374,15 +370,14 @@ async def bing_search_chat(
         ]
         return resp, source_documents
 
-    loop = asyncio.get_event_loop()
-    executor = concurrent.futures.ThreadPoolExecutor()
-    resp, source_documents = await loop.run_in_executor(executor, _sync_method, question, history)
+    resp, source_documents = await asyncio.to_thread(_sync_method, question=question, history=history)
     return ChatMessage(
         question=question,
         response=resp["result"],
         history=history,
         source_documents=source_documents,
     )
+
 
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
@@ -408,15 +403,14 @@ async def chat(
             pass
         return resp, history
 
-    loop = asyncio.get_event_loop()
-    executor = concurrent.futures.ThreadPoolExecutor()
-    resp, history = await loop.run_in_executor(executor, _sync_method, question, history)
+    resp, history = await asyncio.to_thread(_sync_method, question=question, history=history)
     return ChatMessage(
         question=question,
         response=resp,
         history=history,
         source_documents=[],
     )
+
 
 async def stream_chat(websocket: WebSocket):
     await websocket.accept()
@@ -461,6 +455,7 @@ async def stream_chat(websocket: WebSocket):
         )
         turn += 1
 
+
 async def stream_chat_bing(websocket: WebSocket):
     """
     基于bing搜索的流式问答
@@ -474,7 +469,8 @@ async def stream_chat_bing(websocket: WebSocket):
         await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
 
         last_print_len = 0
-        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history, streaming=True):
+        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history,
+                                                                         streaming=True):
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
 
@@ -496,6 +492,7 @@ async def stream_chat_bing(websocket: WebSocket):
             )
         )
         turn += 1
+
 
 async def document():
     return RedirectResponse(url="/docs")
@@ -540,7 +537,8 @@ def api_start(host, port, **kwargs):
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse, summary="获取知识库内的文件列表")(list_docs)
     app.delete("/local_doc_qa/delete_knowledge_base", response_model=BaseResponse, summary="删除知识库")(delete_kb)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse, summary="删除知识库内的文件")(delete_doc)
-    app.post("/local_doc_qa/update_file", response_model=BaseResponse, summary="上传文件到知识库，并删除另一个文件")(update_doc)
+    app.post("/local_doc_qa/update_file", response_model=BaseResponse, summary="上传文件到知识库，并删除另一个文件")(
+        update_doc)
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
