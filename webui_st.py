@@ -23,6 +23,7 @@ def get_vs_list():
     if not os.path.exists(KB_ROOT_PATH):
         return lst_default
     lst = os.listdir(KB_ROOT_PATH)
+    lst = [x for x in lst if os.path.isdir(os.path.join(KB_ROOT_PATH, x))]
     if not lst:
         return lst_default
     lst.sort()
@@ -283,20 +284,24 @@ with st.sidebar:
 
         def on_new_kb():
             name = st.session_state.kb_name
-            if name in vs_list:
-                st.error(f'名为“{name}”的知识库已存在。')
+            if not name:
+                st.sidebar.error(f'新建知识库名称不能为空!')
+            elif name in vs_list:
+                st.sidebar.error(f'名为“{name}”的知识库已存在。')
             else:
-                vs_list.append(name)
                 st.session_state.vs_path = name
+                st.session_state.kb_name = ''
+                new_kb_dir = os.path.join(KB_ROOT_PATH, name)
+                if not os.path.exists(new_kb_dir):
+                    os.makedirs(new_kb_dir)
+                st.sidebar.success(f'名为“{name}”的知识库创建成功，您可以开始添加文件。')
 
         def on_vs_change():
             chat_box.robot_say(f'已加载知识库： {st.session_state.vs_path}')
         with st.expander('知识库配置', True):
             cols = st.columns([12, 10])
             kb_name = cols[0].text_input(
-                '新知识库名称', placeholder='新知识库名称', label_visibility='collapsed')
-            if 'kb_name' not in st.session_state:
-                st.session_state.kb_name = kb_name
+                '新知识库名称', placeholder='新知识库名称', label_visibility='collapsed', key='kb_name')
             cols[1].button('新建知识库', on_click=on_new_kb)
             index = 0
             try:
