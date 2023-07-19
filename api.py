@@ -146,23 +146,28 @@ async def upload_files(
     saved_path = get_doc_path(knowledge_base_id)
     if not os.path.exists(saved_path):
         os.makedirs(saved_path)
+    # 已存在文件列表
+    exist_file_list = []
     filelist = []
     for file in files:
         file_content = ''
         file_path = os.path.join(saved_path, file.filename)
         file_content = await file.read()
         if os.path.exists(file_path) and os.path.getsize(file_path) == len(file_content):
+            exist_file_list.append(file_path)
             continue
         with open(file_path, "wb") as f:
             f.write(file_content)
         filelist.append(file_path)
+    # 已存在文件列表输出
+    exist_status = f", {', '.join([os.path.split(i)[-1] for i in exist_file_list])} already exists" if exist_file_list else ""
     if filelist:
         vs_path = get_vs_path(knowledge_base_id)
         vs_path, loaded_files = local_doc_qa.init_knowledge_vector_store(filelist, vs_path)
         if len(loaded_files):
-            file_status = f"documents {', '.join([os.path.split(i)[-1] for i in loaded_files])} upload success"
+            file_status = f"documents {', '.join([os.path.split(i)[-1] for i in loaded_files])} upload success" + exist_status
             return BaseResponse(code=200, msg=file_status)
-    file_status = f"documents {', '.join([os.path.split(i)[-1] for i in loaded_files])} upload fail"
+    file_status = f"documents {', '.join([os.path.split(i)[-1] for i in filelist])} upload fail"
     return BaseResponse(code=500, msg=file_status)
 
 
