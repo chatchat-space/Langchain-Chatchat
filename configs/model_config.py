@@ -155,6 +155,15 @@ llm_model_dict = {
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
+        # 通过 fastchat 调用的模型请参考如下格式
+    "fastchat-chatglm-6b-int4": {
+        "name": "chatglm-6b-int4",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm-6b-int4",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
+        "api_base_url": "http://localhost:8001/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
+    },
     "fastchat-chatglm2-6b": {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm2-6b",

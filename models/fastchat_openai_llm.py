@@ -140,7 +140,7 @@ class FastChatOpenAILLMChain(RemoteRpcModel, Chain, ABC):
         # create a chat completion
         completion = openai.ChatCompletion.create(
             model=self.model_name,
-            messages=build_message_list(prompt)
+            messages=build_message_list(prompt,history=history)
         )
         print(f"response:{completion.choices[0].message.content}")
         print(f"+++++++++++++++++++++++++++++++++++")
