@@ -87,6 +87,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "MOSSLLMChain"
     },
+    "moss-int4": {
+        "name": "moss",
+        "pretrained_model_name": "fnlp/moss-moon-003-sft-int4",
+        "local_model_path": None,
+        "provides": "MOSSLLM"
+    },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
@@ -149,6 +155,15 @@ llm_model_dict = {
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
+        # 通过 fastchat 调用的模型请参考如下格式
+    "fastchat-chatglm-6b-int4": {
+        "name": "chatglm-6b-int4",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm-6b-int4",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
+        "api_base_url": "http://localhost:8001/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
+    },
     "fastchat-chatglm2-6b": {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm2-6b",
@@ -173,7 +188,7 @@ llm_model_dict = {
     # 如果报出：raise NewConnectionError(
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
-    # 则是因为内地和香港的IP都被OPENAI封了，需要挂切换为日本、新加坡等地
+    # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
     "openai-chatgpt-3.5": {
         "name": "gpt-3.5-turbo",
         "pretrained_model_name": "gpt-3.5-turbo",
@@ -186,7 +201,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "fastchat-chatglm-6b-int4"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
@@ -203,7 +218,7 @@ STREAMING = True
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
-
+PTUNING_DIR='./ptuing-v2'
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 

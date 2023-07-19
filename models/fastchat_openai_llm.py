@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     chain = FastChatOpenAILLMChain()
 
-    chain.set_api_key("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")
+    chain.set_api_key("EMPTY")
     # chain.set_api_base_url("https://api.openai.com/v1")
     # chain.call_model_name("gpt-3.5-turbo")
 
