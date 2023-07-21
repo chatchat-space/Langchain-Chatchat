@@ -184,6 +184,8 @@ llm_model_dict = {
     # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
     #  Max retries exceeded with url: /v1/chat/completions
     # 则需要将urllib3版本修改为1.25.11
+    # 如果依然报urllib3.exceptions.MaxRetryError: HTTPSConnectionPool，则将https改为http
+    # 参考https://zhuanlan.zhihu.com/p/350015032
 
     # 如果报出：raise NewConnectionError(
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
