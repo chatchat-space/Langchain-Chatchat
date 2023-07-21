@@ -374,7 +374,7 @@ async def bing_search_chat(
 
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: List[List[str]] = Body(
+        history: Optional[List[List[str]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -392,7 +392,6 @@ async def chat(
         resp = answer_result.llm_output["answer"]
         history = answer_result.history
         pass
-
     return ChatMessage(
         question=question,
         response=resp,
