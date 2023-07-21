@@ -203,7 +203,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "fastchat-chatglm"
+LLM_MODEL = "chatglm-6b"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
