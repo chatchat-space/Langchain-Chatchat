@@ -175,3 +175,6 @@ embedding/*
 pyrightconfig.json
 loader/tmp_files
 flagged/*
+ptuning-v2/*.json
+ptuning-v2/*.bin
+
