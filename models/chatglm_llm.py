@@ -2,14 +2,14 @@ from abc import ABC
 from langchain.chains.base import Chain
 from typing import Any, Dict, List, Optional, Generator
 from langchain.callbacks.manager import CallbackManagerForChainRun
-from transformers.generation.logits_process import LogitsProcessor
-from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
+# from transformers.generation.logits_process import LogitsProcessor
+# from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult,
                          AnswerResultStream,
                          AnswerResultQueueSentinelTokenListenerQueue)
-import torch
+# import torch
 import transformers
 
 
