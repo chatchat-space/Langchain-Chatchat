@@ -2,14 +2,14 @@ from abc import ABC
 from langchain.chains.base import Chain
 from typing import Any, Dict, List, Optional, Generator
 from langchain.callbacks.manager import CallbackManagerForChainRun
-from transformers.generation.logits_process import LogitsProcessor
-from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
+# from transformers.generation.logits_process import LogitsProcessor
+# from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult,
                          AnswerResultStream,
                          AnswerResultQueueSentinelTokenListenerQueue)
-import torch
+# import torch
 import transformers
 
 
@@ -94,8 +94,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
                 answer_result = AnswerResult()
                 answer_result.history = history
                 answer_result.llm_output = {"answer": stream_resp}
-                if listenerQueue.listenerQueue.__len__() > 0:
-                    answer_result.listenerToken = listenerQueue.listenerQueue.pop()
                 generate_with_callback(answer_result)
             self.checkPoint.clear_torch_cache()
         else:
@@ -114,8 +112,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
             answer_result = AnswerResult()
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
-            if listenerQueue.listenerQueue.__len__() > 0:
-                answer_result.listenerToken = listenerQueue.listenerQueue.pop()
 
             generate_with_callback(answer_result)
 

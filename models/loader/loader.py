@@ -149,7 +149,7 @@ class LoaderCheckPoint:
                                                         trust_remote_code=True).half()
                     # 可传入device_map自定义每张卡的部署情况
                     if self.device_map is None:
-                        if 'chatglm' in self.model_name.lower():
+                        if 'chatglm' in self.model_name.lower() and not "chatglm2" in self.model_name.lower():
                             self.device_map = self.chatglm_auto_configure_device_map(num_gpus)
                         elif 'moss' in self.model_name.lower():
                             self.device_map = self.moss_auto_configure_device_map(num_gpus, checkpoint)
@@ -165,13 +165,6 @@ class LoaderCheckPoint:
                                                                     dtype=torch.float16 if not self.load_in_8bit else torch.int8,
                                                                     max_memory=max_memory,
                                                                     no_split_module_classes=model._no_split_modules)
-                            # 对于chaglm和moss意外的模型应使用自动指定，而非调用chatglm的配置方式
-                            # 其他模型定义的层类几乎不可能与chatglm和moss一致，使用chatglm_auto_configure_device_map
-                            # 百分百会报错，使用infer_auto_device_map虽然可能导致负载不均衡，但至少不会报错
-                            # 实测在bloom模型上如此
-                    #                             self.device_map = infer_auto_device_map(model,
-                    #                                                                     dtype=torch.int8,
-                    #                                                                     no_split_module_classes=model._no_split_modules)
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
@@ -472,12 +465,13 @@ class LoaderCheckPoint:
 
         if self.use_ptuning_v2:
             try:
-                prefix_encoder_file = open(Path(f'{self.ptuning_dir}/config.json'), 'r')
+                prefix_encoder_file = open(Path(f'{os.path.abspath(self.ptuning_dir)}/config.json'), 'r')
                 prefix_encoder_config = json.loads(prefix_encoder_file.read())
                 prefix_encoder_file.close()
                 self.model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 self.model_config.prefix_projection = prefix_encoder_config['prefix_projection']
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder config.json失败")
 
         self.model, self.tokenizer = self._load_model()
@@ -487,14 +481,16 @@ class LoaderCheckPoint:
 
         if self.use_ptuning_v2:
             try:
-                prefix_state_dict = torch.load(Path(f'{self.ptuning_dir}/pytorch_model.bin'))
+                prefix_state_dict = torch.load(Path(f'{os.path.abspath(self.ptuning_dir)}/pytorch_model.bin'))
                 new_prefix_state_dict = {}
                 for k, v in prefix_state_dict.items():
                     if k.startswith("transformer.prefix_encoder."):
                         new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
                 self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
                 self.model.transformer.prefix_encoder.float()
+                print("加载ptuning检查点成功！")
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder模型参数失败")
         # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
         if not self.is_llamacpp and not self.is_chatgmlcpp:

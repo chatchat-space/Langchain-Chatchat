@@ -226,6 +226,10 @@ Web UI 可以实现如下功能：
   - [x] [THUDM/chatglm-6b-int4-qe](https://huggingface.co/THUDM/chatglm-6b-int4-qe)
   - [x] [ClueAI/ChatYuan-large-v2](https://huggingface.co/ClueAI/ChatYuan-large-v2)
   - [x] [fnlp/moss-moon-003-sft](https://huggingface.co/fnlp/moss-moon-003-sft)
+  - [x] [bigscience/bloomz-7b1](https://huggingface.co/bigscience/bloomz-7b1)
+  - [x] [bigscience/bloom-3b](https://huggingface.co/bigscience/bloom-3b)
+  - [x] [baichuan-inc/baichuan-7B](https://huggingface.co/baichuan-inc/baichuan-7B)
+  - [x] [lmsys/vicuna-13b-delta-v1.1](https://huggingface.co/lmsys/vicuna-13b-delta-v1.1)
   - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
 - [x] 增加更多 Embedding 模型支持
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
@@ -251,7 +255,7 @@ Web UI 可以实现如下功能：
 - [x] VUE 前端
 
 ## 项目交流群
-<img src="img/qr_code_42.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_45.jpg" alt="二维码" width="300" height="300" />
 
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

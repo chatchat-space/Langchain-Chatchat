@@ -49,7 +49,7 @@ $ python loader/image_loader.py
 
 ## llama-cpp模型调用的说明
 
-1. 首先从huggingface hub中下载对应的模型，如https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/的[ggml-vic13b-q5_1.bin](https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/blob/main/ggml-vic13b-q5_1.bin)，建议使用huggingface_hub库的snapshot_download下载。
+1. 首先从huggingface hub中下载对应的模型，如 [https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/](https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/) 的 [ggml-vic13b-q5_1.bin](https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/blob/main/ggml-vic13b-q5_1.bin)，建议使用huggingface_hub库的snapshot_download下载。
 2. 将下载的模型重命名。通过huggingface_hub下载的模型会被重命名为随机序列，因此需要重命名为原始文件名，如[ggml-vic13b-q5_1.bin](https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/blob/main/ggml-vic13b-q5_1.bin)。
 3. 基于下载模型的ggml的加载时间，推测对应的llama-cpp版本，下载对应的llama-cpp-python库的wheel文件，实测[ggml-vic13b-q5_1.bin](https://huggingface.co/vicuna/ggml-vicuna-13b-1.1/blob/main/ggml-vic13b-q5_1.bin)与llama-cpp-python库兼容,然后手动安装wheel文件。
 4. 将下载的模型信息写入configs/model_config.py文件里 `llm_model_dict`中，注意保证参数的兼容性，一些参数组合可能会报错.

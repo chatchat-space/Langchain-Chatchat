@@ -11,7 +11,7 @@ beautifulsoup4
 icetk
 cpm_kernels
 faiss-cpu
-gradio==3.28.3
+gradio==3.37.0
 fastapi~=0.95.0
 uvicorn~=0.21.1
 pypinyin~=0.48.0

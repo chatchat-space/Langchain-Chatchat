@@ -94,6 +94,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "MOSSLLMChain"
     },
+    "moss-int4": {
+        "name": "moss",
+        "pretrained_model_name": "fnlp/moss-moon-003-sft-int4",
+        "local_model_path": None,
+        "provides": "MOSSLLM"
+    },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
         "pretrained_model_name": "vicuna-13b-hf",
@@ -156,6 +162,15 @@ llm_model_dict = {
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
+        # 通过 fastchat 调用的模型请参考如下格式
+    "fastchat-chatglm-6b-int4": {
+        "name": "chatglm-6b-int4",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm-6b-int4",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLMChain",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLMChain"
+        "api_base_url": "http://localhost:8001/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
+    },
     "fastchat-chatglm2-6b": {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm2-6b",
@@ -176,11 +191,13 @@ llm_model_dict = {
     # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
     #  Max retries exceeded with url: /v1/chat/completions
     # 则需要将urllib3版本修改为1.25.11
+    # 如果依然报urllib3.exceptions.MaxRetryError: HTTPSConnectionPool，则将https改为http
+    # 参考https://zhuanlan.zhihu.com/p/350015032
 
     # 如果报出：raise NewConnectionError(
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
-    # 则是因为内地和香港的IP都被OPENAI封了，需要挂切换为日本、新加坡等地
+    # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
     "openai-chatgpt-3.5": {
         "name": "gpt-3.5-turbo",
         "pretrained_model_name": "gpt-3.5-turbo",
@@ -210,7 +227,7 @@ STREAMING = True
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
-
+PTUNING_DIR='./ptuning-v2'
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -238,8 +255,8 @@ LLM_HISTORY_LEN = 3
 # 知识库检索时返回的匹配内容条数
 VECTOR_SEARCH_TOP_K = 5
 
-# 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
-VECTOR_SEARCH_SCORE_THRESHOLD = 390
+# 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，建议设置为500左右，经测试设置为小于500时，匹配结果更精准
+VECTOR_SEARCH_SCORE_THRESHOLD = 500
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 

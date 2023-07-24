@@ -174,8 +174,7 @@ embedding/*
 
 pyrightconfig.json
 loader/tmp_files
-<<<<<<< HEAD
 flagged/*
-=======
-flagged/*
->>>>>>> 19147c3 (Update .gitignore)
+ptuning-v2/*.json
+ptuning-v2/*.bin
+
