@@ -1,12 +1,20 @@
 from abc import ABC
-from langchain.llms.base import LLM
-from typing import Optional, List
+from langchain.chains.base import Chain
+from typing import Any, Dict, List, Optional, Generator, Union
+from langchain.callbacks.manager import CallbackManagerForChainRun
+from transformers.generation.logits_process import LogitsProcessor
+from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult)
+                         AnswerResult,
+                         AnswerResultStream,
+                         AnswerResultQueueSentinelTokenListenerQueue)
+import torch
+import transformers
 
 import torch
 
+# todo 建议重写instruction,在该instruction下，各模型的表现比较差
 META_INSTRUCTION = \
     """You are an AI assistant whose name is MOSS.
     - MOSS is a conversational language model that is developed by Fudan University. It is designed to be helpful, honest, and harmless.
@@ -21,49 +29,76 @@ META_INSTRUCTION = \
     """
 
 
-class MOSSLLM(BaseAnswer, LLM, ABC):
+# todo 在MOSSLLM类下，各模型的响应速度很慢，后续要检查一下原因
+class MOSSLLMChain(BaseAnswer, Chain, ABC):
     max_token: int = 2048
     temperature: float = 0.7
     top_p = 0.8
     # history = []
     checkPoint: LoaderCheckPoint = None
     history_len: int = 10
+    streaming_key: str = "streaming"  #: :meta private:
+    history_key: str = "history"  #: :meta private:
+    prompt_key: str = "prompt"  #: :meta private:
+    output_key: str = "answer_result_stream"  #: :meta private:
 
     def __init__(self, checkPoint: LoaderCheckPoint = None):
         super().__init__()
         self.checkPoint = checkPoint
 
     @property
-    def _llm_type(self) -> str:
-        return "MOSS"
+    def _chain_type(self) -> str:
+        return "MOSSLLMChain"
+
+    @property
+    def input_keys(self) -> List[str]:
+        """Will be whatever keys the prompt expects.
+
+        :meta private:
+        """
+        return [self.prompt_key]
+
+    @property
+    def output_keys(self) -> List[str]:
+        """Will always return text key.
+
+        :meta private:
+        """
+        return [self.output_key]
 
     @property
     def _check_point(self) -> LoaderCheckPoint:
         return self.checkPoint
 
-    @property
-    def set_history_len(self) -> int:
-        return self.history_len
+    def _call(
+            self,
+            inputs: Dict[str, Any],
+            run_manager: Optional[CallbackManagerForChainRun] = None,
+    ) -> Dict[str, Generator]:
+        generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
+        return {self.output_key: generator}
 
-    def _set_history_len(self, history_len: int) -> None:
-        self.history_len = history_len
+    def _generate_answer(self,
+                         inputs: Dict[str, Any],
+                         run_manager: Optional[CallbackManagerForChainRun] = None,
+                         generate_with_callback: AnswerResultStream = None) -> None:
 
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        pass
-
-    def generatorAnswer(self, prompt: str,
-                         history: List[List[str]] = [],
-                         streaming: bool = False):
+        history = inputs[self.history_key]
+        streaming = inputs[self.streaming_key]
+        prompt = inputs[self.prompt_key]
+        print(f"__call:{prompt}")
         if len(history) > 0:
             history = history[-self.history_len:] if self.history_len > 0 else []
             prompt_w_history = str(history)
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
         else:
-            prompt_w_history = META_INSTRUCTION
+            prompt_w_history = META_INSTRUCTION.replace("MOSS", self.checkPoint.model_name.split("/")[-1])
             prompt_w_history += '<|Human|>: ' + prompt + '<eoh>'
 
         inputs = self.checkPoint.tokenizer(prompt_w_history, return_tensors="pt")
         with torch.no_grad():
+            # max_length似乎可以设的小一些，而repetion_penalty应大一些，否则chatyuan,bloom等模型为满足max会重复输出
+            #
             outputs = self.checkPoint.model.generate(
                 inputs.input_ids.cuda(),
                 attention_mask=inputs.attention_mask.cuda(),
@@ -76,13 +111,12 @@ class MOSSLLM(BaseAnswer, LLM, ABC):
                 num_return_sequences=1,
                 eos_token_id=106068,
                 pad_token_id=self.checkPoint.tokenizer.pad_token_id)
-            response = self.checkPoint.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            response = self.checkPoint.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:],
+                                                        skip_special_tokens=True)
             self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
             answer_result = AnswerResult()
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
 
-            yield answer_result
-
-
+            generate_with_callback(answer_result)

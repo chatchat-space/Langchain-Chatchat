@@ -555,7 +555,7 @@ const options = computed(() => {
 
   return common
 })
-function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
+function handleSelect(key: string) {
   if (key == '清除会话') {
     handleClear()
   }
@@ -658,7 +658,6 @@ function searchfun() {
           <NDropdown
             v-if="isMobile"
             :trigger="isMobile ? 'click' : 'hover'"
-            :placement="!inversion ? 'right' : 'left'"
             :options="options"
             @select="handleSelect"
           >
