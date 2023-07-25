@@ -12,6 +12,12 @@ $ conda create -p /your_path/env_name python=3.8
 
 # 激活环境
 $ source activate /your_path/env_name
+
+# 或，conda安装，不指定路径, 注意以下，都将/your_path/env_name替换为env_name
+$ conda create -n env_name python=3.8
+$ conda activate env_name # Activate the environment
+
+# 更新py库
 $ pip3 install --upgrade pip
 
 # 关闭环境
