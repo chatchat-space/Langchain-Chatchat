@@ -196,7 +196,7 @@ llm_model_dict = {
         "pretrained_model_name": "gpt-3.5-turbo",
         "provides": "FastChatOpenAILLMChain",
         "local_model_path": None,
-        "api_base_url": "https://api.openapi.com/v1",
+        "api_base_url": "https://api.openai.com/v1",
         "api_key": ""
     },
 
