@@ -55,7 +55,7 @@ class ListDocsResponse(BaseResponse):
 class ChatMessage(BaseModel):
     question: str = pydantic.Field(..., description="Question text")
     response: str = pydantic.Field(..., description="Response text")
-    history: List[List[str]] = pydantic.Field(..., description="History text")
+    history: List[List[Optional[str]]] = pydantic.Field(..., description="History text")
     source_documents: List[str] = pydantic.Field(
         ..., description="List of source documents and their scores"
     )
@@ -303,7 +303,7 @@ async def update_doc(
 async def local_doc_chat(
         knowledge_base_id: str = Body(..., description="Knowledge Base Name", example="kb1"),
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: List[List[str]] = Body(
+        history: List[List[Optional[str]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -344,7 +344,7 @@ async def local_doc_chat(
 
 async def bing_search_chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: Optional[List[List[str]]] = Body(
+        history: Optional[List[List[Optional[str]]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -374,7 +374,7 @@ async def bing_search_chat(
 
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: Optional[List[List[str]]] = Body(
+        history: Optional[List[List[Optional[str]]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
