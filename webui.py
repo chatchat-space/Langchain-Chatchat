@@ -307,6 +307,15 @@ def delete_vs(vs_id, chatbot):
                gr.update(visible=True), chatbot, gr.update(visible=True)
 
 
+# 清空聊天记录
+def clear_chat(query, chatbot):
+    query = gr.update(value="")
+
+    chatbot = [[None, init_message]]
+
+    return query, chatbot
+
+
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
@@ -352,6 +361,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                      show_label=False).style(height=750)
                 query = gr.Textbox(show_label=False,
                                    placeholder="请输入提问内容，按回车进行提交").style(container=False)
+                vs_del_chat = gr.Button("新建聊天")
             with gr.Column(scale=5):
                 mode = gr.Radio(["LLM 对话", "知识库问答", "Bing搜索问答"],
                                 label="请选择使用模式",
@@ -426,6 +436,9 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                              show_progress=True,
                                              inputs=[select_vs, files_to_delete, chatbot],
                                              outputs=[files_to_delete, chatbot])
+                    # 清空聊天记录
+                    vs_del_chat.click(clear_chat, inputs=[query, chatbot], outputs=[query, chatbot])
+
     with gr.Tab("知识库测试 Beta"):
         with gr.Row():
             with gr.Column(scale=10):
