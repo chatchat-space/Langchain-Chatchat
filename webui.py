@@ -32,7 +32,7 @@ local_doc_qa = LocalDocQA()
 flag_csv_logger = gr.CSVLogger()
 
 
-def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
+def get_answer(query, vs_path, history, mode, prompt_template, score_threshold=VECTOR_SEARCH_SCORE_THRESHOLD,
                vector_search_top_k=VECTOR_SEARCH_TOP_K, chunk_conent: bool = True,
                chunk_size=CHUNK_SIZE, streaming: bool = STREAMING):
     if mode == "Bing搜索问答":
@@ -51,7 +51,8 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
     elif mode == "知识库问答" and vs_path is not None and os.path.exists(vs_path) and "index.faiss" in os.listdir(
             vs_path):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=query, vs_path=vs_path, chat_history=history, streaming=streaming):
+                query=query, vs_path=vs_path, chat_history=history, streaming=streaming,
+                prompt_template=prompt_template):
             source = "\n\n"
             source += "".join(
                 [f"""<details> <summary>出处 [{i + 1}] {os.path.split(doc.metadata["source"])[-1]}</summary>\n"""
@@ -372,6 +373,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                             inputs=[mode, chatbot],
                             outputs=[vs_setting, knowledge_set, chatbot])
                 with vs_setting:
+                    prompt_template = gr.TextArea(PROMPT_TEMPLATE, label="当前的提示词模板：", visible=True, interactive=True)
                     vs_refresh = gr.Button("更新已有知识库选项")
                     select_vs = gr.Dropdown(get_vs_list(),
                                             label="请选择要加载的知识库",
@@ -430,7 +432,7 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
                                              outputs=[vs_path, folder_files, chatbot, files_to_delete], )
                     flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
                     query.submit(get_answer,
-                                 [query, vs_path, chatbot, mode],
+                                 [query, vs_path, chatbot, mode, prompt_template],
                                  [chatbot, query])
                     delete_file_button.click(delete_file,
                                              show_progress=True,

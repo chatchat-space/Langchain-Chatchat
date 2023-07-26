@@ -58,7 +58,6 @@ def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
 
 
 def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_TITLE_ENHANCE):
-
     if filepath.lower().endswith(".md"):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
@@ -107,7 +106,9 @@ def write_check_file(filepath, docs):
 
 def generate_prompt(related_docs: List[str],
                     query: str,
-                    prompt_template: str = PROMPT_TEMPLATE, ) -> str:
+                    prompt_template: str = None, ) -> str:
+    if not prompt_template:
+        prompt_template = PROMPT_TEMPLATE
     context = "\n".join([doc.page_content for doc in related_docs])
     prompt = prompt_template.replace("{question}", query).replace("{context}", context)
     return prompt
@@ -229,7 +230,8 @@ class LocalDocQA:
             logger.error(e)
             return None, [one_title]
 
-    def get_knowledge_based_answer(self, query, vs_path, chat_history=[], streaming: bool = STREAMING):
+    def get_knowledge_based_answer(self, query, vs_path, chat_history=[], streaming: bool = STREAMING,
+                                   prompt_template=PROMPT_TEMPLATE):
         vector_store = load_vector_store(vs_path, self.embeddings)
         vector_store.chunk_size = self.chunk_size
         vector_store.chunk_conent = self.chunk_conent
@@ -237,7 +239,7 @@ class LocalDocQA:
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
         torch_gc()
         if len(related_docs_with_score) > 0:
-            prompt = generate_prompt(related_docs_with_score, query)
+            prompt = generate_prompt(related_docs_with_score, query, prompt_template)
         else:
             prompt = query
 
