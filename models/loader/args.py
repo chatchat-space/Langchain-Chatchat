@@ -42,7 +42,7 @@ parser.add_argument('--no-remote-model', action='store_true', help='remote in th
                                                                    'model to add the ` '
                                                                    '--no-remote-model`')
 parser.add_argument('--model-name', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
-parser.add_argument('--lora', type=str, help='Name of the LoRA to apply to the model by default.')
+parser.add_argument('--lora', type=str, action="store_true",help='Name of the LoRA to apply to the model by default.')
 parser.add_argument("--lora-dir", type=str, default=LORA_DIR, help="Path to directory with all the loras")
 parser.add_argument('--use-ptuning-v2',action='store_true',help="whether use ptuning-v2 checkpoint")
 parser.add_argument("--ptuning-dir",type=str,default=PTUNING_DIR,help="the dir of ptuning-v2 checkpoint")
