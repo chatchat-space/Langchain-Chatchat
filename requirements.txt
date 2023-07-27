@@ -23,7 +23,6 @@ openai
 #accelerate~=0.18.0
 #peft~=0.3.0
 #bitsandbytes; platform_system != "Windows"
-
 torch~=2.0.0
 pydantic~=1.10.7
 starlette~=0.26.1
