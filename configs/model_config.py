@@ -16,12 +16,12 @@ embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
     "text2vec-base": "shibing624/text2vec-base-chinese",
-    "text2vec": "/Users/liuqian/Downloads/ChatGLM-6B/text2vec-large-chinese",  # "GanymedeNil/text2vec-large-chinese",
+    "text2vec": "GanymedeNil/text2vec-large-chinese",
     "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
     "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
     "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
     "m3e-small": "moka-ai/m3e-small",
-    "m3e-base": "/Users/liuqian/Downloads/ChatGLM-6B/m3e-base", # "moka-ai/m3e-base",
+    "m3e-base": "moka-ai/m3e-base",
     "m3e-large": "moka-ai/m3e-large",
 }
 
@@ -36,7 +36,7 @@ llm_model_dict = {
     "chatglm-6b": {
         "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm-6b",
-        "local_model_path": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm-6b",
+        "local_model_path": "",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
@@ -52,7 +52,7 @@ llm_model_dict = {
     "chatglm2-6b": {
         "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm2-6b",
-        "local_model_path": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm2-6b",
+        "local_model_path": "",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
