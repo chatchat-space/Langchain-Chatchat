@@ -597,7 +597,7 @@ def api_start_new(host, port, **kwargs):
             allow_headers=["*"],
         )
     
-    # 本地知识库搜索
+    # 本地产品搜索
     app.post("/local_doc_search", response_model=ChatMessage, summary="与知识库对话")(local_product_search)
     
     local_doc_search = LocalDocSearch()
