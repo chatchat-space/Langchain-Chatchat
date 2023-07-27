@@ -9,8 +9,9 @@ import asyncio
 import nltk
 import pydantic
 import uvicorn
-from fastapi import Body, FastAPI, File, Form, Query, UploadFile, WebSocket
+from fastapi import Body, Request, FastAPI, File, Form, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
@@ -55,7 +56,7 @@ class ListDocsResponse(BaseResponse):
 class ChatMessage(BaseModel):
     question: str = pydantic.Field(..., description="Question text")
     response: str = pydantic.Field(..., description="Response text")
-    history: List[List[str]] = pydantic.Field(..., description="History text")
+    history: List[List[Optional[str]]] = pydantic.Field(..., description="History text")
     source_documents: List[str] = pydantic.Field(
         ..., description="List of source documents and their scores"
     )
@@ -303,7 +304,8 @@ async def update_doc(
 async def local_doc_chat(
         knowledge_base_id: str = Body(..., description="Knowledge Base Name", example="kb1"),
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: List[List[str]] = Body(
+        streaming: bool = Body(False, description="是否开启流式输出，默认false，有些模型可能不支持。"),
+        history: List[List[Optional[str]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -324,27 +326,39 @@ async def local_doc_chat(
             source_documents=[],
         )
     else:
-        for resp, history in local_doc_qa.get_knowledge_based_answer(
-                query=question, vs_path=vs_path, chat_history=history, streaming=True
-        ):
-            pass
-        source_documents = [
-            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-            f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
-        ]
+        if (streaming):
+            def generate_answer ():
+                last_print_len = 0
+                for resp, next_history in local_doc_qa.get_knowledge_based_answer(
+                    query=question, vs_path=vs_path, chat_history=history, streaming=True
+                ):
+                    yield resp["result"][last_print_len:]
+                    last_print_len=len(resp["result"])
 
-        return ChatMessage(
-            question=question,
-            response=resp["result"],
-            history=history,
-            source_documents=source_documents,
-        )
+            return StreamingResponse(generate_answer())
+        else:
+            for resp, history in local_doc_qa.get_knowledge_based_answer(
+                    query=question, vs_path=vs_path, chat_history=history, streaming=True
+            ):
+                pass
+                    
+            source_documents = [
+                f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+                f"""相关度：{doc.metadata['score']}\n\n"""
+                for inum, doc in enumerate(resp["source_documents"])
+            ]
+
+            return ChatMessage(
+                question=question,
+                response=resp["result"],
+                history=history,
+                source_documents=source_documents,
+            )
 
 
 async def bing_search_chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: Optional[List[List[str]]] = Body(
+        history: Optional[List[List[Optional[str]]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -374,7 +388,8 @@ async def bing_search_chat(
 
 async def chat(
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
-        history: List[List[str]] = Body(
+        streaming: bool = Body(False, description="是否开启流式输出，默认false，有些模型可能不支持。"),
+        history: List[List[Optional[str]]] = Body(
             [],
             description="History of previous questions and answers",
             example=[
@@ -385,6 +400,30 @@ async def chat(
             ],
         ),
 ):
+    if (streaming):
+        def generate_answer ():
+            last_print_len = 0
+            answer_result_stream_result = local_doc_qa.llm_model_chain(
+                {"prompt": question, "history": history, "streaming": True})
+            for answer_result in answer_result_stream_result['answer_result_stream']:
+                yield answer_result.llm_output["answer"][last_print_len:]
+                last_print_len = len(answer_result.llm_output["answer"])
+            
+        return StreamingResponse(generate_answer())
+    else:
+        answer_result_stream_result = local_doc_qa.llm_model_chain(
+            {"prompt": question, "history": history, "streaming": True})
+        for answer_result in answer_result_stream_result['answer_result_stream']:
+            resp = answer_result.llm_output["answer"]
+            history = answer_result.history
+            pass
+
+        return ChatMessage(
+            question=question,
+            response=resp,
+            history=history,
+            source_documents=[],
+        )
     answer_result_stream_result = local_doc_qa.llm_model_chain(
         {"prompt": question, "history": history, "streaming": True})
 
@@ -392,7 +431,6 @@ async def chat(
         resp = answer_result.llm_output["answer"]
         history = answer_result.history
         pass
-
     return ChatMessage(
         question=question,
         response=resp,
@@ -545,7 +583,7 @@ if __name__ == "__main__":
     parser.add_argument("--ssl_keyfile", type=str)
     parser.add_argument("--ssl_certfile", type=str)
     # 初始化消息
-    args = None
+
     args = parser.parse_args()
     args_dict = vars(args)
     shared.loaderCheckPoint = LoaderCheckPoint(args_dict)

@@ -180,9 +180,9 @@ Q14 调用api中的 `bing_search_chat`接口时，报出 `Failed to establish a 
 
 ---
 
-Q15 加载chatglm-6b-int8或chatglm-6b-int4抛出`RuntimeError: Only Tensors of floating point andcomplex dtype can require gradients`
+Q15 加载chatglm-6b-int8或chatglm-6b-int4抛出 `RuntimeError: Only Tensors of floating point andcomplex dtype can require gradients`
 
-疑为chatglm的quantization的问题或torch版本差异问题，针对已经变为Parameter的torch.zeros矩阵也执行Parameter操作，从而抛出`RuntimeError: Only Tensors of floating point andcomplex dtype can require gradients`。解决办法是在chatglm-项目的原始文件中的quantization.py文件374行改为：
+疑为chatglm的quantization的问题或torch版本差异问题，针对已经变为Parameter的torch.zeros矩阵也执行Parameter操作，从而抛出 `RuntimeError: Only Tensors of floating point andcomplex dtype can require gradients`。解决办法是在chatglm-项目的原始文件中的quantization.py文件374行改为：
 
 ```
     try:
@@ -191,6 +191,8 @@ Q15 加载chatglm-6b-int8或chatglm-6b-int4抛出`RuntimeError: Only Tensors of 
         pass
 ```
 
-    注：虽然模型可以顺利加载但在cpu上仍存在推理失败的可能：即针对每个问题，模型一直输出gugugugu。
+    如果上述方式不起作用，则在.cache/hugggingface/modules/目录下针对chatglm项目的原始文件中的quantization.py文件执行上述操作，若软链接不止一个，按照错误提示选择正确的路径。
+
+注：虽然模型可以顺利加载但在cpu上仍存在推理失败的可能：即针对每个问题，模型一直输出gugugugu。
 
     因此，最好不要试图用cpu加载量化模型，原因可能是目前python主流量化包的量化操作是在gpu上执行的,会天然地存在gap。
