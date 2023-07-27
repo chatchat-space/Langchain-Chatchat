@@ -15,10 +15,11 @@ from pydantic import BaseModel
 from typing_extensions import Annotated
 from starlette.responses import RedirectResponse
 
-from chains.local_doc_qa import LocalDocQA
+from chains.local_doc_qa import LocalDocQA, LocalDocSearch
 from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
                                   EMBEDDING_MODEL, NLTK_DATA_PATH,
-                                  VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
+                                  VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN,
+                                  OPEN_CROSS_DOMAIN, LOCAL_DOC_PATH)
 import models.shared as shared
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
@@ -483,6 +484,47 @@ async def document():
     return RedirectResponse(url="/docs")
 
 
+async def local_product_search(
+        question: str = Body(..., description="Question", example="工伤保险是什么？"),
+        history: List[List[str]] = Body(
+            [],
+            description="History of previous questions and answers",
+            example=[
+                [
+                    "工伤保险是什么？",
+                    "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
+                ]
+            ],
+        ),
+):
+    vs_path = LOCAL_DOC_PATH
+    if not os.path.exists(vs_path):
+        # return BaseResponse(code=404, msg=f"Knowledge base {knowledge_base_id} not found")
+        return ChatMessage(
+            question=question,
+            response=f"Knowledge base not found",
+            history=history,
+            source_documents=[],
+        )
+    else:
+        for resp, history in local_doc_search.get_knowledge_based_answer(
+                query=question, vs_path=vs_path, chat_history=history, streaming=True
+        ):
+            pass
+        source_documents = [
+            f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+            f"""相关度：{doc.metadata['score']}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+
+        return ChatMessage(
+            question=question,
+            response=resp["result"],
+            history=history,
+            source_documents=source_documents,
+        )
+
+
 def api_start(host, port, **kwargs):
     global app
     global local_doc_qa
@@ -538,6 +580,40 @@ def api_start(host, port, **kwargs):
         uvicorn.run(app, host=host, port=port)
 
 
+def api_start_new(host, port, **kwargs):
+    global app
+    global local_doc_search
+
+    app = FastAPI()
+    # Add CORS middleware to allow all origins
+    # 在config.py中设置OPEN_DOMAIN=True，允许跨域
+    # set OPEN_DOMAIN=True in config.py to allow cross-domain
+    if OPEN_CROSS_DOMAIN:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    
+    # 本地知识库搜索
+    app.post("/local_doc_search", response_model=ChatMessage, summary="与知识库对话")(local_product_search)
+    
+    local_doc_search = LocalDocSearch()
+    local_doc_search.init_cfg(
+        embedding_model=EMBEDDING_MODEL,
+        embedding_device=EMBEDDING_DEVICE,
+        top_k=VECTOR_SEARCH_TOP_K,
+        )
+    
+    if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
+        uvicorn.run(app, host=host, port=port, ssl_keyfile=kwargs.get("ssl_keyfile"),
+                    ssl_certfile=kwargs.get("ssl_certfile"))
+    else:
+        uvicorn.run(app, host=host, port=port)
+
+
 if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
@@ -547,5 +623,6 @@ if __name__ == "__main__":
     args = None
     args = parser.parse_args()
     args_dict = vars(args)
-    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
-    api_start(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
+    # shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+    # api_start(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
+    api_start_new(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
