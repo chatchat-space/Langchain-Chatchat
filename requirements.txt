@@ -5,7 +5,6 @@ chromadb
 fschat
 transformers
 torch~=2.0.0
-streamlit>=1.25.0
 fastapi~=0.99.1
 fastapi-offline
 nltk~=3.8.1
@@ -14,3 +13,6 @@ starlette~=0.27.0
 numpy~=1.24.4
 pydantic~=1.10.11
 unstructured[local-inference]
+
+streamlit>=1.25.0
+streamlit-option-menu
