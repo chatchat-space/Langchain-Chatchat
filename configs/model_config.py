@@ -34,32 +34,24 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 
 llm_model_dict = {
     "chatglm-6b": {
-        "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": "chatglm-6b",
-        "local_model_path": "",
+        "local_model_path": "THUDM/chatglm-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
     "chatglm-6b-int4": {
-        "name": "chatglm-6b-int4",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": "chatglm-6b-int4",
-        "local_model_path": "",
+        "local_model_path": "THUDM/chatglm-6b-int4",
         "api_base_url": "http://localhost:8001/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
     "chatglm2-6b": {
-        "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": "chatglm2-6b",
-        "local_model_path": "",
+        "local_model_path": "THUDM/chatglm2-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
     "vicuna-13b-hf": {
-        "name": "vicuna-13b-hf",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": "",
         "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
@@ -76,11 +68,9 @@ llm_model_dict = {
     # Failed to establish a new connection: [WinError 10060]
     # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
     "openai-chatgpt-3.5": {
-        "name": "gpt-3.5-turbo",
-        "pretrained_model_name": "gpt-3.5-turbo",
-        "local_model_path": "",
+        "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openapi.com/v1",
-        "api_key": ""
+        "api_key": os.environ["OPENAI_API_KEY"]
     },
 }
 
@@ -92,6 +82,8 @@ LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mp
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+if not os.path.exists(LOG_PATH):
+    os.mkdir(LOG_PATH)
 
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
