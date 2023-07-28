@@ -70,7 +70,7 @@ llm_model_dict = {
     "openai-chatgpt-3.5": {
         "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openapi.com/v1",
-        "api_key": os.environ["OPENAI_API_KEY"]
+        "api_key": os.environ.get("OPENAI_API_KEY")
     },
 }
 
