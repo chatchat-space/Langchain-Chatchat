@@ -63,6 +63,13 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
+    # 注：chatglm2-cpp已在mac上测试通过，其他系统暂不支持
+    "chatglm2-cpp": {
+        "name": "chatglm2-cpp",
+        "pretrained_model_name": "cylee0909/chatglm2cpp",
+        "local_model_path": None,
+        "provides": "ChatGLMCppLLMChain"
+    },
     "chatglm2-6b-int4": {
         "name": "chatglm2-6b-int4",
         "pretrained_model_name": "THUDM/chatglm2-6b-int4",
