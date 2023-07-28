@@ -31,7 +31,7 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
 # 在以下字典中修改属性值，以指定本地 LLM 模型存储位置
 # 如将 "chatglm-6b" 的 "local_model_path" 由 None 修改为 "User/Downloads/chatglm-6b"
-# 此处请写绝对路径
+# 此处请写绝对路径,且路径中必须包含repo-id的模型名称，因为FastChat是以模型名匹配的
 llm_model_dict = {
     "chatglm-6b-int4-qe": {
         "name": "chatglm-6b-int4-qe",
@@ -218,9 +218,10 @@ BF16 = False
 # 本地lora存放的位置
 LORA_DIR = "loras/"
 
-# LLM lora path，默认为空，如果有请直接指定文件夹路径
-LLM_LORA_PATH = ""
-USE_LORA = True if LLM_LORA_PATH else False
+# LORA的名称，如有请指定为列表
+
+LORA_NAME = ""
+USE_LORA = True if LORA_NAME else False
 
 # LLM streaming reponse
 STREAMING = True

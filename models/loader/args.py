@@ -42,9 +42,10 @@ parser.add_argument('--no-remote-model', action='store_true', help='remote in th
                                                                    'model to add the ` '
                                                                    '--no-remote-model`')
 parser.add_argument('--model-name', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
-parser.add_argument('--lora', type=str, help='Name of the LoRA to apply to the model by default.')
+parser.add_argument("--use-lora",type=bool,default=USE_LORA,help="use lora or not")
+parser.add_argument('--lora', type=str, default=LORA_NAME,help='Name of the LoRA to apply to the model by default.')
 parser.add_argument("--lora-dir", type=str, default=LORA_DIR, help="Path to directory with all the loras")
-parser.add_argument('--use-ptuning-v2',action='store_true',help="whether use ptuning-v2 checkpoint")
+parser.add_argument('--use-ptuning-v2',default=USE_PTUNING_V2,help="whether use ptuning-v2 checkpoint")
 parser.add_argument("--ptuning-dir",type=str,default=PTUNING_DIR,help="the dir of ptuning-v2 checkpoint")
 # Accelerate/transformers
 parser.add_argument('--load-in-8bit', action='store_true', default=LOAD_IN_8BIT,
