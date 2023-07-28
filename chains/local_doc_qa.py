@@ -108,7 +108,8 @@ def write_check_file(filepath, docs):
 def generate_prompt(related_docs: List[str],
                     query: str,
                     prompt_template: str = PROMPT_TEMPLATE, ) -> str:
-    context = "\n".join([doc.page_content for doc in related_docs])
+    #related_docs Document(page_content='', metadata={'source':'....'}...)  这里related_docs 是一个tuple
+    context = "\n".join([doc[0].page_content for doc in related_docs])
     prompt = prompt_template.replace("{question}", query).replace("{context}", context)
     return prompt
 
@@ -273,7 +274,7 @@ class LocalDocQA:
                         "source_documents": []}
             return response, ""
         torch_gc()
-        prompt = "\n".join([doc.page_content for doc in related_docs_with_score])
+        prompt = "\n".join([doc[0].page_content for doc in related_docs_with_score])
         response = {"query": query,
                     "source_documents": related_docs_with_score}
         return response, prompt
