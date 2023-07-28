@@ -54,6 +54,7 @@ def main():
     while True:
         query = input("Input your question 请输入问题：")
         last_print_len = 0
+        resp_source_documents = []
         for resp, history in local_doc_qa.get_knowledge_based_answer(query=query,
                                                                      vs_path=vs_path,
                                                                      chat_history=history,
@@ -63,13 +64,15 @@ def main():
                 last_print_len = len(resp["result"])
             else:
                 print(resp["result"])
-        if REPLY_WITH_SOURCE:
+            resp_source_documents = resp["source_documents"]
+        if REPLY_WITH_SOURCE and len(resp_source_documents) > 0:
             source_text = [f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
                            # f"""相关度：{doc.metadata['score']}\n\n"""
                            for inum, doc in
-                           enumerate(resp["source_documents"])]
+                           enumerate(resp_source_documents)]
             print("\n\n" + "\n\n".join(source_text))
-
+        else:
+            print("\n\n")
 
 if __name__ == "__main__":
 #     # 通过cli.py调用cli_demo时需要在cli.py里初始化模型，否则会报错：

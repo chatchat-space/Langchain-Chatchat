@@ -324,14 +324,16 @@ async def local_doc_chat(
             source_documents=[],
         )
     else:
+        resp_source_documents = []
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
+            resp_source_documents = resp["source_documents"]
             pass
         source_documents = [
             f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
             f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
+            for inum, doc in enumerate(resp_source_documents)
         ]
 
         return ChatMessage(
@@ -355,13 +357,15 @@ async def bing_search_chat(
             ],
         ),
 ):
+    resp_source_documents = []
     for resp, history in local_doc_qa.get_search_result_based_answer(
             query=question, chat_history=history, streaming=True
     ):
+        resp_source_documents = resp["source_documents"]
         pass
     source_documents = [
         f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
-        for inum, doc in enumerate(resp["source_documents"])
+        for inum, doc in enumerate(resp_source_documents)
     ]
 
     return ChatMessage(
@@ -417,17 +421,19 @@ async def stream_chat(websocket: WebSocket):
         await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
 
         last_print_len = 0
+        resp_source_documents = []
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
             await asyncio.sleep(0)
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
+            resp_source_documents = resp["source_documents"]
 
         source_documents = [
             f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
             f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
+            for inum, doc in enumerate(resp_source_documents)
         ]
 
         await websocket.send_text(
@@ -456,14 +462,16 @@ async def stream_chat_bing(websocket: WebSocket):
         await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
 
         last_print_len = 0
+        resp_source_documents = []
         for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history, streaming=True):
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
+            resp_source_documents = resp["source_documents"]
 
         source_documents = [
             f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
             f"""相关度：{doc.metadata['score']}\n\n"""
-            for inum, doc in enumerate(resp["source_documents"])
+            for inum, doc in enumerate(resp_source_documents)
         ]
 
         await websocket.send_text(
