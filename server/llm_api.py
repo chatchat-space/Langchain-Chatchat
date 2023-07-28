@@ -16,7 +16,7 @@ port = 8887
 
 # 2. 不同任务的日志还是分开；
 
-# 3. 在此处定义args，可选fastchat为每个服务所提供的命令行参数，model_path除外；
+# 3. 在model_config.py里定义args；
 
 # 4. 用logger.removeHandler把它添加的handler删掉，添加我们自己的handler;
 
