@@ -231,7 +231,7 @@ if __name__ == "__main__":
 # 服务启动后接口调用示例：
 # import openai
 # openai.api_key = "EMPTY" # Not support yet
-# openai.api_base = "http://0.0.0.0:8000/v1"
+# openai.api_base = "http://localhost:8888/v1"
 
 # model = "chatglm2-6b"
 
