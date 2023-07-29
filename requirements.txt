@@ -2,7 +2,7 @@ langchain==0.0.237
 openai
 sentence_transformers
 chromadb
-fschat
+fschat==0.2.15
 transformers
 torch~=2.0.0
 fastapi~=0.99.1

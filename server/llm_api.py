@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
 import asyncio
 
-
 host_ip = "0.0.0.0"
 controller_port = 20001
 model_worker_port = 20002
@@ -22,7 +21,7 @@ def set_httpx_timeout(timeout=60.0):
 
 
 def create_controller_app(
-    dispatch_method="shortest_queue",
+        dispatch_method="shortest_queue",
 ):
     from fastchat.serve.controller import app, Controller
     from loguru import logger
@@ -36,21 +35,21 @@ def create_controller_app(
 
 
 def create_model_worker_app(
-    model_path=llm_model_dict[LLM_MODEL].get("local_model_path"),
-    model_names=[LLM_MODEL],
-    device=LLM_DEVICE,
-    load_8bit=False,
-    gptq_ckpt=None,
-    gptq_wbits=16,
-    gpus=None,
-    num_gpus=1,
-    max_gpu_memory=None,
-    cpu_offloading=None,
-    worker_address=base_url.format(model_worker_port),
-    controller_address=base_url.format(controller_port),
-    limit_model_concurrency=5,
-    stream_interval=2,
-    no_register=False,
+        model_path=llm_model_dict[LLM_MODEL].get("local_model_path"),
+        model_names=[LLM_MODEL],
+        device=LLM_DEVICE,
+        load_8bit=False,
+        gptq_ckpt=None,
+        gptq_wbits=16,
+        gpus=None,
+        num_gpus=1,
+        max_gpu_memory=None,
+        cpu_offloading=None,
+        worker_address=base_url.format(model_worker_port),
+        controller_address=base_url.format(controller_port),
+        limit_model_concurrency=5,
+        stream_interval=2,
+        no_register=False,
 ):
     from fastchat.serve.model_worker import app, GptqConfig, ModelWorker, worker_id
     from fastchat.serve import model_worker
@@ -67,36 +66,37 @@ def create_model_worker_app(
         act_order=None,
     )
     worker = ModelWorker(
-        controller_address,
-        worker_address,
-        worker_id,
-        no_register,
-        model_path,
-        model_names,
-        device,
-        num_gpus,
-        max_gpu_memory,
-        load_8bit,
-        cpu_offloading,
-        gptq_config,
+        controller_addr=controller_address,
+        worker_addr=worker_address,
+        worker_id=worker_id,
+        no_register=no_register,
+        model_path=model_path,
+        model_names=model_names,
+        device=device,
+        num_gpus=num_gpus,
+        max_gpu_memory=max_gpu_memory,
+        load_8bit=load_8bit,
+        cpu_offloading=cpu_offloading,
+        gptq_config=gptq_config,
+        # limit_worker_concurrency=1,
     )
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
-    args.model_path=model_path
-    args.model_names=model_names
-    args.device=device
-    args.load_8bit=load_8bit
-    args.gptq_ckpt=gptq_ckpt
-    args.gptq_wbits=gptq_wbits
-    args.gpus=gpus
-    args.num_gpus=num_gpus
-    args.max_gpu_memory=max_gpu_memory
-    args.cpu_offloading=cpu_offloading
-    args.worker_address=worker_address
-    args.controller_address=controller_address
-    args.limit_model_concurrency=limit_model_concurrency
-    args.stream_interval=stream_interval
-    args.no_register=no_register
+    args.model_path = model_path
+    args.model_names = model_names
+    args.device = device
+    args.load_8bit = load_8bit
+    args.gptq_ckpt = gptq_ckpt
+    args.gptq_wbits = gptq_wbits
+    args.gpus = gpus
+    args.num_gpus = num_gpus
+    args.max_gpu_memory = max_gpu_memory
+    args.cpu_offloading = cpu_offloading
+    args.worker_address = worker_address
+    args.controller_address = controller_address
+    args.limit_model_concurrency = limit_model_concurrency
+    args.stream_interval = stream_interval
+    args.no_register = no_register
 
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
@@ -106,10 +106,10 @@ def create_model_worker_app(
 
 
 def create_openai_api_app(
-    host=host_ip,
-    port=openai_api_port,
-    controller_address=base_url.format(controller_port),
-    api_keys=[],
+        host=host_ip,
+        port=openai_api_port,
+        controller_address=base_url.format(controller_port),
+        api_keys=[],
 ):
     from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings
     from loguru import logger
@@ -193,8 +193,7 @@ def run_openai_api(q):
 if __name__ == "__main__":
     logger.info(llm_model_dict[LLM_MODEL])
     model_path = llm_model_dict[LLM_MODEL]["local_model_path"]
-    model_path = "d:\\chatglm\\models\\chatglm-6b"
-
+    # model_path = "d:\\chatglm\\models\\chatglm-6b"
 
     logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
@@ -228,7 +227,6 @@ if __name__ == "__main__":
         controller_process.join()
         model_worker_process.join()
         openai_api_process.join()
-
 
 # 服务启动后接口调用示例：
 # import openai
