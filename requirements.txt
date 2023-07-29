@@ -6,6 +6,7 @@ fschat
 transformers
 torch~=2.0.0
 fastapi~=0.99.1
+loguru
 fastapi-offline
 nltk~=3.8.1
 uvicorn~=0.23.1
