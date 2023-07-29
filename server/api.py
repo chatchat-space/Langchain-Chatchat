@@ -1,4 +1,7 @@
 import nltk
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import NLTK_DATA_PATH, OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
