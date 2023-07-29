@@ -2,6 +2,7 @@ import click
 
 from api import api_start as api_start
 from cli_demo import main as cli_start
+from cli_demo import qa_main as qa_start
 from configs.model_config import llm_model_dict, embedding_model_dict
 
 
@@ -55,6 +56,16 @@ def start_api(ip, port, **kwargs):
     shared.loaderCheckPoint = LoaderCheckPoint(DEFAULT_ARGS)
     api_start(host=ip, port=port, **kwargs)
 
+@start.command(name="qa", context_settings=dict(help_option_names=['-h', '--help']))
+@click.option('--index_path', default='/home/zh.wang/fintech_raw_dataset/index', show_default=True, type=str, help='faiss index dir index')
+def start_qa(index_path):
+    print("通过cli.py使用进行qa")
+    from models import shared
+    from models.loader import LoaderCheckPoint
+    from models.loader.args import DEFAULT_ARGS
+    shared.loaderCheckPoint = LoaderCheckPoint(DEFAULT_ARGS)
+    qa_start(index_path)
+
 #     # 通过cli.py调用cli_demo时需要在cli.py里初始化模型，否则会报错：
     # langchain-ChatGLM: error: unrecognized arguments: start cli
     # 为此需要先将
@@ -64,16 +75,19 @@ def start_api(ip, port, **kwargs):
     # shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     # 语句从main函数里取出放到函数外部
     # 然后在cli.py里初始化
-
 @start.command(name="cli", context_settings=dict(help_option_names=['-h', '--help']))
-def start_cli():
+@click.option('--gpus', default=1, show_default=True, type=int, help='gpu instance number')
+@click.option('--index', default=0, show_default=True, type=int, help='sub task index')
+@click.option('--device_num', default=1, show_default=True, type=int, help='gpu number')
+@click.option('--debug', default=True, show_default=True, type=bool, help='debug info')
+def start_cli(gpus, index, device_num, debug):
     print("通过cli.py调用cli_demo...")
 
     from models import shared
     from models.loader import LoaderCheckPoint
     from models.loader.args import DEFAULT_ARGS
     shared.loaderCheckPoint = LoaderCheckPoint(DEFAULT_ARGS)
-    cli_start()
+    cli_start(gpus, index, device_num, debug)
     
 # 同cli命令，通过cli.py调用webui时，argparse的初始化需要放到cli.py里，
 # 但由于webui.py里，模型初始化通过init_model函数实现，也无法简单地分离出主函数,

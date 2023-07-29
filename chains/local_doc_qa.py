@@ -4,7 +4,7 @@ from langchain.document_loaders import UnstructuredFileLoader, TextLoader, CSVLo
 from configs.model_config import *
 import datetime
 from textsplitter import ChineseTextSplitter
-from typing import List
+from typing import Any, List
 from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
@@ -18,8 +18,9 @@ from langchain.docstore.document import Document
 from functools import lru_cache
 from textsplitter.zh_title_enhance import zh_title_enhance
 from langchain.chains.base import Chain
+from paddleocr import PaddleOCR
 
-
+ocr = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=True, show_log=False)
 # patch HuggingFaceEmbeddings to make it hashable
 def _embeddings_hash(self):
     return hash(self.model_name)
@@ -69,7 +70,7 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_T
     elif filepath.lower().endswith(".pdf"):
         # 暂且将paddle相关的loader改为动态加载，可以在不上传pdf/image知识文件的前提下使用protobuf=4.x
         from loader import UnstructuredPaddlePDFLoader
-        loader = UnstructuredPaddlePDFLoader(filepath)
+        loader = UnstructuredPaddlePDFLoader(filepath, ocr)
         textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
@@ -87,7 +88,7 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_T
         docs = loader.load_and_split(text_splitter=textsplitter)
     if using_zh_title_enhance:
         docs = zh_title_enhance(docs)
-    write_check_file(filepath, docs)
+    # write_check_file(filepath, docs)
     return docs
 
 
@@ -137,6 +138,8 @@ class LocalDocQA:
                  llm_model: Chain = None,
                  top_k=VECTOR_SEARCH_TOP_K,
                  ):
+        self.embedding_model = embedding_model
+        self.embedding_device = embedding_device
         self.llm_model_chain = llm_model
         self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[embedding_model],
                                                 model_kwargs={'device': embedding_device})
@@ -158,6 +161,10 @@ class LocalDocQA:
                     docs = load_file(filepath, sentence_size)
                     logger.info(f"{file} 已成功加载")
                     loaded_files.append(filepath)
+                    vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
+                    torch_gc()
+                    vector_store.save_local(vs_path)
+                    return vs_path, loaded_files
                 except Exception as e:
                     logger.error(e)
                     logger.info(f"{file} 未能成功加载")
@@ -178,31 +185,53 @@ class LocalDocQA:
                         logger.info(f"{file}\n")
 
         else:
-            docs = []
+            # docs = []
+            logger.info("开始加载pdf文件")
+            # import torch.multiprocessing as mp
+            # import pathos.multiprocessing as mp
+            # ctx = mp.get_context('forkserver')
+            # pool = mp.Pool(processes=1)
             for file in filepath:
-                try:
-                    docs += load_file(file)
-                    logger.info(f"{file} 已成功加载")
-                    loaded_files.append(file)
-                except Exception as e:
-                    logger.error(e)
-                    logger.info(f"{file} 未能成功加载")
-        if len(docs) > 0:
-            logger.info("文件加载完毕，正在生成向量库")
-            if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
-                vector_store = load_vector_store(vs_path, self.embeddings)
-                vector_store.add_documents(docs)
-                torch_gc()
-            else:
-                if not vs_path:
-                    vs_path = os.path.join(KB_ROOT_PATH,
-                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
-                                           "vector_store")
-                vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
-                torch_gc()
+                # r = pool.apply_async(task, args=(file, None,))
+                f = lazy_pinyin(os.path.basename(file).replace('.pdf', ""))
+                f = "".join(f)
+                vs_path = os.path.join(KB_ROOT_PATH, f"""{f}_faiss_vector_store""")
+                v = Task(file, vs_path).run()
+                # r = task(file, vs_path)
+                # if r is not None:
+                #     loaded_files.append(r)
+                if v is not None:
+                    docs, file, vs_path = v
+                    logger.info(f"{file} 已成功加载, 开始生成向量库")
+                    # if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
+                        # vector_store = load_vector_store(vs_path, self.embeddings)
+                        # vector_store.add_documents(docs)
+                        # torch_gc()    
+                    # else:
+                    vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
+                    torch_gc()
 
-            vector_store.save_local(vs_path)
-            return vs_path, loaded_files
+                    vector_store.save_local(vs_path)
+                    logger.info(f"{file}生成向量库, vs_path:{vs_path}")
+                    loaded_files.append(vs_path)
+            logger.info(f"{len(loaded_files)}份文件被建立索引")
+                
+        if len(loaded_files) > 0:
+            # logger.info("文件加载完毕，正在生成向量库")
+            # if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
+            #     vector_store = load_vector_store(vs_path, self.embeddings)
+            #     vector_store.add_documents(docs)
+            #     torch_gc()
+            # else:
+            #     if not vs_path:
+            #         vs_path = os.path.join(KB_ROOT_PATH,
+            #                                f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
+            #                                "vector_store")
+            #     vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
+            #     torch_gc()
+
+            # vector_store.save_local(vs_path)
+            return KB_ROOT_PATH, loaded_files
         else:
             logger.info("文件均未成功加载，请检查依赖包或替换为其他文件再次上传。")
 
@@ -228,6 +257,41 @@ class LocalDocQA:
         except Exception as e:
             logger.error(e)
             return None, [one_title]
+        
+    def init_file_knowledge_index(self, vs_path, pdfs):
+        docs = []
+        company = {}
+        for file in pdfs:
+            f = os.path.basename(file).replace('.pdf', "")
+            fs = f.split('__')
+            l = company.get(fs[-4], [])
+            l.append(fs[-2])
+            if len(l) >= 2:
+                logger.info(f"{fs[1]} report {len(l)} years")
+            metadata={'source': file, 'year': fs[-2], 'code': fs[-4]}
+            docs.append(Document(page_content=f, metadata=metadata))
+            docs.append(Document(page_content=fs[1], metadata=metadata))
+            docs.append(Document(page_content=fs[-3], metadata=metadata))
+
+        return
+        vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
+        torch_gc()
+        vector_store.save_local(vs_path)
+
+
+    def get_knowledge_local(self, pinyin_query: str, vs_path):
+        pinyin_query = pinyin_query.split('?')[0]
+        logger.info(f"input search query:{pinyin_query}")
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        vector_store.chunk_size = self.chunk_size
+        vector_store.chunk_conent = self.chunk_conent
+        vector_store.score_threshold = self.score_threshold
+        related_docs_with_score = vector_store.similarity_search(query=pinyin_query, k=2)
+        torch_gc()
+        if (len(related_docs_with_score) > 0):
+            logger.info(f"related_docs_with_score:{related_docs_with_score}")
+            return related_docs_with_score[0][1].split(' ')[0]
+        return None
 
     def get_knowledge_based_answer(self, query, vs_path, chat_history=[], streaming: bool = STREAMING):
         vector_store = load_vector_store(vs_path, self.embeddings)
@@ -320,6 +384,26 @@ class LocalDocQA:
         else:
             return [os.path.split(doc)[-1] for doc in docs]
 
+class Task:
+    def __init__(self, file, vs_path):
+        self.file = file
+        self.vs_path = vs_path
+
+    def run(self):
+        file = self.file
+        vs_path = self.vs_path
+        logger.info(f"{file}提交任务")
+        try:
+            if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
+                os.remove(file)
+                logger.info(f"{file} 已成功生成向量库 删除原文件 {file}")
+                return None
+            docs = load_file(file)
+            return (docs, file, vs_path)
+        except Exception as e:
+            logger.error(e)
+            logger.info(f"{file} 未能成功加载")
+            return None
 
 if __name__ == "__main__":
     # 初始化消息

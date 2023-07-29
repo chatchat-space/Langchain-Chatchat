@@ -16,7 +16,8 @@ embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
     "text2vec-base": "shibing624/text2vec-base-chinese",
-    "text2vec": "GanymedeNil/text2vec-large-chinese",
+    # "text2vec": "GanymedeNil/text2vec-large-chinese",
+    "text2vec": "/home/zh.wang/text2vec-large-chinese",
     "m3e-small": "moka-ai/m3e-small",
     "m3e-base": "moka-ai/m3e-base",
 }
@@ -26,6 +27,7 @@ EMBEDDING_MODEL = "text2vec"
 
 # Embedding running device
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+# EMBEDDING_DEVICE = "cpu"
 
 # supported LLM models
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
@@ -60,13 +62,13 @@ llm_model_dict = {
     "chatglm2-6b": {
         "name": "chatglm2-6b",
         "pretrained_model_name": "THUDM/chatglm2-6b",
-        "local_model_path": None,
+        "local_model_path": "/home/zh.wang/chatglm2-6b",
         "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-int4": {
         "name": "chatglm2-6b-int4",
         "pretrained_model_name": "THUDM/chatglm2-6b-int4",
-        "local_model_path": None,
+        "local_model_path": "/home/zh.wang/chatglm2-6b-int4",
         "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-int8": {
@@ -203,7 +205,8 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "chatglm-6b"
+# LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "chatglm2-6b"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
@@ -225,7 +228,9 @@ PTUNING_DIR='./ptuning-v2'
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 # 知识库默认存储路径
-KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
+KB_ROOT_PATH = '/home/zh.wang/chatglm_llm_fintech_raw_dataset/knowledge_base/index'
+
+KB_TMP_PATH = '/home/zh.wang/chatglm_llm_fintech_raw_dataset/knowledge_base/tmp'
 
 # 基于上下文的prompt模版，请务必保留"{question}"和"{context}"
 PROMPT_TEMPLATE = """已知信息：
