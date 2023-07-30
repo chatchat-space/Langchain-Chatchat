@@ -2,8 +2,9 @@ langchain==0.0.237
 openai
 sentence_transformers
 chromadb
-fschat==0.2.15
+fschat==0.2.20
 transformers
+transformers_stream_generator
 torch~=2.0.0
 fastapi~=0.99.1
 loguru
