@@ -219,14 +219,15 @@ if __name__ == "__main__":
         )
         controller_process.start()
 
-        model_worker_process = Process(
-            target=run_model_worker,
-            name=f"model_worker({os.getpid()})",
-            args=(queue,),
-            # kwargs={"load_8bit": True},
-            daemon=True,
-        )
-        model_worker_process.start()
+        # cuda 没办法用在fork的多进程中
+        # model_worker_process = Process(
+        #     target=run_model_worker,
+        #     name=f"model_worker({os.getpid()})",
+        #     args=(queue,),
+        #     # kwargs={"load_8bit": True},
+        #     daemon=True,
+        # )
+        # model_worker_process.start()
 
         openai_api_process = Process(
             target=run_openai_api,
@@ -236,9 +237,12 @@ if __name__ == "__main__":
         )
         openai_api_process.start()
 
+        run_model_worker(queue)
+
         controller_process.join()
-        model_worker_process.join()
+        # model_worker_process.join()
         openai_api_process.join()
+
 
 # 服务启动后接口调用示例：
 # import openai
