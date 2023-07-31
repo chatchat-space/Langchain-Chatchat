@@ -57,6 +57,15 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
+    # langchain-ChatGLM 用户“帛凡” @BoFan-tunning 基于ChatGLM-6B 训练并提供的权重合并模型和 lora 权重文件 chatglm-fitness-RLHF
+    # 详细信息见 HuggingFace 模型介绍页 https://huggingface.co/fb700/chatglm-fitness-RLHF
+    # 使用该模型或者lora权重文件，对比chatglm-6b、chatglm2-6b、百川7b，甚至其它未经过微调的更高参数的模型，在本项目中，总结能力可获得显著提升。
+    "chatglm-fitness-RLHF": {
+        "name": "chatglm-fitness-RLHF",
+        "pretrained_model_name": "fb700/chatglm-fitness-RLHF",
+        "local_model_path": None,
+        "provides": "ChatGLMLLMChain"
+    },
     "chatglm2-6b": {
         "name": "chatglm2-6b",
         "pretrained_model_name": "THUDM/chatglm2-6b",
@@ -203,7 +212,7 @@ llm_model_dict = {
         "pretrained_model_name": "gpt-3.5-turbo",
         "provides": "FastChatOpenAILLMChain",
         "local_model_path": None,
-        "api_base_url": "https://api.openapi.com/v1",
+        "api_base_url": "https://api.openai.com/v1",
         "api_key": ""
     },
 
