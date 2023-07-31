@@ -1,3 +1,4 @@
+
 from multiprocessing import Process, Queue
 import sys
 import os
@@ -11,6 +12,7 @@ model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
 queue = Queue()
+import torch
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -29,6 +31,7 @@ def create_controller_app(
 
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
+    #todo 替换fastchat的日志文件
     sys.modules["fastchat.serve.controller"].logger = logger
     logger.info(f"controller dispatch method: {dispatch_method}")
     return app
@@ -96,14 +99,14 @@ def create_model_worker_app(
         groupsize=args.gptq_groupsize,
         act_order=args.gptq_act_order,
     )
-
+    # torch.multiprocessing.set_start_method('spawn')
     worker = ModelWorker(
-        args.controller_address,
-        args.worker_address,
-        worker_id,
-        args.model_path,
-        args.model_names,
-        args.limit_worker_concurrency,
+        controller_addr=args.controller_address,
+        worker_addr=args.worker_address,
+        worker_id=worker_id,
+        model_path=args.model_path,
+        model_names=args.model_names,
+        limit_worker_concurrency=args.limit_worker_concurrency,
         no_register=args.no_register,
         device=args.device,
         num_gpus=args.num_gpus,
@@ -117,6 +120,7 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
+    # #todo 替换fastchat的日志文件
     sys.modules["fastchat.serve.model_worker"].logger = logger
     return app
 
@@ -141,6 +145,7 @@ def create_openai_api_app(
 
     app_settings.controller_address = controller_address
     app_settings.api_keys = api_keys
+    # #todo 替换fastchat的日志文件
     sys.modules["fastchat.serve.openai_api_server"].logger = logger
 
     return app
@@ -194,17 +199,8 @@ def run_openai_api(q):
     uvicorn.run(app, host=host_ip, port=openai_api_port)
 
 
-# 1. llm_model_dict精简；
 
-# 2. 不同任务的日志还是分开；
 
-# 3. 在model_config.py里定义args；
-
-# 4. 用logger.removeHandler把它添加的handler删掉，添加我们自己的handler;
-
-# 5. 用watchdog监控第二步的执行情况；
-
-# 6. requirements指定fastchat版本号。
 
 if __name__ == "__main__":
     logger.info(llm_model_dict[LLM_MODEL])
