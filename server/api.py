@@ -20,9 +20,7 @@ async def document():
     return RedirectResponse(url="/docs")
 
 
-def api_start(host, port, **kwargs):
-    global app
-
+def create_app():
     app = FastAPI()
     # Add CORS middleware to allow all origins
     # 在config.py中设置OPEN_DOMAIN=True，允许跨域
@@ -94,7 +92,11 @@ def api_start(host, port, **kwargs):
              response_model=BaseResponse,
              summary="上传文件到知识库，并删除另一个文件"
              )(update_doc)
+    return app
 
+app = create_app()
+
+def run_api(host, port, **kwargs):
     if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
         uvicorn.run(app, host=host, port=port, ssl_keyfile=kwargs.get("ssl_keyfile"),
                     ssl_certfile=kwargs.get("ssl_certfile"))
@@ -113,4 +115,4 @@ if __name__ == "__main__":
     # 初始化消息
     args = parser.parse_args()
     args_dict = vars(args)
-    api_start(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
+    run_api(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
