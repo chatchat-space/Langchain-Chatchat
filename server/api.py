@@ -105,8 +105,12 @@ app = create_app()
 
 def run_api(host, port, **kwargs):
     if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
-        uvicorn.run(app, host=host, port=port, ssl_keyfile=kwargs.get("ssl_keyfile"),
-                    ssl_certfile=kwargs.get("ssl_certfile"))
+        uvicorn.run(app,
+                    host=host,
+                    port=port,
+                    ssl_keyfile=kwargs.get("ssl_keyfile"),
+                    ssl_certfile=kwargs.get("ssl_certfile"),
+                    )
     else:
         uvicorn.run(app, host=host, port=port)
 
@@ -122,4 +126,8 @@ if __name__ == "__main__":
     # 初始化消息
     args = parser.parse_args()
     args_dict = vars(args)
-    run_api(args.host, args.port, ssl_keyfile=args.ssl_keyfile, ssl_certfile=args.ssl_certfile)
+    run_api(host=args.host,
+            port=args.port,
+            ssl_keyfile=args.ssl_keyfile,
+            ssl_certfile=args.ssl_certfile,
+            )
