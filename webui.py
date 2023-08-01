@@ -1,6 +1,10 @@
 import streamlit as st
+from streamlit_chatbox import *
+from webui_utils import *
 from streamlit_option_menu import option_menu
-import openai
+
+
+api = ApiRequest()
 
 def dialogue_page():
     with st.sidebar:
@@ -8,37 +12,30 @@ def dialogue_page():
                                  ["LLM 对话",
                                   "知识库问答",
                                   "Bing 搜索问答"])
+        history_len = st.slider("历史对话轮数：", 1, 10, 1)
         if dialogue_mode == "知识库问答":
-            selected_kb = st.selectbox("请选择知识库：", ["知识库1", "知识库2"])
+            selected_kb = st.selectbox("请选择知识库：", get_kb_list())
             with st.expander(f"{selected_kb} 中已存储文件"):
-                st.write("123")
+                st.write(get_kb_files(selected_kb))
 
     # Display chat messages from history on app rerun
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    chat_box.output_messages()
 
     if prompt := st.chat_input("What is up?"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
-            for response in openai.ChatCompletion.create(
-                    model=OPENAI_MODEL,
-                    messages=[
-                        {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.messages
-                    ],
-                    stream=True,
-            ):
-                full_response += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
-
+        chat_box.user_say(prompt)
+        chat_box.ai_say("正在思考...")
+        # with api.chat_fastchat([{"role": "user", "content": "prompt"}], stream=streaming) as r: # todo: support history len
+        text = ""
+        r = api.chat_chat(prompt, no_remote_api=True)
+        for t in r:
+            text += t
+            chat_box.update_msg(text)
+        chat_box.update_msg(text, streaming=False)
+        # with  api.chat_chat(prompt) as r:
+        #     for t in r.iter_text(None):
+        #         text += t
+        #         chat_box.update_msg(text)
+        #     chat_box.update_msg(text, streaming=False)
 
 def knowledge_base_edit_page():
     pass
@@ -51,8 +48,7 @@ def config_page():
 if __name__ == "__main__":
     st.set_page_config("langchain-chatglm WebUI")
 
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    chat_box = ChatBox()
 
     pages = {"对话": {"icon": "chat",
                       "func": dialogue_page,
