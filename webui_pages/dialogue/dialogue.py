@@ -4,7 +4,8 @@ from streamlit_chatbox import *
 
 chat_box = ChatBox()
 
-def dialogue_page():
+
+def dialogue_page(api: ApiRequest):
     with st.sidebar:
         dialogue_mode = st.radio("请选择对话模式",
                                  ["LLM 对话",
@@ -22,7 +23,8 @@ def dialogue_page():
     if prompt := st.chat_input("请输入对话内容，换行请使用Ctrl+Enter"):
         chat_box.user_say(prompt)
         chat_box.ai_say("正在思考...")
-        # with api.chat_fastchat([{"role": "user", "content": "prompt"}], stream=streaming) as r: # todo: support history len
+        # with api.chat_fastchat([{"role": "user", "content": "prompt"}], stream=streaming) as r:
+        # todo: support history len
         text = ""
         r = api.chat_chat(prompt, no_remote_api=True)
         for t in r:

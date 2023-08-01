@@ -26,4 +26,4 @@ if __name__ == "__main__":
                                     menu_icon="chat-quote",
                                     default_index=0)
 
-    pages[selected_page]["func"]()
+    pages[selected_page]["func"](api)
