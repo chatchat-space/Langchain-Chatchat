@@ -21,7 +21,7 @@ embedding_model_dict = {
     "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
     "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
     "m3e-small": "moka-ai/m3e-small",
-    "m3e-base": "/Users/liuqian/Downloads/ChatGLM-6B/m3e-base",
+    "m3e-base": "moka-ai/m3e-base",
     "m3e-large": "moka-ai/m3e-large",
 }
 
@@ -46,7 +46,7 @@ llm_model_dict = {
     },
 
     "chatglm2-6b": {
-        "local_model_path": "/Users/liuqian/Downloads/ChatGLM-6B/chatglm2-6b", # "THUDM/chatglm2-6b",
+        "local_model_path": "THUDM/chatglm2-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
