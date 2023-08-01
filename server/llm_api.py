@@ -12,7 +12,8 @@ model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
 queue = Queue()
-import torch
+sys.modules['fastchat.constants.LOGDIR'] = LOG_PATH
+import parser
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -122,6 +123,7 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
     # #todo 替换fastchat的日志文件
     sys.modules["fastchat.serve.model_worker"].logger = logger
+    
     return app
 
 
