@@ -8,7 +8,6 @@ layoutparser[layoutmodels,tesseract]
 nltk~=3.8.1
 sentence-transformers
 beautifulsoup4
-icetk
 cpm_kernels
 faiss-cpu
 gradio==3.37.0

@@ -220,6 +220,7 @@ Web UI 可以实现如下功能：
   - [ ] Agent 实现
 - [x] 增加更多 LLM 模型支持
   - [x] [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)
+  - [x] [THUDM/chatglm2-6b-32k](https://huggingface.co/THUDM/chatglm2-6b-32k)
   - [x] [THUDM/chatglm-6b](https://huggingface.co/THUDM/chatglm-6b)
   - [x] [THUDM/chatglm-6b-int8](https://huggingface.co/THUDM/chatglm-6b-int8)
   - [x] [THUDM/chatglm-6b-int4](https://huggingface.co/THUDM/chatglm-6b-int4)
@@ -235,6 +236,9 @@ Web UI 可以实现如下功能：
   - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
   - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
   - [x] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
+  - [x] [shibing624/text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
+  - [x] [shibing624/text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
+  - [x] [shibing624/text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
   - [x] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
   - [x] [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
   - [x] [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
