@@ -63,9 +63,14 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_T
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
     elif filepath.lower().endswith(".txt"):
-        loader = TextLoader(filepath, autodetect_encoding=True)
-        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
-        docs = loader.load_and_split(textsplitter)
+        try:
+            loader = TextLoader(filepath, encoding='utf-8', autodetect_encoding=True)
+            textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
+            docs = loader.load_and_split(textsplitter)
+            logger.info(f"分词后的词条数量:{len(docs)}")
+        except Exception as e:
+            logger.error(e)
+            logger.info(f"{filepath} 未能成功分词")
     elif filepath.lower().endswith(".pdf"):
         loader = UnstructuredPaddlePDFLoader(filepath)
         textsplitter = ChineseTextSplitter(pdf=True, sentence_size=sentence_size)
@@ -83,6 +88,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_T
         docs = loader.load_and_split(text_splitter=textsplitter)
     if using_zh_title_enhance:
         docs = zh_title_enhance(docs)
+
+    logger.info("分词后的文件写入临时文件中")
     write_check_file(filepath, docs)
     return docs
 
@@ -185,24 +192,51 @@ class LocalDocQA:
                     logger.info(f"{file} 未能成功加载")
         if len(docs) > 0:
             logger.info("文件加载完毕，正在生成向量库")
-            if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
-                vector_store = load_vector_store(vs_path, self.embeddings)
-                vector_store.add_documents(docs)
-                torch_gc()
-            else:
-                if not vs_path:
-                    vs_path = os.path.join(KB_ROOT_PATH,
-                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
-                                           "vector_store")
-                vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
-                torch_gc()
+            try:
+                if vs_path and os.path.isdir(vs_path) and "index.faiss" in os.listdir(vs_path):
+                    self.batch_save_docs(docs, vs_path, True)
+                else:
+                    if not vs_path:
+                        vs_path = os.path.join(KB_ROOT_PATH,
+                                               f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
+                                               "vector_store")
+                    logger.info(f"开始分批({LARGE_FILE_BATCH_SIZE}个词条一批)保存向量库")
+                    self.batch_save_docs(docs, vs_path, False)
 
-            vector_store.save_local(vs_path)
+            except Exception as e:
+                logger.error(e)
+                logger.info(f"{file} 未能生成向量库")
+                return None, loaded_files
+
+            logger.info("向量库生成完毕")
             return vs_path, loaded_files
         else:
             logger.info("文件均未成功加载，请检查依赖包或替换为其他文件再次上传。")
 
             return None, loaded_files
+
+    '''
+    大文本导入容易导致内存溢出，这里将大文本分词后的Tokens分批写入或追加到向量库中
+    '''
+    def batch_save_docs(self, docs:[], vs_path:str, isExist: bool=True):
+        # 分批处理文本，应对大文本一次性处理导致内存溢出的问题
+        batch_size = LARGE_FILE_BATCH_SIZE  # 按照N个tokens一批进行处理，可以根据自己的服务器内存配置进行调整
+        docs_len = len(docs)
+        for i in range(0, docs_len, batch_size):
+            batch_docs = docs[i:i + batch_size]
+            batch_info = str((i + batch_size) if (i + batch_size) < docs_len else docs_len) + "/" + str(docs_len)
+            if isExist:
+                vector_db = load_vector_store(vs_path, self.embeddings)
+                logger.info(f"内存中追加批次{batch_info}Tokens到向量库")
+                vector_db.add_documents(batch_docs)
+            else:
+                logger.info(f"内存中构建批次{batch_info}Tokens到向量库")
+                vector_db = MyFAISS.from_documents(batch_docs, self.embeddings)
+                isExist = True
+
+            logger.info(f"保存批次{batch_info}Tokens向量库到磁盘：{vs_path}")
+            vector_db.save_local(vs_path)
+            torch_gc()
 
     def one_knowledge_add(self, vs_path, one_title, one_conent, one_content_segmentation, sentence_size):
         try:

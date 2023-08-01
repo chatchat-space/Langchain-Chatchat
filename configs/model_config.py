@@ -222,6 +222,9 @@ CACHED_VS_NUM = 1
 # 文本分句长度
 SENTENCE_SIZE = 100
 
+# 文本上传单批次处理的tokens数，防止大文件上传导致OOM，根据可用内存自行调整
+LARGE_FILE_BATCH_SIZE = 50000
+
 # 匹配后单段上下文长度
 CHUNK_SIZE = 250
 
