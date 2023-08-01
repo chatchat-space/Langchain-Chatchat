@@ -171,7 +171,7 @@ embedding_model_dict = {
 }
 
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "text2vec"
+EMBEDDING_MODEL = "m3e-base"
 
 # Embedding 模型运行设备
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -192,6 +192,12 @@ llm_model_dict = {
 
     "chatglm2-6b": {
         "local_model_path": "THUDM/chatglm2-6b",
+        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
+    },
+
+    "chatglm2-6b-32k": {
+        "local_model_path": "THUDM/chatglm2-6b-32k",  # "THUDM/chatglm2-6b-32k",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
@@ -246,3 +252,16 @@ PROMPT_TEMPLATE = """【指令】根据已知信息，简洁和专业的来回�
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
+
+# Bing 搜索必备变量
+# 使用 Bing 搜索需要使用 Bing Subscription Key,需要在azure port中申请试用bing search
+# 具体申请方式请见
+# https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/create-bing-search-service-resource
+# 使用python创建bing api 搜索实例详见:
+# https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/quickstarts/rest/python
+BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
+# 注意不是bing Webmaster Tools的api key，
+
+# 此外，如果是在服务器上，报Failed to establish a new connection: [Errno 110] Connection timed out
+# 是因为服务器加了防火墙，需要联系管理员加白名单，如果公司的服务器的话，就别想了GG
+BING_SUBSCRIPTION_KEY = ""
