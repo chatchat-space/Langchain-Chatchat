@@ -7,8 +7,9 @@ import argparse
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse, StreamingResponse
-from server.chat import chat, knowledge_base_chat, openai_chat
+from starlette.responses import RedirectResponse
+from server.chat import (chat, knowledge_base_chat, openai_chat,
+                         bing_search_chat, duckduckgo_search_chat)
 from server.knowledge_base import (list_kbs, create_kb, delete_kb,
                                    list_docs, upload_doc, delete_doc, update_doc)
 from server.utils import BaseResponse, ListResponse
@@ -50,7 +51,13 @@ def create_app():
              tags=["Chat"],
              summary="与知识库对话")(knowledge_base_chat)
 
-    # app.post("/chat/bing_search_chat", tags=["Chat"], summary="与Bing搜索对话")(bing_search_chat)
+    app.post("/chat/bing_search_chat",
+             tags=["Chat"],
+             summary="与Bing搜索对话")(bing_search_chat)
+
+    app.post("/chat/duckduckgo_search_chat",
+             tags=["Chat"],
+             summary="与DuckDuckGo搜索对话")(duckduckgo_search_chat)
 
     app.get("/knowledge_base/list_knowledge_bases",
             tags=["Knowledge Base Management"],
