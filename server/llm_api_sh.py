@@ -66,10 +66,14 @@ def string_args(args,args_list):
     return args_str
 
 def launch_worker(item):
-            log_name = item.split("/")[-1].split("\\")[-1].replace("-","_").replace("@","_")
+            log_name = item.split("/")[-1].split("\\")[-1].replace("-","_").replace("@","_").replace(".","_")
             # 先分割model-path-address,在传到string_args中分析参数
             args.model_path,args.worker_host, args.worker_port = item.split("@")
+            print( args.model_path,args.worker_host, args.worker_port)
+            print("*"*80)
+            
             worker_str_args = string_args(args,worker_args)
+            print(worker_str_args)
             worker_sh = base_launch_sh.format("model_worker",worker_str_args,LOG_PATH,f"worker_{log_name}")
             worker_check_sh = base_check_sh.format(LOG_PATH,f"worker_{log_name}","model_worker")
             subprocess.run(worker_sh,shell=True,check=True)

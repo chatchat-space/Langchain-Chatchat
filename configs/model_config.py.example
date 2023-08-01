@@ -117,7 +117,7 @@ parser.add_argument("--stream-interval", type=int, default=2)
 parser.add_argument("--no-register", action="store_true")
 
 worker_args = [
-                "worker-host","work-port",
+                "worker-host","worker-port",
                 "model-path","revision","device","gpus","num-gpus",
                "max-gpu-memory","load-8bit","cpu-offloading",
                "gptq-ckpt","gptq-wbits","gptq-groupsize",
