@@ -26,7 +26,7 @@ embedding_model_dict = {
 }
 
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "text2vec"
+EMBEDDING_MODEL = "m3e-base"
 
 # Embedding 模型运行设备
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -47,6 +47,12 @@ llm_model_dict = {
 
     "chatglm2-6b": {
         "local_model_path": "THUDM/chatglm2-6b",
+        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_key": "EMPTY"
+    },
+
+    "chatglm2-6b-32k": {
+        "local_model_path": "THUDM/chatglm2-6b-32k",  # "THUDM/chatglm2-6b-32k",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
