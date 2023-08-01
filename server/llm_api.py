@@ -1,7 +1,7 @@
-
 from multiprocessing import Process, Queue
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
 import asyncio
@@ -31,7 +31,7 @@ def create_controller_app(
 
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
-    #todo 替换fastchat的日志文件
+    # todo 替换fastchat的日志文件
     sys.modules["fastchat.serve.controller"].logger = logger
     logger.info(f"controller dispatch method: {dispatch_method}")
     return app
@@ -199,9 +199,6 @@ def run_openai_api(q):
     uvicorn.run(app, host=host_ip, port=openai_api_port)
 
 
-
-
-
 if __name__ == "__main__":
     logger.info(llm_model_dict[LLM_MODEL])
     model_path = llm_model_dict[LLM_MODEL]["local_model_path"]
@@ -242,7 +239,6 @@ if __name__ == "__main__":
         controller_process.join()
         # model_worker_process.join()
         openai_api_process.join()
-
 
 # 服务启动后接口调用示例：
 # import openai

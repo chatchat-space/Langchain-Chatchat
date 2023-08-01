@@ -21,7 +21,7 @@ def dialogue_page():
     # Display chat messages from history on app rerun
     chat_box.output_messages()
 
-    if prompt := st.chat_input("What is up?"):
+    if prompt := st.chat_input("请输入对话内容，换行请使用Ctrl+Enter"):
         chat_box.user_say(prompt)
         chat_box.ai_say("正在思考...")
         # with api.chat_fastchat([{"role": "user", "content": "prompt"}], stream=streaming) as r: # todo: support history len
