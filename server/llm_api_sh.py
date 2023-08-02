@@ -17,15 +17,6 @@ if args.gpus:
         )
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
-#-------------global-----------------
-# parser.add_argument('--model-path-address',
-#                     default="THUDM/chatglm2-6b@localhost@20002",
-#                     nargs="+",
-#                     type=str,
-#                     help="model path, host, and port, formatted as model-path@host@path")
-# multi_worker_args = parser.parse_args()
-
-
 # 0,controller, model_worker, openai_api_server
 # 1, 命令行选项
 # 2,LOG_PATH
@@ -69,9 +60,7 @@ def launch_worker(item):
             log_name = item.split("/")[-1].split("\\")[-1].replace("-","_").replace("@","_").replace(".","_")
             # 先分割model-path-address,在传到string_args中分析参数
             args.model_path,args.worker_host, args.worker_port = item.split("@")
-            print( args.model_path,args.worker_host, args.worker_port)
-            print("*"*80)
-            
+            print("*"*80)        
             worker_str_args = string_args(args,worker_args)
             print(worker_str_args)
             worker_sh = base_launch_sh.format("model_worker",worker_str_args,LOG_PATH,f"worker_{log_name}")
