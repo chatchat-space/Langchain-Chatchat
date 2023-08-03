@@ -30,3 +30,5 @@ tqdm~=4.65.0
 requests~=2.28.2
 tenacity~=8.2.2
 charset_normalizer==2.1.0
+langchain
+pypinyin
