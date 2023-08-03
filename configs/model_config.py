@@ -30,6 +30,9 @@ EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backe
 # local knowledge path
 LOCAL_DOC_PATH = "/home/llm/local_knowledge/test.txt"
 
+# vector store path
+VS_PATH = "/home/llm/local_knowledge/Vector_Store/"
+
 # supported LLM models
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
 # 在以下字典中修改属性值，以指定本地 LLM 模型存储位置
@@ -235,6 +238,13 @@ PROMPT_TEMPLATE = """已知信息：
 {context} 
 
 根据上述已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题” 或 “没有提供足够的相关信息”，不允许在答案中添加编造成分，答案请使用中文。 问题是：{question}"""
+# 缓存请求数量
+CACHED_QUERY_NUM = 1000
+
+# 流式输出URL
+STREAM_CHAT_URL = "http://0.0.0.0:8888/stream-chat"
+# 非流式输出URL
+CHAT_URL = "http://0.0.0.0:8888/chat"
 
 # 缓存知识库数量,如果是ChatGLM2,ChatGLM2-int4,ChatGLM2-int8模型若检索效果不好可以调成’10’
 CACHED_VS_NUM = 1

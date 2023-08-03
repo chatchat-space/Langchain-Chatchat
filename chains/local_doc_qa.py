@@ -34,6 +34,18 @@ HuggingFaceEmbeddings.__hash__ = _embeddings_hash
 def load_vector_store(vs_path, embeddings):
     return MyFAISS.load_local(vs_path, embeddings)
 
+@lru_cache(CACHED_QUERY_NUM)
+def chat_response(prompt):
+    params = dict()
+    params["prompt"] = prompt
+    url = "http://0.0.0.0:8888/chat"
+    return requests.get(url=url, json=params)
+
+def stream_chat_response(prompt):
+    params = dict()
+    params["prompt"] = prompt
+    url = "http://0.0.0.0:8888/stream-chat"
+    return requests.get(url=url, json=params, stream=True)
 
 def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
     """返回两个列表，第一个列表为 filepath 下全部文件的完整路径, 第二个为对应的文件名"""
@@ -425,7 +437,7 @@ class LocalDocSearch:
             logger.error(e)
             return None, [one_title]
 
-    def get_knowledge_based_answer(self, query, vs_path, chat_history=[], streaming: bool = STREAMING):
+    def get_knowledge_based_answer(self, query, vs_path, chat_history=[]):
         vector_store = load_vector_store(vs_path, self.embeddings)
         vector_store.chunk_size = self.chunk_size
         vector_store.chunk_conent = self.chunk_conent
@@ -436,23 +448,23 @@ class LocalDocSearch:
             prompt = generate_prompt(related_docs_with_score, query)
         else:
             prompt = query
-        
-        if streaming:
-            "do something"
+        print(prompt)
+        return chat_response(prompt)
+    
+    def get_knowledge_based_stream_answer(self, query, vs_path, chat_history=[]):
+        print(vs_path)
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        vector_store.chunk_size = self.chunk_size
+        vector_store.chunk_conent = self.chunk_conent
+        vector_store.score_threshold = self.score_threshold
+        related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
+        torch_gc()
+        if len(related_docs_with_score) > 0:
+            prompt = generate_prompt(related_docs_with_score, query)
         else:
-            "do another something"
-        
-        answer_result_stream_result = self.llm_model_chain(
-            {"prompt": prompt, "history": chat_history, "streaming": streaming})
-
-        for answer_result in answer_result_stream_result['answer_result_stream']:
-            resp = answer_result.llm_output["answer"]
-            history = answer_result.history
-            history[-1][0] = query
-            response = {"query": query,
-                        "result": resp,
-                        "source_documents": related_docs_with_score}
-            yield response, history
+            prompt = query
+        for response in stream_chat_response(prompt):
+            yield response
 
     # query      查询内容
     # vs_path    知识库路径

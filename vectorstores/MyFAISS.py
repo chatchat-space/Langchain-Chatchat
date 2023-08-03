@@ -9,7 +9,6 @@ import copy
 import os
 from configs.model_config import *
 
-
 class MyFAISS(FAISS, VectorStore):
     def __init__(
             self,
