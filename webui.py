@@ -1,5 +1,5 @@
 # 运行方式：
-# 1. 安装必要的包：pip install streamlit-option-menu streamlit-chatbox>=1.1.3
+# 1. 安装必要的包：pip install streamlit-option-menu streamlit-chatbox>=1.1.4
 # 2. 运行本机fastchat服务：python server\llm_api.py 或者 运行对应的sh文件
 # 3. 运行API服务器：python server/api.py。如果使用api = ApiRequest(no_remote_api=True)，该步可以跳过。
 # 4. 运行WEB UI：streamlit run webui.py --server.port 7860
@@ -12,7 +12,7 @@ from webui_pages import *
 api = ApiRequest()
 
 if __name__ == "__main__":
-    st.set_page_config("langchain-chatglm WebUI")
+    st.set_page_config("langchain-chatglm WebUI", layout="wide")
 
     pages = {"对话": {"icon": "chat",
                       "func": dialogue_page,

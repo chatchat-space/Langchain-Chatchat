@@ -3,13 +3,13 @@ from webui_pages.utils import *
 from streamlit_chatbox import *
 
 
-def dialogue_page(api: ApiRequest):
-    chat_box = ChatBox(
-        greetings=[
-            f"欢迎使用 [`Langchain-Chatglm`](https://github.com/chatchat-space/langchain-chatglm) ! 当前使用模型`{LLM_MODEL}`, 您可以开始提问了.",
-        ]
-    )
+chat_box = ChatBox(
+    greetings=[
+        f"欢迎使用 [`Langchain-Chatglm`](https://github.com/chatchat-space/langchain-chatglm) ! 当前使用模型`{LLM_MODEL}`, 您可以开始提问了.",
+    ]
+)
 
+def dialogue_page(api: ApiRequest):
     with st.sidebar:
         def on_mode_change():
             mode = st.session_state.dialogue_mode
@@ -31,24 +31,53 @@ def dialogue_page(api: ApiRequest):
                                 )
         history_len = st.slider("历史对话轮数：", 1, 10, 1, disabled=True)
         # todo: support history len
-        if st.button("清除历史对话"):
-            chat_box.reset_history()
+        with st.expander("会话管理", True):
+            if st.button("清除历史对话内容"):
+                chat_box.reset_history()
+
+            col_input, col_btn = st.columns(2)
+            new_chat_name = col_input.text_input(
+                "新会话名称",
+                placeholder="新会话名称",
+                label_visibility="collapsed",
+                key="new_chat_name",
+            )
+
+            def on_btn_new_chat():
+                new_chat_name = st.session_state.new_chat_name
+                if new_chat_name:
+                    chat_box.use_chat_name(new_chat_name)
+                    st.session_state.new_chat_name = ""
+            col_btn.button("新建会话", on_click=on_btn_new_chat)
+
+            cols = st.columns(2)
+            chat_list = chat_box.get_chat_names()
+            print(chat_list, chat_box.cur_chat_name)
+            try:
+                index = chat_list.index(chat_box.cur_chat_name)
+            except:
+                index = 0
+            cur_chat_name = cols[0].selectbox("当前会话：", chat_list, index, label_visibility="collapsed")
+            chat_box.use_chat_name(cur_chat_name)
+            if cols[1].button("清除会话"):
+                chat_box.del_chat_name(cur_chat_name)
 
         def on_kb_change():
             chat_box.ai_say(f"已加载知识库： {st.session_state.selected_kb}", not_render=True)
 
         if dialogue_mode == "知识库问答":
-            kb_list = api.list_knowledge_bases()
-            selected_kb = st.selectbox(
-                "请选择知识库：",
-                kb_list,
-                on_change=on_kb_change,
-                key="selected_kb",
-            )
-            top_k = st.slider("匹配知识条数：", 1, 20, 3, disabled=True)
-            score_threshold = st.slider("知识匹配分数阈值：", 0, 1000, 0, disabled=True)
-            chunk_content = st.checkbox("关联上下文", False, disabled=True)
-            chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
+            with st.expander("知识库配置", True):
+                kb_list = api.list_knowledge_bases()
+                selected_kb = st.selectbox(
+                    "请选择知识库：",
+                    kb_list,
+                    on_change=on_kb_change,
+                    key="selected_kb",
+                )
+                top_k = st.slider("匹配知识条数：", 1, 20, 3, disabled=True)
+                score_threshold = st.slider("知识匹配分数阈值：", 0, 1000, 0, disabled=True)
+                chunk_content = st.checkbox("关联上下文", False, disabled=True)
+                chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
 
     # Display chat messages from history on app rerun
     chat_box.output_messages()
