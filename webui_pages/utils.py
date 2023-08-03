@@ -275,48 +275,27 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response)
 
-    def duckduckgo_search_chat(
+    def search_engine_chat(
         self,
         query: str,
+        search_engine_name: str,
+        top_k: int,
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/chat/duckduckgo_search_chat接口
+        对应api.py/chat/search_engine_chat接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         if no_remote_api:
-            from server.chat.duckduckgo_search_chat import duckduckgo_search_chat
-            response = duckduckgo_search_chat(query)
+            from server.chat.search_engine_chat import search_engine_chat
+            response = search_engine_chat(query, search_engine_name, top_k)
             return self._fastapi_stream2generator(response)
         else:
             response = self.post(
-                "/chat/duckduckgo_search_chat",
-                json=f"{query}",
-                stream=True,
-            )
-            return self._httpx_stream2generator(response)
-
-    def bing_search_chat(
-        self,
-        query: str,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/bing_search_chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        if no_remote_api:
-            from server.chat.bing_search_chat import bing_search_chat
-            response = bing_search_chat(query)
-            return self._fastapi_stream2generator(response)
-        else:
-            response = self.post(
-                "/chat/bing_search_chat",
-                json=f"{query}",
+                "/chat/search_engine_chat",
+                json={"query": query, "search_engine_name": search_engine_name, "top_k": top_k},
                 stream=True,
             )
             return self._httpx_stream2generator(response)

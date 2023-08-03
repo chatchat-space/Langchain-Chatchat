@@ -4,6 +4,9 @@ from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
                                   CACHED_VS_NUM, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE)
 from server.chat.utils import wrap_done
+from server.utils import BaseResponse
+import os
+from server.knowledge_base.utils import get_kb_path
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -51,6 +54,10 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         knowledge_base_name: str = Body(..., description="知识库名称", example="samples"),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                         ):
+    kb_path = get_kb_path(knowledge_base_name)
+    if not os.path.exists(kb_path):
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+
     async def knowledge_base_chat_iterator(query: str,
                                            knowledge_base_name: str,
                                            top_k: int,
@@ -76,9 +83,15 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             callback.done),
         )
 
+        source_documents = [
+            f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+            for inum, doc in enumerate(docs)
+        ]
+
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
-            yield token
+            yield {"answer": token,
+                   "docs": source_documents}
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k),

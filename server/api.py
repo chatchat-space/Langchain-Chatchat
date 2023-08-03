@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
-                         bing_search_chat, duckduckgo_search_chat)
+                         search_engine_chat)
 from server.knowledge_base import (list_kbs, create_kb, delete_kb,
                                    list_docs, upload_doc, delete_doc, update_doc)
 from server.utils import BaseResponse, ListResponse
@@ -39,6 +39,7 @@ def create_app():
             response_model=BaseResponse,
             summary="swagger 文档")(document)
 
+    # Tag: Chat
     app.post("/chat/fastchat",
              tags=["Chat"],
              summary="与llm模型对话(直接与fastchat api对话)")(openai_chat)
@@ -51,14 +52,11 @@ def create_app():
              tags=["Chat"],
              summary="与知识库对话")(knowledge_base_chat)
 
-    app.post("/chat/bing_search_chat",
+    app.post("/chat/search_engine_chat",
              tags=["Chat"],
-             summary="与Bing搜索对话")(bing_search_chat)
+             summary="与搜索引擎对话")(search_engine_chat)
 
-    app.post("/chat/duckduckgo_search_chat",
-             tags=["Chat"],
-             summary="与DuckDuckGo搜索对话")(duckduckgo_search_chat)
-
+    # Tag: Knowledge Base Management
     app.get("/knowledge_base/list_knowledge_bases",
             tags=["Knowledge Base Management"],
             response_model=ListResponse,
