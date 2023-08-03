@@ -19,3 +19,4 @@ unstructured[local-inference]
 streamlit>=1.25.0
 streamlit-option-menu
 streamlit-chatbox>=1.1.0
+httpx

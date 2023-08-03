@@ -14,6 +14,28 @@ api = ApiRequest()
 if __name__ == "__main__":
     st.set_page_config("langchain-chatglm WebUI", layout="wide")
 
+    # pages = {"对话1": {"icon": "chat",
+    #                   "func": dialogue_page,
+    #                   },
+    #          "对话2": {"icon": "chat",
+    #                    "func": dialogue_page,
+    #                    },
+    #          "对话3": {"icon": "chat",
+    #                    "func": dialogue_page,
+    #                    },
+    #          "新建对话": {"icon": "plus-circle",
+    #                    "func": dialogue_page,
+    #                    },
+    #          "---": {"icon": None,
+    #                  "func": None},
+    #          "知识库管理": {"icon": "database-fill-gear",
+    #                         "func": knowledge_base_page,
+    #                         },
+    #          "模型配置": {"icon": "gear",
+    #                       "func": model_config_page,
+    #                       }
+    #          }
+
     pages = {"对话": {"icon": "chat",
                       "func": dialogue_page,
                       },
