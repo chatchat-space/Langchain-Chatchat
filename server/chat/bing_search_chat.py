@@ -2,7 +2,7 @@ from langchain.utilities import BingSearchAPIWrapper
 from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE)
+from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K, PROMPT_TEMPLATE)
 from server.chat.utils import wrap_done
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
@@ -12,7 +12,7 @@ import asyncio
 from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
 
-def bing_search(text, result_len=3):
+def bing_search(text, result_len=SEARCH_ENGINE_TOP_K):
     if not (BING_SEARCH_URL and BING_SUBSCRIPTION_KEY):
         return [{"snippet": "please set BING_SUBSCRIPTION_KEY and BING_SEARCH_URL in os ENV",
                  "title": "env info is not found",
@@ -33,9 +33,11 @@ def search_result2docs(search_results):
 
 
 def bing_search_chat(query: str = Body(..., description="用户输入", example="你好"),
+                     top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
               ):
     async def bing_search_chat_iterator(query: str,
-                                 ) -> AsyncIterable[str]:
+                                        top_k: int,
+                                        ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
             streaming=True,
@@ -46,7 +48,7 @@ def bing_search_chat(query: str = Body(..., description="用户输入", example=
             model_name=LLM_MODEL
         )
 
-        results = bing_search(query, result_len=3)
+        results = bing_search(query, result_len=top_k)
         docs = search_result2docs(results)
         context = "\n".join([doc.page_content for doc in docs])
         prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
@@ -64,4 +66,4 @@ def bing_search_chat(query: str = Body(..., description="用户输入", example=
             yield token
         await task
 
-    return StreamingResponse(bing_search_chat_iterator(query), media_type="text/event-stream")
+    return StreamingResponse(bing_search_chat_iterator(query, top_k), media_type="text/event-stream")

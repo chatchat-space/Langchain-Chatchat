@@ -1,6 +1,7 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
+                                  CACHED_VS_NUM, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE)
 from server.chat.utils import wrap_done
 from langchain.chat_models import ChatOpenAI
@@ -18,15 +19,15 @@ from functools import lru_cache
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model],
-                                        model_kwargs={'device': device})
+                                       model_kwargs={'device': device})
     return embeddings
 
 
-@lru_cache(1)
+@lru_cache(CACHED_VS_NUM)
 def load_vector_store(
-    knowledge_base_name: str,
-    embedding_model: str,
-    embedding_device: str,
+        knowledge_base_name: str,
+        embedding_model: str,
+        embedding_device: str,
 ):
     embeddings = load_embeddings(embedding_model, embedding_device)
     vs_path = get_vs_path(knowledge_base_name)
@@ -35,11 +36,11 @@ def load_vector_store(
 
 
 def lookup_vs(
-    query: str,
-    knowledge_base_name: str,
-    top_k: int = 3,
-    embedding_model: str = EMBEDDING_MODEL,
-    embedding_device: str = EMBEDDING_DEVICE,
+        query: str,
+        knowledge_base_name: str,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        embedding_model: str = EMBEDDING_MODEL,
+        embedding_device: str = EMBEDDING_DEVICE,
 ):
     search_index = load_vector_store(knowledge_base_name, embedding_model, embedding_device)
     docs = search_index.similarity_search(query, k=top_k)
@@ -48,7 +49,7 @@ def lookup_vs(
 
 def knowledge_base_chat(query: str = Body(..., description="用户输入", example="你好"),
                         knowledge_base_name: str = Body(..., description="知识库名称", example="samples"),
-                        top_k: int = Body(3, description="匹配向量数"),
+                        top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                         ):
     async def knowledge_base_chat_iterator(query: str,
                                            knowledge_base_name: str,
@@ -80,4 +81,5 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             yield token
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k), media_type="text/event-stream")
+    return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k),
+                             media_type="text/event-stream")

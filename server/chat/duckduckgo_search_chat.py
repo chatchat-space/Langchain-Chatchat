@@ -1,7 +1,7 @@
 from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE)
+from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K, PROMPT_TEMPLATE)
 from server.chat.utils import wrap_done
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
@@ -12,7 +12,7 @@ from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
 
 
-def duckduckgo_search(text, result_len=3):
+def duckduckgo_search(text, result_len=SEARCH_ENGINE_TOP_K):
     search = DuckDuckGoSearchAPIWrapper()
     return search.results(text, result_len)
 
@@ -28,8 +28,10 @@ def search_result2docs(search_results):
 
 
 def duckduckgo_search_chat(query: str = Body(..., description="用户输入", example="你好"),
+                           top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
                     ):
     async def duckduckgo_search_chat_iterator(query: str,
+                                              top_k: int
                                        ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
@@ -41,7 +43,7 @@ def duckduckgo_search_chat(query: str = Body(..., description="用户输入", ex
             model_name=LLM_MODEL
         )
 
-        results = duckduckgo_search(query, result_len=3)
+        results = duckduckgo_search(query, result_len=top_k)
         docs = search_result2docs(results)
         context = "\n".join([doc.page_content for doc in docs])
         prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
@@ -59,4 +61,4 @@ def duckduckgo_search_chat(query: str = Body(..., description="用户输入", ex
             yield token
         await task
 
-    return StreamingResponse(duckduckgo_search_chat_iterator(query), media_type="text/event-stream")
+    return StreamingResponse(duckduckgo_search_chat_iterator(query, top_k), media_type="text/event-stream")
