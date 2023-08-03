@@ -81,6 +81,10 @@ if __name__ == "__main__":
     # shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     # 语句从main函数里取出放到函数外部
     # 然后在cli.py里初始化
+
+    # model_path
+    # model_name
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,2,3,4,5,6,7'
     args = None
     args = parser.parse_args()
     args_dict = vars(args)

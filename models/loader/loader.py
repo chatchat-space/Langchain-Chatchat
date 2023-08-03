@@ -59,7 +59,7 @@ class LoaderCheckPoint:
         self.params = params or {}
         self.model_name = params.get('model_name', False)
         self.model_path = params.get('model_path', None)
-        self.no_remote_model = params.get('no_remote_model', False)
+        self.no_remote_model = params.get('no_remote_model', True)
         self.lora = params.get('lora', '')
         self.use_ptuning_v2 = params.get('use_ptuning_v2', False)
         self.lora_dir = params.get('lora_dir', '')

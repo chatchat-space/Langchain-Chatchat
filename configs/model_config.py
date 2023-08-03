@@ -72,7 +72,7 @@ llm_model_dict = {
     "chatglm2-6b": {
         "name": "chatglm2-6b",
         "pretrained_model_name": "THUDM/chatglm2-6b",
-        "local_model_path": None,
+        "local_model_path": "/home/hanting/LLM/ChatGLM2-6B/model",
         "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-32k": {
@@ -228,7 +228,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "chatglm2-6b-32k"
+LLM_MODEL = "chatglm2-6b"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
@@ -239,7 +239,7 @@ LORA_DIR = "loras/"
 # LORA的名称，如有请指定为列表
 
 LORA_NAME = ""
-USE_LORA = True if LORA_NAME else False
+USE_LORA = False #True if LORA_NAME else False
 
 # LLM streaming reponse
 STREAMING = True
