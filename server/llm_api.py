@@ -13,7 +13,6 @@ openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
 queue = Queue()
 sys.modules['fastchat.constants.LOGDIR'] = LOG_PATH
-import parser
 
 
 def set_httpx_timeout(timeout=60.0):
