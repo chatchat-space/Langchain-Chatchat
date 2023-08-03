@@ -52,6 +52,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         ):
     async def knowledge_base_chat_iterator(query: str,
                                            knowledge_base_name: str,
+                                           top_k: int,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
@@ -62,7 +63,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
             model_name=LLM_MODEL
         )
-
         docs = lookup_vs(query, knowledge_base_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
         prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
@@ -80,4 +80,4 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             yield token
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name), media_type="text/event-stream")
+    return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k), media_type="text/event-stream")

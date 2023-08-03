@@ -254,6 +254,7 @@ class ApiRequest:
         self,
         query: str,
         knowledge_base_name: str,
+        top_k: int = 3,
         no_remote_api: bool = None,
     ):
         '''
@@ -264,12 +265,12 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(query, knowledge_base_name)
+            response = knowledge_base_chat(query, knowledge_base_name, top_k)
             return self._fastapi_stream2generator(response)
         else:
             response = self.post(
                 "/chat/knowledge_base_chat",
-                json={"query": query, "knowledge_base_name": knowledge_base_name},
+                json={"query": query, "knowledge_base_name": knowledge_base_name, "top_k": top_k},
                 stream=True,
             )
             return self._httpx_stream2generator(response)

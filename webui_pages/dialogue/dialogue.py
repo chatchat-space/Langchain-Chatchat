@@ -10,6 +10,7 @@ chat_box = ChatBox(
 )
 
 def dialogue_page(api: ApiRequest):
+    chat_box.init_session()
     with st.sidebar:
         def on_mode_change():
             mode = st.session_state.dialogue_mode
