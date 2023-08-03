@@ -231,6 +231,66 @@ class ApiRequest:
             response = self.post("/chat/chat", json=f"{query}", stream=True)
             return response
 
+    def knowledge_base_chat(
+        self,
+        query: str,
+        knowledge_base_name: str,
+        no_remote_api: bool = False,
+    ):
+        '''
+        对应/chat/knowledge_base_chat接口
+        '''
+        if no_remote_api:
+            from server.chat.knowledge_base_chat import knowledge_base_chat
+            response = knowledge_base_chat(query, knowledge_base_name)
+            return self._stream2generator(response)
+        else:
+            response = self.post(
+                "/chat/knowledge_base_chat",
+                json={"query": query, "knowledge_base_name": knowledge_base_name},
+                stream=True,
+            )
+            return response
+
+    def duckduckgo_search_chat(
+        self,
+        query: str,
+        no_remote_api: bool = False,
+    ):
+        '''
+        对应api.py/chat/duckduckgo_search_chat接口
+        '''
+        if no_remote_api:
+            from server.chat.duckduckgo_search_chat import duckduckgo_search_chat
+            response = duckduckgo_search_chat(query)
+            return self._stream2generator(response)
+        else:
+            response = self.post(
+                "/chat/duckduckgo_search_chat",
+                json=f"{query}",
+                stream=True,
+            )
+            return response
+
+    def bing_search_chat(
+        self,
+        query: str,
+        no_remote_api: bool = False,
+    ):
+        '''
+        对应api.py/chat/bing_search_chat接口
+        '''
+        if no_remote_api:
+            from server.chat.bing_search_chat import bing_search_chat
+            response = bing_search_chat(query)
+            return self._stream2generator(response)
+        else:
+            response = self.post(
+                "/chat/bing_search_chat",
+                json=f"{query}",
+                stream=True,
+            )
+            return response
 
 if __name__ == "__main__":
     api = ApiRequest()
