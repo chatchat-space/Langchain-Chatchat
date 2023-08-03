@@ -22,9 +22,6 @@ def stream(json_post_raw):
     json_post = json.dumps(json_post_raw)
     json_post_list = json.loads(json_post)
     question = json_post_list.get('question')
-    print("honey honey: ", json_post_list)
-    now = datetime.datetime.now()
-    time1 = now.strftime("%Y-%m-%d %H:%M:%S")
     result = local_doc_search.get_knowledge_based_stream_answer(query=question, vs_path=vs_path)
     for response in result:
         yield response
