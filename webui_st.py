@@ -1,6 +1,8 @@
 import streamlit as st
 from streamlit_chatbox import st_chatbox
 import tempfile
+from pathlib import Path
+
 ###### 从webui借用的代码 #####
 ######   做了少量修改    #####
 import os
@@ -23,6 +25,7 @@ def get_vs_list():
     if not os.path.exists(KB_ROOT_PATH):
         return lst_default
     lst = os.listdir(KB_ROOT_PATH)
+    lst = [x for x in lst if os.path.isdir(os.path.join(KB_ROOT_PATH, x))]
     if not lst:
         return lst_default
     lst.sort()
@@ -100,23 +103,23 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
 
 
 def get_vector_store(vs_id, files, sentence_size, history, one_conent, one_content_segmentation):
-    vs_path = os.path.join(KB_ROOT_PATH, vs_id, "vector_store")
-    filelist = []
-    if not os.path.exists(os.path.join(KB_ROOT_PATH, vs_id, "content")):
-        os.makedirs(os.path.join(KB_ROOT_PATH, vs_id, "content"))
+    vs_path = Path(KB_ROOT_PATH) / vs_id / "vector_store"
+    con_path = Path(KB_ROOT_PATH) / vs_id / "content"
+    con_path.mkdir(parents=True, exist_ok=True)
+
     qa = st.session_state.local_doc_qa
     if qa.llm_model_chain and qa.embeddings:
+        filelist = []
         if isinstance(files, list):
             for file in files:
                 filename = os.path.split(file.name)[-1]
-                shutil.move(file.name, os.path.join(
-                    KB_ROOT_PATH, vs_id, "content", filename))
-                filelist.append(os.path.join(
-                    KB_ROOT_PATH, vs_id, "content", filename))
+                target = con_path / filename
+                shutil.move(file.name, target)
+                filelist.append(str(target))
             vs_path, loaded_files = qa.init_knowledge_vector_store(
-                filelist, vs_path, sentence_size)
+                filelist, str(vs_path), sentence_size)
         else:
-            vs_path, loaded_files = qa.one_knowledge_add(vs_path, files, one_conent, one_content_segmentation,
+            vs_path, loaded_files = qa.one_knowledge_add(str(vs_path), files, one_conent, one_content_segmentation,
                                                                    sentence_size)
         if len(loaded_files):
             file_status = f"已添加 {'、'.join([os.path.split(i)[-1] for i in loaded_files if i])} 内容至知识库，并已加载知识库，请开始提问"
@@ -283,20 +286,24 @@ with st.sidebar:
 
         def on_new_kb():
             name = st.session_state.kb_name
-            if name in vs_list:
-                st.error(f'名为“{name}”的知识库已存在。')
+            if not name:
+                st.sidebar.error(f'新建知识库名称不能为空!')
+            elif name in vs_list:
+                st.sidebar.error(f'名为“{name}”的知识库已存在。')
             else:
-                vs_list.append(name)
                 st.session_state.vs_path = name
+                st.session_state.kb_name = ''
+                new_kb_dir = os.path.join(KB_ROOT_PATH, name)
+                if not os.path.exists(new_kb_dir):
+                    os.makedirs(new_kb_dir)
+                st.sidebar.success(f'名为“{name}”的知识库创建成功，您可以开始添加文件。')
 
         def on_vs_change():
             chat_box.robot_say(f'已加载知识库： {st.session_state.vs_path}')
         with st.expander('知识库配置', True):
             cols = st.columns([12, 10])
             kb_name = cols[0].text_input(
-                '新知识库名称', placeholder='新知识库名称', label_visibility='collapsed')
-            if 'kb_name' not in st.session_state:
-                st.session_state.kb_name = kb_name
+                '新知识库名称', placeholder='新知识库名称', label_visibility='collapsed', key='kb_name')
             cols[1].button('新建知识库', on_click=on_new_kb)
             index = 0
             try:
@@ -317,7 +324,8 @@ with st.sidebar:
             sentence_size = st.slider('文本入库分句长度限制', 1, 1000, SENTENCE_SIZE)
             files = st.file_uploader('上传知识文件',
                                      ['docx', 'txt', 'md', 'csv', 'xlsx', 'pdf'],
-                                     accept_multiple_files=True)
+                                     accept_multiple_files=True,
+                                     )
             if st.button('添加文件到知识库'):
                 temp_dir = tempfile.mkdtemp()
                 file_list = []
@@ -326,8 +334,8 @@ with st.sidebar:
                     with open(file, 'wb') as fp:
                         fp.write(f.getvalue())
                     file_list.append(TempFile(file))
-                    _, _, history = get_vector_store(
-                    vs_path, file_list, sentence_size, [], None, None)
+                _, _, history = get_vector_store(
+                vs_path, file_list, sentence_size, [], None, None)
                 st.session_state.files = []
 
 

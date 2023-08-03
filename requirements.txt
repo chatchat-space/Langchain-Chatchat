@@ -8,7 +8,6 @@ layoutparser[layoutmodels,tesseract]
 nltk~=3.8.1
 sentence-transformers
 beautifulsoup4
-icetk
 cpm_kernels
 faiss-cpu
 gradio==3.37.0
@@ -23,13 +22,6 @@ openai
 #accelerate~=0.18.0
 #peft~=0.3.0
 #bitsandbytes; platform_system != "Windows"
-
-# 要调用llama-cpp模型，如vicuma-13b量化模型需要安装llama-cpp-python库
-# but!!! 实测pip install 不好使，需要手动从ttps://github.com/abetlen/llama-cpp-python/releases/下载
-# 而且注意不同时期的ggml格式并不！兼！容!!!因此需要安装的llama-cpp-python版本也不一致，需要手动测试才能确定
-# 实测ggml-vicuna-13b-1.1在llama-cpp-python 0.1.63上可正常兼容
-# 不过！！！本项目模型加载的方式控制的比较严格，与llama-cpp-python的兼容性较差，很多参数设定不能使用，
-# 建议如非必要还是不要使用llama-cpp
 torch~=2.0.0
 pydantic~=1.10.7
 starlette~=0.26.1
