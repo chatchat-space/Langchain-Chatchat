@@ -52,7 +52,6 @@ def dialogue_page(api: ApiRequest):
 
             cols = st.columns(2)
             chat_list = chat_box.get_chat_names()
-            print(chat_list, chat_box.cur_chat_name)
             try:
                 index = chat_list.index(chat_box.cur_chat_name)
             except:
@@ -74,7 +73,7 @@ def dialogue_page(api: ApiRequest):
                     on_change=on_kb_change,
                     key="selected_kb",
                 )
-                top_k = st.slider("匹配知识条数：", 1, 20, 3, disabled=True)
+                top_k = st.slider("匹配知识条数：", 1, 20, 3)
                 score_threshold = st.slider("知识匹配分数阈值：", 0, 1000, 0, disabled=True)
                 chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
@@ -95,7 +94,7 @@ def dialogue_page(api: ApiRequest):
         elif dialogue_mode == "知识库问答":
             chat_box.ai_say(f"正在查询知识库： `{selected_kb}` ...")
             text = ""
-            for t in api.knowledge_base_chat(prompt, selected_kb):
+            for t in api.knowledge_base_chat(prompt, selected_kb, top_k):
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)
