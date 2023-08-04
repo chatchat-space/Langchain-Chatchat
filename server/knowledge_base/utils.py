@@ -3,6 +3,7 @@ from typing import List
 from server.utils import torch_gc
 from configs.model_config import KB_ROOT_PATH
 from langchain.vectorstores import FAISS
+from langchain.schema import Document
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from configs.model_config import (CACHED_VS_NUM, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE)
