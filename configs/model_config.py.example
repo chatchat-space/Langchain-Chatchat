@@ -239,6 +239,15 @@ if not os.path.exists(LOG_PATH):
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
 
+# 缓存向量库数量
+CACHED_VS_NUM = 1
+
+# 知识库匹配向量数量
+VECTOR_SEARCH_TOP_K = 5
+
+# 搜索引擎匹配结题数量
+SEARCH_ENGINE_TOP_K = 5
+
 # nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
