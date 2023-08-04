@@ -76,7 +76,7 @@ def load_vector_store(
         knowledge_base_name: str,
         embedding_model: str,
         embedding_device: str,
-        tick: int, # tick will be changed by upload_doc etc. and make cache refreshed.
+        tick: int,  # tick will be changed by upload_doc etc. and make cache refreshed.
 ):
     print(f"loading vector store in '{knowledge_base_name}' with '{embedding_model}' embeddings.")
     embeddings = load_embeddings(embedding_model, embedding_device)
@@ -92,15 +92,18 @@ def lookup_vs(
         embedding_model: str = EMBEDDING_MODEL,
         embedding_device: str = EMBEDDING_DEVICE,
 ):
-    search_index = load_vector_store(knowledge_base_name, embedding_model, embedding_device, _VECTOR_STORE_TICKS.get(knowledge_base_name))
+    search_index = load_vector_store(knowledge_base_name,
+                                     embedding_model,
+                                     embedding_device,
+                                     _VECTOR_STORE_TICKS.get(knowledge_base_name))
     docs = search_index.similarity_search(query, k=top_k)
     return docs
 
 
 def refresh_vs_cache(kb_name: str):
-    '''
+    """
     make vector store cache refreshed when next loading
-    '''
+    """
     _VECTOR_STORE_TICKS[kb_name] = _VECTOR_STORE_TICKS.get(kb_name, 0) + 1
 
 
