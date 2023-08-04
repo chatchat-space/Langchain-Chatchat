@@ -5,7 +5,10 @@ from fastapi import File, Form, UploadFile
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import (validate_kb_name, get_kb_path, get_doc_path,
                                          get_file_path, file2text, docs2vs,
-                                         refresh_vs_cache, )
+                                         refresh_vs_cache, get_vs_path, )
+from fastapi.responses import StreamingResponse
+import json
+import shutil
 
 
 async def list_docs(knowledge_base_name: str):
@@ -98,3 +101,30 @@ async def update_doc():
 async def download_doc():
     # TODO: 下载文件
     pass
+
+
+async def recreate_vector_store(knowledge_base_name: str):
+    '''
+    recreate vector store from the content.
+    this is usefull when user can copy files to content folder directly instead of upload through network.
+    '''
+    async def output(kb):
+        vs_path = get_vs_path(kb)
+        if os.path.isdir(vs_path):
+            shutil.rmtree(vs_path)
+        os.mkdir(vs_path)
+        print(f"start to recreate vectore in {vs_path}")
+
+        docs = (await list_docs(kb)).data
+        for i, filename in enumerate(docs):
+            filepath = get_file_path(kb, filename)
+            print(f"processing {filepath} to vector store.")
+            docs = file2text(filepath)
+            docs2vs(docs, kb)
+            yield json.dumps({
+                "total": len(docs),
+                "finished": i + 1,
+                "doc": filename,
+            })
+    
+    return StreamingResponse(output(knowledge_base_name), media_type="text/event-stream")

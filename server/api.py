@@ -11,7 +11,8 @@ from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base import (list_kbs, create_kb, delete_kb,
-                                   list_docs, upload_doc, delete_doc, update_doc)
+                                   list_docs, upload_doc, delete_doc,
+                                   update_doc, recreate_vector_store)
 from server.utils import BaseResponse, ListResponse
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -97,6 +98,9 @@ def create_app():
              response_model=BaseResponse,
              summary="上传文件到知识库，并删除另一个文件"
              )(update_doc)
+    app.post("/knowledge_base/recreate_vector_store",
+             summary="根据content中文档重建向量库，流式输出处理进度。"
+             )(recreate_vector_store)
     return app
 
 app = create_app()

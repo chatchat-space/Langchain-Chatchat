@@ -444,9 +444,31 @@ class ApiRequest:
             )
             return response.json()
 
+    def recreate_vector_store(
+        self,
+        knowledge_base_name: str,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/knowledge_base/recreate_vector_store接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        if no_remote_api:
+            from server.knowledge_base.kb_doc_api import recreate_vector_store
+            response = run_async(recreate_vector_store(knowledge_base_name))
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post(
+                "/knowledge_base/recreate_vector_store",
+                json={"knowledge_base_name": knowledge_base_name},
+            )
+            return self._httpx_stream2generator(response, as_json=True)
+
 
 if __name__ == "__main__":
-    api = ApiRequest()
+    api = ApiRequest(no_remote_api=True)
 
     # print(api.chat_fastchat(
     #     messages=[{"role": "user", "content": "hello"}]
@@ -464,4 +486,7 @@ if __name__ == "__main__":
     # for t in r:
     #     print(t)
 
-    print(api.list_knowledge_bases())
+    # print(api.list_knowledge_bases())
+
+    for t in api.recreate_vector_store('kblog'):
+        print(t)
