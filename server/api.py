@@ -2,6 +2,7 @@ import nltk
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from configs.model_config import NLTK_DATA_PATH, OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
@@ -98,12 +99,16 @@ def create_app():
              response_model=BaseResponse,
              summary="上传文件到知识库，并删除另一个文件"
              )(update_doc)
+
     app.post("/knowledge_base/recreate_vector_store",
+             tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
     return app
 
+
 app = create_app()
+
 
 def run_api(host, port, **kwargs):
     if kwargs.get("ssl_keyfile") and kwargs.get("ssl_certfile"):
