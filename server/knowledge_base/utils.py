@@ -1,6 +1,4 @@
 import os
-from typing import List
-from server.utils import torch_gc
 from configs.model_config import KB_ROOT_PATH
 from langchain.vectorstores import FAISS
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
