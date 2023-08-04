@@ -30,6 +30,7 @@ async def list_docs(knowledge_base_name: str):
 
 async def upload_doc(file: UploadFile = File(description="上传文件"),
                      knowledge_base_name: str = Form(..., description="知识库名称", example="kb1"),
+                     override: bool = Form(False, description="覆盖已有文件", example=False),
                      ):
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -41,7 +42,10 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     file_content = await file.read()  # 读取上传文件的内容
 
     file_path = os.path.join(saved_path, file.filename)
-    if os.path.exists(file_path) and os.path.getsize(file_path) == len(file_content):
+    if (os.path.exists(file_path)
+        and not override
+        and os.path.getsize(file_path) == len(file_content)
+    ):
         file_status = f"文件 {file.filename} 已存在。"
         return BaseResponse(code=404, msg=file_status)
 

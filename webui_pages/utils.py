@@ -1,6 +1,4 @@
 # 该文件包含webui通用工具，可以被不同的webui使用
-
-import tempfile
 from typing import *
 from pathlib import Path
 import os
@@ -17,6 +15,7 @@ from server.chat.openai_chat import OpenAiChatMsgIn
 from fastapi.responses import StreamingResponse
 import contextlib
 import json
+from io import BytesIO
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -383,8 +382,10 @@ class ApiRequest:
 
     def upload_kb_doc(
         self,
-        file: Union[str, Path],
+        file: Union[str, Path, bytes],
         knowledge_base_name: str,
+        filename: str = None,
+        override: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -393,8 +394,11 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
-        file = Path(file).absolute()
-        filename = file.name
+        if isinstance(file, bytes):
+            file = BytesIO(file)
+        else:
+            file = Path(file).absolute().open("rb")
+            filename = filename or file.name
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import upload_doc
@@ -402,18 +406,18 @@ class ApiRequest:
             from tempfile import SpooledTemporaryFile
 
             temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
-            with file.open("rb") as fp:
-                temp_file.write(fp.read())
+            temp_file.write(file.read())
             response = run_async(upload_doc(
                 UploadFile(temp_file, filename=filename),
                 knowledge_base_name,
+                override,
             ))
             return response.dict()
         else:
             response = self.post(
                 "/knowledge_base/upload_doc",
-                data={"knowledge_base_name": knowledge_base_name},
-                files={"file": (filename, file.open("rb"))},
+                data={"knowledge_base_name": knowledge_base_name, "override": override},
+                files={"file": (filename, file)},
             )
             return response.json()
 
