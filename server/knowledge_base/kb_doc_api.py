@@ -4,10 +4,10 @@ import shutil
 from fastapi import File, Form, UploadFile
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import (validate_kb_name, get_kb_path, get_doc_path,
-                                         get_file_path, file2text, docs2vs,
-                                         refresh_vs_cache, get_vs_path, )
+                                         get_file_path, refresh_vs_cache, get_vs_path)
 from fastapi.responses import StreamingResponse
 import json
+from server.knowledge_base.knowledge_file import KnowledgeFile
 
 
 async def list_docs(knowledge_base_name: str):
@@ -57,9 +57,10 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     except Exception as e:
         return BaseResponse(code=500, msg=f"{file.filename} 文件上传失败，报错信息为: {e}")
 
-    filepath = get_file_path(knowledge_base_name, file.filename)
-    docs = file2text(filepath)
-    docs2vs(docs, knowledge_base_name)
+    kb_file = KnowledgeFile(filename=file.filename,
+                            knowledge_base_name=knowledge_base_name)
+    kb_file.file2text()
+    kb_file.docs2vs()
 
     return BaseResponse(code=200, msg=f"成功上传文件 {file.filename}")
 
@@ -116,10 +117,11 @@ async def recreate_vector_store(knowledge_base_name: str):
 
         docs = (await list_docs(kb)).data
         for i, filename in enumerate(docs):
-            filepath = get_file_path(kb, filename)
-            print(f"processing {filepath} to vector store.")
-            docs = file2text(filepath)
-            docs2vs(docs, kb)
+            kb_file = KnowledgeFile(filename=filename,
+                                    knowledge_base_name=kb)
+            print(f"processing {get_file_path(kb, filename)} to vector store.")
+            kb_file.file2text()
+            kb_file.docs2vs()
             yield json.dumps({
                 "total": len(docs),
                 "finished": i + 1,
