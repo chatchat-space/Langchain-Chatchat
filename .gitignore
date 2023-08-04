@@ -175,3 +175,4 @@ embedding/*
 pyrightconfig.json
 loader/tmp_files
 flagged/*
+GanymedeNil/text2vec-large-chinese/
