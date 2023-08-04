@@ -11,7 +11,6 @@ from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
                           AutoTokenizer, LlamaTokenizer)
 from configs.model_config import LLM_DEVICE
 
-
 class LoaderCheckPoint:
     """
     加载自定义 model CheckPoint
@@ -68,6 +67,8 @@ class LoaderCheckPoint:
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
+        self.is_chatgmlcpp = "chatglm2-cpp" == self.model_name
+
     def _load_model_config(self):
 
         if self.model_path:
@@ -119,7 +120,7 @@ class LoaderCheckPoint:
         # 如果加载没问题，但在推理时报错RuntimeError: CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`
         # 那还是因为显存不够，此时只能考虑--load-in-8bit,或者配置默认模型为`chatglm-6b-int8`
         if not any([self.llm_device.lower() == "cpu",
-                    self.load_in_8bit, self.is_llamacpp]):
+                    self.load_in_8bit, self.is_llamacpp, self.is_chatgmlcpp]):
 
             if torch.cuda.is_available() and self.llm_device.lower().startswith("cuda"):
                 # 根据当前设备GPU数量决定是否进行多卡部署
@@ -148,7 +149,7 @@ class LoaderCheckPoint:
                                                         trust_remote_code=True).half()
                     # 可传入device_map自定义每张卡的部署情况
                     if self.device_map is None:
-                        if 'chatglm' in self.model_name.lower():
+                        if 'chatglm' in self.model_name.lower() and not "chatglm2" in self.model_name.lower():
                             self.device_map = self.chatglm_auto_configure_device_map(num_gpus)
                         elif 'moss' in self.model_name.lower():
                             self.device_map = self.moss_auto_configure_device_map(num_gpus, checkpoint)
@@ -164,13 +165,6 @@ class LoaderCheckPoint:
                                                                     dtype=torch.float16 if not self.load_in_8bit else torch.int8,
                                                                     max_memory=max_memory,
                                                                     no_split_module_classes=model._no_split_modules)
-                            # 对于chaglm和moss意外的模型应使用自动指定，而非调用chatglm的配置方式
-                            # 其他模型定义的层类几乎不可能与chatglm和moss一致，使用chatglm_auto_configure_device_map
-                            # 百分百会报错，使用infer_auto_device_map虽然可能导致负载不均衡，但至少不会报错
-                            # 实测在bloom模型上如此
-                    #                             self.device_map = infer_auto_device_map(model,
-                    #                                                                     dtype=torch.int8,
-                    #                                                                     no_split_module_classes=model._no_split_modules)
 
                     model = dispatch_model(model, device_map=self.device_map)
             else:
@@ -183,11 +177,40 @@ class LoaderCheckPoint:
                     .to(self.llm_device)
                 )
 
-        elif self.is_llamacpp:
-
+        elif self.is_chatgmlcpp :
+            try:
+                import chatglm_cpp
+            except ImportError as exc:
+                import platform
+                if platform.system() == "Darwin":
+                    raise ValueError(
+                        "Could not import depend python package "
+                        "Please install it with `pip install chatglm-cpp`."
+                    ) from exc
+                else :
+                    raise SystemError(
+                        f"chatglm-cpp not support {platform.system()}."
+                    ) from exc
+                
+            model = (
+                    LoaderClass.from_pretrained(
+                        checkpoint,
+                        config=self.model_config,
+                        trust_remote_code=True)
+                )
+            # model = chatglm_cpp.Pipeline(f'{self.model_path}/{self.model_name}.bin')
+            tokenizer = getattr(model, "tokenizer")
+            return model, tokenizer
+        
+        elif self.is_llamacpp:    
+            # 要调用llama-cpp模型，如vicuma-13b量化模型需要安装llama-cpp-python库
+            # but!!! 实测pip install 不好使，需要手动从ttps://github.com/abetlen/llama-cpp-python/releases/下载
+            # 而且注意不同时期的ggml格式并不！兼！容!!!因此需要安装的llama-cpp-python版本也不一致，需要手动测试才能确定
+            # 实测ggml-vicuna-13b-1.1在llama-cpp-python 0.1.63上可正常兼容
+            # 不过！！！本项目模型加载的方式控制的比较严格，与llama-cpp-python的兼容性较差，很多参数设定不能使用，
+            # 建议如非必要还是不要使用llama-cpp
             try:
                 from llama_cpp import Llama
-
             except ImportError as exc:
                 raise ValueError(
                     "Could not import depend python package "
@@ -448,12 +471,13 @@ class LoaderCheckPoint:
 
         if self.use_ptuning_v2:
             try:
-                prefix_encoder_file = open(Path(f'{self.ptuning_dir}/config.json'), 'r')
+                prefix_encoder_file = open(Path(f'{os.path.abspath(self.ptuning_dir)}/config.json'), 'r')
                 prefix_encoder_config = json.loads(prefix_encoder_file.read())
                 prefix_encoder_file.close()
                 self.model_config.pre_seq_len = prefix_encoder_config['pre_seq_len']
                 self.model_config.prefix_projection = prefix_encoder_config['prefix_projection']
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder config.json失败")
 
         self.model, self.tokenizer = self._load_model()
@@ -463,15 +487,17 @@ class LoaderCheckPoint:
 
         if self.use_ptuning_v2:
             try:
-                prefix_state_dict = torch.load(Path(f'{self.ptuning_dir}/pytorch_model.bin'))
+                prefix_state_dict = torch.load(Path(f'{os.path.abspath(self.ptuning_dir)}/pytorch_model.bin'))
                 new_prefix_state_dict = {}
                 for k, v in prefix_state_dict.items():
                     if k.startswith("transformer.prefix_encoder."):
                         new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
                 self.model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
                 self.model.transformer.prefix_encoder.float()
+                print("加载ptuning检查点成功！")
             except Exception as e:
+                print(e)
                 print("加载PrefixEncoder模型参数失败")
         # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
-        if not self.is_llamacpp:
+        if not self.is_llamacpp and not self.is_chatgmlcpp:
             self.model = self.model.eval()

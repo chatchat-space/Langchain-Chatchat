@@ -87,6 +87,10 @@ $ conda create -p /your_path/env_name python=3.8
 # Activate the environment
 $ source activate /your_path/env_name
 
+# or, do not specify an env path, note that /your_path/env_name is to be replaced with env_name below
+$ conda create -n env_name python=3.8
+$ conda activate env_name # Activate the environment
+
 # Deactivate the environment
 $ source deactivate /your_path/env_name
 
