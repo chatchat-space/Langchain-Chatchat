@@ -8,7 +8,6 @@ from server.knowledge_base.utils import (validate_kb_name, get_kb_path, get_doc_
                                          refresh_vs_cache, get_vs_path, )
 from fastapi.responses import StreamingResponse
 import json
-import shutil
 
 
 async def list_docs(knowledge_base_name: str):
