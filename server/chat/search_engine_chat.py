@@ -12,6 +12,7 @@ from typing import AsyncIterable
 import asyncio
 from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
+import json
 
 
 def bing_search(text, result_len=SEARCH_ENGINE_TOP_K):
@@ -94,8 +95,8 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
 
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
-            yield {"answer": token,
-                   "docs": source_documents}
+            yield json.dumps({"answer": token,
+                   "docs": source_documents})
         await task
 
     return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k),

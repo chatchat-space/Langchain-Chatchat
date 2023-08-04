@@ -72,7 +72,7 @@ def lookup_vs(
         embedding_model: str = EMBEDDING_MODEL,
         embedding_device: str = EMBEDDING_DEVICE,
 ):
-    search_index = load_vector_store(knowledge_base_name, embedding_model, embedding_device)
+    search_index = load_vector_store(knowledge_base_name, embedding_model, embedding_device, _VECTOR_STORE_TICKS.get(knowledge_base_name))
     docs = search_index.similarity_search(query, k=top_k)
     return docs
 

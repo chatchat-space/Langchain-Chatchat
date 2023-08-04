@@ -13,6 +13,7 @@ from typing import AsyncIterable
 import asyncio
 from langchain.prompts import PromptTemplate
 from server.knowledge_base.utils import lookup_vs
+import json
 
 
 def knowledge_base_chat(query: str = Body(..., description="用户输入", example="你好"),
@@ -55,8 +56,8 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
-            yield {"answer": token,
-                   "docs": source_documents}
+            yield json.dumps({"answer": token,
+                   "docs": source_documents})
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k),
