@@ -1,4 +1,6 @@
 import os
+from typing import List
+from server.utils import torch_gc
 from configs.model_config import KB_ROOT_PATH
 from langchain.vectorstores import FAISS
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
@@ -42,6 +44,23 @@ def file2text(filepath):
     text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=200)
     docs = loader.load_and_split(text_splitter)
     return docs
+
+def docs2vs(
+        docs: List[Document],
+        knowledge_base_name: str):
+    vs_path = get_vs_path(knowledge_base_name)
+    embeddings = load_embeddings(embedding_model_dict[EMBEDDING_MODEL], EMBEDDING_DEVICE)
+    if os.path.exists(vs_path) and "index.faiss" in os.listdir(vs_path):
+        vector_store = FAISS.load_local(vs_path, embeddings)
+        vector_store.add_documents(docs)
+        torch_gc()
+    else:
+        if not os.path.exists(vs_path):
+            os.makedirs(vs_path)
+        vector_store = FAISS.from_documents(docs, embeddings)  # docs 为Document列表
+        torch_gc()
+    vector_store.save_local(vs_path)
+    refresh_vs_cache(knowledge_base_name)
 
 
 @lru_cache(1)

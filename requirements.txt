@@ -14,7 +14,7 @@ uvicorn~=0.23.1
 starlette~=0.27.0
 numpy~=1.24.4
 pydantic~=1.10.11
-unstructured[local-inference]
+unstructured[all-docs]
 
 streamlit>=1.25.0
 streamlit-option-menu
