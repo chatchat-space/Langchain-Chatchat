@@ -239,6 +239,9 @@ if not os.path.exists(LOG_PATH):
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
 
+# 数据库默认存储路径
+DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")
+
 # 缓存向量库数量
 CACHED_VS_NUM = 1
 

@@ -1,7 +1,7 @@
 import os.path
 from server.knowledge_base.utils import (get_file_path)
-from server.knowledge_base import KnowledgeBase
 import sys
+
 
 LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
@@ -23,19 +23,23 @@ class KnowledgeFile:
             filename: str,
             knowledge_base_name: str
     ):
-        self.kb = KnowledgeBase.load(knowledge_base_name)
+        self.kb_name = knowledge_base_name
         self.filename = filename
         self.ext = os.path.splitext(filename)[-1]
         if self.ext not in SUPPORTED_EXTS:
             raise ValueError(f"暂未支持的文件格式 {self.ext}")
         self.filepath = get_file_path(knowledge_base_name, filename)
         self.docs = None
-        self.loader_class_name = get_LoaderClass(self.ext)
+        self.document_loader_name = get_LoaderClass(self.ext)
+
+        # TODO: 增加依据文件格式匹配text_splitter
+        self.text_splitter_name = "CharacterTextSplitter"
 
     def file2text(self):
-        LoaderClass = getattr(sys.modules['langchain.document_loaders'], self.loader_class_name)
-        loader = LoaderClass(self.filepath)
+        DocumentLoader = getattr(sys.modules['langchain.document_loaders'], self.document_loader_name)
+        loader = DocumentLoader(self.filepath)
 
-        from langchain.text_splitter import CharacterTextSplitter
-        text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=200)
+        # TODO: 增加依据文件格式匹配text_splitter
+        TextSplitter = getattr(sys.modules['langchain.text_splitter'], self.text_splitter_name)
+        text_splitter = TextSplitter(chunk_size=500, chunk_overlap=200)
         return loader.load_and_split(text_splitter)
