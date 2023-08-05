@@ -54,7 +54,7 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     kb_file = KnowledgeFile(filename=file.filename,
                             knowledge_base_name=knowledge_base_name)
     kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
-    kb.add_file(kb_file)
+    kb.add_doc(kb_file)
 
     return BaseResponse(code=200, msg=f"成功上传文件 {file.filename}")
 
@@ -115,7 +115,7 @@ async def recreate_vector_store(knowledge_base_name: str):
                                     knowledge_base_name=kb_name)
             print(f"processing {kb_file.filepath} to vector store.")
             kb = KnowledgeBase.load(knowledge_base_name=kb_name)
-            kb.add_file(kb_file)
+            kb.add_doc(kb_file)
             yield json.dumps({
                 "total": len(docs),
                 "finished": i + 1,

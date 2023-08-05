@@ -149,7 +149,7 @@ def list_docs_from_db(kb_name):
     conn.close()
     return kbs
 
-def add_file_to_db(kb_file: KnowledgeFile):
+def add_doc_to_db(kb_file: KnowledgeFile):
     conn = sqlite3.connect(DB_ROOT_PATH)
     c = conn.cursor()
     # Create table
@@ -163,6 +163,7 @@ def add_file_to_db(kb_file: KnowledgeFile):
                  file_version INTEGER,
                  create_time DATETIME) ''')
     # Insert a row of data
+    # TODO: 同名文件添加至知识库时，file_version增加
     c.execute(f"""INSERT INTO knowledge_files 
                   (file_name, file_ext, kb_name, document_loader_name, text_splitter_name, file_version, create_time)
                   VALUES 
@@ -219,7 +220,7 @@ class KnowledgeBase:
                 vector_store = FAISS.from_documents(docs, embeddings)  # docs 为Document列表
                 torch_gc()
             vector_store.save_local(vs_path)
-            add_file_to_db(kb_file)
+            add_doc_to_db(kb_file)
             refresh_vs_cache(self.kb_name)
         elif self.vs_type in ["milvus"]:
             # TODO: 向milvus库中增加文件
