@@ -172,6 +172,50 @@ def add_doc_to_db(kb_file: KnowledgeFile):
     conn.commit()
     conn.close()
 
+def delete_file_from_db(kb_file: KnowledgeFile):
+    conn = sqlite3.connect(DB_ROOT_PATH)
+    c = conn.cursor()
+    # delete files in kb from table knowledge_files
+    c.execute('''CREATE TABLE if not exists knowledge_files
+                     (id INTEGER  PRIMARY KEY AUTOINCREMENT,
+                     file_name TEXT, 
+                     file_ext TEXT, 
+                     kb_name TEXT,
+                     document_loader_name TEXT,
+                     text_splitter_name TEXT,
+                     file_version INTEGER,
+                     create_time DATETIME) ''')
+    # Insert a row of data
+    c.execute(f"""DELETE 
+                  FROM knowledge_files 
+                  WHERE file_name="{kb_file.filename}"
+                  AND kb_name="{kb_file.kb_name}"
+                """)
+    conn.commit()
+    conn.close()
+    return True
+
+def doc_exists(kb_file: KnowledgeFile):
+    conn = sqlite3.connect(DB_ROOT_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE if not exists knowledge_files
+                     (id INTEGER  PRIMARY KEY AUTOINCREMENT,
+                     file_name TEXT, 
+                     file_ext TEXT, 
+                     kb_name TEXT,
+                     document_loader_name TEXT,
+                     text_splitter_name TEXT,
+                     file_version INTEGER,
+                     create_time DATETIME) ''')
+    c.execute(f'''SELECT COUNT(*)
+                  FROM knowledge_files
+                  WHERE file_name="{kb_file.filename}"
+                  AND kb_name="{kb_file.kb_name}"  ''')
+    status = True if c.fetchone()[0] else False
+    conn.commit()
+    conn.close()
+    return status
+
 
 class KnowledgeBase:
     def __init__(self,
@@ -225,6 +269,17 @@ class KnowledgeBase:
         elif self.vs_type in ["milvus"]:
             # TODO: 向milvus库中增加文件
             pass
+
+    def delete_doc(self, kb_file: KnowledgeFile):
+        if os.path.exists(kb_file.filepath):
+            os.remove(kb_file.filepath)
+        if self.vs_type in ["faiss"]:
+            # TODO: 从FAISS向量库中删除文档
+            delete_file_from_db(kb_file)
+
+    def exist_doc(self, file_name: str):
+        return doc_exists(KnowledgeFile(knowledge_base_name=self.kb_name,
+                                        filename=file_name))
 
     def list_docs(self):
         return list_docs_from_db(self.kb_name)
