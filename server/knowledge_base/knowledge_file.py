@@ -10,7 +10,6 @@ class KnowledgeFile:
             knowledge_base_name: str
     ):
         self.kb = KnowledgeBase.load(knowledge_base_name)
-        self.knowledge_base_type = "faiss"
         self.filename = filename
         self.ext = os.path.splitext(filename)[-1]
         self.filepath = get_file_path(knowledge_base_name, filename)

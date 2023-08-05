@@ -16,8 +16,6 @@ SUPPORTED_VS_TYPES = ["faiss", "milvus"]
 DB_ROOT = os.path.join(KB_ROOT_PATH, "info.db")
 
 
-# TODO: 知识库信息入库
-
 def list_kbs_from_db():
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
