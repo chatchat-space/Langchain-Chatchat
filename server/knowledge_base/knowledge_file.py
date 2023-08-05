@@ -1,9 +1,5 @@
 import os.path
-from server.knowledge_base.utils import (get_file_path, get_vs_path,
-                                         refresh_vs_cache, load_embeddings)
-from configs.model_config import (embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE)
-from langchain.vectorstores import FAISS
-from server.utils import torch_gc
+from server.knowledge_base.utils import (get_file_path)
 from server.knowledge_base import KnowledgeBase
 
 
