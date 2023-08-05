@@ -1,9 +1,16 @@
-from server.knowledge_base.utils import (get_vs_path, get_kb_path, get_doc_path)
 import os
 import sqlite3
-from configs.model_config import KB_ROOT_PATH
 import datetime
 import shutil
+from langchain.vectorstores import FAISS
+from server.knowledge_base.utils import (get_vs_path, get_kb_path, get_doc_path,
+                                         refresh_vs_cache, load_embeddings)
+from configs.model_config import (KB_ROOT_PATH, embedding_model_dict, EMBEDDING_MODEL,
+                                  EMBEDDING_DEVICE)
+from server.utils import torch_gc
+from typing import List
+from langchain.docstore.document import Document
+
 
 SUPPORTED_VS_TYPES = ["faiss", "milvus"]
 DB_ROOT = os.path.join(KB_ROOT_PATH, "info.db")
@@ -22,7 +29,8 @@ def list_kbs_from_db():
     conn.close()
     return kbs
 
-def add_kb_to_db(kb_name, vs_type):
+
+def add_kb_to_db(kb_name, vs_type, embed_model):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
     # Create table
@@ -30,13 +38,15 @@ def add_kb_to_db(kb_name, vs_type):
                  (ID INTEGER  PRIMARY KEY AUTOINCREMENT,
                  KB_NAME TEXT, 
                  VS_TYPE TEXT, 
+                 EMBED_MODEL TEXT,
                  FILE_COUNT INTEGER,
                  CREATE_TIME DATETIME) ''')
     # Insert a row of data
     c.execute(f"""INSERT INTO KNOWLEDGE_BASE 
-                  (KB_NAME, VS_TYPE, FILE_COUNT, CREATE_TIME)
+                  (KB_NAME, VS_TYPE, EMBED_MODEL, FILE_COUNT, CREATE_TIME)
                   VALUES 
-                  ('{kb_name}','{vs_type}',0,'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')""")
+                  ('{kb_name}','{vs_type}','{embed_model}',
+                  0,'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')""")
     conn.commit()
     conn.close()
 
@@ -56,17 +66,17 @@ def kb_exists(kb_name):
 def load_kb_from_db(kb_name):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
-    c.execute(f'''SELECT KB_NAME, VS_TYPE
+    c.execute(f'''SELECT KB_NAME, VS_TYPE, EMBED_MODEL
                   FROM KNOWLEDGE_BASE
                   WHERE KB_NAME="{kb_name}"  ''')
     resp = c.fetchone()
     if resp:
-        kb_name, vs_type = resp
+        kb_name, vs_type, embed_model = resp
     else:
-        kb_name, vs_type = None, None
+        kb_name, vs_type, embed_model = None, None, None
     conn.commit()
     conn.close()
-    return kb_name, vs_type
+    return kb_name, vs_type, embed_model
 
 
 def delete_kb_from_db(kb_name):
@@ -84,11 +94,15 @@ class KnowledgeBase:
     def __init__(self,
                  knowledge_base_name: str,
                  vector_store_type: str,
+                 embed_model: str,
                  ):
         self.kb_name = knowledge_base_name
         if vector_store_type not in SUPPORTED_VS_TYPES:
             raise ValueError(f"暂未支持向量库类型 {vector_store_type}")
         self.vs_type = vector_store_type
+        if embed_model not in embedding_model_dict.keys():
+            raise ValueError(f"暂未支持embedding模型 {embed_model}")
+        self.embed_model = embed_model
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         if self.vs_type in ["faiss"]:
@@ -102,11 +116,30 @@ class KnowledgeBase:
         if self.vs_type in ["faiss"]:
             if not os.path.exists(self.vs_path):
                 os.makedirs(self.vs_path)
-            add_kb_to_db(self.kb_name, self.vs_type)
+            add_kb_to_db(self.kb_name, self.vs_type, self.embed_model)
         elif self.vs_type in ["milvus"]:
             # TODO: 创建milvus库
             pass
         return True
+
+    def add_file(self, docs: List[Document]):
+        vs_path = get_vs_path(self.kb_name)
+        embeddings = load_embeddings(embedding_model_dict[self.embed_model], EMBEDDING_DEVICE)
+        if self.vs_type in ["faiss"]:
+            if os.path.exists(vs_path) and "index.faiss" in os.listdir(vs_path):
+                vector_store = FAISS.load_local(vs_path, embeddings)
+                vector_store.add_documents(docs)
+                torch_gc()
+            else:
+                if not os.path.exists(vs_path):
+                    os.makedirs(vs_path)
+                vector_store = FAISS.from_documents(docs, embeddings)  # docs 为Document列表
+                torch_gc()
+            vector_store.save_local(vs_path)
+            refresh_vs_cache(self.kb_name)
+        elif self.vs_type in ["milvus"]:
+            # TODO: 向milvus库中增加文件
+            pass
 
     @classmethod
     def exists(cls,
@@ -116,8 +149,8 @@ class KnowledgeBase:
     @classmethod
     def load(cls,
              knowledge_base_name: str):
-        kb_name, vs_type = load_kb_from_db(knowledge_base_name)
-        return cls(kb_name, vs_type)
+        kb_name, vs_type, embed_model = load_kb_from_db(knowledge_base_name)
+        return cls(kb_name, vs_type, embed_model)
 
     @classmethod
     def delete(cls,

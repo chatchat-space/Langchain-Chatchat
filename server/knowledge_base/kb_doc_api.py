@@ -7,7 +7,7 @@ from server.knowledge_base.utils import (validate_kb_name, get_kb_path, get_doc_
                                          get_file_path, refresh_vs_cache, get_vs_path)
 from fastapi.responses import StreamingResponse
 import json
-from server.knowledge_base.knowledge_file import KnowledgeFile
+from server.knowledge_base import KnowledgeFile, KnowledgeBase
 
 
 async def list_docs(knowledge_base_name: str):
@@ -59,8 +59,8 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
 
     kb_file = KnowledgeFile(filename=file.filename,
                             knowledge_base_name=knowledge_base_name)
-    kb_file.file2text()
-    kb_file.docs2vs()
+    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
+    kb.add_file(kb_file.file2text())
 
     return BaseResponse(code=200, msg=f"成功上传文件 {file.filename}")
 
@@ -108,20 +108,20 @@ async def recreate_vector_store(knowledge_base_name: str):
     recreate vector store from the content.
     this is usefull when user can copy files to content folder directly instead of upload through network.
     '''
-    async def output(kb):
-        vs_path = get_vs_path(kb)
+    async def output(kb_name):
+        vs_path = get_vs_path(kb_name)
         if os.path.isdir(vs_path):
             shutil.rmtree(vs_path)
         os.mkdir(vs_path)
         print(f"start to recreate vectore in {vs_path}")
 
-        docs = (await list_docs(kb)).data
+        docs = (await list_docs(kb_name)).data
         for i, filename in enumerate(docs):
             kb_file = KnowledgeFile(filename=filename,
-                                    knowledge_base_name=kb)
-            print(f"processing {get_file_path(kb, filename)} to vector store.")
-            kb_file.file2text()
-            kb_file.docs2vs()
+                                    knowledge_base_name=kb_name)
+            print(f"processing {kb_file.filepath} to vector store.")
+            kb = KnowledgeBase.load(knowledge_base_name=kb_name)
+            kb.add_file(kb_file.file2text())
             yield json.dumps({
                 "total": len(docs),
                 "finished": i + 1,

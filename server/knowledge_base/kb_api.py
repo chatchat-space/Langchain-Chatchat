@@ -10,7 +10,9 @@ async def list_kbs():
 
 
 async def create_kb(knowledge_base_name: str,
-                    vector_store_type: str = "faiss"):
+                    vector_store_type: str = "faiss",
+                    embed_model: str = "m3e-base",
+                    ):
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -19,7 +21,8 @@ async def create_kb(knowledge_base_name: str,
     if KnowledgeBase.exists(knowledge_base_name):
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
     kb = KnowledgeBase(knowledge_base_name=knowledge_base_name,
-                       vector_store_type=vector_store_type)
+                       vector_store_type=vector_store_type,
+                       embed_model=embed_model)
     kb.create()
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 

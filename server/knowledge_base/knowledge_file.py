@@ -4,6 +4,7 @@ from server.knowledge_base.utils import (get_file_path, get_vs_path,
 from configs.model_config import (embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE)
 from langchain.vectorstores import FAISS
 from server.utils import torch_gc
+from server.knowledge_base import KnowledgeBase
 
 
 class KnowledgeFile:
@@ -12,7 +13,7 @@ class KnowledgeFile:
             filename: str,
             knowledge_base_name: str
     ):
-        self.knowledge_base_name = knowledge_base_name
+        self.kb = KnowledgeBase.load(knowledge_base_name)
         self.knowledge_base_type = "faiss"
         self.filename = filename
         self.ext = os.path.splitext(filename)[-1]
@@ -28,12 +29,12 @@ class KnowledgeFile:
 
         from langchain.text_splitter import CharacterTextSplitter
         text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=200)
-        self.docs = loader.load_and_split(text_splitter)
-        return True
+        return loader.load_and_split(text_splitter)
 
     def docs2vs(self):
-        vs_path = get_vs_path(self.knowledge_base_name)
+        vs_path = get_vs_path(self.kb.kb_name)
         embeddings = load_embeddings(embedding_model_dict[EMBEDDING_MODEL], EMBEDDING_DEVICE)
+
         if os.path.exists(vs_path) and "index.faiss" in os.listdir(vs_path):
             vector_store = FAISS.load_local(vs_path, embeddings)
             vector_store.add_documents(self.docs)
@@ -44,5 +45,5 @@ class KnowledgeFile:
             vector_store = FAISS.from_documents(self.docs, embeddings)  # docs 为Document列表
             torch_gc()
         vector_store.save_local(vs_path)
-        refresh_vs_cache(self.knowledge_base_name)
+        refresh_vs_cache(self.kb.kb_name)
         return True
