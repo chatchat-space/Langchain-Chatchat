@@ -32,16 +32,16 @@ def add_kb_to_db(kb_name, vs_type, embed_model):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
     # Create table
-    c.execute('''CREATE TABLE if not exists KNOWLEDGE_BASE
-                 (ID INTEGER  PRIMARY KEY AUTOINCREMENT,
-                 KB_NAME TEXT, 
-                 VS_TYPE TEXT, 
-                 EMBED_MODEL TEXT,
-                 FILE_COUNT INTEGER,
-                 CREATE_TIME DATETIME) ''')
+    c.execute('''CREATE TABLE if not exists knowledge_base
+                 (id INTEGER  PRIMARY KEY AUTOINCREMENT,
+                 kb_name TEXT, 
+                 vs_type TEXT, 
+                 embed_model TEXT,
+                 file_count INTEGER,
+                 create_time DATETIME) ''')
     # Insert a row of data
-    c.execute(f"""INSERT INTO KNOWLEDGE_BASE 
-                  (KB_NAME, VS_TYPE, EMBED_MODEL, FILE_COUNT, CREATE_TIME)
+    c.execute(f"""INSERT INTO knowledge_base 
+                  (kb_name, vs_type, embed_model, file_count, create_time)
                   VALUES 
                   ('{kb_name}','{vs_type}','{embed_model}',
                   0,'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')""")
@@ -53,8 +53,8 @@ def kb_exists(kb_name):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
     c.execute(f'''SELECT COUNT(*)
-                  FROM KNOWLEDGE_BASE
-                  WHERE KB_NAME="{kb_name}"  ''')
+                  FROM knowledge_base
+                  WHERE kb_name="{kb_name}"  ''')
     status = True if c.fetchone()[0] else False
     conn.commit()
     conn.close()
@@ -64,9 +64,9 @@ def kb_exists(kb_name):
 def load_kb_from_db(kb_name):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
-    c.execute(f'''SELECT KB_NAME, VS_TYPE, EMBED_MODEL
-                  FROM KNOWLEDGE_BASE
-                  WHERE KB_NAME="{kb_name}"  ''')
+    c.execute(f'''SELECT kb_name, vs_type, embed_model
+                  FROM knowledge_base
+                  WHERE kb_name="{kb_name}"  ''')
     resp = c.fetchone()
     if resp:
         kb_name, vs_type, embed_model = resp
@@ -81,8 +81,8 @@ def delete_kb_from_db(kb_name):
     conn = sqlite3.connect(DB_ROOT)
     c = conn.cursor()
     c.execute(f'''DELETE
-                  FROM KNOWLEDGE_BASE
-                  WHERE KB_NAME="{kb_name}"  ''')
+                  FROM knowledge_base
+                  WHERE kb_name="{kb_name}"  ''')
     conn.commit()
     conn.close()
     return True
