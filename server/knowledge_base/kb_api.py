@@ -2,6 +2,7 @@ import urllib
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name
 from server.knowledge_base.knowledge_base import KnowledgeBase
+from configs.model_config import EMBEDDING_MODEL
 
 
 async def list_kbs():
@@ -11,7 +12,7 @@ async def list_kbs():
 
 async def create_kb(knowledge_base_name: str,
                     vector_store_type: str = "faiss",
-                    embed_model: str = "m3e-base",
+                    embed_model: str = EMBEDDING_MODEL,
                     ):
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):

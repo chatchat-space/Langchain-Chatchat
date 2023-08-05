@@ -93,8 +93,8 @@ def delete_kb_from_db(kb_name):
 class KnowledgeBase:
     def __init__(self,
                  knowledge_base_name: str,
-                 vector_store_type: str,
-                 embed_model: str,
+                 vector_store_type: str = "faiss",
+                 embed_model: str = EMBEDDING_MODEL,
                  ):
         self.kb_name = knowledge_base_name
         if vector_store_type not in SUPPORTED_VS_TYPES:
