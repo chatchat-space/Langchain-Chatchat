@@ -1,10 +1,8 @@
 import os
 import urllib
-import shutil
 from fastapi import File, Form, UploadFile
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import (validate_kb_name, get_kb_path, get_doc_path,
-                                         get_file_path, refresh_vs_cache, get_vs_path)
+from server.knowledge_base.utils import (validate_kb_name)
 from fastapi.responses import StreamingResponse
 import json
 from server.knowledge_base.knowledge_file import KnowledgeFile
@@ -16,8 +14,7 @@ async def list_docs(knowledge_base_name: str):
         return ListResponse(code=403, msg="Don't attack me", data=[])
 
     knowledge_base_name = urllib.parse.unquote(knowledge_base_name)
-    kb_path = get_kb_path(knowledge_base_name)
-    if not os.path.exists(kb_path):
+    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
         return ListResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[])
     else:
         all_doc_names = KnowledgeBase.load(knowledge_base_name=knowledge_base_name).list_docs()
@@ -42,9 +39,10 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
                             knowledge_base_name=knowledge_base_name)
 
     if (os.path.exists(kb_file.filepath)
-        and not override
-        and os.path.getsize(kb_file.filepath) == len(file_content)
+            and not override
+            and os.path.getsize(kb_file.filepath) == len(file_content)
     ):
+        # TODO: filesize 不同后的处理
         file_status = f"文件 {kb_file.filename} 已存在。"
         return BaseResponse(code=404, msg=file_status)
 
@@ -83,6 +81,7 @@ async def update_doc():
     # refresh_vs_cache(knowledge_base_name)
     pass
 
+
 async def download_doc():
     # TODO: 下载文件
     pass
@@ -93,24 +92,21 @@ async def recreate_vector_store(knowledge_base_name: str):
     recreate vector store from the content.
     this is usefull when user can copy files to content folder directly instead of upload through network.
     '''
-    async def output(kb_name):
-        vs_path = get_vs_path(kb_name)
-        if os.path.isdir(vs_path):
-            shutil.rmtree(vs_path)
-        os.mkdir(vs_path)
-        print(f"start to recreate vectore in {vs_path}")
+    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
 
-        docs = (await list_docs(kb_name)).data
+    async def output(kb: KnowledgeBase):
+        kb.recreate_vs()
+        print(f"start to recreate vector store of {kb.kb_name}")
+        docs = kb.list_docs()
         for i, filename in enumerate(docs):
             kb_file = KnowledgeFile(filename=filename,
-                                    knowledge_base_name=kb_name)
+                                    knowledge_base_name=kb.kb_name)
             print(f"processing {kb_file.filepath} to vector store.")
-            kb = KnowledgeBase.load(knowledge_base_name=kb_name)
             kb.add_doc(kb_file)
             yield json.dumps({
                 "total": len(docs),
                 "finished": i + 1,
                 "doc": filename,
             })
-    
-    return StreamingResponse(output(knowledge_base_name), media_type="text/event-stream")
+
+    return StreamingResponse(output(kb), media_type="text/event-stream")

@@ -4,15 +4,13 @@ from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
                                   VECTOR_SEARCH_TOP_K)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
-import os
-from server.knowledge_base.utils import get_kb_path
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts import PromptTemplate
-from server.knowledge_base.utils import lookup_vs
+from server.knowledge_base.knowledge_base import KnowledgeBase
 import json
 
 
@@ -20,12 +18,12 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         knowledge_base_name: str = Body(..., description="知识库名称", example="samples"),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                         ):
-    kb_path = get_kb_path(knowledge_base_name)
-    if not os.path.exists(kb_path):
+    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
 
     async def knowledge_base_chat_iterator(query: str,
-                                           knowledge_base_name: str,
+                                           kb: KnowledgeBase,
                                            top_k: int,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
@@ -37,7 +35,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
             model_name=LLM_MODEL
         )
-        docs = lookup_vs(query, knowledge_base_name, top_k)
+        docs = kb.search_docs(query, top_k)
         context = "\n".join([doc.page_content for doc in docs])
         prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
 
@@ -60,5 +58,5 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                    "docs": source_documents})
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, knowledge_base_name, top_k),
+    return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k),
                              media_type="text/event-stream")
