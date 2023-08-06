@@ -5,32 +5,17 @@ import shutil
 from langchain.vectorstores import FAISS
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from configs.model_config import (embedding_model_dict, EMBEDDING_MODEL, EMBEDDING_DEVICE,
-                                  KB_ROOT_PATH, DB_ROOT_PATH, VECTOR_SEARCH_TOP_K, CACHED_VS_NUM)
+                                  DB_ROOT_PATH, VECTOR_SEARCH_TOP_K, CACHED_VS_NUM)
 from server.utils import torch_gc
 from functools import lru_cache
 from server.knowledge_base.knowledge_file import KnowledgeFile
 from typing import List
 import numpy as np
+from server.knowledge_base.utils import (get_kb_path, get_doc_path, get_vs_path)
 
 SUPPORTED_VS_TYPES = ["faiss", "milvus"]
 
 _VECTOR_STORE_TICKS = {}
-
-
-def get_kb_path(knowledge_base_name: str):
-    return os.path.join(KB_ROOT_PATH, knowledge_base_name)
-
-
-def get_doc_path(knowledge_base_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), "content")
-
-
-def get_vs_path(knowledge_base_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
-
-
-def get_file_path(knowledge_base_name: str, doc_name: str):
-    return os.path.join(get_doc_path(knowledge_base_name), doc_name)
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
