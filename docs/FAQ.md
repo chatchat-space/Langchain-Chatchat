@@ -119,7 +119,7 @@ embedding_model_dict = {
 
 Q10: 执行 `python cli_demo.py`过程中，显卡内存爆了，提示"OutOfMemoryError: CUDA out of memory"
 
-A10: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。
+A10: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。或者打开量化，请在 [configs/model_config.py](../configs/model_config.py) 文件中，对`LOAD_IN_8BIT`参数进行修改
 
 ---
 
@@ -196,3 +196,15 @@ Q15 加载chatglm-6b-int8或chatglm-6b-int4抛出 `RuntimeError: Only Tensors of
 注：虽然模型可以顺利加载但在cpu上仍存在推理失败的可能：即针对每个问题，模型一直输出gugugugu。
 
     因此，最好不要试图用cpu加载量化模型，原因可能是目前python主流量化包的量化操作是在gpu上执行的,会天然地存在gap。
+
+---
+
+Q16 修改配置中路径后，加载text2vec-large-chinese依然提示`WARNING: No sentence-transformers model found with name text2vec-large-chinese. Creating a new one with MEAN pooling.`
+
+尝试更换embedding，如text2vec-base-chinese，请在 [configs/model_config.py](../configs/model_config.py) 文件中，修改 `text2vec-base`参数为本地路径，绝对路径或者相对路径均可
+
+---
+
+Q17 启动webui.py时报错  `you need to set ValueError: If you want to offload some keys to cpu or disk, you need to set llm_int8_enable_fp32_cpu_offload=True.`
+
+疑为GPU相关的问题，重新启动服务器即可
