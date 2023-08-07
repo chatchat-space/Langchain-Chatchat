@@ -14,6 +14,7 @@ import datetime
 from server.knowledge_base.utils import (get_kb_path, get_doc_path)
 from server.knowledge_base.knowledge_file import KnowledgeFile
 from typing import List
+import os
 
 
 class SupportedVSType:
@@ -125,6 +126,10 @@ def list_docs_from_db(kb_name):
     conn.close()
     return kbs
 
+def list_docs_from_folder(kb_name: str):
+    doc_path = get_doc_path(kb_name)
+    return [file for file in os.listdir(doc_path)
+            if os.path.isfile(os.path.join(doc_path, file))]
 
 def add_doc_to_db(kb_file: KnowledgeFile):
     conn = sqlite3.connect(DB_ROOT_PATH)

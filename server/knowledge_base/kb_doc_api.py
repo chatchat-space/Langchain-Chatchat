@@ -6,7 +6,9 @@ from server.knowledge_base.utils import (validate_kb_name)
 from fastapi.responses import StreamingResponse
 import json
 from server.knowledge_base.knowledge_file import KnowledgeFile
-from server.knowledge_base.knowledge_base import KnowledgeBase
+from server.knowledge_base.knowledge_base_factory import KBServiceFactory
+from server.knowledge_base.kb_service.base import SupportedVSType, list_docs_from_folder
+from server.knowledge_base.kb_service.faiss_kb_service import refresh_vs_cache
 
 
 async def list_docs(knowledge_base_name: str):
@@ -14,10 +16,11 @@ async def list_docs(knowledge_base_name: str):
         return ListResponse(code=403, msg="Don't attack me", data=[])
 
     knowledge_base_name = urllib.parse.unquote(knowledge_base_name)
-    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
         return ListResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[])
     else:
-        all_doc_names = KnowledgeBase.load(knowledge_base_name=knowledge_base_name).list_docs()
+        all_doc_names = kb.list_docs()
     return ListResponse(data=all_doc_names)
 
 
@@ -28,10 +31,9 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
 
-    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
-
-    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
 
     file_content = await file.read()  # 读取上传文件的内容
 
@@ -63,10 +65,10 @@ async def delete_doc(knowledge_base_name: str,
         return BaseResponse(code=403, msg="Don't attack me")
 
     knowledge_base_name = urllib.parse.unquote(knowledge_base_name)
-    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
     if not kb.exist_doc(doc_name):
         return BaseResponse(code=404, msg=f"未找到文件 {doc_name}")
     kb_file = KnowledgeFile(filename=doc_name,
@@ -92,21 +94,26 @@ async def recreate_vector_store(knowledge_base_name: str):
     recreate vector store from the content.
     this is usefull when user can copy files to content folder directly instead of upload through network.
     '''
-    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    async def output(kb: KnowledgeBase):
-        kb.recreate_vs()
+    async def output(kb):
+        kb.clear_vs()
         print(f"start to recreate vector store of {kb.kb_name}")
-        docs = kb.list_docs()
+        docs = list_docs_from_folder(knowledge_base_name)
+        print(docs)
         for i, filename in enumerate(docs):
+            yield json.dumps({
+                "total": len(docs),
+                "finished": i,
+                "doc": filename,
+            })
             kb_file = KnowledgeFile(filename=filename,
                                     knowledge_base_name=kb.kb_name)
             print(f"processing {kb_file.filepath} to vector store.")
             kb.add_doc(kb_file)
-            yield json.dumps({
-                "total": len(docs),
-                "finished": i + 1,
-                "doc": filename,
-            })
+        if kb.vs_type == SupportedVSType.FAISS:
+            refresh_vs_cache(knowledge_base_name)
 
     return StreamingResponse(output(kb), media_type="text/event-stream")

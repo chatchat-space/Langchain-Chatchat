@@ -5,13 +5,13 @@ class DefaultKBService(KBService):
     def vs_type(self) -> str:
         return "default"
 
-    def do_create_kbs(self):
+    def do_create_kb(self):
         pass
 
     def do_init(self):
         pass
 
-    def do_drop_kbs(self):
+    def do_drop_kb(self):
         pass
 
     def do_search(self):
@@ -25,3 +25,6 @@ class DefaultKBService(KBService):
 
     def do_delete_doc(self):
         pass
+
+    def kb_exists(self):
+        return False

@@ -10,7 +10,8 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts import PromptTemplate
-from server.knowledge_base.knowledge_base import KnowledgeBase
+from server.knowledge_base.knowledge_base_factory import KBServiceFactory
+from server.knowledge_base.kb_service.base import KBService
 import json
 
 
@@ -18,12 +19,12 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         knowledge_base_name: str = Body(..., description="知识库名称", example="samples"),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                         ):
-    if not KnowledgeBase.exists(knowledge_base_name=knowledge_base_name):
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
-    kb = KnowledgeBase.load(knowledge_base_name=knowledge_base_name)
 
     async def knowledge_base_chat_iterator(query: str,
-                                           kb: KnowledgeBase,
+                                           kb: KBService,
                                            top_k: int,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()

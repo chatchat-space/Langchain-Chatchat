@@ -21,3 +21,6 @@ streamlit-option-menu
 streamlit-antd-components
 streamlit-chatbox>=1.1.6
 httpx
+
+faiss-cpu
+pymilvus==2.1.3 # requires milvus==2.1.3

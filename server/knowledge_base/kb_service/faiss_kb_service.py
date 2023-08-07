@@ -122,3 +122,4 @@ class FaissKBService(KBService):
 
     def do_clear_vs(self):
         shutil.rmtree(self.vs_path)
+        os.makedirs(self.vs_path)
