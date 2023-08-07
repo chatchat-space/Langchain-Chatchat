@@ -14,7 +14,6 @@ import datetime
 from server.knowledge_base.utils import (get_kb_path, get_doc_path)
 from server.knowledge_base.knowledge_file import KnowledgeFile
 from typing import List
-import os
 
 
 class SupportedVSType:
