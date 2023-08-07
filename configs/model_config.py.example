@@ -289,4 +289,3 @@ kbs_config = {
         "secure": False,
     }
 }
-DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")
