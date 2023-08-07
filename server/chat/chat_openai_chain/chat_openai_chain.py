@@ -11,7 +11,7 @@ from langchain.schema import (
     SystemMessage,
     LLMResult
 )
-from langchain.chat_models import ChatOpenAI, _convert_dict_to_message
+from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForChainRun,
     CallbackManagerForChainRun,
