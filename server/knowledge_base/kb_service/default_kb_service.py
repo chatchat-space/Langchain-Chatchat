@@ -11,7 +11,7 @@ class DefaultKBService(KBService):
     def do_init(self):
         pass
 
-    def do_remove_kbs(self):
+    def do_drop_kbs(self):
         pass
 
     def do_search(self):
@@ -23,5 +23,5 @@ class DefaultKBService(KBService):
     def do_insert_one_knowledge(self):
         pass
 
-    def do_delete(self):
+    def do_delete_doc(self):
         pass

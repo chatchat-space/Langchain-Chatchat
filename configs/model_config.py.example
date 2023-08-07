@@ -280,10 +280,13 @@ BING_SUBSCRIPTION_KEY = ""
 
 kbs_config = {
     "faiss": {
-
     },
     "milvus": {
-        "milvus_host": "192.168.50.128",
-        "milvus_port": 19530
+        "host": "127.0.0.1",
+        "port": "19530",
+        "user": "",
+        "password": "",
+        "secure": False,
     }
 }
+DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")

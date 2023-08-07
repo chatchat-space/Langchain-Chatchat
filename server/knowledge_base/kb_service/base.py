@@ -195,11 +195,9 @@ class KBService(ABC):
 
     def __init__(self,
                  knowledge_base_name: str,
-                 vector_store_type: str = "faiss",
                  embed_model: str = EMBEDDING_MODEL,
                  ):
         self.kb_name = knowledge_base_name
-        self.vs_type = vector_store_type
         self.embed_model = embed_model
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
@@ -212,7 +210,7 @@ class KBService(ABC):
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
             self.do_create_kb()
-        status = add_kb_to_db(self.kb_name, self.vs_type, self.embed_model)
+        status = add_kb_to_db(self.kb_name, self.vs_type(), self.embed_model)
         return status
 
     def clear_vs(self):
@@ -225,7 +223,7 @@ class KBService(ABC):
         """
         删除知识库
         """
-        self.do_remove_kb()
+        self.do_drop_kb()
         status = delete_kb_from_db(self.kb_name)
         return status
 
@@ -245,7 +243,7 @@ class KBService(ABC):
         """
         if os.path.exists(kb_file.filepath):
             os.remove(kb_file.filepath)
-        self.do_delete(kb_file)
+        self.do_delete_doc(kb_file)
         status = delete_file_from_db(kb_file)
         return status
 
@@ -293,7 +291,7 @@ class KBService(ABC):
         pass
 
     @abstractmethod
-    def do_remove_kb(self):
+    def do_drop_kb(self):
         """
         删除知识库子类实自己逻辑
         """
@@ -320,7 +318,7 @@ class KBService(ABC):
         pass
 
     @abstractmethod
-    def do_delete(self,
+    def do_delete_doc(self,
                   kb_file: KnowledgeFile):
         """
         从知识库删除文档子类实自己逻辑

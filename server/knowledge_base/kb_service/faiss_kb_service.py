@@ -76,7 +76,7 @@ class FaissKBService(KBService):
         if not os.path.exists(self.vs_path):
             os.makedirs(self.vs_path)
 
-    def do_remove_kb(self):
+    def do_drop_kb(self):
         shutil.rmtree(self.kb_path)
 
     def do_search(self,
@@ -105,7 +105,7 @@ class FaissKBService(KBService):
         vector_store.save_local(self.vs_path)
         refresh_vs_cache(self.kb_name)
 
-    def do_delete(self,
+    def do_delete_doc(self,
                   kb_file: KnowledgeFile):
         embeddings = load_embeddings(self.embed_model, EMBEDDING_DEVICE)
         if os.path.exists(self.vs_path) and "index.faiss" in os.listdir(self.vs_path):
@@ -113,7 +113,6 @@ class FaissKBService(KBService):
             ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata["source"] == kb_file.filepath]
             if len(ids) == 0:
                 return None
-            print(len(ids))
             vector_store = delete_doc_from_faiss(vector_store, ids)
             vector_store.save_local(self.vs_path)
             refresh_vs_cache(self.kb_name)
