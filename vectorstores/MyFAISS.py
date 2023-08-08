@@ -129,12 +129,14 @@ class MyFAISS(FAISS, VectorStore):
             if len(ids) == 0:
                 return f"docs delete fail"
             else:
+                _reversed_index = {v: k for k, v in self.index_to_docstore_id.items()}
+                index_to_delete = [_reversed_index[i] for i in ids]
+                # 从 self.index 中删除对应id
+                self.index.remove_ids(np.array(index_to_delete, dtype=np.int64))
                 for id in ids:
                     index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
                     self.index_to_docstore_id.pop(index)
                     self.docstore._dict.pop(id)
-                # TODO: 从 self.index 中删除对应id
-                # self.index.reset()
                 self.save_local(vs_path)
                 return f"docs delete success"
         except Exception as e:

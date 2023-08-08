@@ -35,7 +35,7 @@ def main():
         # filepath错误的返回为None, 如果直接用原先的vs_path,_ = local_doc_qa.init_knowledge_vector_store(filepath)
         # 会直接导致TypeError: cannot unpack non-iterable NoneType object而使得程序直接退出
         # 因此需要先加一层判断，保证程序能继续运行
-        temp,loaded_files = local_doc_qa.init_knowledge_vector_store(filepath)
+        temp, loaded_files = local_doc_qa.init_knowledge_vector_store(filepath)
         if temp is not None:
             vs_path = temp
             # 如果loaded_files和len(filepath)不一致，则说明部分文件没有加载成功
