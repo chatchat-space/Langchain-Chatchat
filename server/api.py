@@ -11,9 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
-# from server.knowledge_base import (list_kbs, create_kb, delete_kb,
-#                                    list_docs, upload_doc, delete_doc,
-#                                    update_doc, recreate_vector_store)
+from server.knowledge_base import (list_kbs, create_kb, delete_kb,
+                                   list_docs, upload_doc, delete_doc,
+                                   update_doc, recreate_vector_store)
 from server.utils import BaseResponse, ListResponse
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -58,52 +58,52 @@ def create_app():
              tags=["Chat"],
              summary="与搜索引擎对话")(search_engine_chat)
 
-    # # Tag: Knowledge Base Management
-    # app.get("/knowledge_base/list_knowledge_bases",
-    #         tags=["Knowledge Base Management"],
-    #         response_model=ListResponse,
-    #         summary="获取知识库列表")(list_kbs)
-    #
-    # app.post("/knowledge_base/create_knowledge_base",
+    # Tag: Knowledge Base Management
+    app.get("/knowledge_base/list_knowledge_bases",
+            tags=["Knowledge Base Management"],
+            response_model=ListResponse,
+            summary="获取知识库列表")(list_kbs)
+
+    app.post("/knowledge_base/create_knowledge_base",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="创建知识库"
+             )(create_kb)
+
+    app.delete("/knowledge_base/delete_knowledge_base",
+               tags=["Knowledge Base Management"],
+               response_model=BaseResponse,
+               summary="删除知识库"
+               )(delete_kb)
+
+    app.get("/knowledge_base/list_docs",
+            tags=["Knowledge Base Management"],
+            response_model=ListResponse,
+            summary="获取知识库内的文件列表"
+            )(list_docs)
+
+    app.post("/knowledge_base/upload_doc",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="上传文件到知识库"
+             )(upload_doc)
+
+    app.delete("/knowledge_base/delete_doc",
+               tags=["Knowledge Base Management"],
+               response_model=BaseResponse,
+               summary="删除知识库内的文件"
+               )(delete_doc)
+
+    # app.post("/knowledge_base/update_doc",
     #          tags=["Knowledge Base Management"],
     #          response_model=BaseResponse,
-    #          summary="创建知识库"
-    #          )(create_kb)
-    #
-    # app.delete("/knowledge_base/delete_knowledge_base",
-    #            tags=["Knowledge Base Management"],
-    #            response_model=BaseResponse,
-    #            summary="删除知识库"
-    #            )(delete_kb)
-    #
-    # app.get("/knowledge_base/list_docs",
-    #         tags=["Knowledge Base Management"],
-    #         response_model=ListResponse,
-    #         summary="获取知识库内的文件列表"
-    #         )(list_docs)
-    #
-    # app.post("/knowledge_base/upload_doc",
-    #          tags=["Knowledge Base Management"],
-    #          response_model=BaseResponse,
-    #          summary="上传文件到知识库"
-    #          )(upload_doc)
-    #
-    # app.delete("/knowledge_base/delete_doc",
-    #            tags=["Knowledge Base Management"],
-    #            response_model=BaseResponse,
-    #            summary="删除知识库内的文件"
-    #            )(delete_doc)
-    #
-    # # app.post("/knowledge_base/update_doc",
-    # #          tags=["Knowledge Base Management"],
-    # #          response_model=BaseResponse,
-    # #          summary="上传文件到知识库，并删除另一个文件"
-    # #          )(update_doc)
-    #
-    # app.post("/knowledge_base/recreate_vector_store",
-    #          tags=["Knowledge Base Management"],
-    #          summary="根据content中文档重建向量库，流式输出处理进度。"
-    #          )(recreate_vector_store)
+    #          summary="上传文件到知识库，并删除另一个文件"
+    #          )(update_doc)
+
+    app.post("/knowledge_base/recreate_vector_store",
+             tags=["Knowledge Base Management"],
+             summary="根据content中文档重建向量库，流式输出处理进度。"
+             )(recreate_vector_store)
     return app
 
 
