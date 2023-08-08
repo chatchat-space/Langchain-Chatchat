@@ -12,7 +12,7 @@ from server.db.repository.knowledge_file_repository import add_doc_to_db, delete
     list_docs_from_db
 from configs.model_config import (DB_ROOT_PATH, kbs_config, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
-from server.knowledge_base.utils import (get_kb_path, get_doc_path, KnowledgeFile)
+from server.knowledge_base.utils import (get_kb_path, get_doc_path, load_embeddings, KnowledgeFile)
 from typing import List
 
 
@@ -20,19 +20,6 @@ class SupportedVSType:
     FAISS = 'faiss'
     MILVUS = 'milvus'
     DEFAULT = 'default'
-
-
-def list_docs_from_folder(kb_name: str):
-    doc_path = get_doc_path(kb_name)
-    return [file for file in os.listdir(doc_path)
-            if os.path.isfile(os.path.join(doc_path, file))]
-
-
-@lru_cache(1)
-def load_embeddings(model: str, device: str):
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model],
-                                       model_kwargs={'device': device})
-    return embeddings
 
 
 class KBService(ABC):

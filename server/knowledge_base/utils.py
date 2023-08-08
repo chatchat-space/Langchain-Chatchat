@@ -6,7 +6,6 @@ from functools import lru_cache
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.db.repository.knowledge_base_repository import load_kb_from_db
 from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
-from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -27,6 +26,10 @@ def get_vs_path(knowledge_base_name: str):
 def get_file_path(knowledge_base_name: str, doc_name: str):
     return os.path.join(get_doc_path(knowledge_base_name), doc_name)
 
+def list_docs_from_folder(kb_name: str):
+    doc_path = get_doc_path(kb_name)
+    return [file for file in os.listdir(doc_path)
+            if os.path.isfile(os.path.join(doc_path, file))]
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):

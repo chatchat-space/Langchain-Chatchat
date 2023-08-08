@@ -1,7 +1,7 @@
 import urllib
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name, KBServiceFactory
-from server.knowledge_base.kb_service.base import list_kbs_from_db
+from server.db.repository.knowledge_base_repository import list_kbs_from_db
 from configs.model_config import EMBEDDING_MODEL
 
 
