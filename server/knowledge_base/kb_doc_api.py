@@ -8,7 +8,6 @@ import json
 from server.knowledge_base.utils import KnowledgeFile, list_docs_from_folder
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.knowledge_base.kb_service.base import SupportedVSType
-from server.knowledge_base.kb_service.faiss_kb_service import refresh_vs_cache
 from typing import Union
 
 
@@ -81,7 +80,6 @@ async def delete_doc(knowledge_base_name: str,
 
 async def update_doc():
     # TODO: 替换文件
-    # refresh_vs_cache(knowledge_base_name)
     pass
 
 
@@ -109,6 +107,7 @@ async def recreate_vector_store(
             return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
     async def output(kb):
+        kb.create_kb()
         kb.clear_vs()
         print(f"start to recreate vector store of {kb.kb_name}")
         docs = list_docs_from_folder(knowledge_base_name)
@@ -126,7 +125,5 @@ async def recreate_vector_store(
                 kb.add_doc(kb_file)
             except ValueError as e:
                 print(e)
-        if kb.vs_type == SupportedVSType.FAISS:
-            refresh_vs_cache(knowledge_base_name)
 
     return StreamingResponse(output(kb), media_type="text/event-stream")

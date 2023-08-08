@@ -20,10 +20,19 @@ def add_doc_to_db(session, kb_file: KnowledgeFile):
                                                                     kb_name=kb_file.kb_name).first()
         if existing_file:
             existing_file.file_version += 1
+            session.add(existing_file)
         # 否则，添加新文件
         else:
-            session.add(kb_file)
+            new_file = KnowledgeFileModel(
+                file_name=kb_file.filename,
+                file_ext=kb_file.ext,
+                kb_name=kb_file.kb_name,
+                document_loader_name=kb_file.document_loader_name,
+                text_splitter_name=kb_file.text_splitter_name,
+            )
             kb.file_count += 1
+            session.add(new_file)
+            session.add(kb)
     return True
 
 

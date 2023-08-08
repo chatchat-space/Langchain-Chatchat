@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
-
 from server.db.base import Base
-
+from datetime import datetime
 
 class KnowledgeFileModel(Base):
     """
@@ -14,8 +13,8 @@ class KnowledgeFileModel(Base):
     kb_name = Column(String, comment='所属知识库名称')
     document_loader_name = Column(String, comment='文档加载器名称')
     text_splitter_name = Column(String, comment='文本分割器名称')
-    file_version = Column(Integer, comment='文件版本')
-    create_time = Column(DateTime, comment='创建时间')
+    file_version = Column(Integer, comment='文件版本', default=1)
+    create_time = Column(DateTime, comment='创建时间', default=datetime.now)
 
     def __repr__(self):
         return f"<KnowledgeFile(id='{self.id}', file_name='{self.file_name}', file_ext='{self.file_ext}', kb_name='{self.kb_name}', document_loader_name='{self.document_loader_name}', text_splitter_name='{self.text_splitter_name}', file_version='{self.file_version}', create_time='{self.create_time}')>"
