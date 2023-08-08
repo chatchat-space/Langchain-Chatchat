@@ -1,6 +1,6 @@
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, init_db, load_kb_from_db
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from server.db.repository.knowledge_base_repository import load_kb_from_db
 from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
-from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
 
 
 class KBServiceFactory:
@@ -21,7 +21,7 @@ class KBServiceFactory:
     @staticmethod
     def get_service_by_name(kb_name: str
                             ) -> KBService:
-        kb_name, vs_type = load_kb_from_db(kb_name)
+        kb_name, vs_type, _ = load_kb_from_db(kb_name)
         return KBServiceFactory.get_service(kb_name, vs_type)
 
     @staticmethod
@@ -30,8 +30,10 @@ class KBServiceFactory:
 
 
 if __name__ == '__main__':
+    # 测试建表使用
+    # from server.db.base import Base, engine
+    # Base.metadata.create_all(bind=engine)
     KBService = KBServiceFactory.get_service("test", SupportedVSType.FAISS)
-    init_db()
     KBService.create_kb()
     KBService = KBServiceFactory.get_default()
     print(KBService.list_kbs())

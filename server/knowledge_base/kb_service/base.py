@@ -8,9 +8,13 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
-from configs.model_config import (DB_ROOT_PATH, kbs_config, VECTOR_SEARCH_TOP_K,
+from configs.config import kbs_config
+from configs.model_config import (VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
-import datetime
+
+from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists
+from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \
+    list_docs_from_db
 from server.knowledge_base.utils import (get_kb_path, get_doc_path)
 from server.knowledge_base.knowledge_file import KnowledgeFile
 from typing import List
@@ -22,170 +26,10 @@ class SupportedVSType:
     DEFAULT = 'default'
 
 
-def init_db():
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE if not exists knowledge_base
-                 (id INTEGER  PRIMARY KEY AUTOINCREMENT,
-                 kb_name TEXT, 
-                 vs_type TEXT, 
-                 embed_model TEXT,
-                 file_count INTEGER,
-                 create_time DATETIME) ''')
-    c.execute('''CREATE TABLE if not exists knowledge_files
-                     (id INTEGER  PRIMARY KEY AUTOINCREMENT,
-                     file_name TEXT, 
-                     file_ext TEXT, 
-                     kb_name TEXT,
-                     document_loader_name TEXT,
-                     text_splitter_name TEXT,
-                     file_version INTEGER,
-                     create_time DATETIME) ''')
-    conn.commit()
-    conn.close()
-
-
-def list_kbs_from_db():
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''SELECT kb_name
-                  FROM knowledge_base
-                  WHERE file_count>0  ''')
-    kbs = [i[0] for i in c.fetchall() if i]
-    conn.commit()
-    conn.close()
-    return kbs
-
-
-def add_kb_to_db(kb_name, vs_type, embed_model):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    # Insert a row of data
-    c.execute(f"""INSERT INTO knowledge_base 
-                  (kb_name, vs_type, embed_model, file_count, create_time)
-                  VALUES 
-                  ('{kb_name}','{vs_type}','{embed_model}',
-                  0,'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')""")
-    conn.commit()
-    conn.close()
-    return True
-
-
-def kb_exists(kb_name):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''SELECT COUNT(*)
-                  FROM knowledge_base
-                  WHERE kb_name="{kb_name}"  ''')
-    status = True if c.fetchone()[0] else False
-    conn.commit()
-    conn.close()
-    return status
-
-
-def load_kb_from_db(kb_name):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''SELECT kb_name, vs_type, embed_model
-                  FROM knowledge_base
-                  WHERE kb_name="{kb_name}"  ''')
-    resp = c.fetchone()
-    if resp:
-        kb_name, vs_type, embed_model = resp
-    else:
-        kb_name, vs_type, embed_model = None, None, None
-    conn.commit()
-    conn.close()
-    return kb_name, vs_type, embed_model
-
-
-def delete_kb_from_db(kb_name):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''DELETE
-                  FROM knowledge_base
-                  WHERE kb_name="{kb_name}"  ''')
-    c.execute(f"""DELETE 
-                  FROM knowledge_files 
-                  WHERE kb_name="{kb_name}"
-                """)
-    conn.commit()
-    conn.close()
-    return True
-
-
-def list_docs_from_db(kb_name):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''SELECT file_name
-                  FROM knowledge_files
-                  WHERE kb_name="{kb_name}"  ''')
-    kbs = [i[0] for i in c.fetchall() if i]
-    conn.commit()
-    conn.close()
-    return kbs
-
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
-
-def add_doc_to_db(kb_file: KnowledgeFile):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    # Insert a row of data
-    c.execute(
-        f"""SELECT 1 FROM knowledge_files WHERE file_name="{kb_file.filename}" AND kb_name="{kb_file.kb_name}" """)
-    record_exist = c.fetchone()
-    if record_exist is not None:
-        c.execute(f"""UPDATE knowledge_files 
-                      SET file_version = file_version + 1
-                      WHERE file_name="{kb_file.filename}" AND kb_name="{kb_file.kb_name}"
-                   """)
-    else:
-        c.execute(f"""INSERT INTO knowledge_files 
-                      (file_name, file_ext, kb_name, document_loader_name, text_splitter_name, file_version, create_time)
-                      VALUES 
-                      ('{kb_file.filename}','{kb_file.ext}','{kb_file.kb_name}', '{kb_file.document_loader_name}', 
-                      '{kb_file.text_splitter_name}',0,'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')""")
-        c.execute(f"""UPDATE knowledge_base
-                      SET file_count = file_count + 1 
-                      WHERE kb_name="{kb_file.kb_name}"
-                    """)
-    conn.commit()
-    conn.close()
-    return True
-
-
-def delete_file_from_db(kb_file: KnowledgeFile):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    # Insert a row of data
-    c.execute(f"""DELETE 
-                  FROM knowledge_files 
-                  WHERE file_name="{kb_file.filename}"
-                  AND kb_name="{kb_file.kb_name}"
-                """)
-    c.execute(f"""UPDATE knowledge_base
-                  SET file_count = file_count - 1 
-                  WHERE kb_name="{kb_file.kb_name}"
-                """)
-    conn.commit()
-    conn.close()
-    return True
-
-
-def doc_exists(kb_file: KnowledgeFile):
-    conn = sqlite3.connect(DB_ROOT_PATH)
-    c = conn.cursor()
-    c.execute(f'''SELECT COUNT(*)
-                  FROM knowledge_files
-                  WHERE file_name="{kb_file.filename}"
-                  AND kb_name="{kb_file.kb_name}"  ''')
-    status = True if c.fetchone()[0] else False
-    conn.commit()
-    conn.close()
-    return status
 
 
 @lru_cache(1)
@@ -323,7 +167,7 @@ class KBService(ABC):
 
     @abstractmethod
     def do_delete_doc(self,
-                  kb_file: KnowledgeFile):
+                      kb_file: KnowledgeFile):
         """
         从知识库删除文档子类实自己逻辑
         """

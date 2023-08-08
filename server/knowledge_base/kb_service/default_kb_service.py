@@ -1,7 +1,24 @@
+from typing import List
+
+from langchain.embeddings.base import Embeddings
+from langchain.schema import Document
+
 from server.knowledge_base.kb_service.base import KBService
 
 
 class DefaultKBService(KBService):
+    def do_create_kb(self):
+        pass
+
+    def do_drop_kb(self):
+        pass
+
+    def do_add_doc(self, docs: List[Document], embeddings: Embeddings):
+        pass
+
+    def do_clear_vs(self):
+        pass
+
     def vs_type(self) -> str:
         return "default"
 

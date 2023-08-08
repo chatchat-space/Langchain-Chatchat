@@ -4,9 +4,10 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Milvus
 
-from configs.model_config import EMBEDDING_DEVICE, kbs_config
+from configs.config import kbs_config
+from configs.model_config import EMBEDDING_DEVICE
 from server.knowledge_base import KnowledgeFile
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings, add_doc_to_db
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings
 
 
 class MilvusKBService(KBService):
@@ -55,6 +56,7 @@ class MilvusKBService(KBService):
         """
         docs = kb_file.file2text()
         self.milvus.add_documents(docs)
+        from server.db.repository.knowledge_file_repository import add_doc_to_db
         status = add_doc_to_db(kb_file)
         return status
 
@@ -72,8 +74,11 @@ class MilvusKBService(KBService):
 
 
 if __name__ == '__main__':
+    # 测试建表使用
+    from server.db.base import Base, engine
+    Base.metadata.create_all(bind=engine)
     milvusService = MilvusKBService("test")
-    # milvusService.add_doc(KnowledgeFile("test.pdf", "test"))
-    # milvusService.delete_doc(KnowledgeFile("test.pdf", "test"))
+    milvusService.add_doc(KnowledgeFile("test.pdf", "test"))
+    milvusService.delete_doc(KnowledgeFile("test.pdf", "test"))
     milvusService.do_drop_kb()
     print(milvusService.search_docs("测试"))
