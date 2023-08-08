@@ -3,9 +3,6 @@ import os
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from configs.model_config import (embedding_model_dict, KB_ROOT_PATH, EMBEDDING_MODEL, kbs_config)
 from functools import lru_cache
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType
-from server.db.repository.knowledge_base_repository import load_kb_from_db
-from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -25,6 +22,10 @@ def get_vs_path(knowledge_base_name: str):
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
     return os.path.join(get_doc_path(knowledge_base_name), doc_name)
+
+def list_kbs_from_folder():
+    return [f for f in os.listdir(KB_ROOT_PATH)
+            if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
 
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
@@ -78,33 +79,3 @@ class KnowledgeFile:
         TextSplitter = getattr(sys.modules['langchain.text_splitter'], self.text_splitter_name)
         text_splitter = TextSplitter(chunk_size=500, chunk_overlap=200)
         return loader.load_and_split(text_splitter)
-
-
-class KBServiceFactory:
-
-    @staticmethod
-    def get_service(kb_name: str,
-                    vector_store_type: Union[str, SupportedVSType],
-                    embed_model: str = EMBEDDING_MODEL,
-                    ) -> KBService:
-        if isinstance(vector_store_type, str):
-            vector_store_type = getattr(SupportedVSType, vector_store_type.upper())
-        if SupportedVSType.FAISS == vector_store_type:
-            from server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
-            return FaissKBService(kb_name, embed_model=embed_model)
-        elif SupportedVSType.MILVUS == vector_store_type:
-            from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
-            return MilvusKBService(kb_name, embed_model=embed_model) # other milvus parameters are set in model_config.kbs_config
-        elif SupportedVSType.DEFAULT == vector_store_type: # kb_exists of default kbservice is False, to make validation easier.
-            return DefaultKBService(kb_name)
-
-    @staticmethod
-    def get_service_by_name(kb_name: str
-                            ) -> KBService:
-        kb_name, vs_type, embed_model = load_kb_from_db(kb_name)
-        return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
-
-    @staticmethod
-    def get_default():
-        return KBServiceFactory.get_service("default", SupportedVSType.DEFAULT)
-

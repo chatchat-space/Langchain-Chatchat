@@ -7,13 +7,13 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
-from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists
+from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists, load_kb_from_db
 from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \
     list_docs_from_db
 from configs.model_config import (DB_ROOT_PATH, kbs_config, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
 from server.knowledge_base.utils import (get_kb_path, get_doc_path, load_embeddings, KnowledgeFile)
-from typing import List
+from typing import List, Union
 
 
 class SupportedVSType:
@@ -162,3 +162,33 @@ class KBService(ABC):
         从知识库删除全部向量子类实自己逻辑
         """
         pass
+
+
+class KBServiceFactory:
+
+    @staticmethod
+    def get_service(kb_name: str,
+                    vector_store_type: Union[str, SupportedVSType],
+                    embed_model: str = EMBEDDING_MODEL,
+                    ) -> KBService:
+        if isinstance(vector_store_type, str):
+            vector_store_type = getattr(SupportedVSType, vector_store_type.upper())
+        if SupportedVSType.FAISS == vector_store_type:
+            from server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
+            return FaissKBService(kb_name, embed_model=embed_model)
+        elif SupportedVSType.MILVUS == vector_store_type:
+            from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
+            return MilvusKBService(kb_name, embed_model=embed_model) # other milvus parameters are set in model_config.kbs_config
+        elif SupportedVSType.DEFAULT == vector_store_type: # kb_exists of default kbservice is False, to make validation easier.
+            return DefaultKBService(kb_name)
+
+    @staticmethod
+    def get_service_by_name(kb_name: str
+                            ) -> KBService:
+        kb_name, vs_type, embed_model = load_kb_from_db(kb_name)
+        return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
+
+    @staticmethod
+    def get_default():
+        return KBServiceFactory.get_service("default", SupportedVSType.DEFAULT)
+
