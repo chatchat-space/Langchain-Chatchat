@@ -10,7 +10,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts import PromptTemplate
-from server.knowledge_base.knowledge_base_factory import KBServiceFactory
+from server.knowledge_base.utils import KBServiceFactory
 from server.knowledge_base.kb_service.base import KBService
 import json
 

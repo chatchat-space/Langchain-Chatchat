@@ -1,7 +1,7 @@
 from server.db.models.knowledge_base_model import KnowledgeBaseModel
 from server.db.models.knowledge_file_model import KnowledgeFileModel
 from server.db.session import with_session
-from server.knowledge_base.knowledge_file import KnowledgeFile
+from server.knowledge_base.utils import KnowledgeFile
 
 
 @with_session
