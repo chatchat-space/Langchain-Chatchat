@@ -7,11 +7,22 @@ from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
-from langchain.prompts import PromptTemplate
+from langchain.prompts.chat import ChatPromptTemplate
+from typing import List, Optional
+from server.chat.utils import History
 
 
-def chat(query: str = Body(..., description="用户输入", example="你好")):
-    async def chat_iterator(message: str) -> AsyncIterable[str]:
+def chat(query: str = Body(..., description="用户输入", example="恼羞成怒"),
+         history: Optional[List[History]] = Body(...,
+                                                 description="历史对话",
+                                                 example=[
+                                                     {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                     {"role": "assistant", "content": "虎头虎脑"}]
+                                                 ),
+         ):
+    async def chat_iterator(query: str,
+                            history: Optional[List[History]]
+                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
 
         model = ChatOpenAI(
@@ -23,17 +34,13 @@ def chat(query: str = Body(..., description="用户输入", example="你好")):
             model_name=LLM_MODEL
         )
 
-        # llm = OpenAI(model_name=LLM_MODEL,
-        #              openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-        #              openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-        #              streaming=True)
-
-        prompt = PromptTemplate(input_variables=["input"], template="{input}")
-        chain = LLMChain(prompt=prompt, llm=model)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_tuple() for i in history] + [("human", "{input}")])
+        chain = LLMChain(prompt=chat_prompt, llm=model)
 
         # Begin a task that runs in the background.
         task = asyncio.create_task(wrap_done(
-            chain.acall(message),
+            chain.acall({"input": query}),
             callback.done),
         )
 
@@ -41,4 +48,6 @@ def chat(query: str = Body(..., description="用户输入", example="你好")):
             # Use server-sent-events to stream the response
             yield token
         await task
-    return StreamingResponse(chat_iterator(query), media_type="text/event-stream")
+
+    return StreamingResponse(chat_iterator(query, history),
+                             media_type="text/event-stream")

@@ -9,7 +9,9 @@ from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
-from langchain.prompts import PromptTemplate
+from langchain.prompts.chat import ChatPromptTemplate
+from typing import List, Optional
+from server.chat.utils import History
 from server.knowledge_base.kb_service.base import KBService, KBServiceFactory
 import json
 
@@ -17,6 +19,14 @@ import json
 def knowledge_base_chat(query: str = Body(..., description="用户输入", example="你好"),
                         knowledge_base_name: str = Body(..., description="知识库名称", example="samples"),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+                        history: Optional[List[History]] = Body(...,
+                                                                description="历史对话",
+                                                                example=[
+                                                                    {"role": "user",
+                                                                     "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                                    {"role": "assistant",
+                                                                     "content": "虎头虎脑"}]
+                                                                ),
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -25,6 +35,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     async def knowledge_base_chat_iterator(query: str,
                                            kb: KBService,
                                            top_k: int,
+                                           history: Optional[List[History]],
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
@@ -37,9 +48,11 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         )
         docs = kb.search_docs(query, top_k)
         context = "\n".join([doc.page_content for doc in docs])
-        prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
 
-        chain = LLMChain(prompt=prompt, llm=model)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_tuple() for i in history] + [("human", PROMPT_TEMPLATE)])
+
+        chain = LLMChain(prompt=chat_prompt, llm=model)
 
         # Begin a task that runs in the background.
         task = asyncio.create_task(wrap_done(
@@ -58,5 +71,5 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                    "docs": source_documents})
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k),
+    return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history),
                              media_type="text/event-stream")

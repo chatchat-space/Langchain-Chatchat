@@ -10,7 +10,9 @@ from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
-from langchain.prompts import PromptTemplate
+from langchain.prompts.chat import ChatPromptTemplate
+from typing import List, Optional
+from server.chat.utils import History
 from langchain.docstore.document import Document
 import json
 
@@ -58,6 +60,14 @@ def lookup_search_engine(
 def search_engine_chat(query: str = Body(..., description="用户输入", example="你好"),
                        search_engine_name: str = Body(..., description="搜索引擎名称", example="duckduckgo"),
                        top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
+                       history: Optional[List[History]] = Body(...,
+                                                               description="历史对话",
+                                                               example=[
+                                                                   {"role": "user",
+                                                                    "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                                   {"role": "assistant",
+                                                                    "content": "虎头虎脑"}]
+                                                               ),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -65,6 +75,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
     async def search_engine_chat_iterator(query: str,
                                           search_engine_name: str,
                                           top_k: int,
+                                          history: Optional[List[History]],
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
@@ -78,9 +89,11 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
-        prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
 
-        chain = LLMChain(prompt=prompt, llm=model)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_tuple() for i in history] + [("human", PROMPT_TEMPLATE)])
+
+        chain = LLMChain(prompt=chat_prompt, llm=model)
 
         # Begin a task that runs in the background.
         task = asyncio.create_task(wrap_done(
@@ -99,5 +112,5 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                    "docs": source_documents})
         await task
 
-    return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k),
+    return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history),
                              media_type="text/event-stream")
