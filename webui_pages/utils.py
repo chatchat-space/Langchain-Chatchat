@@ -16,6 +16,7 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
+from server.knowledge_base.utils import list_kbs_from_folder
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -468,6 +469,9 @@ class ApiRequest:
 
 
 if __name__ == "__main__":
+    from server.db.base import Base, engine
+    Base.metadata.create_all(bind=engine)
+
     api = ApiRequest(no_remote_api=True)
 
     # print(api.chat_fastchat(
@@ -488,5 +492,7 @@ if __name__ == "__main__":
 
     # print(api.list_knowledge_bases())
 
-    for t in api.recreate_vector_store('kblog'):
-        print(t)
+    # recreate all vector store
+    for kb in list_kbs_from_folder():
+        for t in api.recreate_vector_store(kb):
+            print(t)

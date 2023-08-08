@@ -9,6 +9,7 @@ from server.knowledge_base.utils import KnowledgeFile, list_docs_from_folder
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.knowledge_base.kb_service.base import SupportedVSType
 from server.knowledge_base.kb_service.faiss_kb_service import refresh_vs_cache
+from typing import Union
 
 
 async def list_docs(knowledge_base_name: str):
@@ -89,14 +90,23 @@ async def download_doc():
     pass
 
 
-async def recreate_vector_store(knowledge_base_name: str):
+async def recreate_vector_store(
+        knowledge_base_name: str,
+        allow_empty_kb: bool = True,
+        vs_type: Union[str, SupportedVSType] = "faiss",
+    ):
     '''
     recreate vector store from the content.
     this is usefull when user can copy files to content folder directly instead of upload through network.
+    by default, get_service_by_name only return knowledge base in the info.db and having document files in it.
+    set allow_empty_kb to True make it applied on empty knowledge base which it not in the info.db or having no documents.
     '''
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
-        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+        if allow_empty_kb:
+            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type)
+        else:
+            return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
     async def output(kb):
         kb.clear_vs()
@@ -109,10 +119,13 @@ async def recreate_vector_store(knowledge_base_name: str):
                 "finished": i,
                 "doc": filename,
             })
-            kb_file = KnowledgeFile(filename=filename,
-                                    knowledge_base_name=kb.kb_name)
-            print(f"processing {kb_file.filepath} to vector store.")
-            kb.add_doc(kb_file)
+            try:
+                kb_file = KnowledgeFile(filename=filename,
+                                        knowledge_base_name=kb.kb_name)
+                print(f"processing {kb_file.filepath} to vector store.")
+                kb.add_doc(kb_file)
+            except ValueError as e:
+                print(e)
         if kb.vs_type == SupportedVSType.FAISS:
             refresh_vs_cache(knowledge_base_name)
 
