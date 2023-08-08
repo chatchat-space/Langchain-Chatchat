@@ -25,3 +25,5 @@ httpx
 
 faiss-cpu
 pymilvus==2.1.3 # requires milvus==2.1.3
+
+SQLAlchemy==2.0.19
