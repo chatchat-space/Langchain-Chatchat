@@ -8,9 +8,9 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
-from configs.config import kbs_config
 from configs.model_config import (VECTOR_SEARCH_TOP_K,
-                                  embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
+                                  embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL,
+                                  kbs_config)
 
 from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists
 from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \

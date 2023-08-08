@@ -22,13 +22,7 @@ class DefaultKBService(KBService):
     def vs_type(self) -> str:
         return "default"
 
-    def do_create_kbs(self):
-        pass
-
     def do_init(self):
-        pass
-
-    def do_drop_kbs(self):
         pass
 
     def do_search(self):
