@@ -56,3 +56,22 @@ def doc_exists(session, kb_file: KnowledgeFile):
     existing_file = session.query(KnowledgeFileModel).filter_by(file_name=kb_file.filename,
                                                                 kb_name=kb_file.kb_name).first()
     return True if existing_file else False
+
+
+@with_session
+def get_file_detail(session, kb_name: str, filename: str) -> dict:
+    file: KnowledgeFileModel = (session.query(KnowledgeFileModel)
+                                .filter_by(file_name=filename,
+                                            kb_name=kb_name).first())
+    if file:
+        return {
+            "kb_name": file.kb_name,
+            "file_name": file.file_name,
+            "file_ext": file.file_ext,
+            "file_version": file.file_version,
+            "document_loader": file.document_loader_name,
+            "text_splitter": file.text_splitter_name,
+            "create_time": file.create_time,
+        }
+    else:
+        return {}

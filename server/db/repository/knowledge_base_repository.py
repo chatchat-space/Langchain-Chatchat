@@ -42,3 +42,18 @@ def delete_kb_from_db(session, kb_name):
     if kb:
         session.delete(kb)
     return True
+
+
+@with_session
+def get_kb_detail(session, kb_name: str) -> dict:
+    kb: KnowledgeBaseModel = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    if kb:
+        return {
+            "kb_name": kb.kb_name,
+            "vs_type": kb.vs_type,
+            "embed_model": kb.embed_model,
+            "file_count": kb.file_count,
+            "create_time": kb.create_time,
+        }
+    else:
+        return {}
