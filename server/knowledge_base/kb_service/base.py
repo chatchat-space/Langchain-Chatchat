@@ -1,22 +1,18 @@
 from abc import ABC, abstractmethod
 
 import os
-import sqlite3
 from functools import lru_cache
 
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
-from configs.model_config import (VECTOR_SEARCH_TOP_K,
-                                  embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL,
-                                  kbs_config)
-
 from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists
 from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \
     list_docs_from_db
-from server.knowledge_base.utils import (get_kb_path, get_doc_path)
-from server.knowledge_base.knowledge_file import KnowledgeFile
+from configs.model_config import (DB_ROOT_PATH, kbs_config, VECTOR_SEARCH_TOP_K,
+                                  embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
+from server.knowledge_base.utils import (get_kb_path, get_doc_path, KnowledgeFile)
 from typing import List
 
 

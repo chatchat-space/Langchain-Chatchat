@@ -5,8 +5,7 @@ from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import (validate_kb_name)
 from fastapi.responses import StreamingResponse
 import json
-from server.knowledge_base.knowledge_file import KnowledgeFile
-from server.knowledge_base.knowledge_base_factory import KBServiceFactory
+from server.knowledge_base.utils import KnowledgeFile, KBServiceFactory
 from server.knowledge_base.kb_service.base import SupportedVSType, list_docs_from_folder
 from server.knowledge_base.kb_service.faiss_kb_service import refresh_vs_cache
 

@@ -5,8 +5,9 @@ from langchain.schema import Document
 from langchain.vectorstores import Milvus
 
 from configs.model_config import EMBEDDING_DEVICE, kbs_config
-from server.knowledge_base import KnowledgeFile
+
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings
+from server.knowledge_base.utils import KnowledgeFile
 
 
 class MilvusKBService(KBService):

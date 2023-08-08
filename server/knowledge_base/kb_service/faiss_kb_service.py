@@ -4,8 +4,7 @@ import shutil
 from configs.model_config import KB_ROOT_PATH, CACHED_VS_NUM, EMBEDDING_DEVICE
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings
 from functools import lru_cache
-from server.knowledge_base.utils import get_vs_path
-from server.knowledge_base.knowledge_file import KnowledgeFile
+from server.knowledge_base.utils import get_vs_path, KnowledgeFile
 from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from typing import List
