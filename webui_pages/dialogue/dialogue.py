@@ -118,7 +118,7 @@ def dialogue_page(api: ApiRequest):
             chat_box.update_msg(text, 0, streaming=False)
 
     now = datetime.now()
-    cols[0].download_button(
+    export_btn.download_button(
         "Export",
         "".join(chat_box.export2md(cur_chat_name)),
         file_name=f"{now:%Y-%m-%d %H.%M}_{cur_chat_name}.md",
