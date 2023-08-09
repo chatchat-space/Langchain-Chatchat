@@ -93,6 +93,10 @@
 
 - [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
 - [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
+- [moka-ai/m3e-large](https://huggingface.co/moka-ai/m3e-large)
+- [BAAI/bge-small-zh](https://huggingface.co/BAAI/bge-small-zh)
+- [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
+- [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
 - [text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
 - [text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
 - [text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)

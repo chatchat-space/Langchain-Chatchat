@@ -25,6 +25,9 @@ embedding_model_dict = {
     "m3e-small": "moka-ai/m3e-small",
     "m3e-base": "moka-ai/m3e-base",
     "m3e-large": "moka-ai/m3e-large",
+    "bge-small-zh": "BAAI/bge-small-zh",
+    "bge-base-zh": "BAAI/bge-base-zh",
+    "bge-large-zh": "BAAI/bge-large-zh"
 }
 
 # 选用的 Embedding 名称
