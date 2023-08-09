@@ -3,6 +3,7 @@ from typing import *
 from pathlib import Path
 import os
 from configs.model_config import (
+    EMBEDDING_MODEL,
     KB_ROOT_PATH,
     LLM_MODEL,
     llm_model_dict,
@@ -320,6 +321,8 @@ class ApiRequest:
     def create_knowledge_base(
         self,
         knowledge_base_name: str,
+        vector_store_type: str = "faiss",
+        embed_model: str = EMBEDDING_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -330,12 +333,12 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(knowledge_base_name))
+            response = run_async(create_kb(knowledge_base_name, vector_store_type, embed_model))
             return response.dict()
         else:
             response = self.post(
                 "/knowledge_base/create_knowledge_base",
-                json={"knowledge_base_name": knowledge_base_name},
+                json={"knowledge_base_name": knowledge_base_name, "vector_store_type": vector_store_type, "embed_model": embed_model},
             )
             return response.json()
 
