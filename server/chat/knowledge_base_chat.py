@@ -32,6 +32,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
+    history = [History(**h) if isinstance(h, dict) else h for h in history]
     async def knowledge_base_chat_iterator(query: str,
                                            kb: KBService,
                                            top_k: int,

@@ -20,6 +20,7 @@ def chat(query: str = Body(..., description="用户输入", example="恼羞成�
                                         {"role": "assistant", "content": "虎头虎脑"}]
                                     ),
          ):
+    history = [History(**h) if isinstance(h, dict) else h for h in history]
     async def chat_iterator(query: str,
                             history: List[History] = [],
                             ) -> AsyncIterable[str]:
