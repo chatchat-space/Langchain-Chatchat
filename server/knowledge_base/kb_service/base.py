@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 import os
 from functools import lru_cache
 
-from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
@@ -34,6 +33,9 @@ class KBService(ABC):
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
 
+    def _load_embeddings(self, embed_device: str = EMBEDDING_DEVICE) -> Embeddings:
+        return load_embeddings(self.embed_model, embed_device)
+
     def create_kb(self):
         """
         创建知识库
@@ -63,7 +65,7 @@ class KBService(ABC):
         向知识库添加文件
         """
         docs = kb_file.file2text()
-        embeddings = load_embeddings(self.embed_model, EMBEDDING_DEVICE)
+        embeddings = self._load_embeddings()
         self.do_add_doc(docs, embeddings)
         status = add_doc_to_db(kb_file)
         return status
@@ -88,8 +90,8 @@ class KBService(ABC):
     def search_docs(self,
                     query: str,
                     top_k: int = VECTOR_SEARCH_TOP_K,
-                    embedding_device: str = EMBEDDING_DEVICE, ):
-        embeddings = load_embeddings(self.embed_model, embedding_device)
+                    ):
+        embeddings = self._load_embeddings()
         docs = self.do_search(query, top_k, embeddings)
         return docs
 
@@ -142,7 +144,8 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
-                   embeddings: Embeddings):
+                   embeddings: Embeddings,
+                   ):
         """
         向知识库添加文档子类实自己逻辑
         """

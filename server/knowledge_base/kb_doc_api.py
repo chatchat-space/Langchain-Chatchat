@@ -91,7 +91,7 @@ async def download_doc():
 async def recreate_vector_store(
         knowledge_base_name: str,
         allow_empty_kb: bool = True,
-        vs_type: Union[str, SupportedVSType] = "faiss",
+        vs_type: str = "faiss",
     ):
     '''
     recreate vector store from the content.

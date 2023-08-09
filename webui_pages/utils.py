@@ -169,7 +169,7 @@ class ApiRequest:
         for chunk in  iter_over_async(response.body_iterator, loop):
             if as_json and chunk:
                 yield json.loads(chunk)
-            else:
+            elif chunk.strip():
                 yield chunk
 
     def _httpx_stream2generator(
@@ -184,7 +184,7 @@ class ApiRequest:
             for chunk in r.iter_text(None):
                 if as_json and chunk:
                     yield json.loads(chunk)
-                else:
+                elif chunk.strip():
                     yield chunk
 
     # 对话相关操作
@@ -250,6 +250,7 @@ class ApiRequest:
         query: str,
         knowledge_base_name: str,
         top_k: int = VECTOR_SEARCH_TOP_K,
+        history: List[Dict] = [],
         no_remote_api: bool = None,
     ):
         '''
@@ -260,12 +261,12 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(query, knowledge_base_name, top_k)
+            response = knowledge_base_chat(query, knowledge_base_name, top_k, history)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
                 "/chat/knowledge_base_chat",
-                json={"query": query, "knowledge_base_name": knowledge_base_name, "top_k": top_k},
+                json={"query": query, "knowledge_base_name": knowledge_base_name, "top_k": top_k, "history": history},
                 stream=True,
             )
             return self._httpx_stream2generator(response, as_json=True)

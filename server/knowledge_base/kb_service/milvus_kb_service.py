@@ -6,7 +6,7 @@ from langchain.vectorstores import Milvus
 
 from configs.model_config import EMBEDDING_DEVICE, kbs_config
 
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.utils import KnowledgeFile
 
 
@@ -33,11 +33,10 @@ class MilvusKBService(KBService):
     def vs_type(self) -> str:
         return SupportedVSType.MILVUS
 
-    def _load_milvus(self, embedding_device: str = EMBEDDING_DEVICE, embeddings: Embeddings = None):
-        _embeddings = embeddings
-        if _embeddings is None:
-            _embeddings = load_embeddings(self.embed_model, embedding_device)
-        self.milvus = Milvus(embedding_function=_embeddings,
+    def _load_milvus(self, embeddings: Embeddings = None):
+        if embeddings is None:
+            embeddings = self._load_embeddings()
+        self.milvus = Milvus(embedding_function=embeddings,
                              collection_name=self.kb_name, connection_args=kbs_config.get("milvus"))
 
     def do_init(self):

@@ -1,16 +1,24 @@
 import os
 import shutil
 
-from configs.model_config import KB_ROOT_PATH, CACHED_VS_NUM, EMBEDDING_DEVICE
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, load_embeddings
+from configs.model_config import KB_ROOT_PATH, CACHED_VS_NUM, EMBEDDING_MODEL, EMBEDDING_DEVICE
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from functools import lru_cache
-from server.knowledge_base.utils import get_vs_path, KnowledgeFile
+from server.knowledge_base.utils import get_vs_path, load_embeddings, KnowledgeFile
 from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from typing import List
 from langchain.docstore.document import Document
 from server.utils import torch_gc
 import numpy as np
+
+
+# make HuggingFaceEmbeddings hashable
+def _embeddings_hash(self):
+    return hash(self.model_name)
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+
 
 _VECTOR_STORE_TICKS = {}
 
@@ -18,11 +26,15 @@ _VECTOR_STORE_TICKS = {}
 @lru_cache(CACHED_VS_NUM)
 def load_vector_store(
         knowledge_base_name: str,
-        embeddings: Embeddings,
-        tick: int,  # tick will be changed by upload_doc etc. and make cache refreshed.
+        embed_model: str = EMBEDDING_MODEL,
+        embed_device: str = EMBEDDING_DEVICE,
+        embeddings: Embeddings = None,
+        tick: int = 0,  # tick will be changed by upload_doc etc. and make cache refreshed.
 ):
     print(f"loading vector store in '{knowledge_base_name}'.")
     vs_path = get_vs_path(knowledge_base_name)
+    if embeddings is None:
+        embeddings = load_embeddings(embed_model, embed_device)
     search_index = FAISS.load_local(vs_path, embeddings)
     return search_index
 
@@ -84,14 +96,15 @@ class FaissKBService(KBService):
                   embeddings: Embeddings,
                   ) -> List[Document]:
         search_index = load_vector_store(self.kb_name,
-                                         embeddings,
-                                         _VECTOR_STORE_TICKS.get(self.kb_name))
+                                         embeddings=embeddings,
+                                         tick=_VECTOR_STORE_TICKS.get(self.kb_name))
         docs = search_index.similarity_search(query, k=top_k)
         return docs
 
     def do_add_doc(self,
                    docs: List[Document],
-                   embeddings: Embeddings):
+                   embeddings: Embeddings,
+                   ):
         if os.path.exists(self.vs_path) and "index.faiss" in os.listdir(self.vs_path):
             vector_store = FAISS.load_local(self.vs_path, embeddings)
             vector_store.add_documents(docs)
@@ -99,14 +112,15 @@ class FaissKBService(KBService):
         else:
             if not os.path.exists(self.vs_path):
                 os.makedirs(self.vs_path)
-            vector_store = FAISS.from_documents(docs, embeddings)  # docs 为Document列表
+            vector_store = FAISS.from_documents(
+                docs, embeddings)  # docs 为Document列表
             torch_gc()
         vector_store.save_local(self.vs_path)
         refresh_vs_cache(self.kb_name)
 
     def do_delete_doc(self,
                   kb_file: KnowledgeFile):
-        embeddings = load_embeddings(self.embed_model, EMBEDDING_DEVICE)
+        embeddings = self._load_embeddings()
         if os.path.exists(self.vs_path) and "index.faiss" in os.listdir(self.vs_path):
             vector_store = FAISS.load_local(self.vs_path, embeddings)
             ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata["source"] == kb_file.filepath]
