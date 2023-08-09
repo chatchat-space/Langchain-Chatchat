@@ -17,8 +17,9 @@ import numpy as np
 # make HuggingFaceEmbeddings hashable
 def _embeddings_hash(self):
     return hash(self.model_name)
-HuggingFaceEmbeddings.__hash__ = _embeddings_hash
 
+
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
 
 _VECTOR_STORE_TICKS = {}
 
@@ -44,24 +45,6 @@ def refresh_vs_cache(kb_name: str):
     make vector store cache refreshed when next loading
     """
     _VECTOR_STORE_TICKS[kb_name] = _VECTOR_STORE_TICKS.get(kb_name, 0) + 1
-
-
-def delete_doc_from_faiss(vector_store: FAISS, ids: List[str]):
-    overlapping = set(ids).intersection(vector_store.index_to_docstore_id.values())
-    if not overlapping:
-        raise ValueError("ids do not exist in the current object")
-    _reversed_index = {v: k for k, v in vector_store.index_to_docstore_id.items()}
-    index_to_delete = [_reversed_index[i] for i in ids]
-    vector_store.index.remove_ids(np.array(index_to_delete, dtype=np.int64))
-    for _id in index_to_delete:
-        del vector_store.index_to_docstore_id[_id]
-    # Remove items from docstore.
-    overlapping2 = set(ids).intersection(vector_store.docstore._dict)
-    if not overlapping2:
-        raise ValueError(f"Tried to delete ids that does not  exist: {ids}")
-    for _id in ids:
-        vector_store.docstore._dict.pop(_id)
-    return vector_store
 
 
 class FaissKBService(KBService):
@@ -119,14 +102,14 @@ class FaissKBService(KBService):
         refresh_vs_cache(self.kb_name)
 
     def do_delete_doc(self,
-                  kb_file: KnowledgeFile):
+                      kb_file: KnowledgeFile):
         embeddings = self._load_embeddings()
         if os.path.exists(self.vs_path) and "index.faiss" in os.listdir(self.vs_path):
             vector_store = FAISS.load_local(self.vs_path, embeddings)
             ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata["source"] == kb_file.filepath]
             if len(ids) == 0:
                 return None
-            vector_store = delete_doc_from_faiss(vector_store, ids)
+            vector_store.delete(ids)
             vector_store.save_local(self.vs_path)
             refresh_vs_cache(self.kb_name)
             return True

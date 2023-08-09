@@ -79,5 +79,5 @@ class KnowledgeFile:
 
         # TODO: 增加依据文件格式匹配text_splitter
         TextSplitter = getattr(sys.modules['langchain.text_splitter'], self.text_splitter_name)
-        text_splitter = TextSplitter(chunk_size=500, chunk_overlap=200)
+        text_splitter = TextSplitter(chunk_size=250, chunk_overlap=200)
         return loader.load_and_split(text_splitter)

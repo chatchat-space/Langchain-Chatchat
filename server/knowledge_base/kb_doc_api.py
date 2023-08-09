@@ -12,7 +12,7 @@ from typing import Union
 
 
 async def list_docs(
-    knowledge_base_name: str = Body(..., examples=["samples"])
+    knowledge_base_name: str
 ):
     if not validate_kb_name(knowledge_base_name):
         return ListResponse(code=403, msg="Don't attack me", data=[])
@@ -61,7 +61,7 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
 
 
 async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
-                     doc_name: str = Body(..., examples=["file_name"]),
+                     doc_name: str = Body(..., examples=["file_name.md"]),
                      delete_content: bool = Body(False),
                     ):
     if not validate_kb_name(knowledge_base_name):

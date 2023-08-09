@@ -61,13 +61,13 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                        search_engine_name: str = Body(..., description="搜索引擎名称", examples=["duckduckgo"]),
                        top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
                        history: List[History] = Body([],
-                                                    description="历史对话",
-                                                    examples=[[
-                                                        {"role": "user",
-                                                        "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                        {"role": "assistant",
-                                                        "content": "虎头虎脑"}]]
-                                                    ),
+                                                     description="历史对话",
+                                                     examples=[[
+                                                         {"role": "user",
+                                                          "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                         {"role": "assistant",
+                                                          "content": "虎头虎脑"}]]
+                                                     ),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -109,7 +109,8 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
             yield json.dumps({"answer": token,
-                   "docs": source_documents}, ensure_ascii=False)
+                              "docs": source_documents},
+                             ensure_ascii=False)
         await task
 
     return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history),
