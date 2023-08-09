@@ -12,7 +12,6 @@ model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
 queue = Queue()
-sys.modules['fastchat.constants.LOGDIR'] = LOG_PATH
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -25,15 +24,13 @@ def set_httpx_timeout(timeout=60.0):
 def create_controller_app(
         dispatch_method="shortest_queue",
 ):
+    import fastchat.constants
+    fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.controller import app, Controller
-    from loguru import logger
-    logger.add(os.path.join(LOG_PATH, "controller.log"), level="INFO")
 
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
-    # todo 替换fastchat的日志文件
-    sys.modules["fastchat.serve.controller"].logger = logger
-    logger.info(f"controller dispatch method: {dispatch_method}")
+
     return app
 
 
@@ -56,11 +53,11 @@ def create_model_worker_app(
         stream_interval=2,
         no_register=False,
 ):
+    import fastchat.constants
+    fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.model_worker import app, GptqConfig, ModelWorker, worker_id
     from fastchat.serve import model_worker
     import argparse
-    from loguru import logger
-    logger.add(os.path.join(LOG_PATH, "model_worker.log"), level="INFO")
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
@@ -120,8 +117,6 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-    # #todo 替换fastchat的日志文件
-    sys.modules["fastchat.serve.model_worker"].logger = logger
     
     return app
 
@@ -132,9 +127,9 @@ def create_openai_api_app(
         controller_address=base_url.format(controller_port),
         api_keys=[],
 ):
+    import fastchat.constants
+    fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings
-    from loguru import logger
-    logger.add(os.path.join(LOG_PATH, "openai_api.log"), level="INFO")
 
     app.add_middleware(
         CORSMiddleware,
@@ -146,8 +141,6 @@ def create_openai_api_app(
 
     app_settings.controller_address = controller_address
     app_settings.api_keys = api_keys
-    # #todo 替换fastchat的日志文件
-    sys.modules["fastchat.serve.openai_api_server"].logger = logger
 
     return app
 
