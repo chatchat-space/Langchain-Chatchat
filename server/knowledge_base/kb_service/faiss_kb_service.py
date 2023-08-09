@@ -136,3 +136,13 @@ class FaissKBService(KBService):
     def do_clear_vs(self):
         shutil.rmtree(self.vs_path)
         os.makedirs(self.vs_path)
+
+    def exist_doc(self, file_name: str):
+        if super().exist_doc(file_name):
+            return "in_db"
+
+        content_path = os.path.join(self.kb_path, "content")
+        if os.path.isfile(os.path.join(content_path, file_name)):
+            return "in_folder"
+        else:
+            return False

@@ -94,11 +94,11 @@ def create_app():
                summary="删除知识库内的文件"
                )(delete_doc)
 
-    # app.post("/knowledge_base/update_doc",
-    #          tags=["Knowledge Base Management"],
-    #          response_model=BaseResponse,
-    #          summary="上传文件到知识库，并删除另一个文件"
-    #          )(update_doc)
+    app.post("/knowledge_base/update_doc",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="更新现有文件到知识库"
+             )(update_doc)
 
     app.post("/knowledge_base/recreate_vector_store",
              tags=["Knowledge Base Management"],

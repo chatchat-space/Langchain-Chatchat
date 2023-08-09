@@ -3,6 +3,7 @@ import os
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from configs.model_config import (embedding_model_dict, KB_ROOT_PATH, EMBEDDING_MODEL, kbs_config)
 from functools import lru_cache
+import langchain.document_loaders
 import sys
 
 

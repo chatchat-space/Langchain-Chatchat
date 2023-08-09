@@ -65,21 +65,32 @@ class KBService(ABC):
         向知识库添加文件
         """
         docs = kb_file.file2text()
-        embeddings = self._load_embeddings()
-        self.do_add_doc(docs, embeddings)
-        status = add_doc_to_db(kb_file)
+        if docs:
+            embeddings = self._load_embeddings()
+            self.do_add_doc(docs, embeddings)
+            status = add_doc_to_db(kb_file)
+        else:
+            status = False
         return status
 
-    def delete_doc(self, kb_file: KnowledgeFile):
+    def delete_doc(self, kb_file: KnowledgeFile, delete_content: bool = False):
         """
         从知识库删除文件
         """
-        if os.path.exists(kb_file.filepath):
+        if delete_content and os.path.exists(kb_file.filepath):
             os.remove(kb_file.filepath)
         self.do_delete_doc(kb_file)
         status = delete_file_from_db(kb_file)
         return status
 
+    def update_doc(self, kb_file: KnowledgeFile):
+        """
+        使用content中的文件更新向量库
+        """
+        if os.path.exists(kb_file.filepath):
+            self.delete_doc(kb_file)
+            return self.add_doc(kb_file)
+        
     def exist_doc(self, file_name: str):
         return doc_exists(KnowledgeFile(knowledge_base_name=self.kb_name,
                                         filename=file_name))

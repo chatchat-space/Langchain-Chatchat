@@ -88,7 +88,7 @@ def config_aggrid(
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_column("No", width=50)
     for k, v in titles.items():
-        gb.configure_column(k, v, maxWidth=100)
+        gb.configure_column(k, v, maxWidth=100, wrapHeaderText=True)
     gb.configure_selection(selection_mode, use_checkbox, pre_selected_rows=[0])
     return gb
 
@@ -149,7 +149,6 @@ def knowledge_base_page(api: ApiRequest):
                 files = st.file_uploader("上传知识文件",
                                         ["docx", "txt", "md", "csv", "xlsx", "pdf"],
                                         accept_multiple_files=True,
-                                        key="files",
                                         )
                 if st.button(
                     "添加文件到知识库",
@@ -199,7 +198,7 @@ def knowledge_base_page(api: ApiRequest):
             cols = st.columns(3)
             selected_rows = doc_grid.get("selected_rows", [])
 
-            cols = st.columns([2, 3, 2])
+            cols = st.columns(4)
             if selected_rows:
                 file_name = selected_rows[0]["file_name"]
                 file_path = get_file_path(kb, file_name)
@@ -207,9 +206,20 @@ def knowledge_base_page(api: ApiRequest):
                     cols[0].download_button("下载选中文档", fp, file_name=file_name)
             else:
                 cols[0].download_button("下载选中文档", "", disabled=True)
-            if cols[2].button("删除选中文档！", type="primary"):
+            
+            if cols[1].button("入库", disabled=len(selected_rows)==0):
                 for row in selected_rows:
-                    ret = api.delete_kb_doc(kb, row["file_name"])
+                    api.update_kb_doc(kb, row["file_name"])
+                st.experimental_rerun()
+
+            if cols[2].button("出库", disabled=len(selected_rows)==0):
+                for row in selected_rows:
+                    api.delete_kb_doc(kb, row["file_name"])
+                st.experimental_rerun()
+
+            if cols[3].button("删除选中文档！", type="primary"):
+                for row in selected_rows:
+                    ret = api.delete_kb_doc(kb, row["file_name"], True)
                     st.toast(ret["msg"])
                 st.experimental_rerun()
 

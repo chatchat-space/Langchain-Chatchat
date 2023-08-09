@@ -1,8 +1,8 @@
 import os
 import urllib
-from fastapi import File, Form, UploadFile
+from fastapi import File, Form, Body, UploadFile
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import (validate_kb_name)
+from server.knowledge_base.utils import (get_file_path, validate_kb_name)
 from fastapi.responses import StreamingResponse
 import json
 from server.knowledge_base.utils import KnowledgeFile, list_docs_from_folder
@@ -58,9 +58,10 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     return BaseResponse(code=200, msg=f"成功上传文件 {kb_file.filename}")
 
 
-async def delete_doc(knowledge_base_name: str,
-                     doc_name: str,
-                     ):
+async def delete_doc(knowledge_base_name: str = Body(...),
+                     doc_name: str = Body(...),
+                     delete_content: bool = Body(...),
+                    ):
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
 
@@ -73,14 +74,33 @@ async def delete_doc(knowledge_base_name: str,
         return BaseResponse(code=404, msg=f"未找到文件 {doc_name}")
     kb_file = KnowledgeFile(filename=doc_name,
                             knowledge_base_name=knowledge_base_name)
-    kb.delete_doc(kb_file)
+    kb.delete_doc(kb_file, delete_content)
     return BaseResponse(code=200, msg=f"{kb_file.filename} 文件删除成功")
     # return BaseResponse(code=500, msg=f"{kb_file.filename} 文件删除失败")
 
 
-async def update_doc():
-    # TODO: 替换文件
-    pass
+async def update_doc(
+        knowledge_base_name: str = Body(...),
+        file_name: str = Body(...),
+    ):
+    '''
+    更新知识库文档
+    '''
+    if not validate_kb_name(knowledge_base_name):
+        return BaseResponse(code=403, msg="Don't attack me")
+
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+
+    kb_file = KnowledgeFile(filename=file_name,
+                            knowledge_base_name=knowledge_base_name)
+
+    if os.path.exists(kb_file.filepath):
+        kb.update_doc(kb_file)
+        return BaseResponse(code=200, msg=f"成功更新文件 {kb_file.filename}")
+    else:
+        return BaseResponse(code=500, msg=f"{kb_file.filename} 文件上传失败，报错信息为: {e}")
 
 
 async def download_doc():
@@ -89,9 +109,9 @@ async def download_doc():
 
 
 async def recreate_vector_store(
-        knowledge_base_name: str,
-        allow_empty_kb: bool = True,
-        vs_type: str = "faiss",
+        knowledge_base_name: str = Body(...),
+        allow_empty_kb: bool = Body(True),
+        vs_type: str = Body("faiss"),
     ):
     '''
     recreate vector store from the content.

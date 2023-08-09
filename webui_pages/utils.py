@@ -397,9 +397,11 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
-        if isinstance(file, bytes):
+        if isinstance(file, bytes): # raw bytes
             file = BytesIO(file)
-        else:
+        elif hasattr(file, "read"): # a file io like object
+            filename = filename or file.name
+        else: # a local path
             file = Path(file).absolute().open("rb")
             filename = filename or file.name
 
@@ -410,6 +412,7 @@ class ApiRequest:
 
             temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
             temp_file.write(file.read())
+            temp_file.seek(0)
             response = run_async(upload_doc(
                 UploadFile(temp_file, filename=filename),
                 knowledge_base_name,
@@ -428,6 +431,7 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         doc_name: str,
+        delete_content: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -438,11 +442,34 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(knowledge_base_name, doc_name))
+            response = run_async(delete_doc(knowledge_base_name, doc_name, delete_content))
             return response.dict()
         else:
             response = self.delete(
                 "/knowledge_base/delete_doc",
+                json={"knowledge_base_name": knowledge_base_name, "doc_name": doc_name, "delete_content": delete_content},
+            )
+            return response.json()
+
+    def update_kb_doc(
+        self,
+        knowledge_base_name: str,
+        doc_name: str,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/knowledge_base/update_doc接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        if no_remote_api:
+            from server.knowledge_base.kb_doc_api import update_doc
+            response = run_async(update_doc(knowledge_base_name, doc_name))
+            return response.dict()
+        else:
+            response = self.delete(
+                "/knowledge_base/update_doc",
                 json={"knowledge_base_name": knowledge_base_name, "doc_name": doc_name},
             )
             return response.json()
