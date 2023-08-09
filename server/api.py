@@ -91,7 +91,7 @@ def create_app():
     app.delete("/knowledge_base/delete_doc",
                tags=["Knowledge Base Management"],
                response_model=BaseResponse,
-               summary="删除知识库内的文件"
+               summary="删除知识库内指定文件"
                )(delete_doc)
 
     app.post("/knowledge_base/update_doc",

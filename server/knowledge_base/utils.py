@@ -1,9 +1,16 @@
 import os
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from configs.model_config import (embedding_model_dict, KB_ROOT_PATH, CHUNK_SIZE, OVERLAP_SIZE)
+from configs.model_config import (
+    embedding_model_dict,
+    KB_ROOT_PATH,
+    CHUNK_SIZE,
+    OVERLAP_SIZE,
+    ZH_TITLE_ENHANCE
+)
 from functools import lru_cache
 import sys
 from text_splitter import zh_title_enhance
+from langchain.document_loaders import UnstructuredFileLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -74,9 +81,17 @@ class KnowledgeFile:
         # TODO: 增加依据文件格式匹配text_splitter
         self.text_splitter_name = None
 
-    def file2text(self, using_zh_title_enhance):
-        DocumentLoader = getattr(sys.modules['langchain.document_loaders'], self.document_loader_name)
-        loader = DocumentLoader(self.filepath)
+    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE):
+        print(self.document_loader_name)
+        try:
+            DocumentLoader = getattr(sys.modules['langchain.document_loaders'], self.document_loader_name)
+        except Exception as e:
+            print(e)
+            DocumentLoader = getattr(sys.modules['langchain.document_loaders'], "UnstructuredFileLoader")
+        if self.document_loader_name == "UnstructuredFileLoader":
+            loader = DocumentLoader(self.filepath, autodetect_encoding=True)
+        else:
+            loader = DocumentLoader(self.filepath)
 
         # TODO: 增加依据文件格式匹配text_splitter
         try:
@@ -101,6 +116,7 @@ class KnowledgeFile:
             )
 
         docs = loader.load_and_split(text_splitter)
+        print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
         return docs

@@ -4,7 +4,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Milvus
 
-from configs.model_config import EMBEDDING_DEVICE, kbs_config
+from configs.model_config import SCORE_THRESHOLD, kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.utils import KnowledgeFile
@@ -47,7 +47,7 @@ class MilvusKBService(KBService):
 
     def do_search(self, query: str, top_k: int, embeddings: Embeddings) -> List[Document]:
         self._load_milvus(embeddings=embeddings)
-        return self.milvus.similarity_search(query, top_k)
+        return self.milvus.similarity_search(query, top_k, score_threshold=SCORE_THRESHOLD)
 
     def add_doc(self, kb_file: KnowledgeFile):
         """
