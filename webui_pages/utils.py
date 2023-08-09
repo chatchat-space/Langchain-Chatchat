@@ -229,6 +229,7 @@ class ApiRequest:
     def chat_chat(
         self,
         query: str,
+        history: List[Dict] = [],
         no_remote_api: bool = None,
     ):
         '''
@@ -239,10 +240,10 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.chat import chat
-            response = chat(query)
+            response = chat(query, history)
             return self._fastapi_stream2generator(response)
         else:
-            response = self.post("/chat/chat", json=f"{query}", stream=True)
+            response = self.post("/chat/chat", json={"query": query, "history": history}, stream=True)
             return self._httpx_stream2generator(response)
 
     def knowledge_base_chat(
