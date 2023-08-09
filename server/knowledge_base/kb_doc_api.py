@@ -12,7 +12,7 @@ from typing import Union
 
 
 async def list_docs(
-    knowledge_base_name: str = Body(..., examples=["kb_name"])
+    knowledge_base_name: str = Body(..., examples=["samples"])
 ):
     if not validate_kb_name(knowledge_base_name):
         return ListResponse(code=403, msg="Don't attack me", data=[])
@@ -60,7 +60,7 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     return BaseResponse(code=200, msg=f"成功上传文件 {kb_file.filename}")
 
 
-async def delete_doc(knowledge_base_name: str = Body(..., examples=["kb_name"]),
+async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
                      doc_name: str = Body(..., examples=["file_name"]),
                      delete_content: bool = Body(False),
                     ):
@@ -82,7 +82,7 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["kb_name"]),
 
 
 async def update_doc(
-        knowledge_base_name: str = Body(..., examples=["kb_name"]),
+        knowledge_base_name: str = Body(..., examples=["samples"]),
         file_name: str = Body(..., examples=["file_name"]),
     ):
     '''
@@ -111,7 +111,7 @@ async def download_doc():
 
 
 async def recreate_vector_store(
-        knowledge_base_name: str = Body(..., examples=["kb_name"]),
+        knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body("faiss"),
     ):

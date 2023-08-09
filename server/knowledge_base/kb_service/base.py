@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import os
-from functools import lru_cache
 
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
@@ -42,7 +41,7 @@ class KBService(ABC):
         """
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
-            self.do_create_kb()
+        self.do_create_kb()
         status = add_kb_to_db(self.kb_name, self.vs_type(), self.embed_model)
         return status
 
@@ -194,12 +193,15 @@ class KBServiceFactory:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name, embed_model=embed_model) # other milvus parameters are set in model_config.kbs_config
         elif SupportedVSType.DEFAULT == vector_store_type: # kb_exists of default kbservice is False, to make validation easier.
+            from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
             return DefaultKBService(kb_name)
 
     @staticmethod
     def get_service_by_name(kb_name: str
                             ) -> KBService:
-        kb_name, vs_type, embed_model = load_kb_from_db(kb_name)
+        _, vs_type, embed_model = load_kb_from_db(kb_name)
+        if vs_type is None and os.path.isdir(get_kb_path(kb_name)): # faiss knowledge base not in db
+            vs_type = "faiss"
         return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
 
     @staticmethod
