@@ -19,8 +19,15 @@ def get_messages_history(history_len: int) -> List[Dict]:
             "role": msg["role"],
             "content": content[0] if content else "",
         }
-    history = chat_box.filter_history(history_len, filter)
-    return history
+    history = chat_box.filter_history(100000, filter) # workaround before upgrading streamlit-chatbox.
+    user_count = 0
+    i = 1
+    for i in range(1, len(history) + 1):
+        if history[-i]["role"] == "user":
+            user_count += 1
+            if user_count >= history_len:
+                break
+    return history[-i:]
 
 
 def dialogue_page(api: ApiRequest):
