@@ -69,7 +69,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
             yield json.dumps({"answer": token,
-                   "docs": source_documents})
+                   "docs": source_documents}, ensure_ascii=False)
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history),

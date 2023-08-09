@@ -109,7 +109,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
         async for token in callback.aiter():
             # Use server-sent-events to stream the response
             yield json.dumps({"answer": token,
-                   "docs": source_documents})
+                   "docs": source_documents}, ensure_ascii=False)
         await task
 
     return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history),
