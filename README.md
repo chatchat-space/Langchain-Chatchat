@@ -162,7 +162,25 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 
 ### 3. 设置配置项
 
-在开始执行 Web UI 或命令行交互前，请先检查 [configs/model_config.py](configs/model_config.py) 中的各项模型参数设计是否符合需求。
+复制文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
+
+在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 中的各项模型参数设计是否符合需求：
+- 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
+```python
+llm_model_dict={
+                "chatglm2-6b": {
+                        "local_model_path": "/Users/xxx/Downloads/chatglm2-6b",
+                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
+                        "api_key": "EMPTY"
+                    },
+                }
+```
+- 请确认已下载至本地的 Embedding 模型本地存储路径写在 `embedding_model_dict` 对应模型位置，如：
+```python
+embedding_model_dict = {
+                        "m3e-base": "/Users/xxx/Downloads/m3e-base",
+                       }
+```
 
 ### 4. 启动 API 服务或 Web UI
 
@@ -193,7 +211,7 @@ $ python webui.py
     - [x] 接入非结构化文档
       - [x] .md
       - [x] .txt
-      - [x] .
+      - [x] .docx
     - [ ] 结构化数据接入
       - [x] .csv
       - [ ] .xlsx
