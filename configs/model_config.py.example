@@ -104,6 +104,12 @@ SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_ROOT_PATH}"
 # 缓存向量库数量
 CACHED_VS_NUM = 1
 
+# 知识库中单段文本长度
+CHUNK_SIZE = 250
+
+# 知识库中相邻文本重合长度
+OVERLAP_SIZE = 50
+
 # 知识库匹配向量数量
 VECTOR_SEARCH_TOP_K = 5
 
