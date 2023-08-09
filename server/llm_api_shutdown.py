@@ -24,3 +24,4 @@ else:
     shell_script = base_shell.format(serve)
 
 subprocess.run(shell_script,shell=True,check=True)
+print(f"llm api sever --{args.serve} has been shutdown!")
