@@ -1,7 +1,7 @@
 """
 调用示例：
 python llm_api_shutdown.py --serve all
-可选"all","controller","worker","openai_api_server"， all表示停止所有服务
+可选"all","controller","model_worker","openai_api_server"， all表示停止所有服务
 """
 import sys
 import os 
@@ -11,7 +11,7 @@ import subprocess
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--serve",choices=["all","controller","worker","openai_api_server"])
+parser.add_argument("--serve",choices=["all","controller","model_worker","openai_api_server"])
 
 args = parser.parse_args()
 
