@@ -13,15 +13,15 @@ from server.chat.utils import History
 
 
 def chat(query: str = Body(..., description="用户输入", example="恼羞成怒"),
-         history: Optional[List[History]] = Body(...,
-                                                 description="历史对话",
-                                                 example=[
-                                                     {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                     {"role": "assistant", "content": "虎头虎脑"}]
-                                                 ),
+         history: List[History] = Body([],
+                                    description="历史对话",
+                                    example=[
+                                        {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                        {"role": "assistant", "content": "虎头虎脑"}]
+                                    ),
          ):
     async def chat_iterator(query: str,
-                            history: Optional[List[History]]
+                            history: List[History] = [],
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
 
