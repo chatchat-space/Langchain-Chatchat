@@ -4,6 +4,7 @@ from server.knowledge_base.utils import validate_kb_name
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_base_repository import list_kbs_from_db
 from configs.model_config import EMBEDDING_MODEL
+from fastapi import Body
 
 
 async def list_kbs():
@@ -11,9 +12,9 @@ async def list_kbs():
     return ListResponse(data=list_kbs_from_db())
 
 
-async def create_kb(knowledge_base_name: str,
-                    vector_store_type: str = "faiss",
-                    embed_model: str = EMBEDDING_MODEL,
+async def create_kb(knowledge_base_name: str = Body(..., examples=["kb_name"]),
+                    vector_store_type: str = Body("faiss"),
+                    embed_model: str = Body(EMBEDDING_MODEL),
                     ):
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
@@ -21,14 +22,16 @@ async def create_kb(knowledge_base_name: str,
     if knowledge_base_name is None or knowledge_base_name.strip() == "":
         return BaseResponse(code=404, msg="知识库名称不能为空，请重新填写知识库名称")
 
-    kb = KBServiceFactory.get_service(knowledge_base_name, "faiss")
+    kb = KBServiceFactory.get_service(knowledge_base_name, vector_store_type, embed_model)
     if kb is not None:
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
     kb.create()
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 
 
-async def delete_kb(knowledge_base_name: str):
+async def delete_kb(
+        knowledge_base_name: str = Body(..., examples=["kb_name"])
+    ):
     # Delete selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")

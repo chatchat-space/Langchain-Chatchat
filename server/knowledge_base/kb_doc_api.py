@@ -11,7 +11,9 @@ from server.knowledge_base.kb_service.base import SupportedVSType
 from typing import Union
 
 
-async def list_docs(knowledge_base_name: str):
+async def list_docs(
+    knowledge_base_name: str = Body(..., examples=["kb_name"])
+):
     if not validate_kb_name(knowledge_base_name):
         return ListResponse(code=403, msg="Don't attack me", data=[])
 
@@ -25,8 +27,8 @@ async def list_docs(knowledge_base_name: str):
 
 
 async def upload_doc(file: UploadFile = File(description="上传文件"),
-                     knowledge_base_name: str = Form(..., description="知识库名称", example="kb1"),
-                     override: bool = Form(False, description="覆盖已有文件", example=False),
+                     knowledge_base_name: str = Form(..., description="知识库名称", examples=["kb1"]),
+                     override: bool = Form(False, description="覆盖已有文件"),
                      ):
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -58,9 +60,9 @@ async def upload_doc(file: UploadFile = File(description="上传文件"),
     return BaseResponse(code=200, msg=f"成功上传文件 {kb_file.filename}")
 
 
-async def delete_doc(knowledge_base_name: str = Body(...),
-                     doc_name: str = Body(...),
-                     delete_content: bool = Body(...),
+async def delete_doc(knowledge_base_name: str = Body(..., examples=["kb_name"]),
+                     doc_name: str = Body(..., examples=["file_name"]),
+                     delete_content: bool = Body(False),
                     ):
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -80,8 +82,8 @@ async def delete_doc(knowledge_base_name: str = Body(...),
 
 
 async def update_doc(
-        knowledge_base_name: str = Body(...),
-        file_name: str = Body(...),
+        knowledge_base_name: str = Body(..., examples=["kb_name"]),
+        file_name: str = Body(..., examples=["file_name"]),
     ):
     '''
     更新知识库文档
@@ -109,7 +111,7 @@ async def download_doc():
 
 
 async def recreate_vector_store(
-        knowledge_base_name: str = Body(...),
+        knowledge_base_name: str = Body(..., examples=["kb_name"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body("faiss"),
     ):

@@ -12,12 +12,12 @@ from typing import List, Optional
 from server.chat.utils import History
 
 
-def chat(query: str = Body(..., description="用户输入", example="恼羞成怒"),
+def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
          history: List[History] = Body([],
                                     description="历史对话",
-                                    example=[
+                                    examples=[[
                                         {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                        {"role": "assistant", "content": "虎头虎脑"}]
+                                        {"role": "assistant", "content": "虎头虎脑"}]]
                                     ),
          ):
     history = [History(**h) if isinstance(h, dict) else h for h in history]
