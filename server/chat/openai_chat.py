@@ -18,7 +18,7 @@ class OpenAiChatMsgIn(BaseModel):
     n: int = 1
     max_tokens: int = 1024
     stop: List[str] = []
-    stream: bool = True
+    stream: bool = False
     presence_penalty: int = 0
     frequency_penalty: int = 0
 
@@ -31,11 +31,22 @@ async def openai_chat(msg: OpenAiChatMsgIn):
     print(msg)
 
     async def get_response(msg):
-        response = openai.ChatCompletion.create(**msg.dict())
-        for chunk in response.choices[0].message.content:
-            print(chunk)
-            yield chunk
+        data = msg.dict()
+        data["streaming"] = True
+        data.pop("stream")
+        response = openai.ChatCompletion.create(**data)
 
+        if msg.stream:
+            for chunk in response.choices[0].message.content:
+                print(chunk)
+                yield chunk
+        else:
+            answer = ""
+            for chunk in response.choices[0].message.content:
+                answer += chunk
+            print(answer)
+            yield(answer)
+    
     return StreamingResponse(
         get_response(msg),
         media_type='text/event-stream',
