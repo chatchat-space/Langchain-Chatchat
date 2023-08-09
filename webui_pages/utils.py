@@ -253,6 +253,7 @@ class ApiRequest:
         knowledge_base_name: str,
         top_k: int = VECTOR_SEARCH_TOP_K,
         history: List[Dict] = [],
+        stream: bool = True,
         no_remote_api: bool = None,
     ):
         '''
@@ -261,14 +262,22 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "query": query,
+            "knowledge_base_name": knowledge_base_name,
+            "top_k": top_k,
+            "history": history,
+            "stream": stream,
+        }
+
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(query, knowledge_base_name, top_k, history)
+            response = knowledge_base_chat(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
                 "/chat/knowledge_base_chat",
-                json={"query": query, "knowledge_base_name": knowledge_base_name, "top_k": top_k, "history": history},
+                json=data,
                 stream=True,
             )
             return self._httpx_stream2generator(response, as_json=True)
@@ -278,6 +287,7 @@ class ApiRequest:
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
+        stream: bool = True,
         no_remote_api: bool = None,
     ):
         '''
@@ -286,14 +296,21 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "query": query,
+            "search_engine_name": search_engine_name,
+            "top_k": top_k,
+            "stream": stream,
+        }
+
         if no_remote_api:
             from server.chat.search_engine_chat import search_engine_chat
-            response = search_engine_chat(query, search_engine_name, top_k)
+            response = search_engine_chat(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
                 "/chat/search_engine_chat",
-                json={"query": query, "search_engine_name": search_engine_name, "top_k": top_k},
+                json=data,
                 stream=True,
             )
             return self._httpx_stream2generator(response, as_json=True)
@@ -331,14 +348,20 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "vector_store_type": vector_store_type,
+            "embed_model": embed_model,
+        }
+
         if no_remote_api:
             from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(knowledge_base_name, vector_store_type, embed_model))
+            response = run_async(create_kb(**data))
             return response.dict()
         else:
             response = self.post(
                 "/knowledge_base/create_knowledge_base",
-                json={"knowledge_base_name": knowledge_base_name, "vector_store_type": vector_store_type, "embed_model": embed_model},
+                json=data,
             )
             return response.json()
 
@@ -443,14 +466,20 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "doc_name": doc_name,
+            "delete_content": delete_content,
+        }
+
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(knowledge_base_name, doc_name, delete_content))
+            response = run_async(delete_doc(**data))
             return response.dict()
         else:
             response = self.delete(
                 "/knowledge_base/delete_doc",
-                json={"knowledge_base_name": knowledge_base_name, "doc_name": doc_name, "delete_content": delete_content},
+                json=data,
             )
             return response.json()
 
