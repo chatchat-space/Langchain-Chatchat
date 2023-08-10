@@ -59,8 +59,9 @@ def dialogue_page(api: ApiRequest):
             if cols[1].button("Clear"):
                 chat_box.reset_history()
 
-            if cols[2].button("Delete"):
-                chat_box.del_chat_name(cur_chat_name, disabled=len(chat_list) <= 1)
+            if cols[2].button("Delete", disabled=len(chat_list) <= 1):
+                chat_box.del_chat_name(cur_chat_name)
+                st.experimental_rerun()
 
         def on_mode_change():
             mode = st.session_state.dialogue_mode
