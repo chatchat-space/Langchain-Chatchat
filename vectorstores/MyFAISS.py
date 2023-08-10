@@ -138,7 +138,7 @@ class MyFAISS(FAISS, VectorStore):
                     index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
                     self.index_to_docstore_id.pop(index)
                     self.docstore._dict.pop(id)
-                #为了保证index_to_docstore_id中的idx和faiss索引中的idx相一致，需要将index_to_docstore_id中的idx重排序
+                #为了保证index_to_docstore_id中的idx和faiss索引中的向量idx相一致，需要将index_to_docstore_id中的idx重排序
                 index_to_docstore_id_items = sorted(self.index_to_docstore_id.items())#0, 1, 3 - > 0, 1, 2
                 for i in range(len(index_to_docstore_id_items)):
                     index_to_docstore_id_items[i] = (i, index_to_docstore_id_items[i][1])
