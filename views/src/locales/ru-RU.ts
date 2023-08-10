@@ -64,6 +64,7 @@ export default {
     resetUserInfo: 'Сбросить информацию о пользователе',
     chatHistory: 'История чата',
     theme: 'Тема',
+		audiosetting: 'Настройка',
     language: 'Язык',
     api: 'API',
     reverseProxy: 'Обратный прокси-сервер',
