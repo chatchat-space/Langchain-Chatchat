@@ -104,6 +104,11 @@ def create_app():
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
+
+    # init local vector store info to database
+    from webui_pages.utils import init_vs_database
+    init_vs_database()
+
     return app
 
 

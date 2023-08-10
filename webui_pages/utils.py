@@ -614,11 +614,38 @@ def get_kb_doc_details(api: ApiRequest, kb: str) -> pd.DataFrame:
     return df
 
 
-if __name__ == "__main__":
+def init_vs_database(recreate_vs: bool = False):
+    '''
+    init local vector store info to database
+    '''
     from server.db.base import Base, engine
+    from server.db.repository.knowledge_base_repository import add_kb_to_db, kb_exists
+    from server.db.repository.knowledge_file_repository import add_doc_to_db
+    from server.knowledge_base.utils import KnowledgeFile
+
     Base.metadata.create_all(bind=engine)
 
+    if recreate_vs:
+        api = ApiRequest(no_remote_api=True)
+        for kb in list_kbs_from_folder():
+            for t in api.recreate_vector_store(kb):
+                print(t)
+    else: # add vs info to db only
+        for kb in list_kbs_from_folder():
+            if not kb_exists(kb):
+                add_kb_to_db(kb, "faiss", EMBEDDING_MODEL)
+                for doc in list_docs_from_folder(kb):
+                    try:
+                        kb_file = KnowledgeFile(doc, kb)
+                        add_doc_to_db(kb_file)
+                    except Exception as e:
+                        print(e)
+
+
+if __name__ == "__main__":
     api = ApiRequest(no_remote_api=True)
+    # init vector store database
+    init_vs_database()
 
     # print(api.chat_fastchat(
     #     messages=[{"role": "user", "content": "hello"}]
@@ -637,8 +664,3 @@ if __name__ == "__main__":
     #     print(t)
 
     # print(api.list_knowledge_bases())
-
-    # recreate all vector store
-    for kb in list_kbs_from_folder():
-        for t in api.recreate_vector_store(kb):
-            print(t)
