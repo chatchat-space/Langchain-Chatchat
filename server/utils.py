@@ -2,6 +2,14 @@ import pydantic
 from pydantic import BaseModel
 from typing import List
 import torch
+from fastapi_offline import FastAPIOffline
+import fastapi_offline
+from pathlib import Path
+
+
+# patch fastapi_offline to use local static assests
+fastapi_offline.core._STATIC_PATH = Path(__file__).parent / "static"
+
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="HTTP status code")

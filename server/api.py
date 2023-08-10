@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import NLTK_DATA_PATH, OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
-from fastapi_offline import FastAPIOffline as FastAPI
+from server.utils import FastAPIOffline as FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
