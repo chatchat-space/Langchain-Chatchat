@@ -1,11 +1,11 @@
 from langchain.text_splitter import CharacterTextSplitter
 import re
 from typing import List
-from configs.model_config import SENTENCE_SIZE
+from configs.model_config import CHUNK_SIZE
 
 
 class ChineseTextSplitter(CharacterTextSplitter):
-    def __init__(self, pdf: bool = False, sentence_size: int = SENTENCE_SIZE, **kwargs):
+    def __init__(self, pdf: bool = False, sentence_size: int = CHUNK_SIZE, **kwargs):
         super().__init__(**kwargs)
         self.pdf = pdf
         self.sentence_size = sentence_size

@@ -16,7 +16,14 @@ class AliTextSplitter(CharacterTextSplitter):
             text = re.sub(r"\n{3,}", r"\n", text)
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
-        from modelscope.pipelines import pipeline
+        try:
+            from modelscope.pipelines import pipeline
+        except ImportError:
+            raise ImportError(
+                "Could not import modelscope python package. "
+                "Please install modelscope with `pip install modelscope`. "
+            )
+
 
         p = pipeline(
             task="document-segmentation",
