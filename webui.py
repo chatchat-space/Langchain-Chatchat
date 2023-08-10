@@ -44,7 +44,7 @@ if __name__ == "__main__":
     pages = {"对话": {"icon": "chat",
                       "func": dialogue_page,
                       },
-             "知识库管理": {"icon": "database-fill-gear",
+             "知识库管理": {"icon": "hdd-stack",
                             "func": knowledge_base_page,
                             },
              "模型配置": {"icon": "gear",
