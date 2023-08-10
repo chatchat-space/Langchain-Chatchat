@@ -204,13 +204,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-如果想启动多个**LLM模型**服务：
-
-```shell
-$python server/llm_api_luanch.py --model-path-address `model-path1@host1@port1` `model-path2@host2@port2` 
-```
-
-注：以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
+以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $python server/llm_api_shutdown.py --serve all 
