@@ -25,9 +25,9 @@
 
 ✅ 依托于本项目支持的开源 LLM 与 Embedding 模型，本项目可实现全部使用**开源**模型**离线私有部署**。与此同时，本项目也支持 OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 API 的接入。
 
-⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的`top k`个 -> 匹配出的文本作为上下文和问题一起添加到`prompt`中 -> 提交给`LLM`生成回答。
+⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的 `top k`个 -> 匹配出的文本作为上下文和问题一起添加到 `prompt`中 -> 提交给 `LLM`生成回答。
 
-📺 [原理介绍视频](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514) 
+📺 [原理介绍视频](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
 ![实现原理图](img/langchain+chatglm.png)
 
@@ -39,7 +39,7 @@
 
 🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong🌲 ）
 
-💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 
+💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0
 
 ## 变更日志
 
@@ -89,7 +89,7 @@
 
 ### Embedding 模型支持
 
-本项目支持调用 [HuggingFace](https://huggingface.co/models?pipeline_tag=sentence-similarity) 中的 Embedding 模型，已支持的 Embedding 模型如下： 
+本项目支持调用 [HuggingFace](https://huggingface.co/models?pipeline_tag=sentence-similarity) 中的 Embedding 模型，已支持的 Embedding 模型如下：
 
 - [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
 - [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
@@ -110,28 +110,32 @@
 🐳 Docker镜像地址：`registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 `🌲
 
 💻 一行命令运行：
+
 ```shell
 docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0
 ```
 
-- 该版本镜像大小`25.2G`，使用[v0.1.16](https://github.com/imClumsyPanda/langchain-ChatGLM/releases/tag/v0.1.16)，以`nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04`为基础镜像
-- 该版本内置两个`embedding`模型：`m3e-base`，`text2vec-large-chinese`，内置`fastchat+chatglm-6b`
+- 该版本镜像大小 `25.2G`，使用[v0.1.16](https://github.com/imClumsyPanda/langchain-ChatGLM/releases/tag/v0.1.16)，以 `nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04`为基础镜像
+- 该版本内置两个 `embedding`模型：`m3e-base`，`text2vec-large-chinese`，内置 `fastchat+chatglm-6b`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
-- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装`NVIDIA Driver`以及`NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用`docker logs -f <container id>`查看日志
-- 如遇到启动过程卡在`Waiting..`步骤，建议使用`docker exec -it <container id> bash`进入`/logs/`目录查看对应阶段日志
-![](img/docker_logs.png)
-
+- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver`以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用 `docker logs -f <container id>`查看日志
+- 如遇到启动过程卡在 `Waiting..`步骤，建议使用 `docker exec -it <container id> bash`进入 `/logs/`目录查看对应阶段日志
+  ![](img/docker_logs.png)
 
 ## Docker 部署
+
 为了能让容器使用主机GPU资源，需要在主机上安装 [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)。具体安装步骤如下：
+
 ```shell
 sudo apt-get update
 sudo apt-get install -y nvidia-container-toolkit-base
 sudo systemctl daemon-reload 
 sudo systemctl restart docker
 ```
+
 安装完成后，可以使用以下命令编译镜像和启动容器：
+
 ```
 docker build -f Dockerfile-cuda -t chatglm-cuda:latest .
 docker run --gpus all -d --name chatglm -p 7860:7860  chatglm-cuda:latest
@@ -169,7 +173,9 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 复制文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
 
 在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 中的各项模型参数设计是否符合需求：
+
 - 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
+
 ```python
 llm_model_dict={
                 "chatglm2-6b": {
@@ -179,7 +185,9 @@ llm_model_dict={
                     },
                 }
 ```
+
 - 请确认已下载至本地的 Embedding 模型本地存储路径写在 `embedding_model_dict` 对应模型位置，如：
+
 ```python
 embedding_model_dict = {
                         "m3e-base": "/Users/xxx/Downloads/m3e-base",
@@ -189,9 +197,24 @@ embedding_model_dict = {
 ### 4. 启动 API 服务或 Web UI
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
+
 ```shell
 $ python server/llm_api.py
 ```
+
+如果想启动多个llm模型服务：
+
+```shell
+$python server/llm_api_luanch.py --model-path-address `model-path1@host1@port1` `model-path2@host2@port2` 
+```
+
+以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
+
+```shell
+$python server/llm_api_shutdown.py --serve all 
+```
+
+亦可单独停止一个fastchat服务模块，可选[all, controller,model_worker,openai_api_server]
 
 执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
 
@@ -200,6 +223,7 @@ $ python server/api.py
 ```
 
 执行 [webui.py](webui.py) 启动 **Web UI** 服务
+
 ```shell
 $ python webui.py
 ```
@@ -210,37 +234,37 @@ $ python webui.py
 
 ## 路线图
 
-- [x] Langchain 应用
-  - [x] 本地数据接入
-    - [x] 接入非结构化文档
-      - [x] .md
-      - [x] .txt
-      - [x] .docx
+- [X] Langchain 应用
+  - [X] 本地数据接入
+    - [X] 接入非结构化文档
+      - [X] .md
+      - [X] .txt
+      - [X] .docx
     - [ ] 结构化数据接入
-      - [x] .csv
+      - [X] .csv
       - [ ] .xlsx
     - [ ] 本地网页接入
     - [ ] SQL 接入
     - [ ] 知识图谱/图数据库接入
-  - [x] 搜索引擎接入
-    - [x] Bing 搜索
-    - [x] DuckDuckGo 搜索
+  - [X] 搜索引擎接入
+    - [X] Bing 搜索
+    - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
-- [x] LLM 模型接入
-  - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
-- [x] 增加更多 Embedding 模型支持
-  - [x] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
-  - [x] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
-  - [x] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
-  - [x] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
-  - [x] [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
-  - [x] [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
-- [x] 基于 FastAPI 的 API 方式调用
-- [x] Web UI
-  - [x] 基于 Streamlit 的 Web UI
+- [X] LLM 模型接入
+  - [X] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
+- [X] 增加更多 Embedding 模型支持
+  - [X] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
+  - [X] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+  - [X] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
+  - [X] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
+  - [X] [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
+  - [X] [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
+- [X] 基于 FastAPI 的 API 方式调用
+- [X] Web UI
+  - [X] 基于 Streamlit 的 Web UI
 
 ## 项目交流群
-<img src="img/qr_code_46.jpg" alt="二维码" width="300" height="300" />
 
+<img src="img/qr_code_46.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
