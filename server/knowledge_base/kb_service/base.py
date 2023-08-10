@@ -5,11 +5,10 @@ import os
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
-from configs.config import kbs_config
 from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists, load_kb_from_db
 from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \
     list_docs_from_db
-from configs.model_config import (DB_ROOT_PATH,  VECTOR_SEARCH_TOP_K,
+from configs.model_config import (DB_ROOT_PATH, kbs_config, VECTOR_SEARCH_TOP_K,
                                   embedding_model_dict, EMBEDDING_DEVICE, EMBEDDING_MODEL)
 from server.knowledge_base.utils import (get_kb_path, get_doc_path, load_embeddings, KnowledgeFile)
 from typing import List, Union

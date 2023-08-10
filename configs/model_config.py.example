@@ -149,7 +149,20 @@ BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 # 是因为服务器加了防火墙，需要联系管理员加白名单，如果公司的服务器的话，就别想了GG
 BING_SUBSCRIPTION_KEY = ""
 
-
+kbs_config = {
+    "faiss": {
+    },
+    "milvus": {
+        "host": "127.0.0.1",
+        "port": "19530",
+        "user": "",
+        "password": "",
+        "secure": False,
+    },
+    "pg": {
+        "connection_uri": "postgresql://postgres:postgres@192.168.50.128:5432/langchain_chatgml",
+    }
+}
 
 # 是否开启中文标题加强，以及标题增强的相关配置
 # 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；

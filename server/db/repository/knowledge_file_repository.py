@@ -1,5 +1,3 @@
-import datetime
-
 from server.db.models.knowledge_base_model import KnowledgeBaseModel
 from server.db.models.knowledge_file_model import KnowledgeFileModel
 from server.db.session import with_session
@@ -24,11 +22,15 @@ def add_doc_to_db(session, kb_file: KnowledgeFile):
             existing_file.file_version += 1
         # 否则，添加新文件
         else:
-            session.add(KnowledgeFileModel(file_name=kb_file.filename,
-                                           file_ext=kb_file.ext,
-                                           document_loader_name=kb_file.document_loader_name,
-                                           text_splitter_name=kb_file.text_splitter_name
-                                           ))
+            new_file = KnowledgeFileModel(
+                file_name=kb_file.filename,
+                file_ext=kb_file.ext,
+                kb_name=kb_file.kb_name,
+                document_loader_name=kb_file.document_loader_name,
+                text_splitter_name=kb_file.text_splitter_name,
+            )
+            kb.file_count += 1
+            session.add(new_file)
     return True
 
 
