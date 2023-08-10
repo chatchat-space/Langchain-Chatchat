@@ -39,6 +39,10 @@ $ cd langchain-ChatGLM
 # 安装依赖
 $ pip install -r requirements.txt
 
+# 默认依赖包括基本运行环境（FAISS向量库）与API服务支持。如果要使用chromadb/milvus/pg等向量库，请将requirements.txt中相应依赖取消注释再安装。
+
+# 如果需要webui，请安装streamlit相关依赖：
+$ pip install -r requirements_webui.txt
 ```
 
 注：使用 `langchain.document_loaders.UnstructuredFileLoader` 进行 `.docx` 等格式非结构化文件接入时，可能需要依据文档进行其他依赖包的安装，请参考 [langchain 文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html)。
