@@ -65,6 +65,7 @@ export default {
     chatHistory: '채팅 기록',
     theme: '테마',
     language: '언어',
+		audiosetting: '음성설정',
     api: 'API',
     reverseProxy: '리버스 프록시',
     timeout: '타임아웃',

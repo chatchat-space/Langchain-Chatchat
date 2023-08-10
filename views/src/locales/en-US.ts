@@ -64,6 +64,7 @@ export default {
     resetUserInfo: 'Reset UserInfo',
     chatHistory: 'ChatHistory',
     theme: 'Theme',
+		audiosetting: 'AudioSet',
     language: 'Language',
     api: 'API',
     reverseProxy: 'Reverse Proxy',
