@@ -4,7 +4,6 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
-import asyncio
 
 host_ip = "0.0.0.0"
 controller_port = 20001

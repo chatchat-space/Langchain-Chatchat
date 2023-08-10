@@ -1,6 +1,5 @@
-from fastapi import Body
 from fastapi.responses import StreamingResponse
-from typing import List, Dict
+from typing import List
 import openai
 from configs.model_config import llm_model_dict, LLM_MODEL
 from pydantic import BaseModel

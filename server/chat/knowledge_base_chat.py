@@ -20,13 +20,13 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                         history: List[History] = Body([],
-                                                    description="历史对话",
-                                                    examples=[[
-                                                        {"role": "user",
-                                                            "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                        {"role": "assistant",
-                                                            "content": "虎头虎脑"}]]
-                                                    ),
+                                                      description="历史对话",
+                                                      examples=[[
+                                                          {"role": "user",
+                                                           "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                          {"role": "assistant",
+                                                           "content": "虎头虎脑"}]]
+                                                      ),
                         stream: bool = Body(False, description="流式输出"),
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
@@ -72,14 +72,15 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             async for token in callback.aiter():
                 # Use server-sent-events to stream the response
                 yield json.dumps({"answer": token,
-                    "docs": source_documents}, ensure_ascii=False)
+                                  "docs": source_documents},
+                                 ensure_ascii=False)
         else:
             answer = ""
             async for token in callback.aiter():
                 answer += token
             yield json.dumps({"answer": token,
-                "docs": source_documents},
-                ensure_ascii=False)
+                              "docs": source_documents},
+                             ensure_ascii=False)
 
         await task
 

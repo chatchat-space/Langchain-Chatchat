@@ -1,6 +1,7 @@
 import nltk
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs.model_config import NLTK_DATA_PATH, OPEN_CROSS_DOMAIN
@@ -13,7 +14,7 @@ from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_docs, upload_doc, delete_doc,
-                                   update_doc, recreate_vector_store)
+                                              update_doc, recreate_vector_store)
 from server.utils import BaseResponse, ListResponse
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path

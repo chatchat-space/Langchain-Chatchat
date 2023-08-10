@@ -10,7 +10,6 @@ from configs.model_config import (
 from functools import lru_cache
 import sys
 from text_splitter import zh_title_enhance
-from langchain.document_loaders import UnstructuredFileLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:

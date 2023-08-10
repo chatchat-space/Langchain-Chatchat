@@ -2,13 +2,11 @@ import os
 import urllib
 from fastapi import File, Form, Body, UploadFile
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import (get_file_path, validate_kb_name)
+from server.knowledge_base.utils import validate_kb_name
 from fastapi.responses import StreamingResponse
 import json
 from server.knowledge_base.utils import KnowledgeFile, list_docs_from_folder
 from server.knowledge_base.kb_service.base import KBServiceFactory
-from server.knowledge_base.kb_service.base import SupportedVSType
-from typing import Union
 
 
 async def list_docs(
@@ -26,7 +24,7 @@ async def list_docs(
     return ListResponse(data=all_doc_names)
 
 
-async def upload_doc(file: UploadFile = File(description="上传文件"),
+async def upload_doc(file: UploadFile = File(..., description="上传文件"),
                      knowledge_base_name: str = Form(..., description="知识库名称", examples=["kb1"]),
                      override: bool = Form(False, description="覆盖已有文件"),
                      ):

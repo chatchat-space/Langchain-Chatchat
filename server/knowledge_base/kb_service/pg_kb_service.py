@@ -6,8 +6,8 @@ from langchain.vectorstores import PGVector
 from sqlalchemy import text
 
 from configs.model_config import EMBEDDING_DEVICE, kbs_config
-from server.knowledge_base.kb_service.base import SupportedVSType
-from server.knowledge_base.utils import KBService, load_embeddings, KnowledgeFile
+from server.knowledge_base.kb_service.base import SupportedVSType, KBService
+from server.knowledge_base.utils import load_embeddings, KnowledgeFile
 
 
 class PGKBService(KBService):

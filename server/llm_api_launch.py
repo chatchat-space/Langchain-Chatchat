@@ -5,7 +5,8 @@
 
 """
 import sys
-import os 
+import os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import subprocess
@@ -19,15 +20,14 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
-
 parser = argparse.ArgumentParser()
-#------multi worker-----------------
+# ------multi worker-----------------
 parser.add_argument('--model-path-address',
                     default="THUDM/chatglm2-6b@localhost@20002",
                     nargs="+",
                     type=str,
                     help="model path, host, and port, formatted as model-path@host@path")
-#---------------controller-------------------------
+# ---------------controller-------------------------
 
 parser.add_argument("--controller-host", type=str, default="localhost")
 parser.add_argument("--controller-port", type=int, default=21001)
@@ -37,9 +37,9 @@ parser.add_argument(
     choices=["lottery", "shortest_queue"],
     default="shortest_queue",
 )
-controller_args = ["controller-host","controller-port","dispatch-method"]
+controller_args = ["controller-host", "controller-port", "dispatch-method"]
 
-#----------------------worker------------------------------------------
+# ----------------------worker------------------------------------------
 
 parser.add_argument("--worker-host", type=str, default="localhost")
 parser.add_argument("--worker-port", type=int, default=21002)
@@ -125,15 +125,15 @@ parser.add_argument("--stream-interval", type=int, default=2)
 parser.add_argument("--no-register", action="store_true")
 
 worker_args = [
-                "worker-host","worker-port",
-                "model-path","revision","device","gpus","num-gpus",
-               "max-gpu-memory","load-8bit","cpu-offloading",
-               "gptq-ckpt","gptq-wbits","gptq-groupsize",
-               "gptq-act-order","model-names","limit-worker-concurrency",
-               "stream-interval","no-register",
-               "controller-address"
-               ]
-#-----------------openai server---------------------------
+    "worker-host", "worker-port",
+    "model-path", "revision", "device", "gpus", "num-gpus",
+    "max-gpu-memory", "load-8bit", "cpu-offloading",
+    "gptq-ckpt", "gptq-wbits", "gptq-groupsize",
+    "gptq-act-order", "model-names", "limit-worker-concurrency",
+    "stream-interval", "no-register",
+    "controller-address"
+]
+# -----------------openai server---------------------------
 
 parser.add_argument("--server-host", type=str, default="127.0.0.1", help="host name")
 parser.add_argument("--server-port", type=int, default=8888, help="port number")
@@ -154,13 +154,14 @@ parser.add_argument(
     type=lambda s: s.split(","),
     help="Optional list of comma separated API keys",
 )
-server_args = ["server-host","server-port","allow-credentials","api-keys",
+server_args = ["server-host", "server-port", "allow-credentials", "api-keys",
                "controller-address"
                ]
 
 args = parser.parse_args()
 # 必须要加http//:，否则InvalidSchema: No connection adapters were found
-args = argparse.Namespace(**vars(args),**{"controller-address":f"http://{args.controller_host}:{str(args.controller_port)}"})
+args = argparse.Namespace(**vars(args),
+                          **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
 
 if args.gpus:
     if len(args.gpus.split(",")) < args.num_gpus:
@@ -173,10 +174,10 @@ if args.gpus:
 # 1, 命令行选项
 # 2,LOG_PATH
 # 3, log的文件名
-base_launch_sh = "nohup python3 -m fastchat.serve.{0} {1} >{2}/{3}.log 2>&1 &" 
+base_launch_sh = "nohup python3 -m fastchat.serve.{0} {1} >{2}/{3}.log 2>&1 &"
 
 # 0 log_path
-#! 1 log的文件名，必须与bash_launch_sh一致
+# ! 1 log的文件名，必须与bash_launch_sh一致
 # 2 controller, worker, openai_api_server
 base_check_sh = """while [ `grep -c "Uvicorn running on" {0}/{1}.log` -eq '0' ];do
                         sleep 1s;
@@ -185,20 +186,20 @@ base_check_sh = """while [ `grep -c "Uvicorn running on" {0}/{1}.log` -eq '0' ];
                 echo '{2} running' """
 
 
-def string_args(args,args_list):
+def string_args(args, args_list):
     """将args中的key转化为字符串"""
     args_str = ""
     for key, value in args._get_kwargs():
         # args._get_kwargs中的key以_为分隔符,先转换，再判断是否在指定的args列表中
-        key = key.replace("_","-") 
+        key = key.replace("_", "-")
         if key not in args_list:
-             continue
+            continue
         # fastchat中port,host没有前缀，去除前缀
-        key = key.split("-")[-1] if re.search("port|host",key) else key 
+        key = key.split("-")[-1] if re.search("port|host", key) else key
         if not value:
             pass
         # 1==True ->  True
-        elif isinstance(value,bool) and value == True:
+        elif isinstance(value, bool) and value == True:
             args_str += f" --{key} "
         elif isinstance(value, list) or isinstance(value, tuple) or isinstance(value, set):
             value = " ".join(value)
@@ -208,38 +209,40 @@ def string_args(args,args_list):
 
     return args_str
 
+
 def launch_worker(item):
-            log_name = item.split("/")[-1].split("\\")[-1].replace("-","_").replace("@","_").replace(".","_")
-            # 先分割model-path-address,在传到string_args中分析参数
-            args.model_path,args.worker_host, args.worker_port = item.split("@")
-            print("*"*80)        
-            worker_str_args = string_args(args,worker_args)
-            print(worker_str_args)
-            worker_sh = base_launch_sh.format("model_worker",worker_str_args,LOG_PATH,f"worker_{log_name}")
-            worker_check_sh = base_check_sh.format(LOG_PATH,f"worker_{log_name}","model_worker")
-            subprocess.run(worker_sh,shell=True,check=True)
-            subprocess.run(worker_check_sh,shell=True,check=True)
+    log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
+    # 先分割model-path-address,在传到string_args中分析参数
+    args.model_path, args.worker_host, args.worker_port = item.split("@")
+    print("*" * 80)
+    worker_str_args = string_args(args, worker_args)
+    print(worker_str_args)
+    worker_sh = base_launch_sh.format("model_worker", worker_str_args, LOG_PATH, f"worker_{log_name}")
+    worker_check_sh = base_check_sh.format(LOG_PATH, f"worker_{log_name}", "model_worker")
+    subprocess.run(worker_sh, shell=True, check=True)
+    subprocess.run(worker_check_sh, shell=True, check=True)
 
 
 def launch_all():
-    controller_str_args = string_args(args,controller_args)
-    controller_sh = base_launch_sh.format("controller",controller_str_args,LOG_PATH,"controller")
-    controller_check_sh = base_check_sh.format(LOG_PATH,"controller","controller")
-    subprocess.run(controller_sh,shell=True,check=True)
-    subprocess.run(controller_check_sh,shell=True,check=True)
+    controller_str_args = string_args(args, controller_args)
+    controller_sh = base_launch_sh.format("controller", controller_str_args, LOG_PATH, "controller")
+    controller_check_sh = base_check_sh.format(LOG_PATH, "controller", "controller")
+    subprocess.run(controller_sh, shell=True, check=True)
+    subprocess.run(controller_check_sh, shell=True, check=True)
 
     if isinstance(args.model_path_address, str):
         launch_worker(args.model_path_address)
     else:
-        for idx,item in enumerate(args.model_path_address):
+        for idx, item in enumerate(args.model_path_address):
             print(f"开始加载第{idx}个模型:{item}")
             launch_worker(item)
-    
-    server_str_args = string_args(args,server_args)
-    server_sh = base_launch_sh.format("openai_api_server",server_str_args,LOG_PATH,"openai_api_server")
-    server_check_sh = base_check_sh.format(LOG_PATH,"openai_api_server","openai_api_server")
-    subprocess.run(server_sh,shell=True,check=True)
-    subprocess.run(server_check_sh,shell=True,check=True)
+
+    server_str_args = string_args(args, server_args)
+    server_sh = base_launch_sh.format("openai_api_server", server_str_args, LOG_PATH, "openai_api_server")
+    server_check_sh = base_check_sh.format(LOG_PATH, "openai_api_server", "openai_api_server")
+    subprocess.run(server_sh, shell=True, check=True)
+    subprocess.run(server_check_sh, shell=True, check=True)
+
 
 if __name__ == "__main__":
     launch_all()

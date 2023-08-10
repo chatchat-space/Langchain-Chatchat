@@ -3,7 +3,6 @@ openai
 sentence_transformers
 fschat==0.2.20
 transformers
-transformers_stream_generator
 torch~=2.0.0
 fastapi~=0.99.1
 fastapi-offline

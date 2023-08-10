@@ -1,9 +1,6 @@
 from functools import wraps
-
-from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-
-from server.db.base import engine, SessionLocal
+from server.db.base import SessionLocal
 
 
 @contextmanager
