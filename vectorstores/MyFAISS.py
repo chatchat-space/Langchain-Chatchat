@@ -132,11 +132,19 @@ class MyFAISS(FAISS, VectorStore):
                 _reversed_index = {v: k for k, v in self.index_to_docstore_id.items()}
                 index_to_delete = [_reversed_index[i] for i in ids]
                 # 从 self.index 中删除对应id
+                # 使用remove_ids从faiss索引中删除向量时，剩余的待索引向量idx仍然是连续的  0, 3, 4 - > 0, 1, 2
                 self.index.remove_ids(np.array(index_to_delete, dtype=np.int64))
                 for id in ids:
                     index = list(self.index_to_docstore_id.keys())[list(self.index_to_docstore_id.values()).index(id)]
                     self.index_to_docstore_id.pop(index)
                     self.docstore._dict.pop(id)
+                #为了保证index_to_docstore_id中的idx和faiss索引中的向量idx相一致，需要将index_to_docstore_id中的idx重排序
+                index_to_docstore_id_items = sorted(self.index_to_docstore_id.items())#0, 1, 3 - > 0, 1, 2
+                for i in range(len(index_to_docstore_id_items)):
+                    index_to_docstore_id_items[i] = (i, index_to_docstore_id_items[i][1])
+                self.index_to_docstore_id.clear()
+                self.index_to_docstore_id.update(index_to_docstore_id_items)
+                
                 self.save_local(vs_path)
                 return f"docs delete success"
         except Exception as e:
