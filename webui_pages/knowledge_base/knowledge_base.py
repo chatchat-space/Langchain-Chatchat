@@ -4,110 +4,29 @@ from webui_pages.utils import *
 from st_aggrid import AgGrid
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
-from server.knowledge_base.utils import get_file_path, list_kbs_from_folder, list_docs_from_folder
-from server.knowledge_base.kb_service.base import KBServiceFactory
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
+from server.knowledge_base.utils import get_file_path
 # from streamlit_chatbox import *
-from typing import Literal, Dict
+from typing import Literal, Dict, Tuple
 
 
 SENTENCE_SIZE = 100
 
 
-def get_kb_details(api: ApiRequest) -> pd.DataFrame:
-    kbs_in_folder = list_kbs_from_folder()
-    kbs_in_db = api.list_knowledge_bases()
-    result = {}
-
-    for kb in kbs_in_folder:
-        result[kb] = {
-            "kb_name": kb,
-            "vs_type": "",
-            "embed_model": "",
-            "file_count": 0,
-            "create_time": None,
-            "in_folder": True,
-            "in_db": False,
-        }
-    
-    for kb in kbs_in_db:
-        kb_detail = get_kb_detail(kb)
-        if kb_detail:
-            kb_detail["in_db"] = True
-            if kb in result:
-                result[kb].update(kb_detail)
-            else:
-                kb_detail["in_folder"] = False
-                result[kb] = kb_detail
-
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "vs_type",
-            "embed_model",
-            "file_count",
-            "create_time",
-            "in_folder",
-            "in_db",
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
-
-
-def get_kb_doc_details(api: ApiRequest, kb: str) -> pd.DataFrame:
-    docs_in_folder = list_docs_from_folder(kb)
-    docs_in_db = api.list_kb_docs(kb)
-    result = {}
-
-    for doc in docs_in_folder:
-        result[doc] = {
-            "kb_name": kb,
-            "file_name": doc,
-            "file_ext": os.path.splitext(doc)[-1],
-            "file_version": 0,
-            "document_loader": "",
-            "text_splitter": "",
-            "create_time": None,
-            "in_folder": True,
-            "in_db": False,
-        }
-    
-    for doc in docs_in_db:
-        doc_detail = get_file_detail(kb, doc)
-        if doc_detail:
-            doc_detail["in_db"] = True
-            if doc in result:
-                result[doc].update(doc_detail)
-            else:
-                doc_detail["in_folder"] = False
-                result[doc] = doc_detail
-
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "file_name",
-            "file_ext",
-            "file_version",
-            "document_loader",
-            "text_splitter",
-            "create_time",
-            "in_folder",
-            "in_db",        
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
-
-
 def config_aggrid(
     df: pd.DataFrame,
-    titles: Dict[str, str] = {},
+    columns: Dict[Tuple[str, str], Dict] = {},
     selection_mode: Literal["single", "multiple", "disabled"] = "single",
     use_checkbox: bool = False,
 ) -> GridOptionsBuilder:
     gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_column("No", width=50)
-    for k, v in titles.items():
-        gb.configure_column(k, v, maxWidth=100, wrapHeaderText=True)
-    gb.configure_selection(selection_mode, use_checkbox, pre_selected_rows=[0])
+    gb.configure_column("No", width=40)
+    for (col, header), kw in columns.items():
+        gb.configure_column(col, header, wrapHeaderText=True, **kw)
+    gb.configure_selection(
+        selection_mode,
+        use_checkbox,
+        # pre_selected_rows=st.session_state.get("selected_rows", [0]),
+    )
     return gb
 
 
@@ -142,22 +61,24 @@ def knowledge_base_page(api: ApiRequest):
         else:
             st.error(f"名为 {new_kb_name} 的知识库不存在！")
 
-    st.write("知识库：")
+    st.write("知识库列表：")
     if kb_list:
         gb = config_aggrid(
             kb_details,
             {
-                "kb_name": "知识库名称",
-                "vs_type": "知识库类型",
-                "embed_model": "嵌入模型",
-                "file_count": "文档数量",
-                "create_time": "创建时间",
-                "in_folder": "存在于文件夹",
-                "in_db": "存在于数据库",
+                ("kb_name", "知识库名称"): {"maxWidth": 150},
+                ("vs_type", "知识库类型"): {"maxWidth": 100},
+                ("embed_model", "嵌入模型"): {"maxWidth": 100},
+                ("file_count", "文档数量"): {"maxWidth": 60},
+                ("create_time", "创建时间"): {"maxWidth": 150},
+                ("in_folder", "文件夹"): {"maxWidth": 50},
+                ("in_db", "数据库"): {"maxWidth": 50},
             }
         )
         kb_grid = AgGrid(kb_details, gb.build())
+        # st.write(kb_grid)
         if kb_grid.selected_rows:
+            # st.session_state.selected_rows = [x["nIndex"] for x in kb_grid.selected_rows]
             kb = kb_grid.selected_rows[0]["kb_name"]
 
             with st.sidebar:
@@ -191,21 +112,21 @@ def knowledge_base_page(api: ApiRequest):
                         progress.progress(d["finished"] / d["t]otal"], f"正在处理： {d['doc']}")
 
             # 知识库详情
-            st.subheader(f"知识库 {kb} 详情")
+            st.write(f"知识库 {kb} 详情:")
             doc_details = get_kb_doc_details(api, kb)
             doc_details.drop(columns=["kb_name"], inplace=True)
 
             gb = config_aggrid(
                 doc_details,
                 {
-                    "file_name": "文档名称",
-                    "file_ext": "文档类型",
-                    "file_version": "文档版本",
-                    "document_loader": "文档加载器",
-                    "text_splitter": "分词器",
-                    "create_time": "创建时间",
-                    "in_folder": "存在于文件夹",
-                    "in_db": "存在于数据库",
+                    ("file_name", "文档名称"): {"maxWidth": 150},
+                    ("file_ext", "文档类型"): {"maxWidth": 50},
+                    ("file_version", "文档版本"): {"maxWidth": 50},
+                    ("document_loader", "文档加载器"): {"maxWidth": 150},
+                    ("text_splitter", "分词器"): {"maxWidth": 150},
+                    ("create_time", "创建时间"): {"maxWidth": 150},
+                    ("in_folder", "文件夹"): {"maxWidth": 50},
+                    ("in_db", "数据库"): {"maxWidth": 50},
                 },
                 "multiple",
             )
@@ -239,5 +160,3 @@ def knowledge_base_page(api: ApiRequest):
                     ret = api.delete_kb_doc(kb, row["file_name"], True)
                     st.toast(ret["msg"])
                 st.experimental_rerun()
-
-            st.write("本文档包含以下知识条目：(待定内容)")
