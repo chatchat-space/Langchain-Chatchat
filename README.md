@@ -196,19 +196,21 @@ embedding_model_dict = {
 
 ### 4. 启动 API 服务或 Web UI
 
+#### 4.1 启动LLM服务
+
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
 ```shell
 $ python server/llm_api.py
 ```
 
-如果想启动多个llm模型服务：
+如果想启动多个**LLM模型**服务：
 
 ```shell
 $python server/llm_api_luanch.py --model-path-address `model-path1@host1@port1` `model-path2@host2@port2` 
 ```
 
-以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
+注：以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $python server/llm_api_shutdown.py --serve all 
@@ -216,13 +218,17 @@ $python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个fastchat服务模块，可选[all, controller,model_worker,openai_api_server]
 
-执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
+#### 4.2 启动API服务
+
+启动**LLM服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
 
 ```shell
 $ python server/api.py
 ```
 
-执行 [webui.py](webui.py) 启动 **Web UI** 服务
+#### 4.3 启动Web UI服务
+
+启动**LLM服务**后，执行 [webui.py](webui.py) 启动 **Web UI** 服务
 
 ```shell
 $ python webui.py
