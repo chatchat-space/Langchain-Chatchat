@@ -41,5 +41,4 @@ if __name__ == "__main__":
                                     icons=[i["icon"] for i in pages.values()],
                                     menu_icon="chat-quote",
                                     default_index=0)
-    print(f"root: {api.no_remote_api=}")
     pages[selected_page]["func"](api)

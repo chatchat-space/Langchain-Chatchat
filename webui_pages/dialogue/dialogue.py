@@ -6,8 +6,8 @@ import streamlit_antd_components as sac
 from server.chat.search_engine_chat import SEARCH_ENGINES
 from typing import List, Dict
 
-
 chat_box = ChatBox()
+
 
 def get_messages_history(history_len: int) -> List[Dict]:
     def filter(msg):
@@ -19,7 +19,8 @@ def get_messages_history(history_len: int) -> List[Dict]:
             "role": msg["role"],
             "content": content[0] if content else "",
         }
-    history = chat_box.filter_history(100000, filter) # workaround before upgrading streamlit-chatbox.
+
+    history = chat_box.filter_history(100000, filter)  # workaround before upgrading streamlit-chatbox.
     user_count = 0
     i = 1
     for i in range(1, len(history) + 1):
@@ -35,7 +36,7 @@ def dialogue_page(api: ApiRequest):
 
     with st.sidebar:
         with st.expander("会话管理", True):
-            col_input, col_btn = st.columns(2)
+            col_input, col_btn = st.columns([2, 1])
             new_chat_name = col_input.text_input(
                 "新会话名称",
                 placeholder="新会话名称",
@@ -48,6 +49,7 @@ def dialogue_page(api: ApiRequest):
                 if new_chat_name:
                     chat_box.use_chat_name(new_chat_name)
                     st.session_state.new_chat_name = ""
+
             col_btn.button("新建会话", on_click=on_btn_new_chat)
 
             chat_list = chat_box.get_chat_names()
@@ -56,10 +58,17 @@ def dialogue_page(api: ApiRequest):
 
             cols = st.columns(3)
             export_btn = cols[0]
-            if cols[1].button("Clear"):
+            if cols[1].button(
+                    "Clear",
+                    use_container_width=True,
+            ):
                 chat_box.reset_history()
 
-            if cols[2].button("Delete", disabled=len(chat_list) <= 1):
+            if cols[2].button(
+                    "Delete",
+                    disabled=len(chat_list) <= 1,
+                    use_container_width=True,
+            ):
                 chat_box.del_chat_name(cur_chat_name)
                 st.experimental_rerun()
 
@@ -77,11 +86,12 @@ def dialogue_page(api: ApiRequest):
                                  ["LLM 对话",
                                   "知识库问答",
                                   "搜索引擎问答",
-                                ],
-                                on_change=on_mode_change,
-                                key="dialogue_mode",
-                                )
+                                  ],
+                                 on_change=on_mode_change,
+                                 key="dialogue_mode",
+                                 )
         history_len = st.slider("历史对话轮数：", 1, 10, 3)
+
         # todo: support history len
 
         def on_kb_change():
@@ -97,9 +107,9 @@ def dialogue_page(api: ApiRequest):
                     key="selected_kb",
                 )
                 kb_top_k = st.slider("匹配知识条数：", 1, 20, 3)
-                score_threshold = st.slider("知识匹配分数阈值：", 0, 1000, 0, disabled=True)
-                chunk_content = st.checkbox("关联上下文", False, disabled=True)
-                chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
+                # score_threshold = st.slider("知识匹配分数阈值：", 0, 1, 0, disabled=True)
+                # chunk_content = st.checkbox("关联上下文", False, disabled=True)
+                # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
             search_engine = sac.buttons(SEARCH_ENGINES.keys(), 0)
             se_top_k = st.slider("匹配搜索结果条数：", 1, 20, 3)
@@ -117,7 +127,7 @@ def dialogue_page(api: ApiRequest):
             for t in r:
                 text += t
                 chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False) # 更新最终的字符串，去除光标
+            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
         elif dialogue_mode == "知识库问答":
             history = get_messages_history(history_len)
             chat_box.ai_say([
@@ -148,4 +158,5 @@ def dialogue_page(api: ApiRequest):
         "".join(chat_box.export2md(cur_chat_name)),
         file_name=f"{now:%Y-%m-%d %H.%M}_{cur_chat_name}.md",
         mime="text/markdown",
+        use_container_width=True,
     )
