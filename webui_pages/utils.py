@@ -443,7 +443,7 @@ class ApiRequest:
             temp_file.write(file.read())
             temp_file.seek(0)
             response = run_async(upload_doc(
-                UploadFile(temp_file, filename=filename),
+                UploadFile(file=temp_file, filename=filename),
                 knowledge_base_name,
                 override,
             ))

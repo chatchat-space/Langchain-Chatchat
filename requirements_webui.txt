@@ -1,0 +1,6 @@
+streamlit>=1.25.0
+streamlit-option-menu
+streamlit-antd-components
+streamlit-chatbox>=1.1.6
+streamlit-aggrid
+httpx

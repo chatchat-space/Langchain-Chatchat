@@ -1,32 +1,25 @@
 langchain==0.0.257
 openai
 sentence_transformers
-chromadb
 fschat==0.2.20
 transformers
 transformers_stream_generator
 torch~=2.0.0
 fastapi~=0.99.1
-loguru
 fastapi-offline
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
 numpy~=1.24.4
+pandas~=2.0.3
 pydantic~=1.10.11
 unstructured[all-docs]
 python-magic-bin; sys_platform == 'win32'
-
-streamlit>=1.25.0
-streamlit-option-menu
-streamlit-antd-components
-streamlit-chatbox>=1.1.6
-streamlit-aggrid
-httpx
-
-faiss-cpu
-pymilvus==2.1.3 # requires milvus==2.1.3
-
 SQLAlchemy==2.0.19
+faiss-cpu
+
+# uncomment libs if you want to use corresponding vector store
+# pymilvus==2.1.3 # requires milvus==2.1.3
+# chromadb
 # psycopg2
 # pgvector
