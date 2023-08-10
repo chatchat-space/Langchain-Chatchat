@@ -241,17 +241,28 @@ class LocalDocQA:
         else:
             prompt = query
 
-        answer_result_stream_result = self.llm_model_chain(
-            {"prompt": prompt, "history": chat_history, "streaming": streaming})
+        # 接入baichuan的代码分支：
+        if LLM_MODEL == "Baichuan-13B-Chat":
+            for answer_result in self.llm_model_chain._generate_answer(prompt=prompt, history=chat_history,
+                                                                       streaming=streaming):
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                response = {"query": query,
+                            "result": resp,
+                            "source_documents": related_docs_with_score}
+                yield response, history
+        else:  # 原本逻辑分支：
+            answer_result_stream_result = self.llm_model_chain(
+                {"prompt": prompt, "history": chat_history, "streaming": streaming})
 
-        for answer_result in answer_result_stream_result['answer_result_stream']:
-            resp = answer_result.llm_output["answer"]
-            history = answer_result.history
-            history[-1][0] = query
-            response = {"query": query,
-                        "result": resp,
-                        "source_documents": related_docs_with_score}
-            yield response, history
+            for answer_result in answer_result_stream_result['answer_result_stream']:
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                history[-1][0] = query
+                response = {"query": query,
+                            "result": resp,
+                            "source_documents": related_docs_with_score}
+                yield response, history
 
     # query      查询内容
     # vs_path    知识库路径
