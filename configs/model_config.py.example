@@ -158,6 +158,9 @@ kbs_config = {
         "user": "",
         "password": "",
         "secure": False,
+    },
+    "pg": {
+        "connection_uri": "postgresql://postgres:postgres@192.168.50.128:5432/langchain_chatgml",
     }
 }
 

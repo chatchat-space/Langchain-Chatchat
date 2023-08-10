@@ -18,6 +18,7 @@ class SupportedVSType:
     FAISS = 'faiss'
     MILVUS = 'milvus'
     DEFAULT = 'default'
+    PG = 'pg'
 
 
 class KBService(ABC):
@@ -189,6 +190,9 @@ class KBServiceFactory:
         if SupportedVSType.FAISS == vector_store_type:
             from server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
             return FaissKBService(kb_name, embed_model=embed_model)
+        if SupportedVSType.PG == vector_store_type:
+            from server.knowledge_base.kb_service.pg_kb_service import PGKBService
+            return PGKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.MILVUS == vector_store_type:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name, embed_model=embed_model) # other milvus parameters are set in model_config.kbs_config
