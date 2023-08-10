@@ -9,7 +9,6 @@ from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages import *
 
-
 api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=False)
 
 if __name__ == "__main__":
@@ -19,18 +18,21 @@ if __name__ == "__main__":
     st.set_page_config("langchain-chatglm WebUI")
 
     if not chat_box.chat_inited:
-        st.toast(f"欢迎使用 [`Langchain-Chatglm`](https://github.com/chatchat-space/langchain-chatglm) ! \n\n当前使用模型`{LLM_MODEL}`, 您可以开始提问了.")
+        st.toast(
+            f"欢迎使用 [`Langchain-Chatglm`](https://github.com/chatchat-space/langchain-chatglm) ! \n\n"
+            f"当前使用模型`{LLM_MODEL}`, 您可以开始提问了."
+        )
         st.toast(" ")
 
     pages = {"对话": {"icon": "chat",
-                      "func": dialogue_page,
-                      },
+                     "func": dialogue_page,
+                    },
              "知识库管理": {"icon": "hdd-stack",
-                            "func": knowledge_base_page,
-                            },
-             "模型配置": {"icon": "gear",
-                          "func": model_config_page,
-                          }
+                          "func": knowledge_base_page,
+                         },
+             # "模型配置": {"icon": "gear",
+             #              "func": model_config_page,
+             #              }
              }
 
     with st.sidebar:
