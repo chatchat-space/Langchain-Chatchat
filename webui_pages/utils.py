@@ -17,7 +17,10 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-from server.knowledge_base.utils import list_kbs_from_folder
+import pandas as pd
+from server.knowledge_base.utils import list_kbs_from_folder, list_docs_from_folder
+from server.db.repository.knowledge_base_repository import get_kb_detail
+from server.db.repository.knowledge_file_repository import get_file_detail
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -529,11 +532,120 @@ class ApiRequest:
             return self._httpx_stream2generator(response, as_json=True)
 
 
-if __name__ == "__main__":
+def get_kb_details(api: ApiRequest) -> pd.DataFrame:
+    kbs_in_folder = list_kbs_from_folder()
+    kbs_in_db = api.list_knowledge_bases()
+    result = {}
+
+    for kb in kbs_in_folder:
+        result[kb] = {
+            "kb_name": kb,
+            "vs_type": "",
+            "embed_model": "",
+            "file_count": 0,
+            "create_time": None,
+            "in_folder": True,
+            "in_db": False,
+        }
+    
+    for kb in kbs_in_db:
+        kb_detail = get_kb_detail(kb)
+        if kb_detail:
+            kb_detail["in_db"] = True
+            if kb in result:
+                result[kb].update(kb_detail)
+            else:
+                kb_detail["in_folder"] = False
+                result[kb] = kb_detail
+
+    df = pd.DataFrame(result.values(), columns=[
+            "kb_name",
+            "vs_type",
+            "embed_model",
+            "file_count",
+            "create_time",
+            "in_folder",
+            "in_db",
+    ])
+    df.insert(0, "No", range(1, len(df) + 1))
+    return df
+
+
+def get_kb_doc_details(api: ApiRequest, kb: str) -> pd.DataFrame:
+    docs_in_folder = list_docs_from_folder(kb)
+    docs_in_db = api.list_kb_docs(kb)
+    result = {}
+
+    for doc in docs_in_folder:
+        result[doc] = {
+            "kb_name": kb,
+            "file_name": doc,
+            "file_ext": os.path.splitext(doc)[-1],
+            "file_version": 0,
+            "document_loader": "",
+            "text_splitter": "",
+            "create_time": None,
+            "in_folder": True,
+            "in_db": False,
+        }
+    
+    for doc in docs_in_db:
+        doc_detail = get_file_detail(kb, doc)
+        if doc_detail:
+            doc_detail["in_db"] = True
+            if doc in result:
+                result[doc].update(doc_detail)
+            else:
+                doc_detail["in_folder"] = False
+                result[doc] = doc_detail
+
+    df = pd.DataFrame(result.values(), columns=[
+            "kb_name",
+            "file_name",
+            "file_ext",
+            "file_version",
+            "document_loader",
+            "text_splitter",
+            "create_time",
+            "in_folder",
+            "in_db",        
+    ])
+    df.insert(0, "No", range(1, len(df) + 1))
+    return df
+
+
+def init_vs_database(recreate_vs: bool = False):
+    '''
+    init local vector store info to database
+    '''
     from server.db.base import Base, engine
+    from server.db.repository.knowledge_base_repository import add_kb_to_db, kb_exists
+    from server.db.repository.knowledge_file_repository import add_doc_to_db
+    from server.knowledge_base.utils import KnowledgeFile
+
     Base.metadata.create_all(bind=engine)
 
+    if recreate_vs:
+        api = ApiRequest(no_remote_api=True)
+        for kb in list_kbs_from_folder():
+            for t in api.recreate_vector_store(kb):
+                print(t)
+    else: # add vs info to db only
+        for kb in list_kbs_from_folder():
+            if not kb_exists(kb):
+                add_kb_to_db(kb, "faiss", EMBEDDING_MODEL)
+                for doc in list_docs_from_folder(kb):
+                    try:
+                        kb_file = KnowledgeFile(doc, kb)
+                        add_doc_to_db(kb_file)
+                    except Exception as e:
+                        print(e)
+
+
+if __name__ == "__main__":
     api = ApiRequest(no_remote_api=True)
+    # init vector store database
+    init_vs_database()
 
     # print(api.chat_fastchat(
     #     messages=[{"role": "user", "content": "hello"}]
@@ -552,8 +664,3 @@ if __name__ == "__main__":
     #     print(t)
 
     # print(api.list_knowledge_bases())
-
-    # recreate all vector store
-    for kb in list_kbs_from_folder():
-        for t in api.recreate_vector_store(kb):
-            print(t)
