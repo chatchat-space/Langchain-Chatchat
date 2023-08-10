@@ -29,15 +29,17 @@ class MyFAISS(FAISS, VectorStore):
         self.chunk_conent = False
 
     def seperate_list(self, ls: List[int]) -> List[List[int]]:
-        # TODO: 增加是否属于同一文档的判断
+        
         lists = []
         ls1 = [ls[0]]
+        source1 = self.index_to_docstore_source(ls[0])
         for i in range(1, len(ls)):
-            if ls[i - 1] + 1 == ls[i]:
+            if ls[i - 1] + 1 == ls[i] and self.index_to_docstore_source(ls[i]) == source1:
                 ls1.append(ls[i])
             else:
                 lists.append(ls1)
                 ls1 = [ls[i]]
+                source1 = self.index_to_docstore_source(ls[i])
         lists.append(ls1)
         return lists
 
@@ -162,3 +164,8 @@ class MyFAISS(FAISS, VectorStore):
 
     def list_docs(self):
         return list(set(v.metadata["source"] for v in self.docstore._dict.values()))
+    
+    def index_to_docstore_source(self,i:int):
+        _id = self.index_to_docstore_id[i]
+        doc = self.docstore.search(_id)
+        return doc.metadata["source"]
