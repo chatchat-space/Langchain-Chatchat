@@ -11,7 +11,7 @@ import subprocess
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--serve",choices=["all","controller","model_worker","openai_api_server"])
+parser.add_argument("--serve",choices=["all","controller","model_worker","openai_api_server"],default="all")
 
 args = parser.parse_args()
 

@@ -135,8 +135,8 @@ worker_args = [
                ]
 #-----------------openai server---------------------------
 
-parser.add_argument("--server-host", type=str, default="localhost", help="host name")
-parser.add_argument("--server-port", type=int, default=8001, help="port number")
+parser.add_argument("--server-host", type=str, default="127.0.0.1", help="host name")
+parser.add_argument("--server-port", type=int, default=8888, help="port number")
 parser.add_argument(
     "--allow-credentials", action="store_true", help="allow credentials"
 )

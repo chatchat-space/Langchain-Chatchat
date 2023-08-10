@@ -228,7 +228,7 @@ $ python server/api.py
 
 #### 4.3 启动Web UI服务
 
-启动**LLM服务**后，执行 [webui.py](webui.py) 启动 **Web UI** 服务
+执行 [webui.py](webui.py) 启动 **Web UI** 服务
 
 ```shell
 $ python webui.py
