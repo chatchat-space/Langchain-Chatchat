@@ -15,7 +15,7 @@ parser.add_argument("--serve",choices=["all","controller","model_worker","openai
 
 args = parser.parse_args()
 
-base_shell = "ps -eo user,pid,cmd|grep fastchat.serve{}|grep -v grep|awk '{print $2}'|xargs kill -9"
+base_shell = "ps -eo user,pid,cmd|grep fastchat.serve{}|grep -v grep|awk '{{print $2}}'|xargs kill -9"
 
 if args.serve == "all":
     shell_script = base_shell.format("")
