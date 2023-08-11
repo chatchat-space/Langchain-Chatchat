@@ -32,6 +32,7 @@ def config_aggrid(
 def knowledge_base_page(api: ApiRequest):
     # api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=True)
     kb_list = get_kb_details()
+    kb_names = [x["kb_name"] for x in kb_list]
 
     cols = st.columns([3, 1, 1, 3])
     new_kb_name = cols[0].text_input(
@@ -46,7 +47,7 @@ def knowledge_base_page(api: ApiRequest):
             disabled=not bool(new_kb_name),
             use_container_width=True,
     ) and new_kb_name:
-        if new_kb_name in kb_list:
+        if new_kb_name in kb_names:
             st.error(f"名为 {new_kb_name} 的知识库已经存在！")
         else:
             ret = api.create_knowledge_base(new_kb_name)
@@ -58,7 +59,7 @@ def knowledge_base_page(api: ApiRequest):
             disabled=not bool(new_kb_name),
             use_container_width=True,
     ) and new_kb_name:
-        if new_kb_name in kb_list:
+        if new_kb_name in kb_names:
             ret = api.delete_knowledge_base(new_kb_name)
             st.toast(ret["msg"])
             st.experimental_rerun()

@@ -409,7 +409,7 @@ class ApiRequest:
         else:
             response = self.post(
                 "/knowledge_base/delete_knowledge_base",
-                json={"knowledge_base_name": knowledge_base_name},
+                json=f"{knowledge_base_name}",
             )
             return response.json()
 
