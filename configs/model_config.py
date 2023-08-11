@@ -250,8 +250,8 @@ USE_LORA = True if LORA_NAME else False
 # LLM streaming reponse
 STREAMING = True
 
-# 直接定义baichuan的lora完整路径即可
-LORA_MODEL_PATH_BAICHUAN=""
+# 直接定义baichuan的lora完整路径即可,"" != False
+LORA_MODEL_PATH_BAICHUAN=None
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
