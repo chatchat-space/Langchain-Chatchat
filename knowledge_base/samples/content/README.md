@@ -45,6 +45,8 @@
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
+从`0.1.x`升级过来的用户请注意，在完成[“开发部署 3 设置配置项”](docs/INSTALL.md)之后，需要将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
+
 ## 模型支持
 
 本项目中默认使用的 LLM 模型为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认使用的 Embedding 模型为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例。

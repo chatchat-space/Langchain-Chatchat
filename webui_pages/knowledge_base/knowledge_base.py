@@ -1,6 +1,6 @@
 import streamlit as st
 from webui_pages.utils import *
-from st_aggrid import AgGrid
+from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
 from server.knowledge_base.utils import get_file_path, LOADER_DICT
@@ -9,6 +9,8 @@ from typing import Literal, Dict, Tuple
 from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE
 
 # SENTENCE_SIZE = 100
+
+cell_renderer = JsCode("""function(params) {if(params.value==true){return '✓'}else{return '×'}}""")
 
 
 def config_aggrid(
@@ -33,10 +35,16 @@ def knowledge_base_page(api: ApiRequest):
     kb_list = get_kb_details()
     kb_names = [x["kb_name"] for x in kb_list]
 
+    if "selected_kb_name" in st.session_state and st.session_state["selected_kb_name"] in kb_names:
+        selected_kb_index = kb_names.index(st.session_state["selected_kb_name"])
+    else:
+        selected_kb_index = 0
+
     selected_kb = st.selectbox(
-        "请选择知识库：",
+        "请选择或新建知识库：",
         kb_list + ["新建知识库"],
         format_func=lambda s: f"{s['kb_name']} ({s['vs_type']} @ {s['embed_model']})" if type(s) != str else s,
+        index=selected_kb_index
     )
 
     if selected_kb == "新建知识库":
@@ -85,8 +93,8 @@ def knowledge_base_page(api: ApiRequest):
                     embed_model=embed_model,
                 )
                 st.toast(ret["msg"])
-                # st.experimental_rerun()
-
+                st.session_state["selected_kb_name"] = kb_name
+                st.experimental_rerun()
 
     elif selected_kb:
         kb = selected_kb["kb_name"]
@@ -111,7 +119,7 @@ def knowledge_base_page(api: ApiRequest):
                 if ret["code"] == 200:
                     st.toast(ret["msg"], icon="✔")
                 else:
-                    st.toast(ret["msg"], icon="❌")
+                    st.toast(ret["msg"], icon="✖")
             st.session_state.files = []
 
         st.divider()
@@ -123,22 +131,25 @@ def knowledge_base_page(api: ApiRequest):
             st.info(f"知识库 `{kb}` 中暂无文件")
         else:
             st.write(f"知识库 `{kb}` 中已有文件:")
+            st.info("知识库中包含源文件与向量库，请从下表中选择文件后操作")
             doc_details.drop(columns=["kb_name"], inplace=True)
             doc_details = doc_details[[
                 "No", "file_name", "document_loader", "text_splitter", "in_folder", "in_db",
             ]]
-
+            # doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
+            # doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
             gb = config_aggrid(
                 doc_details,
                 {
+                    ("No", "序号"): {},
                     ("file_name", "文档名称"): {},
                     # ("file_ext", "文档类型"): {},
                     # ("file_version", "文档版本"): {},
                     ("document_loader", "文档加载器"): {},
                     ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
-                    ("in_folder", "源文件"): {},
-                    ("in_db", "向量库"): {},
+                    ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
+                    ("in_db", "向量库"): {"cellRenderer": cell_renderer},
                 },
                 "multiple",
             )
@@ -151,6 +162,7 @@ def knowledge_base_page(api: ApiRequest):
                 custom_css={
                     "#gridToolBar": {"display": "none"},
                 },
+                allow_unsafe_jscode=True
             )
 
             selected_rows = doc_grid.get("selected_rows", [])
@@ -172,9 +184,10 @@ def knowledge_base_page(api: ApiRequest):
                     disabled=True,
                     use_container_width=True, )
 
+            st.write()
             # 将文件分词并加载到向量库中
             if cols[1].button(
-                    "添加至向量库",  # "重新添加至向量库"
+                    "重新添加至向量库" if selected_rows and (pd.DataFrame(selected_rows)["in_db"]).any() else "添加至向量库",
                     disabled=len(selected_rows) == 0,
                     use_container_width=True,
             ):
@@ -193,7 +206,7 @@ def knowledge_base_page(api: ApiRequest):
                 st.experimental_rerun()
 
             if cols[3].button(
-                    "删除选中文档！",
+                    "从知识库中删除",
                     type="primary",
                     use_container_width=True,
             ):
@@ -213,17 +226,18 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
                 type="primary",
         ):
-            empty = st.empty()
-            empty.progress(0.0, "")
-            for d in api.recreate_vector_store(kb):
-                print(d)
-                empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
-            empty.write("重建完毕")
+            with st.spinner("向量库重构中"):
+                empty = st.empty()
+                empty.progress(0.0, "")
+                for d in api.recreate_vector_store(kb):
+                    print(d)
+                    empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+                st.experimental_rerun()
 
         if cols[2].button(
                 "删除知识库",
                 use_container_width=True,
         ):
             ret = api.delete_knowledge_base(kb)
-            st.toast(ret["detail"][0]["msg"])
             st.experimental_rerun()
+            st.toast(ret["msg"])

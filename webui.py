@@ -19,7 +19,6 @@ if __name__ == "__main__":
             f"欢迎使用 [`Langchain-Chatglm`](https://github.com/chatchat-space/langchain-chatglm) ! \n\n"
             f"当前使用模型`{LLM_MODEL}`, 您可以开始提问了."
         )
-        st.toast(" ")
 
     pages = {"对话": {"icon": "chat",
                      "func": dialogue_page,
