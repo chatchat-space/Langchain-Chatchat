@@ -159,6 +159,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "BaichuanLLMChain"
     },
+    "Qwen-7B-Chat": {
+        "name": "Qwen-7B-Chat",
+        "pretrained_model_name": "Qwen/Qwen-7B-Chat",
+        "local_model_path": None,
+        "provides": "QWenLLMChain"
+    },
     # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1-q5": {
         "name": "ggml-vicuna-13b-1.1-q5",
