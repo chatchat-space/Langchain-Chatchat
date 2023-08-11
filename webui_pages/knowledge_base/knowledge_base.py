@@ -181,12 +181,15 @@ def knowledge_base_page(api: ApiRequest):
             st.session_state.files = []
 
         # todo: freezed
-        # if cols[1].button(
-        #         "重建知识库",
-        #         help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
-        #         use_container_width=True,
-        #         type="primary",
-        # ):
-        #     progress = st.progress(0.0, "")
-        #     for d in api.recreate_vector_store(kb):
-        #         progress.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+        if cols[1].button(
+                "重建知识库",
+                help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                use_container_width=True,
+                type="primary",
+        ):
+            empty = st.empty()
+            empty.progress(0.0, "")
+            for d in api.recreate_vector_store(kb):
+                print(d)
+                empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+            empty.write("重建完毕")
