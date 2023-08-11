@@ -45,16 +45,8 @@
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
-## 旧版本升级与知识库迁移
+从`0.1.x`升级过来的用户请注意，在完成[“开发部署 3 设置配置项”](docs/INSTALL.md)之后，需要将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
 
-从`0.1.x`升级过来的用户请注意，在完成“开发部署 3 设置配置项”之后，需要将现有知识库迁移到新格式：
-```shell
-# 如果知识库已经建立，且知识库类型、嵌入模型无变化，只需以下命令将现有知识库信息添加到数据库即可。
-$ python init_database.py
-
-# 如果知识库未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令进行知识库迁移。
-$ python init_database.py --recreate-vs
-``` 
 ## 模型支持
 
 本项目中默认使用的 LLM 模型为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认使用的 Embedding 模型为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例。
