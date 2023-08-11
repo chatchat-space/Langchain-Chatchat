@@ -64,6 +64,7 @@ export default {
     resetUserInfo: '重置用户信息',
     chatHistory: '聊天记录',
     theme: '主题',
+		audiosetting: '语音设置',
     language: '语言',
     api: 'API',
     reverseProxy: '反向代理',
