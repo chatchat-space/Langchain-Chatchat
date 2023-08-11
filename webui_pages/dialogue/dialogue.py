@@ -36,8 +36,8 @@ def dialogue_page(api: ApiRequest):
 
     with st.sidebar:
         with st.expander("会话管理", True):
-            col_input, col_btn = st.columns([2, 1])
-            new_chat_name = col_input.text_input(
+            col_input, col_btn = st.columns([1.5, 1])
+            col_input.text_input(
                 "新会话名称",
                 placeholder="新会话名称",
                 label_visibility="collapsed",
@@ -50,7 +50,11 @@ def dialogue_page(api: ApiRequest):
                     chat_box.use_chat_name(new_chat_name)
                     st.session_state.new_chat_name = ""
 
-            col_btn.button("新建会话", on_click=on_btn_new_chat)
+            col_btn.button(
+                "新建会话",
+                on_click=on_btn_new_chat,
+                use_container_width=True,
+            )
 
             chat_list = chat_box.get_chat_names()
             cur_chat_name = sac.buttons(chat_list, 0)

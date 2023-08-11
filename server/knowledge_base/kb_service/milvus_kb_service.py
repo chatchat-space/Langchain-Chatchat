@@ -77,7 +77,7 @@ if __name__ == '__main__':
     from server.db.base import Base, engine
     Base.metadata.create_all(bind=engine)
     milvusService = MilvusKBService("test")
-    milvusService.add_doc(KnowledgeFile("test.pdf", "test"))
-    milvusService.delete_doc(KnowledgeFile("test.pdf", "test"))
+    milvusService.add_doc(KnowledgeFile("README.md", "test"))
+    milvusService.delete_doc(KnowledgeFile("README.md", "test"))
     milvusService.do_drop_kb()
     print(milvusService.search_docs("测试"))

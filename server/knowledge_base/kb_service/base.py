@@ -272,7 +272,6 @@ def get_kb_doc_details(kb_name: str) -> List[Dict]:
             "in_folder": True,
             "in_db": False,
         }
-
     for doc in docs_in_db:
         doc_detail = get_file_detail(kb_name, doc)
         if doc_detail:
