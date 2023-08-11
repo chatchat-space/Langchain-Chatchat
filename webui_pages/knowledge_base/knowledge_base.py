@@ -1,11 +1,10 @@
 import streamlit as st
 from webui_pages.utils import *
-# import streamlit_antd_components as sac
 from st_aggrid import AgGrid
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
 from server.knowledge_base.utils import get_file_path
-# from streamlit_chatbox import *
+from server.knowledge_base.kb_service.base import get_kb_details, get_kb_doc_details
 from typing import Literal, Dict, Tuple
 
 SENTENCE_SIZE = 100
@@ -33,7 +32,7 @@ def config_aggrid(
 
 def knowledge_base_page(api: ApiRequest):
     # api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=True)
-    kb_details = get_kb_details(api)
+    kb_details = get_kb_details()
     kb_list = list(kb_details.kb_name)
 
     cols = st.columns([3, 1, 1])
@@ -127,7 +126,7 @@ def knowledge_base_page(api: ApiRequest):
             # 知识库详情
             st.write(f"知识库 `{kb}` 详情:")
             st.info("请选择文件")
-            doc_details = get_kb_doc_details(api, kb)
+            doc_details = get_kb_doc_details(kb)
             doc_details.drop(columns=["kb_name"], inplace=True)
 
             gb = config_aggrid(

@@ -12,9 +12,6 @@ from webui_pages import *
 api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=False)
 
 if __name__ == "__main__":
-    # init local vector store info to database
-    init_vs_database()
-
     st.set_page_config("langchain-chatglm WebUI")
 
     if not chat_box.chat_inited:

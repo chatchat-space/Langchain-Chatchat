@@ -9,6 +9,9 @@ def add_kb_to_db(session, kb_name, vs_type, embed_model):
     if not kb:
         kb = KnowledgeBaseModel(kb_name=kb_name, vs_type=vs_type, embed_model=embed_model)
         session.add(kb)
+    else: # update kb with new vs_type and embed_model
+        kb.vs_type = vs_type
+        kb.embed_model = embed_model
     return True
 
 

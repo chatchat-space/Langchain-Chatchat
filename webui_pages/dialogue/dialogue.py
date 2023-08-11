@@ -86,12 +86,11 @@ def dialogue_page(api: ApiRequest):
                                  ["LLM 对话",
                                   "知识库问答",
                                   "搜索引擎问答",
-                                  ],
-                                 on_change=on_mode_change,
-                                 key="dialogue_mode",
-                                 )
-        history_len = st.slider("历史对话轮数：", 1, 10, 3)
-
+                                ],
+                                on_change=on_mode_change,
+                                key="dialogue_mode",
+                                )
+        history_len = st.slider("历史对话轮数：", 0, 10, 3)
         # todo: support history len
 
         def on_kb_change():

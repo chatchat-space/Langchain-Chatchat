@@ -70,7 +70,6 @@ def folder2db(
 
 
 def recreate_all_vs(
-    mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_mode: str = EMBEDDING_MODEL,
 ):
@@ -78,7 +77,7 @@ def recreate_all_vs(
     used to recreate a vector store or change current vector store to another type or embed_model
     '''
     for kb_name in list_kbs_from_folder():
-        folder2db(kb_name, mode, vs_type, embed_mode)
+        folder2db(kb_name, "recreate_vs", vs_type, embed_mode)
 
 
 def prune_db_docs(kb_name: str):

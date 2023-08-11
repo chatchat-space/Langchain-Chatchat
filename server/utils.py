@@ -5,6 +5,7 @@ import torch
 from fastapi_offline import FastAPIOffline
 import fastapi_offline
 from pathlib import Path
+import asyncio
 
 
 # patch fastapi_offline to use local static assests
@@ -82,3 +83,32 @@ def torch_gc():
         except Exception as e:
             print(e)
             print("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
+
+
+def run_async(cor):
+    '''
+    在同步环境中运行异步代码.
+    '''
+    try:
+        loop = asyncio.get_event_loop()
+    except:
+        loop = asyncio.new_event_loop()
+    return loop.run_until_complete(cor)
+
+
+def iter_over_async(ait, loop):
+    '''
+    将异步生成器封装成同步生成器.
+    '''
+    ait = ait.__aiter__()
+    async def get_next():
+        try:
+            obj = await ait.__anext__()
+            return False, obj
+        except StopAsyncIteration:
+            return True, None
+    while True:
+        done, obj = loop.run_until_complete(get_next())
+        if done:
+            break
+        yield obj

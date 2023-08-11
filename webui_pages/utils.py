@@ -1,7 +1,6 @@
 # 该文件包含webui通用工具，可以被不同的webui使用
 from typing import *
 from pathlib import Path
-import os
 from configs.model_config import (
     EMBEDDING_MODEL,
     KB_ROOT_PATH,
@@ -17,10 +16,9 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-import pandas as pd
-from server.knowledge_base.utils import list_kbs_from_folder, list_docs_from_folder
 from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
+from server.utils import run_async, iter_over_async
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -35,35 +33,6 @@ def set_httpx_timeout(timeout=60.0):
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
 set_httpx_timeout()
-
-
-def run_async(cor):
-    '''
-    在同步环境中运行异步代码.
-    '''
-    try:
-        loop = asyncio.get_event_loop()
-    except:
-        loop = asyncio.new_event_loop()
-    return loop.run_until_complete(cor)
-
-
-def iter_over_async(ait, loop):
-    '''
-    将异步生成器封装成同步生成器.
-    '''
-    ait = ait.__aiter__()
-    async def get_next():
-        try:
-            obj = await ait.__anext__()
-            return False, obj
-        except StopAsyncIteration:
-            return True, None
-    while True:
-        done, obj = loop.run_until_complete(get_next())
-        if done:
-            break
-        yield obj
 
 
 class ApiRequest:
@@ -97,13 +66,17 @@ class ApiRequest:
         url: str,
         params: Union[Dict, List[Tuple], bytes] = None,
         retry: int = 3,
+        stream: bool = False,
         **kwargs: Any,
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
         while retry > 0:
             try:
-                return httpx.get(url, params=params, **kwargs)
+                if stream:
+                    return httpx.stream("GET", url, params=params, **kwargs)
+                else:
+                    return httpx.get(url, params=params, **kwargs)
             except:
                 retry -= 1
 
@@ -112,6 +85,7 @@ class ApiRequest:
         url: str,
         params: Union[Dict, List[Tuple], bytes] = None,
         retry: int = 3,
+        stream: bool = False,
         **kwargs: Any,
     ) -> Union[httpx.Response, None]:
         rl = self._parse_url(url)
@@ -119,7 +93,10 @@ class ApiRequest:
         async with httpx.AsyncClient() as client:
             while retry > 0:
                 try:
-                    return await client.get(url, params=params, **kwargs)
+                    if stream:
+                        return await client.stream("GET", url, params=params, **kwargs)
+                    else:
+                        return await client.get(url, params=params, **kwargs)
                 except:
                     retry -= 1
 
@@ -150,6 +127,7 @@ class ApiRequest:
         data: Dict = None,
         json: Dict = None,
         retry: int = 3,
+        stream: bool = False,
         **kwargs: Any
     ) -> Union[httpx.Response, None]:
         rl = self._parse_url(url)
@@ -157,7 +135,51 @@ class ApiRequest:
         async with httpx.AsyncClient() as client:
             while retry > 0:
                 try:
-                    return await client.post(url, data=data, json=json, **kwargs)
+                    if stream:
+                        return await client.stream("POST", url, data=data, json=json, **kwargs)
+                    else:
+                        return await client.post(url, data=data, json=json, **kwargs)
+                except:
+                    retry -= 1
+
+    def delete(
+        self,
+        url: str,
+        data: Dict = None,
+        json: Dict = None,
+        retry: int = 3,
+        stream: bool = False,
+        **kwargs: Any
+    ) -> Union[httpx.Response, None]:
+        url = self._parse_url(url)
+        kwargs.setdefault("timeout", self.timeout)
+        while retry > 0:
+            try:
+                if stream:
+                    return httpx.stream("DELETE", url, data=data, json=json, **kwargs)
+                else:
+                    return httpx.delete(url, data=data, json=json, **kwargs)
+            except:
+                retry -= 1
+
+    async def adelete(
+        self,
+        url: str,
+        data: Dict = None,
+        json: Dict = None,
+        retry: int = 3,
+        stream: bool = False,
+        **kwargs: Any
+    ) -> Union[httpx.Response, None]:
+        rl = self._parse_url(url)
+        kwargs.setdefault("timeout", self.timeout)
+        async with httpx.AsyncClient() as client:
+            while retry > 0:
+                try:
+                    if stream:
+                        return await client.stream("DELETE", url, data=data, json=json, **kwargs)
+                    else:
+                        return await client.delete(url, data=data, json=json, **kwargs)
                 except:
                     retry -= 1
 
@@ -384,7 +406,7 @@ class ApiRequest:
             response = run_async(delete_kb(knowledge_base_name))
             return response.dict()
         else:
-            response = self.delete(
+            response = self.post(
                 "/knowledge_base/delete_knowledge_base",
                 json={"knowledge_base_name": knowledge_base_name},
             )
@@ -480,7 +502,7 @@ class ApiRequest:
             response = run_async(delete_doc(**data))
             return response.dict()
         else:
-            response = self.delete(
+            response = self.post(
                 "/knowledge_base/delete_doc",
                 json=data,
             )
@@ -489,7 +511,7 @@ class ApiRequest:
     def update_kb_doc(
         self,
         knowledge_base_name: str,
-        doc_name: str,
+        file_name: str,
         no_remote_api: bool = None,
     ):
         '''
@@ -500,12 +522,12 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import update_doc
-            response = run_async(update_doc(knowledge_base_name, doc_name))
+            response = run_async(update_doc(knowledge_base_name, file_name))
             return response.dict()
         else:
-            response = self.delete(
+            response = self.post(
                 "/knowledge_base/update_doc",
-                json={"knowledge_base_name": knowledge_base_name, "doc_name": doc_name},
+                json={"knowledge_base_name": knowledge_base_name, "file_name": file_name},
             )
             return response.json()
 
@@ -532,120 +554,8 @@ class ApiRequest:
             return self._httpx_stream2generator(response, as_json=True)
 
 
-def get_kb_details(api: ApiRequest) -> pd.DataFrame:
-    kbs_in_folder = list_kbs_from_folder()
-    kbs_in_db = api.list_knowledge_bases()
-    result = {}
-
-    for kb in kbs_in_folder:
-        result[kb] = {
-            "kb_name": kb,
-            "vs_type": "",
-            "embed_model": "",
-            "file_count": 0,
-            "create_time": None,
-            "in_folder": True,
-            "in_db": False,
-        }
-    
-    for kb in kbs_in_db:
-        kb_detail = get_kb_detail(kb)
-        if kb_detail:
-            kb_detail["in_db"] = True
-            if kb in result:
-                result[kb].update(kb_detail)
-            else:
-                kb_detail["in_folder"] = False
-                result[kb] = kb_detail
-
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "vs_type",
-            "embed_model",
-            "file_count",
-            "create_time",
-            "in_folder",
-            "in_db",
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
-
-
-def get_kb_doc_details(api: ApiRequest, kb: str) -> pd.DataFrame:
-    docs_in_folder = list_docs_from_folder(kb)
-    docs_in_db = api.list_kb_docs(kb)
-    result = {}
-
-    for doc in docs_in_folder:
-        result[doc] = {
-            "kb_name": kb,
-            "file_name": doc,
-            "file_ext": os.path.splitext(doc)[-1],
-            "file_version": 0,
-            "document_loader": "",
-            "text_splitter": "",
-            "create_time": None,
-            "in_folder": True,
-            "in_db": False,
-        }
-    
-    for doc in docs_in_db:
-        doc_detail = get_file_detail(kb, doc)
-        if doc_detail:
-            doc_detail["in_db"] = True
-            if doc in result:
-                result[doc].update(doc_detail)
-            else:
-                doc_detail["in_folder"] = False
-                result[doc] = doc_detail
-
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "file_name",
-            "file_ext",
-            "file_version",
-            "document_loader",
-            "text_splitter",
-            "create_time",
-            "in_folder",
-            "in_db",        
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
-
-
-def init_vs_database(recreate_vs: bool = False):
-    '''
-    init local vector store info to database
-    '''
-    from server.db.base import Base, engine
-    from server.db.repository.knowledge_base_repository import add_kb_to_db, kb_exists
-    from server.db.repository.knowledge_file_repository import add_doc_to_db
-    from server.knowledge_base.utils import KnowledgeFile
-
-    Base.metadata.create_all(bind=engine)
-
-    if recreate_vs:
-        api = ApiRequest(no_remote_api=True)
-        for kb in list_kbs_from_folder():
-            for t in api.recreate_vector_store(kb):
-                print(t)
-    else: # add vs info to db only
-        for kb in list_kbs_from_folder():
-            if not kb_exists(kb):
-                add_kb_to_db(kb, "faiss", EMBEDDING_MODEL)
-                for doc in list_docs_from_folder(kb):
-                    try:
-                        kb_file = KnowledgeFile(doc, kb)
-                        add_doc_to_db(kb_file)
-                    except Exception as e:
-                        print(e)
-
-
 if __name__ == "__main__":
     api = ApiRequest(no_remote_api=True)
-    # init vector store database
-    init_vs_database()
 
     # print(api.chat_fastchat(
     #     messages=[{"role": "user", "content": "hello"}]

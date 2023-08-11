@@ -71,7 +71,7 @@ def create_app():
              summary="创建知识库"
              )(create_kb)
 
-    app.delete("/knowledge_base/delete_knowledge_base",
+    app.post("/knowledge_base/delete_knowledge_base",
                tags=["Knowledge Base Management"],
                response_model=BaseResponse,
                summary="删除知识库"
@@ -89,7 +89,7 @@ def create_app():
              summary="上传文件到知识库"
              )(upload_doc)
 
-    app.delete("/knowledge_base/delete_doc",
+    app.post("/knowledge_base/delete_doc",
                tags=["Knowledge Base Management"],
                response_model=BaseResponse,
                summary="删除知识库内指定文件"
@@ -105,10 +105,6 @@ def create_app():
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
-
-    # init local vector store info to database
-    from webui_pages.utils import init_vs_database
-    init_vs_database()
 
     return app
 

@@ -1,16 +1,25 @@
 from abc import ABC, abstractmethod
 
 import os
+import pandas as pd
 
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
+from server.db.repository.knowledge_base_repository import (
+    add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
+    load_kb_from_db, get_kb_detail,
+)
+from server.db.repository.knowledge_file_repository import (
+    add_doc_to_db, delete_file_from_db, doc_exists,
+    list_docs_from_db, get_file_detail
+)
 
-from server.db.repository.knowledge_base_repository import add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists, load_kb_from_db
-from server.db.repository.knowledge_file_repository import add_doc_to_db, delete_file_from_db, doc_exists, \
-    list_docs_from_db
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K,
                                   EMBEDDING_DEVICE, EMBEDDING_MODEL)
-from server.knowledge_base.utils import (get_kb_path, get_doc_path, load_embeddings, KnowledgeFile)
+from server.knowledge_base.utils import (
+    get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
+    list_kbs_from_folder, list_docs_from_folder,
+)
 from typing import List, Union
 
 
@@ -77,10 +86,10 @@ class KBService(ABC):
         """
         从知识库删除文件
         """
-        if delete_content and os.path.exists(kb_file.filepath):
-            os.remove(kb_file.filepath)
         self.do_delete_doc(kb_file)
         status = delete_file_from_db(kb_file)
+        if delete_content and os.path.exists(kb_file.filepath):
+            os.remove(kb_file.filepath)
         return status
 
     def update_doc(self, kb_file: KnowledgeFile):
@@ -121,10 +130,9 @@ class KBService(ABC):
     def list_kbs(cls):
         return list_kbs_from_db()
 
-    @classmethod
-    def exists(cls,
-               knowledge_base_name: str):
-        return kb_exists(knowledge_base_name)
+    def exists(self, kb_name: str = None):
+        kb_name = kb_name or self.kb_name
+        return kb_exists(kb_name)
 
     @abstractmethod
     def vs_type(self) -> str:
@@ -211,4 +219,87 @@ class KBServiceFactory:
     @staticmethod
     def get_default():
         return KBServiceFactory.get_service("default", SupportedVSType.DEFAULT)
+
+
+def get_kb_details() -> pd.DataFrame:
+    kbs_in_folder = list_kbs_from_folder()
+    kbs_in_db = KBService.list_kbs()
+    result = {}
+
+    for kb in kbs_in_folder:
+        result[kb] = {
+            "kb_name": kb,
+            "vs_type": "",
+            "embed_model": "",
+            "file_count": 0,
+            "create_time": None,
+            "in_folder": True,
+            "in_db": False,
+        }
+
+    for kb in kbs_in_db:
+        kb_detail = get_kb_detail(kb)
+        if kb_detail:
+            kb_detail["in_db"] = True
+            if kb in result:
+                result[kb].update(kb_detail)
+            else:
+                kb_detail["in_folder"] = False
+                result[kb] = kb_detail
+
+    df = pd.DataFrame(result.values(), columns=[
+            "kb_name",
+            "vs_type",
+            "embed_model",
+            "file_count",
+            "create_time",
+            "in_folder",
+            "in_db",
+    ])
+    df.insert(0, "No", range(1, len(df) + 1))
+    return df
+
+
+def get_kb_doc_details(kb_name: str) -> pd.DataFrame:
+    kb = KBServiceFactory.get_service_by_name(kb_name)
+    docs_in_folder = list_docs_from_folder(kb_name)
+    docs_in_db = kb.list_docs()
+    result = {}
+
+    for doc in docs_in_folder:
+        result[doc] = {
+            "kb_name": kb_name,
+            "file_name": doc,
+            "file_ext": os.path.splitext(doc)[-1],
+            "file_version": 0,
+            "document_loader": "",
+            "text_splitter": "",
+            "create_time": None,
+            "in_folder": True,
+            "in_db": False,
+        }
+
+    for doc in docs_in_db:
+        doc_detail = get_file_detail(kb_name, doc)
+        if doc_detail:
+            doc_detail["in_db"] = True
+            if doc in result:
+                result[doc].update(doc_detail)
+            else:
+                doc_detail["in_folder"] = False
+                result[doc] = doc_detail
+
+    df = pd.DataFrame(result.values(), columns=[
+            "kb_name",
+            "file_name",
+            "file_ext",
+            "file_version",
+            "document_loader",
+            "text_splitter",
+            "create_time",
+            "in_folder",
+            "in_db",
+    ])
+    df.insert(0, "No", range(1, len(df) + 1))
+    return df
 
