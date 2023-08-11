@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed/* , ref */ } from 'vue'
 import { NButton, NPopconfirm, NSelect, useMessage } from 'naive-ui'
-import type { Language, Theme } from '@/store/modules/app/helper'
+import type { Language, Theme, AudioSettings} from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
 import { useAppStore/* , useUserStore */ } from '@/store'
 /* import type { UserInfo } from '@/store/modules/user/helper' */
@@ -35,6 +35,15 @@ const language = computed({
   },
 })
 
+const audioSettings = computed({
+  get() {
+    return appStore.audioSettings
+  },
+  set(value: AudioSettings) {
+    appStore.setAudio(value)
+  },
+})
+
 const themeOptions: { label: string; key: Theme; icon: string }[] = [
   /* {
     label: 'Auto',
@@ -53,12 +62,23 @@ const themeOptions: { label: string; key: Theme; icon: string }[] = [
   },
 ]
 
+// export type Language = 'zh-CN' | 'zh-TW' | 'en-US' | 'ko-KR' | 'ru-RU'
+
+// export type AudioSettings = 'input' | 'send' | 'close'
+
 const languageOptions: { label: string; key: Language; value: Language }[] = [
   { label: '简体中文', key: 'zh-CN', value: 'zh-CN' },
   { label: '繁體中文', key: 'zh-TW', value: 'zh-TW' },
   { label: 'English', key: 'en-US', value: 'en-US' },
   { label: '한국어', key: 'ko-KR', value: 'ko-KR' },
   { label: 'Русский язык', key: 'ru-RU', value: 'ru-RU' },
+]
+
+const audioOptions: { label: string; key: AudioSettings; value: AudioSettings }[] = [
+  { label: '语音识别后显示在对话框', key: 'input', value: 'input' },
+  { label: '语音识别后直接发送', key: 'send', value: 'send' },
+  { label: '关闭语音识别功能', key: 'close', value: 'close' },
+	{ label: '关闭语音识别与合成功能', key: 'closeAll', value: 'closeAll' },
 ]
 
 /* function updateUserInfo(options: Partial<UserInfo>) {
@@ -211,6 +231,17 @@ function handleImportButtonClick(): void {
             :value="language"
             :options="languageOptions"
             @update-value="value => appStore.setLanguage(value)"
+          />
+        </div>
+      </div>
+			<div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.audiosetting') }}</span>
+        <div class="flex flex-wrap items-center gap-4">
+          <NSelect
+            style="width: 210px"
+            :value="audioSettings"
+            :options="audioOptions"
+            @update-value="value => appStore.setAudio(value)"
           />
         </div>
       </div>

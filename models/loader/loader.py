@@ -9,7 +9,9 @@ import torch
 import transformers
 from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
                           AutoTokenizer, LlamaTokenizer)
-from configs.model_config import LLM_DEVICE
+from configs.model_config import LLM_DEVICE, LLM_MODEL, LORA_MODEL_PATH_BAICHUAN
+from peft import PeftModel
+from transformers.generation.utils import GenerationConfig
 
 class LoaderCheckPoint:
     """
@@ -126,14 +128,34 @@ class LoaderCheckPoint:
                 # 根据当前设备GPU数量决定是否进行多卡部署
                 num_gpus = torch.cuda.device_count()
                 if num_gpus < 2 and self.device_map is None:
-                    model = (
-                        LoaderClass.from_pretrained(checkpoint,
-                                                    config=self.model_config,
-                                                    torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
-                                                    trust_remote_code=True)
-                        .half()
-                        .cuda()
-                    )
+                    # if LORA_MODEL_PATH_BAICHUAN is not None:
+                    if LORA_MODEL_PATH_BAICHUAN:
+                        if LLM_MODEL == "Baichuan-13B-Chat":
+                            model = AutoModelForCausalLM.from_pretrained(checkpoint, torch_dtype=torch.float16,
+                                                                         device_map="auto", trust_remote_code=True, )
+                            model.generation_config = GenerationConfig.from_pretrained(checkpoint)
+                            from configs.model_config import LLM_DEVICE, LORA_MODEL_PATH_BAICHUAN
+                            # if LORA_MODEL_PATH_BAICHUAN is not None:
+                            if LORA_MODEL_PATH_BAICHUAN:
+                                print("loading lora:{path}".format(path=LORA_MODEL_PATH_BAICHUAN))
+                                model = PeftModel.from_pretrained(
+                                    model,
+                                    LORA_MODEL_PATH_BAICHUAN,
+                                    torch_dtype=torch.float16,
+                                    device_map={"": LLM_DEVICE}
+                                )
+                            tokenizer = AutoTokenizer.from_pretrained(checkpoint, use_fast=False,
+                                                                      trust_remote_code=True)
+                            model.half().cuda()
+                    else:
+                        model = (
+                            LoaderClass.from_pretrained(checkpoint,
+                                                        config=self.model_config,
+                                                        torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
+                                                        trust_remote_code=True)
+                                .half()
+                                .cuda()
+                        )
                 # 支持自定义cuda设备
                 elif ":" in self.llm_device:
                     model = LoaderClass.from_pretrained(checkpoint,

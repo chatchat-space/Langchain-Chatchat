@@ -156,6 +156,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "MOSSLLMChain"
     },
+    "Baichuan-13b-Chat": {
+        "name": "Baichuan-13b-Chat",
+        "pretrained_model_name": "baichuan-inc/Baichuan-13b-Chat",
+        "local_model_path": None,
+        "provides": "BaichuanLLMChain"
+    },
     # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1-q5": {
         "name": "ggml-vicuna-13b-1.1-q5",
@@ -243,6 +249,9 @@ USE_LORA = True if LORA_NAME else False
 
 # LLM streaming reponse
 STREAMING = True
+
+# 直接定义baichuan的lora完整路径即可
+LORA_MODEL_PATH_BAICHUAN=""
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False

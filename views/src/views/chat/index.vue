@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { Ref } from 'vue'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref , onBeforeUnmount , watchEffect , getCurrentInstance} from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NDropdown, NInput, NRadioButton, NRadioGroup, useDialog, useMessage } from 'naive-ui'
@@ -17,6 +17,14 @@ import { useChatStore, usePromptStore } from '@/store'
 import { t } from '@/locales'
 import { bing_search, chat, chatfile } from '@/api/chat'
 import { idStore } from '@/store/modules/knowledgebaseid/id'
+// 添加语音识别
+import VConsole from "vconsole";
+import CryptoES from "crypto-es"; // 科大讯飞
+import { Base64 } from "js-base64";
+import IatRecorder from "./voicekeda/until/iatRecorder"; // 科大讯飞
+import TTSRecorder from "./voicekeda/kedatts/tts-ws";
+import { useAppStore } from '@/store';
+
 let controller = new AbortController()
 const { iconRender } = useIconRender()
 // const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
@@ -56,6 +64,116 @@ dataSources.value.forEach((item, index) => {
   if (item.loading)
     updateChatSome(+uuid, index, { loading: false })
 })
+
+
+// ======================科大讯飞语音识别模块=============================
+
+let iatRecorder = new IatRecorder()
+var vConsole = new VConsole()
+let countInterval
+const showTimer = ref(false)
+const isRecording = ref(false)
+const seconds = ref(0)
+const buttonText = ref('开始识别')
+const currentIcon = ref('icon-park-solid:voice')
+
+// 状态改变时触发
+iatRecorder.onWillStatusChange = function (oldStatus, status) {
+    // 可以在这里进行页面中一些交互逻辑处理：倒计时,录音的动画，按钮交互等
+    // let text = {
+    //     null: "开始识别", // 最开始状态
+    //     init: "开始识别", // 初始化状态
+    //     ing: "结束识别", // 正在录音状态
+    //     end: "开始识别", // 结束状态
+    // };
+    // let senconds = 0;
+		if (status === 'ing') {
+			currentIcon.value = 'mingcute:voice-line'
+			showTimer.value = true
+			countInterval = setInterval(() => {
+				seconds.value++
+			}, 1000)
+  	} else if (status === 'init') {
+			currentIcon.value = 'icon-park-solid:voice'
+			showTimer.value = true
+			seconds.value = 0
+		}else if (status === 'end') {
+			currentIcon.value = 'icon-park-solid:voice'
+			showTimer.value = false
+			clearInterval(countInterval)
+			const appStore = useAppStore()
+			const audioSetting = computed(() => appStore.audioSettings);
+			if(audioSetting.value == "send"){
+				onConversation()
+			}
+		}else {
+			currentIcon.value = 'icon-park-solid:voice'
+			showTimer.value = false
+			clearInterval(countInterval)
+		}
+};
+
+// 监听识别结果的变化
+iatRecorder.onTextChange = function (text) {
+    console.log(text, "text")
+		const appStore = useAppStore()
+		const audioSetting = computed(() => appStore.audioSettings);
+		if (audioSetting.value != "close" && audioSetting.value != "closeall") {
+			prompt.value = text
+		}
+};
+
+async function distinguish() {
+    if (iatRecorder.status === "ing") {
+      iatRecorder.stop()
+    } else {
+      iatRecorder.start()
+    }
+}
+
+const buttonClass = computed(() => {
+  return {
+    'status-init': !isRecording.value,
+    'status-ing': isRecording.value,
+  }
+})
+
+const formattedTime = computed(() => {
+  const minutes = Math.floor(seconds.value / 60)
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+  const formattedSeconds = (seconds.value % 60).toString().padStart(2, '0');
+  // return `${formattedMinutes}:${formattedSeconds}`;
+	return `${formattedSeconds}`
+})
+
+// ======================end==========================
+
+// ======================科大讯飞语音合成模块=============================
+
+let ttsRecorder = new TTSRecorder()
+
+function playTTS(string) {
+	// ttsRecorder初始化配置
+	ttsRecorder.setParams({
+		voiceName: 'aisxping',
+		text: string
+	})
+	ttsRecorder.start()
+}
+
+ttsRecorder.onWillStatusChange = function(oldStatus, status) {
+  // 可以在这里的回调中进行页面中一些交互逻辑处理：按钮交互等
+  // 按钮中的状态
+  let btnState = {
+    init: '立即合成',
+    ttsing: '正在合成',
+    play: '停止播放',
+    endPlay: '重新播放',
+    errorTTS: '合成失败',
+  }
+}
+
+// ======================end==========================
 
 async function handleSubmit() {
   if (search.value === 'Bing搜索') {
@@ -194,6 +312,14 @@ async function onConversation() {
           requestOptions: { prompt: message, options: { ...options } },
         },
       )
+
+			// 语音合成
+			const appStore = useAppStore()
+			const audioSetting = computed(() => appStore.audioSettings);
+			if (audioSetting.value != "closeall") {
+				playTTS(result);
+			}
+
       scrollToBottomIfAtBottom()
       loading.value = false
       /* await fetchChatAPIProcess<Chat.ConversationResponse>({
@@ -690,6 +816,16 @@ function searchfun() {
               />
             </template>
           </NAutoComplete>
+					<NButton type="info" @click="distinguish" :class="buttonClass" style="background-color:rgb(88, 88, 242);">
+						<template #icon>
+							<span class="dark:text-black">
+								<SvgIcon :icon="currentIcon" />
+							</span>
+						</template>
+						<template v-if="showTimer" class="time-box">
+							<span class="used-time">{{ formattedTime }}</span>
+						</template>
+					</NButton>
           <NButton type="primary" :disabled="buttonDisabled" @click="handleSubmit">
             <template #icon>
               <span class="dark:text-black">
@@ -724,5 +860,14 @@ function searchfun() {
 .shadow-md{
   box-shadow: 0 12px 40px 0 rgba(148,186,215,.2);
   border: 1px solid ;
+}
+
+.time-box {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+.used-time {
+  margin-left: 4px;
 }
 </style>
