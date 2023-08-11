@@ -457,6 +457,7 @@ class LoaderCheckPoint:
                         self.model = self.model.to(device)
                     else:
                         self.model = self.model.cuda()
+            print("加载lora检查点成功.")
 
     def clear_torch_cache(self):
         gc.collect()

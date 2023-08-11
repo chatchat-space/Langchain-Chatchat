@@ -130,10 +130,7 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "LLamaLLMChain"
     },
-    # 直接调用返回requests.exceptions.ConnectionError错误，需要通过huggingface_hub包里的snapshot_download函数
-    # 下载模型，如果snapshot_download还是返回网络错误，多试几次，一般是可以的，
-    # 如果仍然不行，则应该是网络加了防火墙(在服务器上这种情况比较常见)，基本只能从别的设备上下载，
-    # 然后转移到目标设备了.
+
     "bloomz-7b1": {
         "name": "bloomz-7b1",
         "pretrained_model_name": "bigscience/bloomz-7b1",
@@ -250,8 +247,8 @@ USE_LORA = True if LORA_NAME else False
 # LLM streaming reponse
 STREAMING = True
 
-# 直接定义baichuan的lora完整路径即可
-LORA_MODEL_PATH_BAICHUAN=""
+# 直接定义baichuan的lora完整路径即可,"" != False
+LORA_MODEL_PATH_BAICHUAN=None
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
