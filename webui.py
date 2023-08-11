@@ -20,21 +20,45 @@ if __name__ == "__main__":
             f"当前使用模型`{LLM_MODEL}`, 您可以开始提问了."
         )
 
-    pages = {"对话": {"icon": "chat",
+    if "chat_list" not in st.session_state:
+        st.session_state["chat_list"] = ["对话"]
+    if "cur_chat_name" not in st.session_state:
+        st.session_state["cur_chat_name"] = "对话"
+    if "need_chat_name" not in st.session_state:
+        st.session_state["need_chat_name"] = True
+
+    pages = {i: {"icon": "chat",
+                  "func": dialogue_page,
+                  } for i in st.session_state.chat_list}
+    pages2 = {
+        "新建对话": {"icon": "plus-circle",
                      "func": dialogue_page,
-                    },
-             "知识库管理": {"icon": "hdd-stack",
-                          "func": knowledge_base_page,
-                         },
-             # "模型配置": {"icon": "gear",
-             #              "func": model_config_page,
-             #              }
-             }
+                     },
+        "---": {"icon": None,
+                "func": None},
+        "知识库管理": {"icon": "hdd-stack",
+                       "func": knowledge_base_page,
+                       },
+        # "模型配置": {"icon": "gear",
+        #              "func": model_config_page,
+        #              }
+    }
+    pages.update(pages2)
 
     with st.sidebar:
         selected_page = option_menu("langchain-chatglm",
                                     options=list(pages.keys()),
                                     icons=[i["icon"] for i in pages.values()],
                                     menu_icon="chat-quote",
-                                    default_index=0)
-    pages[selected_page]["func"](api)
+                                    default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]))
+    if selected_page == "新建对话":
+        if len(st.session_state.chat_list) > 1 and st.session_state.chat_list[0] == "对话":
+            st.session_state.chat_list[0] = "对话1"
+        st.write(st.session_state.chat_list)
+        new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
+        st.session_state.chat_list += [new_chat_name]
+        st.session_state["cur_chat_name"] = new_chat_name
+        st.session_state["need_chat_name"] = True
+        st.experimental_rerun()
+    else:
+        pages[selected_page]["func"](api)
