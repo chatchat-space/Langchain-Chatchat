@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import os
-import pandas as pd
 
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
@@ -20,7 +19,7 @@ from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_docs_from_folder,
 )
-from typing import List, Union
+from typing import List, Union, Dict
 
 
 class SupportedVSType:
@@ -221,7 +220,7 @@ class KBServiceFactory:
         return KBServiceFactory.get_service("default", SupportedVSType.DEFAULT)
 
 
-def get_kb_details() -> pd.DataFrame:
+def get_kb_details() -> List[Dict]:
     kbs_in_folder = list_kbs_from_folder()
     kbs_in_db = KBService.list_kbs()
     result = {}
@@ -247,20 +246,15 @@ def get_kb_details() -> pd.DataFrame:
                 kb_detail["in_folder"] = False
                 result[kb] = kb_detail
 
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "vs_type",
-            "embed_model",
-            "file_count",
-            "create_time",
-            "in_folder",
-            "in_db",
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
+    data = []
+    for i, v in enumerate(result.values()):
+        v['No'] = i + 1
+        data.append(v)
+   
+    return data
 
 
-def get_kb_doc_details(kb_name: str) -> pd.DataFrame:
+def get_kb_doc_details(kb_name: str) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(kb_name)
     docs_in_folder = list_docs_from_folder(kb_name)
     docs_in_db = kb.list_docs()
@@ -289,17 +283,9 @@ def get_kb_doc_details(kb_name: str) -> pd.DataFrame:
                 doc_detail["in_folder"] = False
                 result[doc] = doc_detail
 
-    df = pd.DataFrame(result.values(), columns=[
-            "kb_name",
-            "file_name",
-            "file_ext",
-            "file_version",
-            "document_loader",
-            "text_splitter",
-            "create_time",
-            "in_folder",
-            "in_db",
-    ])
-    df.insert(0, "No", range(1, len(df) + 1))
-    return df
-
+    data = []
+    for i, v in enumerate(result.values()):
+        v['No'] = i + 1
+        data.append(v)
+   
+    return data

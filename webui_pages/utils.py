@@ -3,6 +3,7 @@ from typing import *
 from pathlib import Path
 from configs.model_config import (
     EMBEDDING_MODEL,
+    DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
     llm_model_dict,
@@ -88,7 +89,7 @@ class ApiRequest:
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[httpx.Response, None]:
-        rl = self._parse_url(url)
+        url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
         async with httpx.AsyncClient() as client:
             while retry > 0:
@@ -130,7 +131,7 @@ class ApiRequest:
         stream: bool = False,
         **kwargs: Any
     ) -> Union[httpx.Response, None]:
-        rl = self._parse_url(url)
+        url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
         async with httpx.AsyncClient() as client:
             while retry > 0:
@@ -171,7 +172,7 @@ class ApiRequest:
         stream: bool = False,
         **kwargs: Any
     ) -> Union[httpx.Response, None]:
-        rl = self._parse_url(url)
+        url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
         async with httpx.AsyncClient() as client:
             while retry > 0:
@@ -534,6 +535,9 @@ class ApiRequest:
     def recreate_vector_store(
         self,
         knowledge_base_name: str,
+        allow_empty_kb: bool = True,
+        vs_type: str = DEFAULT_VS_TYPE,
+        embed_model: str = EMBEDDING_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -542,14 +546,22 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "allow_empty_kb": allow_empty_kb,
+            "vs_type": vs_type,
+            "embed_model": embed_model,
+        }
+
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import recreate_vector_store
-            response = run_async(recreate_vector_store(knowledge_base_name))
+            response = run_async(recreate_vector_store(**data))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
                 "/knowledge_base/recreate_vector_store",
-                json={"knowledge_base_name": knowledge_base_name},
+                json=data,
+                stream=True,
             )
             return self._httpx_stream2generator(response, as_json=True)
 

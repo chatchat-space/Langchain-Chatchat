@@ -4,7 +4,7 @@ from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import add_doc_to_db
 from server.db.base import Base, engine
 import os
-from typing import Literal
+from typing import Literal, Callable, Any
 
 
 def create_tables():
@@ -21,6 +21,8 @@ def folder2db(
     mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
+    callback_before: Callable = None,
+    callback_after: Callable = None,
 ):
     '''
     use existed files in local folder to populate database and/or vector store.
@@ -35,34 +37,53 @@ def folder2db(
 
     if mode == "recreate_vs":
         kb.clear_vs()
-        for doc in list_docs_from_folder(kb_name):
+        docs = list_docs_from_folder(kb_name)
+        for i, doc in enumerate(docs):
             try:
                 kb_file = KnowledgeFile(doc, kb_name)
+                if callable(callback_before):
+                    callback_before(kb_file, i, docs)
                 kb.add_doc(kb_file)
+                if callable(callback_after):
+                    callback_after(kb_file, i, docs)
             except Exception as e:
                 print(e)
     elif mode == "fill_info_only":
-        for doc in list_docs_from_folder(kb_name):
+        docs = list_docs_from_folder(kb_name)
+        for i, doc in enumerate(docs):
             try:
                 kb_file = KnowledgeFile(doc, kb_name)
+                if callable(callback_before):
+                    callback_before(kb_file, i, docs)
                 add_doc_to_db(kb_file)
+                if callable(callback_after):
+                    callback_after(kb_file, i, docs)
             except Exception as e:
                 print(e)
     elif mode == "update_in_db":
-        for doc in kb.list_docs():
+        docs = kb.list_docs()
+        for i, doc in enumerate(docs):
             try:
                 kb_file = KnowledgeFile(doc, kb_name)
+                if callable(callback_before):
+                    callback_before(kb_file, i, docs)
                 kb.update_doc(kb_file)
+                if callable(callback_after):
+                    callback_after(kb_file, i, docs)
             except Exception as e:
                 print(e)
     elif mode == "increament":
         db_docs = kb.list_docs()
         folder_docs = list_docs_from_folder(kb_name)
         docs = list(set(folder_docs) - set(db_docs))
-        for doc in docs:
+        for i, doc in enumerate(docs):
             try:
                 kb_file = KnowledgeFile(doc, kb_name)
+                if callable(callback_before):
+                    callback_before(kb_file, i, docs)
                 kb.add_doc(kb_file)
+                if callable(callback_after):
+                    callback_after(kb_file, i, docs)
             except Exception as e:
                 print(e)
     else:
@@ -72,12 +93,13 @@ def folder2db(
 def recreate_all_vs(
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_mode: str = EMBEDDING_MODEL,
+    **kwargs: Any,
 ):
     '''
     used to recreate a vector store or change current vector store to another type or embed_model
     '''
     for kb_name in list_kbs_from_folder():
-        folder2db(kb_name, "recreate_vs", vs_type, embed_mode)
+        folder2db(kb_name, "recreate_vs", vs_type, embed_mode, **kwargs)
 
 
 def prune_db_docs(kb_name: str):

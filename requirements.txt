@@ -9,8 +9,6 @@ fastapi-offline
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
-numpy~=1.24.4
-pandas~=2.0.3
 pydantic~=1.10.11
 unstructured[all-docs]
 python-magic-bin; sys_platform == 'win32'

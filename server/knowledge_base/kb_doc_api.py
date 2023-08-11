@@ -1,12 +1,13 @@
 import os
 import urllib
 from fastapi import File, Form, Body, UploadFile
+from configs.model_config import DEFAULT_VS_TYPE, EMBEDDING_MODEL
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import validate_kb_name
+from server.knowledge_base.utils import validate_kb_name, list_docs_from_folder, KnowledgeFile
 from fastapi.responses import StreamingResponse
 import json
-from server.knowledge_base.utils import KnowledgeFile, list_docs_from_folder
 from server.knowledge_base.kb_service.base import KBServiceFactory
+from typing import List
 
 
 async def list_docs(
@@ -100,7 +101,7 @@ async def update_doc(
         kb.update_doc(kb_file)
         return BaseResponse(code=200, msg=f"成功更新文件 {kb_file.filename}")
     else:
-        return BaseResponse(code=500, msg=f"{kb_file.filename} 文件上传失败，报错信息为: {e}")
+        return BaseResponse(code=500, msg=f"{kb_file.filename} 文件更新失败")
 
 
 async def download_doc():
@@ -111,7 +112,8 @@ async def download_doc():
 async def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
-        vs_type: str = Body("faiss"),
+        vs_type: str = Body(DEFAULT_VS_TYPE),
+        embed_model: str = Body(EMBEDDING_MODEL),
     ):
     '''
     recreate vector store from the content.
@@ -119,31 +121,24 @@ async def recreate_vector_store(
     by default, get_service_by_name only return knowledge base in the info.db and having document files in it.
     set allow_empty_kb to True make it applied on empty knowledge base which it not in the info.db or having no documents.
     '''
-    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
-    if kb is None:
-        if allow_empty_kb:
-            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type)
-        else:
-            return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+    if not kb.exists() and not allow_empty_kb:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
     async def output(kb):
         kb.create_kb()
         kb.clear_vs()
-        print(f"start to recreate vector store of {kb.kb_name}")
         docs = list_docs_from_folder(knowledge_base_name)
-        print(docs)
-        for i, filename in enumerate(docs):
-            yield json.dumps({
-                "total": len(docs),
-                "finished": i,
-                "doc": filename,
-            })
+        for i, doc in enumerate(docs):
             try:
-                kb_file = KnowledgeFile(filename=filename,
-                                        knowledge_base_name=kb.kb_name)
-                print(f"processing {kb_file.filepath} to vector store.")
+                kb_file = KnowledgeFile(doc, knowledge_base_name)
+                yield json.dumps({
+                    "total": len(docs),
+                    "finished": i,
+                    "doc": doc,
+                }, ensure_ascii=False)
                 kb.add_doc(kb_file)
-            except ValueError as e:
+            except Exception as e:
                 print(e)
 
     return StreamingResponse(output(kb), media_type="text/event-stream")
