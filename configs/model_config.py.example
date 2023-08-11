@@ -104,6 +104,9 @@ KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowled
 DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_ROOT_PATH}"
 
+# 默认向量库类型。可选：faiss, milvus, pg.
+DEFAULT_VS_TYPE = "faiss"
+
 # 缓存向量库数量
 CACHED_VS_NUM = 1
 
