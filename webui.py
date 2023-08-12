@@ -21,27 +21,30 @@ if __name__ == "__main__":
         )
 
     if "chat_list" not in st.session_state:
-        st.session_state["chat_list"] = ["对话"]
+        st.session_state["chat_list"] = {"对话1": {"need_rename": True}}
     if "cur_chat_name" not in st.session_state:
-        st.session_state["cur_chat_name"] = "对话"
+        st.session_state["cur_chat_name"] = list(st.session_state["chat_list"].keys())[0]
     if "need_chat_name" not in st.session_state:
         st.session_state["need_chat_name"] = True
 
-    pages = {i: {"icon": "chat",
-                  "func": dialogue_page,
-                  } for i in st.session_state.chat_list}
+    pages = {i: {
+        "icon": "chat",
+        "func": dialogue_page,
+    } for i in st.session_state.chat_list.keys()}
+
     pages2 = {
-        "新建对话": {"icon": "plus-circle",
-                     "func": dialogue_page,
-                     },
-        "---": {"icon": None,
-                "func": None},
-        "知识库管理": {"icon": "hdd-stack",
-                       "func": knowledge_base_page,
-                       },
-        # "模型配置": {"icon": "gear",
-        #              "func": model_config_page,
-        #              }
+        "新建对话": {
+            "icon": "plus-circle",
+            "func": dialogue_page,
+        },
+        "---": {
+            "icon": None,
+            "func": None
+        },
+        "知识库管理": {
+            "icon": "hdd-stack",
+            "func": knowledge_base_page,
+        },
     }
     pages.update(pages2)
 
@@ -52,13 +55,12 @@ if __name__ == "__main__":
                                     menu_icon="chat-quote",
                                     default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]))
     if selected_page == "新建对话":
-        if len(st.session_state.chat_list) > 1 and st.session_state.chat_list[0] == "对话":
-            st.session_state.chat_list[0] = "对话1"
-        st.write(st.session_state.chat_list)
         new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
-        st.session_state.chat_list += [new_chat_name]
+        st.session_state.chat_list[new_chat_name] = {"need_rename": True}
         st.session_state["cur_chat_name"] = new_chat_name
-        st.session_state["need_chat_name"] = True
         st.experimental_rerun()
+    elif selected_page == "知识库管理":
+        pages[selected_page]["func"](api)
     else:
+        st.session_state["cur_chat_name"] = selected_page
         pages[selected_page]["func"](api)

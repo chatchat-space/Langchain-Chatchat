@@ -1,3 +1,5 @@
+import sqlite3
+
 import streamlit as st
 from webui_pages.utils import *
 from st_aggrid import AgGrid, JsCode
@@ -32,7 +34,11 @@ def config_aggrid(
 
 
 def knowledge_base_page(api: ApiRequest):
-    kb_list = get_kb_details()
+    try:
+        kb_list = get_kb_details()
+    except Exception as e:
+        st.error("获取知识库信息错误，请检查是否已按照 `README.md` 中 `4 知识库初始化与迁移` 步骤完成初始化或迁移，或是否为数据库连接错误。")
+        st.stop()
     kb_names = [x["kb_name"] for x in kb_list]
 
     if "selected_kb_name" in st.session_state and st.session_state["selected_kb_name"] in kb_names:
