@@ -59,7 +59,7 @@ if __name__ == "__main__":
             options=list(pages.keys()),
             icons=[i["icon"] for i in pages.values()],
             menu_icon="chat-quote",
-            default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]),
+            # default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]),
         )
 
     if selected_page == "新建对话":
