@@ -37,9 +37,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🐳 Docker镜像：registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 （感谢 @InkSong🌲 ）
-
-💻 运行方式：docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0
+🌐 AutoDL 镜像及 Docker 镜像制作中
 
 ## 变更日志
 
@@ -53,8 +51,9 @@
 2. 使用 [langchain](https://github.com/langchain-ai/langchain) 中已有 Chain 的实现，便于后续接入不同类型 Chain，并将对 Agent 接入开展测试；
 3. 使用 [FastAPI](https://github.com/tiangolo/fastapi) 提供 API 服务，全部接口可在 FastAPI 自动生成的 docs 中开展测试，且所有对话接口支持通过参数设置流式或非流式输出；
 4. 使用 [Streamlit](https://github.com/streamlit/streamlit) 提供 WebUI 服务，可选是否基于 API 服务启动 WebUI，增加会话管理，可以自定义会话主题并切换，且后续可支持不同形式输出内容的显示；
-5. 除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
-6. 项目中默认 LLM 模型改为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置。
+5. 项目中默认 LLM 模型改为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置；
+6. 项目中扩充了对不同类型向量库的支持，除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
+7. 项目中搜索引擎对话，除 Bing 搜索外，增加 DuckDuckGo 搜索选项，DuckDuckGo 搜索无需配置 API Key，在可访问国外服务环境下可直接使用。
 
 ## 模型支持
 
@@ -118,42 +117,7 @@
 
 ## Docker 整合包
 
-🐳 Docker镜像地址：`registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0 `🌲
-
-💻 一行命令运行：
-
-```shell
-docker run -d -p 80:7860 --gpus all registry.cn-beijing.aliyuncs.com/isafetech/chatmydata:1.0
-```
-
-- 该版本镜像大小 `25.2G`，使用[v0.1.16](https://github.com/imClumsyPanda/langchain-ChatGLM/releases/tag/v0.1.16)，以 `nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04`为基础镜像
-- 该版本内置两个 `embedding`模型：`m3e-base`，`text2vec-large-chinese`，内置 `fastchat+chatglm-6b`
-- 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
-- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver`以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用 `docker logs -f <container id>`查看日志
-- 如遇到启动过程卡在 `Waiting..`步骤，建议使用 `docker exec -it <container id> bash`进入 `/logs/`目录查看对应阶段日志
-  ![](img/docker_logs.png)
-
-## Docker 部署
-
-为了能让容器使用主机GPU资源，需要在主机上安装 [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)。具体安装步骤如下：
-
-```shell
-sudo apt-get update
-sudo apt-get install -y nvidia-container-toolkit-base
-sudo systemctl daemon-reload 
-sudo systemctl restart docker
-```
-
-安装完成后，可以使用以下命令编译镜像和启动容器：
-
-```
-docker build -f Dockerfile-cuda -t chatglm-cuda:latest .
-docker run --gpus all -d --name chatglm -p 7860:7860  chatglm-cuda:latest
-
-#若要使用离线模型，请配置好模型路径，然后此 repo 挂载到 Container
-docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatGLM:/chatGLM  chatglm-cuda:latest
-```
+AutoDL 镜像及 Docker 镜像制作中，将会在上传完成后增加。
 
 ## 开发部署
 
@@ -249,6 +213,10 @@ $ python server/api.py
 
 启动 API 服务后，可访问 `localhost:7861` 或 `{API 所在服务器 IP}:7861` FastAPI 自动生成的 docs 进行接口查看与测试。
 
+- FastAPI docs 界面
+
+  ![](img/fastapi_docs_020_0.png)
+
 #### 4.3 启动 Web UI 服务
 
 执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口`8501`）
@@ -262,6 +230,14 @@ $ streamlit run webui.py
 ```shell
 $ streamlit run webui.py --server.port 666
 ```
+
+- Web UI 对话界面：
+
+  ![](img/webui_020_0.png)
+
+- Web UI 知识库管理页面：
+
+  ![](img/webui_020_1.png)
 
 ### 常见问题
 
