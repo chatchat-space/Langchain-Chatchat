@@ -56,11 +56,14 @@ if __name__ == "__main__":
     def on_page_change(key):
         cur_chat_name = st.session_state["cur_chat_name"]
         if (st.session_state[key] == "新建对话"
-            and not st.session_state.chat_list[cur_chat_name].get("need_rename")):
+            and cur_chat_name != "新建对话"
+            and not st.session_state.get("prompt")):
             new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
             st.session_state.chat_list[new_chat_name] = {"need_rename": True}
             st.session_state["cur_chat_name"] = new_chat_name
             st.session_state[key]  = new_chat_name
+        elif st.session_state[key] not in ["新建对话", "知识库管理"]:
+            st.session_state["cur_chat_name"] = st.session_state[key]
 
     with st.sidebar:
         selected_page = option_menu(
