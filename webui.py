@@ -54,13 +54,13 @@ if __name__ == "__main__":
         st.write(f"Selection changed to {selection}")
 
     def on_page_change(key):
-        if st.session_state[key] == "新建对话":
+        cur_chat_name = st.session_state["cur_chat_name"]
+        if (st.session_state[key] == "新建对话"
+            and not st.session_state.chat_list[cur_chat_name].get("need_rename")):
             new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
             st.session_state.chat_list[new_chat_name] = {"need_rename": True}
             st.session_state["cur_chat_name"] = new_chat_name
             st.session_state[key]  = new_chat_name
-        else:
-            st.session_state["cur_chat_name"] = st.session_state[key]
 
     with st.sidebar:
         selected_page = option_menu(
