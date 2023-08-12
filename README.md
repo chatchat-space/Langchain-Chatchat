@@ -254,13 +254,13 @@ $ python server/api.py
 执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口`8501`）
 
 ```shell
-$ python webui.py
+$ streamlit run webui.py
 ```
 
 或使用以下命令指定启动 **Web UI** 服务并指定端口号
 
 ```shell
-$ python webui.py --server.port 666
+$ streamlit run webui.py --server.port 666
 ```
 
 ### 常见问题
