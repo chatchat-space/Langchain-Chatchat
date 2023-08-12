@@ -52,8 +52,8 @@
 1. 使用 [FastChat](https://github.com/lm-sys/FastChat) 提供开源 LLM 模型的 API，以 OpenAI API 接口形式接入，提升 LLM 模型加载效果；
 2. 使用 [langchain](https://github.com/langchain-ai/langchain) 中已有 Chain 的实现，便于后续接入不同类型 Chain，并将对 Agent 接入开展测试；
 3. 使用 [FastAPI](https://github.com/tiangolo/fastapi) 提供 API 服务，全部接口可在 FastAPI 自动生成的 docs 中开展测试，且所有对话接口支持通过参数设置流式或非流式输出；
-4. 使用 [Streamlit](https://github.com/streamlit/streamlit) 提供 WebUI 服务，可选是否基于 API 服务启动 WebUI，且后续可支持不同形式输出内容的显示；
-5. 除 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
+4. 使用 [Streamlit](https://github.com/streamlit/streamlit) 提供 WebUI 服务，可选是否基于 API 服务启动 WebUI，增加会话管理，可以自定义会话主题并切换，且后续可支持不同形式输出内容的显示；
+5. 除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
 6. 项目中默认 LLM 模型改为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置。
 
 ## 模型支持
@@ -223,7 +223,7 @@ embedding_model_dict = {
 
 ### 5. 启动 API 服务或 Web UI
 
-#### 4.1 启动LLM服务
+#### 4.1 启动 LLM 服务
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -239,20 +239,28 @@ $python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个fastchat服务模块，可选[all, controller,model_worker,openai_api_server]
 
-#### 4.2 启动API服务
+#### 4.2 启动 API 服务
 
-启动**LLM服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
+启动 **LLM 服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
 
 ```shell
 $ python server/api.py
 ```
 
-#### 4.3 启动Web UI服务
+启动 API 服务后，可访问 `localhost:7861` 或 `{API 所在服务器 IP}:7861` FastAPI 自动生成的 docs 进行接口查看与测试。
 
-执行 [webui.py](webui.py) 启动 **Web UI** 服务
+#### 4.3 启动 Web UI 服务
+
+执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口`8501`）
 
 ```shell
 $ python webui.py
+```
+
+或使用以下命令指定启动 **Web UI** 服务并指定端口号
+
+```shell
+$ python webui.py --server.port 666
 ```
 
 ### 常见问题

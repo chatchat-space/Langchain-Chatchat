@@ -48,12 +48,20 @@ if __name__ == "__main__":
     }
     pages.update(pages2)
 
+
+    def on_change(key):
+        selection = st.session_state[key]
+        st.write(f"Selection changed to {selection}")
+
     with st.sidebar:
-        selected_page = option_menu("langchain-chatglm",
-                                    options=list(pages.keys()),
-                                    icons=[i["icon"] for i in pages.values()],
-                                    menu_icon="chat-quote",
-                                    default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]))
+        selected_page = option_menu(
+            "langchain-chatglm",
+            options=list(pages.keys()),
+            icons=[i["icon"] for i in pages.values()],
+            menu_icon="chat-quote",
+            default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]),
+        )
+
     if selected_page == "新建对话":
         new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
         st.session_state.chat_list[new_chat_name] = {"need_rename": True}
