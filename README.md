@@ -156,6 +156,8 @@ docker run --gpus all -d --name chatglm -p 7860:7860 -v ~/github/langchain-ChatG
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
+**请注意：** `0.2.0`及更新版本的依赖包与`0.1.x`版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
+
 ### 2. 下载模型至本地
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
@@ -196,7 +198,21 @@ embedding_model_dict = {
                        }
 ```
 
-### 4. 启动 API 服务或 Web UI
+### 4. 知识库初始化与迁移
+
+当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
+
+- 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
+    ```shell
+    $ python init_database.py
+    ``` 
+  
+- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
+    ```shell
+    $ python init_database.py --recreate-vs
+    ```
+
+### 5. 启动 API 服务或 Web UI
 
 #### 4.1 启动LLM服务
 
