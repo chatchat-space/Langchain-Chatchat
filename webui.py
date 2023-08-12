@@ -53,22 +53,23 @@ if __name__ == "__main__":
         selection = st.session_state[key]
         st.write(f"Selection changed to {selection}")
 
+    def on_page_change(key):
+        if st.session_state[key] == "新建对话":
+            new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
+            st.session_state.chat_list[new_chat_name] = {"need_rename": True}
+            st.session_state["cur_chat_name"] = new_chat_name
+            st.session_state[key]  = new_chat_name
+        else:
+            st.session_state["cur_chat_name"] = st.session_state[key]
+
     with st.sidebar:
         selected_page = option_menu(
             "langchain-chatglm",
             options=list(pages.keys()),
             icons=[i["icon"] for i in pages.values()],
             menu_icon="chat-quote",
-            # default_index=list(pages.keys()).index(st.session_state["cur_chat_name"]),
+            key="selected_page",
+            on_change=on_page_change,
         )
 
-    if selected_page == "新建对话":
-        new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
-        st.session_state.chat_list[new_chat_name] = {"need_rename": True}
-        st.session_state["cur_chat_name"] = new_chat_name
-        st.experimental_rerun()
-    elif selected_page == "知识库管理":
-        pages[selected_page]["func"](api)
-    else:
-        st.session_state["cur_chat_name"] = selected_page
-        pages[selected_page]["func"](api)
+    pages[selected_page]["func"](api)
