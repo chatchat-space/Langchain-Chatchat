@@ -5,7 +5,6 @@
 * [介绍](README.md#介绍)
 * [变更日志](README.md#变更日志)
 * [模型支持](README.md#模型支持)
-* [Docker 整合包](README.md#Docker-整合包)
 * [Docker 部署](README.md#Docker-部署)
 * [开发部署](README.md#开发部署)
   * [软件需求](README.md#软件需求)
@@ -115,7 +114,7 @@
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
 
-## Docker 整合包
+## Docker 部署
 
 AutoDL 镜像及 Docker 镜像制作中，将会在上传完成后增加。
 
