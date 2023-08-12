@@ -2,7 +2,6 @@ import streamlit as st
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
-import streamlit_antd_components as sac
 from server.chat.search_engine_chat import SEARCH_ENGINES
 from typing import List, Dict
 
@@ -133,7 +132,7 @@ def dialogue_page(api: ApiRequest):
             elif dialogue_mode == "知识库问答":
                 history = get_messages_history(history_len)
                 chat_box.ai_say([
-                    f"正在查询知识库： `{selected_kb}` ...",
+                    f"正在查询知识库 `{selected_kb}` ...",
                     Markdown("...", in_expander=True, title="知识库匹配结果"),
                 ])
                 text = ""
@@ -144,7 +143,7 @@ def dialogue_page(api: ApiRequest):
                 chat_box.update_msg(text, 0, streaming=False)
             elif dialogue_mode == "搜索引擎问答":
                 chat_box.ai_say([
-                    f"正在执行{search_engine}搜索...",
+                    f"正在执行 `{search_engine}` 搜索...",
                     Markdown("...", in_expander=True, title="网络搜索结果"),
                 ])
                 text = ""
