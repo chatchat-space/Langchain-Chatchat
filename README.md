@@ -11,7 +11,8 @@
   * [1. 开发环境准备](README.md#1.-开发环境准备)
   * [2. 下载模型至本地](README.md#2.-下载模型至本地)
   * [3. 设置配置项](README.md#3.-设置配置项)
-  * [4. 启动 API 服务或 Web UI](README.md#4.-启动-API-服务或-Web-UI)
+  * [4. 知识库初始化与迁移](README.md#4.-知识库初始化与迁移)
+  * [5. 启动 API 服务或 Web UI](README.md#5.-启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -186,7 +187,7 @@ embedding_model_dict = {
 
 ### 5. 启动 API 服务或 Web UI
 
-#### 4.1 启动 LLM 服务
+#### 5.1 启动 LLM 服务
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -194,15 +195,15 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-以如上方式启动LLM服务会以nohup命令在后台运行fastchat服务，如需停止服务，可以运行如下命令：
+以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令：
 
 ```shell
-$python server/llm_api_shutdown.py --serve all 
+$ python server/llm_api_shutdown.py --serve all 
 ```
 
-亦可单独停止一个fastchat服务模块，可选[all, controller,model_worker,openai_api_server]
+亦可单独停止一个 fastchat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-#### 4.2 启动 API 服务
+#### 5.2 启动 API 服务
 
 启动 **LLM 服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
 
@@ -216,7 +217,7 @@ $ python server/api.py
 
   ![](img/fastapi_docs_020_0.png)
 
-#### 4.3 启动 Web UI 服务
+#### 5.3 启动 Web UI 服务
 
 执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口`8501`）
 
@@ -264,15 +265,12 @@ $ streamlit run webui.py --server.port 666
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
-- [X] LLM 模型接入
-  - [X] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
-- [X] 增加更多 Embedding 模型支持
-  - [X] [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
-  - [X] [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
-  - [X] [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
-  - [X] [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
-  - [X] [moka-ai/m3e-small](https://huggingface.co/moka-ai/m3e-small)
-  - [X] [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)
+- [x] LLM 模型接入
+  - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
+  - [ ] 支持 ChatGLM API 等 LLM API 的接入
+- [X] Embedding 模型接入
+  - [x] 支持调用 HuggingFace 中各开源 Emebdding 模型
+  - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
 - [X] 基于 FastAPI 的 API 方式调用
 - [X] Web UI
   - [X] 基于 Streamlit 的 Web UI
