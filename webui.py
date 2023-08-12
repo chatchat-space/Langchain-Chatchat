@@ -12,7 +12,7 @@ from webui_pages import *
 api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=False)
 
 if __name__ == "__main__":
-    st.set_page_config("langchain-chatglm WebUI")
+    st.set_page_config("langchain-chatglm WebUI", initial_sidebar_state="expanded")
 
     if not chat_box.chat_inited:
         st.toast(
@@ -63,8 +63,11 @@ if __name__ == "__main__":
             st.session_state["cur_chat_name"] = new_chat_name
             st.session_state[key]  = new_chat_name
         elif st.session_state[key] not in ["新建对话", "知识库管理"]:
-            st.session_state["cur_chat_name"] = st.session_state[key]
-
+            if st.session_state.get("prompt"):
+                st.session_state["cur_chat_name"] = st.session_state.get("prompt")
+            else:
+                st.session_state["cur_chat_name"] = st.session_state[key]
+        
     with st.sidebar:
         selected_page = option_menu(
             "langchain-chatglm",
@@ -75,4 +78,5 @@ if __name__ == "__main__":
             on_change=on_page_change,
         )
 
-    pages[selected_page]["func"](api)
+    if selected_page == "知识库管理" or selected_page in pages:
+        pages[selected_page]["func"](api)

@@ -82,15 +82,16 @@ def dialogue_page(api: ApiRequest):
 
     chat_box.output_messages()
 
-    if (st.session_state.cur_chat_name == "新建对话"
-        or st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename")):
+    if st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename"):
         chat_input_placeholder = "请输入对话名称"
     else:
         chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
+    
+    def on_prompt():
+        st.session_state["selected_page"] = prompt        
 
-    if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        if (st.session_state.cur_chat_name == "新建对话"
-            or st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename")):
+    if prompt := st.chat_input(chat_input_placeholder, key="prompt", on_submit=on_prompt):
+        if st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename"):
             if prompt in st.session_state.chat_list.keys():
                 st.toast("已有同名对话，请重新命名")
             else:
