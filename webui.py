@@ -21,17 +21,20 @@ if __name__ == "__main__":
         )
 
     if "chat_list" not in st.session_state:
-        st.session_state["chat_list"] = {"对话1": {"need_rename": True}}
+        st.session_state["chat_list"] = {"对话1": {"need_rename": True, "chat_no": 1}}
     if "cur_chat_name" not in st.session_state:
         st.session_state["cur_chat_name"] = list(st.session_state["chat_list"].keys())[0]
     if "need_chat_name" not in st.session_state:
         st.session_state["need_chat_name"] = True
+    if "chat_count" not in st.session_state:
+        st.session_state["chat_count"] = 1
 
     chat_list = [{"name": k, "chat_no": v.get("chat_no", 0)} for k, v in st.session_state.chat_list.items()]
-    pages = {i["name"]: {
+    chat_list = [x["name"] for x in sorted(chat_list, key=lambda x: x["chat_no"])]
+    pages1 = {i: {
         "icon": "chat",
         "func": dialogue_page,
-    } for i in sorted(chat_list, key=lambda x: x["chat_no"])}
+    } for i in chat_list}
 
     pages2 = {
         "新建对话": {
@@ -47,41 +50,43 @@ if __name__ == "__main__":
             "func": knowledge_base_page,
         },
     }
-    pages.update(pages2)
-
-
-    def on_change(key):
-        selection = st.session_state[key]
-        st.write(f"Selection changed to {selection}")
+    pages = {**pages1, **pages2}
         
     with st.sidebar:
+        options = chat_list + list(pages2)
+        icons = ["chat"] * len(chat_list) + [x["icon"] for x in pages2.values()]
+
         default_index = list(pages).index(st.session_state["cur_chat_name"])
         selected_page = option_menu(
             "langchain-chatglm",
-            options=list(pages.keys()),
-            icons=[i["icon"] for i in pages.values()],
+            options=options,
+            icons=icons,
             menu_icon="chat-quote",
             default_index=default_index,
         )
 
     if selected_page == "新建对话":
-        cur_chat_name = st.session_state["cur_chat_name"]
+        cur_chat_name = st.session_state.get("cur_chat_name")
         if (not st.session_state.get("create_chat")
             and not st.session_state.get("renamde_chat")
             and not st.session_state.get("delete_chat")):
-            chat_no = len(st.session_state.chat_list) + 1
+            st.session_state.chat_count += 1
+            chat_no = st.session_state.chat_count
             new_chat_name = f"对话{chat_no}"
             st.session_state.chat_list[new_chat_name] = {"need_rename": True, "chat_no": chat_no}
             st.session_state["cur_chat_name"] = new_chat_name
             st.experimental_rerun()
-        if st.session_state.get("create_chat"):
-            st.session_state.create_chat = False
-        if st.session_state.get("renamde_chat"):
-            st.session_state.renamde_chat = False
-        if st.session_state.get("delete_chat"):
-            st.session_state.delete_chat = False
+        else:
+            if st.session_state.get("create_chat"):
+                st.session_state.create_chat = False
+            if st.session_state.get("renamde_chat"):
+                st.session_state.renamde_chat = False
+                st.experimental_rerun()
+            if st.session_state.get("delete_chat"):
+                st.session_state.delete_chat = False
+                st.experimental_rerun()
     elif selected_page in st.session_state.chat_list:
-        st.session_state["cur_chat_name"] = selected_page
+        st.session_state["selected_page"] = selected_page
 
     if selected_page in pages:
         pages[selected_page]["func"](api)

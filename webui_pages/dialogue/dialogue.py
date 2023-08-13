@@ -32,7 +32,7 @@ def get_messages_history(history_len: int) -> List[Dict]:
 
 def dialogue_page(api: ApiRequest):
     chat_box.init_session()
-    chat_box.use_chat_name(st.session_state.cur_chat_name)
+    chat_box.use_chat_name(st.session_state.selected_page)
 
     with st.sidebar:
         # TODO: 对话模型与会话绑定
@@ -82,7 +82,7 @@ def dialogue_page(api: ApiRequest):
 
     chat_box.output_messages()
 
-    if st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename"):
+    if st.session_state.chat_list.get(st.session_state.selected_page, {}).get("need_rename"):
         chat_input_placeholder = "请输入对话名称"
     else:
         chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
@@ -91,15 +91,18 @@ def dialogue_page(api: ApiRequest):
         st.session_state.rename_chat = True
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt", on_submit=on_prompt):
-        if st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename"):
+        if st.session_state.chat_list.get(st.session_state.selected_page, {}).get("need_rename"):
             if prompt in st.session_state.chat_list.keys():
                 st.toast("已有同名对话，请重新命名")
             else:
-                st.session_state.chat_list[prompt] = {"need_rename": False}
-                st.session_state.chat_list.pop(st.session_state.cur_chat_name)
-                chat_box.del_chat_name(st.session_state.cur_chat_name)
+                cur_chat_name = st.session_state.get("selected_page")
+                st.session_state.chat_list[prompt] = {
+                    "need_rename": False,
+                    "chat_no": st.session_state.chat_list[cur_chat_name]["chat_no"]}
+                st.session_state.chat_list.pop(cur_chat_name)
+                chat_box.del_chat_name(cur_chat_name)
                 st.session_state.cur_chat_name = prompt
-                chat_box.use_chat_name(st.session_state.cur_chat_name)
+                chat_box.use_chat_name(prompt)
                 st.experimental_rerun()
         else:
             history = get_messages_history(history_len)
@@ -157,16 +160,17 @@ def dialogue_page(api: ApiRequest):
                 use_container_width=True,
                 on_click=on_delete_chat
         ):
-            chat_box.del_chat_name(st.session_state.cur_chat_name)
-            st.session_state.chat_list.pop(st.session_state.cur_chat_name)
+            cur_chat_name = st.session_state.get("selected_page")
+            chat_box.del_chat_name(cur_chat_name)
+            st.session_state.chat_list.pop(cur_chat_name)
             st.session_state.cur_chat_name = list(st.session_state.chat_list.keys())[0]
             chat_box.use_chat_name(st.session_state.cur_chat_name)
             st.experimental_rerun()
 
     export_btn.download_button(
         "导出记录",
-        "".join(chat_box.export2md(st.session_state.cur_chat_name)),
-        file_name=f"{now:%Y-%m-%d %H.%M}_{st.session_state.cur_chat_name}.md",
+        "".join(chat_box.export2md(st.session_state.selected_page)),
+        file_name=f"{now:%Y-%m-%d %H.%M}_{st.session_state.selected_page}.md",
         mime="text/markdown",
         use_container_width=True,
     )
