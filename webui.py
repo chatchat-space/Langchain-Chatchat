@@ -52,31 +52,34 @@ if __name__ == "__main__":
     def on_change(key):
         selection = st.session_state[key]
         st.write(f"Selection changed to {selection}")
-
-    def on_page_change(key):
-        cur_chat_name = st.session_state["cur_chat_name"]
-        if (st.session_state[key] == "新建对话"
-            and cur_chat_name != "新建对话"
-            and not st.session_state.get("prompt")):
-            new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
-            st.session_state.chat_list[new_chat_name] = {"need_rename": True}
-            st.session_state["cur_chat_name"] = new_chat_name
-            st.session_state[key]  = new_chat_name
-        elif st.session_state[key] not in ["新建对话", "知识库管理"]:
-            if st.session_state.get("prompt"):
-                st.session_state["cur_chat_name"] = st.session_state.get("prompt")
-            else:
-                st.session_state["cur_chat_name"] = st.session_state[key]
         
     with st.sidebar:
+        default_index = list(pages).index(st.session_state["cur_chat_name"])
         selected_page = option_menu(
             "langchain-chatglm",
             options=list(pages.keys()),
             icons=[i["icon"] for i in pages.values()],
             menu_icon="chat-quote",
-            key="selected_page",
-            on_change=on_page_change,
+            default_index=default_index,
         )
 
-    if selected_page == "知识库管理" or selected_page in pages:
+    if selected_page == "新建对话":
+        cur_chat_name = st.session_state["cur_chat_name"]
+        if (not st.session_state.get("create_chat")
+            and not st.session_state.get("renamde_chat")
+            and not st.session_state.get("delete_chat")):
+            new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
+            st.session_state.chat_list[new_chat_name] = {"need_rename": True}
+            st.session_state["cur_chat_name"] = new_chat_name
+            st.experimental_rerun()
+        if st.session_state.get("create_chat"):
+            st.session_state.create_chat = False
+        if st.session_state.get("renamde_chat"):
+            st.session_state.renamde_chat = False
+        if st.session_state.get("delete_chat"):
+            st.session_state.delete_chat = False
+    elif selected_page in st.session_state.chat_list:
+        st.session_state["cur_chat_name"] = selected_page
+
+    if selected_page in pages:
         pages[selected_page]["func"](api)

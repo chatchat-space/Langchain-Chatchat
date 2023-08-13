@@ -88,7 +88,7 @@ def dialogue_page(api: ApiRequest):
         chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
     
     def on_prompt():
-        st.session_state["selected_page"] = prompt        
+        st.session_state.rename_chat = True
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt", on_submit=on_prompt):
         if st.session_state.chat_list.get(st.session_state.cur_chat_name, {}).get("need_rename"):
@@ -146,17 +146,23 @@ def dialogue_page(api: ApiRequest):
                 use_container_width=True,
         ):
             chat_box.reset_history()
+            st.experimental_rerun()
+
+        def on_delete_chat():
+            st.session_state.delete_chat = True
 
         if cols[2].button(
                 "删除对话",
                 disabled=len(st.session_state.chat_list) <= 1,
                 use_container_width=True,
+                on_click=on_delete_chat
         ):
             chat_box.del_chat_name(st.session_state.cur_chat_name)
             st.session_state.chat_list.pop(st.session_state.cur_chat_name)
             st.session_state.cur_chat_name = list(st.session_state.chat_list.keys())[0]
             chat_box.use_chat_name(st.session_state.cur_chat_name)
             st.experimental_rerun()
+
     export_btn.download_button(
         "导出记录",
         "".join(chat_box.export2md(st.session_state.cur_chat_name)),
