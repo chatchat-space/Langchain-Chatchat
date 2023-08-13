@@ -4,8 +4,15 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 from typing import List, Dict
+import os
 
-chat_box = ChatBox()
+chat_box = ChatBox(
+    assistant_avatar=os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "img",
+        "chatchat_icon_blue_square_v2.png"
+    )
+)
 
 
 def get_messages_history(history_len: int) -> List[Dict]:
@@ -46,14 +53,15 @@ def dialogue_page(api: ApiRequest):
             # sac.alert(text, description="descp", type="success", closable=True, banner=True)
 
         dialogue_mode = st.selectbox("请选择对话模式",
-                                 ["LLM 对话",
-                                  "知识库问答",
-                                  "搜索引擎问答",
-                                ],
-                                on_change=on_mode_change,
-                                key="dialogue_mode",
-                                )
+                                     ["LLM 对话",
+                                      "知识库问答",
+                                      "搜索引擎问答",
+                                      ],
+                                     on_change=on_mode_change,
+                                     key="dialogue_mode",
+                                     )
         history_len = st.number_input("历史对话轮数：", 0, 10, 3)
+
         # todo: support history len
 
         def on_kb_change():

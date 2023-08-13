@@ -8,6 +8,7 @@ import streamlit as st
 from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages import *
+import os
 
 api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=False)
 
@@ -32,15 +33,23 @@ if __name__ == "__main__":
     }
         
     with st.sidebar:
+        st.image(
+            os.path.join(
+                os.path.dirname(__file__),
+                "img",
+                "logo-long-chatchat-trans-v2.png"
+            ),
+            use_column_width=True
+        )
         options = list(pages)
         icons = [x["icon"] for x in pages.values()]
 
         default_index = 0
         selected_page = option_menu(
-            "langchain-chatglm",
+            "",
             options=options,
             icons=icons,
-            menu_icon="chat-quote",
+            # menu_icon="chat-quote",
             default_index=default_index,
         )
 
