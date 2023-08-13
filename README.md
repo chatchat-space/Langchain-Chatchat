@@ -51,12 +51,6 @@
 ```shell
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
 ```
-- 该版本镜像大小`33.9GB`，使用[v0.2.0](https://github.com/chatchat-space/Langchain-Chatchat/tree/dev)，以`nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04`为基础镜像
-- 该版本内置一个`embedding`模型：`m3e-large`，内置`fastchat+chatglm2-6b-32k`
-- 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
-- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装`NVIDIA Driver`以及`NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用`docker logs -f <container id>`查看日志
-- 如遇到启动过程卡在`Waiting..`步骤，建议使用`docker exec -it <container id> bash`进入`/logs/`目录查看对应阶段日志
 
 ---
 
@@ -143,8 +137,19 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ---
 
 ## Docker 部署
+🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)` 🌲
+```shell
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+```
+- 该版本镜像大小`33.9GB`，使用[v0.2.0](https://github.com/chatchat-space/Langchain-Chatchat/tree/dev)，以`nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04`为基础镜像
+- 该版本内置一个`embedding`模型：`m3e-large`，内置`fastchat+chatglm2-6b-32k`
+- 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
+- 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装`NVIDIA Driver`以及`NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- 首次拉取和启动均需要一定时间，首次启动时请参照下图使用`docker logs -f <container id>`查看日志
+- 如遇到启动过程卡在`Waiting..`步骤，建议使用`docker exec -it <container id> bash`进入`/logs/`目录查看对应阶段日志
 
-AutoDL 镜像及 Docker 镜像制作中，将会在上传完成后增加。
+
+AutoDL 镜像制作中，将会在上传完成后增加。
 
 ---
 
