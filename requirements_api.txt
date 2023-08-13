@@ -14,6 +14,7 @@ unstructured[all-docs]
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
+nltk
 
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3

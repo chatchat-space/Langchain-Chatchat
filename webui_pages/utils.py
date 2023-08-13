@@ -6,7 +6,6 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
-    llm_model_dict,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
 )
@@ -21,6 +20,9 @@ from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
 from server.utils import run_async, iter_over_async
 
+from configs.model_config import NLTK_DATA_PATH
+import nltk
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 def set_httpx_timeout(timeout=60.0):
     '''
