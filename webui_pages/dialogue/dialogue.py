@@ -133,7 +133,7 @@ def dialogue_page(api: ApiRequest):
                     Markdown("...", in_expander=True, title="网络搜索结果"),
                 ])
                 text = ""
-                for d in api.bing_search_chat(prompt, search_engine, se_top_k):
+                for d in api.search_engine_chat(prompt, search_engine, se_top_k):
                     text += d["answer"]
                     chat_box.update_msg(text, 0)
                     chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
