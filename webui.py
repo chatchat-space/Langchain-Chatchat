@@ -27,10 +27,11 @@ if __name__ == "__main__":
     if "need_chat_name" not in st.session_state:
         st.session_state["need_chat_name"] = True
 
-    pages = {i: {
+    chat_list = [{"name": k, "chat_no": v.get("chat_no", 0)} for k, v in st.session_state.chat_list.items()]
+    pages = {i["name"]: {
         "icon": "chat",
         "func": dialogue_page,
-    } for i in st.session_state.chat_list.keys()}
+    } for i in sorted(chat_list, key=lambda x: x["chat_no"])}
 
     pages2 = {
         "新建对话": {
@@ -68,8 +69,9 @@ if __name__ == "__main__":
         if (not st.session_state.get("create_chat")
             and not st.session_state.get("renamde_chat")
             and not st.session_state.get("delete_chat")):
-            new_chat_name = f"对话{len(st.session_state.chat_list) + 1}"
-            st.session_state.chat_list[new_chat_name] = {"need_rename": True}
+            chat_no = len(st.session_state.chat_list) + 1
+            new_chat_name = f"对话{chat_no}"
+            st.session_state.chat_list[new_chat_name] = {"need_rename": True, "chat_no": chat_no}
             st.session_state["cur_chat_name"] = new_chat_name
             st.experimental_rerun()
         if st.session_state.get("create_chat"):
