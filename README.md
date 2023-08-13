@@ -1,4 +1,6 @@
-# 基于本地知识库的 ChatGLM 等大语言模型应用实现
+![](img/logo-long-chatchat-trans-v2.png)
+
+**LangChain-Chatchat** (原 Langchain-ChatGLM):  基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
 
 ## 目录
 
@@ -240,6 +242,12 @@ $ python server/api.py
 $ streamlit run webui.py
 ```
 
+使用 Langchain-Chatchat 主题色启动 **Web UI** 服务（默认使用端口`8501`）
+
+```shell
+$ streamlit run webui.py --theme.base "light" --theme.primaryColor "#165dff" --theme.secondaryBackgroundColor "#f5f5f5" --theme.textColor "#000000"
+```
+
 或使用以下命令指定启动 **Web UI** 服务并指定端口号
 
 ```shell
@@ -248,11 +256,11 @@ $ streamlit run webui.py --server.port 666
 
 - Web UI 对话界面：
 
-  ![](img/webui_020_0.png)
+  ![](img/webui_0813_0.png)
 
 - Web UI 知识库管理页面：
 
-  ![](img/webui_020_1.png)
+  ![](img/webui_0813_1.png)
 
 ---
 
