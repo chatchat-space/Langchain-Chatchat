@@ -9,8 +9,8 @@ from server.db.repository.knowledge_base_repository import (
     load_kb_from_db, get_kb_detail,
 )
 from server.db.repository.knowledge_file_repository import (
-    add_doc_to_db, delete_file_from_db, doc_exists,
-    list_docs_from_db, get_file_detail
+    add_doc_to_db, delete_file_from_db, delete_files_from_db, doc_exists,
+    list_docs_from_db, get_file_detail, delete_file_from_db
 )
 
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K,
@@ -56,9 +56,12 @@ class KBService(ABC):
 
     def clear_vs(self):
         """
-        用知识库中已上传文件重建向量库
+        删除向量库中所有内容
         """
         self.do_clear_vs()
+        status = delete_files_from_db(self.kb_name)
+        return status
+
 
     def drop_kb(self):
         """

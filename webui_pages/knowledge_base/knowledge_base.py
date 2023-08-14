@@ -1,5 +1,3 @@
-import sqlite3
-
 import streamlit as st
 from webui_pages.utils import *
 from st_aggrid import AgGrid, JsCode
@@ -9,6 +7,9 @@ from server.knowledge_base.utils import get_file_path, LOADER_DICT
 from server.knowledge_base.kb_service.base import get_kb_details, get_kb_doc_details
 from typing import Literal, Dict, Tuple
 from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE
+import os
+import time
+
 
 # SENTENCE_SIZE = 100
 
@@ -31,6 +32,19 @@ def config_aggrid(
         # pre_selected_rows=st.session_state.get("selected_rows", [0]),
     )
     return gb
+
+
+def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
+    '''
+    check whether a doc file exists in local knowledge base folder.
+    return the file's name and path if it exists.
+    '''
+    if selected_rows:
+        file_name = selected_rows[0]["file_name"]
+        file_path = get_file_path(kb, file_name)
+        if os.path.isfile(file_path):
+            return file_name, file_path
+    return "", ""
 
 
 def knowledge_base_page(api: ApiRequest):
@@ -174,9 +188,8 @@ def knowledge_base_page(api: ApiRequest):
             selected_rows = doc_grid.get("selected_rows", [])
 
             cols = st.columns(4)
-            if selected_rows:
-                file_name = selected_rows[0]["file_name"]
-                file_path = get_file_path(kb, file_name)
+            file_name, file_path = file_exists(kb, selected_rows)
+            if file_path:
                 with open(file_path, "rb") as fp:
                     cols[0].download_button(
                         "下载选中文档",
@@ -194,7 +207,7 @@ def knowledge_base_page(api: ApiRequest):
             # 将文件分词并加载到向量库中
             if cols[1].button(
                     "重新添加至向量库" if selected_rows and (pd.DataFrame(selected_rows)["in_db"]).any() else "添加至向量库",
-                    disabled=len(selected_rows) == 0,
+                    disabled=not file_exists(kb, selected_rows)[0],
                     use_container_width=True,
             ):
                 for row in selected_rows:
@@ -204,7 +217,7 @@ def knowledge_base_page(api: ApiRequest):
             # 将文件从向量库中删除，但不删除文件本身。
             if cols[2].button(
                     "从向量库删除",
-                    disabled=len(selected_rows) == 0,
+                    disabled=not (selected_rows and selected_rows[0]["in_db"]),
                     use_container_width=True,
             ):
                 for row in selected_rows:
@@ -245,5 +258,6 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
         ):
             ret = api.delete_knowledge_base(kb)
-            st.experimental_rerun()
             st.toast(ret["msg"])
+            time.sleep(1)
+            st.experimental_rerun()
