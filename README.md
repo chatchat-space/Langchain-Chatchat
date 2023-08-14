@@ -223,21 +223,45 @@ embedding_model_dict = {
 
 #### 5.1 启动 LLM 服务
 
+##### 5.1.1 基于多进程脚本llm_api.py启动LLM服务
+
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
 ```shell
 $ python server/llm_api.py
 ```
 
-以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令：
+项目支持多卡加载，需在llm_api.py中修改create_model_worker_app函数中，修改gpus=None,num_gpus=1,max_gpu_memory="20GiB",三个参数，其中gpus控制使用的卡的ID，如果“0,1", num_gpus控制使用的卡数，max_gpu_memory控制每个卡使用的显存容量。
+
+注：以上方式可能会因torch的多进程问题而启动失败，视使用的系统、torch的版本而定。
+
+##### 5.1.2 基于命令行脚本llm_api_launch.py启动LLM服务
+
+在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
+
+```shell
+$ python server/llm_api_launch.py
+```
+
+该方式支持启动多个worker，示例启动方式：
+
+```shell
+$ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
+```
+
+如果要启动多卡加载，示例命令如下：
+
+```shell
+$ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
+```
+
+注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
 ```
 
 亦可单独停止一个 fastchat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
-
-项目支持多卡加载，需在llm_api.py中修改create_model_worker_app函数中，修改gpus=None,num_gpus=1,max_gpu_memory="20GiB",三个参数，其中gpus控制使用的卡的ID，如果“0,1", num_gpus控制使用的卡数，max_gpu_memory控制每个卡使用的显存容量。
 
 
 #### 5.2 启动 API 服务
