@@ -8,7 +8,6 @@ import os
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "img",
         "chatchat_icon_blue_square_v2.png"
     )

@@ -14,7 +14,7 @@ from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_docs, upload_doc, delete_doc,
-                                              update_doc, recreate_vector_store)
+                                              update_doc, download_doc, recreate_vector_store)
 from server.utils import BaseResponse, ListResponse
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -100,6 +100,10 @@ def create_app():
              response_model=BaseResponse,
              summary="更新现有文件到知识库"
              )(update_doc)
+
+    app.get("/knowledge_base/download_doc",
+            tags=["Knowledge Base Management"],
+            summary="下载对应的知识文件")(download_doc)
 
     app.post("/knowledge_base/recreate_vector_store",
              tags=["Knowledge Base Management"],

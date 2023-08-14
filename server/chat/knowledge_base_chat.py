@@ -1,4 +1,4 @@
-from fastapi import Body
+from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
                                   VECTOR_SEARCH_TOP_K)
@@ -15,6 +15,7 @@ from server.chat.utils import History
 from server.knowledge_base.kb_service.base import KBService, KBServiceFactory
 import json
 import os
+from urllib.parse import urlencode
 
 
 def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
@@ -29,6 +30,8 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                                            "content": "虎头虎脑"}]]
                                                       ),
                         stream: bool = Body(False, description="流式输出"),
+                        local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
+                        request: Request = None,
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -64,10 +67,16 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             callback.done),
         )
 
-        source_documents = [
-            f"""出处 [{inum + 1}] [{os.path.split(doc.metadata["source"])[-1]}] \n\n{doc.page_content}\n\n"""
-            for inum, doc in enumerate(docs)
-        ]
+        source_documents = []
+        for inum, doc in enumerate(docs):
+            filename = os.path.split(doc.metadata["source"])[-1]
+            if local_doc_url:
+                url = "file://" + doc.metadata["source"]
+            else:
+                parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
+                url = f"{request.base_url}knowledge_base/download_doc?" + parameters
+            text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+            source_documents.append(text)
 
         if stream:
             async for token in callback.aiter():

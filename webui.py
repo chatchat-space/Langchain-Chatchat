@@ -35,7 +35,6 @@ if __name__ == "__main__":
     with st.sidebar:
         st.image(
             os.path.join(
-                os.path.dirname(__file__),
                 "img",
                 "logo-long-chatchat-trans-v2.png"
             ),

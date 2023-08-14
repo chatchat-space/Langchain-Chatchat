@@ -259,6 +259,7 @@ class ApiRequest:
         self,
         query: str,
         history: List[Dict] = [],
+        stream: bool = True,
         no_remote_api: bool = None,
     ):
         '''
@@ -267,12 +268,18 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "query": query,
+            "history": history,
+            "stream": stream,
+        }
+
         if no_remote_api:
             from server.chat.chat import chat
-            response = chat(query, history)
+            response = chat(**data)
             return self._fastapi_stream2generator(response)
         else:
-            response = self.post("/chat/chat", json={"query": query, "history": history}, stream=True)
+            response = self.post("/chat/chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
 
     def knowledge_base_chat(
@@ -296,6 +303,7 @@ class ApiRequest:
             "top_k": top_k,
             "history": history,
             "stream": stream,
+            "local_doc_url": no_remote_api,
         }
 
         if no_remote_api:
