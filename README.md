@@ -299,7 +299,7 @@ PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
     --num-gpus 2
 ```
 
-详见 https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216 
+详见 https://github.com/lm-sys/fastchat/pull/1905#issuecomment-1627801216 
 
 #### 5.2 启动 API 服务
 
