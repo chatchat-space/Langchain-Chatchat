@@ -78,9 +78,9 @@ llm_model_dict = {
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
     # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
-    "openai-chatgpt-3.5": {
+    "gpt-3.5-turbo": {
         "local_model_path": "gpt-3.5-turbo",
-        "api_base_url": "https://api.openapi.com/v1",
+        "api_base_url": "https://api.openai.com/v1",
         "api_key": os.environ.get("OPENAI_API_KEY")
     },
 }
