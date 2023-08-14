@@ -57,7 +57,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
-从 `0.1.x`升级过来的用户请注意，在完成[“开发部署 3 设置配置项”](docs/INSTALL.md)之后，需要将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
+从 `0.1.x` 升级过来的用户请注意，需要按照[开发部署](README.md#3.-开发部署)过程操作，将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
 
 ### `0.2.0` 版本与 `0.1.x` 版本区别
 
@@ -162,7 +162,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
-**请注意：** `0.2.0`及更新版本的依赖包与 `0.1.x`版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
+**请注意：** `0.2.0` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
 
 ### 2. 下载模型至本地
 
@@ -378,7 +378,7 @@ $ streamlit run webui.py --server.port 666
     - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
 - [X] LLM 模型接入
-  - [X] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
+  - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
   - [ ] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
   - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
