@@ -289,7 +289,7 @@ $ python server/llm_api_shutdown.py --serve all
 示例代码如下：
 
 ```shell
-PEFT_SHARE_BASE_WEIGHTS=true python3 -m FastChat.serve.multi_model_worker \
+PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
     --model-path /data/chris/peft-llama-dummy-1 \
     --model-names peft-dummy-1 \
     --model-path /data/chris/peft-llama-dummy-2 \
@@ -299,7 +299,7 @@ PEFT_SHARE_BASE_WEIGHTS=true python3 -m FastChat.serve.multi_model_worker \
     --num-gpus 2
 ```
 
-详见 [FastChat 相关 PR](https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216)
+详见 https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216 
 
 #### 5.2 启动 API 服务
 
