@@ -1,4 +1,4 @@
-from fastapi import Body
+from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
                                   VECTOR_SEARCH_TOP_K)
