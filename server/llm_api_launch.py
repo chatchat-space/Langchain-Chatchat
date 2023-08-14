@@ -76,6 +76,7 @@ parser.add_argument("--num-gpus", type=int, default=1)
 parser.add_argument(
     "--max-gpu-memory",
     type=str,
+    default="20GiB",
     help="The maximum memory per gpu. Use a string like '13Gib'",
 )
 parser.add_argument(
