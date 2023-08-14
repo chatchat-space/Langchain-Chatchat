@@ -233,8 +233,6 @@ $ python server/llm_api.py
 
 项目支持多卡加载，需在llm_api.py中修改create_model_worker_app函数中，修改gpus=None,num_gpus=1,max_gpu_memory="20GiB",三个参数，其中gpus控制使用的卡的ID，如果“0,1", num_gpus控制使用的卡数，max_gpu_memory控制每个卡使用的显存容量。
 
-注：以上方式可能会因torch的多进程问题而启动失败，视使用的系统、torch的版本而定。
-
 ##### 5.1.2 基于命令行脚本llm_api_launch.py启动LLM服务
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
@@ -280,7 +278,7 @@ PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
     --num-gpus 2
 ```
 
-详见 https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216 
+详见 https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216
 
 #### 5.2 启动 API 服务
 
