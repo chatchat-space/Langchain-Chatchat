@@ -44,7 +44,7 @@ def create_model_worker_app(
         gptq_act_order=None,
         gpus=None,
         num_gpus=1,
-        max_gpu_memory=None,
+        max_gpu_memory="20GiB",
         cpu_offloading=None,
         worker_address=base_url.format(model_worker_port),
         controller_address=base_url.format(controller_port),

@@ -1,10 +1,10 @@
 import os
 import urllib
-from fastapi import File, Form, Body, UploadFile
+from fastapi import File, Form, Body, Query, UploadFile
 from configs.model_config import DEFAULT_VS_TYPE, EMBEDDING_MODEL
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name, list_docs_from_folder, KnowledgeFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from typing import List
@@ -104,9 +104,32 @@ async def update_doc(
         return BaseResponse(code=500, msg=f"{kb_file.filename} 文件更新失败")
 
 
-async def download_doc():
-    # TODO: 下载文件
-    pass
+async def download_doc(
+        knowledge_base_name: str = Query(..., examples=["samples"]),
+        file_name: str = Query(..., examples=["test.txt"]),
+    ):
+    '''
+    下载知识库文档
+    '''
+    if not validate_kb_name(knowledge_base_name):
+        return BaseResponse(code=403, msg="Don't attack me")
+
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+
+    kb_file = KnowledgeFile(filename=file_name,
+                            knowledge_base_name=knowledge_base_name)
+
+    if os.path.exists(kb_file.filepath):
+        return FileResponse(
+            path=kb_file.filepath,
+            filename=kb_file.filename,
+            media_type="multipart/form-data")
+    else:
+        return BaseResponse(code=500, msg=f"{kb_file.filename} 读取文件失败")
+
+
 
 
 async def recreate_vector_store(

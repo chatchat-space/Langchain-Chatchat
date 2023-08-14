@@ -76,6 +76,7 @@ parser.add_argument("--num-gpus", type=int, default=1)
 parser.add_argument(
     "--max-gpu-memory",
     type=str,
+    default="20GiB",
     help="The maximum memory per gpu. Use a string like '13Gib'",
 )
 parser.add_argument(
@@ -131,11 +132,11 @@ worker_args = [
     "gptq-ckpt", "gptq-wbits", "gptq-groupsize",
     "gptq-act-order", "model-names", "limit-worker-concurrency",
     "stream-interval", "no-register",
-    "controller-address"
+    "controller-address","worker-address"
 ]
 # -----------------openai server---------------------------
 
-parser.add_argument("--server-host", type=str, default="127.0.0.1", help="host name")
+parser.add_argument("--server-host", type=str, default="localhost", help="host name")
 parser.add_argument("--server-port", type=int, default=8888, help="port number")
 parser.add_argument(
     "--allow-credentials", action="store_true", help="allow credentials"
@@ -214,6 +215,7 @@ def launch_worker(item):
     log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
     # 先分割model-path-address,在传到string_args中分析参数
     args.model_path, args.worker_host, args.worker_port = item.split("@")
+    args.worker_address = f"http://{args.worker_host}:{args.worker_port}"
     print("*" * 80)
     worker_str_args = string_args(args, worker_args)
     print(worker_str_args)
