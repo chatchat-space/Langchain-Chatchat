@@ -378,7 +378,7 @@ $ streamlit run webui.py --server.port 666
     - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
 - [X] LLM 模型接入
-  - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/FastChat) api 调用 llm
+  - [X] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
   - [ ] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
   - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
