@@ -263,6 +263,24 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 fastchat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
+##### 5.1.3 lora加载
+
+本项目基于fastchat加载LLM服务，故需以fastchat加载lora路径，即保证路径名称里必须有peft这个词，配置文件的名字为adapter_config.json，peft路径下包含model.bin格式的lora权重。
+
+示例代码如下：
+
+```shell
+PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
+    --model-path /data/chris/peft-llama-dummy-1 \
+    --model-names peft-dummy-1 \
+    --model-path /data/chris/peft-llama-dummy-2 \
+    --model-names peft-dummy-2 \
+    --model-path /data/chris/peft-llama-dummy-3 \
+    --model-names peft-dummy-3 \
+    --num-gpus 2
+```
+
+详见 https://github.com/lm-sys/FastChat/pull/1905#issuecomment-1627801216 
 
 #### 5.2 启动 API 服务
 
