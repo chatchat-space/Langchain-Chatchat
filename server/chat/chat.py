@@ -19,6 +19,7 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
                                            {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
                                            {"role": "assistant", "content": "虎头虎脑"}]]
                                        ),
+         stream: bool = Body(False, description="流式输出"),
          ):
     history = [History(**h) if isinstance(h, dict) else h for h in history]
 
@@ -46,9 +47,16 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
             callback.done),
         )
 
-        async for token in callback.aiter():
-            # Use server-sent-events to stream the response
-            yield token
+        if stream:
+            async for token in callback.aiter():
+                # Use server-sent-events to stream the response
+                yield token
+        else:
+            answer = ""
+            async for token in callback.aiter():
+                answer += token
+            yield answer
+
         await task
 
     return StreamingResponse(chat_iterator(query, history),

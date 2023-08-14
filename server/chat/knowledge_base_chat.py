@@ -14,6 +14,7 @@ from typing import List, Optional
 from server.chat.utils import History
 from server.knowledge_base.kb_service.base import KBService, KBServiceFactory
 import json
+import os
 
 
 def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
@@ -64,7 +65,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         )
 
         source_documents = [
-            f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+            f"""出处 [{inum + 1}] [{os.path.split(doc.metadata["source"])[-1]}] \n\n{doc.page_content}\n\n"""
             for inum, doc in enumerate(docs)
         ]
 
@@ -78,7 +79,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             answer = ""
             async for token in callback.aiter():
                 answer += token
-            yield json.dumps({"answer": token,
+            yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
 
