@@ -223,6 +223,10 @@ embedding_model_dict = {
 
 #### 5.1 启动 LLM 服务
 
+**!!!注意1**：5.1.1-5.1.3三种方式只需选择一个即可。
+
+**!!!注意2**：如果启动在线的API服务（如OPENAI的api接口），则无需启动LLM服务，即5.1小节的任何命令均无需启动。
+
 ##### 5.1.1 基于多进程脚本llm_api.py启动LLM服务
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
@@ -231,7 +235,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-项目支持多卡加载，需在llm_api.py中修改create_model_worker_app函数中，修改gpus=None,num_gpus=1,max_gpu_memory="20GiB",三个参数，其中gpus控制使用的卡的ID，如果“0,1", num_gpus控制使用的卡数，max_gpu_memory控制每个卡使用的显存容量。
+项目支持多卡加载，需在llm_api.py中修改create_model_worker_app函数中，修改gpus=None,num_gpus=1,max_gpu_memory="20GiB",三个参数，其中gpus控制使用的卡的ID，如果“0,1";num_gpus控制使用的卡数;max_gpu_memory控制每个卡使用的显存容量。
 
 ##### 5.1.2 基于命令行脚本llm_api_launch.py启动LLM服务
 
@@ -282,7 +286,11 @@ PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
 
 #### 5.2 启动 API 服务
 
-启动 **LLM 服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
+本地部署情况下，!!!**启动LLM 服务后!!!**，再执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
+
+在线调用API服务的情况下，直接执执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
+
+调用命令示例：
 
 ```shell
 $ python server/api.py
@@ -296,7 +304,7 @@ $ python server/api.py
 
 #### 5.3 启动 Web UI 服务
 
-执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口 `8501`）
+**!!!启动API服务后!!!**，执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口 `8501`）
 
 ```shell
 $ streamlit run webui.py
