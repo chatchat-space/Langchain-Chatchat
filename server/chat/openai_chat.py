@@ -1,7 +1,7 @@
 from fastapi.responses import StreamingResponse
 from typing import List
 import openai
-from configs.model_config import llm_model_dict, LLM_MODEL
+from configs.model_config import llm_model_dict, LLM_MODEL, logger
 from pydantic import BaseModel
 
 
@@ -33,19 +33,23 @@ async def openai_chat(msg: OpenAiChatMsgIn):
         data = msg.dict()
         data["streaming"] = True
         data.pop("stream")
-        response = openai.ChatCompletion.create(**data)
 
-        if msg.stream:
-            for chunk in response.choices[0].message.content:
-                print(chunk)
-                yield chunk
-        else:
-            answer = ""
-            for chunk in response.choices[0].message.content:
-                answer += chunk
-            print(answer)
-            yield(answer)
-    
+        try:
+            response = openai.ChatCompletion.create(**data)
+            if msg.stream:
+                for chunk in response.choices[0].message.content:
+                    print(chunk)
+                    yield chunk
+            else:
+                answer = ""
+                for chunk in response.choices[0].message.content:
+                    answer += chunk
+                print(answer)
+                yield(answer)
+        except Exception as e:
+            print(type(e))
+            logger.error(e)
+
     return StreamingResponse(
         get_response(msg),
         media_type='text/event-stream',
