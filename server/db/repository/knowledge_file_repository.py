@@ -50,6 +50,18 @@ def delete_file_from_db(session, kb_file: KnowledgeFile):
 
 
 @with_session
+def delete_files_from_db(session, knowledge_base_name: str):
+    session.query(KnowledgeFileModel).filter_by(kb_name=knowledge_base_name).delete()
+
+    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=knowledge_base_name).first()
+    if kb:
+        kb.file_count = 0
+
+    session.commit()
+    return True
+
+
+@with_session
 def doc_exists(session, kb_file: KnowledgeFile):
     existing_file = session.query(KnowledgeFileModel).filter_by(file_name=kb_file.filename,
                                                                 kb_name=kb_file.kb_name).first()

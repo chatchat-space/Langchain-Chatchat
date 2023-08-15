@@ -44,8 +44,12 @@ async def delete_kb(
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    status = kb.drop_kb()
-    if status:
-        return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
-    else:
-        return BaseResponse(code=500, msg=f"删除知识库失败 {knowledge_base_name}")
+    try:
+        status = kb.clear_vs()
+        status = kb.drop_kb()
+        if status:
+            return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
+    except Exception as e:
+        print(e)
+
+    return BaseResponse(code=500, msg=f"删除知识库失败 {knowledge_base_name}")
