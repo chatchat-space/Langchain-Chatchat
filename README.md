@@ -213,7 +213,6 @@ embedding_model_dict = {
   ```shell
   $ python init_database.py
   ```
-  
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
 
   ```shell
@@ -243,14 +242,16 @@ $ python server/llm_api.py
 ```
 
 项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
+
 ```python
 gpus=None, 
 num_gpus=1, 
 max_gpu_memory="20GiB"
 ```
-其中，`gpus` 控制使用的显卡的ID，如果 "0,1"; 
 
-`num_gpus` 控制使用的卡数; 
+其中，`gpus` 控制使用的显卡的ID，如果 "0,1";
+
+`num_gpus` 控制使用的卡数;
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
@@ -342,14 +343,15 @@ $ streamlit run webui.py --server.port 666
 - Web UI 对话界面：
 
   ![](img/webui_0813_0.png)
-
 - Web UI 知识库管理页面：
 
   ![](img/webui_0813_1.png)
 
 ---
 
-### 6 一键启动：
+### 6 一键启动
+
+**!!!注意，一键启动脚本仅适用于linux和mac设备!!!**
 
 #### 6.1 api服务一键启动脚本
 
@@ -372,30 +374,41 @@ $ python server/api_allinone.py --model-path-address model1@host1@port1 model2@h
 ```shell
 python server/api_allinone.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
+
 其他参数详见各脚本及fastchat服务说明。
 
 #### 6.2 webui一键启动脚本
+
 加载本地模型：
+
 ```shell
 $ python webui_allinone.py
 ```
 
 调用远程api服务：
+
 ```shell
 $ python webui_allinone.py --use-remote-api
 ```
+
 后台运行webui服务：
+
 ```shell
 $ python webui_allinone.py --nohup
 ```
+
 加载多个非默认模型：
+
 ```shell
 $ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@port2 
 ```
+
 多卡启动：
+
+```shell
+$ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
-python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
-```
+
 其他参数详见各脚本及fastchat服务说明。
 
 ## 常见问题
