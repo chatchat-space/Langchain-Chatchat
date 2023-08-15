@@ -181,7 +181,7 @@ base_launch_sh = "nohup python3 -m fastchat.serve.{0} {1} >{2}/{3}.log 2>&1 &"
 # ! 1 log的文件名，必须与bash_launch_sh一致
 # 2 controller, worker, openai_api_server
 base_check_sh = """while [ `grep -c "Uvicorn running on" {0}/{1}.log` -eq '0' ];do
-                        sleep 1s;
+                        sleep 5s;
                         echo "wait {2} running"
                 done
                 echo '{2} running' """
@@ -211,7 +211,7 @@ def string_args(args, args_list):
     return args_str
 
 
-def launch_worker(item):
+def launch_worker(item,args=args,worker_args=worker_args):
     log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
     # 先分割model-path-address,在传到string_args中分析参数
     args.model_path, args.worker_host, args.worker_port = item.split("@")
@@ -225,7 +225,11 @@ def launch_worker(item):
     subprocess.run(worker_check_sh, shell=True, check=True)
 
 
-def launch_all():
+def launch_all(args=args,
+               controller_args=controller_args,
+               worker_args=worker_args,
+               server_args=server_args
+               ):
     controller_str_args = string_args(args, controller_args)
     controller_sh = base_launch_sh.format("controller", controller_str_args, LOG_PATH, "controller")
     controller_check_sh = base_check_sh.format(LOG_PATH, "controller", "controller")
@@ -233,7 +237,7 @@ def launch_all():
     subprocess.run(controller_check_sh, shell=True, check=True)
 
     if isinstance(args.model_path_address, str):
-        launch_worker(args.model_path_address)
+        launch_worker(args.model_path_address,args=args,worker_args=worker_args)
     else:
         for idx, item in enumerate(args.model_path_address):
             print(f"开始加载第{idx}个模型:{item}")
