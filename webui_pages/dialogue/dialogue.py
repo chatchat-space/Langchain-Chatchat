@@ -98,6 +98,9 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history)
             for t in r:
+                if error_msg := check_error_msg(t): # check whether error occured
+                    st.error(error_msg)
+                    break
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
@@ -109,6 +112,8 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, history):
+                if error_msg := check_error_msg(t): # check whether error occured
+                    st.error(error_msg)
                 text += d["answer"]
                 chat_box.update_msg(text, 0)
                 chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
@@ -120,6 +125,8 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.search_engine_chat(prompt, search_engine, se_top_k):
+                if error_msg := check_error_msg(t): # check whether error occured
+                    st.error(error_msg)
                 text += d["answer"]
                 chat_box.update_msg(text, 0)
                 chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
