@@ -4,6 +4,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
+from server.utils import MakeFastAPIOffline
+
 
 host_ip = "0.0.0.0"
 controller_port = 20001
@@ -30,6 +32,8 @@ def create_controller_app(
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
 
+    MakeFastAPIOffline(app)
+    app.title = "FastChat Controller"
     return app
 
 
@@ -55,7 +59,6 @@ def create_model_worker_app(
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.model_worker import app, GptqConfig, ModelWorker, worker_id
-    from fastchat.serve import model_worker
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -117,6 +120,8 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
     
+    MakeFastAPIOffline(app)
+    app.title = f"FastChat LLM Server ({LLM_MODEL})"
     return app
 
 
@@ -141,6 +146,8 @@ def create_openai_api_app(
     app_settings.controller_address = controller_address
     app_settings.api_keys = api_keys
 
+    MakeFastAPIOffline(app)
+    app.title = "FastChat OpeanAI API Server"
     return app
 
 
