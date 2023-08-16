@@ -214,6 +214,7 @@ embedding_model_dict = {
   ```shell
   $ python init_database.py
   ```
+  
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
 
   ```shell
@@ -242,8 +243,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中如下三个参数:
-
+项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
 ```python
 gpus=None, 
 num_gpus=1, 
@@ -284,7 +284,7 @@ $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model
 $ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
 ```
 
-注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台,win平台请使用wsl**：
+注：以如上方式启动LLM服务会以nohup命令在后台运行 FastChat 服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
@@ -352,6 +352,7 @@ $ streamlit run webui.py --server.port 666
 - Web UI 对话界面：
 
   ![](img/webui_0813_0.png)
+
 - Web UI 知识库管理页面：
 
   ![](img/webui_0813_1.png)
