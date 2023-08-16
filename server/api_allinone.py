@@ -41,6 +41,8 @@ def run_api(host, port, **kwargs):
         uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
+    print("Luanching api_allinone，it would take a while, please be patient...")
+    print("正在启动api_allinone，LLM服务启动约3-10分钟，请耐心等待...")
     launch_all(args=args,controller_args=controller_args,worker_args=worker_args,server_args=server_args)
     run_api(
             host=args.api_host,
@@ -48,3 +50,5 @@ if __name__ == "__main__":
             ssl_keyfile=args.ssl_keyfile,
             ssl_certfile=args.ssl_certfile,
             )
+    print("Luanching api_allinone done.")
+    print("api_allinone启动完毕.")

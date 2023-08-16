@@ -37,7 +37,8 @@ web_args = ["server.port","theme.base","theme.primaryColor","theme.secondaryBack
 args = parser.parse_args()
 
 def launch_api(args=args,args_list=api_args,log_name=None):
-    print("launch api ...")
+    print("Launching api ...")
+    print("启动API服务...")
     if not log_name:
         log_name = f"{LOG_PATH}api_{args.api_host}_{args.api_port}"
     print(f"logs on api are written in {log_name}")
@@ -46,10 +47,11 @@ def launch_api(args=args,args_list=api_args,log_name=None):
         script="api.py",args_str=args_str,log_name=log_name)
     subprocess.run(api_sh, shell=True, check=True)
     print("launch api done!")
-
+    print("启动API服务完毕.")
 
 def launch_webui(args=args,args_list=web_args,log_name=None):
     print("Launching webui...")
+    print("启动webui服务...")
     if not log_name:
         log_name = f"{LOG_PATH}webui"
     print(f"logs on api are written in {log_name}")
@@ -62,12 +64,15 @@ def launch_webui(args=args,args_list=web_args,log_name=None):
         args_str=args_str)
     subprocess.run(webui_sh, shell=True, check=True)
     print("launch webui done!")
+    print("启动webui服务完毕.")
 
 
 if __name__ == "__main__":
     print("Starting webui_allineone.py, it would take a while, please be patient....")
+    print(f"开始启动webui_allinone,启动LLM服务需要约3-10分钟，请耐心等待，如长时间未启动，请到{LOG_PATH}下查看日志...")
     if not args.use_remote_api:
         launch_all(args=args,controller_args=controller_args,worker_args=worker_args,server_args=server_args)
     launch_api(args=args,args_list=api_args)
     launch_webui(args=args,args_list=web_args)
     print("Start webui_allinone.py done!")
+    print("感谢耐心等待，启动webui_allinone完毕。")

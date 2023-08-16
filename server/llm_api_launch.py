@@ -217,6 +217,7 @@ def launch_worker(item,args=args,worker_args=worker_args):
     args.model_path, args.worker_host, args.worker_port = item.split("@")
     args.worker_address = f"http://{args.worker_host}:{args.worker_port}"
     print("*" * 80)
+    print(f"worker启动视设备不同而不同，约需3-10分钟，如长时间未启动，请到{LOG_PATH}/{log_name}下查看日志")
     worker_str_args = string_args(args, worker_args)
     print(worker_str_args)
     worker_sh = base_launch_sh.format("model_worker", worker_str_args, LOG_PATH, f"worker_{log_name}")
@@ -230,6 +231,8 @@ def launch_all(args=args,
                worker_args=worker_args,
                server_args=server_args
                ):
+    print(f"Launching llm service,logs are located in {LOG_PATH}...")
+    print(f"开始启动LLM服务,请到{LOG_PATH}下监控各模块日志...")
     controller_str_args = string_args(args, controller_args)
     controller_sh = base_launch_sh.format("controller", controller_str_args, LOG_PATH, "controller")
     controller_check_sh = base_check_sh.format(LOG_PATH, "controller", "controller")
@@ -248,7 +251,8 @@ def launch_all(args=args,
     server_check_sh = base_check_sh.format(LOG_PATH, "openai_api_server", "openai_api_server")
     subprocess.run(server_sh, shell=True, check=True)
     subprocess.run(server_check_sh, shell=True, check=True)
-
+    print("Launching LLM service done!")
+    print("LLM服务启动完毕。")
 
 if __name__ == "__main__":
     launch_all()
