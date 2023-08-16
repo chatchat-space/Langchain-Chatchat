@@ -41,6 +41,12 @@ def list_docs_from_folder(kb_name: str):
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
+    if 'bge-' in embedding_model_dict[model] and '-noinstruct' not in embedding_model_dict[model]:
+        from langchain.embeddings import HuggingFaceBgeEmbeddings
+        embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
+                                              model_kwargs={'device': device},
+                                              query_instruction="为这个句子生成表示以用于检索相关文章：")
+        return embeddings
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model],
                                        model_kwargs={'device': device})
     return embeddings
