@@ -5,7 +5,6 @@ fschat==0.2.20
 transformers
 torch~=2.0.0
 fastapi~=0.99.1
-fastapi-offline
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
