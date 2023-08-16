@@ -258,13 +258,11 @@ max_gpu_memory="20GiB"
 
 ##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
 
-**!!!注意:**
+⚠️ **注意:** 
 
 **1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
-
-**!!!**
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
