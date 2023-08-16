@@ -132,7 +132,7 @@ worker_args = [
     "gptq-ckpt", "gptq-wbits", "gptq-groupsize",
     "gptq-act-order", "model-names", "limit-worker-concurrency",
     "stream-interval", "no-register",
-    "controller-address","worker-address"
+    "controller-address", "worker-address"
 ]
 # -----------------openai server---------------------------
 
@@ -158,8 +158,6 @@ parser.add_argument(
 server_args = ["server-host", "server-port", "allow-credentials", "api-keys",
                "controller-address"
                ]
-
-
 
 # 0,controller, model_worker, openai_api_server
 # 1, 命令行选项
@@ -201,7 +199,7 @@ def string_args(args, args_list):
     return args_str
 
 
-def launch_worker(item,args,worker_args=worker_args):
+def launch_worker(item, args, worker_args=worker_args):
     log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
     # 先分割model-path-address,在传到string_args中分析参数
     args.model_path, args.worker_host, args.worker_port = item.split("@")
@@ -230,11 +228,11 @@ def launch_all(args,
     subprocess.run(controller_check_sh, shell=True, check=True)
     print(f"worker启动时间视设备不同而不同，约需3-10分钟，请耐心等待...")
     if isinstance(args.model_path_address, str):
-        launch_worker(args.model_path_address,args=args,worker_args=worker_args)
+        launch_worker(args.model_path_address, args=args, worker_args=worker_args)
     else:
         for idx, item in enumerate(args.model_path_address):
             print(f"开始加载第{idx}个模型:{item}")
-            launch_worker(item,args=args,worker_args=worker_args)
+            launch_worker(item, args=args, worker_args=worker_args)
 
     server_str_args = string_args(args, server_args)
     server_sh = base_launch_sh.format("openai_api_server", server_str_args, LOG_PATH, "openai_api_server")
@@ -244,11 +242,12 @@ def launch_all(args,
     print("Launching LLM service done!")
     print("LLM服务启动完毕。")
 
+
 if __name__ == "__main__":
     args = parser.parse_args()
     # 必须要加http//:，否则InvalidSchema: No connection adapters were found
     args = argparse.Namespace(**vars(args),
-                            **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
+                              **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
 
     if args.gpus:
         if len(args.gpus.split(",")) < args.num_gpus:
