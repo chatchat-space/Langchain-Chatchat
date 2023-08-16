@@ -46,7 +46,7 @@ llm_model_dict = {
 
     "chatglm-6b-int4": {
         "local_model_path": "THUDM/chatglm-6b-int4",
-        "api_base_url": "http://localhost:8001/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
@@ -64,7 +64,7 @@ llm_model_dict = {
 
     "vicuna-13b-hf": {
         "local_model_path": "",
-        "api_base_url": "http://localhost:8000/v1",  # "name"修改为fastchat服务中的"api_base_url"
+        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
@@ -84,6 +84,7 @@ llm_model_dict = {
         "api_key": os.environ.get("OPENAI_API_KEY")
     },
 }
+
 
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
