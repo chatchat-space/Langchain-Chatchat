@@ -421,7 +421,7 @@ $ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@
 $ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
 
-其他参数详见各脚本及fastchat服务说明。
+其他参数详见各脚本及 Fastchat 服务说明。
 
 上述两个一键启动脚本会后台运行多个服务，如要停止所有服务，可使用 `shutdown_all.sh` 脚本：
 
