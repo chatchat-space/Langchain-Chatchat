@@ -42,7 +42,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM) 中 `v5` 版本所使用代码已更新至本项目 `0.2.0` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/Langchain-Chatchat) 中 `v5` 版本所使用代码已更新至本项目 `0.2.0` 版本。
 
 🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
 
@@ -214,6 +214,7 @@ embedding_model_dict = {
   ```shell
   $ python init_database.py
   ```
+  
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
 
   ```shell
@@ -242,8 +243,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中如下三个参数:
-
+项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
 ```python
 gpus=None, 
 num_gpus=1, 
@@ -258,13 +258,11 @@ max_gpu_memory="20GiB"
 
 ##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
 
-**!!!注意:**
+⚠️ **注意:** 
 
 **1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
-
-**!!!**
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -284,7 +282,7 @@ $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model
 $ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
 ```
 
-注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台,win平台请使用wsl**：
+注：以如上方式启动LLM服务会以nohup命令在后台运行 FastChat 服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
@@ -352,6 +350,7 @@ $ streamlit run webui.py --server.port 666
 - Web UI 对话界面：
 
   ![](img/webui_0813_0.png)
+
 - Web UI 知识库管理页面：
 
   ![](img/webui_0813_1.png)
@@ -422,7 +421,7 @@ $ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@
 $ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
 
-其他参数详见各脚本及fastchat服务说明。
+其他参数详见各脚本及 Fastchat 服务说明。
 
 上述两个一键启动脚本会后台运行多个服务，如要停止所有服务，可使用 `shutdown_all.sh` 脚本：
 
@@ -472,6 +471,6 @@ bash shutdown_all.sh
 
 ## 项目交流群
 
-<img src="img/qr_code_51.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_52.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
