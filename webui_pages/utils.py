@@ -223,11 +223,6 @@ class ApiRequest:
         try:
             with response as r:
                 for chunk in r.iter_text(None):
-                    if not chunk: # openai api server communicating error
-                        msg = f"API通信超时，请确认已启动FastChat与API服务（详见README '5. 启动 API 服务或 Web UI'）"
-                        logger.error(msg)
-                        yield {"code": 500, "errorMsg": msg}
-                        break
                     if as_json and chunk:
                         yield json.loads(chunk)
                     elif chunk.strip():
