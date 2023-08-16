@@ -14,6 +14,7 @@ from server.knowledge_base.utils import get_vs_path, load_embeddings, KnowledgeF
 from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.embeddings.openai import OpenAIEmbeddings
 from typing import List
 from langchain.docstore.document import Document
 from server.utils import torch_gc
@@ -21,10 +22,13 @@ from server.utils import torch_gc
 
 # make HuggingFaceEmbeddings hashable
 def _embeddings_hash(self):
-    return hash(self.model_name)
-
+    if isinstance(self, HuggingFaceEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, OpenAIEmbeddings):
+        return hash(self.model)
 
 HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+OpenAIEmbeddings.__hash__ = _embeddings_hash
 
 _VECTOR_STORE_TICKS = {}
 
