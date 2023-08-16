@@ -49,21 +49,27 @@ def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
 
 def knowledge_base_page(api: ApiRequest):
     try:
-        kb_list = get_kb_details()
+        kb_list = {x["kb_name"]: x for x in get_kb_details()}
     except Exception as e:
         st.error("获取知识库信息错误，请检查是否已按照 `README.md` 中 `4 知识库初始化与迁移` 步骤完成初始化或迁移，或是否为数据库连接错误。")
         st.stop()
-    kb_names = [x["kb_name"] for x in kb_list]
+    kb_names = list(kb_list.keys())
 
     if "selected_kb_name" in st.session_state and st.session_state["selected_kb_name"] in kb_names:
         selected_kb_index = kb_names.index(st.session_state["selected_kb_name"])
     else:
         selected_kb_index = 0
 
+    def format_selected_kb(kb_name: str) -> str:
+        if kb := kb_list.get(kb_name):
+            return f"{kb_name} ({kb['vs_type']} @ {kb['embed_model']})"
+        else:
+            return kb_name
+
     selected_kb = st.selectbox(
         "请选择或新建知识库：",
-        kb_list + ["新建知识库"],
-        format_func=lambda s: f"{s['kb_name']} ({s['vs_type']} @ {s['embed_model']})" if type(s) != str else s,
+        kb_names + ["新建知识库"],
+        format_func=format_selected_kb,
         index=selected_kb_index
     )
 
@@ -117,7 +123,7 @@ def knowledge_base_page(api: ApiRequest):
                 st.experimental_rerun()
 
     elif selected_kb:
-        kb = selected_kb["kb_name"]
+        kb = selected_kb
 
         # 上传文件
         # sentence_size = st.slider("文本入库分句长度限制", 1, 1000, SENTENCE_SIZE, disabled=True)
