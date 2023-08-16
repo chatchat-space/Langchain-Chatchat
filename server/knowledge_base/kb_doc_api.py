@@ -1,13 +1,32 @@
 import os
 import urllib
 from fastapi import File, Form, Body, Query, UploadFile
-from configs.model_config import DEFAULT_VS_TYPE, EMBEDDING_MODEL
+from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name, list_docs_from_folder, KnowledgeFile
 from fastapi.responses import StreamingResponse, FileResponse
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
-from typing import List
+from typing import List, Dict
+from langchain.docstore.document import Document
+
+
+class DocumentWithScore(Document):
+    score: float = None
+
+
+def search_docs(query: str = Body(..., description="用户输入", examples=["你好"]),
+                knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+                top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+                score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
+                ) -> List[DocumentWithScore]:
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return {"code": 404, "msg": f"未找到知识库 {knowledge_base_name}", "docs": []}
+    docs = kb.search_docs(query, top_k, score_threshold)
+    data = [DocumentWithScore(**x[0].dict(), score=x[1]) for x in docs]
+
+    return data
 
 
 async def list_docs(
