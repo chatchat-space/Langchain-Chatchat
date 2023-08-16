@@ -234,7 +234,7 @@ def launch_all(args,
     else:
         for idx, item in enumerate(args.model_path_address):
             print(f"开始加载第{idx}个模型:{item}")
-            launch_worker(item)
+            launch_worker(item,args=args,worker_args=worker_args)
 
     server_str_args = string_args(args, server_args)
     server_sh = base_launch_sh.format("openai_api_server", server_str_args, LOG_PATH, "openai_api_server")
