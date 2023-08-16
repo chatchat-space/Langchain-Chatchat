@@ -27,7 +27,7 @@ def add_doc_to_db(session, kb_file: KnowledgeFile):
                 file_ext=kb_file.ext,
                 kb_name=kb_file.kb_name,
                 document_loader_name=kb_file.document_loader_name,
-                text_splitter_name=kb_file.text_splitter_name,
+                text_splitter_name=kb_file.text_splitter_name or "SpacyTextSplitter",
             )
             kb.file_count += 1
             session.add(new_file)
