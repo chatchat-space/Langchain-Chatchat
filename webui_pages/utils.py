@@ -6,8 +6,10 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
+    logger,
 )
 import httpx
 import asyncio
@@ -23,6 +25,7 @@ from server.utils import run_async, iter_over_async
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+
 
 def set_httpx_timeout(timeout=60.0):
     '''
@@ -80,7 +83,8 @@ class ApiRequest:
                     return httpx.stream("GET", url, params=params, **kwargs)
                 else:
                     return httpx.get(url, params=params, **kwargs)
-            except:
+            except Exception as e:
+                logger.error(e)
                 retry -= 1
 
     async def aget(
@@ -100,7 +104,8 @@ class ApiRequest:
                         return await client.stream("GET", url, params=params, **kwargs)
                     else:
                         return await client.get(url, params=params, **kwargs)
-                except:
+                except Exception as e:
+                    logger.error(e)
                     retry -= 1
 
     def post(
@@ -121,7 +126,8 @@ class ApiRequest:
                     return httpx.stream("POST", url, data=data, json=json, **kwargs)
                 else:
                     return httpx.post(url, data=data, json=json, **kwargs)
-            except:
+            except Exception as e:
+                logger.error(e)
                 retry -= 1
 
     async def apost(
@@ -142,7 +148,8 @@ class ApiRequest:
                         return await client.stream("POST", url, data=data, json=json, **kwargs)
                     else:
                         return await client.post(url, data=data, json=json, **kwargs)
-                except:
+                except Exception as e:
+                    logger.error(e)
                     retry -= 1
 
     def delete(
@@ -162,7 +169,8 @@ class ApiRequest:
                     return httpx.stream("DELETE", url, data=data, json=json, **kwargs)
                 else:
                     return httpx.delete(url, data=data, json=json, **kwargs)
-            except:
+            except Exception as e:
+                logger.error(e)
                 retry -= 1
 
     async def adelete(
@@ -183,7 +191,8 @@ class ApiRequest:
                         return await client.stream("DELETE", url, data=data, json=json, **kwargs)
                     else:
                         return await client.delete(url, data=data, json=json, **kwargs)
-                except:
+                except Exception as e:
+                    logger.error(e)
                     retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
@@ -195,11 +204,14 @@ class ApiRequest:
         except:
             loop = asyncio.new_event_loop()
         
-        for chunk in  iter_over_async(response.body_iterator, loop):
-            if as_json and chunk:
-                yield json.loads(chunk)
-            elif chunk.strip():
-                yield chunk
+        try:
+            for chunk in  iter_over_async(response.body_iterator, loop):
+                if as_json and chunk:
+                    yield json.loads(chunk)
+                elif chunk.strip():
+                    yield chunk
+        except Exception as e:
+            logger.error(e)
 
     def _httpx_stream2generator(
         self,
@@ -209,12 +221,26 @@ class ApiRequest:
         '''
         将httpx.stream返回的GeneratorContextManager转化为普通生成器
         '''
-        with response as r:
-            for chunk in r.iter_text(None):
-                if as_json and chunk:
-                    yield json.loads(chunk)
-                elif chunk.strip():
-                    yield chunk
+        try:
+            with response as r:
+                for chunk in r.iter_text(None):
+                    if as_json and chunk:
+                        yield json.loads(chunk)
+                    elif chunk.strip():
+                        yield chunk
+        except httpx.ConnectError as e:
+            msg = f"无法连接API服务器，请确认已执行python server\\api.py"
+            logger.error(msg)
+            logger.error(e)
+            yield {"code": 500, "errorMsg": msg}
+        except httpx.ReadTimeout as e:
+            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）"
+            logger.error(msg)
+            logger.error(e)
+            yield {"code": 500, "errorMsg": msg}
+        except Exception as e:
+            logger.error(e)
+            yield {"code": 500, "errorMsg": str(e)}
 
     # 对话相关操作
 
@@ -287,6 +313,7 @@ class ApiRequest:
         query: str,
         knowledge_base_name: str,
         top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
         no_remote_api: bool = None,
@@ -301,6 +328,7 @@ class ApiRequest:
             "query": query,
             "knowledge_base_name": knowledge_base_name,
             "top_k": top_k,
+            "score_threshold": score_threshold,
             "history": history,
             "stream": stream,
             "local_doc_url": no_remote_api,
@@ -353,6 +381,21 @@ class ApiRequest:
 
     # 知识库相关操作
 
+    def _check_httpx_json_response(
+            self,
+            response: httpx.Response,
+            errorMsg: str = f"无法连接API服务器，请确认已执行python server\\api.py",
+        ) -> Dict:
+        '''
+        check whether httpx returns correct data with normal Response.
+        error in api with streaming support was checked in _httpx_stream2enerator
+        '''
+        try:
+            return response.json()
+        except Exception as e:
+            logger.error(e)
+            return {"code": 500, "errorMsg": errorMsg or str(e)}
+
     def list_knowledge_bases(
         self,
         no_remote_api: bool = None,
@@ -369,7 +412,8 @@ class ApiRequest:
             return response.data
         else:
             response = self.get("/knowledge_base/list_knowledge_bases")
-            return response.json().get("data")
+            data = self._check_httpx_json_response(response)
+            return data.get("data", [])
 
     def create_knowledge_base(
         self,
@@ -399,7 +443,7 @@ class ApiRequest:
                 "/knowledge_base/create_knowledge_base",
                 json=data,
             )
-            return response.json()
+            return self._check_httpx_json_response(response)
 
     def delete_knowledge_base(
         self,
@@ -421,7 +465,7 @@ class ApiRequest:
                 "/knowledge_base/delete_knowledge_base",
                 json=f"{knowledge_base_name}",
             )
-            return response.json()
+            return self._check_httpx_json_response(response)
 
     def list_kb_docs(
         self,
@@ -443,7 +487,8 @@ class ApiRequest:
                 "/knowledge_base/list_docs",
                 params={"knowledge_base_name": knowledge_base_name}
             )
-            return response.json().get("data")
+            data = self._check_httpx_json_response(response)
+            return data.get("data", [])
 
     def upload_kb_doc(
         self,
@@ -487,7 +532,7 @@ class ApiRequest:
                 data={"knowledge_base_name": knowledge_base_name, "override": override},
                 files={"file": (filename, file)},
             )
-            return response.json()
+            return self._check_httpx_json_response(response)
 
     def delete_kb_doc(
         self,
@@ -517,7 +562,7 @@ class ApiRequest:
                 "/knowledge_base/delete_doc",
                 json=data,
             )
-            return response.json()
+            return self._check_httpx_json_response(response)
 
     def update_kb_doc(
         self,
@@ -540,7 +585,7 @@ class ApiRequest:
                 "/knowledge_base/update_doc",
                 json={"knowledge_base_name": knowledge_base_name, "file_name": file_name},
             )
-            return response.json()
+            return self._check_httpx_json_response(response)
 
     def recreate_vector_store(
         self,
@@ -572,8 +617,18 @@ class ApiRequest:
                 "/knowledge_base/recreate_vector_store",
                 json=data,
                 stream=True,
+                timeout=False,
             )
             return self._httpx_stream2generator(response, as_json=True)
+
+
+def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
+    '''
+    return error message if error occured when requests API
+    '''
+    if isinstance(data, dict) and key in data:
+        return data[key]
+    return ""
 
 
 if __name__ == "__main__":

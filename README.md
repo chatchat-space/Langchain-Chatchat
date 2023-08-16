@@ -15,6 +15,7 @@
   * [3. 设置配置项](README.md#3.-设置配置项)
   * [4. 知识库初始化与迁移](README.md#4.-知识库初始化与迁移)
   * [5. 启动 API 服务或 Web UI](README.md#5.-启动-API-服务或-Web-UI)
+  * [6. 一键启动](README.md#6.-一键启动)
 * [常见问题](README.md#常见问题)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -248,13 +249,22 @@ gpus=None,
 num_gpus=1, 
 max_gpu_memory="20GiB"
 ```
-其中，`gpus` 控制使用的显卡的ID，如果 "0,1"; 
 
-`num_gpus` 控制使用的卡数; 
+其中，`gpus` 控制使用的显卡的ID，如果 "0,1";
+
+`num_gpus` 控制使用的卡数;
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
 ##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
+
+**!!!注意:**
+
+**1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
+
+**2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
+
+**!!!**
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -274,7 +284,7 @@ $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model
 $ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
 ```
 
-注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台**：
+注：以如上方式启动LLM服务会以nohup命令在后台运行 FastChat 服务，如需停止服务，可以运行如下命令：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
@@ -349,11 +359,17 @@ $ streamlit run webui.py --server.port 666
 
 ---
 
-### 6 一键启动：
+### 6. 一键启动
 
-#### 6.1 api服务一键启动脚本
+⚠️ **注意:** 
 
-新增api一键启动脚本，可一键开启fastchat后台服务及本项目提供的langchain api服务,调用示例：
+**1. 一键启动脚本仅适用于 Linux 和 Mac 设备, Winodws 平台请使用 WLS;**
+
+**2. 加载非默认模型需要用命令行参数 `--model-path-address` 指定指定模型，不会读取 `model_config.py` 配置。**
+
+#### 6.1 API 服务一键启动脚本
+
+新增 API 一键启动脚本，可一键开启 FastChat 后台服务及本项目提供的 API 服务,调用示例：
 
 调用默认模型：
 
@@ -372,31 +388,48 @@ $ python server/api_allinone.py --model-path-address model1@host1@port1 model2@h
 ```shell
 python server/api_allinone.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
-其他参数详见各脚本及fastchat服务说明。
+
+其他参数详见各脚本及 FastChat 服务说明。
 
 #### 6.2 webui一键启动脚本
+
 加载本地模型：
+
 ```shell
 $ python webui_allinone.py
 ```
 
-调用远程api服务：
+调用远程 API 服务：
+
 ```shell
 $ python webui_allinone.py --use-remote-api
 ```
+
 后台运行webui服务：
+
 ```shell
 $ python webui_allinone.py --nohup
 ```
+
 加载多个非默认模型：
+
 ```shell
 $ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@port2 
 ```
+
 多卡启动：
+
+```shell
+$ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
 ```
-python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
-```
+
 其他参数详见各脚本及fastchat服务说明。
+
+上述两个一键启动脚本会后台运行多个服务，如要停止所有服务，可使用 `shutdown_all.sh` 脚本：
+
+```shell
+bash shutdown_all.sh
+```
 
 ## 常见问题
 

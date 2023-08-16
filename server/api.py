@@ -7,15 +7,17 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import NLTK_DATA_PATH, OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
-from server.utils import FastAPIOffline as FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_docs, upload_doc, delete_doc,
-                                              update_doc, download_doc, recreate_vector_store)
-from server.utils import BaseResponse, ListResponse
+                                              update_doc, download_doc, recreate_vector_store,
+                                               search_docs, DocumentWithScore)
+from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+from typing import List
+
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
@@ -25,7 +27,8 @@ async def document():
 
 
 def create_app():
-    app = FastAPI()
+    app = FastAPI(title="Langchain-Chatchat API Server")
+    MakeFastAPIOffline(app)
     # Add CORS middleware to allow all origins
     # 在config.py中设置OPEN_DOMAIN=True，允许跨域
     # set OPEN_DOMAIN=True in config.py to allow cross-domain
@@ -82,6 +85,12 @@ def create_app():
             response_model=ListResponse,
             summary="获取知识库内的文件列表"
             )(list_docs)
+
+    app.post("/knowledge_base/search_docs",
+            tags=["Knowledge Base Management"],
+            response_model=List[DocumentWithScore],
+            summary="搜索知识库"
+            )(search_docs)
 
     app.post("/knowledge_base/upload_doc",
              tags=["Knowledge Base Management"],
