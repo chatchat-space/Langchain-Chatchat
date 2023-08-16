@@ -265,7 +265,7 @@ $ python server/llm_api_launch.py
 该方式支持启动多个worker，示例启动方式：
 
 ```shell
-$ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
+$ python server/llm_api_launch.py --model-path-address model1@host1@port1 model2@host2@port2
 ```
 
 如果要启动多卡加载，示例命令如下：
