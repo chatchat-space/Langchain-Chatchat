@@ -351,7 +351,7 @@ $ streamlit run webui.py --server.port 666
 
 ### 6 一键启动
 
-**!!!注意，一键启动脚本仅适用于linux和mac设备!!!**
+**!!!注意，一键启动脚本仅适用于linux和mac设备,且加载需要命令行指定模型，不会读取model_config.py配置!!!**
 
 #### 6.1 api服务一键启动脚本
 
@@ -410,6 +410,12 @@ $ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpu
 ```
 
 其他参数详见各脚本及fastchat服务说明。
+
+上述两个一键启动脚本会后台运行多个服务，如要停止所有服务，可使用shutdown_all.sh脚本：
+
+```shell
+bash shutdown_all.sh
+```
 
 ## 常见问题
 

@@ -159,17 +159,7 @@ server_args = ["server-host", "server-port", "allow-credentials", "api-keys",
                "controller-address"
                ]
 
-args = parser.parse_args()
-# 必须要加http//:，否则InvalidSchema: No connection adapters were found
-args = argparse.Namespace(**vars(args),
-                          **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
 
-if args.gpus:
-    if len(args.gpus.split(",")) < args.num_gpus:
-        raise ValueError(
-            f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
-        )
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
 # 0,controller, model_worker, openai_api_server
 # 1, 命令行选项
@@ -211,13 +201,13 @@ def string_args(args, args_list):
     return args_str
 
 
-def launch_worker(item,args=args,worker_args=worker_args):
+def launch_worker(item,args,worker_args=worker_args):
     log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
     # 先分割model-path-address,在传到string_args中分析参数
     args.model_path, args.worker_host, args.worker_port = item.split("@")
     args.worker_address = f"http://{args.worker_host}:{args.worker_port}"
     print("*" * 80)
-    print(f"worker启动视设备不同而不同，约需3-10分钟，如长时间未启动，请到{LOG_PATH}/{log_name}下查看日志")
+    print(f"如长时间未启动，请到{LOG_PATH}{log_name}.log下查看日志")
     worker_str_args = string_args(args, worker_args)
     print(worker_str_args)
     worker_sh = base_launch_sh.format("model_worker", worker_str_args, LOG_PATH, f"worker_{log_name}")
@@ -226,7 +216,7 @@ def launch_worker(item,args=args,worker_args=worker_args):
     subprocess.run(worker_check_sh, shell=True, check=True)
 
 
-def launch_all(args=args,
+def launch_all(args,
                controller_args=controller_args,
                worker_args=worker_args,
                server_args=server_args
@@ -238,7 +228,7 @@ def launch_all(args=args,
     controller_check_sh = base_check_sh.format(LOG_PATH, "controller", "controller")
     subprocess.run(controller_sh, shell=True, check=True)
     subprocess.run(controller_check_sh, shell=True, check=True)
-
+    print(f"worker启动时间视设备不同而不同，约需3-10分钟，请耐心等待...")
     if isinstance(args.model_path_address, str):
         launch_worker(args.model_path_address,args=args,worker_args=worker_args)
     else:
@@ -255,4 +245,15 @@ def launch_all(args=args,
     print("LLM服务启动完毕。")
 
 if __name__ == "__main__":
-    launch_all()
+    args = parser.parse_args()
+    # 必须要加http//:，否则InvalidSchema: No connection adapters were found
+    args = argparse.Namespace(**vars(args),
+                            **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
+
+    if args.gpus:
+        if len(args.gpus.split(",")) < args.num_gpus:
+            raise ValueError(
+                f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
+            )
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
+    launch_all(args=args)
