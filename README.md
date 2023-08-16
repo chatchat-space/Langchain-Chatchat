@@ -241,7 +241,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
+项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中如下三个参数:
 
 ```python
 gpus=None, 
@@ -256,6 +256,14 @@ max_gpu_memory="20GiB"
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
 ##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
+
+**!!!注意:**
+
+**1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
+
+**2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
+
+**!!!**
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -275,7 +283,7 @@ $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model
 $ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
 ```
 
-注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台**：
+注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台,win平台请使用wsl**：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
@@ -351,7 +359,13 @@ $ streamlit run webui.py --server.port 666
 
 ### 6 一键启动
 
-**!!!注意，一键启动脚本仅适用于linux和mac设备,且加载需要命令行指定模型，不会读取model_config.py配置!!!**
+**!!!注意:** 
+
+**1.一键启动脚本仅适用于linux和mac设备,win平台请使用wls;**
+
+**2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
+
+**!!!**
 
 #### 6.1 api服务一键启动脚本
 
