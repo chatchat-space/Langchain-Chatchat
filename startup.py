@@ -253,19 +253,19 @@ def parse_args() -> argparse.ArgumentParser:
         "--all-webui",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
-        dest="all",
+        dest="all_webui",
     )
     parser.add_argument(
         "--all-api",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
-        dest="all",
+        dest="all_api",
     )
     parser.add_argument(
         "--llm-api",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
-        dest="all",
+        dest="llm_api",
     )
     parser.add_argument(
         "-o",
