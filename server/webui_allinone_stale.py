@@ -20,9 +20,9 @@ from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages import *
 import os
-from server.llm_api_launch import string_args,launch_all,controller_args,worker_args,server_args,LOG_PATH
+from server.llm_api_stale import string_args,launch_all,controller_args,worker_args,server_args,LOG_PATH
 
-from server.api_allinone import parser, api_args
+from server.api_allinone_stale import parser, api_args
 import subprocess
 
 parser.add_argument("--use-remote-api",action="store_true")

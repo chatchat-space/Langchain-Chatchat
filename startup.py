@@ -249,8 +249,19 @@ def run_webui(q: Queue, run_seq: int = 5):
 def parse_args() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-a",
-        "--all",
+        "--all-webui",
+        action="store_true",
+        help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        dest="all",
+    )
+    parser.add_argument(
+        "--all-api",
+        action="store_true",
+        help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        dest="all",
+    )
+    parser.add_argument(
+        "--llm-api",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
         dest="all",
@@ -305,11 +316,24 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
     queue = Queue()
     args = parse_args()
-    if args.all:
+    if args.all_webui:
         args.openai_api = True
         args.model_worker = True
         args.api = True
         args.webui = True
+
+    elif args.all_api:
+        args.openai_api = True
+        args.model_worker = True
+        args.api = True
+        args.webui = False
+        
+    elif args.llm_api:
+        args.openai_api = True
+        args.model_worker = True
+        args.api = False
+        args.webui = False
+        
 
     logger.info(f"正在启动服务：")
     logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
