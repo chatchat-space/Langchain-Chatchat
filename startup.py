@@ -230,10 +230,16 @@ def run_api_server(q: Queue, run_seq: int = 4):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_webui():
-    from configs.model_config import logger
+def run_webui(q: Queue, run_seq: int = 5):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
+    while True:
+        no = q.get()
+        if no != run_seq - 1:
+            q.put(no)
+        else:
+            break
+    q.put(run_seq)
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                     "--server.address", host,
                     "--server.port", str(port)])
@@ -247,18 +253,21 @@ def parse_args() -> argparse.ArgumentParser:
         "--all",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        dest="all",
     )
     parser.add_argument(
         "-o",
         "--openai-api",
         action="store_true",
         help="run fastchat controller/openai_api servers",
+        dest="openai_api",
     )
     parser.add_argument(
         "-m",
         "--model-worker",
         action="store_true",
         help="run fastchat model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
+        dest="model_worker",
     )
     parser.add_argument(
         "-n"
@@ -266,23 +275,27 @@ def parse_args() -> argparse.ArgumentParser:
         type=str,
         default=LLM_MODEL,
         help="specify model name for model worker.",
+        dest="model_name",
     )
     parser.add_argument(
         "-c"
         "--controller",
         type=str,
         help="specify controller address the worker is registered to. default is server_config.FSCHAT_CONTROLLER",
+        dest="controller_address",
     )
     parser.add_argument(
         "--api",
         action="store_true",
         help="run api.py server",
+        dest="api",
     )
     parser.add_argument(
         "-w",
         "--webui",
         action="store_true",
         help="run webui.py server",
+        dest="webui",
     )
     args = parser.parse_args()
     return args
@@ -326,7 +339,7 @@ if __name__ == "__main__":
         process = Process(
             target=run_model_worker,
             name=f"model_worker({os.getpid()})",
-            args=(args.model_name, queue, len(processes) + 1),
+            args=(args.model_name, args.controller_address, queue, len(processes) + 1),
             daemon=True,
         )
         process.start()
@@ -346,6 +359,7 @@ if __name__ == "__main__":
         process = Process(
             target=run_webui,
             name=f"WEBUI Server{os.getpid()})",
+            args=(queue,),
             daemon=True,
         )
         process.start()
