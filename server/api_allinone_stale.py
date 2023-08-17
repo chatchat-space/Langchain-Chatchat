@@ -15,7 +15,7 @@ import os
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from llm_api_launch import launch_all, parser, controller_args, worker_args, server_args
+from llm_api_stale import launch_all, parser, controller_args, worker_args, server_args
 from api import create_app
 import uvicorn
 

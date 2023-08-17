@@ -181,9 +181,11 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 
 ### 3. 设置配置项
 
-复制文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
+复制模型相关参数配置模板文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
 
-在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 中的各项模型参数设计是否符合需求：
+复制服务相关参数配置模板文件 [configs/server_config.py.example](configs/server_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `server_config.py`。
+
+在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 和 `configs/server_config.py` 中的各项模型参数设计是否符合需求：
 
 - 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
 
@@ -214,7 +216,6 @@ embedding_model_dict = {
   ```shell
   $ python init_database.py
   ```
-  
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
 
   ```shell
@@ -244,6 +245,7 @@ $ python server/llm_api.py
 ```
 
 项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
+
 ```python
 gpus=None, 
 num_gpus=1, 
@@ -258,7 +260,7 @@ max_gpu_memory="20GiB"
 
 ##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
 
-⚠️ **注意:** 
+⚠️ **注意:**
 
 **1.llm_api_launch.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
 
@@ -275,11 +277,13 @@ $ python server/llm_api_launch.py
 ```shell
 $ python server/llm_api_launch.py --model-path-address model1@host1@port1 model2@host2@port2
 ```
+
 如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
 
 ```shell
 $ python server/llm_api_launch.py --server-port 8887
 ```
+
 如果要启动多卡加载，示例命令如下：
 
 ```shell
@@ -354,7 +358,6 @@ $ streamlit run webui.py --server.port 666
 - Web UI 对话界面：
 
   ![](img/webui_0813_0.png)
-
 - Web UI 知识库管理页面：
 
   ![](img/webui_0813_1.png)
@@ -363,86 +366,38 @@ $ streamlit run webui.py --server.port 666
 
 ### 6. 一键启动
 
-⚠️ **注意:** 
-
-**1. 一键启动脚本仅原生适用于Linux,Mac 设备需要安装对应的linux命令, Winodws 平台请使用 WLS;**
-
-**2. 加载非默认模型需要用命令行参数 `--model-path-address` 指定模型，不会读取 `model_config.py` 配置。**
-
-#### 6.1 API 服务一键启动脚本
-
-新增 API 一键启动脚本，可一键开启 FastChat 后台服务及本项目提供的 API 服务,调用示例：
-
-调用默认模型：
+更新一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
 
 ```shell
-$ python server/api_allinone.py
+$ python startup.py --all-webui
 ```
 
-加载多个非默认模型：
+并可使用 `Ctrl + C` 直接关闭所有运行服务。
+
+可选参数包括 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
+`--model-worker`, `--api`, `--webui`，其中：
+
+- `--all-webui` 为一键启动 WebUI 所有依赖服务；
+
+- `--all-api` 为一键启动 API 所有依赖服务；
+
+- `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
+
+- `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
+
+- 其他为单独服务启动选项。
+
+若想指定非默认模型，需要用 `--model-name` 选项，示例：
 
 ```shell
-$ python server/api_allinone.py --model-path-address model1@host1@port1 model2@host2@port2
+$ python startup.py --all-webui --model-name Qwen-7B-Chat
 ```
 
-如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
+**注意：**
 
-```shell
-$ python server/api_allinone.py --server-port 8887
-```
+**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
 
-多卡启动：
-
-```shell
-python server/api_allinone.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
-```
-
-其他参数详见各脚本及 FastChat 服务说明。
-
-#### 6.2 webui一键启动脚本
-
-加载本地模型：
-
-```shell
-$ python webui_allinone.py
-```
-
-调用远程 API 服务：
-
-```shell
-$ python webui_allinone.py --use-remote-api
-```
-如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
-
-```shell
-$ python webui_allinone.py --server-port 8887
-```
-
-后台运行webui服务：
-
-```shell
-$ python webui_allinone.py --nohup
-```
-
-加载多个非默认模型：
-
-```shell
-$ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@port2 
-```
-
-多卡启动：
-
-```shell
-$ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
-```
-
-其他参数详见各脚本及 Fastchat 服务说明。
-
-上述两个一键启动脚本会后台运行多个服务，如要停止所有服务，可使用 `shutdown_all.sh` 脚本：
-
-```shell
-bash shutdown_all.sh
-```
+**2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
 
 ## 常见问题
 
