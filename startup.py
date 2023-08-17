@@ -479,7 +479,7 @@ if __name__ == "__main__":
         args.api = False
         args.webui = False
 
-    dump_server_info()
+    dump_server_info(args=args)
 
     if len(sys.argv) > 1:
         logger.info(f"正在启动服务：")
