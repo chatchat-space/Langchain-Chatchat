@@ -1,5 +1,4 @@
-from .model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE
-
+from .model_config import LLM_MODEL, LLM_DEVICE
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
@@ -23,7 +22,7 @@ API_SERVER = {
 # fastchat openai_api server
 FSCHAT_OPENAI_API = {
     "host": DEFAULT_BIND_HOST,
-    "port": 8888, # model_config.llm_model_dict中模型配置的api_base_url需要与这里一致。
+    "port": 8888,  # model_config.llm_model_dict中模型配置的api_base_url需要与这里一致。
 }
 
 # fastchat model_worker server
@@ -56,7 +55,6 @@ FSCHAT_MODEL_WORKERS = {
     },
 }
 
-
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {
     # todo
@@ -76,11 +74,13 @@ def fschat_controller_address() -> str:
     port = FSCHAT_CONTROLLER["port"]
     return f"http://{host}:{port}"
 
+
 def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
     if model := FSCHAT_MODEL_WORKERS.get(model_name):
         host = model["host"]
         port = model["port"]
         return f"http://{host}:{port}"
+
 
 def fschat_openai_api_address() -> str:
     host = FSCHAT_OPENAI_API["host"]
