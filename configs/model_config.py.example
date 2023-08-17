@@ -1,14 +1,11 @@
 import os
 import logging
 import torch
-import argparse
-import json
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
-import json
 
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
