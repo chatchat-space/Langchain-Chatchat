@@ -182,7 +182,12 @@ def run_controller(q: Queue, run_seq: int = 1):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_model_worker(model_name: str = LLM_MODEL, q: Queue = None, run_seq: int = 2):
+def run_model_worker(
+    model_name: str = LLM_MODEL,
+    controller_address: str = "",
+    q: Queue = None,
+    run_seq: int = 2,
+):
     import uvicorn
 
     kwargs = FSCHAT_MODEL_WORKERS[LLM_MODEL].copy()
@@ -191,7 +196,7 @@ def run_model_worker(model_name: str = LLM_MODEL, q: Queue = None, run_seq: int 
     model_path = llm_model_dict[model_name].get("local_model_path", "")
     kwargs["model_path"] = model_path
     kwargs["model_names"] = [model_name]
-    kwargs["controller_address"] = fschat_controller_address()
+    kwargs["controller_address"] = controller_address or fschat_controller_address()
     kwargs["worker_address"] = fschat_model_worker_address()
 
     app = create_model_worker_app(**kwargs)
@@ -238,25 +243,35 @@ def run_webui():
 def parse_args() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-a",
         "--all",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
     )
     parser.add_argument(
+        "-o",
         "--openai-api",
         action="store_true",
         help="run fastchat controller/openai_api servers",
     )
     parser.add_argument(
+        "-m",
         "--model-worker",
         action="store_true",
         help="run fastchat model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
     )
     parser.add_argument(
+        "-n"
         "--model-name",
         type=str,
         default=LLM_MODEL,
         help="specify model name for model worker.",
+    )
+    parser.add_argument(
+        "-c"
+        "--controller",
+        type=str,
+        help="specify controller address the worker is registered to. default is server_config.FSCHAT_CONTROLLER",
     )
     parser.add_argument(
         "--api",
@@ -264,6 +279,7 @@ def parse_args() -> argparse.ArgumentParser:
         help="run api.py server",
     )
     parser.add_argument(
+        "-w",
         "--webui",
         action="store_true",
         help="run webui.py server",
