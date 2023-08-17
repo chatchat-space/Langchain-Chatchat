@@ -260,7 +260,7 @@ max_gpu_memory="20GiB"
 
 ⚠️ **注意:** 
 
-**1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
+**1.llm_api_launch.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
 
@@ -361,7 +361,7 @@ $ streamlit run webui.py --server.port 666
 
 ⚠️ **注意:** 
 
-**1. 一键启动脚本仅适用于 Linux 和 Mac 设备, Winodws 平台请使用 WLS;**
+**1. 一键启动脚本仅原生适用于Linux,Mac 设备需要安装对应的linux命令, Winodws 平台请使用 WLS;**
 
 **2. 加载非默认模型需要用命令行参数 `--model-path-address` 指定指定模型，不会读取 `model_config.py` 配置。**
 
