@@ -86,3 +86,15 @@ def fschat_openai_api_address() -> str:
     host = FSCHAT_OPENAI_API["host"]
     port = FSCHAT_OPENAI_API["port"]
     return f"http://{host}:{port}"
+
+
+def api_address() -> str:
+    host = API_SERVER["host"]
+    port = API_SERVER["port"]
+    return f"http://{host}:{port}"
+
+
+def webui_address() -> str:
+    host = WEBUI_SERVER["host"]
+    port = WEBUI_SERVER["port"]
+    return f"http://{host}:{port}"
