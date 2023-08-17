@@ -16,20 +16,14 @@ except:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
-from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
-                                   FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
-                                   fschat_openai_api_address, )
+from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER, FSCHAT_OPENAI_API,
+                                    fschat_controller_address, fschat_model_worker_address,
+                                    fschat_openai_api_address, get_model_worker_config,
+                                    set_httpx_timeout,)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from configs import VERSION
-
-
-def set_httpx_timeout(timeout=60.0):
-    import httpx
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 def create_controller_app(
@@ -44,6 +38,7 @@ def create_controller_app(
 
     MakeFastAPIOffline(app)
     app.title = "FastChat Controller"
+    app._controller = controller
     return app
 
 
@@ -136,6 +131,7 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
 
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({LLM_MODEL})"
+    app._worker = worker
     return app
 
 
@@ -164,6 +160,9 @@ def create_openai_api_app(
 
 
 def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
+    if q is None or not isinstance(run_seq, int):
+        return
+
     if run_seq == 1:
         @app.on_event("startup")
         async def on_startup():
@@ -184,9 +183,70 @@ def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
 
 def run_controller(q: Queue, run_seq: int = 1):
     import uvicorn
+    import httpx
+    from fastapi import Body
+    import time
 
     app = create_controller_app(FSCHAT_CONTROLLER.get("dispatch_method"))
     _set_app_seq(app, q, run_seq)
+
+    # add interface to release and load model worker
+    @app.post("/release_worker")
+    def release_worker(
+        model_name: str = Body(..., description="要释放模型的名称", samples=["chatglm-6b"]),
+        # worker_address: str = Body(None, description="要释放模型的地址，与名称二选一", samples=[fschat_controller_address()]),
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        available_models = app._controller.list_models()
+        if new_model_name in available_models:
+            msg = f"要切换的LLM模型 {new_model_name} 已经存在"
+            logger.info(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            logger.info(f"开始切换LLM模型：从 {model_name} 到 {new_model_name}")
+        else:
+            logger.info(f"即将停止LLM模型： {model_name}")
+
+        if model_name not in available_models:
+            msg = f"the model {model_name} is not available"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        worker_address = app._controller.get_worker_address(model_name)
+        if not worker_address:
+            msg = f"can not find model_worker address for {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        r = httpx.post(worker_address + "/release",
+                    json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+        if r.status_code != 200:
+            msg = f"failed to release model: {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            timer = 300 # wait 5 minutes for new model_worker register
+            while timer > 0:
+                models = app._controller.list_models()
+                if new_model_name in models:
+                    break
+                time.sleep(1)
+                timer -= 1
+            if timer > 0:
+                msg = f"sucess change model from {model_name} to {new_model_name}"
+                logger.info(msg)
+                return {"code": 200, "msg": msg}
+            else:
+                msg = f"failed change model from {model_name} to {new_model_name}"
+                logger.error(msg)
+                return {"code": 500, "msg": msg}
+        else:
+            msg = f"sucess to release model: {model_name}"
+            logger.info(msg)
+            return {"code": 200, "msg": msg}
 
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
@@ -200,11 +260,12 @@ def run_model_worker(
         run_seq: int = 2,
 ):
     import uvicorn
+    from fastapi import Body
 
-    kwargs = FSCHAT_MODEL_WORKERS[model_name].copy()
+    kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
     port = kwargs.pop("port")
-    model_path = llm_model_dict[model_name].get("local_model_path", "")
+    model_path = kwargs.get("local_model_path", "")
     kwargs["model_path"] = model_path
     kwargs["model_names"] = [model_name]
     kwargs["controller_address"] = controller_address or fschat_controller_address()
@@ -212,6 +273,22 @@ def run_model_worker(
 
     app = create_model_worker_app(**kwargs)
     _set_app_seq(app, q, run_seq)
+
+    # add interface to release and load model
+    @app.post("/release")
+    def release_model(
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        if keep_origin:
+            if new_model_name:
+                q.put(["start", new_model_name])
+        else:
+            if new_model_name:
+                q.put(["replace", new_model_name])
+            else:
+                q.put(["stop"])
+        return {"code": 200, "msg": "done"}
 
     uvicorn.run(app, host=host, port=port)
 
@@ -244,13 +321,15 @@ def run_api_server(q: Queue, run_seq: int = 4):
 def run_webui(q: Queue, run_seq: int = 5):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
-    while True:
-        no = q.get()
-        if no != run_seq - 1:
-            q.put(no)
-        else:
-            break
-    q.put(run_seq)
+
+    if q is not None and isinstance(run_seq, int):
+        while True:
+            no = q.get()
+            if no != run_seq - 1:
+                q.put(no)
+            else:
+                break
+        q.put(run_seq)
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                           "--server.address", host,
                           "--server.port", str(port)])
@@ -324,7 +403,7 @@ def parse_args() -> argparse.ArgumentParser:
     return args, parser
 
 
-def dump_server_info(after_start=False):
+def dump_server_info(after_start=False, args=None):
     import platform
     import langchain
     import fastchat
@@ -337,8 +416,11 @@ def dump_server_info(after_start=False):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
-    print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
-    pprint(llm_model_dict[LLM_MODEL])
+    model = LLM_MODEL
+    if args and args.model_name:
+        model = args.model_name
+    print(f"当前LLM模型：{model} @ {llm_model_dict[model].get('device', LLM_DEVICE)}")
+    pprint(llm_model_dict[model])
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
     if after_start:
         print("\n")
@@ -378,7 +460,7 @@ if __name__ == "__main__":
         args.api = False
         args.webui = False
 
-    dump_server_info()
+    dump_server_info(args=args)
 
     if len(sys.argv) > 1:
         logger.info(f"正在启动服务：")
