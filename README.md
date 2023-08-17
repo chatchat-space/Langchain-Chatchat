@@ -229,7 +229,7 @@ embedding_model_dict = {
 
 - [基于多进程脚本 llm_api.py 启动 LLM 服务](README.md#5.1.1-基于多进程脚本-llm_api.py-启动-LLM-服务)
 - [基于命令行脚本 llm_api_launch.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_launch.py-启动-LLM-服务)
-- [LoRA 加载](README.md#5.1.3-LoRA-加载)
+- [PEFT 加载](README.md#5.1.3-PEFT-加载)
 
 三种方式只需选择一个即可，具体操作方式详见 5.1.1 - 5.1.3。
 
@@ -260,9 +260,9 @@ max_gpu_memory="20GiB"
 
 ⚠️ **注意:** 
 
-**1.llm_api_launch.py脚本仅适用于linux和mac设备,win平台请使用wls;**
+**1.llm_api_launch.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
 
-**2.加载非默认模型需要用命令行参数--model-path-address指定指定模型，不会读取model_config.py配置;**
+**2.加载非默认模型需要用命令行参数--model-path-address指定模型，不会读取model_config.py配置;**
 
 在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -275,7 +275,11 @@ $ python server/llm_api_launch.py
 ```shell
 $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
 ```
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
 
+```shell
+$ python server/llm_api_launch.py --server-port 8887
+```
 如果要启动多卡加载，示例命令如下：
 
 ```shell
@@ -290,9 +294,9 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-##### 5.1.3 LoRA 加载
+##### 5.1.3 PEFT 加载
 
-本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 LoRA 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 LoRA 权重。
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
 
 示例代码如下：
 
@@ -361,9 +365,9 @@ $ streamlit run webui.py --server.port 666
 
 ⚠️ **注意:** 
 
-**1. 一键启动脚本仅适用于 Linux 和 Mac 设备, Winodws 平台请使用 WLS;**
+**1. 一键启动脚本仅原生适用于Linux,Mac 设备需要安装对应的linux命令, Winodws 平台请使用 WLS;**
 
-**2. 加载非默认模型需要用命令行参数 `--model-path-address` 指定指定模型，不会读取 `model_config.py` 配置。**
+**2. 加载非默认模型需要用命令行参数 `--model-path-address` 指定模型，不会读取 `model_config.py` 配置。**
 
 #### 6.1 API 服务一键启动脚本
 
@@ -379,6 +383,12 @@ $ python server/api_allinone.py
 
 ```shell
 $ python server/api_allinone.py --model-path-address model1@host1@port1 model2@host2@port2
+```
+
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
+
+```shell
+$ python server/api_allinone.py --server-port 8887
 ```
 
 多卡启动：
@@ -401,6 +411,11 @@ $ python webui_allinone.py
 
 ```shell
 $ python webui_allinone.py --use-remote-api
+```
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
+
+```shell
+$ python webui_allinone.py --server-port 8887
 ```
 
 后台运行webui服务：
