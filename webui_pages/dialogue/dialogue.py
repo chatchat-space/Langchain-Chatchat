@@ -5,6 +5,8 @@ from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 from typing import List, Dict
 import os
+from configs.model_config import llm_model_dict, LLM_MODEL
+
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -36,6 +38,12 @@ def get_messages_history(history_len: int) -> List[Dict]:
     return history[-i:]
 
 
+@st.cache_resource
+def change_llm_model(_api: ApiRequest, model_name: str, new_model_name: str):
+    if model_name != new_model_name:
+        _api.change_llm_model(model_name, new_model_name)
+
+
 def dialogue_page(api: ApiRequest):
     chat_box.init_session()
 
@@ -59,6 +67,16 @@ def dialogue_page(api: ApiRequest):
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
+        def on_llm_change():
+            st.session_state["prev_llm_model"] = llm_model
+
+        llm_models = list(llm_model_dict.keys()) # todo: list available models from openai api
+        llm_model = st.selectbox("选择LLM模型：",
+                                llm_models,
+                                llm_models.index(LLM_MODEL),
+                                on_change=on_llm_change,
+                                key="llm_model")
+        change_llm_model(api, st.session_state.get("prev_llm_model"), llm_model)
         history_len = st.number_input("历史对话轮数：", 0, 10, 3)
 
         # todo: support history len
@@ -96,7 +114,8 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.chat_chat(prompt, history)
+            # r = api.chat_chat(prompt, history)
+            r = api.chat_fastchat(history + [{"role": "user", "content": prompt}])
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)

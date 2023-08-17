@@ -11,6 +11,7 @@ from configs.model_config import (
     SEARCH_ENGINE_TOP_K,
     logger,
 )
+from configs.server_config import fschat_controller_address
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -56,6 +57,9 @@ class ApiRequest:
         self.base_url = base_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
+
+    def __hash__(self):
+        return str(id(self))
 
     def _parse_url(self, url: str) -> str:
         if (not url.startswith("http")
@@ -620,6 +624,31 @@ class ApiRequest:
                 timeout=False,
             )
             return self._httpx_stream2generator(response, as_json=True)
+
+    def stop_llm_model(
+        self,
+        model_name: str,
+        controller_address: str = None,
+    ):
+        controller_address = controller_address or fschat_controller_address()
+        r = httpx.post(
+            controller_address + "/release_worker",
+            json={"model_name": model_name},
+        )
+        return r.json()
+    
+    def change_llm_model(
+        self,
+        model_name: str,
+        new_model_name: str,
+        controller_address: str = None,
+    ):
+        controller_address = controller_address or fschat_controller_address()
+        r = httpx.post(
+            controller_address + "/release_worker",
+            json={"model_name": model_name, "new_model_name": new_model_name},
+        )
+        return r.json()
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:

@@ -11,7 +11,7 @@ from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, 
                                 FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -33,6 +33,7 @@ def create_controller_app(
 
     MakeFastAPIOffline(app)
     app.title = "FastChat Controller"
+    app._controller = controller
     return app
 
 
@@ -125,6 +126,7 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
     
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({LLM_MODEL})"
+    app._worker = worker
     return app
 
 
@@ -153,6 +155,9 @@ def create_openai_api_app(
 
 
 def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
+    if not isinstance(run_seq, int):
+        return
+
     if run_seq == 1:
         @app.on_event("startup")
         async def on_startup():
@@ -173,9 +178,34 @@ def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
 
 def run_controller(q: Queue, run_seq: int = 1):
     import uvicorn
+    import httpx
+    from fastapi import Body
 
     app = create_controller_app(FSCHAT_CONTROLLER.get("dispatch_method"))
     _set_app_seq(app, q, run_seq)
+
+    # add interface to release and load model worker
+    @app.post("/release_worker")
+    def release_worker(
+        model_name: str = Body(None, description="要释放模型的名称，与地址二选一", samples=["chatglm-6b"]),
+        worker_address: str = Body(None, description="要释放模型的地址，与地址二选一", samples=[fschat_controller_address()]),
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        if model_name:
+            worker_address = app._controller.get_worker_address(model_name)
+        if worker_address:
+            r = httpx.post(worker_address + "/release",
+                        json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+            if r.status_code == 200:
+                if model_name and new_model_name:
+                    return {"code": 200, "msg": f"sucess change worker from {model_name} to {new_model_name}"}
+                else:
+                    return {"code": 200, "msg": f"sucess to release {worker_address}"}
+        if model_name:
+            return {"code": 500, "errorMsg": f"failed to release model: {model_name}"}
+        if worker_address:
+            return {"code": 500, "errorMsg": f"failed to release worker: {worker_address}"}
 
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
@@ -189,6 +219,7 @@ def run_model_worker(
     run_seq: int = 2,
 ):
     import uvicorn
+    from fastapi import Body
 
     kwargs = FSCHAT_MODEL_WORKERS[LLM_MODEL].copy()
     host = kwargs.pop("host")
@@ -201,6 +232,22 @@ def run_model_worker(
 
     app = create_model_worker_app(**kwargs)
     _set_app_seq(app, q, run_seq)
+
+    # add interface to release and load model
+    @app.post("/release")
+    def release_model(
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        if keep_origin:
+            if new_model_name:
+                q.put(["start", new_model_name])
+        else:
+            if new_model_name:
+                q.put(["replace", new_model_name])
+            else:
+                q.put(["stop"])
+        return {"code": 200, "msg": "done"}
 
     uvicorn.run(app, host=host, port=port)
 
@@ -239,7 +286,6 @@ def run_webui(q: Queue, run_seq: int = 5):
             q.put(no)
         else:
             break
-    q.put(run_seq)
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                     "--server.address", host,
                     "--server.port", str(port)])
@@ -366,6 +412,29 @@ if __name__ == "__main__":
         processes["webui"] = process
 
     try:
+        while True:
+            cmd = queue.get()
+            if isinstance(cmd, list):
+                if cmd[0] == "start": # 暂不支持同脚本内多worker
+                    continue
+                elif cmd[0] == "stop":
+                    process["model_worker"].terminate()
+                    process["model_worker"].join()
+                    break
+                elif cmd[0] == "replace":
+                    process["model_worker"].terminate()
+                    process["model_worker"].join()
+                    process = Process(
+                        target=run_model_worker,
+                        name=f"model_worker({os.getpid()})",
+                        args=(cmd[1], args.controller_address, queue, len(processes) + 1),
+                        daemon=True,
+                    )
+                    process.start()
+                    processes["model_worker"] = process
+            else:
+                queue.put(cmd)
+
         if model_worker_process := processes.get("model_worker"):
             model_worker_process.join()
         for name, process in processes.items():
