@@ -372,7 +372,9 @@ $ streamlit run webui.py --server.port 666
 $ python startup.py --all-webui
 ```
 
-可选 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
+并可使用 `Ctrl + C` 直接关闭所有运行服务。
+
+可选参数包括 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
 `--model-worker`, `--api`, `--webui`，其中：
 
 - `--all-webui` 为一键启动 WebUI 所有依赖服务；
