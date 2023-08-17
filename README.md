@@ -275,7 +275,11 @@ $ python server/llm_api_launch.py
 ```shell
 $ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
 ```
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
 
+```shell
+$ python server/llm_api_launch.py --server-port 8887
+```
 如果要启动多卡加载，示例命令如下：
 
 ```shell
@@ -381,6 +385,12 @@ $ python server/api_allinone.py
 $ python server/api_allinone.py --model-path-address model1@host1@port1 model2@host2@port2
 ```
 
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
+
+```shell
+$ python server/api_allinone.py --server-port 8887
+```
+
 多卡启动：
 
 ```shell
@@ -401,6 +411,11 @@ $ python webui_allinone.py
 
 ```shell
 $ python webui_allinone.py --use-remote-api
+```
+如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
+
+```shell
+$ python webui_allinone.py --server-port 8887
 ```
 
 后台运行webui服务：
