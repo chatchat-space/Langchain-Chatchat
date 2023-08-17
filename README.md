@@ -273,7 +273,7 @@ $ python server/llm_api_launch.py
 该方式支持启动多个worker，示例启动方式：
 
 ```shell
-$ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
+$ python server/llm_api_launch.py --model-path-address model1@host1@port1 model2@host2@port2
 ```
 如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
 
@@ -486,6 +486,6 @@ bash shutdown_all.sh
 
 ## 项目交流群
 
-<img src="img/qr_code_52.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_53.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
