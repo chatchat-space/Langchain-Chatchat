@@ -5,14 +5,16 @@ import sys
 import os
 from pprint import pprint
 
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
+from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
+    logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
-                                FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address, fschat_openai_api_address,)
+                                   FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
+                                   fschat_openai_api_address, )
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List
+from configs import VERSION
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -53,6 +55,7 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
             target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
         )
         self.heart_beat_thread.start()
+
     ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
@@ -88,7 +91,6 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
             )
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
-
     gptq_config = GptqConfig(
         ckpt=args.gptq_ckpt or args.model_path,
         wbits=args.gptq_wbits,
@@ -123,7 +125,7 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-    
+
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({LLM_MODEL})"
     return app
@@ -184,10 +186,10 @@ def run_controller(q: Queue, run_seq: int = 1):
 
 
 def run_model_worker(
-    model_name: str = LLM_MODEL,
-    controller_address: str = "",
-    q: Queue = None,
-    run_seq: int = 2,
+        model_name: str = LLM_MODEL,
+        controller_address: str = "",
+        q: Queue = None,
+        run_seq: int = 2,
 ):
     import uvicorn
 
@@ -210,7 +212,7 @@ def run_openai_api(q: Queue, run_seq: int = 3):
     import uvicorn
 
     controller_addr = fschat_controller_address()
-    app = create_openai_api_app(controller_addr) # todo: not support keys yet.
+    app = create_openai_api_app(controller_addr)  # todo: not support keys yet.
     _set_app_seq(app, q, run_seq)
 
     host = FSCHAT_OPENAI_API["host"]
@@ -242,8 +244,8 @@ def run_webui(q: Queue, run_seq: int = 5):
             break
     q.put(run_seq)
     p = subprocess.Popen(["streamlit", "run", "webui.py",
-                    "--server.address", host,
-                    "--server.port", str(port)])
+                          "--server.address", host,
+                          "--server.port", str(port)])
     p.wait()
 
 
@@ -334,13 +336,12 @@ if __name__ == "__main__":
         args.model_worker = True
         args.api = True
         args.webui = False
-        
+
     elif args.llm_api:
         args.openai_api = True
         args.model_worker = True
         args.api = False
         args.webui = False
-        
 
     logger.info(f"正在启动服务：")
     logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
@@ -406,7 +407,7 @@ if __name__ == "__main__":
                 print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
                 print(f"操作系统：{platform.platform()}.")
                 print(f"python版本：{sys.version}")
-                print(f"项目版本：") # todo
+                print(f"项目版本：{VERSION}")
                 print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
                 print("\n")
                 print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
