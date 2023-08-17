@@ -440,6 +440,6 @@ python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 
 
 ## 项目交流群
 
-<img src="img/qr_code_52.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_53.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
