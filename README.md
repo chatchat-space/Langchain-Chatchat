@@ -366,15 +366,26 @@ $ streamlit run webui.py --server.port 666
 
 ### 6. 一键启动
 
-更新一键启动脚本startup.py,一键启动所有fastchat服务、API服务、WebUI服务，示例代码：
+更新一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
 
 ```shell
 $ python startup.py --all-webui
 ```
 
-可选 `all-webui,all-api,llm-api,controller,openai-api,model-worker,api,webui`，其中all-webui为一键启动webui所有依赖服务，all-api为一键启动api所有依赖服务，llm-api为一键启动fastchat所有依赖的llm服务，openai-api为仅启动fastchat的controller和openai-api-server服务，其他为单独服务启动选项。
+可选 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
+`--model-worker`, `--api`, `--webui`，其中：
 
-若想指定非默认模型，需要用--model-name选项，示例：
+- `--all-webui` 为一键启动 WebUI 所有依赖服务；
+
+- `--all-api` 为一键启动 API 所有依赖服务；
+
+- `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
+
+- `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
+
+- 其他为单独服务启动选项。
+
+若想指定非默认模型，需要用 `--model-name` 选项，示例：
 
 ```shell
 $ python startup.py --all-webui --model-name Qwen-7B-Chat
@@ -382,9 +393,9 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 **注意：**
 
-**1. startup脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认llm-api服务端口：127.0.0.1:8888,默认api服务端口：127.0.0.1:7861,默认webui服务端口：`本机IP：8501`)**
+**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
 
-**2.服务启动时间示设备不同而不同，约3-10分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
+**2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
 
 ## 常见问题
 
