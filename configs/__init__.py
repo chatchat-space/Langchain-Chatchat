@@ -1,4 +1,4 @@
 from .model_config import *
 from .server_config import *
 
-VERSION = "v0.2.1-preview"
+VERSION = "v0.2.1"
