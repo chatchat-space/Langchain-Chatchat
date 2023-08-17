@@ -49,6 +49,9 @@ class ApiRequest:
         self.timeout = timeout
         self.no_remote_api = no_remote_api
 
+    def __hash__(self):
+        return str(id(self))
+
     def _parse_url(self, url: str) -> str:
         if (not url.startswith("http")
                     and self.base_url
