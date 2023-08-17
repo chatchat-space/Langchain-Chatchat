@@ -229,7 +229,7 @@ embedding_model_dict = {
 
 - [基于多进程脚本 llm_api.py 启动 LLM 服务](README.md#5.1.1-基于多进程脚本-llm_api.py-启动-LLM-服务)
 - [基于命令行脚本 llm_api_launch.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_launch.py-启动-LLM-服务)
-- [LoRA 加载](README.md#5.1.3-LoRA-加载)
+- [PEFT 加载](README.md#5.1.3-PEFT-加载)
 
 三种方式只需选择一个即可，具体操作方式详见 5.1.1 - 5.1.3。
 
@@ -294,9 +294,9 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-##### 5.1.3 LoRA 加载
+##### 5.1.3 PEFT 加载
 
-本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 LoRA 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 LoRA 权重。
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
 
 示例代码如下：
 
