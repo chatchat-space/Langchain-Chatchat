@@ -1,11 +1,10 @@
 langchain==0.0.257
 openai
 sentence_transformers
-fschat==0.2.20
-transformers
+fschat==0.2.24
+transformers>=4.31.0
 torch~=2.0.0
 fastapi~=0.99.1
-fastapi-offline
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0

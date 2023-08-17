@@ -11,10 +11,11 @@ python server/api_allinone.py --model-path-address model@host@port --num-gpus 2 
 """
 import sys
 import os
+
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from llm_api_launch import launch_all,parser,controller_args,worker_args,server_args
+from llm_api_stale import launch_all, parser, controller_args, worker_args, server_args
 from api import create_app
 import uvicorn
 
@@ -22,11 +23,9 @@ parser.add_argument("--api-host", type=str, default="0.0.0.0")
 parser.add_argument("--api-port", type=int, default=7861)
 parser.add_argument("--ssl_keyfile", type=str)
 parser.add_argument("--ssl_certfile", type=str)
-# 初始化消息
-args = parser.parse_args()
-args_dict = vars(args)
 
-api_args = ["api-host","api-port","ssl_keyfile","ssl_certfile"]
+api_args = ["api-host", "api-port", "ssl_keyfile", "ssl_certfile"]
+
 
 def run_api(host, port, **kwargs):
     app = create_app()
@@ -40,11 +39,19 @@ def run_api(host, port, **kwargs):
     else:
         uvicorn.run(app, host=host, port=port)
 
+
 if __name__ == "__main__":
-    launch_all(args=args,controller_args=controller_args,worker_args=worker_args,server_args=server_args)
+    print("Luanching api_allinone，it would take a while, please be patient...")
+    print("正在启动api_allinone，LLM服务启动约3-10分钟，请耐心等待...")
+    # 初始化消息
+    args = parser.parse_args()
+    args_dict = vars(args)
+    launch_all(args=args, controller_args=controller_args, worker_args=worker_args, server_args=server_args)
     run_api(
-            host=args.api_host,
-            port=args.api_port,
-            ssl_keyfile=args.ssl_keyfile,
-            ssl_certfile=args.ssl_certfile,
-            )
+        host=args.api_host,
+        port=args.api_port,
+        ssl_keyfile=args.ssl_keyfile,
+        ssl_certfile=args.ssl_certfile,
+    )
+    print("Luanching api_allinone done.")
+    print("api_allinone启动完毕.")

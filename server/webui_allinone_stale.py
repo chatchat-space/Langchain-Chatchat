@@ -20,9 +20,9 @@ from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages import *
 import os
-from server.llm_api_launch import string_args,launch_all,controller_args,worker_args,server_args,LOG_PATH
+from server.llm_api_stale import string_args,launch_all,controller_args,worker_args,server_args,LOG_PATH
 
-from server.api_allinone import parser, api_args
+from server.api_allinone_stale import parser, api_args
 import subprocess
 
 parser.add_argument("--use-remote-api",action="store_true")
@@ -34,27 +34,31 @@ parser.add_argument("--theme.secondaryBackgroundColor",type=str,default='"#f5f5f
 parser.add_argument("--theme.textColor",type=str,default='"#000000"')
 web_args = ["server.port","theme.base","theme.primaryColor","theme.secondaryBackgroundColor","theme.textColor"]
 
-args = parser.parse_args()
 
-def launch_api(args=args,args_list=api_args,log_name=None):
-    print("launch api ...")
+def launch_api(args,args_list=api_args,log_name=None):
+    print("Launching api ...")
+    print("启动API服务...")
     if not log_name:
         log_name = f"{LOG_PATH}api_{args.api_host}_{args.api_port}"
     print(f"logs on api are written in {log_name}")
+    print(f"API日志位于{log_name}下，如启动异常请查看日志")
     args_str = string_args(args,args_list)
     api_sh = "python  server/{script} {args_str} >{log_name}.log 2>&1 &".format(
         script="api.py",args_str=args_str,log_name=log_name)
     subprocess.run(api_sh, shell=True, check=True)
     print("launch api done!")
+    print("启动API服务完毕.")
 
-
-def launch_webui(args=args,args_list=web_args,log_name=None):
+def launch_webui(args,args_list=web_args,log_name=None):
     print("Launching webui...")
+    print("启动webui服务...")
     if not log_name:
         log_name = f"{LOG_PATH}webui"
-    print(f"logs on api are written in {log_name}")
+
     args_str = string_args(args,args_list)
     if args.nohup:
+        print(f"logs on api are written in {log_name}")
+        print(f"webui服务日志位于{log_name}下，如启动异常请查看日志")
         webui_sh = "streamlit run webui.py {args_str} >{log_name}.log 2>&1 &".format(
         args_str=args_str,log_name=log_name)
     else:
@@ -62,12 +66,18 @@ def launch_webui(args=args,args_list=web_args,log_name=None):
         args_str=args_str)
     subprocess.run(webui_sh, shell=True, check=True)
     print("launch webui done!")
+    print("启动webui服务完毕.")
 
 
 if __name__ == "__main__":
     print("Starting webui_allineone.py, it would take a while, please be patient....")
+    print(f"开始启动webui_allinone,启动LLM服务需要约3-10分钟，请耐心等待，如长时间未启动，请到{LOG_PATH}下查看日志...")
+    args = parser.parse_args()
+
+    print("*"*80)
     if not args.use_remote_api:
         launch_all(args=args,controller_args=controller_args,worker_args=worker_args,server_args=server_args)
     launch_api(args=args,args_list=api_args)
     launch_webui(args=args,args_list=web_args)
     print("Start webui_allinone.py done!")
+    print("感谢耐心等待，启动webui_allinone完毕。")

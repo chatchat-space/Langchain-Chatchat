@@ -43,7 +43,8 @@ class PGKBService(KBService):
             '''))
             connect.commit()
 
-    def do_search(self, query: str, top_k: int, embeddings: Embeddings) -> List[Document]:
+    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings) -> List[Document]:
+        # todo: support score threshold
         self._load_pg_vector(embeddings=embeddings)
         return self.pg_vector.similarity_search(query, top_k)
 

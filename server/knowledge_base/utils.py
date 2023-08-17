@@ -80,7 +80,7 @@ class KnowledgeFile:
     ):
         self.kb_name = knowledge_base_name
         self.filename = filename
-        self.ext = os.path.splitext(filename)[-1]
+        self.ext = os.path.splitext(filename)[-1].lower()
         if self.ext not in SUPPORTED_EXTS:
             raise ValueError(f"暂未支持的文件格式 {self.ext}")
         self.filepath = get_file_path(knowledge_base_name, filename)
@@ -113,6 +113,7 @@ class KnowledgeFile:
                     chunk_size=CHUNK_SIZE,
                     chunk_overlap=OVERLAP_SIZE,
                 )
+                self.text_splitter_name = "SpacyTextSplitter"
             else:
                 text_splitter_module = importlib.import_module('langchain.text_splitter')
                 TextSplitter = getattr(text_splitter_module, self.text_splitter_name)

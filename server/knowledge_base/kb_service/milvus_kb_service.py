@@ -45,7 +45,8 @@ class MilvusKBService(KBService):
     def do_drop_kb(self):
         self.milvus.col.drop()
 
-    def do_search(self, query: str, top_k: int, embeddings: Embeddings) -> List[Document]:
+    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings) -> List[Document]:
+        # todo: support score threshold
         self._load_milvus(embeddings=embeddings)
         return self.milvus.similarity_search(query, top_k, score_threshold=SCORE_THRESHOLD)
 

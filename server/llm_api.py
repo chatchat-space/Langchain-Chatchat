@@ -1,16 +1,18 @@
 from multiprocessing import Process, Queue
+import multiprocessing as mp
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
+from server.utils import MakeFastAPIOffline
+
 
 host_ip = "0.0.0.0"
 controller_port = 20001
 model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
-queue = Queue()
 
 
 def set_httpx_timeout(timeout=60.0):
@@ -30,33 +32,50 @@ def create_controller_app(
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
 
+    MakeFastAPIOffline(app)
+    app.title = "FastChat Controller"
     return app
 
 
 def create_model_worker_app(
+        worker_address=base_url.format(model_worker_port),
+        controller_address=base_url.format(controller_port),
         model_path=llm_model_dict[LLM_MODEL].get("local_model_path"),
-        model_names=[LLM_MODEL],
         device=LLM_DEVICE,
+        gpus=None,
+        max_gpu_memory="20GiB",
         load_8bit=False,
+        cpu_offloading=None,
         gptq_ckpt=None,
         gptq_wbits=16,
         gptq_groupsize=-1,
-        gptq_act_order=None,
-        gpus=None,
-        num_gpus=1,
-        max_gpu_memory="20GiB",
-        cpu_offloading=None,
-        worker_address=base_url.format(model_worker_port),
-        controller_address=base_url.format(controller_port),
+        gptq_act_order=False,
+        awq_ckpt=None,
+        awq_wbits=16,
+        awq_groupsize=-1,
+        model_names=[LLM_MODEL],
+        num_gpus=1, # not in fastchat
+        conv_template=None,
         limit_worker_concurrency=5,
         stream_interval=2,
         no_register=False,
 ):
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.model_worker import app, GptqConfig, ModelWorker, worker_id
-    from fastchat.serve import model_worker
+    from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id
     import argparse
+    import threading
+    import fastchat.serve.model_worker
+
+    # workaround to make program exit with Ctrl+c
+    # it should be deleted after pr is merged by fastchat
+    def _new_init_heart_beat(self):
+        self.register_to_controller()
+        self.heart_beat_thread = threading.Thread(
+            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+        )
+        self.heart_beat_thread.start()
+    ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
@@ -68,12 +87,16 @@ def create_model_worker_app(
     args.gptq_wbits = gptq_wbits
     args.gptq_groupsize = gptq_groupsize
     args.gptq_act_order = gptq_act_order
+    args.awq_ckpt = awq_ckpt
+    args.awq_wbits = awq_wbits
+    args.awq_groupsize = awq_groupsize
     args.gpus = gpus
     args.num_gpus = num_gpus
     args.max_gpu_memory = max_gpu_memory
     args.cpu_offloading = cpu_offloading
     args.worker_address = worker_address
     args.controller_address = controller_address
+    args.conv_template = conv_template
     args.limit_worker_concurrency = limit_worker_concurrency
     args.stream_interval = stream_interval
     args.no_register = no_register
@@ -95,6 +118,12 @@ def create_model_worker_app(
         groupsize=args.gptq_groupsize,
         act_order=args.gptq_act_order,
     )
+    awq_config = AWQConfig(
+        ckpt=args.awq_ckpt or args.model_path,
+        wbits=args.awq_wbits,
+        groupsize=args.awq_groupsize,
+    )
+
     # torch.multiprocessing.set_start_method('spawn')
     worker = ModelWorker(
         controller_addr=args.controller_address,
@@ -110,19 +139,21 @@ def create_model_worker_app(
         load_8bit=args.load_8bit,
         cpu_offloading=args.cpu_offloading,
         gptq_config=gptq_config,
+        awq_config=awq_config,
         stream_interval=args.stream_interval,
+        conv_template=args.conv_template,
     )
 
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
     
+    MakeFastAPIOffline(app)
+    app.title = f"FastChat LLM Server ({LLM_MODEL})"
     return app
 
 
 def create_openai_api_app(
-        host=host_ip,
-        port=openai_api_port,
         controller_address=base_url.format(controller_port),
         api_keys=[],
 ):
@@ -141,6 +172,8 @@ def create_openai_api_app(
     app_settings.controller_address = controller_address
     app_settings.api_keys = api_keys
 
+    MakeFastAPIOffline(app)
+    app.title = "FastChat OpeanAI API Server"
     return app
 
 
@@ -193,6 +226,8 @@ def run_openai_api(q):
 
 
 if __name__ == "__main__":
+    mp.set_start_method("spawn")
+    queue = Queue()
     logger.info(llm_model_dict[LLM_MODEL])
     model_path = llm_model_dict[LLM_MODEL]["local_model_path"]
 
@@ -209,15 +244,14 @@ if __name__ == "__main__":
         )
         controller_process.start()
 
-        # cuda 没办法用在fork的多进程中
-        # model_worker_process = Process(
-        #     target=run_model_worker,
-        #     name=f"model_worker({os.getpid()})",
-        #     args=(queue,),
-        #     # kwargs={"load_8bit": True},
-        #     daemon=True,
-        # )
-        # model_worker_process.start()
+        model_worker_process = Process(
+            target=run_model_worker,
+            name=f"model_worker({os.getpid()})",
+            args=(queue,),
+            # kwargs={"load_8bit": True},
+            daemon=True,
+        )
+        model_worker_process.start()
 
         openai_api_process = Process(
             target=run_openai_api,
@@ -227,11 +261,14 @@ if __name__ == "__main__":
         )
         openai_api_process.start()
 
-        run_model_worker(queue)
-
-        controller_process.join()
-        # model_worker_process.join()
-        openai_api_process.join()
+        try:
+            model_worker_process.join()
+            controller_process.join()
+            openai_api_process.join()
+        except KeyboardInterrupt:
+            model_worker_process.terminate()
+            controller_process.terminate()
+            openai_api_process.terminate()
 
 # 服务启动后接口调用示例：
 # import openai
