@@ -29,3 +29,13 @@ if __name__ == "__main__":
             print(line, flush=True)
     else:
         print("Error:", response.status_code)
+
+
+    r = requests.post(
+        openai_url + "/chat/completions",
+        json={"model": LLM_MODEL, "messages": "你好", "max_tokens": 1000})
+    data = r.json()
+    print(f"/chat/completions\n")
+    print(data)
+    assert "choices" in data
+
