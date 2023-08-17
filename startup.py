@@ -3,12 +3,13 @@ import multiprocessing as mp
 import subprocess
 import sys
 import os
-from xml.etree.ElementPath import prepare_child
+from pprint import pprint
+
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
+from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
-                                FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,)
+                                FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address, fschat_openai_api_address,)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List
@@ -313,6 +314,12 @@ def parse_args() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
+    import platform
+    import time
+    import langchain
+    import fastchat
+    from configs.server_config import api_address, webui_address
+
     mp.set_start_method("spawn")
     queue = Queue()
     args = parse_args()
@@ -383,13 +390,43 @@ if __name__ == "__main__":
         process = Process(
             target=run_webui,
             name=f"WEBUI Server{os.getpid()})",
-            args=(queue,),
+            args=(queue, len(processes) + 1),
             daemon=True,
         )
         process.start()
         processes["webui"] = process
 
     try:
+        # log infors
+        while True:
+            no = queue.get()
+            if no == len(processes):
+                time.sleep(0.5)
+                print("\n\n")
+                print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+                print(f"操作系统：{platform.platform()}.")
+                print(f"python版本：{sys.version}")
+                print(f"项目版本：") # todo
+                print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
+                print("\n")
+                print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
+                pprint(llm_model_dict[LLM_MODEL])
+                print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
+                print("\n")
+                print(f"服务端运行信息：")
+                if args.openai_api:
+                    print(f"    OpenAI API Server: {fschat_openai_api_address()}/v1")
+                    print("请确认llm_model_dict中配置的api_base_url与上面地址一致。")
+                if args.api:
+                    print(f"    Chatchat  API  Server: {api_address()}")
+                if args.webui:
+                    print(f"    Chatchat WEBUI Server: {webui_address()}")
+                print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+                print("\n\n")
+                break
+            else:
+                queue.put(no)
+
         if model_worker_process := processes.get("model_worker"):
             model_worker_process.join()
         for name, process in processes.items():
