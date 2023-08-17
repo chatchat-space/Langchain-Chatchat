@@ -364,13 +364,13 @@ $ streamlit run webui.py --server.port 666
 
 ### 6. 一键启动
 
-更新一键启动脚本startup.py,一键启动所有fastchat服务、API服务、WebUI服务实例：
+更新一键启动脚本startup.py,一键启动所有fastchat服务、API服务、WebUI服务，示例代码：
 
 ```shell
 $ python startup.py --all-webui
 ```
 
-可选 `all-webui,all-api,llm-api,controller,openai-api,model-worker,api,webui`.
+可选 `all-webui,all-api,llm-api,controller,openai-api,model-worker,api,webui`，其中all-webui为一键启动webui所有依赖服务，all-api为一键启动api所有依赖服务，llm-api为一键启动fastchat所有依赖的llm服务，openai-api为仅启动fastchat的controller和openai-api-server服务，其他为单独服务启动选项。
 
 若想指定非默认模型，需要用--model-name选项，示例：
 
@@ -378,7 +378,11 @@ $ python startup.py --all-webui
 $ python startup.py --all-webui --model-name Qwen-7B-Chat
 ```
 
-**注意：startup脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认端口调用服务（默认api服务端口127.0.0.1:7861,默认webui服务端口：`本机IP：8501`)**
+**注意：**
+
+**1. startup脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认llm-api服务端口：127.0.0.1:8888,默认api服务端口：127.0.0.1:7861,默认webui服务端口：`本机IP：8501`)**
+
+**2.服务启动时间示设备不同而不同，约3-10分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
 
 ## 常见问题
 
