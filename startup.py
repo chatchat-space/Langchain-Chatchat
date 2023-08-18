@@ -315,6 +315,31 @@ def parse_args() -> argparse.ArgumentParser:
     return args
 
 
+def dump_server_info(after_start=False):
+    print("\n\n")
+    print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+    print(f"操作系统：{platform.platform()}.")
+    print(f"python版本：{sys.version}")
+    print(f"项目版本：{VERSION}")
+    print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
+    print("\n")
+    print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
+    pprint(llm_model_dict[LLM_MODEL])
+    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
+    if after_start:
+        print("\n")
+        print(f"服务端运行信息：")
+        if args.openai_api:
+            print(f"    OpenAI API Server: {fschat_openai_api_address()}/v1")
+            print("     (请确认llm_model_dict中配置的api_base_url与上面地址一致。)")
+        if args.api:
+            print(f"    Chatchat  API  Server: {api_address()}")
+        if args.webui:
+            print(f"    Chatchat WEBUI Server: {webui_address()}")
+    print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
+    print("\n\n")
+
+
 if __name__ == "__main__":
     import platform
     import time
@@ -343,6 +368,7 @@ if __name__ == "__main__":
         args.api = False
         args.webui = False
 
+    dump_server_info()
     logger.info(f"正在启动服务：")
     logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
@@ -403,27 +429,7 @@ if __name__ == "__main__":
             no = queue.get()
             if no == len(processes):
                 time.sleep(0.5)
-                print("\n\n")
-                print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
-                print(f"操作系统：{platform.platform()}.")
-                print(f"python版本：{sys.version}")
-                print(f"项目版本：{VERSION}")
-                print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
-                print("\n")
-                print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
-                pprint(llm_model_dict[LLM_MODEL])
-                print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
-                print("\n")
-                print(f"服务端运行信息：")
-                if args.openai_api:
-                    print(f"    OpenAI API Server: {fschat_openai_api_address()}/v1")
-                    print("请确认llm_model_dict中配置的api_base_url与上面地址一致。")
-                if args.api:
-                    print(f"    Chatchat  API  Server: {api_address()}")
-                if args.webui:
-                    print(f"    Chatchat WEBUI Server: {webui_address()}")
-                print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
-                print("\n\n")
+                dump_server_info(True)
                 break
             else:
                 queue.put(no)
