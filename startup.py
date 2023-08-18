@@ -255,33 +255,33 @@ def parse_args() -> argparse.ArgumentParser:
         "-a",
         "--all-webui",
         action="store_true",
-        help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        help="run fastchat's controller/openai_api/model_worker servers, run api.py and webui.py",
         dest="all_webui",
     )
     parser.add_argument(
         "--all-api",
         action="store_true",
-        help="run fastchat's controller/model_worker/openai_api servers, run api.py",
+        help="run fastchat's controller/openai_api/model_worker servers, run api.py",
         dest="all_api",
     )
     parser.add_argument(
         "--llm-api",
         action="store_true",
-        help="run fastchat's controller/model_worker/openai_api serversy",
+        help="run fastchat's controller/openai_api/model_worker servers",
         dest="llm_api",
     )
     parser.add_argument(
         "-o",
         "--openai-api",
         action="store_true",
-        help="run fastchat controller/openai_api servers",
+        help="run fastchat's controller/openai_api servers",
         dest="openai_api",
     )
     parser.add_argument(
         "-m",
         "--model-worker",
         action="store_true",
-        help="run fastchat model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
+        help="run fastchat's model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
         dest="model_worker",
     )
     parser.add_argument(
