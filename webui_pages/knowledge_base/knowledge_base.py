@@ -118,7 +118,7 @@ def knowledge_base_page(api: ApiRequest):
                     vector_store_type=vs_type,
                     embed_model=embed_model,
                 )
-                st.toast(ret["msg"])
+                st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
                 st.experimental_rerun()
 
@@ -140,10 +140,10 @@ def knowledge_base_page(api: ApiRequest):
         ):
             for f in files:
                 ret = api.upload_kb_doc(f, kb)
-                if ret["code"] == 200:
-                    st.toast(ret["msg"], icon="✔")
-                else:
-                    st.toast(ret["msg"], icon="✖")
+                if msg := check_success_msg(ret):
+                    st.toast(msg, icon="✔")
+                elif msg := check_error_msg(ret):
+                    st.toast(msg, icon="✖")
             st.session_state.files = []
 
         st.divider()
@@ -235,7 +235,7 @@ def knowledge_base_page(api: ApiRequest):
             ):
                 for row in selected_rows:
                     ret = api.delete_kb_doc(kb, row["file_name"], True)
-                    st.toast(ret["msg"])
+                    st.toast(ret.get("msg", " "))
                 st.experimental_rerun()
 
         st.divider()
@@ -262,6 +262,6 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
         ):
             ret = api.delete_knowledge_base(kb)
-            st.toast(ret["msg"])
+            st.toast(ret.get("msg", " "))
             time.sleep(1)
             st.experimental_rerun()
