@@ -252,6 +252,7 @@ def run_webui(q: Queue, run_seq: int = 5):
 def parse_args() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-a",
         "--all-webui",
         action="store_true",
         help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
@@ -260,13 +261,13 @@ def parse_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "--all-api",
         action="store_true",
-        help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        help="run fastchat's controller/model_worker/openai_api servers, run api.py",
         dest="all_api",
     )
     parser.add_argument(
         "--llm-api",
         action="store_true",
-        help="run fastchat's controller/model_worker/openai_api servers, run api.py and webui.py",
+        help="run fastchat's controller/model_worker/openai_api serversy",
         dest="llm_api",
     )
     parser.add_argument(
