@@ -229,7 +229,7 @@ class ApiRequest:
                     elif chunk.strip():
                         yield chunk
         except httpx.ConnectError as e:
-            msg = f"无法连接API服务器，请确认已执行python server\\api.py"
+            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
             logger.error(msg)
             logger.error(e)
             yield {"code": 500, "msg": msg}

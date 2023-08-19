@@ -249,12 +249,14 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
                 type="primary",
         ):
-            with st.spinner("向量库重构中"):
+            with st.spinner("向量库重构中，请耐心等待，勿刷新或关闭页面。"):
                 empty = st.empty()
                 empty.progress(0.0, "")
                 for d in api.recreate_vector_store(kb):
-                    print(d)
-                    empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+                    if msg := check_error_msg(d):
+                        st.toast(msg)
+                    else:
+                        empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
                 st.experimental_rerun()
 
         if cols[2].button(
