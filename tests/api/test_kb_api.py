@@ -8,6 +8,7 @@ root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
 from configs.server_config import api_address
 from configs.model_config import VECTOR_SEARCH_TOP_K
+from server.knowledge_base.utils import get_kb_path
 
 from pprint import pprint
 
@@ -22,8 +23,11 @@ test_files = {
 
 
 def test_delete_kb_before(api="/knowledge_base/delete_knowledge_base"):
+    if not Path(get_kb_path(kb)).exists():
+        return
+
     url = api_base_url + api
-    print("\n删除知识库")
+    print("\n测试知识库存在，需要删除")
     r = requests.post(url, json=kb)
     data = r.json()
     pprint(data)

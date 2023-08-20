@@ -77,6 +77,7 @@ class KBService(ABC):
         """
         docs = kb_file.file2text()
         if docs:
+            self.delete_doc(kb_file)
             embeddings = self._load_embeddings()
             self.do_add_doc(docs, embeddings)
             status = add_doc_to_db(kb_file)
