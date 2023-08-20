@@ -23,10 +23,11 @@ assignees: ''
 描述实际发生的结果 / Describe the actual result.
 
 **环境信息 / Environment Information**
-- langchain-ChatGLM 版本/commit 号：(例如：v1.0.0 或 commit 123456) / langchain-ChatGLM version/commit number: (e.g., v1.0.0 or commit 123456)
+- langchain-ChatGLM 版本/commit 号：(例如：v2.0.1 或 commit 123456) / langchain-ChatGLM version/commit number: (e.g., v2.0.1 or commit 123456)
 - 是否使用 Docker 部署（是/否）：是 / Is Docker deployment used (yes/no): yes
-- 使用的模型（ChatGLM-6B / ClueAI/ChatYuan-large-v2 等）：ChatGLM-6B / Model used (ChatGLM-6B / ClueAI/ChatYuan-large-v2, etc.): ChatGLM-6B
-- 使用的 Embedding 模型（GanymedeNil/text2vec-large-chinese 等）：GanymedeNil/text2vec-large-chinese / Embedding model used (GanymedeNil/text2vec-large-chinese, etc.): GanymedeNil/text2vec-large-chinese
+- 使用的模型（ChatGLM2-6B / Qwen-7B 等）：ChatGLM-6B / Model used (ChatGLM2-6B / Qwen-7B, etc.): ChatGLM2-6B
+- 使用的 Embedding 模型（moka-ai/m3e-base 等）：moka-ai/m3e-base / Embedding model used (moka-ai/m3e-base, etc.): moka-ai/m3e-base
+- 使用的向量库类型 (faiss / milvus / pg_vector 等)： faiss / Vector library used (faiss, milvus, pg_vector, etc.): faiss
 - 操作系统及版本 / Operating system and version:
 - Python 版本 / Python version:
 - 其他相关环境信息 / Other relevant environment information:
