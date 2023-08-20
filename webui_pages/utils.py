@@ -496,6 +496,7 @@ class ApiRequest:
         knowledge_base_name: str,
         filename: str = None,
         override: bool = False,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -529,7 +530,11 @@ class ApiRequest:
         else:
             response = self.post(
                 "/knowledge_base/upload_doc",
-                data={"knowledge_base_name": knowledge_base_name, "override": override},
+                data={
+                    "knowledge_base_name": knowledge_base_name,
+                    "override": override,
+                    "not_refresh_vs_cache": not_refresh_vs_cache,
+                },
                 files={"file": (filename, file)},
             )
             return self._check_httpx_json_response(response)
@@ -539,6 +544,7 @@ class ApiRequest:
         knowledge_base_name: str,
         doc_name: str,
         delete_content: bool = False,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -551,6 +557,7 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "doc_name": doc_name,
             "delete_content": delete_content,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
         }
 
         if no_remote_api:
@@ -568,6 +575,7 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         file_name: str,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -583,7 +591,11 @@ class ApiRequest:
         else:
             response = self.post(
                 "/knowledge_base/update_doc",
-                json={"knowledge_base_name": knowledge_base_name, "file_name": file_name},
+                json={
+                    "knowledge_base_name": knowledge_base_name,
+                    "file_name": file_name,
+                    "not_refresh_vs_cache": not_refresh_vs_cache,
+                },
             )
             return self._check_httpx_json_response(response)
 
@@ -617,7 +629,7 @@ class ApiRequest:
                 "/knowledge_base/recreate_vector_store",
                 json=data,
                 stream=True,
-                timeout=False,
+                timeout=None,
             )
             return self._httpx_stream2generator(response, as_json=True)
 

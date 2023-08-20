@@ -66,6 +66,7 @@ def refresh_vs_cache(kb_name: str):
     make vector store cache refreshed when next loading
     """
     _VECTOR_STORE_TICKS[kb_name] = _VECTOR_STORE_TICKS.get(kb_name, 0) + 1
+    print(f"知识库 {kb_name} 缓存刷新：{_VECTOR_STORE_TICKS[kb_name]}")
 
 
 class FaissKBService(KBService):
@@ -111,17 +112,20 @@ class FaissKBService(KBService):
     def do_add_doc(self,
                    docs: List[Document],
                    embeddings: Embeddings,
+                   **kwargs,
                    ):
         vector_store = load_vector_store(self.kb_name,
                                          embeddings=embeddings,
                                          tick=_VECTOR_STORE_TICKS.get(self.kb_name, 0))
         vector_store.add_documents(docs)
         torch_gc()
-        vector_store.save_local(self.vs_path)
-        refresh_vs_cache(self.kb_name)
+        if not kwargs.get("not_refresh_vs_cache"):
+            vector_store.save_local(self.vs_path)
+            refresh_vs_cache(self.kb_name)
 
     def do_delete_doc(self,
-                      kb_file: KnowledgeFile):
+                      kb_file: KnowledgeFile,
+                      **kwargs):
         embeddings = self._load_embeddings()
         vector_store = load_vector_store(self.kb_name,
                                          embeddings=embeddings,
@@ -132,8 +136,9 @@ class FaissKBService(KBService):
             return None
 
         vector_store.delete(ids)
-        vector_store.save_local(self.vs_path)
-        refresh_vs_cache(self.kb_name)
+        if not kwargs.get("not_refresh_vs_cache"):
+            vector_store.save_local(self.vs_path)
+            refresh_vs_cache(self.kb_name)
 
         return True
 

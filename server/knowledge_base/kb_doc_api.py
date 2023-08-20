@@ -47,6 +47,7 @@ async def list_docs(
 async def upload_doc(file: UploadFile = File(..., description="上传文件"),
                      knowledge_base_name: str = Form(..., description="知识库名称", examples=["kb1"]),
                      override: bool = Form(False, description="覆盖已有文件"),
+                     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
                      ) -> BaseResponse:
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -76,7 +77,7 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
         return BaseResponse(code=500, msg=f"{kb_file.filename} 文件上传失败，报错信息为: {e}")
 
     try:
-        kb.add_doc(kb_file)
+        kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
     except Exception as e:
         print(e)
         return BaseResponse(code=500, msg=f"{kb_file.filename} 文件向量化失败，报错信息为: {e}")
@@ -87,6 +88,7 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
 async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
                      doc_name: str = Body(..., examples=["file_name.md"]),
                      delete_content: bool = Body(False),
+                     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
                     ) -> BaseResponse:
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -102,7 +104,7 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
     try:
         kb_file = KnowledgeFile(filename=doc_name,
                                 knowledge_base_name=knowledge_base_name)
-        kb.delete_doc(kb_file, delete_content)
+        kb.delete_doc(kb_file, delete_content, not_refresh_vs_cache=not_refresh_vs_cache)
     except Exception as e:
         print(e)
         return BaseResponse(code=500, msg=f"{kb_file.filename} 文件删除失败，错误信息：{e}")
@@ -113,6 +115,7 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
 async def update_doc(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         file_name: str = Body(..., examples=["file_name"]),
+        not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
     ) -> BaseResponse:
     '''
     更新知识库文档
@@ -128,7 +131,7 @@ async def update_doc(
         kb_file = KnowledgeFile(filename=file_name,
                                 knowledge_base_name=knowledge_base_name)
         if os.path.exists(kb_file.filepath):
-            kb.update_doc(kb_file)
+            kb.update_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
             return BaseResponse(code=200, msg=f"成功更新文件 {kb_file.filename}")
     except Exception as e:
         print(e)
@@ -205,7 +208,5 @@ async def recreate_vector_store(
                         "code": 500,
                         "msg": f"添加文件‘{doc}’到知识库‘{knowledge_base_name}’时出错：{e}。已跳过。",
                     })
-                import asyncio
-                await asyncio.sleep(5)
 
     return StreamingResponse(output(), media_type="text/event-stream")

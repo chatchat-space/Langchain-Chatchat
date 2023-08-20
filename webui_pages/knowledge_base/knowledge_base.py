@@ -138,8 +138,10 @@ def knowledge_base_page(api: ApiRequest):
                 # use_container_width=True,
                 disabled=len(files) == 0,
         ):
-            for f in files:
-                ret = api.upload_kb_doc(f, kb)
+            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True} for f in files]
+            data[-1]["not_refresh_vs_cache"]=False
+            for k in data:
+                ret = api.upload_kb_doc(**k)
                 if msg := check_success_msg(ret):
                     st.toast(msg, icon="✔")
                 elif msg := check_error_msg(ret):
