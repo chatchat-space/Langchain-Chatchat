@@ -284,7 +284,7 @@ def parse_args() -> argparse.ArgumentParser:
         dest="model_worker",
     )
     parser.add_argument(
-        "-n"
+        "-n",
         "--model-name",
         type=str,
         default=LLM_MODEL,
@@ -292,7 +292,7 @@ def parse_args() -> argparse.ArgumentParser:
         dest="model_name",
     )
     parser.add_argument(
-        "-c"
+        "-c",
         "--controller",
         type=str,
         help="specify controller address the worker is registered to. default is server_config.FSCHAT_CONTROLLER",
