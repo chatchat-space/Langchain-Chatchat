@@ -229,7 +229,7 @@ embedding_model_dict = {
 如需使用开源模型进行本地部署，需首先启动 LLM 服务，启动方式分为三种：
 
 - [基于多进程脚本 llm_api.py 启动 LLM 服务](README.md#5.1.1-基于多进程脚本-llm_api.py-启动-LLM-服务)
-- [基于命令行脚本 llm_api_launch.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_launch.py-启动-LLM-服务)
+- [基于命令行脚本 llm_api_stale.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_stale.py-启动-LLM-服务)
 - [PEFT 加载](README.md#5.1.3-PEFT-加载)
 
 三种方式只需选择一个即可，具体操作方式详见 5.1.1 - 5.1.3。
@@ -258,36 +258,36 @@ max_gpu_memory="20GiB"
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
-##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
+##### 5.1.2 基于命令行脚本 llm_api_stale.py 启动 LLM 服务
 
 ⚠️ **注意:**
 
-**1.llm_api_launch.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
+**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定模型，不会读取model_config.py配置;**
 
-在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
+在项目根目录下，执行 [server/llm_api_stale.py](server/llm_api_stale.py) 脚本启动 **LLM 模型**服务：
 
 ```shell
-$ python server/llm_api_launch.py
+$ python server/llm_api_stale.py
 ```
 
 该方式支持启动多个worker，示例启动方式：
 
 ```shell
-$ python server/llm_api_launch.py --model-path-address model1@host1@port1 model2@host2@port2
+$ python server/llm_api_stale.py --model-path-address model1@host1@port1 model2@host2@port2
 ```
 
 如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
 
 ```shell
-$ python server/llm_api_launch.py --server-port 8887
+$ python server/llm_api_stale.py --server-port 8887
 ```
 
 如果要启动多卡加载，示例命令如下：
 
 ```shell
-$ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
+$ python server/llm_api_stale.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
 ```
 
 注：以如上方式启动LLM服务会以nohup命令在后台运行 FastChat 服务，如需停止服务，可以运行如下命令：

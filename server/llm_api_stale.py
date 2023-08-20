@@ -1,5 +1,5 @@
 """
-调用示例: python llm_api_launch.py --model-path-address THUDM/chatglm2-6b@localhost@7650 THUDM/chatglm2-6b-32k@localhost@7651
+调用示例: python llm_api_stale.py --model-path-address THUDM/chatglm2-6b@localhost@7650 THUDM/chatglm2-6b-32k@localhost@7651
 其他fastchat.server.controller/worker/openai_api_server参数可按照fastchat文档调用
 但少数非关键参数如--worker-address,--allowed-origins,--allowed-methods,--allowed-headers不支持
 
