@@ -114,7 +114,7 @@ kbs_config = {
         "secure": False,
     },
     "pg": {
-        "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatglm",
+        "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat",
     }
 }
 
