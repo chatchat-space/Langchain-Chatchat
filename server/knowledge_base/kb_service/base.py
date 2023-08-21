@@ -67,7 +67,7 @@ class KBService(ABC):
         """
         删除知识库
         """
-        self.do_drop_kb()
+        # self.do_drop_kb()
         status = delete_kb_from_db(self.kb_name)
         return status
 
@@ -88,7 +88,7 @@ class KBService(ABC):
         """
         从知识库删除文件
         """
-        self.do_delete_doc(kb_file)
+        self.do_delete_doc(kb_file)     # 从向量数据库删除向量
         status = delete_file_from_db(kb_file)
         if delete_content and os.path.exists(kb_file.filepath):
             os.remove(kb_file.filepath)

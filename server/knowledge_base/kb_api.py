@@ -1,6 +1,6 @@
 import urllib
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import validate_kb_name
+from server.knowledge_base.utils import validate_kb_name, delete_kb_fold
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_base_repository import list_kbs_from_db
 from configs.model_config import EMBEDDING_MODEL
@@ -45,8 +45,10 @@ async def delete_kb(
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
     try:
-        status = kb.clear_vs()
-        status = kb.drop_kb()
+        status = kb.clear_vs()      # 删除向量数据库的collection、db里的file信息
+        status = kb.drop_kb()       # 删除db里的knowledge_base信息
+        status = delete_kb_fold(knowledge_base_name)  # 删除knowledge_base的文件夹
+
         if status:
             return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
     except Exception as e:

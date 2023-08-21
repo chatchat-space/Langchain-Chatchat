@@ -64,13 +64,15 @@ class MilvusKBService(KBService):
         pass
 
     def do_delete_doc(self, kb_file: KnowledgeFile):
-        filepath = kb_file.filepath.replace('\\', '\\\\')
+        filepath = kb_file.filepath.replace('\\', '/')
         delete_list = [item.get("pk") for item in
                        self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
         self.milvus.col.delete(expr=f'pk in {delete_list}')
 
     def do_clear_vs(self):
-        self.milvus.col.drop()
+        if self.milvus.col:
+            self.milvus.col.release()
+            self.milvus.col.drop()
 
 
 if __name__ == '__main__':

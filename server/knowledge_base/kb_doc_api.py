@@ -101,7 +101,7 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
 
 async def update_doc(
         knowledge_base_name: str = Body(..., examples=["samples"]),
-        file_name: str = Body(..., examples=["file_name"]),
+        file: UploadFile = File(..., description="更新文件"),
     ):
     '''
     更新知识库文档
@@ -113,10 +113,17 @@ async def update_doc(
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    kb_file = KnowledgeFile(filename=file_name,
+    kb_file = KnowledgeFile(filename=file.filename,
                             knowledge_base_name=knowledge_base_name)
 
     if os.path.exists(kb_file.filepath):
+        os.remove(kb_file.filepath)     # 删除旧文件
+        file_content = await file.read()  # 读取上传文件的内容
+        try:
+            with open(kb_file.filepath, "wb") as f:
+                f.write(file_content)
+        except Exception as e:
+            return BaseResponse(code=500, msg=f"{kb_file.filename} 文件更新失败")
         kb.update_doc(kb_file)
         return BaseResponse(code=200, msg=f"成功更新文件 {kb_file.filename}")
     else:

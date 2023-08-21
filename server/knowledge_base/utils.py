@@ -1,4 +1,5 @@
 import os
+import shutil
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from configs.model_config import (
     embedding_model_dict,
@@ -38,6 +39,13 @@ def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
+
+def delete_kb_fold(kb_name: str):
+    kb_path = get_kb_path(kb_name)
+    if os.path.isdir(kb_path):
+        shutil.rmtree(kb_path)
+        return True
+    return False
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
@@ -122,4 +130,7 @@ class KnowledgeFile:
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
+        # 修改路径：\ -> /
+        for doc in docs:
+            doc.metadata["source"] = doc.metadata["source"].replace("\\", "/")
         return docs
