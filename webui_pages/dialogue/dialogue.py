@@ -1,4 +1,5 @@
 import streamlit as st
+from configs.server_config import FSCHAT_MODEL_WORKERS
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
@@ -38,10 +39,14 @@ def get_messages_history(history_len: int) -> List[Dict]:
     return history[-i:]
 
 
-@st.cache_resource
-def change_llm_model(_api: ApiRequest, model_name: str, new_model_name: str):
-    if model_name != new_model_name:
-        _api.change_llm_model(model_name, new_model_name)
+@st.cache_data
+def change_llm_model(
+    _api: ApiRequest,
+    model_name: str,
+    new_model_name: str,
+):
+    if model_name and model_name != new_model_name:
+        return _api.change_llm_model(model_name, new_model_name)
 
 
 def dialogue_page(api: ApiRequest):
@@ -70,7 +75,7 @@ def dialogue_page(api: ApiRequest):
         def on_llm_change():
             st.session_state["prev_llm_model"] = llm_model
 
-        llm_models = list(llm_model_dict.keys()) # todo: list available models from openai api
+        llm_models = list(FSCHAT_MODEL_WORKERS.keys())
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
                                 llm_models.index(LLM_MODEL),
@@ -114,8 +119,7 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            # r = api.chat_chat(prompt, history)
-            r = api.chat_fastchat(history + [{"role": "user", "content": prompt}])
+            r = api.chat_chat(prompt, history, model=llm_model)
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)
@@ -130,7 +134,7 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="知识库匹配结果"),
             ])
             text = ""
-            for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history):
+            for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
@@ -143,7 +147,7 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="网络搜索结果"),
             ])
             text = ""
-            for d in api.search_engine_chat(prompt, search_engine, se_top_k):
+            for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]

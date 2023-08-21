@@ -58,9 +58,6 @@ class ApiRequest:
         self.timeout = timeout
         self.no_remote_api = no_remote_api
 
-    def __hash__(self):
-        return str(id(self))
-
     def _parse_url(self, url: str) -> str:
         if (not url.startswith("http")
                     and self.base_url
@@ -290,6 +287,7 @@ class ApiRequest:
         query: str,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -302,6 +300,7 @@ class ApiRequest:
             "query": query,
             "history": history,
             "stream": stream,
+            "model_name": model,
         }
 
         if no_remote_api:
@@ -320,6 +319,7 @@ class ApiRequest:
         score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -335,6 +335,7 @@ class ApiRequest:
             "score_threshold": score_threshold,
             "history": history,
             "stream": stream,
+            "model_name": model,
             "local_doc_url": no_remote_api,
         }
 
@@ -356,6 +357,7 @@ class ApiRequest:
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -369,6 +371,7 @@ class ApiRequest:
             "search_engine_name": search_engine_name,
             "top_k": top_k,
             "stream": stream,
+            "model_name": model,
         }
 
         if no_remote_api:
@@ -642,8 +645,12 @@ class ApiRequest:
         model_name: str,
         controller_address: str = None,
     ):
+        '''
+        向fastchat controller请求停止某个LLM模型。
+        注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
+        '''
         controller_address = controller_address or fschat_controller_address()
-        r = httpx.post(
+        r = self.post(
             controller_address + "/release_worker",
             json={"model_name": model_name},
         )
@@ -655,10 +662,14 @@ class ApiRequest:
         new_model_name: str,
         controller_address: str = None,
     ):
+        '''
+        向fastchat controller请求切换LLM模型。
+        '''
         controller_address = controller_address or fschat_controller_address()
-        r = httpx.post(
+        r = self.post(
             controller_address + "/release_worker",
             json={"model_name": model_name, "new_model_name": new_model_name},
+            timeout=300.0, # wait 5 minutes for new worker_model
         )
         return r.json()
 

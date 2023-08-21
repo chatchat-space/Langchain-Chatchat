@@ -158,7 +158,7 @@ def create_openai_api_app(
 
 
 def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
-    if not isinstance(run_seq, int):
+    if q is None or not isinstance(run_seq, int):
         return
 
     if run_seq == 1:
@@ -183,6 +183,7 @@ def run_controller(q: Queue, run_seq: int = 1):
     import uvicorn
     import httpx
     from fastapi import Body
+    import time
 
     app = create_controller_app(FSCHAT_CONTROLLER.get("dispatch_method"))
     _set_app_seq(app, q, run_seq)
@@ -190,25 +191,60 @@ def run_controller(q: Queue, run_seq: int = 1):
     # add interface to release and load model worker
     @app.post("/release_worker")
     def release_worker(
-        model_name: str = Body(None, description="要释放模型的名称，与地址二选一", samples=["chatglm-6b"]),
-        worker_address: str = Body(None, description="要释放模型的地址，与地址二选一", samples=[fschat_controller_address()]),
+        model_name: str = Body(..., description="要释放模型的名称", samples=["chatglm-6b"]),
+        # worker_address: str = Body(None, description="要释放模型的地址，与名称二选一", samples=[fschat_controller_address()]),
         new_model_name: str = Body(None, description="释放后加载该模型"),
         keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
     ) -> Dict:
-        if model_name:
-            worker_address = app._controller.get_worker_address(model_name)
-        if worker_address:
-            r = httpx.post(worker_address + "/release",
-                        json={"new_model_name": new_model_name, "keep_origin": keep_origin})
-            if r.status_code == 200:
-                if model_name and new_model_name:
-                    return {"code": 200, "msg": f"sucess change worker from {model_name} to {new_model_name}"}
-                else:
-                    return {"code": 200, "msg": f"sucess to release {worker_address}"}
-        if model_name:
-            return {"code": 500, "errorMsg": f"failed to release model: {model_name}"}
-        if worker_address:
-            return {"code": 500, "errorMsg": f"failed to release worker: {worker_address}"}
+        available_models = app._controller.list_models()
+        if new_model_name in available_models:
+            msg = f"要切换的LLM模型 {new_model_name} 已经存在"
+            logger.info(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            logger.info(f"开始切换LLM模型：从 {model_name} 到 {new_model_name}")
+        else:
+            logger.info(f"即将停止LLM模型： {model_name}")
+
+        if model_name not in available_models:
+            msg = f"the model {model_name} is not available"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        worker_address = app._controller.get_worker_address(model_name)
+        if not worker_address:
+            msg = f"can not find model_worker address for {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        r = httpx.post(worker_address + "/release",
+                    json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+        if r.status_code != 200:
+            msg = f"failed to release model: {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            timer = 300 # wait 5 minutes for new model_worker register
+            while timer > 0:
+                models = app._controller.list_models()
+                if new_model_name in models:
+                    break
+                time.sleep(1)
+                timer -= 1
+            if timer > 0:
+                msg = f"sucess change model from {model_name} to {new_model_name}"
+                logger.info(msg)
+                return {"code": 200, "msg": msg}
+            else:
+                msg = f"failed change model from {model_name} to {new_model_name}"
+                logger.error(msg)
+                return {"code": 500, "msg": msg}
+        else:
+            msg = f"sucess to release model: {model_name}"
+            logger.info(msg)
+            return {"code": 200, "msg": msg}
 
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
@@ -283,12 +319,15 @@ def run_api_server(q: Queue, run_seq: int = 4):
 def run_webui(q: Queue, run_seq: int = 5):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
-    while True:
-        no = q.get()
-        if no != run_seq - 1:
-            q.put(no)
-        else:
-            break
+
+    if q is not None and isinstance(run_seq, int):
+        while True:
+            no = q.get()
+            if no != run_seq - 1:
+                q.put(no)
+            else:
+                break
+        q.put(run_seq)
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                           "--server.address", host,
                           "--server.port", str(port)])
@@ -362,7 +401,7 @@ def parse_args() -> argparse.ArgumentParser:
     return args
 
 
-def dump_server_info(after_start=False):
+def dump_server_info(after_start=False, args=None):
     import platform
     import langchain
     import fastchat
@@ -375,8 +414,11 @@ def dump_server_info(after_start=False):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
-    print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
-    pprint(llm_model_dict[LLM_MODEL])
+    model = LLM_MODEL
+    if args and args.model_name:
+        model = args.model_name
+    print(f"当前LLM模型：{model} @ {llm_model_dict[model].get('device', LLM_DEVICE)}")
+    pprint(llm_model_dict[model])
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
     if after_start:
         print("\n")
@@ -416,7 +458,7 @@ if __name__ == "__main__":
         args.api = False
         args.webui = False
 
-    dump_server_info()
+    dump_server_info(args=args)
     logger.info(f"正在启动服务：")
     logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
@@ -472,28 +514,37 @@ if __name__ == "__main__":
         processes["webui"] = process
 
     try:
+        # log infors
         while True:
             cmd = queue.get()
+
+            if isinstance(cmd, int):
+                if cmd == len(processes): # all servers have been started
+                    time.sleep(0.5)
+                    dump_server_info(True, args)
+                else:
+                    queue.put(cmd)
+
             if isinstance(cmd, list):
                 if cmd[0] == "start": # 暂不支持同脚本内多worker
                     continue
                 elif cmd[0] == "stop":
-                    process["model_worker"].terminate()
-                    process["model_worker"].join()
+                    time.sleep(1)
+                    processes["model_worker"].terminate()
+                    processes["model_worker"].join()
                     break
                 elif cmd[0] == "replace":
-                    process["model_worker"].terminate()
-                    process["model_worker"].join()
+                    time.sleep(1)
+                    processes["model_worker"].terminate()
+                    processes["model_worker"].join()
                     process = Process(
                         target=run_model_worker,
                         name=f"model_worker({os.getpid()})",
-                        args=(cmd[1], args.controller_address, queue, len(processes) + 1),
+                        args=(cmd[1], args.controller_address, queue, None),
                         daemon=True,
                     )
                     process.start()
                     processes["model_worker"] = process
-            else:
-                queue.put(cmd)
 
         if model_worker_process := processes.get("model_worker"):
             model_worker_process.join()

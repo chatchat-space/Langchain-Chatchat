@@ -53,6 +53,11 @@ FSCHAT_MODEL_WORKERS = {
         # "stream_interval": 2,
         # "no_register": False,
     },
+    "baichuan-7b": {
+        "host": DEFAULT_BIND_HOST,
+        "port": 20002,
+        # "device": "cpu",
+    },
 }
 
 # fastchat multi model worker server
