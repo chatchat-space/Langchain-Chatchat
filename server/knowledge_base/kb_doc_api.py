@@ -201,7 +201,11 @@ async def recreate_vector_store(
                         "finished": i,
                         "doc": doc,
                     }, ensure_ascii=False)
-                    kb.add_doc(kb_file)
+                    if i == len(docs) - 1:
+                        not_refresh_vs_cache = False
+                    else:
+                        not_refresh_vs_cache = True
+                    kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
                 except Exception as e:
                     print(e)
                     yield json.dumps({

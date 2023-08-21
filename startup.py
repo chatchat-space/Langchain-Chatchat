@@ -317,6 +317,11 @@ def parse_args() -> argparse.ArgumentParser:
 
 
 def dump_server_info(after_start=False):
+    import platform
+    import langchain
+    import fastchat
+    from configs.server_config import api_address, webui_address
+
     print("\n\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print(f"操作系统：{platform.platform()}.")
@@ -342,11 +347,7 @@ def dump_server_info(after_start=False):
 
 
 if __name__ == "__main__":
-    import platform
     import time
-    import langchain
-    import fastchat
-    from configs.server_config import api_address, webui_address
 
     mp.set_start_method("spawn")
     queue = Queue()
