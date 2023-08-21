@@ -617,7 +617,7 @@ class ApiRequest:
                 "/knowledge_base/recreate_vector_store",
                 json=data,
                 stream=True,
-                timeout=False,
+                timeout=None,
             )
             return self._httpx_stream2generator(response, as_json=True)
 
