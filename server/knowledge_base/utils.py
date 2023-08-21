@@ -69,7 +69,7 @@ class KnowledgeFile:
     ):
         self.kb_name = knowledge_base_name
         self.filename = filename
-        self.ext = os.path.splitext(filename)[-1]
+        self.ext = os.path.splitext(filename)[-1].lower()
         if self.ext not in SUPPORTED_EXTS:
             raise ValueError(f"暂未支持的文件格式 {self.ext}")
         self.filepath = get_file_path(knowledge_base_name, filename)
