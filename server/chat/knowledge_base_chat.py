@@ -1,5 +1,6 @@
 from fastapi import Body, Request
-from fastapi.responses import StreamingResponse
+#from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
                                   VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
 from server.chat.utils import wrap_done
@@ -95,5 +96,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history),
-                             media_type="text/event-stream")
+    #return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history),
+    #                         media_type="text/event-stream")
+    return EventSourceResponse(knowledge_base_chat_iterator(query, kb, top_k, history))
