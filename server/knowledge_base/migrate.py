@@ -43,7 +43,11 @@ def folder2db(
                 kb_file = KnowledgeFile(doc, kb_name)
                 if callable(callback_before):
                     callback_before(kb_file, i, docs)
-                kb.add_doc(kb_file)
+                if i == len(docs) - 1:
+                    not_refresh_vs_cache = False
+                else:
+                    not_refresh_vs_cache = True
+                kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
                 if callable(callback_after):
                     callback_after(kb_file, i, docs)
             except Exception as e:
@@ -67,7 +71,11 @@ def folder2db(
                 kb_file = KnowledgeFile(doc, kb_name)
                 if callable(callback_before):
                     callback_before(kb_file, i, docs)
-                kb.update_doc(kb_file)
+                if i == len(docs) - 1:
+                    not_refresh_vs_cache = False
+                else:
+                    not_refresh_vs_cache = True
+                kb.update_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
                 if callable(callback_after):
                     callback_after(kb_file, i, docs)
             except Exception as e:
@@ -81,7 +89,11 @@ def folder2db(
                 kb_file = KnowledgeFile(doc, kb_name)
                 if callable(callback_before):
                     callback_before(kb_file, i, docs)
-                kb.add_doc(kb_file)
+                if i == len(docs) - 1:
+                    not_refresh_vs_cache = False
+                else:
+                    not_refresh_vs_cache = True
+                kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
                 if callable(callback_after):
                     callback_after(kb_file, i, docs)
             except Exception as e:

@@ -46,7 +46,7 @@ class PGKBService(KBService):
     def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings) -> List[Document]:
         # todo: support score threshold
         self._load_pg_vector(embeddings=embeddings)
-        return self.pg_vector.similarity_search(query, top_k)
+        return self.pg_vector.similarity_search_with_score(query, top_k)
 
     def add_doc(self, kb_file: KnowledgeFile):
         """

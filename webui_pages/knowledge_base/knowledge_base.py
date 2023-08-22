@@ -118,7 +118,7 @@ def knowledge_base_page(api: ApiRequest):
                     vector_store_type=vs_type,
                     embed_model=embed_model,
                 )
-                st.toast(ret["msg"])
+                st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
                 st.experimental_rerun()
 
@@ -138,12 +138,14 @@ def knowledge_base_page(api: ApiRequest):
                 # use_container_width=True,
                 disabled=len(files) == 0,
         ):
-            for f in files:
-                ret = api.upload_kb_doc(f, kb)
-                if ret["code"] == 200:
-                    st.toast(ret["msg"], icon="✔")
-                else:
-                    st.toast(ret["msg"], icon="✖")
+            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True} for f in files]
+            data[-1]["not_refresh_vs_cache"]=False
+            for k in data:
+                ret = api.upload_kb_doc(**k)
+                if msg := check_success_msg(ret):
+                    st.toast(msg, icon="✔")
+                elif msg := check_error_msg(ret):
+                    st.toast(msg, icon="✖")
             st.session_state.files = []
 
         st.divider()
@@ -235,7 +237,7 @@ def knowledge_base_page(api: ApiRequest):
             ):
                 for row in selected_rows:
                     ret = api.delete_kb_doc(kb, row["file_name"], True)
-                    st.toast(ret["msg"])
+                    st.toast(ret.get("msg", " "))
                 st.experimental_rerun()
 
         st.divider()
@@ -249,12 +251,14 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
                 type="primary",
         ):
-            with st.spinner("向量库重构中"):
+            with st.spinner("向量库重构中，请耐心等待，勿刷新或关闭页面。"):
                 empty = st.empty()
                 empty.progress(0.0, "")
                 for d in api.recreate_vector_store(kb):
-                    print(d)
-                    empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+                    if msg := check_error_msg(d):
+                        st.toast(msg)
+                    else:
+                        empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
                 st.experimental_rerun()
 
         if cols[2].button(
@@ -262,6 +266,6 @@ def knowledge_base_page(api: ApiRequest):
                 use_container_width=True,
         ):
             ret = api.delete_knowledge_base(kb)
-            st.toast(ret["msg"])
+            st.toast(ret.get("msg", " "))
             time.sleep(1)
             st.experimental_rerun()
