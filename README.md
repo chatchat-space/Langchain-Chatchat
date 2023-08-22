@@ -298,24 +298,13 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-##### 5.1.3 PEFT 加载
+##### 5.1.3 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia等)
 
 本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
+详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)
 
-示例代码如下：
+![image](https://github.com/chatchat-space/Langchain-Chatchat/assets/22924096/4e056c1c-5c4b-4865-a1af-859cd58a625d)
 
-```shell
-PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
-    --model-path /data/chris/peft-llama-dummy-1 \
-    --model-names peft-dummy-1 \
-    --model-path /data/chris/peft-llama-dummy-2 \
-    --model-names peft-dummy-2 \
-    --model-path /data/chris/peft-llama-dummy-3 \
-    --model-names peft-dummy-3 \
-    --num-gpus 2
-```
-
-详见 [FastChat 相关 PR](https://github.com/lm-sys/fastchat/pull/1905#issuecomment-1627801216)
 
 #### 5.2 启动 API 服务
 
@@ -441,6 +430,6 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 ## 项目交流群
 
-<img src="img/qr_code_54.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_55.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

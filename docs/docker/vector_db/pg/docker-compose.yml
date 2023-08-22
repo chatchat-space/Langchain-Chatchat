@@ -2,9 +2,9 @@ version: "3.8"
 services:
  postgresql:
   image: ankane/pgvector:v0.4.1
-  container_name: langchain-chatgml-pg-db
+  container_name: langchain_chatchat-pg-db
   environment:
-      POSTGRES_DB: langchain_chatgml
+      POSTGRES_DB: langchain_chatchat
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
   ports:
