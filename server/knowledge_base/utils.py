@@ -40,12 +40,6 @@ def list_docs_from_folder(kb_name: str):
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
 
-def delete_kb_fold(kb_name: str):
-    kb_path = get_kb_path(kb_name)
-    if os.path.isdir(kb_path):
-        shutil.rmtree(kb_path)
-        return True
-    return False
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):

@@ -1,5 +1,7 @@
 from typing import List
 
+import shutil
+
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Milvus
@@ -43,7 +45,7 @@ class MilvusKBService(KBService):
         self._load_milvus()
 
     def do_drop_kb(self):
-        self.milvus.col.drop()
+        shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings) -> List[Document]:
         # todo: support score threshold

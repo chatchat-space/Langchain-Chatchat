@@ -62,12 +62,11 @@ class KBService(ABC):
         status = delete_files_from_db(self.kb_name)
         return status
 
-
     def drop_kb(self):
         """
         删除知识库
         """
-        # self.do_drop_kb()
+        self.do_drop_kb()
         status = delete_kb_from_db(self.kb_name)
         return status
 

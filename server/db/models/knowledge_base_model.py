@@ -9,7 +9,7 @@ class KnowledgeBaseModel(Base):
     """
     __tablename__ = 'knowledge_base'
     id = Column(Integer, primary_key=True, autoincrement=True, comment='知识库ID')
-    kb_name = Column(String(24), comment='知识库名称')
+    kb_name = Column(String(50), comment='知识库名称')
     vs_type = Column(String(24), comment='嵌入模型类型')
     embed_model = Column(String(24), comment='嵌入模型名称')
     file_count = Column(Integer, default=0, comment='文件数量')
