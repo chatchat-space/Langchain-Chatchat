@@ -73,6 +73,8 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
 
+    history = [History.from_data(h) for h in history]
+
     async def search_engine_chat_iterator(query: str,
                                           search_engine_name: str,
                                           top_k: int,
@@ -91,8 +93,9 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
         docs = lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
+        input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_tuple() for i in history] + [("human", PROMPT_TEMPLATE)])
+            [i.to_msg_template() for i in history] + [input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model)
 
