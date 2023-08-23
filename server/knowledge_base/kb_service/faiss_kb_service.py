@@ -24,7 +24,7 @@ from server.utils import torch_gc
 def _embeddings_hash(self):
     if isinstance(self, HuggingFaceEmbeddings):
         return hash(self.model_name)
-    if isinstance(self, HuggingFaceBgeEmbeddings):
+    elif isinstance(self, HuggingFaceBgeEmbeddings):
         return hash(self.model_name)
     elif isinstance(self, OpenAIEmbeddings):
         return hash(self.model)
