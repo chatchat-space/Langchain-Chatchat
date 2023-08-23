@@ -126,6 +126,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [BAAI/bge-small-zh](https://huggingface.co/BAAI/bge-small-zh)
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
+- [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
 - [text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
 - [text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
 - [text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
@@ -133,6 +134,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+- [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
 ---
 
@@ -206,6 +208,7 @@ embedding_model_dict = {
                         "m3e-base": "/Users/xxx/Downloads/m3e-base",
                        }
 ```
+如果你选择使用OpenAI的Embedding模型，请将模型的```key```写入`embedding_model_dict`中。使用该模型，你需要鞥能够访问OpenAI官的API，或设置代理。
 
 ### 4. 知识库初始化与迁移
 

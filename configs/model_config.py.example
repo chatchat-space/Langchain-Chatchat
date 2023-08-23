@@ -24,7 +24,9 @@ embedding_model_dict = {
     "m3e-large": "moka-ai/m3e-large",
     "bge-small-zh": "BAAI/bge-small-zh",
     "bge-base-zh": "BAAI/bge-base-zh",
-    "bge-large-zh": "BAAI/bge-large-zh"
+    "bge-large-zh": "BAAI/bge-large-zh",
+    "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
+    "text-embedding-ada-002": os.environ.get("OPENAI_API_KEY")
 }
 
 # 选用的 Embedding 名称
