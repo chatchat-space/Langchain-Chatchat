@@ -45,7 +45,7 @@ def list_docs_from_folder(kb_name: str):
 def load_embeddings(model: str, device: str):
     if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
         embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
-    if 'bge-' in model:
+    elif 'bge-' in model:
         embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
                                               model_kwargs={'device': device},
                                               query_instruction="为这个句子生成表示以用于检索相关文章：")
