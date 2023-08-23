@@ -50,7 +50,7 @@ class MilvusKBService(KBService):
         self._load_milvus(embeddings=embeddings)
         return self.milvus.similarity_search_with_score(query, top_k)
 
-    def add_doc(self, kb_file: KnowledgeFile):
+    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
         """
         向知识库添加文件
         """
@@ -60,10 +60,10 @@ class MilvusKBService(KBService):
         status = add_doc_to_db(kb_file)
         return status
 
-    def do_add_doc(self, docs: List[Document], embeddings: Embeddings):
+    def do_add_doc(self, docs: List[Document], embeddings: Embeddings, **kwargs):
         pass
 
-    def do_delete_doc(self, kb_file: KnowledgeFile):
+    def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         filepath = kb_file.filepath.replace('\\', '\\\\')
         delete_list = [item.get("pk") for item in
                        self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
