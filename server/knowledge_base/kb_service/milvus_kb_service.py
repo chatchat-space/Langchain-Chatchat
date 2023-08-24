@@ -70,7 +70,7 @@ class MilvusKBService(KBService):
         self.milvus.col.delete(expr=f'pk in {delete_list}')
 
     def do_clear_vs(self):
-        if not self.milvus.col:
+        if self.milvus.col:
             self.milvus.col.drop()
 
 
