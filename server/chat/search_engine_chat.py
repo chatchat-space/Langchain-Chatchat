@@ -87,7 +87,8 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
             callbacks=[callback],
             openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL
+            model_name=LLM_MODEL,
+            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
         )
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
