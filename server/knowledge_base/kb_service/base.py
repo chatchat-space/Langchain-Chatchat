@@ -157,6 +157,7 @@ class KBService(ABC):
     def do_search(self,
                   query: str,
                   top_k: int,
+                  score_threshold: float,
                   embeddings: Embeddings,
                   ) -> List[Document]:
         """
