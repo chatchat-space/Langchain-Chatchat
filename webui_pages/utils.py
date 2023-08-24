@@ -6,12 +6,12 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    llm_model_dict,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     logger,
 )
-from configs.server_config import fschat_controller_address
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -19,8 +19,6 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
 from server.utils import run_async, iter_over_async
 
 from configs.model_config import NLTK_DATA_PATH
@@ -640,19 +638,37 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
+    def list_running_models(self, controller_address: str = None):
+        '''
+        获取Fastchat中正运行的模型列表
+        '''
+        r = self.post(
+            "/llm_model/list_models",
+        )
+        return r.json().get("data", [])
+
+    def list_config_models(self):
+        '''
+        获取configs中配置的模型列表
+        '''
+        return list(llm_model_dict.keys())
+
     def stop_llm_model(
         self,
         model_name: str,
         controller_address: str = None,
     ):
         '''
-        向fastchat controller请求停止某个LLM模型。
+        停止某个LLM模型。
         注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
         '''
-        controller_address = controller_address or fschat_controller_address()
+        data = {
+            "model_name": model_name,
+            "controller_address": controller_address,
+        }
         r = self.post(
-            controller_address + "/release_worker",
-            json={"model_name": model_name},
+            "/llm_model/stop",
+            json=data,
         )
         return r.json()
     
@@ -665,10 +681,37 @@ class ApiRequest:
         '''
         向fastchat controller请求切换LLM模型。
         '''
-        controller_address = controller_address or fschat_controller_address()
+        if not model_name or not new_model_name:
+            return
+
+        if new_model_name == model_name:
+            return {
+                "code": 200,
+                "msg": "什么都不用做"
+            }
+
+        running_models = self.list_running_models()
+        if model_name not in running_models:
+            return {
+                "code": 500,
+                "msg": f"指定的模型'{model_name}'没有运行。当前运行模型：{running_models}"
+            }
+
+        config_models = self.list_config_models()
+        if new_model_name not in config_models:
+            return {
+                "code": 500,
+                "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
+            }
+
+        data = {
+            "model_name": model_name,
+            "new_model_name": new_model_name,
+            "controller_address": controller_address,
+        }
         r = self.post(
-            controller_address + "/release_worker",
-            json={"model_name": model_name, "new_model_name": new_model_name},
+            "/llm_model/change",
+            json=data,
             timeout=300.0, # wait 5 minutes for new worker_model
         )
         return r.json()

@@ -18,7 +18,7 @@ from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_di
     logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
                                    FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
-                                   fschat_openai_api_address, )
+                                   fschat_openai_api_address, get_model_worker_config)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List, Dict
@@ -268,10 +268,10 @@ def run_model_worker(
     import uvicorn
     from fastapi import Body
 
-    kwargs = FSCHAT_MODEL_WORKERS[LLM_MODEL].copy()
+    kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
     port = kwargs.pop("port")
-    model_path = llm_model_dict[model_name].get("local_model_path", "")
+    model_path = kwargs.get("local_model_path", "")
     kwargs["model_path"] = model_path
     kwargs["model_names"] = [model_name]
     kwargs["controller_address"] = controller_address or fschat_controller_address()

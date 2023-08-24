@@ -39,16 +39,6 @@ def get_messages_history(history_len: int) -> List[Dict]:
     return history[-i:]
 
 
-@st.cache_data
-def change_llm_model(
-    _api: ApiRequest,
-    model_name: str,
-    new_model_name: str,
-):
-    if model_name and model_name != new_model_name:
-        return _api.change_llm_model(model_name, new_model_name)
-
-
 def dialogue_page(api: ApiRequest):
     chat_box.init_session()
 
@@ -72,16 +62,37 @@ def dialogue_page(api: ApiRequest):
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
+
         def on_llm_change():
             st.session_state["prev_llm_model"] = llm_model
 
-        llm_models = list(FSCHAT_MODEL_WORKERS.keys())
+        def llm_model_format_func(x):
+            if x in running_models:
+                return f"{x} (Running)"
+            return x
+
+        running_models = api.list_running_models()
+        config_models = api.list_config_models()
+        for x in running_models:
+            if x in config_models:
+                config_models.remove(x)
+        llm_models = running_models + config_models
+        if "prev_llm_model" not in st.session_state:
+            index = llm_models.index(LLM_MODEL)
+        else:
+            index = 0
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
-                                llm_models.index(LLM_MODEL),
+                                index,
+                                format_func=llm_model_format_func,
                                 on_change=on_llm_change,
-                                key="llm_model")
-        change_llm_model(api, st.session_state.get("prev_llm_model"), llm_model)
+                                # key="llm_model",
+                                )
+        if st.session_state.get("prev_llm_model") != llm_model:
+            with st.spinner(f"正在加载模型： {llm_model}"):
+                r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
+            st.session_state["prev_llm_model"] = llm_model
+
         history_len = st.number_input("历史对话轮数：", 0, 10, 3)
 
         # todo: support history len

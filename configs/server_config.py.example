@@ -29,15 +29,16 @@ FSCHAT_OPENAI_API = {
 # 这些模型必须是在model_config.llm_model_dict中正确配置的。
 # 在启动startup.py时，可用通过`--model-worker --model-name xxxx`指定模型，不指定则为LLM_MODEL
 FSCHAT_MODEL_WORKERS = {
-    LLM_MODEL: {
+    # 所有模型共用的默认配置，可在模型专项配置或llm_model_dict中进行覆盖。
+    "default": {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
         # todo: 多卡加载需要配置的参数
-        "gpus": None,
-        "numgpus": 1,
-        # 以下为非常用参数，可根据需要配置
+        # "gpus": None,
+        # "numgpus": 1,
         # "max_gpu_memory": "20GiB",
+        # 以下为非常用参数，可根据需要配置
         # "load_8bit": False,
         # "cpu_offloading": None,
         # "gptq_ckpt": None,
@@ -53,10 +54,8 @@ FSCHAT_MODEL_WORKERS = {
         # "stream_interval": 2,
         # "no_register": False,
     },
-    "baichuan-7b": {
-        "host": DEFAULT_BIND_HOST,
-        "port": 20002,
-        # "device": "cpu",
+    "baichuan-7b": { # 使用default中的IP和端口
+        "device": "cpu",
     },
 }
 
