@@ -40,16 +40,6 @@ def get_messages_history(history_len: int) -> List[Dict]:
     return history[-i:]
 
 
-@st.cache_data
-def change_llm_model(
-    _api: ApiRequest,
-    model_name: str,
-    new_model_name: str,
-):
-    if model_name and model_name != new_model_name:
-        return _api.change_llm_model(model_name, new_model_name)
-
-
 def dialogue_page(api: ApiRequest):
     chat_box.init_session()
 
