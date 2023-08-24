@@ -75,10 +75,15 @@ llm_model_dict = {
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
     # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
+
+    # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
+    # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
+    # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
     "gpt-3.5-turbo": {
         "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY")
+        "api_key": os.environ.get("OPENAI_API_KEY"),
+        "openai_proxy": os.environ.get("OPENAI_PROXY")
     },
 }
 
