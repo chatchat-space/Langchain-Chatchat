@@ -116,7 +116,7 @@ class KBService(ABC):
                     score_threshold: float = SCORE_THRESHOLD,
                     ):
         embeddings = self._load_embeddings()
-        docs = self.do_search(query, top_k, score_threshold, embeddings)
+        docs = self.do_search(query, top_k, embeddings)
         return docs
 
     @abstractmethod
