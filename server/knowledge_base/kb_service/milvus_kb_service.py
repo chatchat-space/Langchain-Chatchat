@@ -45,7 +45,7 @@ class MilvusKBService(KBService):
     def do_drop_kb(self):
         self.milvus.col.drop()
 
-    def do_search(self, query: str, top_k: int, embeddings: Embeddings):
+    def do_search(self, query: str, top_k: int,score_threshold: float, embeddings: Embeddings):
         # todo: support score threshold
         self._load_milvus(embeddings=embeddings)
         return self.milvus.similarity_search_with_score(query, top_k)
@@ -70,7 +70,8 @@ class MilvusKBService(KBService):
         self.milvus.col.delete(expr=f'pk in {delete_list}')
 
     def do_clear_vs(self):
-        self.milvus.col.drop()
+        if not self.milvus.col:
+            self.milvus.col.drop()
 
 
 if __name__ == '__main__':
