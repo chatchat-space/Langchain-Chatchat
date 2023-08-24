@@ -117,7 +117,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
             answer = ""
             async for token in callback.aiter():
                 answer += token
-            yield json.dumps({"answer": token,
+            yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
         await task
