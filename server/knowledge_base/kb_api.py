@@ -15,7 +15,7 @@ async def list_kbs():
 async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
                     vector_store_type: str = Body("faiss"),
                     embed_model: str = Body(EMBEDDING_MODEL),
-                    ):
+                    ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -27,13 +27,18 @@ async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
 
     kb = KBServiceFactory.get_service(knowledge_base_name, vector_store_type, embed_model)
-    kb.create_kb()
+    try:
+        kb.create_kb()
+    except Exception as e:
+        print(e)
+        return BaseResponse(code=500, msg=f"创建知识库出错： {e}")
+
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 
 
 async def delete_kb(
         knowledge_base_name: str = Body(..., examples=["samples"])
-    ):
+    ) -> BaseResponse:
     # Delete selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -51,5 +56,6 @@ async def delete_kb(
             return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
     except Exception as e:
         print(e)
+        return BaseResponse(code=500, msg=f"删除知识库时出现意外： {e}")
 
     return BaseResponse(code=500, msg=f"删除知识库失败 {knowledge_base_name}")

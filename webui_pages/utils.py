@@ -229,18 +229,18 @@ class ApiRequest:
                     elif chunk.strip():
                         yield chunk
         except httpx.ConnectError as e:
-            msg = f"无法连接API服务器，请确认已执行python server\\api.py"
+            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
             logger.error(msg)
             logger.error(e)
-            yield {"code": 500, "errorMsg": msg}
+            yield {"code": 500, "msg": msg}
         except httpx.ReadTimeout as e:
             msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）"
             logger.error(msg)
             logger.error(e)
-            yield {"code": 500, "errorMsg": msg}
+            yield {"code": 500, "msg": msg}
         except Exception as e:
             logger.error(e)
-            yield {"code": 500, "errorMsg": str(e)}
+            yield {"code": 500, "msg": str(e)}
 
     # 对话相关操作
 
@@ -394,7 +394,7 @@ class ApiRequest:
             return response.json()
         except Exception as e:
             logger.error(e)
-            return {"code": 500, "errorMsg": errorMsg or str(e)}
+            return {"code": 500, "msg": errorMsg or str(e)}
 
     def list_knowledge_bases(
         self,
@@ -496,6 +496,7 @@ class ApiRequest:
         knowledge_base_name: str,
         filename: str = None,
         override: bool = False,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -529,7 +530,11 @@ class ApiRequest:
         else:
             response = self.post(
                 "/knowledge_base/upload_doc",
-                data={"knowledge_base_name": knowledge_base_name, "override": override},
+                data={
+                    "knowledge_base_name": knowledge_base_name,
+                    "override": override,
+                    "not_refresh_vs_cache": not_refresh_vs_cache,
+                },
                 files={"file": (filename, file)},
             )
             return self._check_httpx_json_response(response)
@@ -539,6 +544,7 @@ class ApiRequest:
         knowledge_base_name: str,
         doc_name: str,
         delete_content: bool = False,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -551,6 +557,7 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "doc_name": doc_name,
             "delete_content": delete_content,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
         }
 
         if no_remote_api:
@@ -568,6 +575,7 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         file_name: str,
+        not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
@@ -583,7 +591,11 @@ class ApiRequest:
         else:
             response = self.post(
                 "/knowledge_base/update_doc",
-                json={"knowledge_base_name": knowledge_base_name, "file_name": file_name},
+                json={
+                    "knowledge_base_name": knowledge_base_name,
+                    "file_name": file_name,
+                    "not_refresh_vs_cache": not_refresh_vs_cache,
+                },
             )
             return self._check_httpx_json_response(response)
 
@@ -617,7 +629,7 @@ class ApiRequest:
                 "/knowledge_base/recreate_vector_store",
                 json=data,
                 stream=True,
-                timeout=False,
+                timeout=None,
             )
             return self._httpx_stream2generator(response, as_json=True)
 
@@ -626,7 +638,22 @@ def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
     '''
     return error message if error occured when requests API
     '''
-    if isinstance(data, dict) and key in data:
+    if isinstance(data, dict):
+        if key in data:
+            return data[key]
+        if "code" in data and data["code"] != 200:
+            return data["msg"]
+    return ""
+
+
+def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
+    '''
+    return error message if error occured when requests API
+    '''
+    if (isinstance(data, dict)
+        and key in data
+        and "code" in data
+        and data["code"] == 200):
         return data[key]
     return ""
 

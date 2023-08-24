@@ -9,8 +9,8 @@ from typing import Any, Optional
 
 
 class BaseResponse(BaseModel):
-    code: int = pydantic.Field(200, description="HTTP status code")
-    msg: str = pydantic.Field("success", description="HTTP status message")
+    code: int = pydantic.Field(200, description="API status code")
+    msg: str = pydantic.Field("success", description="API status message")
 
     class Config:
         schema_extra = {

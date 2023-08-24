@@ -170,3 +170,16 @@ A13: 疑为 chatglm 的 quantization 的问题或 torch 版本差异问题，针
 Q14: 修改配置中路径后，加载 text2vec-large-chinese 依然提示 `WARNING: No sentence-transformers model found with name text2vec-large-chinese. Creating a new one with MEAN pooling.`
 
 A14: 尝试更换 embedding，如 text2vec-base-chinese，请在 [configs/model_config.py](../configs/model_config.py) 文件中，修改 `text2vec-base`参数为本地路径，绝对路径或者相对路径均可
+
+
+---
+
+Q15: 使用pg向量库建表报错
+
+A15: 需要手动安装对应的vector扩展(连接pg执行 CREATE EXTENSION IF NOT EXISTS vector)
+
+---
+
+Q16: pymilvus 连接超时
+
+A16.pymilvus版本需要匹配和milvus对应否则会超时参考pymilvus==2.1.3

@@ -24,7 +24,9 @@ embedding_model_dict = {
     "m3e-large": "moka-ai/m3e-large",
     "bge-small-zh": "BAAI/bge-small-zh",
     "bge-base-zh": "BAAI/bge-base-zh",
-    "bge-large-zh": "BAAI/bge-large-zh"
+    "bge-large-zh": "BAAI/bge-large-zh",
+    "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
+    "text-embedding-ada-002": os.environ.get("OPENAI_API_KEY")
 }
 
 # 选用的 Embedding 名称
@@ -41,12 +43,6 @@ llm_model_dict = {
         "api_key": "EMPTY"
     },
 
-    "chatglm-6b-int4": {
-        "local_model_path": "THUDM/chatglm-6b-int4",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
-        "api_key": "EMPTY"
-    },
-
     "chatglm2-6b": {
         "local_model_path": "THUDM/chatglm2-6b",
         "api_base_url": "http://localhost:8888/v1",  # URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
@@ -56,12 +52,6 @@ llm_model_dict = {
     "chatglm2-6b-32k": {
         "local_model_path": "THUDM/chatglm2-6b-32k",  # "THUDM/chatglm2-6b-32k",
         "api_base_url": "http://localhost:8888/v1",  # "URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
-    "vicuna-13b-hf": {
-        "local_model_path": "",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
 
@@ -75,10 +65,15 @@ llm_model_dict = {
     # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
     # Failed to establish a new connection: [WinError 10060]
     # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
+
+    # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
+    # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
+    # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
     "gpt-3.5-turbo": {
         "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY")
+        "api_key": os.environ.get("OPENAI_API_KEY"),
+        "openai_proxy": os.environ.get("OPENAI_PROXY")
     },
 }
 
@@ -114,7 +109,7 @@ kbs_config = {
         "secure": False,
     },
     "pg": {
-        "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatglm",
+        "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat",
     }
 }
 
@@ -142,12 +137,12 @@ SEARCH_ENGINE_TOP_K = 5
 # nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
-# 基于本地知识问答的提示词模版
-PROMPT_TEMPLATE = """【指令】根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 
+# 基于本地知识问答的提示词模版（使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
+PROMPT_TEMPLATE = """<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 </指令>
 
-【已知信息】{context} 
+<已知信息>{{ context }}</已知信息>
 
-【问题】{question}"""
+<问题>{{ question }}</问题>"""
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
