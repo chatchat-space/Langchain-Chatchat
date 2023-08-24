@@ -2,6 +2,7 @@ from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import llm_model_dict, LLM_MODEL
 from server.chat.utils import wrap_done
+from models.chatglm import ChatChatGLM
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -27,16 +28,25 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
                             history: List[History] = [],
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
-        )
+        if llm_model_dict[LLM_MODEL]["local_model_path"] == "chatglm_api":
+            model = ChatChatGLM(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                chatglm_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                chatglm_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=LLM_MODEL
+            )
+        else:
+            model = ChatOpenAI(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=LLM_MODEL,
+                openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+            )
 
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_tuple() for i in history] + [("human", "{input}")])

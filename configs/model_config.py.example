@@ -85,6 +85,11 @@ llm_model_dict = {
         "api_key": os.environ.get("OPENAI_API_KEY"),
         "openai_proxy": os.environ.get("OPENAI_PROXY")
     },
+    "chatglm_pro": {
+        "local_model_path": "chatglm_api",
+        "api_base_url": "https://open.bigmodel.cn/api/paas/v3/model-api/chatglm_pro/sse-invoke",
+        "api_key": "",
+    },
 }
 
 
