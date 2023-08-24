@@ -55,6 +55,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
