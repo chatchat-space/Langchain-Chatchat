@@ -89,7 +89,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             answer = ""
             async for token in callback.aiter():
                 answer += token
-        yield json.dumps({"answer": answer,
+            yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
 
