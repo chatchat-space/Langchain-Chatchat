@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs.model_config import LLM_MODEL, NLTK_DATA_PATH
-from configs.server_config import OPEN_CROSS_DOMAIN, fschat_controller_address
+from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT, fschat_controller_address
 from configs import VERSION
 import argparse
 import uvicorn
@@ -186,7 +186,7 @@ def create_app():
             r = httpx.post(
                 controller_address + "/release_worker",
                 json={"model_name": model_name, "new_model_name": new_model_name},
-                timeout=300.0, # wait 5 minutes for new worker_model
+                timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
             )
             return r.json()
         except Exception as e:

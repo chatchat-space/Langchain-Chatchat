@@ -16,20 +16,14 @@ except:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
-from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
-                                   FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
-                                   fschat_openai_api_address, get_model_worker_config)
+from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER, FSCHAT_OPENAI_API,
+                                    fschat_controller_address, fschat_model_worker_address,
+                                    fschat_openai_api_address, get_model_worker_config,
+                                    set_httpx_timeout,)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
-
-
-def set_httpx_timeout(timeout=60.0):
-    import httpx
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 def create_controller_app(

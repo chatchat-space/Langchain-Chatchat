@@ -1,6 +1,9 @@
 from .model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE
 
 
+# httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
+HTTPX_DEFAULT_TIMEOUT = 300.0
+
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
@@ -115,3 +118,13 @@ def webui_address() -> str:
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
     return f"http://{host}:{port}"
+
+
+def set_httpx_timeout(timeout: float = HTTPX_DEFAULT_TIMEOUT):
+    '''
+    设置httpx默认timeou。
+    httpx默认timeout是5秒，在请求LLM回答时不够用。
+    '''
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout

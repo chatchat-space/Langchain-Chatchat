@@ -12,6 +12,7 @@ from configs.model_config import (
     SEARCH_ENGINE_TOP_K,
     logger,
 )
+from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -22,18 +23,9 @@ from io import BytesIO
 from server.utils import run_async, iter_over_async
 
 from configs.model_config import NLTK_DATA_PATH
+from configs.server_config import set_httpx_timeout
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
-
-
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
@@ -49,7 +41,7 @@ class ApiRequest:
     def __init__(
         self,
         base_url: str = "http://127.0.0.1:7861",
-        timeout: float = 60.0,
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
         no_remote_api: bool = False,   # call api view function directly
     ):
         self.base_url = base_url
@@ -712,7 +704,7 @@ class ApiRequest:
         r = self.post(
             "/llm_model/change",
             json=data,
-            timeout=300.0, # wait 5 minutes for new worker_model
+            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
         )
         return r.json()
 
