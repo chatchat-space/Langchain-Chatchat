@@ -80,8 +80,13 @@ def dialogue_page(api: ApiRequest):
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
+            search_engine_list = list(SEARCH_ENGINES.keys())
             with st.expander("搜索引擎配置", True):
-                search_engine = st.selectbox("请选择搜索引擎", SEARCH_ENGINES.keys(), 0)
+                search_engine = st.selectbox(
+                    label="请选择搜索引擎",
+                    options=search_engine_list,
+                    index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
+                )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, 3)
 
     # Display chat messages from history on app rerun
@@ -125,11 +130,12 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.search_engine_chat(prompt, search_engine, se_top_k):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                else:
+                    text += d["answer"]
+                    chat_box.update_msg(text, 0)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
 
     now = datetime.now()
