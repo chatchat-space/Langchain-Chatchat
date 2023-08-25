@@ -73,6 +73,9 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
 
+    if search_engine_name == "bing" and not BING_SUBSCRIPTION_KEY:
+        return BaseResponse(code=404, msg=f"要使用Bing搜索引擎，需要设置 `BING_SUBSCRIPTION_KEY`")
+
     history = [History.from_data(h) for h in history]
 
     async def search_engine_chat_iterator(query: str,

@@ -201,7 +201,7 @@ def run_model_worker(
 ):
     import uvicorn
 
-    kwargs = FSCHAT_MODEL_WORKERS[LLM_MODEL].copy()
+    kwargs = FSCHAT_MODEL_WORKERS[model_name].copy()
     host = kwargs.pop("host")
     port = kwargs.pop("port")
     model_path = llm_model_dict[model_name].get("local_model_path", "")
