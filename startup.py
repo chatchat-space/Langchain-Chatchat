@@ -16,11 +16,12 @@ except:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
-from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER, FSCHAT_OPENAI_API,
-                                    fschat_controller_address, fschat_model_worker_address,
-                                    fschat_openai_api_address, get_model_worker_config,
-                                    set_httpx_timeout,)
-from server.utils import MakeFastAPIOffline, FastAPI
+from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
+                                   FSCHAT_OPENAI_API, )
+from server.utils import (fschat_controller_address, fschat_model_worker_address,
+                        fschat_openai_api_address,
+                        set_httpx_timeout,get_model_worker_config,
+                        MakeFastAPIOffline, FastAPI,)
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
@@ -407,7 +408,7 @@ def dump_server_info(after_start=False, args=None):
     import platform
     import langchain
     import fastchat
-    from configs.server_config import api_address, webui_address
+    from server.utils import api_address, webui_address
 
     print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
@@ -528,7 +529,7 @@ if __name__ == "__main__":
                 no = queue.get()
                 if no == len(processes):
                     time.sleep(0.5)
-                    dump_server_info(True)
+                    dump_server_info(after_start=True, args=args)
                     break
                 else:
                     queue.put(no)

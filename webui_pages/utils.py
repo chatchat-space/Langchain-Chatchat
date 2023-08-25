@@ -20,7 +20,9 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-from server.utils import run_async, iter_over_async
+from server.db.repository.knowledge_base_repository import get_kb_detail
+from server.db.repository.knowledge_file_repository import get_file_detail
+from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
 from configs.server_config import set_httpx_timeout
