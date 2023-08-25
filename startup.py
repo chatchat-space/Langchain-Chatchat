@@ -5,6 +5,14 @@ import sys
 import os
 from pprint import pprint
 
+# 设置numexpr最大线程数，默认为CPU核心数
+try:
+    import numexpr
+    n_cores = numexpr.utils.detect_number_of_cores()
+    os.environ["NUMEXPR_MAX_THREADS"] = str(n_cores)
+except:
+    pass
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
@@ -193,7 +201,7 @@ def run_model_worker(
 ):
     import uvicorn
 
-    kwargs = FSCHAT_MODEL_WORKERS[LLM_MODEL].copy()
+    kwargs = FSCHAT_MODEL_WORKERS[model_name].copy()
     host = kwargs.pop("host")
     port = kwargs.pop("port")
     model_path = llm_model_dict[model_name].get("local_model_path", "")

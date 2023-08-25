@@ -1,5 +1,7 @@
 import os
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceBgeEmbeddings
 from configs.model_config import (
     embedding_model_dict,
     KB_ROOT_PATH,
@@ -41,9 +43,18 @@ def list_docs_from_folder(kb_name: str):
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
-    embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model],
-                                       model_kwargs={'device': device})
+    if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
+        embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
+    elif 'bge-' in model:
+        embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
+                                              model_kwargs={'device': device},
+                                              query_instruction="为这个句子生成表示以用于检索相关文章：")
+        if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
+            embeddings.query_instruction = ""
+    else:
+        embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model], model_kwargs={'device': device})
     return embeddings
+
 
 
 LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg', '.rst',

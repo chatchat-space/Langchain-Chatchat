@@ -126,6 +126,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [BAAI/bge-small-zh](https://huggingface.co/BAAI/bge-small-zh)
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
+- [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
 - [text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
 - [text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
 - [text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
@@ -133,6 +134,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+- [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
 ---
 
@@ -207,16 +209,18 @@ embedding_model_dict = {
                        }
 ```
 
+如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要鞥能够访问OpenAI官的API，或设置代理。
+
 ### 4. 知识库初始化与迁移
 
 当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
 
-- 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
+- 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型与 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
 
   ```shell
   $ python init_database.py
   ```
-- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
+- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，或者之前的向量库没有开启 `normalize_L2`，需要以下命令初始化或重建知识库：
 
   ```shell
   $ python init_database.py --recreate-vs
@@ -298,24 +302,12 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-##### 5.1.3 PEFT 加载
+##### 5.1.3 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia等)
 
 本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
+详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)
 
-示例代码如下：
-
-```shell
-PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
-    --model-path /data/chris/peft-llama-dummy-1 \
-    --model-names peft-dummy-1 \
-    --model-path /data/chris/peft-llama-dummy-2 \
-    --model-names peft-dummy-2 \
-    --model-path /data/chris/peft-llama-dummy-3 \
-    --model-names peft-dummy-3 \
-    --num-gpus 2
-```
-
-详见 [FastChat 相关 PR](https://github.com/lm-sys/fastchat/pull/1905#issuecomment-1627801216)
+![image](https://github.com/chatchat-space/Langchain-Chatchat/assets/22924096/4e056c1c-5c4b-4865-a1af-859cd58a625d)
 
 #### 5.2 启动 API 服务
 
@@ -369,22 +361,18 @@ $ streamlit run webui.py --server.port 666
 更新一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
 
 ```shell
-$ python startup.py --all-webui
+$ python startup.py -a
 ```
 
-并可使用 `Ctrl + C` 直接关闭所有运行服务。
+并可使用 `Ctrl + C` 直接关闭所有运行服务。如果一次结束不了，可以多按几次。
 
-可选参数包括 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
-`--model-worker`, `--api`, `--webui`，其中：
+可选参数包括 `-a (或--all-webui)`, `--all-api`, `--llm-api`, `-c (或--controller)`, `--openai-api`,
+`-m (或--model-worker)`, `--api`, `--webui`，其中：
 
 - `--all-webui` 为一键启动 WebUI 所有依赖服务；
-
 - `--all-api` 为一键启动 API 所有依赖服务；
-
 - `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
-
 - `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
-
 - 其他为单独服务启动选项。
 
 若想指定非默认模型，需要用 `--model-name` 选项，示例：
@@ -393,11 +381,15 @@ $ python startup.py --all-webui
 $ python startup.py --all-webui --model-name Qwen-7B-Chat
 ```
 
+更多信息可通过 `python startup.py -h`查看。
+
 **注意：**
 
 **1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
 
 **2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
+
+**3. 在Linux上使用ctrl+C退出可能会由于linux的多进程机制导致multiprocessing遗留孤儿进程，可通过shutdown_all.sh进行退出**
 
 ## 常见问题
 
