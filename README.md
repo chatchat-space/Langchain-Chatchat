@@ -214,12 +214,12 @@ embedding_model_dict = {
 
 当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
 
-- 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
+- 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型与 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
 
   ```shell
   $ python init_database.py
   ```
-- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
+- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，或者之前的向量库没有开启`normalize_L2`，需要以下命令初始化或重建知识库：
 
   ```shell
   $ python init_database.py --recreate-vs
@@ -361,13 +361,13 @@ $ streamlit run webui.py --server.port 666
 更新一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
 
 ```shell
-$ python startup.py --all-webui
+$ python startup.py -a
 ```
 
-并可使用 `Ctrl + C` 直接关闭所有运行服务。
+并可使用 `Ctrl + C` 直接关闭所有运行服务。如果一次结束不了，可以多按几次。
 
-可选参数包括 `--all-webui`, `--all-api`, `--llm-api`, `--controller`, `--openai-api`, 
-`--model-worker`, `--api`, `--webui`，其中：
+可选参数包括 `-a (或--all-webui)`, `--all-api`, `--llm-api`, `-c (或--controller)`, `--openai-api`, 
+`-m (或--model-worker)`, `--api`, `--webui`，其中：
 
 - `--all-webui` 为一键启动 WebUI 所有依赖服务；
 
@@ -384,6 +384,8 @@ $ python startup.py --all-webui
 ```shell
 $ python startup.py --all-webui --model-name Qwen-7B-Chat
 ```
+
+更多信息可通过`python startup.py -h`查看。
 
 **注意：**
 
