@@ -1,4 +1,5 @@
-from .model_config import LLM_MODEL, LLM_DEVICE
+from .model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE
+
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
@@ -34,7 +35,7 @@ FSCHAT_MODEL_WORKERS = {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
-        # todo: 多卡加载需要配置的参数
+        # 多卡加载需要配置的参数
         # "gpus": None,
         # "numgpus": 1,
         # "max_gpu_memory": "20GiB",
@@ -73,6 +74,17 @@ FSCHAT_CONTROLLER = {
 
 
 # 以下不要更改
+def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
+    '''
+    加载model worker的配置项。
+    优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
+    '''
+    config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
+    config.update(llm_model_dict.get(model_name, {}))
+    config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
+    return config
+
+
 def fschat_controller_address() -> str:
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
@@ -80,10 +92,11 @@ def fschat_controller_address() -> str:
 
 
 def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
-    if model := FSCHAT_MODEL_WORKERS.get(model_name):
+    if model := get_model_worker_config(model_name):
         host = model["host"]
         port = model["port"]
         return f"http://{host}:{port}"
+    return ""
 
 
 def fschat_openai_api_address() -> str:
