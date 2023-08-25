@@ -2,6 +2,8 @@ from server.knowledge_base.migrate import create_tables, folder2db, recreate_all
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+from startup import dump_server_info
+
 
 if __name__ == "__main__":
     import argparse
@@ -20,6 +22,8 @@ if __name__ == "__main__":
         )
     )
     args = parser.parse_args()
+
+    dump_server_info()
 
     create_tables()
     print("database talbes created")

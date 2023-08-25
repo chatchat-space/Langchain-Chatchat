@@ -73,6 +73,8 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
 
+    history = [History.from_data(h) for h in history]
+
     async def search_engine_chat_iterator(query: str,
                                           search_engine_name: str,
                                           top_k: int,
@@ -85,14 +87,16 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
             callbacks=[callback],
             openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL
+            model_name=LLM_MODEL,
+            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
         )
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
+        input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_tuple() for i in history] + [("human", PROMPT_TEMPLATE)])
+            [i.to_msg_template() for i in history] + [input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model)
 
@@ -117,7 +121,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
             answer = ""
             async for token in callback.aiter():
                 answer += token
-            yield json.dumps({"answer": token,
+            yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
         await task

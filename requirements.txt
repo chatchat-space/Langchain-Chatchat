@@ -1,4 +1,4 @@
-langchain==0.0.257
+langchain==0.0.266
 openai
 sentence_transformers
 fschat==0.2.24

@@ -4,4 +4,4 @@ logs
 .idea/
 __pycache__/
 knowledge_base/
-configs/model_config.py
+configs/*.py

@@ -38,7 +38,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    history = [History(**h) if isinstance(h, dict) else h for h in history]
+    history = [History.from_data(h) for h in history]
 
     async def knowledge_base_chat_iterator(query: str,
                                            kb: KBService,
@@ -52,13 +52,15 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             callbacks=[callback],
             openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL
+            model_name=LLM_MODEL,
+            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
 
+        input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_tuple() for i in history] + [("human", PROMPT_TEMPLATE)])
+            [i.to_msg_template() for i in history] + [input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model)
 
