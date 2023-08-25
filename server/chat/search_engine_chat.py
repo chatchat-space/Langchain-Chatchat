@@ -6,6 +6,7 @@ from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
 from langchain.chat_models import ChatOpenAI
+from models.chatglm import ChatChatGLM
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
@@ -84,15 +85,25 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                                           history: Optional[List[History]],
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
-        )
+        if llm_model_dict[LLM_MODEL]["local_model_path"] == "chatglm_api":
+            model = ChatChatGLM(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                chatglm_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                chatglm_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=LLM_MODEL
+            )
+        else:
+            model = ChatOpenAI(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=LLM_MODEL,
+                openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+            )
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
