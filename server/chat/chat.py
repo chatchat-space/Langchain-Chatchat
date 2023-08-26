@@ -2,7 +2,7 @@ from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import llm_model_dict, LLM_MODEL
 from server.chat.utils import wrap_done
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
@@ -28,15 +28,35 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
 
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
-        )
+        if LLM_MODEL == "Azure-OpenAI":
+            model = AzureChatOpenAI(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                openai_api_version=llm_model_dict[LLM_MODEL]["api_version"],
+                deployment_name=llm_model_dict[LLM_MODEL]["deployment_name"],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_type="azure",
+            )
+        elif LLM_MODEL == "OpenAI":
+            model = ChatOpenAI(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=llm_model_dict[LLM_MODEL]["model_name"]
+            )
+        else:
+            model = ChatOpenAI(
+                streaming=True,
+                verbose=True,
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=LLM_MODEL
+            )
 
         input_msg = History(role="user", content="{{ input }}").to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(

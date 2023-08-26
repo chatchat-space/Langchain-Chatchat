@@ -7,7 +7,7 @@ from configs.model_config import (
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
-    ZH_TITLE_ENHANCE
+    ZH_TITLE_ENHANCE, TEXT_SPLITTER_NAME
 )
 from functools import lru_cache
 import importlib
@@ -20,31 +20,48 @@ def validate_kb_name(knowledge_base_id: str) -> bool:
         return False
     return True
 
+
 def get_kb_path(knowledge_base_name: str):
     return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+
 
 def get_doc_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "content")
 
+
 def get_vs_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
+
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
     return os.path.join(get_doc_path(knowledge_base_name), doc_name)
 
+
 def list_kbs_from_folder():
     return [f for f in os.listdir(KB_ROOT_PATH)
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
+
 
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
 
+
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
-    if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-        embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
+    if model == "text-embedding-ada-002":  # openai text-embedding-ada-002N
+        embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model]["api_key"],
+                                      openai_api_base=embedding_model_dict[model]["api_base_url"],
+                                      chunk_size=CHUNK_SIZE)
+    elif model == "Azure-OpenAI":  # openai text-embedding-ada-002
+        embeddings = OpenAIEmbeddings(
+            openai_api_base=embedding_model_dict[model]["api_base_url"],
+            openai_api_type="azure",
+            deployment=embedding_model_dict[model]["deployment_name"],
+            openai_api_key=embedding_model_dict[model]["api_key"],
+            openai_api_version=embedding_model_dict[model]["api_version"],
+            chunk_size=1)  # openai Azure 只有1
     elif 'bge-' in model:
         embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
                                               model_kwargs={'device': device},
@@ -56,7 +73,6 @@ def load_embeddings(model: str, device: str):
     return embeddings
 
 
-
 LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
                                           '.doc', '.docx', '.epub', '.odt', '.pdf',
@@ -65,6 +81,7 @@ LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg
                "PyPDFLoader": [".pdf"],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
+
 
 def get_LoaderClass(file_extension):
     for LoaderClass, extensions in LOADER_DICT.items():
@@ -105,18 +122,30 @@ class KnowledgeFile:
             loader = DocumentLoader(self.filepath)
 
         try:
-            if self.text_splitter_name is None:
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
-                TextSplitter = getattr(text_splitter_module, "SpacyTextSplitter")
-                text_splitter = TextSplitter(
-                    pipeline="zh_core_web_sm",
-                    chunk_size=CHUNK_SIZE,
-                    chunk_overlap=OVERLAP_SIZE,
+            self.text_splitter_name = TEXT_SPLITTER_NAME
+            text_splitter_module = importlib.import_module('langchain.text_splitter')
+            TextSplitter = getattr(text_splitter_module, self.text_splitter_name)
+            if self.text_splitter_name == "MarkdownHeaderTextSplitter":
+                headers_to_split_on = [
+                    ("#", "head1"),
+                    ("##", "head2"),
+                    ("###", "head3"),
+                    ("####", "head4"),
+                ]
+                text_splitter = TextSplitter(headers_to_split_on=headers_to_split_on)
+            elif self.text_splitter_name == "CharacterTextSplitter.from_huggingface_tokenizer":
+                from transformers import GPT2TokenizerFast
+                from langchain.text_splitter import CharacterTextSplitter
+                tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")  ##  这里选择你用的tokenizer
+                text_splitter = TextSplitter.from_huggingface_tokenizer(
+                    tokenizer, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP_SIZE
                 )
-                self.text_splitter_name = "SpacyTextSplitter"
+            elif self.text_splitter_name == "CharacterTextSplitter.from_tiktoken_encoder":
+                from langchain.text_splitter import CharacterTextSplitter
+                text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
+                    chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP_SIZE
+                )
             else:
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
-                TextSplitter = getattr(text_splitter_module, self.text_splitter_name)
                 text_splitter = TextSplitter(
                     chunk_size=CHUNK_SIZE,
                     chunk_overlap=OVERLAP_SIZE)
@@ -128,8 +157,15 @@ class KnowledgeFile:
                 chunk_size=CHUNK_SIZE,
                 chunk_overlap=OVERLAP_SIZE,
             )
-
-        docs = loader.load_and_split(text_splitter)
+        if self.text_splitter_name == "MarkdownHeaderTextSplitter":
+            docs = loader.load()
+            docs = text_splitter.split_text(docs[0].page_content)
+            for doc in docs:
+                # 如果文档有元数据
+                if doc.metadata:
+                    doc.metadata["source"] = os.path.basename(self.filepath)
+        else:
+            docs = loader.load_and_split(text_splitter)
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
