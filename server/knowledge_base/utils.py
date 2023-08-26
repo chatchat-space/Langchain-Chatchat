@@ -104,32 +104,35 @@ class KnowledgeFile:
         else:
             loader = DocumentLoader(self.filepath)
 
-        try:
-            if self.text_splitter_name is None:
+        if self.ext in ".csv":
+            docs = loader.load()
+        else:
+            try:
+                if self.text_splitter_name is None:
+                    text_splitter_module = importlib.import_module('langchain.text_splitter')
+                    TextSplitter = getattr(text_splitter_module, "SpacyTextSplitter")
+                    text_splitter = TextSplitter(
+                        pipeline="zh_core_web_sm",
+                        chunk_size=CHUNK_SIZE,
+                        chunk_overlap=OVERLAP_SIZE,
+                    )
+                    self.text_splitter_name = "SpacyTextSplitter"
+                else:
+                    text_splitter_module = importlib.import_module('langchain.text_splitter')
+                    TextSplitter = getattr(text_splitter_module, self.text_splitter_name)
+                    text_splitter = TextSplitter(
+                        chunk_size=CHUNK_SIZE,
+                        chunk_overlap=OVERLAP_SIZE)
+            except Exception as e:
+                print(e)
                 text_splitter_module = importlib.import_module('langchain.text_splitter')
-                TextSplitter = getattr(text_splitter_module, "SpacyTextSplitter")
+                TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
                 text_splitter = TextSplitter(
-                    pipeline="zh_core_web_sm",
                     chunk_size=CHUNK_SIZE,
                     chunk_overlap=OVERLAP_SIZE,
                 )
-                self.text_splitter_name = "SpacyTextSplitter"
-            else:
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
-                TextSplitter = getattr(text_splitter_module, self.text_splitter_name)
-                text_splitter = TextSplitter(
-                    chunk_size=CHUNK_SIZE,
-                    chunk_overlap=OVERLAP_SIZE)
-        except Exception as e:
-            print(e)
-            text_splitter_module = importlib.import_module('langchain.text_splitter')
-            TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
-            text_splitter = TextSplitter(
-                chunk_size=CHUNK_SIZE,
-                chunk_overlap=OVERLAP_SIZE,
-            )
 
-        docs = loader.load_and_split(text_splitter)
+            docs = loader.load_and_split(text_splitter)
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
