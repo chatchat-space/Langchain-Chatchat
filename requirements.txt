@@ -14,6 +14,8 @@ python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
 nltk
+accelerate
+spacy
 
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3
@@ -22,9 +24,10 @@ nltk
 
 numpy~=1.24.4
 pandas~=2.0.3
-streamlit>=1.25.0
+streamlit>=1.26.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.6
 streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
+watchdog
