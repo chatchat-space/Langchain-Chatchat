@@ -408,7 +408,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import list_kbs
-            response = run_async(list_kbs())
+            response = list_kbs()
             return response.data
         else:
             response = self.get("/knowledge_base/list_knowledge_bases")
@@ -436,7 +436,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(**data))
+            response = create_kb(**data)
             return response.dict()
         else:
             response = self.post(
@@ -458,7 +458,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import delete_kb
-            response = run_async(delete_kb(knowledge_base_name))
+            response = delete_kb(knowledge_base_name)
             return response.dict()
         else:
             response = self.post(
@@ -480,7 +480,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
+            response = list_docs(knowledge_base_name)
             return response.data
         else:
             response = self.get(
@@ -521,11 +521,11 @@ class ApiRequest:
             temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
             temp_file.write(file.read())
             temp_file.seek(0)
-            response = run_async(upload_doc(
+            response = upload_doc(
                 UploadFile(file=temp_file, filename=filename),
                 knowledge_base_name,
                 override,
-            ))
+            )
             return response.dict()
         else:
             response = self.post(
@@ -562,7 +562,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(**data))
+            response = delete_doc(**data)
             return response.dict()
         else:
             response = self.post(
@@ -586,7 +586,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import update_doc
-            response = run_async(update_doc(knowledge_base_name, file_name))
+            response = update_doc(knowledge_base_name, file_name)
             return response.dict()
         else:
             response = self.post(
@@ -622,7 +622,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import recreate_vector_store
-            response = run_async(recreate_vector_store(**data))
+            response = recreate_vector_store(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(

@@ -35,7 +35,7 @@ async def openai_chat(msg: OpenAiChatMsgIn):
         data.pop("stream")
 
         try:
-            response = openai.ChatCompletion.create(**data)
+            response = await openai.ChatCompletion.acreate(**data)
             if msg.stream:
                 for chunk in response.choices[0].message.content:
                     print(chunk)

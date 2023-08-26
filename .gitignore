@@ -5,3 +5,4 @@ logs
 __pycache__/
 knowledge_base/
 configs/*.py
+.venv/

@@ -7,12 +7,12 @@ from configs.model_config import EMBEDDING_MODEL
 from fastapi import Body
 
 
-async def list_kbs():
+def list_kbs():
     # Get List of Knowledge Base
     return ListResponse(data=list_kbs_from_db())
 
 
-async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
+def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
                     vector_store_type: str = Body("faiss"),
                     embed_model: str = Body(EMBEDDING_MODEL),
                     ) -> BaseResponse:
@@ -36,7 +36,7 @@ async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 
 
-async def delete_kb(
+def delete_kb(
         knowledge_base_name: str = Body(..., examples=["samples"])
     ) -> BaseResponse:
     # Delete selected knowledge base

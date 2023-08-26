@@ -29,7 +29,7 @@ def search_docs(query: str = Body(..., description="用户输入", examples=["�
     return data
 
 
-async def list_docs(
+def list_docs(
     knowledge_base_name: str
 ) -> ListResponse:
     if not validate_kb_name(knowledge_base_name):
@@ -44,7 +44,7 @@ async def list_docs(
         return ListResponse(data=all_doc_names)
 
 
-async def upload_doc(file: UploadFile = File(..., description="上传文件"),
+def upload_doc(file: UploadFile = File(..., description="上传文件"),
                      knowledge_base_name: str = Form(..., description="知识库名称", examples=["kb1"]),
                      override: bool = Form(False, description="覆盖已有文件"),
                      not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
@@ -56,7 +56,7 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
-    file_content = await file.read()  # 读取上传文件的内容
+    file_content = file.file.read()  # 读取上传文件的内容
 
     try:
         kb_file = KnowledgeFile(filename=file.filename,
@@ -85,7 +85,7 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
     return BaseResponse(code=200, msg=f"成功上传文件 {kb_file.filename}")
 
 
-async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
+def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
                      doc_name: str = Body(..., examples=["file_name.md"]),
                      delete_content: bool = Body(False),
                      not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
@@ -112,7 +112,7 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
     return BaseResponse(code=200, msg=f"{kb_file.filename} 文件删除成功")
 
 
-async def update_doc(
+def update_doc(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         file_name: str = Body(..., examples=["file_name"]),
         not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
@@ -140,7 +140,7 @@ async def update_doc(
     return BaseResponse(code=500, msg=f"{kb_file.filename} 文件更新失败")
 
 
-async def download_doc(
+def download_doc(
         knowledge_base_name: str = Query(..., examples=["samples"]),
         file_name: str = Query(..., examples=["test.txt"]),
     ):
@@ -170,7 +170,7 @@ async def download_doc(
     return BaseResponse(code=500, msg=f"{kb_file.filename} 读取文件失败")
 
 
-async def recreate_vector_store(
+def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body(DEFAULT_VS_TYPE),
