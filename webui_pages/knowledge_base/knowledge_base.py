@@ -244,7 +244,6 @@ def knowledge_base_page(api: ApiRequest):
 
         cols = st.columns(3)
 
-        # todo: freezed
         if cols[0].button(
                 "依据源文件重建向量库",
                 # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
@@ -258,7 +257,7 @@ def knowledge_base_page(api: ApiRequest):
                     if msg := check_error_msg(d):
                         st.toast(msg)
                     else:
-                        empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
+                        empty.progress(d["finished"] / d["total"], d["msg"])
                 st.experimental_rerun()
 
         if cols[2].button(

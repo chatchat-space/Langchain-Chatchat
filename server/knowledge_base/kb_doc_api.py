@@ -183,7 +183,7 @@ async def recreate_vector_store(
     set allow_empty_kb to True make it applied on empty knowledge base which it not in the info.db or having no documents.
     '''
 
-    async def output():
+    def output():
         kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
