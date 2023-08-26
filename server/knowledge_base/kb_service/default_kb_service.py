@@ -13,7 +13,7 @@ class DefaultKBService(KBService):
     def do_drop_kb(self):
         pass
 
-    def do_add_doc(self, docs: List[Document], embeddings: Embeddings):
+    def do_add_doc(self, docs: List[Document]):
         pass
 
     def do_clear_vs(self):
