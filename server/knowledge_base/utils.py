@@ -34,6 +34,20 @@ OpenAIEmbeddings.__hash__ = _embeddings_hash
 HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
 
 
+# make HuggingFaceEmbeddings hashable
+def _embeddings_hash(self):
+    if isinstance(self, HuggingFaceEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, HuggingFaceBgeEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, OpenAIEmbeddings):
+        return hash(self.model)
+
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+OpenAIEmbeddings.__hash__ = _embeddings_hash
+HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
+
+
 def validate_kb_name(knowledge_base_id: str) -> bool:
     # 检查是否包含预期外的字符或路径攻击关键字
     if "../" in knowledge_base_id:
