@@ -1,0 +1,1 @@
+from mypdfloader import RapidOCRPDFLoader
