@@ -175,6 +175,7 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
             text = self._get_text(sample=sample, metadata=metadata)
             docs.append(Document(page_content=text, metadata=metadata))
 
+
 langchain.document_loaders.CustomJSONLoader = CustomJSONLoader
 
 
