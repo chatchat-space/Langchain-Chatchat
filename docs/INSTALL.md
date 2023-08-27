@@ -31,10 +31,10 @@ $ conda env remove -p  /your_path/env_name
 
 ```shell
 # 拉取仓库
-$ git clone https://github.com/imClumsyPanda/langchain-ChatGLM.git
+$ git clone https://github.com/chatchat-space/Langchain-Chatchat.git
 
 # 进入目录
-$ cd langchain-ChatGLM
+$ cd Langchain-Chatchat
 
 # 安装全部依赖
 $ pip install -r requirements.txt
