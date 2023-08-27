@@ -404,14 +404,16 @@ if __name__ == "__main__":
         processes["openai_api"] = process
 
     if args.model_worker:
-        process = Process(
-            target=run_model_worker,
-            name=f"model_worker({os.getpid()})",
-            args=(args.model_name, args.controller_address, queue, len(processes) + 1),
-            daemon=True,
-        )
-        process.start()
-        processes["model_worker"] = process
+        model_path = llm_model_dict[args.model_name].get("local_model_path", "")
+        if os.path.isdir(model_path):
+            process = Process(
+                target=run_model_worker,
+                name=f"model_worker({os.getpid()})",
+                args=(args.model_name, args.controller_address, queue, len(processes) + 1),
+                daemon=True,
+            )
+            process.start()
+            processes["model_worker"] = process
 
     if args.api:
         process = Process(
