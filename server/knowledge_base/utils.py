@@ -25,26 +25,33 @@ def validate_kb_name(knowledge_base_id: str) -> bool:
         return False
     return True
 
+
 def get_kb_path(knowledge_base_name: str):
     return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+
 
 def get_doc_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "content")
 
+
 def get_vs_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
 
+
 def get_file_path(knowledge_base_name: str, doc_name: str):
     return os.path.join(get_doc_path(knowledge_base_name), doc_name)
+
 
 def list_kbs_from_folder():
     return [f for f in os.listdir(KB_ROOT_PATH)
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
 
+
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
+
 
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
@@ -59,7 +66,6 @@ def load_embeddings(model: str, device: str):
     else:
         embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model], model_kwargs={'device': device})
     return embeddings
-
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
@@ -81,12 +87,12 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
     '''
 
     def __init__(
-        self,
-        file_path: Union[str, Path],
-        content_key: Optional[str] = None,
-        metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-        text_content: bool = True,
-        json_lines: bool = False,
+            self,
+            file_path: Union[str, Path],
+            content_key: Optional[str] = None,
+            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
+            text_content: bool = True,
+            json_lines: bool = False,
     ):
         """Initialize the JSONLoader.
 
@@ -141,6 +147,7 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
             text = self._get_text(sample=sample, metadata=metadata)
             docs.append(Document(page_content=text, metadata=metadata))
 
+
 langchain.document_loaders.CustomJSONLoader = CustomJSONLoader
 
 
@@ -186,9 +193,9 @@ class KnowledgeFile:
         elif self.document_loader_name == "CustomJSONLoader":
             loader = DocumentLoader(self.filepath, text_content=False)
         elif self.document_loader_name == "UnstructuredMarkdownLoader":
-            loader = DocumentLoader(self.filepath, mode="elements") # TODO: 需要在实践中测试`elements`是否优于`single`
+            loader = DocumentLoader(self.filepath, mode="elements")  # TODO: 需要在实践中测试`elements`是否优于`single`
         elif self.document_loader_name == "UnstructuredHTMLLoader":
-            loader = DocumentLoader(self.filepath, mode="elements") # TODO: 需要在实践中测试`elements`是否优于`single`
+            loader = DocumentLoader(self.filepath, mode="elements")  # TODO: 需要在实践中测试`elements`是否优于`single`
         else:
             loader = DocumentLoader(self.filepath)
 
