@@ -13,7 +13,6 @@ unstructured[all-docs]
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
-nltk
 accelerate
 spacy
 

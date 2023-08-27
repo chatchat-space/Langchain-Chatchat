@@ -166,3 +166,10 @@ class FaissKBService(KBService):
             return "in_folder"
         else:
             return False
+if __name__ == '__main__':
+
+    milvusService = FaissKBService("test")
+    milvusService.add_doc(KnowledgeFile("README.md", "test"))
+    milvusService.delete_doc(KnowledgeFile("README.md", "test"))
+    milvusService.do_drop_kb()
+    print(milvusService.search_docs("如何启动api服务"))
