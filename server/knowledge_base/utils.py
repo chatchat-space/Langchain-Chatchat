@@ -19,6 +19,20 @@ import json
 from typing import List, Union, Callable, Dict, Optional
 
 
+# make HuggingFaceEmbeddings hashable
+def _embeddings_hash(self):
+    if isinstance(self, HuggingFaceEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, HuggingFaceBgeEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, OpenAIEmbeddings):
+        return hash(self.model)
+
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+OpenAIEmbeddings.__hash__ = _embeddings_hash
+HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
+
+
 def validate_kb_name(knowledge_base_id: str) -> bool:
     # 检查是否包含预期外的字符或路径攻击关键字
     if "../" in knowledge_base_id:
@@ -168,7 +182,10 @@ class KnowledgeFile:
         # TODO: 增加依据文件格式匹配text_splitter
         self.text_splitter_name = None
 
-    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE):
+    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False):
+        if self.docs is not None and not refresh:
+            return self.docs
+
         print(self.document_loader_name)
         try:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
@@ -224,4 +241,11 @@ class KnowledgeFile:
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
+        self.docs = docs
         return docs
+
+    def get_mtime(self):
+        return os.path.getmtime(self.filepath)
+
+    def get_size(self):
+        return os.path.getsize(self.filepath)

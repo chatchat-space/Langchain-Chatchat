@@ -74,16 +74,22 @@ class KBService(ABC):
         status = delete_kb_from_db(self.kb_name)
         return status
 
-    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
+    def add_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
         向知识库添加文件
+        如果指定了docs，则不再将文本向量化
         """
-        docs = kb_file.file2text()
+        if docs:
+            custom_docs = True
+        else:
+            docs = kb_file.file2text()
+            custom_docs = False
+
         if docs:
             self.delete_doc(kb_file)
             embeddings = self._load_embeddings()
-            self.do_add_doc(docs, embeddings, **kwargs)
-            status = add_doc_to_db(kb_file)
+            self.do_add_doc(docs, embeddings=embeddings, **kwargs)
+            status = add_doc_to_db(kb_file, custom_docs=custom_docs)
         else:
             status = False
         return status
@@ -101,6 +107,7 @@ class KBService(ABC):
     def update_doc(self, kb_file: KnowledgeFile, **kwargs):
         """
         使用content中的文件更新向量库
+        # TODO: set parameter to skip file that uses custom docs
         """
         if os.path.exists(kb_file.filepath):
             self.delete_doc(kb_file, **kwargs)

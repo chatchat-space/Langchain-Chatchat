@@ -12,13 +12,21 @@ def list_docs_from_db(session, kb_name):
 
 
 @with_session
-def add_doc_to_db(session, kb_file: KnowledgeFile):
+def add_doc_to_db(session, kb_file: KnowledgeFile, custom_docs: bool = False):
     kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_file.kb_name).first()
     if kb:
-        # 如果已经存在该文件，则更新文件版本号
-        existing_file = session.query(KnowledgeFileModel).filter_by(file_name=kb_file.filename,
-                                                                    kb_name=kb_file.kb_name).first()
+        # 如果已经存在该文件，则更新文件信息与版本号
+        existing_file: KnowledgeFileModel = (session.query(KnowledgeFileModel)
+                                             .filter_by(file_name=kb_file.filename,
+                                                        kb_name=kb_file.kb_name)
+                                            .first())
+        mtime = kb_file.get_mtime()
+        size = kb_file.get_size()
+
         if existing_file:
+            existing_file.file_mtime = mtime
+            existing_file.file_size = size
+            existing_file.custom_docs = custom_docs
             existing_file.file_version += 1
         # 否则，添加新文件
         else:
@@ -28,6 +36,9 @@ def add_doc_to_db(session, kb_file: KnowledgeFile):
                 kb_name=kb_file.kb_name,
                 document_loader_name=kb_file.document_loader_name,
                 text_splitter_name=kb_file.text_splitter_name or "SpacyTextSplitter",
+                file_mtime=mtime,
+                file_size=size,
+                custom_docs=custom_docs,
             )
             kb.file_count += 1
             session.add(new_file)
