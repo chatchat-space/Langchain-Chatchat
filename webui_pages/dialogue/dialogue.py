@@ -55,6 +55,7 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
+                                      "文件问答",
                                       ],
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
@@ -88,7 +89,14 @@ def dialogue_page(api: ApiRequest):
                     index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, 3)
-
+        elif dialogue_mode == "文件问答":
+            file_len = st.number_input("上传字符数：", 1, 30000, 3000)
+            file = st.file_uploader("上传文件",
+                                    ['txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'xml', 'ppt']
+                                    )
+            file_content_str = ""
+            if file:
+                file_content_str = parse_file(file, file_len)
     # Display chat messages from history on app rerun
 
     chat_box.output_messages()
@@ -103,7 +111,7 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
+                if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
                 text += t
@@ -117,7 +125,7 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
                 chat_box.update_msg(text, 0)
@@ -137,6 +145,17 @@ def dialogue_page(api: ApiRequest):
                     chat_box.update_msg(text, 0)
                     chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
+        elif dialogue_mode == "文件问答":
+            chat_box.ai_say("正在思考...")
+            text = ""
+            r = api.file_chat(prompt, file_content_str, history)
+            for t in r:
+                if error_msg := check_error_msg(t):  # check whether error occured
+                    st.error(error_msg)
+                    break
+                text += t
+                chat_box.update_msg(text)
+            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
     now = datetime.now()
     with st.sidebar:

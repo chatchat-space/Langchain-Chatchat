@@ -11,6 +11,13 @@ from configs.model_config import (
     SEARCH_ENGINE_TOP_K,
     logger,
 )
+import PyPDF2
+import docx
+import openpyxl
+import csv
+import markdown
+import xml.etree.ElementTree as ET
+from pptx import Presentation
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -203,7 +210,7 @@ class ApiRequest:
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
-        
+
         try:
             for chunk in  iter_over_async(response.body_iterator, loop):
                 if as_json and chunk:
@@ -378,6 +385,35 @@ class ApiRequest:
                 stream=True,
             )
             return self._httpx_stream2generator(response, as_json=True)
+
+    def file_chat(
+        self,
+        query: str,
+        file_content_str: str,
+        history: List[Dict] = [],
+        stream: bool = True,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/file_chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "file_content_str": file_content_str,
+            "stream": stream,
+        }
+
+        if no_remote_api:
+            from server.chat.file_chat import file_chat
+            response = file_chat(**data)
+            return self._fastapi_stream2generator(response)
+        else:
+            response = self.post("/chat/file_chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
 
     # 知识库相关操作
 
@@ -656,6 +692,53 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
         and data["code"] == 200):
         return data[key]
     return ""
+
+
+def parse_file(file, file_len):
+    content = ""
+    if "text" in file.type:
+        content = file.read().decode("utf-8")
+    elif "pdf" in file.type:
+        pdf_reader = PyPDF2.PdfReader(file)
+        for page in pdf_reader.pages:
+            content += page.extract_text()
+    elif "msword" in file.type:
+        doc = docx.Document(file)
+        for para in doc.paragraphs:
+            content += para.text + "\n"
+    elif "wordprocessingml.document" in file.type:
+        doc = docx.Document(file)
+        for para in doc.paragraphs:
+            content += para.text + "\n"
+    elif "spreadsheetml.sheet" in file.type:
+        workbook = openpyxl.load_workbook(file)
+        for sheet in workbook:
+            for row in sheet.iter_rows(values_only=True):
+                content += " ".join(str(cell) for cell in row) + "\n"
+    elif "csv" in file.type:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            content += ",".join(row) + "\n"
+    elif "json" in file.type:
+        data = json.load(file)
+        content = json.dumps(data, indent=2)
+    elif "markdown" in file.type:
+        markdown_content = file.read().decode("utf-8")
+        content = markdown.markdown(markdown_content)
+    elif "xml" in file.type:
+        root = ET.fromstring(file.read())
+        content = ET.tostring(root, encoding="utf-8", method="text").decode("utf-8")
+    elif "presentationml.presentation" in file.type:
+        prs = Presentation(file)
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    content += shape.text + "\n"
+
+    if len(content) > file_len:
+        content = content[:file_len]
+
+    return content
 
 
 if __name__ == "__main__":
