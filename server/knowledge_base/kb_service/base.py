@@ -87,8 +87,7 @@ class KBService(ABC):
 
         if docs:
             self.delete_doc(kb_file)
-            embeddings = self._load_embeddings()
-            self.do_add_doc(docs, embeddings=embeddings, **kwargs)
+            self.do_add_doc(docs, **kwargs)
             status = add_file_to_db(kb_file, custom_docs=custom_docs, docs_count=len(docs))
         else:
             status = False
@@ -181,7 +180,6 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
-                   embeddings: Embeddings,
                    ):
         """
         向知识库添加文档子类实自己逻辑
