@@ -109,7 +109,6 @@ class FaissKBService(KBService):
 
     def do_add_doc(self,
                    docs: List[Document],
-                   embeddings: Embeddings,
                    **kwargs,
                    ):
         vector_store = self.load_vector_store()
