@@ -54,7 +54,7 @@ class MilvusKBService(KBService):
         self._load_milvus(embeddings=EmbeddingsFunAdapter(embeddings))
         return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
 
-    def do_add_doc(self, docs: List[Document], embeddings: Embeddings, **kwargs):
+    def do_add_doc(self, docs: List[Document], **kwargs):
         self.milvus.add_documents(docs)
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
