@@ -13,15 +13,15 @@ from server.db.repository.knowledge_base_repository import (
     load_kb_from_db, get_kb_detail,
 )
 from server.db.repository.knowledge_file_repository import (
-    add_doc_to_db, delete_file_from_db, delete_files_from_db, doc_exists,
-    list_docs_from_db, get_file_detail, delete_file_from_db
+    add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
+    count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db
 )
 
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
                                   EMBEDDING_DEVICE, EMBEDDING_MODEL)
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
-    list_kbs_from_folder, list_docs_from_folder,
+    list_kbs_from_folder, list_files_from_folder,
 )
 from typing import List, Union, Dict
 
@@ -74,16 +74,22 @@ class KBService(ABC):
         status = delete_kb_from_db(self.kb_name)
         return status
 
-    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
+    def add_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
         向知识库添加文件
+        如果指定了docs，则不再将文本向量化，并将数据库对应条目标为custom_docs=True
         """
-        docs = kb_file.file2text()
+        if docs:
+            custom_docs = True
+        else:
+            docs = kb_file.file2text()
+            custom_docs = False
+
         if docs:
             self.delete_doc(kb_file)
             embeddings = self._load_embeddings()
-            self.do_add_doc(docs, embeddings, **kwargs)
-            status = add_doc_to_db(kb_file)
+            self.do_add_doc(docs, embeddings=embeddings, **kwargs)
+            status = add_file_to_db(kb_file, custom_docs=custom_docs, docs_count=len(docs))
         else:
             status = False
         return status
@@ -98,20 +104,24 @@ class KBService(ABC):
             os.remove(kb_file.filepath)
         return status
 
-    def update_doc(self, kb_file: KnowledgeFile, **kwargs):
+    def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
         使用content中的文件更新向量库
+        如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
         """
         if os.path.exists(kb_file.filepath):
             self.delete_doc(kb_file, **kwargs)
-            return self.add_doc(kb_file, **kwargs)
+            return self.add_doc(kb_file, docs=docs, **kwargs)
 
     def exist_doc(self, file_name: str):
-        return doc_exists(KnowledgeFile(knowledge_base_name=self.kb_name,
+        return file_exists_in_db(KnowledgeFile(knowledge_base_name=self.kb_name,
                                         filename=file_name))
 
-    def list_docs(self):
-        return list_docs_from_db(self.kb_name)
+    def list_files(self):
+        return list_files_from_db(self.kb_name)
+
+    def count_files(self):
+        return count_files_from_db(self.kb_name)
 
     def search_docs(self,
                     query: str,
@@ -264,25 +274,26 @@ def get_kb_details() -> List[Dict]:
     return data
 
 
-def get_kb_doc_details(kb_name: str) -> List[Dict]:
+def get_kb_file_details(kb_name: str) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(kb_name)
-    docs_in_folder = list_docs_from_folder(kb_name)
-    docs_in_db = kb.list_docs()
+    files_in_folder = list_files_from_folder(kb_name)
+    files_in_db = kb.list_files()
     result = {}
 
-    for doc in docs_in_folder:
+    for doc in files_in_folder:
         result[doc] = {
             "kb_name": kb_name,
             "file_name": doc,
             "file_ext": os.path.splitext(doc)[-1],
             "file_version": 0,
             "document_loader": "",
+            "docs_count": 0,
             "text_splitter": "",
             "create_time": None,
             "in_folder": True,
             "in_db": False,
         }
-    for doc in docs_in_db:
+    for doc in files_in_db:
         doc_detail = get_file_detail(kb_name, doc)
         if doc_detail:
             doc_detail["in_db"] = True

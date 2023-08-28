@@ -47,23 +47,12 @@ class PGKBService(KBService):
             connect.commit()
 
     def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
-        # todo: support score threshold
         self._load_pg_vector(embeddings=embeddings)
         return score_threshold_process(score_threshold, top_k,
                                        self.pg_vector.similarity_search_with_score(query, top_k))
 
-    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
-        """
-        向知识库添加文件
-        """
-        docs = kb_file.file2text()
-        self.pg_vector.add_documents(docs)
-        from server.db.repository.knowledge_file_repository import add_doc_to_db
-        status = add_doc_to_db(kb_file)
-        return status
-
     def do_add_doc(self, docs: List[Document], embeddings: Embeddings, **kwargs):
-        pass
+        self.pg_vector.add_documents(docs)
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with self.pg_vector.connect() as connect:

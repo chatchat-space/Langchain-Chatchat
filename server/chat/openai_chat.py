@@ -29,23 +29,22 @@ async def openai_chat(msg: OpenAiChatMsgIn):
     print(f"{openai.api_base=}")
     print(msg)
 
-    async def get_response(msg):
+    def get_response(msg):
         data = msg.dict()
-        data["streaming"] = True
-        data.pop("stream")
 
         try:
             response = openai.ChatCompletion.create(**data)
             if msg.stream:
-                for chunk in response.choices[0].message.content:
-                    print(chunk)
-                    yield chunk
+                for data in response:
+                    if choices := data.choices:
+                        if chunk := choices[0].get("delta", {}).get("content"):
+                            print(chunk, end="", flush=True)
+                            yield chunk
             else:
-                answer = ""
-                for chunk in response.choices[0].message.content:
-                    answer += chunk
-                print(answer)
-                yield(answer)
+                if response.choices:
+                    answer = response.choices[0].message.content
+                    print(answer)
+                    yield(answer)
         except Exception as e:
             print(type(e))
             logger.error(e)
