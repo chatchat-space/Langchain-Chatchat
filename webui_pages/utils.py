@@ -494,18 +494,18 @@ class ApiRequest:
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/list_docs接口
+        对应api.py/knowledge_base/list_files接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
+            from server.knowledge_base.kb_doc_api import list_files
+            response = run_async(list_files(knowledge_base_name))
             return response.data
         else:
             response = self.get(
-                "/knowledge_base/list_docs",
+                "/knowledge_base/list_files",
                 params={"knowledge_base_name": knowledge_base_name}
             )
             data = self._check_httpx_json_response(response)

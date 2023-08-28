@@ -112,7 +112,7 @@ def test_upload_doc(api="/knowledge_base/upload_doc"):
         assert data["msg"] == f"成功上传文件 {name}"
 
 
-def test_list_docs(api="/knowledge_base/list_docs"):
+def test_list_files(api="/knowledge_base/list_files"):
     url = api_base_url + api
     print("\n获取知识库中文件列表：")
     r = requests.get(url, params={"knowledge_base_name": kb})

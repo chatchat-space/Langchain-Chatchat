@@ -16,7 +16,22 @@ import langchain.document_loaders
 from langchain.docstore.document import Document
 from pathlib import Path
 import json
-from typing import List, Union, Callable, Dict, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
+
+
+# make HuggingFaceEmbeddings hashable
+def _embeddings_hash(self):
+    if isinstance(self, HuggingFaceEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, HuggingFaceBgeEmbeddings):
+        return hash(self.model_name)
+    elif isinstance(self, OpenAIEmbeddings):
+        return hash(self.model)
+
+HuggingFaceEmbeddings.__hash__ = _embeddings_hash
+OpenAIEmbeddings.__hash__ = _embeddings_hash
+HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -47,7 +62,7 @@ def list_kbs_from_folder():
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
 
 
-def list_docs_from_folder(kb_name: str):
+def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
@@ -175,8 +190,11 @@ class KnowledgeFile:
         # TODO: 增加依据文件格式匹配text_splitter
         self.text_splitter_name = None
 
-    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE):
-        print(self.document_loader_name)
+    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False):
+        if self.docs is not None and not refresh:
+            return self.docs
+
+        print(f"{self.document_loader_name} used for {self.filepath}")
         try:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
             DocumentLoader = getattr(document_loaders_module, self.document_loader_name)
@@ -193,9 +211,9 @@ class KnowledgeFile:
         elif self.document_loader_name == "CustomJSONLoader":
             loader = DocumentLoader(self.filepath, text_content=False)
         elif self.document_loader_name == "UnstructuredMarkdownLoader":
-            loader = DocumentLoader(self.filepath, mode="elements")  # TODO: 需要在实践中测试`elements`是否优于`single`
+            loader = DocumentLoader(self.filepath, mode="elements")
         elif self.document_loader_name == "UnstructuredHTMLLoader":
-            loader = DocumentLoader(self.filepath, mode="elements")  # TODO: 需要在实践中测试`elements`是否优于`single`
+            loader = DocumentLoader(self.filepath, mode="elements")
         else:
             loader = DocumentLoader(self.filepath)
 
@@ -231,4 +249,63 @@ class KnowledgeFile:
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
+        self.docs = docs
         return docs
+
+    def get_mtime(self):
+        return os.path.getmtime(self.filepath)
+
+    def get_size(self):
+        return os.path.getsize(self.filepath)
+
+
+def run_in_thread_pool(
+    func: Callable,
+    params: List[Dict] = [],
+    pool: ThreadPoolExecutor = None,
+) -> Generator:
+    '''
+    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+    '''
+    tasks = []
+    if pool is None:
+        pool = ThreadPoolExecutor()
+    
+    for kwargs in params:
+        thread = pool.submit(func, **kwargs)
+        tasks.append(thread)
+    
+    for obj in as_completed(tasks):
+        yield obj.result()
+
+
+def files2docs_in_thread(
+    files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+    pool: ThreadPoolExecutor = None,
+) -> Generator:
+    '''
+    利用多线程批量将文件转化成langchain Document.
+    生成器返回值为{(kb_name, file_name): docs}
+    '''
+    def task(*, file: KnowledgeFile, **kwargs) -> Dict[Tuple[str, str], List[Document]]:
+        try:
+            return True, (file.kb_name, file.filename, file.file2text(**kwargs))
+        except Exception as e:
+            return False, e
+
+    kwargs_list = []
+    for i, file in enumerate(files):
+        kwargs = {}
+        if isinstance(file, tuple) and len(file) >= 2:
+            files[i] = KnowledgeFile(filename=file[0], knowledge_base_name=file[1])
+        elif isinstance(file, dict):
+            filename = file.pop("filename")
+            kb_name = file.pop("kb_name")
+            files[i] = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+            kwargs = file
+        kwargs["file"] = file
+        kwargs_list.append(kwargs)
+    
+    for result in run_in_thread_pool(func=task, params=kwargs_list, pool=pool):
+        yield result
