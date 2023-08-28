@@ -77,7 +77,7 @@ class FaissKBService(KBService):
     def load_vector_store(self):
         return load_faiss_vector_store(
             knowledge_base_name=self.kb_name,
-            embedding_model=self.embed_model,
+            embed_model=self.embed_model,
             tick=_VECTOR_STORE_TICKS.get(self.kb_name, 0),
         )
 
