@@ -321,7 +321,7 @@ def parse_args() -> argparse.ArgumentParser:
         dest="webui",
     )
     args = parser.parse_args()
-    return args
+    return args, parser
 
 
 def dump_server_info(after_start=False):
@@ -330,7 +330,7 @@ def dump_server_info(after_start=False):
     import fastchat
     from configs.server_config import api_address, webui_address
 
-    print("\n\n")
+    print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print(f"操作系统：{platform.platform()}.")
     print(f"python版本：{sys.version}")
@@ -351,7 +351,7 @@ def dump_server_info(after_start=False):
         if args.webui:
             print(f"    Chatchat WEBUI Server: {webui_address()}")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
-    print("\n\n")
+    print("\n")
 
 
 if __name__ == "__main__":
@@ -359,7 +359,7 @@ if __name__ == "__main__":
 
     mp.set_start_method("spawn")
     queue = Queue()
-    args = parse_args()
+    args, parser = parse_args()
     if args.all_webui:
         args.openai_api = True
         args.model_worker = True
@@ -379,8 +379,10 @@ if __name__ == "__main__":
         args.webui = False
 
     dump_server_info()
-    logger.info(f"正在启动服务：")
-    logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
+
+    if len(sys.argv) > 1:
+        logger.info(f"正在启动服务：")
+        logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
     processes = {}
 
@@ -435,28 +437,32 @@ if __name__ == "__main__":
         process.start()
         processes["webui"] = process
 
-    try:
-        # log infors
-        while True:
-            no = queue.get()
-            if no == len(processes):
-                time.sleep(0.5)
-                dump_server_info(True)
-                break
-            else:
-                queue.put(no)
+    if len(processes) == 0:
+        parser.print_help()
+    else:
+        try:
+            # log infors
+            while True:
+                no = queue.get()
+                if no == len(processes):
+                    time.sleep(0.5)
+                    dump_server_info(True)
+                    break
+                else:
+                    queue.put(no)
 
-        if model_worker_process := processes.get("model_worker"):
-            model_worker_process.join()
-        for name, process in processes.items():
-            if name != "model_worker":
-                process.join()
-    except:
-        if model_worker_process := processes.get("model_worker"):
-            model_worker_process.terminate()
-        for name, process in processes.items():
-            if name != "model_worker":
-                process.terminate()
+            if model_worker_process := processes.get("model_worker"):
+                model_worker_process.join()
+            for name, process in processes.items():
+                if name != "model_worker":
+                    process.join()
+        except:
+            if model_worker_process := processes.get("model_worker"):
+                model_worker_process.terminate()
+            for name, process in processes.items():
+                if name != "model_worker":
+                    process.terminate()
+
 
 # 服务启动后接口调用示例：
 # import openai
