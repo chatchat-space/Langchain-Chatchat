@@ -458,7 +458,6 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
     queue = Queue()
     args, parser = parse_args()
-
     if args.all_webui:
         args.openai_api = True
         args.model_worker = True
