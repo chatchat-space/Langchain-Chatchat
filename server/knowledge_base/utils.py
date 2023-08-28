@@ -75,7 +75,6 @@ def list_kbs_from_folder():
     return [f for f in os.listdir(KB_ROOT_PATH)
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
 
-
 def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
