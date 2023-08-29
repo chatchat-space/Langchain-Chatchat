@@ -5,7 +5,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
-from server.utils import MakeFastAPIOffline
+from server.utils import MakeFastAPIOffline, set_httpx_timeout
 
 
 host_ip = "0.0.0.0"
@@ -13,13 +13,6 @@ controller_port = 20001
 model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
-
-
-def set_httpx_timeout(timeout=60.0):
-    import httpx
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 def create_controller_app(
