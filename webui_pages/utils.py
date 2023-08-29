@@ -24,7 +24,6 @@ from io import BytesIO
 from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
-from configs.server_config import set_httpx_timeout
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from pprint import pprint
