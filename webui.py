@@ -10,7 +10,7 @@ from streamlit_option_menu import option_menu
 from webui_pages import *
 import os
 from configs import VERSION
-from configs.server_config import api_address
+from server.utils import api_address
 
 
 api = ApiRequest(base_url=api_address())

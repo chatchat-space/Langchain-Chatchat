@@ -95,9 +95,7 @@ def dialogue_page(api: ApiRequest):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
-        history_len = st.number_input("历史对话轮数：", 0, 10, 3)
-
-        # todo: support history len
+        history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -137,7 +135,7 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.chat_chat(prompt, history, model=llm_model)
+            r = api.chat_chat(prompt, history=history, model=llm_model)
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)

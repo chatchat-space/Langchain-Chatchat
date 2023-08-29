@@ -38,7 +38,7 @@ FSCHAT_MODEL_WORKERS = {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
-        # todo: 多卡加载需要配置的参数
+        # 多卡加载需要配置的参数
         # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"
         # "num_gpus": 1, # 使用GPU的数量
         # "max_gpu_memory": "20GiB", # 每个GPU占用的最大显存
