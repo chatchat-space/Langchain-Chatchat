@@ -216,12 +216,13 @@ embedding_model_dict = {
 当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
 
 - 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型与 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
-
+  
   ```shell
   $ python init_database.py
   ```
-- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，或者之前的向量库没有开启 `normalize_L2`，需要以下命令初始化或重建知识库：
 
+- 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，或者之前的向量库没有开启 `normalize_L2`，需要以下命令初始化或重建知识库：
+  
   ```shell
   $ python init_database.py --recreate-vs
   ```
@@ -266,7 +267,7 @@ max_gpu_memory="20GiB"
 
 ⚠️ **注意:**
 
-**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
+**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wsl;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定模型，不会读取model_config.py配置;**
 
@@ -324,7 +325,7 @@ $ python server/api.py
 启动 API 服务后，可访问 `localhost:7861` 或 `{API 所在服务器 IP}:7861` FastAPI 自动生成的 docs 进行接口查看与测试。
 
 - FastAPI docs 界面
-
+  
   ![](img/fastapi_docs_020_0.png)
 
 #### 5.3 启动 Web UI 服务
@@ -348,10 +349,11 @@ $ streamlit run webui.py --server.port 666
 ```
 
 - Web UI 对话界面：
-
+  
   ![](img/webui_0813_0.png)
-- Web UI 知识库管理页面：
 
+- Web UI 知识库管理页面：
+  
   ![](img/webui_0813_1.png)
 
 ---
@@ -399,14 +401,14 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 ## 路线图
 
-- [X] Langchain 应用
-  - [X] 本地数据接入
-    - [X] 接入非结构化文档
-      - [X] .md
-      - [X] .txt
-      - [X] .docx
+- [x] Langchain 应用
+  - [x] 本地数据接入
+    - [x] 接入非结构化文档
+      - [x] .md
+      - [x] .txt
+      - [x] .docx
     - [ ] 结构化数据接入
-      - [X] .csv
+      - [x] .csv
       - [ ] .xlsx
     - [ ] 分词及召回
       - [ ] 接入不同类型 TextSplitter
@@ -415,19 +417,19 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
     - [ ] 本地网页接入
     - [ ] SQL 接入
     - [ ] 知识图谱/图数据库接入
-  - [X] 搜索引擎接入
-    - [X] Bing 搜索
-    - [X] DuckDuckGo 搜索
+  - [x] 搜索引擎接入
+    - [x] Bing 搜索
+    - [x] DuckDuckGo 搜索
   - [ ] Agent 实现
-- [X] LLM 模型接入
-  - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
+- [x] LLM 模型接入
+  - [x] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
   - [ ] 支持 ChatGLM API 等 LLM API 的接入
-- [X] Embedding 模型接入
-  - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
+- [x] Embedding 模型接入
+  - [x] 支持调用 HuggingFace 中各开源 Emebdding 模型
   - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
-- [X] 基于 FastAPI 的 API 方式调用
-- [X] Web UI
-  - [X] 基于 Streamlit 的 Web UI
+- [x] 基于 FastAPI 的 API 方式调用
+- [x] Web UI
+  - [x] 基于 Streamlit 的 Web UI
 
 ---
 
