@@ -19,9 +19,9 @@ from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_di
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
                                    FSCHAT_OPENAI_API, )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                        fschat_openai_api_address, set_httpx_timeout,
-                        get_model_worker_config, )
-from server.utils import MakeFastAPIOffline, FastAPI
+                        fschat_openai_api_address,
+                        set_httpx_timeout,get_model_worker_config,
+                        MakeFastAPIOffline, FastAPI,)
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
@@ -529,7 +529,7 @@ if __name__ == "__main__":
                 no = queue.get()
                 if no == len(processes):
                     time.sleep(0.5)
-                    dump_server_info(True)
+                    dump_server_info(after_start=True, args=args)
                     break
                 else:
                     queue.put(no)

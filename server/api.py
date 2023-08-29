@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs.model_config import LLM_MODEL, NLTK_DATA_PATH
-from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT, fschat_controller_address
+from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT
 from configs import VERSION
 import argparse
 import uvicorn
@@ -18,7 +18,7 @@ from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_files, upload_doc, delete_doc,
                                               update_doc, download_doc, recreate_vector_store,
                                               search_docs, DocumentWithScore)
-from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline, fschat_controller_address
 import httpx
 from typing import List
 

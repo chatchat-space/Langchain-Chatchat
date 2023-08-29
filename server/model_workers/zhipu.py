@@ -15,7 +15,8 @@ class ChatGLMWorker(ApiModelWorker):
         self.init_heart_beat()
 
     def generate_stream_gate(self, params):
-        # TODO: 支持stream参数，维护request_id
+        # TODO: 支持stream参数，维护request_id，传过来的prompt也有问题
+        super().generate_stream_gate(params)
         zhipuai.api_key = get_model_worker_config("chatglm-api").get("api_key")
 
         response = zhipuai.model_api.sse_invoke(
@@ -27,7 +28,7 @@ class ChatGLMWorker(ApiModelWorker):
         for e in response.events():
             if e.event == "add":
                 print(e.data)
-                yield e.data
+                yield {"error_code": 0, "text": e.data} # TODO: 需要兼容openai接口形式
             # elif e.event == "finish":
             #     ...
     

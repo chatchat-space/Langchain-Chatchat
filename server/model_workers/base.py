@@ -19,6 +19,7 @@ class ConvTemplate(BaseModel):
     stop_token_ids: str = None
 
 
+# TODO: conv_template需要定制
 def get_conv_template(conv_template):
     return ConvTemplate()
 
@@ -41,22 +42,21 @@ class ApiModelWorker(BaseModelWorker):
         self.init_heart_beat()
 
     def count_token(self, params):
+        # TODO：需要完善
         print("count token")
         print(params)
         prompt = params["prompt"]
         return {"count": len(str(prompt)), "error_code": 0}
 
     def generate_stream_gate(self, params):
-        print("stream")
-        print(params)
         self.call_ct += 1
     
     def generate_gate(self, params):
         # TODO: 需要根据实际进行调整
-        text = ""
+        msg = {"error_code": 0, "text": ""}
         for x in self.generate_stream_gate(params):
-            text += x
-        return text
+            msg["text"] += x["text"]
+        return msg
 
     def get_embeddings(self, params):
         print("embedding")
