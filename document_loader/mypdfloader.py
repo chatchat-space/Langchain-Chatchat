@@ -1,6 +1,7 @@
 from typing import List
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
 
+
 class RapidOCRPDFLoader(UnstructuredFileLoader):
     def _get_elements(self) -> List:
         def pdf2text(filepath):
@@ -17,10 +18,11 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
                 img_list = page.get_images()
                 for img in img_list:
                     pix = fitz.Pixmap(doc, img[0])
-                    img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
+                    img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
                     result, _ = ocr(img_array)
-                    ocr_result = [line[1] for line in result]
-                    resp += "\n".join(ocr_result)
+                    if result:
+                        ocr_result = [line[1] for line in result]
+                        resp += "\n".join(ocr_result)
             return resp
 
         text = pdf2text(self.file_path)
@@ -29,6 +31,6 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
 
 
 if __name__ == "__main__":
-    loader = UnstructuredRapidOCRPDFLoader(file_path="../docs/ocr_test.pdf")
+    loader = RapidOCRPDFLoader(file_path="../docs/ocr_test4.pdf")
     docs = loader.load()
     print(docs)
