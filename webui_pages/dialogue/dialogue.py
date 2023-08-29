@@ -93,9 +93,7 @@ def dialogue_page(api: ApiRequest):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
-        history_len = st.number_input("历史对话轮数：", 0, 10, 3)
-
-        # todo: support history len
+        history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -109,14 +107,19 @@ def dialogue_page(api: ApiRequest):
                     on_change=on_kb_change,
                     key="selected_kb",
                 )
-                kb_top_k = st.number_input("匹配知识条数：", 1, 20, 3)
+                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
                 score_threshold = st.number_input("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
+            search_engine_list = list(SEARCH_ENGINES.keys())
             with st.expander("搜索引擎配置", True):
-                search_engine = st.selectbox("请选择搜索引擎", SEARCH_ENGINES.keys(), 0)
-                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, 3)
+                search_engine = st.selectbox(
+                    label="请选择搜索引擎",
+                    options=search_engine_list,
+                    index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
+                )
+                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
 
     # Display chat messages from history on app rerun
 
@@ -130,7 +133,7 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.chat_chat(prompt, history, model=llm_model)
+            r = api.chat_chat(prompt, history=history, model=llm_model)
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)
@@ -161,9 +164,10 @@ def dialogue_page(api: ApiRequest):
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                else:
+                    text += d["answer"]
+                    chat_box.update_msg(text, 0)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
 
     now = datetime.now()
