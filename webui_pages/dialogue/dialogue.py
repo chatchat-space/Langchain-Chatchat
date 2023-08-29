@@ -13,6 +13,7 @@ chat_box = ChatBox(
     )
 )
 
+FILE_TOKENS = 3000
 
 def get_messages_history(history_len: int) -> List[Dict]:
     def filter(msg):
@@ -88,7 +89,9 @@ def dialogue_page(api: ApiRequest):
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
         elif dialogue_mode == "文件问答":
-            file_len = st.number_input("上传字符数：", 1, 30000, 3000)
+            global FILE_TOKENS
+            file_len = st.number_input("上传字符数：", 1, 30000, FILE_TOKENS)
+            FILE_TOKENS = file_len
             file = st.file_uploader("上传文件",
                                     ['txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'xml', 'ppt']
                                     )
