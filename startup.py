@@ -17,19 +17,13 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
-                                   FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
-                                   fschat_openai_api_address, )
+                                   FSCHAT_OPENAI_API, )
+from server.utils import (fschat_controller_address, fschat_model_worker_address,
+                        fschat_openai_api_address, set_httpx_timeout)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List
 from configs import VERSION
-
-
-def set_httpx_timeout(timeout=60.0):
-    import httpx
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 def create_controller_app(
@@ -328,7 +322,7 @@ def dump_server_info(after_start=False):
     import platform
     import langchain
     import fastchat
-    from configs.server_config import api_address, webui_address
+    from server.utils import api_address, webui_address
 
     print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)

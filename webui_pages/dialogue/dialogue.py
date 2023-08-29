@@ -59,9 +59,7 @@ def dialogue_page(api: ApiRequest):
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
-        history_len = st.number_input("历史对话轮数：", 0, 10, 3)
-
-        # todo: support history len
+        history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -75,7 +73,7 @@ def dialogue_page(api: ApiRequest):
                     on_change=on_kb_change,
                     key="selected_kb",
                 )
-                kb_top_k = st.number_input("匹配知识条数：", 1, 20, 3)
+                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
                 score_threshold = st.number_input("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
@@ -87,7 +85,7 @@ def dialogue_page(api: ApiRequest):
                     options=search_engine_list,
                     index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
                 )
-                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, 3)
+                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
 
     # Display chat messages from history on app rerun
 

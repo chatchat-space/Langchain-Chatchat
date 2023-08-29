@@ -6,6 +6,7 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
@@ -20,22 +21,12 @@ import json
 from io import BytesIO
 from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async
+from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from pprint import pprint
-
-
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
