@@ -1,11 +1,23 @@
 import os
 import logging
-import torch
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
+
+
+# 分布式部署时，不运行LLM的机器上可以不装torch
+def default_device():
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
 
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
@@ -33,7 +45,7 @@ embedding_model_dict = {
 EMBEDDING_MODEL = "m3e-base"
 
 # Embedding 模型运行设备
-EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+EMBEDDING_DEVICE = default_device()
 
 
 llm_model_dict = {
@@ -70,10 +82,14 @@ llm_model_dict = {
     # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
     # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
     "gpt-3.5-turbo": {
-        "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openai.com/v1",
         "api_key": os.environ.get("OPENAI_API_KEY"),
         "openai_proxy": os.environ.get("OPENAI_PROXY")
+    "chatglm-api": {
+        "api_base_url": "http://127.0.0.1:8888/v1",
+        "api_key": "",
+        "online_api": True,
+    },
     },
 }
 
@@ -81,8 +97,11 @@ llm_model_dict = {
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
 
+# 历史对话轮数
+HISTORY_LEN = 3
+
 # LLM 运行设备
-LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+LLM_DEVICE = default_device()
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")

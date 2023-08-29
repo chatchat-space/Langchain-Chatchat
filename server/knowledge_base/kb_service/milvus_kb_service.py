@@ -1,12 +1,16 @@
 from typing import List
 
+import numpy as np
+from faiss import normalize_L2
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Milvus
+from sklearn.preprocessing import normalize
 
 from configs.model_config import SCORE_THRESHOLD, kbs_config
 
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
+    score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
 
 
@@ -36,32 +40,22 @@ class MilvusKBService(KBService):
     def _load_milvus(self, embeddings: Embeddings = None):
         if embeddings is None:
             embeddings = self._load_embeddings()
-        self.milvus = Milvus(embedding_function=embeddings,
+        self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(embeddings),
                              collection_name=self.kb_name, connection_args=kbs_config.get("milvus"))
 
     def do_init(self):
         self._load_milvus()
 
     def do_drop_kb(self):
-        self.milvus.col.drop()
+        if self.milvus.col:
+            self.milvus.col.drop()
 
-    def do_search(self, query: str, top_k: int, embeddings: Embeddings):
-        # todo: support score threshold
-        self._load_milvus(embeddings=embeddings)
-        return self.milvus.similarity_search_with_score(query, top_k)
+    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
+        self._load_milvus(embeddings=EmbeddingsFunAdapter(embeddings))
+        return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
 
-    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
-        """
-        向知识库添加文件
-        """
-        docs = kb_file.file2text()
+    def do_add_doc(self, docs: List[Document], **kwargs):
         self.milvus.add_documents(docs)
-        from server.db.repository.knowledge_file_repository import add_doc_to_db
-        status = add_doc_to_db(kb_file)
-        return status
-
-    def do_add_doc(self, docs: List[Document], embeddings: Embeddings, **kwargs):
-        pass
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         filepath = kb_file.filepath.replace('\\', '\\\\')
@@ -70,7 +64,8 @@ class MilvusKBService(KBService):
         self.milvus.col.delete(expr=f'pk in {delete_list}')
 
     def do_clear_vs(self):
-        self.milvus.col.drop()
+        if self.milvus.col:
+            self.milvus.col.drop()
 
 
 if __name__ == '__main__':
@@ -82,4 +77,4 @@ if __name__ == '__main__':
     milvusService.add_doc(KnowledgeFile("README.md", "test"))
     milvusService.delete_doc(KnowledgeFile("README.md", "test"))
     milvusService.do_drop_kb()
-    print(milvusService.search_docs("测试"))
+    print(milvusService.search_docs("如何启动api服务"))

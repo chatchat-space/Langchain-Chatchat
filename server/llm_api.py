@@ -5,8 +5,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
-from configs.server_config import set_httpx_timeout
-from server.utils import MakeFastAPIOffline
+from server.utils import MakeFastAPIOffline, set_httpx_timeout
 
 
 host_ip = "0.0.0.0"

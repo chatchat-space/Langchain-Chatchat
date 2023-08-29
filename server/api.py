@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs.model_config import LLM_MODEL, NLTK_DATA_PATH
-from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT, fschat_controller_address
+from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT
 from configs import VERSION
 import argparse
 import uvicorn
@@ -15,10 +15,10 @@ from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
-from server.knowledge_base.kb_doc_api import (list_docs, upload_doc, delete_doc,
+from server.knowledge_base.kb_doc_api import (list_files, upload_doc, delete_doc,
                                               update_doc, download_doc, recreate_vector_store,
                                               search_docs, DocumentWithScore)
-from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline, fschat_controller_address
 import httpx
 from typing import List
 
@@ -86,11 +86,11 @@ def create_app():
              summary="删除知识库"
              )(delete_kb)
 
-    app.get("/knowledge_base/list_docs",
+    app.get("/knowledge_base/list_files",
             tags=["Knowledge Base Management"],
             response_model=ListResponse,
             summary="获取知识库内的文件列表"
-            )(list_docs)
+            )(list_files)
 
     app.post("/knowledge_base/search_docs",
              tags=["Knowledge Base Management"],
