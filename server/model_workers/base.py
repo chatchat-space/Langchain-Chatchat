@@ -20,30 +20,6 @@ class ApiModelOutMsg(BaseModel):
     error_code: int = 0
     text: str
 
-
-class ConvTemplate(BaseModel):
-    name: str = "chatglm-api"
-    system_template: str = "{system_message}"
-    system_message: str = ""
-    roles: List[str] = [] # ["问", "答"]
-    messages: List = []
-    offset: int = 0
-    sep_style: int =8
-    sep: str = "\n\n"
-    sep2: str = None
-    stop_str: str = None,
-    stop_token_ids: str = None
-
-
-# TODO: conv_template需要定制
-def get_conv_template(conv_template):
-    return ConvTemplate()
-
-
-def get_conversation_template(model_path):
-    return ConvTemplate()
-
-
 class ApiModelWorker(BaseModelWorker):
     BASE_URL: str
     SUPPORT_MODELS: List
