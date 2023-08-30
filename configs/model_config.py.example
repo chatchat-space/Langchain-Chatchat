@@ -85,11 +85,14 @@ llm_model_dict = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": os.environ.get("OPENAI_API_KEY"),
         "openai_proxy": os.environ.get("OPENAI_PROXY")
+    },
+    # 线上模型。当前支持智谱AI。
+    # 如果没有设置有效的local_model_path，则认为是在线模型API
     "chatglm-api": {
         "api_base_url": "http://127.0.0.1:8888/v1",
-        "api_key": "",
-        "online_api": True,
-    },
+        "api_key": os.environ.get("ZHIPUAI_API_KEY"),
+        "provider": "ChatGLMWorker",
+        "version": "chatglm_pro",
     },
     # 线上模型。当前支持智谱AI。
     # 如果没有设置有效的local_model_path，则认为是在线模型API

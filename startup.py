@@ -280,7 +280,10 @@ def run_model_worker(
     model_path = kwargs.get("local_model_path", "")
     kwargs["model_path"] = model_path
 
-    app = create_model_worker_app(**kwargs)
+    if kwargs.get("worker_class"):
+        app = create_model_worker_app(**kwargs)
+    else:
+        app = create_model_worker_app(**kwargs)
     _set_app_seq(app, q, run_seq)
 
     # add interface to release and load model
