@@ -4,9 +4,10 @@ from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
-from typing import List, Dict
 import os
 from configs.model_config import llm_model_dict, LLM_MODEL
+from server.utils import get_model_worker_config
+from typing import List, Dict
 
 
 chat_box = ChatBox(
@@ -88,7 +89,8 @@ def dialogue_page(api: ApiRequest):
                                 on_change=on_llm_change,
                                 # key="llm_model",
                                 )
-        if st.session_state.get("prev_llm_model") != llm_model:
+        if (st.session_state.get("prev_llm_model") != llm_model
+            and not get_model_worker_config(llm_model).get("online_api")):
             with st.spinner(f"正在加载模型： {llm_model}"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
