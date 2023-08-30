@@ -1,3 +1,6 @@
+from configs.model_config import LOG_PATH
+import fastchat.constants
+fastchat.constants.LOGDIR = LOG_PATH
 from fastchat.serve.model_worker import BaseModelWorker
 import uuid
 import json
