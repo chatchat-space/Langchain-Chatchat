@@ -16,11 +16,11 @@ except:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
     logger
-from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
+from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                        fschat_openai_api_address,
-                        set_httpx_timeout,get_model_worker_config,
+                        fschat_openai_api_address, set_httpx_timeout,
+                        get_model_worker_config, get_all_model_worker_configs,
                         MakeFastAPIOffline, FastAPI,)
 import argparse
 from typing import Tuple, List, Dict
@@ -50,17 +50,6 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
     import argparse
     import threading
     import fastchat.serve.model_worker
-
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def _new_init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
-
-    ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args([])
@@ -95,43 +84,61 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
             )
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
-    gptq_config = GptqConfig(
-        ckpt=args.gptq_ckpt or args.model_path,
-        wbits=args.gptq_wbits,
-        groupsize=args.gptq_groupsize,
-        act_order=args.gptq_act_order,
-    )
-    awq_config = AWQConfig(
-        ckpt=args.awq_ckpt or args.model_path,
-        wbits=args.awq_wbits,
-        groupsize=args.awq_groupsize,
-    )
+    # 在线模型API
+    if worker_class := kwargs.get("worker_class"):
+        worker = worker_class(model_names=args.model_names,
+                            controller_addr=args.controller_address,
+                            worker_addr=args.worker_address)
+    # 本地模型
+    else:
+        # workaround to make program exit with Ctrl+c
+        # it should be deleted after pr is merged by fastchat
+        def _new_init_heart_beat(self):
+            self.register_to_controller()
+            self.heart_beat_thread = threading.Thread(
+                target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+            )
+            self.heart_beat_thread.start()
 
-    worker = ModelWorker(
-        controller_addr=args.controller_address,
-        worker_addr=args.worker_address,
-        worker_id=worker_id,
-        model_path=args.model_path,
-        model_names=args.model_names,
-        limit_worker_concurrency=args.limit_worker_concurrency,
-        no_register=args.no_register,
-        device=args.device,
-        num_gpus=args.num_gpus,
-        max_gpu_memory=args.max_gpu_memory,
-        load_8bit=args.load_8bit,
-        cpu_offloading=args.cpu_offloading,
-        gptq_config=gptq_config,
-        awq_config=awq_config,
-        stream_interval=args.stream_interval,
-        conv_template=args.conv_template,
-    )
+        ModelWorker.init_heart_beat = _new_init_heart_beat
+
+        gptq_config = GptqConfig(
+            ckpt=args.gptq_ckpt or args.model_path,
+            wbits=args.gptq_wbits,
+            groupsize=args.gptq_groupsize,
+            act_order=args.gptq_act_order,
+        )
+        awq_config = AWQConfig(
+            ckpt=args.awq_ckpt or args.model_path,
+            wbits=args.awq_wbits,
+            groupsize=args.awq_groupsize,
+        )
+
+        worker = ModelWorker(
+            controller_addr=args.controller_address,
+            worker_addr=args.worker_address,
+            worker_id=worker_id,
+            model_path=args.model_path,
+            model_names=args.model_names,
+            limit_worker_concurrency=args.limit_worker_concurrency,
+            no_register=args.no_register,
+            device=args.device,
+            num_gpus=args.num_gpus,
+            max_gpu_memory=args.max_gpu_memory,
+            load_8bit=args.load_8bit,
+            cpu_offloading=args.cpu_offloading,
+            gptq_config=gptq_config,
+            awq_config=awq_config,
+            stream_interval=args.stream_interval,
+            conv_template=args.conv_template,
+        )
+        sys.modules["fastchat.serve.model_worker"].args = args
+        sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
     sys.modules["fastchat.serve.model_worker"].worker = worker
-    sys.modules["fastchat.serve.model_worker"].args = args
-    sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
     MakeFastAPIOffline(app)
-    app.title = f"FastChat LLM Server ({LLM_MODEL})"
+    app.title = f"FastChat LLM Server ({args.model_names[0]})"
     app._worker = worker
     return app
 
@@ -266,13 +273,16 @@ def run_model_worker(
     kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
     port = kwargs.pop("port")
-    model_path = kwargs.get("local_model_path", "")
-    kwargs["model_path"] = model_path
     kwargs["model_names"] = [model_name]
     kwargs["controller_address"] = controller_address or fschat_controller_address()
-    kwargs["worker_address"] = fschat_model_worker_address()
+    kwargs["worker_address"] = fschat_model_worker_address(model_name)
+    model_path = kwargs.get("local_model_path", "")
+    kwargs["model_path"] = model_path
 
-    app = create_model_worker_app(**kwargs)
+    if kwargs.get("worker_class"):
+        app = create_model_worker_app(**kwargs)
+    else:
+        app = create_model_worker_app(**kwargs)
     _set_app_seq(app, q, run_seq)
 
     # add interface to release and load model
@@ -394,6 +404,13 @@ def parse_args() -> argparse.ArgumentParser:
         dest="api",
     )
     parser.add_argument(
+        "-p",
+        "--api-worker",
+        action="store_true",
+        help="run online model api such as zhipuai",
+        dest="api_worker",
+    )
+    parser.add_argument(
         "-w",
         "--webui",
         action="store_true",
@@ -447,17 +464,20 @@ if __name__ == "__main__":
         args.openai_api = True
         args.model_worker = True
         args.api = True
+        args.api_worker = True
         args.webui = True
 
     elif args.all_api:
         args.openai_api = True
         args.model_worker = True
         args.api = True
+        args.api_worker = True
         args.webui = False
 
     elif args.llm_api:
         args.openai_api = True
         args.model_worker = True
+        args.api_worker = True
         args.api = False
         args.webui = False
 
@@ -467,13 +487,16 @@ if __name__ == "__main__":
         logger.info(f"正在启动服务：")
         logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
-    processes = {}
+    processes = {"online-api": []}
+
+    def process_count():
+        return len(processes) + len(processes["online-api"]) -1
 
     if args.openai_api:
         process = Process(
             target=run_controller,
             name=f"controller({os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
@@ -482,29 +505,42 @@ if __name__ == "__main__":
         process = Process(
             target=run_openai_api,
             name=f"openai_api({os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
         processes["openai_api"] = process
 
     if args.model_worker:
-        model_path = llm_model_dict[args.model_name].get("local_model_path", "")
-        if os.path.isdir(model_path):
+        config = get_model_worker_config(args.model_name)
+        if not config.get("online_api"):
             process = Process(
                 target=run_model_worker,
-                name=f"model_worker({os.getpid()})",
-                args=(args.model_name, args.controller_address, queue, len(processes) + 1),
+                name=f"model_worker - {args.model_name} ({os.getpid()})",
+                args=(args.model_name, args.controller_address, queue, process_count() + 1),
                 daemon=True,
             )
             process.start()
             processes["model_worker"] = process
 
+    if args.api_worker:
+        configs = get_all_model_worker_configs()
+        for model_name, config in configs.items():
+            if config.get("online_api") and config.get("worker_class"):
+                process = Process(
+                    target=run_model_worker,
+                    name=f"model_worker - {model_name} ({os.getpid()})",
+                    args=(model_name, args.controller_address, queue, process_count() + 1),
+                    daemon=True,
+                )
+                process.start()
+                processes["online-api"].append(process)
+
     if args.api:
         process = Process(
             target=run_api_server,
             name=f"API Server{os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
@@ -514,37 +550,38 @@ if __name__ == "__main__":
         process = Process(
             target=run_webui,
             name=f"WEBUI Server{os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
         processes["webui"] = process
 
-    if len(processes) == 0:
+    if process_count() == 0:
         parser.print_help()
     else:
         try:
-            # log infors
             while True:
                 no = queue.get()
-                if no == len(processes):
+                if no == process_count():
                     time.sleep(0.5)
                     dump_server_info(after_start=True, args=args)
                     break
                 else:
                     queue.put(no)
 
-            if model_worker_process := processes.get("model_worker"):
+            if model_worker_process := processes.pop("model_worker", None):
                 model_worker_process.join()
+            for process in processes.pop("online-api", []):
+                process.join()
             for name, process in processes.items():
-                if name != "model_worker":
-                    process.join()
+                process.join()
         except:
-            if model_worker_process := processes.get("model_worker"):
+            if model_worker_process := processes.pop("model_worker", None):
                 model_worker_process.terminate()
+            for process in processes.pop("online-api", []):
+                process.terminate()
             for name, process in processes.items():
-                if name != "model_worker":
-                    process.terminate()
+                process.terminate()
 
 
 # 服务启动后接口调用示例：

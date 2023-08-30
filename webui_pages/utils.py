@@ -7,6 +7,7 @@ from configs.model_config import (
     KB_ROOT_PATH,
     LLM_MODEL,
     llm_model_dict,
+    HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
@@ -20,12 +21,9 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
 from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
-from configs.server_config import set_httpx_timeout
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from pprint import pprint
