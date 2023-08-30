@@ -1,5 +1,6 @@
 import zhipuai
 from server.model_workers.base import ApiModelWorker
+from fastchat import conversation as conv
 import sys
 import json
 from typing import List, Literal
@@ -22,6 +23,16 @@ class ChatGLMWorker(ApiModelWorker):
         kwargs.setdefault("context_len", 32768)
         super().__init__(**kwargs)
         self.version = version
+
+        # 这里的是chatglm api的模板，其它API的conv_template需要定制
+        self.conv = conv.Conversation(
+            name="chatglm-api",
+            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
+            messages=[],
+            roles=["Human", "Assistant"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
     def generate_stream_gate(self, params):
         # TODO: 支持stream参数，维护request_id，传过来的prompt也有问题
