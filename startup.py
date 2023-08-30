@@ -22,6 +22,7 @@ from server.utils import (fschat_controller_address, fschat_model_worker_address
                         fschat_openai_api_address, set_httpx_timeout,
                         get_model_worker_config, get_all_model_worker_configs,
                         MakeFastAPIOffline, FastAPI,)
+
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
@@ -279,10 +280,7 @@ def run_model_worker(
     model_path = kwargs.get("local_model_path", "")
     kwargs["model_path"] = model_path
 
-    if kwargs.get("worker_class"):
-        app = create_model_worker_app(**kwargs)
-    else:
-        app = create_model_worker_app(**kwargs)
+    app = create_model_worker_app(**kwargs)
     _set_app_seq(app, q, run_seq)
 
     # add interface to release and load model
@@ -460,6 +458,7 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
     queue = Queue()
     args, parser = parse_args()
+
     if args.all_webui:
         args.openai_api = True
         args.model_worker = True
