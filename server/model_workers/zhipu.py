@@ -1,5 +1,4 @@
 import zhipuai
-from fastchat.serve.model_worker import app
 from server.model_workers.base import ApiModelWorker
 import sys
 import json
@@ -54,6 +53,7 @@ class ChatGLMWorker(ApiModelWorker):
 if __name__ == "__main__":
     import uvicorn
     from server.utils import MakeFastAPIOffline
+    from fastchat.serve.model_worker import app
 
     worker = ChatGLMWorker(
         controller_addr="http://127.0.0.1:20001",
