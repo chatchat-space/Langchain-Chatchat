@@ -72,14 +72,14 @@ llm_model_dict = {
     "gpt-3.5-turbo": {
         "local_model_path": "gpt-3.5-turbo",
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY"),
+        "api_key": "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",
         "openai_proxy": os.environ.get("OPENAI_PROXY")
     },
 }
 
 
 # LLM 名称
-LLM_MODEL = "chatglm2-6b"
+LLM_MODEL = "gpt-3.5-turbo"
 
 # LLM 运行设备
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
