@@ -30,10 +30,12 @@ from configs import VERSION
 
 def create_controller_app(
         dispatch_method: str,
+        log_level: str = "INFO",
 ) -> FastAPI:
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.controller import app, Controller
+    from fastchat.serve.controller import app, Controller, logger
+    logger.setLevel(log_level)
 
     controller = Controller(dispatch_method)
     sys.modules["fastchat.serve.controller"].controller = controller
@@ -44,13 +46,14 @@ def create_controller_app(
     return app
 
 
-def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]:
+def create_model_worker_app(log_level: str = "INFO", **kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]:
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id
+    from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id, logger
     import argparse
     import threading
     import fastchat.serve.model_worker
+    logger.setLevel(log_level)
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args([])
@@ -147,10 +150,12 @@ def create_model_worker_app(**kwargs) -> Tuple[argparse.ArgumentParser, FastAPI]
 def create_openai_api_app(
         controller_address: str,
         api_keys: List = [],
+        log_level: str = "INFO",
 ) -> FastAPI:
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings
+    from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings, logger
+    logger.setLevel(log_level)
 
     app.add_middleware(
         CORSMiddleware,
@@ -190,13 +195,16 @@ def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
             q.put(run_seq)
 
 
-def run_controller(q: Queue, run_seq: int = 1):
+def run_controller(q: Queue, run_seq: int = 1, log_level: str ="INFO"):
     import uvicorn
     import httpx
     from fastapi import Body
     import time
 
-    app = create_controller_app(FSCHAT_CONTROLLER.get("dispatch_method"))
+    app = create_controller_app(
+        dispatch_method=FSCHAT_CONTROLLER.get("dispatch_method"),
+        log_level=log_level,
+    )
     _set_app_seq(app, q, run_seq)
 
     # add interface to release and load model worker
@@ -259,7 +267,7 @@ def run_controller(q: Queue, run_seq: int = 1):
 
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
 
 def run_model_worker(
@@ -267,6 +275,7 @@ def run_model_worker(
         controller_address: str = "",
         q: Queue = None,
         run_seq: int = 2,
+        log_level: str ="INFO",
 ):
     import uvicorn
     from fastapi import Body
@@ -280,7 +289,7 @@ def run_model_worker(
     model_path = kwargs.get("local_model_path", "")
     kwargs["model_path"] = model_path
 
-    app = create_model_worker_app(**kwargs)
+    app = create_model_worker_app(log_level=log_level, **kwargs)
     _set_app_seq(app, q, run_seq)
 
     # add interface to release and load model
@@ -299,14 +308,14 @@ def run_model_worker(
                 q.put(["stop"])
         return {"code": 200, "msg": "done"}
 
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
 
-def run_openai_api(q: Queue, run_seq: int = 3):
+def run_openai_api(q: Queue, run_seq: int = 3, log_level: str = "INFO"):
     import uvicorn
 
     controller_addr = fschat_controller_address()
-    app = create_openai_api_app(controller_addr)  # todo: not support keys yet.
+    app = create_openai_api_app(controller_addr, log_level=log_level)  # todo: not support keys yet.
     _set_app_seq(app, q, run_seq)
 
     host = FSCHAT_OPENAI_API["host"]
@@ -415,6 +424,13 @@ def parse_args() -> argparse.ArgumentParser:
         help="run webui.py server",
         dest="webui",
     )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="减少fastchat服务log信息",
+        dest="quiet",
+    )
     args = parser.parse_args()
     return args, parser
 
@@ -491,11 +507,16 @@ if __name__ == "__main__":
     def process_count():
         return len(processes) + len(processes["online-api"]) -1
 
+    if args.quiet:
+        log_level = "ERROR"
+    else:
+        log_level = "INFO"
+
     if args.openai_api:
         process = Process(
             target=run_controller,
             name=f"controller({os.getpid()})",
-            args=(queue, process_count() + 1),
+            args=(queue, process_count() + 1, log_level),
             daemon=True,
         )
         process.start()
@@ -516,7 +537,7 @@ if __name__ == "__main__":
             process = Process(
                 target=run_model_worker,
                 name=f"model_worker - {args.model_name} ({os.getpid()})",
-                args=(args.model_name, args.controller_address, queue, process_count() + 1),
+                args=(args.model_name, args.controller_address, queue, process_count() + 1, log_level),
                 daemon=True,
             )
             process.start()
@@ -529,7 +550,7 @@ if __name__ == "__main__":
                 process = Process(
                     target=run_model_worker,
                     name=f"model_worker - {model_name} ({os.getpid()})",
-                    args=(model_name, args.controller_address, queue, process_count() + 1),
+                    args=(model_name, args.controller_address, queue, process_count() + 1, log_level),
                     daemon=True,
                 )
                 process.start()
