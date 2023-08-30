@@ -6,6 +6,7 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
@@ -27,21 +28,12 @@ import json
 from io import BytesIO
 from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async
+from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
-
-
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+from pprint import pprint
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
@@ -231,9 +223,17 @@ class ApiRequest:
         try:
             with response as r:
                 for chunk in r.iter_text(None):
-                    if as_json and chunk:
-                        yield json.loads(chunk)
-                    elif chunk.strip():
+                    if not chunk: # fastchat api yield empty bytes on start and end
+                        continue
+                    if as_json:
+                        try:
+                            data = json.loads(chunk)
+                            pprint(data, depth=1)
+                            yield data
+                        except Exception as e:
+                            logger.error(f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。")
+                    else:
+                        print(chunk, end="", flush=True)
                         yield chunk
         except httpx.ConnectError as e:
             msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
@@ -281,6 +281,9 @@ class ApiRequest:
             return self._fastapi_stream2generator(response)
         else:
             data = msg.dict(exclude_unset=True, exclude_none=True)
+            print(f"received input message:")
+            pprint(data)
+
             response = self.post(
                 "/chat/fastchat",
                 json=data,
@@ -306,6 +309,9 @@ class ApiRequest:
             "history": history,
             "stream": stream,
         }
+
+        print(f"received input message:")
+        pprint(data)
 
         if no_remote_api:
             from server.chat.chat import chat
@@ -341,6 +347,9 @@ class ApiRequest:
             "local_doc_url": no_remote_api,
         }
 
+        print(f"received input message:")
+        pprint(data)
+
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
             response = knowledge_base_chat(**data)
@@ -373,6 +382,9 @@ class ApiRequest:
             "top_k": top_k,
             "stream": stream,
         }
+
+        print(f"received input message:")
+        pprint(data)
 
         if no_remote_api:
             from server.chat.search_engine_chat import search_engine_chat
@@ -509,18 +521,18 @@ class ApiRequest:
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/list_docs接口
+        对应api.py/knowledge_base/list_files接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
+            from server.knowledge_base.kb_doc_api import list_files
+            response = run_async(list_files(knowledge_base_name))
             return response.data
         else:
             response = self.get(
-                "/knowledge_base/list_docs",
+                "/knowledge_base/list_files",
                 params={"knowledge_base_name": knowledge_base_name}
             )
             data = self._check_httpx_json_response(response)
