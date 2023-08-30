@@ -1,10 +1,16 @@
 from fastchat.serve.model_worker import BaseModelWorker
 import uuid
 import json
+import sys
 from pydantic import BaseModel
 import fastchat
 import threading
 from typing import Dict, List
+
+
+# 恢复被fastchat覆盖的标准输出
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
 
 
 class ApiModelOutMsg(BaseModel):
