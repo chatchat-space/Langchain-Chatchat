@@ -271,11 +271,11 @@ def run_in_thread_pool(
     tasks = []
     if pool is None:
         pool = ThreadPoolExecutor()
-
+    
     for kwargs in params:
         thread = pool.submit(func, **kwargs)
         tasks.append(thread)
-
+    
     for obj in as_completed(tasks):
         yield obj.result()
 
@@ -306,6 +306,6 @@ def files2docs_in_thread(
             kwargs = file
         kwargs["file"] = file
         kwargs_list.append(kwargs)
-
+    
     for result in run_in_thread_pool(func=task, params=kwargs_list, pool=pool):
         yield result
