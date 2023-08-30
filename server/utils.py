@@ -5,7 +5,10 @@ import torch
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL
+from configs.model_config import LLM_MODEL, llm_model_dict
+from configs.server_config import FSCHAT_MODEL_WORKERS
+import os
+from server import model_workers
 from typing import Any, Optional
 
 
@@ -202,7 +205,26 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
+
+    # 如果没有设置有效的local_model_path，则认为是在线模型API
+    if not os.path.isdir(config.get("local_model_path", "")):
+        config["online_api"] = True
+        if provider := config.get("provider"):
+            try:
+                config["worker_class"] = getattr(model_workers, provider)
+            except Exception as e:
+                print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
+
     return config
+
+
+def get_all_model_worker_configs() -> dict:
+    result = {}
+    model_names = set(llm_model_dict.keys()) | set(FSCHAT_MODEL_WORKERS.keys())
+    for name in model_names:
+        if name != "default":
+            result[name] = get_model_worker_config(name)
+    return result
 
 
 def fschat_controller_address() -> str:
