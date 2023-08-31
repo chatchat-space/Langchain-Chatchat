@@ -7,19 +7,6 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 
-# 分布式部署时，不运行LLM的机器上可以不装torch
-def default_device():
-    try:
-        import torch
-        if torch.cuda.is_available():
-            return "cuda"
-        if torch.backends.mps.is_available():
-            return "mps"
-    except:
-        pass
-    return "cpu"
-
-
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
 # 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
@@ -44,8 +31,8 @@ embedding_model_dict = {
 # 选用的 Embedding 名称
 EMBEDDING_MODEL = "m3e-base"
 
-# Embedding 模型运行设备
-EMBEDDING_DEVICE = default_device()
+# Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+EMBEDDING_DEVICE = "auto"
 
 
 llm_model_dict = {
@@ -94,8 +81,8 @@ LLM_MODEL = "chatglm2-6b"
 # 历史对话轮数
 HISTORY_LEN = 3
 
-# LLM 运行设备
-LLM_DEVICE = default_device()
+# LLM 运行设备。可选项同Embedding 运行设备。
+LLM_DEVICE = "auto"
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
