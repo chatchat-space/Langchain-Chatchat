@@ -28,7 +28,7 @@ def load_faiss_vector_store(
         embed_device: str = EMBEDDING_DEVICE,
         embeddings: Embeddings = None,
         tick: int = 0,  # tick will be changed by upload_doc etc. and make cache refreshed.
-):
+) -> FAISS:
     print(f"loading vector store in '{knowledge_base_name}'.")
     vs_path = get_vs_path(knowledge_base_name)
     if embeddings is None:
@@ -74,12 +74,17 @@ class FaissKBService(KBService):
     def get_kb_path(self):
         return os.path.join(KB_ROOT_PATH, self.kb_name)
 
-    def load_vector_store(self):
+    def load_vector_store(self) -> FAISS:
         return load_faiss_vector_store(
             knowledge_base_name=self.kb_name,
             embed_model=self.embed_model,
             tick=_VECTOR_STORE_TICKS.get(self.kb_name, 0),
         )
+
+    def save_vector_store(self, vector_store: FAISS = None):
+        vector_store = vector_store or self.load_vector_store()
+        vector_store.save_local(self.vs_path)
+        return vector_store
 
     def refresh_vs_cache(self):
         refresh_vs_cache(self.kb_name)
@@ -117,11 +122,11 @@ class FaissKBService(KBService):
         if not kwargs.get("not_refresh_vs_cache"):
             vector_store.save_local(self.vs_path)
             self.refresh_vs_cache()
+        return vector_store
 
     def do_delete_doc(self,
                       kb_file: KnowledgeFile,
                       **kwargs):
-        embeddings = self._load_embeddings()
         vector_store = self.load_vector_store()
 
         ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata["source"] == kb_file.filepath]
@@ -133,7 +138,7 @@ class FaissKBService(KBService):
             vector_store.save_local(self.vs_path)
             self.refresh_vs_cache()
 
-        return True
+        return vector_store
 
     def do_clear_vs(self):
         shutil.rmtree(self.vs_path)
