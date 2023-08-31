@@ -5,7 +5,6 @@ from configs.model_config import (
     KB_ROOT_PATH,
     CACHED_VS_NUM,
     EMBEDDING_MODEL,
-    EMBEDDING_DEVICE,
     SCORE_THRESHOLD
 )
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
@@ -15,7 +14,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from typing import List
 from langchain.docstore.document import Document
-from server.utils import torch_gc
+from server.utils import torch_gc, embedding_device
 
 
 _VECTOR_STORE_TICKS = {}
@@ -25,7 +24,7 @@ _VECTOR_STORE_TICKS = {}
 def load_faiss_vector_store(
         knowledge_base_name: str,
         embed_model: str = EMBEDDING_MODEL,
-        embed_device: str = EMBEDDING_DEVICE,
+        embed_device: str = embedding_device(),
         embeddings: Embeddings = None,
         tick: int = 0,  # tick will be changed by upload_doc etc. and make cache refreshed.
 ) -> FAISS:

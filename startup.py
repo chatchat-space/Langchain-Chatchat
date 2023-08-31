@@ -14,12 +14,13 @@ except:
     pass
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
+from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
     logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
                                    FSCHAT_OPENAI_API, )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                        fschat_openai_api_address, set_httpx_timeout)
+                        fschat_openai_api_address, set_httpx_timeout,
+                        llm_device, embedding_device, get_model_worker_config)
 from server.utils import MakeFastAPIOffline, FastAPI
 import argparse
 from typing import Tuple, List
@@ -195,7 +196,7 @@ def run_model_worker(
 ):
     import uvicorn
 
-    kwargs = FSCHAT_MODEL_WORKERS[model_name].copy()
+    kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
     port = kwargs.pop("port")
     model_path = llm_model_dict[model_name].get("local_model_path", "")
@@ -331,9 +332,9 @@ def dump_server_info(after_start=False):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
-    print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
+    print(f"当前LLM模型：{LLM_MODEL} @ {llm_device()}")
     pprint(llm_model_dict[LLM_MODEL])
-    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
+    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
