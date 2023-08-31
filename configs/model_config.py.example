@@ -1,11 +1,23 @@
 import os
 import logging
-import torch
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
+
+
+# 分布式部署时，不运行LLM的机器上可以不装torch
+def default_device():
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
 
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
@@ -33,7 +45,7 @@ embedding_model_dict = {
 EMBEDDING_MODEL = "m3e-base"
 
 # Embedding 模型运行设备
-EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+EMBEDDING_DEVICE = default_device()
 
 
 llm_model_dict = {
@@ -76,7 +88,6 @@ llm_model_dict = {
     },
 }
 
-
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
 
@@ -84,7 +95,7 @@ LLM_MODEL = "chatglm2-6b"
 HISTORY_LEN = 3
 
 # LLM 运行设备
-LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+LLM_DEVICE = default_device()
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
