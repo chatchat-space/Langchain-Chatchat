@@ -21,7 +21,7 @@ from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
                         fschat_openai_api_address, set_httpx_timeout,
                         get_model_worker_config, get_all_model_worker_configs,
-                        MakeFastAPIOffline, FastAPI,)
+                        MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
