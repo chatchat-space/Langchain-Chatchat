@@ -12,6 +12,7 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
             doc = fitz.open(filepath)
             resp = ""
             for page in doc:
+                # TODO: 依据文本与图片顺序调整处理方式
                 text = page.get_text("")
                 resp += text + "\n"
 
