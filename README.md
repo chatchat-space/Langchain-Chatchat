@@ -49,7 +49,16 @@
 💻 一行命令运行 Docker：
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+docker run -itd --gpus all -p 80:6006 registry.cn-beijing.aliyuncs.com/codewithgpu2/imclumsypanda-langchain-chatglm:8gm9XSkGo8
+
+docker exec -it 容器ID bash
+cd /root/langchain-ChatGLM/
+vi configs/server_config.py
+#修改绑定IP
+DEFAULT_BIND_HOST = "0.0.0.0"
+#启动
+conda activate /root/pyenv
+python startup.py -a
 ```
 
 ---
