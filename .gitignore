@@ -3,5 +3,7 @@
 logs
 .idea/
 __pycache__/
-knowledge_base/
+/knowledge_base/
 configs/*.py
+.vscode/
+.pytest_cache/

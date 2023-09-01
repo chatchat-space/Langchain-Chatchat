@@ -6,6 +6,7 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
@@ -20,22 +21,12 @@ import json
 from io import BytesIO
 from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async
+from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from pprint import pprint
-
-
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
@@ -494,18 +485,18 @@ class ApiRequest:
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/list_docs接口
+        对应api.py/knowledge_base/list_files接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
+            from server.knowledge_base.kb_doc_api import list_files
+            response = run_async(list_files(knowledge_base_name))
             return response.data
         else:
             response = self.get(
-                "/knowledge_base/list_docs",
+                "/knowledge_base/list_files",
                 params={"knowledge_base_name": knowledge_base_name}
             )
             data = self._check_httpx_json_response(response)

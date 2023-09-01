@@ -10,8 +10,10 @@ from streamlit_option_menu import option_menu
 from webui_pages import *
 import os
 from configs import VERSION
+from server.utils import api_address
 
-api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=False)
+
+api = ApiRequest(base_url=api_address())
 
 if __name__ == "__main__":
     st.set_page_config(

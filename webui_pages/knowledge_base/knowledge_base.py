@@ -4,7 +4,7 @@ from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
 from server.knowledge_base.utils import get_file_path, LOADER_DICT
-from server.knowledge_base.kb_service.base import get_kb_details, get_kb_doc_details
+from server.knowledge_base.kb_service.base import get_kb_details, get_kb_file_details
 from typing import Literal, Dict, Tuple
 from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE
 import os
@@ -152,7 +152,7 @@ def knowledge_base_page(api: ApiRequest):
 
         # 知识库详情
         # st.info("请选择文件，点击按钮进行操作。")
-        doc_details = pd.DataFrame(get_kb_doc_details(kb))
+        doc_details = pd.DataFrame(get_kb_file_details(kb))
         if not len(doc_details):
             st.info(f"知识库 `{kb}` 中暂无文件")
         else:
@@ -160,7 +160,7 @@ def knowledge_base_page(api: ApiRequest):
             st.info("知识库中包含源文件与向量库，请从下表中选择文件后操作")
             doc_details.drop(columns=["kb_name"], inplace=True)
             doc_details = doc_details[[
-                "No", "file_name", "document_loader", "text_splitter", "in_folder", "in_db",
+                "No", "file_name", "document_loader", "docs_count", "in_folder", "in_db",
             ]]
             # doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
             # doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
@@ -172,7 +172,8 @@ def knowledge_base_page(api: ApiRequest):
                     # ("file_ext", "文档类型"): {},
                     # ("file_version", "文档版本"): {},
                     ("document_loader", "文档加载器"): {},
-                    ("text_splitter", "分词器"): {},
+                    ("docs_count", "文档数量"): {},
+                    # ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
                     ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
                     ("in_db", "向量库"): {"cellRenderer": cell_renderer},

@@ -6,16 +6,16 @@ from langchain.vectorstores import PGVector
 from langchain.vectorstores.pgvector import DistanceStrategy
 from sqlalchemy import text
 
-from configs.model_config import EMBEDDING_DEVICE, kbs_config
+from configs.model_config import kbs_config
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
 from server.knowledge_base.utils import load_embeddings, KnowledgeFile
-
+from server.utils import embedding_device as get_embedding_device
 
 class PGKBService(KBService):
     pg_vector: PGVector
 
-    def _load_pg_vector(self, embedding_device: str = EMBEDDING_DEVICE, embeddings: Embeddings = None):
+    def _load_pg_vector(self, embedding_device: str = get_embedding_device(), embeddings: Embeddings = None):
         _embeddings = embeddings
         if _embeddings is None:
             _embeddings = load_embeddings(self.embed_model, embedding_device)
@@ -47,23 +47,12 @@ class PGKBService(KBService):
             connect.commit()
 
     def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
-        # todo: support score threshold
         self._load_pg_vector(embeddings=embeddings)
         return score_threshold_process(score_threshold, top_k,
                                        self.pg_vector.similarity_search_with_score(query, top_k))
 
-    def add_doc(self, kb_file: KnowledgeFile, **kwargs):
-        """
-        向知识库添加文件
-        """
-        docs = kb_file.file2text()
+    def do_add_doc(self, docs: List[Document], **kwargs):
         self.pg_vector.add_documents(docs)
-        from server.db.repository.knowledge_file_repository import add_doc_to_db
-        status = add_doc_to_db(kb_file)
-        return status
-
-    def do_add_doc(self, docs: List[Document], embeddings: Embeddings, **kwargs):
-        pass
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with self.pg_vector.connect() as connect:
