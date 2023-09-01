@@ -61,6 +61,7 @@ def list_kbs_from_folder():
     return [f for f in os.listdir(KB_ROOT_PATH)
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
 
+
 def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
@@ -86,7 +87,8 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
                "CustomJSONLoader": [".json"],
                "CSVLoader": [".csv"],
-               "PyPDFLoader": [".pdf"],
+               "RapidOCRPDFLoader": [".pdf"],
+               "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
                                           '.doc', '.docx', '.epub', '.odt',
@@ -195,7 +197,10 @@ class KnowledgeFile:
 
         print(f"{self.document_loader_name} used for {self.filepath}")
         try:
-            document_loaders_module = importlib.import_module('langchain.document_loaders')
+            if self.document_loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
+                document_loaders_module = importlib.import_module('document_loaders')
+            else:
+                document_loaders_module = importlib.import_module('langchain.document_loaders')
             DocumentLoader = getattr(document_loaders_module, self.document_loader_name)
         except Exception as e:
             print(e)

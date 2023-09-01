@@ -14,7 +14,7 @@ except:
     pass
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
+from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
     logger
 from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, )
@@ -22,7 +22,6 @@ from server.utils import (fschat_controller_address, fschat_model_worker_address
                         fschat_openai_api_address, set_httpx_timeout,
                         get_model_worker_config, get_all_model_worker_configs,
                         MakeFastAPIOffline, FastAPI,)
-
 import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
@@ -54,6 +53,17 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> Tuple[argparse
     import threading
     import fastchat.serve.model_worker
     logger.setLevel(log_level)
+
+    # workaround to make program exit with Ctrl+c
+    # it should be deleted after pr is merged by fastchat
+    def _new_init_heart_beat(self):
+        self.register_to_controller()
+        self.heart_beat_thread = threading.Thread(
+            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+        )
+        self.heart_beat_thread.start()
+
+    ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args([])
@@ -154,7 +164,9 @@ def create_openai_api_app(
 ) -> FastAPI:
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings, logger
+    from fastchat.serve.openai_api_server import app, CORSMiddleware, app_settings
+    from fastchat.utils import build_logger
+    logger = build_logger("openai_api", "openai_api.log")
     logger.setLevel(log_level)
 
     app.add_middleware(
@@ -165,6 +177,7 @@ def create_openai_api_app(
         allow_headers=["*"],
     )
 
+    sys.modules["fastchat.serve.openai_api_server"].logger = logger
     app_settings.controller_address = controller_address
     app_settings.api_keys = api_keys
 
@@ -200,6 +213,7 @@ def run_controller(q: Queue, run_seq: int = 1, log_level: str ="INFO"):
     import httpx
     from fastapi import Body
     import time
+    import sys
 
     app = create_controller_app(
         dispatch_method=FSCHAT_CONTROLLER.get("dispatch_method"),
@@ -267,6 +281,11 @@ def run_controller(q: Queue, run_seq: int = 1, log_level: str ="INFO"):
 
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
+
+    if log_level == "ERROR":
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
     uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
 
@@ -279,6 +298,7 @@ def run_model_worker(
 ):
     import uvicorn
     from fastapi import Body
+    import sys
 
     kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
@@ -291,6 +311,9 @@ def run_model_worker(
 
     app = create_model_worker_app(log_level=log_level, **kwargs)
     _set_app_seq(app, q, run_seq)
+    if log_level == "ERROR":
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
     # add interface to release and load model
     @app.post("/release")
@@ -313,13 +336,17 @@ def run_model_worker(
 
 def run_openai_api(q: Queue, run_seq: int = 3, log_level: str = "INFO"):
     import uvicorn
+    import sys
 
     controller_addr = fschat_controller_address()
-    app = create_openai_api_app(controller_addr, log_level=log_level)  # todo: not support keys yet.
+    app = create_openai_api_app(controller_addr, log_level=log_level)  # TODO: not support keys yet.
     _set_app_seq(app, q, run_seq)
 
     host = FSCHAT_OPENAI_API["host"]
     port = FSCHAT_OPENAI_API["port"]
+    if log_level == "ERROR":
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
     uvicorn.run(app, host=host, port=port)
 
 
@@ -448,12 +475,14 @@ def dump_server_info(after_start=False, args=None):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
+
     model = LLM_MODEL
     if args and args.model_name:
         model = args.model_name
-    print(f"当前LLM模型：{model} @ {llm_model_dict[model].get('device', LLM_DEVICE)}")
+    print(f"当前LLM模型：{model} @ {llm_device()}")
     pprint(llm_model_dict[model])
-    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
+    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
+
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
