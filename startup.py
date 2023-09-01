@@ -501,6 +501,11 @@ if __name__ == "__main__":
     import time
 
     mp.set_start_method("spawn")
+    # TODO 链式启动的队列，确实可以用于控制启动顺序，
+    #  但目前引入proxy_worker后，启动的独立于框架的work processes无法确认当前的位置，
+    #  导致注册器未启动时，无法注册。整个启动链因为异常被终止
+    #  需要将 `run_seq`设置为MAX_int,才能保证在最后启动。
+    #  是否需要引入depends_on的机制？
     queue = Queue()
     args, parser = parse_args()
 
