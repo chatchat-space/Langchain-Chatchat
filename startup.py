@@ -16,14 +16,14 @@ except:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
     logger
-from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
+from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
                         fschat_openai_api_address, set_httpx_timeout,
-                        llm_device, embedding_device, get_model_worker_config)
-from server.utils import MakeFastAPIOffline, FastAPI
+                        get_model_worker_config, get_all_model_worker_configs,
+                        MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 import argparse
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from configs import VERSION
 
 
@@ -41,6 +41,7 @@ def create_controller_app(
 
     MakeFastAPIOffline(app)
     app.title = "FastChat Controller"
+    app._controller = controller
     return app
 
 
@@ -97,43 +98,62 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> Tuple[argparse
             )
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
-    gptq_config = GptqConfig(
-        ckpt=args.gptq_ckpt or args.model_path,
-        wbits=args.gptq_wbits,
-        groupsize=args.gptq_groupsize,
-        act_order=args.gptq_act_order,
-    )
-    awq_config = AWQConfig(
-        ckpt=args.awq_ckpt or args.model_path,
-        wbits=args.awq_wbits,
-        groupsize=args.awq_groupsize,
-    )
+    # 在线模型API
+    if worker_class := kwargs.get("worker_class"):
+        worker = worker_class(model_names=args.model_names,
+                            controller_addr=args.controller_address,
+                            worker_addr=args.worker_address)
+    # 本地模型
+    else:
+        # workaround to make program exit with Ctrl+c
+        # it should be deleted after pr is merged by fastchat
+        def _new_init_heart_beat(self):
+            self.register_to_controller()
+            self.heart_beat_thread = threading.Thread(
+                target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+            )
+            self.heart_beat_thread.start()
 
-    worker = ModelWorker(
-        controller_addr=args.controller_address,
-        worker_addr=args.worker_address,
-        worker_id=worker_id,
-        model_path=args.model_path,
-        model_names=args.model_names,
-        limit_worker_concurrency=args.limit_worker_concurrency,
-        no_register=args.no_register,
-        device=args.device,
-        num_gpus=args.num_gpus,
-        max_gpu_memory=args.max_gpu_memory,
-        load_8bit=args.load_8bit,
-        cpu_offloading=args.cpu_offloading,
-        gptq_config=gptq_config,
-        awq_config=awq_config,
-        stream_interval=args.stream_interval,
-        conv_template=args.conv_template,
-    )
+        ModelWorker.init_heart_beat = _new_init_heart_beat
+
+        gptq_config = GptqConfig(
+            ckpt=args.gptq_ckpt or args.model_path,
+            wbits=args.gptq_wbits,
+            groupsize=args.gptq_groupsize,
+            act_order=args.gptq_act_order,
+        )
+        awq_config = AWQConfig(
+            ckpt=args.awq_ckpt or args.model_path,
+            wbits=args.awq_wbits,
+            groupsize=args.awq_groupsize,
+        )
+
+        worker = ModelWorker(
+            controller_addr=args.controller_address,
+            worker_addr=args.worker_address,
+            worker_id=worker_id,
+            model_path=args.model_path,
+            model_names=args.model_names,
+            limit_worker_concurrency=args.limit_worker_concurrency,
+            no_register=args.no_register,
+            device=args.device,
+            num_gpus=args.num_gpus,
+            max_gpu_memory=args.max_gpu_memory,
+            load_8bit=args.load_8bit,
+            cpu_offloading=args.cpu_offloading,
+            gptq_config=gptq_config,
+            awq_config=awq_config,
+            stream_interval=args.stream_interval,
+            conv_template=args.conv_template,
+        )
+        sys.modules["fastchat.serve.model_worker"].args = args
+        sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
     sys.modules["fastchat.serve.model_worker"].worker = worker
-    sys.modules["fastchat.serve.model_worker"].args = args
-    sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
     MakeFastAPIOffline(app)
-    app.title = f"FastChat LLM Server ({LLM_MODEL})"
+    app.title = f"FastChat LLM Server ({args.model_names[0]})"
+    app._worker = worker
     return app
 
 
@@ -190,6 +210,9 @@ def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
 
 def run_controller(q: Queue, run_seq: int = 1, log_level: str ="INFO"):
     import uvicorn
+    import httpx
+    from fastapi import Body
+    import time
     import sys
 
     app = create_controller_app(
@@ -198,11 +221,71 @@ def run_controller(q: Queue, run_seq: int = 1, log_level: str ="INFO"):
     )
     _set_app_seq(app, q, run_seq)
 
+    # add interface to release and load model worker
+    @app.post("/release_worker")
+    def release_worker(
+        model_name: str = Body(..., description="要释放模型的名称", samples=["chatglm-6b"]),
+        # worker_address: str = Body(None, description="要释放模型的地址，与名称二选一", samples=[fschat_controller_address()]),
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        available_models = app._controller.list_models()
+        if new_model_name in available_models:
+            msg = f"要切换的LLM模型 {new_model_name} 已经存在"
+            logger.info(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            logger.info(f"开始切换LLM模型：从 {model_name} 到 {new_model_name}")
+        else:
+            logger.info(f"即将停止LLM模型： {model_name}")
+
+        if model_name not in available_models:
+            msg = f"the model {model_name} is not available"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        worker_address = app._controller.get_worker_address(model_name)
+        if not worker_address:
+            msg = f"can not find model_worker address for {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        r = httpx.post(worker_address + "/release",
+                    json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+        if r.status_code != 200:
+            msg = f"failed to release model: {model_name}"
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
+
+        if new_model_name:
+            timer = 300 # wait 5 minutes for new model_worker register
+            while timer > 0:
+                models = app._controller.list_models()
+                if new_model_name in models:
+                    break
+                time.sleep(1)
+                timer -= 1
+            if timer > 0:
+                msg = f"sucess change model from {model_name} to {new_model_name}"
+                logger.info(msg)
+                return {"code": 200, "msg": msg}
+            else:
+                msg = f"failed change model from {model_name} to {new_model_name}"
+                logger.error(msg)
+                return {"code": 500, "msg": msg}
+        else:
+            msg = f"sucess to release model: {model_name}"
+            logger.info(msg)
+            return {"code": 200, "msg": msg}
+
     host = FSCHAT_CONTROLLER["host"]
     port = FSCHAT_CONTROLLER["port"]
+
     if log_level == "ERROR":
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
     uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
 
@@ -214,22 +297,39 @@ def run_model_worker(
         log_level: str ="INFO",
 ):
     import uvicorn
+    from fastapi import Body
     import sys
 
     kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
     port = kwargs.pop("port")
-    model_path = llm_model_dict[model_name].get("local_model_path", "")
-    kwargs["model_path"] = model_path
     kwargs["model_names"] = [model_name]
     kwargs["controller_address"] = controller_address or fschat_controller_address()
-    kwargs["worker_address"] = fschat_model_worker_address()
+    kwargs["worker_address"] = fschat_model_worker_address(model_name)
+    model_path = kwargs.get("local_model_path", "")
+    kwargs["model_path"] = model_path
 
     app = create_model_worker_app(log_level=log_level, **kwargs)
     _set_app_seq(app, q, run_seq)
     if log_level == "ERROR":
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+    # add interface to release and load model
+    @app.post("/release")
+    def release_model(
+        new_model_name: str = Body(None, description="释放后加载该模型"),
+        keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
+    ) -> Dict:
+        if keep_origin:
+            if new_model_name:
+                q.put(["start", new_model_name])
+        else:
+            if new_model_name:
+                q.put(["replace", new_model_name])
+            else:
+                q.put(["stop"])
+        return {"code": 200, "msg": "done"}
 
     uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
@@ -338,6 +438,13 @@ def parse_args() -> argparse.ArgumentParser:
         dest="api",
     )
     parser.add_argument(
+        "-p",
+        "--api-worker",
+        action="store_true",
+        help="run online model api such as zhipuai",
+        dest="api_worker",
+    )
+    parser.add_argument(
         "-w",
         "--webui",
         action="store_true",
@@ -368,9 +475,14 @@ def dump_server_info(after_start=False, args=None):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
-    print(f"当前LLM模型：{LLM_MODEL} @ {llm_device()}")
-    pprint(llm_model_dict[LLM_MODEL])
+
+    model = LLM_MODEL
+    if args and args.model_name:
+        model = args.model_name
+    print(f"当前LLM模型：{model} @ {llm_device()}")
+    pprint(llm_model_dict[model])
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
+
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
@@ -396,17 +508,20 @@ if __name__ == "__main__":
         args.openai_api = True
         args.model_worker = True
         args.api = True
+        args.api_worker = True
         args.webui = True
 
     elif args.all_api:
         args.openai_api = True
         args.model_worker = True
         args.api = True
+        args.api_worker = True
         args.webui = False
 
     elif args.llm_api:
         args.openai_api = True
         args.model_worker = True
+        args.api_worker = True
         args.api = False
         args.webui = False
 
@@ -416,7 +531,11 @@ if __name__ == "__main__":
         logger.info(f"正在启动服务：")
         logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
-    processes = {}
+    processes = {"online-api": []}
+
+    def process_count():
+        return len(processes) + len(processes["online-api"]) -1
+
     if args.quiet:
         log_level = "ERROR"
     else:
@@ -426,7 +545,7 @@ if __name__ == "__main__":
         process = Process(
             target=run_controller,
             name=f"controller({os.getpid()})",
-            args=(queue, len(processes) + 1, log_level),
+            args=(queue, process_count() + 1, log_level),
             daemon=True,
         )
         process.start()
@@ -435,29 +554,42 @@ if __name__ == "__main__":
         process = Process(
             target=run_openai_api,
             name=f"openai_api({os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
         processes["openai_api"] = process
 
     if args.model_worker:
-        model_path = llm_model_dict[args.model_name].get("local_model_path", "")
-        if os.path.isdir(model_path):
+        config = get_model_worker_config(args.model_name)
+        if not config.get("online_api"):
             process = Process(
                 target=run_model_worker,
-                name=f"model_worker({os.getpid()})",
-                args=(args.model_name, args.controller_address, queue, len(processes) + 1, log_level),
+                name=f"model_worker - {args.model_name} ({os.getpid()})",
+                args=(args.model_name, args.controller_address, queue, process_count() + 1, log_level),
                 daemon=True,
             )
             process.start()
             processes["model_worker"] = process
 
+    if args.api_worker:
+        configs = get_all_model_worker_configs()
+        for model_name, config in configs.items():
+            if config.get("online_api") and config.get("worker_class"):
+                process = Process(
+                    target=run_model_worker,
+                    name=f"model_worker - {model_name} ({os.getpid()})",
+                    args=(model_name, args.controller_address, queue, process_count() + 1, log_level),
+                    daemon=True,
+                )
+                process.start()
+                processes["online-api"].append(process)
+
     if args.api:
         process = Process(
             target=run_api_server,
             name=f"API Server{os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
@@ -467,37 +599,38 @@ if __name__ == "__main__":
         process = Process(
             target=run_webui,
             name=f"WEBUI Server{os.getpid()})",
-            args=(queue, len(processes) + 1),
+            args=(queue, process_count() + 1),
             daemon=True,
         )
         process.start()
         processes["webui"] = process
 
-    if len(processes) == 0:
+    if process_count() == 0:
         parser.print_help()
     else:
         try:
-            # log infors
             while True:
                 no = queue.get()
-                if no == len(processes):
+                if no == process_count():
                     time.sleep(0.5)
                     dump_server_info(after_start=True, args=args)
                     break
                 else:
                     queue.put(no)
 
-            if model_worker_process := processes.get("model_worker"):
+            if model_worker_process := processes.pop("model_worker", None):
                 model_worker_process.join()
+            for process in processes.pop("online-api", []):
+                process.join()
             for name, process in processes.items():
-                if name != "model_worker":
-                    process.join()
+                process.join()
         except:
-            if model_worker_process := processes.get("model_worker"):
+            if model_worker_process := processes.pop("model_worker", None):
                 model_worker_process.terminate()
+            for process in processes.pop("online-api", []):
+                process.terminate()
             for name, process in processes.items():
-                if name != "model_worker":
-                    process.terminate()
+                process.terminate()
 
 
 # 服务启动后接口调用示例：
