@@ -18,11 +18,12 @@ from server.db.repository.knowledge_file_repository import (
 )
 
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                  EMBEDDING_DEVICE, EMBEDDING_MODEL)
+                                  EMBEDDING_MODEL)
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
+from server.utils import embedding_device
 from typing import List, Union, Dict
 
 
@@ -45,7 +46,7 @@ class KBService(ABC):
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
 
-    def _load_embeddings(self, embed_device: str = EMBEDDING_DEVICE) -> Embeddings:
+    def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
 
     def create_kb(self):

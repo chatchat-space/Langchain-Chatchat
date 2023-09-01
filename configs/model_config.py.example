@@ -1,6 +1,5 @@
 import os
 import logging
-import torch
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()
@@ -32,8 +31,8 @@ embedding_model_dict = {
 # 选用的 Embedding 名称
 EMBEDDING_MODEL = "m3e-base"
 
-# Embedding 模型运行设备
-EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+# Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+EMBEDDING_DEVICE = "auto"
 
 
 llm_model_dict = {
@@ -77,15 +76,14 @@ llm_model_dict = {
     },
 }
 
-
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
 
 # 历史对话轮数
 HISTORY_LEN = 3
 
-# LLM 运行设备
-LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+# LLM 运行设备。可选项同Embedding 运行设备。
+LLM_DEVICE = "auto"
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")

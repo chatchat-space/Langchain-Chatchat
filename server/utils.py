@@ -5,8 +5,8 @@ import torch
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL
-from typing import Any, Optional
+from configs.model_config import LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE
+from typing import Literal, Optional
 
 
 class BaseResponse(BaseModel):
@@ -201,6 +201,7 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
+    config["device"] = llm_device(config.get("device"))
     return config
 
 
@@ -256,3 +257,28 @@ def set_httpx_timeout(timeout: float = None):
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+
+
+# 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
+def detect_device() -> Literal["cuda", "mps", "cpu"]:
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
+
+
+def llm_device(device: str = LLM_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
+
+
+def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
