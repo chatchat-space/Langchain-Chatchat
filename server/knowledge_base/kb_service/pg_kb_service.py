@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Optional
 
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
@@ -23,6 +23,10 @@ class PGKBService(KBService):
                                   collection_name=self.kb_name,
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
+
+    # TODO:
+    def get_doc_by_id(self, id: str) -> Optional[Document]:
+        return None
 
     def do_init(self):
         self._load_pg_vector()
@@ -51,8 +55,10 @@ class PGKBService(KBService):
         return score_threshold_process(score_threshold, top_k,
                                        self.pg_vector.similarity_search_with_score(query, top_k))
 
-    def do_add_doc(self, docs: List[Document], **kwargs):
-        self.pg_vector.add_documents(docs)
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+        ids = self.pg_vector.add_documents(docs)
+        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with self.pg_vector.connect() as connect:

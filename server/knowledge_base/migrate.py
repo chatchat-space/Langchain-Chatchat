@@ -8,7 +8,7 @@ from server.db.repository.knowledge_file_repository import add_file_to_db
 from server.db.base import Base, engine
 import os
 from concurrent.futures import ThreadPoolExecutor
-from typing import Literal, Callable, Any, List
+from typing import Literal, Any, List
 
 
 pool = ThreadPoolExecutor(os.cpu_count())

@@ -20,8 +20,8 @@ from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, 
                                    FSCHAT_OPENAI_API, )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
                         fschat_openai_api_address, set_httpx_timeout,
-                        llm_device, embedding_device, get_model_worker_config)
-from server.utils import MakeFastAPIOffline, FastAPI
+                        llm_device, embedding_device, get_model_worker_config,
+                        MakeFastAPIOffline, FastAPI)
 import argparse
 from typing import Tuple, List
 from configs import VERSION

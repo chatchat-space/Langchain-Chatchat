@@ -1,7 +1,6 @@
 import pydantic
 from pydantic import BaseModel
 from typing import List
-import torch
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
@@ -69,6 +68,7 @@ class ChatMessage(BaseModel):
         }
 
 def torch_gc():
+    import torch
     if torch.cuda.is_available():
         # with torch.cuda.device(DEVICE):
         torch.cuda.empty_cache()
