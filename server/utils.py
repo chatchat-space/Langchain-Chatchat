@@ -9,7 +9,7 @@ from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDIN
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
 from server import model_workers
-from typing import Literal, Optional
+from typing import Literal, Optional, Any
 
 
 class BaseResponse(BaseModel):
