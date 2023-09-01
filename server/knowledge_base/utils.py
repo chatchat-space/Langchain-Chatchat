@@ -87,7 +87,8 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
                "CustomJSONLoader": [".json"],
                "CSVLoader": [".csv"],
-               "PyPDFLoader": [".pdf"],
+               "RapidOCRPDFLoader": [".pdf"],
+               "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
                                           '.doc', '.docx', '.epub', '.odt',
@@ -196,7 +197,10 @@ class KnowledgeFile:
 
         print(f"{self.document_loader_name} used for {self.filepath}")
         try:
-            document_loaders_module = importlib.import_module('langchain.document_loaders')
+            if self.document_loader_name in []:
+                document_loaders_module = importlib.import_module('document_loaders')
+            else:
+                document_loaders_module = importlib.import_module('langchain.document_loaders')
             DocumentLoader = getattr(document_loaders_module, self.document_loader_name)
         except Exception as e:
             print(e)
