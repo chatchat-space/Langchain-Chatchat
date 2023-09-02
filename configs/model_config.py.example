@@ -93,7 +93,7 @@ llm_model_dict = {
         "api_base_url": "http://127.0.0.1:8888/v1",
         "api_key": os.environ.get("ZHIPUAI_API_KEY"),
         "provider": "ChatGLMWorker",
-        "version": "chatglm_pro",
+        "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
     },
 }
 
@@ -103,7 +103,7 @@ LLM_MODEL = "chatglm2-6b"
 # 历史对话轮数
 HISTORY_LEN = 3
 
-# LLM 运行设备。可选项同Embedding 运行设备。
+# LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
 
 # 日志存储路径
