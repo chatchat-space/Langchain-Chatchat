@@ -14,7 +14,7 @@ from server.db.repository.knowledge_file_repository import (
 )
 
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                  EMBEDDING_DEVICE, EMBEDDING_MODEL)
+                                  EMBEDDING_DEVICE, embedding_model_dict, EMBEDDING_MODEL)
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_docs_from_folder,

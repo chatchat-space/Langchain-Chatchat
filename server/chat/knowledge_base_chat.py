@@ -1,10 +1,10 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
+                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, llm_model_args)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI,AzureChatOpenAI,ChatAnthropic
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, List, Optional
@@ -46,15 +46,42 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                            history: Optional[List[History]],
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
-        )
+        if LLM_MODEL == "Azure-OpenAI":
+            model = AzureChatOpenAI(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                openai_api_version=llm_model_dict[LLM_MODEL]["api_version"],
+                deployment_name=llm_model_dict[LLM_MODEL]["deployment_name"],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_type="azure",
+            )
+        elif LLM_MODEL == "Anthropic":
+            model = ChatAnthropic(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens_to_sample=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                anthropic_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                anthropic_api_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model=llm_model_dict[LLM_MODEL]["model_name"]
+            )
+        else:
+            model = ChatOpenAI(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=llm_model_dict[LLM_MODEL]["model_name"]
+            )
+
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
 

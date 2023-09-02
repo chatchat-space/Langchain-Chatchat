@@ -1,13 +1,14 @@
 from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
 from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
+from configs.model_config import llm_model_dict, LLM_MODEL, llm_model_args
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K, PROMPT_TEMPLATE)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
-from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
+from langchain.chat_models import ChatOpenAI, AzureChatOpenAI, ChatAnthropic
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
@@ -84,15 +85,41 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                                           history: Optional[List[History]],
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
-        )
+        if LLM_MODEL == "Azure-OpenAI":
+            model = AzureChatOpenAI(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                openai_api_version=llm_model_dict[LLM_MODEL]["api_version"],
+                deployment_name=llm_model_dict[LLM_MODEL]["deployment_name"],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_type="azure",
+            )
+        elif LLM_MODEL == "Anthropic":
+            model = ChatAnthropic(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens_to_sample=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                anthropic_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                anthropic_api_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model=llm_model_dict[LLM_MODEL]["model_name"]
+            )
+        else:
+            model = ChatOpenAI(
+                temperature=llm_model_args["temperature"],
+                streaming=llm_model_args["streaming"],
+                verbose=llm_model_args["verbose"],
+                max_tokens=llm_model_args["max_tokens"],
+                callbacks=[callback],
+                openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+                model_name=llm_model_dict[LLM_MODEL]["model_name"]
+            )
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])

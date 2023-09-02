@@ -20,41 +20,60 @@ def validate_kb_name(knowledge_base_id: str) -> bool:
         return False
     return True
 
+
 def get_kb_path(knowledge_base_name: str):
     return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+
 
 def get_doc_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "content")
 
+
 def get_vs_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
+
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
     return os.path.join(get_doc_path(knowledge_base_name), doc_name)
 
+
 def list_kbs_from_folder():
     return [f for f in os.listdir(KB_ROOT_PATH)
             if os.path.isdir(os.path.join(KB_ROOT_PATH, f))]
+
 
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     return [file for file in os.listdir(doc_path)
             if os.path.isfile(os.path.join(doc_path, file))]
 
+
 @lru_cache(1)
 def load_embeddings(model: str, device: str):
-    if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-        embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
-    elif 'bge-' in model:
-        embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
+    if model == "OpenAI":  # openai text-embedding-ada-002N
+        embeddings = OpenAIEmbeddings(
+            model = embedding_model_dict[model]["model_name"],
+            openai_api_key=embedding_model_dict[model]["api_key"],
+            openai_api_base=embedding_model_dict[model]["api_base_url"],
+            chunk_size=CHUNK_SIZE)
+    elif model == "Azure-OpenAI":  # openai text-embedding-ada-002
+        embeddings = OpenAIEmbeddings(
+            openai_api_base=embedding_model_dict[model]["api_base_url"],
+            openai_api_type="azure",
+            deployment=embedding_model_dict[model]["deployment_name"],
+            openai_api_key=embedding_model_dict[model]["api_key"],
+            openai_api_version=embedding_model_dict[model]["api_version"],
+            chunk_size=1)  # openai Azure 只有1
+    elif 'bge-' in embedding_model_dict[model]["model_name"]:
+        embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model]["local_model_path"],
                                               model_kwargs={'device': device},
                                               query_instruction="为这个句子生成表示以用于检索相关文章：")
-        if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
+        if embedding_model_dict[model]["model_name"] == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
             embeddings.query_instruction = ""
     else:
-        embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model], model_kwargs={'device': device})
-    return embeddings
+        embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model]["local_model_path"], model_kwargs={'device': device})
 
+    return embeddings
 
 
 LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg', '.rst',
@@ -65,6 +84,7 @@ LOADER_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.json', '.md', '.msg
                "PyPDFLoader": [".pdf"],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
+
 
 def get_LoaderClass(file_extension):
     for LoaderClass, extensions in LOADER_DICT.items():
@@ -131,6 +151,7 @@ class KnowledgeFile:
 
         docs = loader.load_and_split(text_splitter)
         print(docs[0])
+
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
         return docs

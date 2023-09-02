@@ -15,7 +15,7 @@ except:
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, \
-    logger
+    logger, embedding_model_dict
 from configs.server_config import (WEBUI_SERVER, API_SERVER, OPEN_CROSS_DOMAIN, FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS,
                                    FSCHAT_OPENAI_API, fschat_controller_address, fschat_model_worker_address,
                                    fschat_openai_api_address, )
@@ -337,9 +337,9 @@ def dump_server_info(after_start=False):
     print(f"项目版本：{VERSION}")
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
-    print(f"当前LLM模型：{LLM_MODEL} @ {LLM_DEVICE}")
-    pprint(llm_model_dict[LLM_MODEL])
-    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {EMBEDDING_DEVICE}")
+    print(f"当前LLM模型：{llm_model_dict[LLM_MODEL]['model_name']} @ {LLM_DEVICE}")
+    pprint(llm_model_dict[LLM_MODEL]['model_name'])
+    print(f"当前Embbedings模型： {embedding_model_dict[EMBEDDING_MODEL]['model_name']} @ {EMBEDDING_DEVICE}")
     if after_start:
         print("\n")
         print(f"服务端运行信息：")

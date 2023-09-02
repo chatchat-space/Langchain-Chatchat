@@ -8,53 +8,28 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 
-# 在以下字典中修改属性值，以指定本地embedding模型存储位置
-# 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
-# 此处请写绝对路径
+
 embedding_model_dict = {
-    "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
-    "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec-base": "shibing624/text2vec-base-chinese",
-    "text2vec": "GanymedeNil/text2vec-large-chinese",
-    "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
-    "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
-    "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
-    "m3e-small": "moka-ai/m3e-small",
-    "m3e-base": "moka-ai/m3e-base",
-    "m3e-large": "moka-ai/m3e-large",
-    "bge-small-zh": "BAAI/bge-small-zh",
-    "bge-base-zh": "BAAI/bge-base-zh",
-    "bge-large-zh": "BAAI/bge-large-zh",
-    "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
-    "text-embedding-ada-002": os.environ.get("OPENAI_API_KEY")
+    ## 填写在线大模型API相关信息或者本地模型名称
+    "Azure-OpenAI": {
+        "model_name": "text-embedding-ada-002",
+        "deployment_name": "",
+        "api_base_url": "https://{Yours}.openai.azure.com",
+        "api_key": "",
+        "api_version": "2023-05-15",
+    }
+    "OpenAI": {
+        "model_name":"text-embedding-ada-002",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "your api keys"
+    },
+
+    "Local-Embedding": {
+        "model_name": "bge-large-zh", #本地模型名称
+        "local_model_path": "your local model path", # 本地模型的绝对路径
+    }
 }
-
-# 选用的 Embedding 名称
-EMBEDDING_MODEL = "m3e-base"
-
-# Embedding 模型运行设备
-EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-
-
 llm_model_dict = {
-    "chatglm-6b": {
-        "local_model_path": "THUDM/chatglm-6b",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
-        "api_key": "EMPTY"
-    },
-
-    "chatglm2-6b": {
-        "local_model_path": "THUDM/chatglm2-6b",
-        "api_base_url": "http://localhost:8888/v1",  # URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
-    "chatglm2-6b-32k": {
-        "local_model_path": "THUDM/chatglm2-6b-32k",  # "THUDM/chatglm2-6b-32k",
-        "api_base_url": "http://localhost:8888/v1",  # "URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
     # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
     #  Max retries exceeded with url: /v1/chat/completions
     # 则需要将urllib3版本修改为1.25.11
@@ -69,20 +44,60 @@ llm_model_dict = {
     # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
     # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
     # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
-    "gpt-3.5-turbo": {
-        "local_model_path": "gpt-3.5-turbo",
+
+    # 在这里的model_name填写Openai API中你的模型，支持微调后和原始的模型。
+    "OpenAI": {
+        "model_name": "",
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY"),
-        "openai_proxy": os.environ.get("OPENAI_PROXY")
+        "api_key": os.environ.get("OPENAI_API_KEY")
     },
+
+    # 在这里的model_name填写Azure Openai API中你的模型，支持微调后和原始的模型。Azure OpenAI在国内可以正常访问
+    "Azure-OpenAI": {
+        "deployment_name": "",
+        "api_base_url": "https://{Yours}.openai.azure.com",
+        "api_key": "",
+        "api_version": "2023-05-15",
+        "model_name": "",
+        "model_version": "0613"
+    }
+
+    # Claude 模型对话，需填写模型名称和Key
+    "Anthropic"：{
+        "model_name": "",
+        "api_base_url": "https://api.anthropic.com"
+        "api_key": "",
+    }
+
+    # 本地模型，需填写模型名称和本地模型路径
+    "Local-LLM": {
+        "model_name": "chatglm2-6b-32k",
+        "local_model_path": "THUDM/chatglm2-6b-32k",  # 本地模型地址
+        "api_base_url": "http://localhost:8888/v1",  # "URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
+        "api_key": "EMPTY"
+    },
+
+
 }
 
+## 以下内容作为激活的类型
 
-# LLM 名称
-LLM_MODEL = "chatglm2-6b"
+# 选用的 Embedding 名称(类型)
+EMBEDDING_MODEL = "Local-Embedding"
+# 选用的 LLM 名称(类型)
+LLM_MODEL = "Local-LLM"
+llm_model_args = {
+    "streaming": True,
+    "verbose": True,
+    "temperature": 0.9,
+    "max_tokens": 1000,
+}
 
+# Embedding 模型运行设备
+EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 # LLM 运行设备
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -112,6 +127,17 @@ kbs_config = {
         "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat",
     }
 }
+
+# 默认分词方法，默认为ChatGLM中使用的
+# SpacyTextSplitter
+# MarkdownHeaderTextSplitter
+# CharacterTextSplitter.from_tiktoken_encoder
+# CharacterTextSplitter.from_huggingface_tokenizer
+# NLTKTextSplitter
+# SentenceTransformersTokenTextSplitter
+# 等Langchain支持的Text_splitter
+
+TEXT_SPLITTER_NAME = "MarkdownHeaderTextSplitter"
 
 # 默认向量库类型。可选：faiss, milvus, pg.
 DEFAULT_VS_TYPE = "faiss"

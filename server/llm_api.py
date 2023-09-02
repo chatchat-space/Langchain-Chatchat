@@ -7,7 +7,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
 from server.utils import MakeFastAPIOffline
 
-
 host_ip = "0.0.0.0"
 controller_port = 20001
 model_worker_port = 20002
@@ -53,8 +52,8 @@ def create_model_worker_app(
         awq_ckpt=None,
         awq_wbits=16,
         awq_groupsize=-1,
-        model_names=[LLM_MODEL],
-        num_gpus=1, # not in fastchat
+        model_names="",
+        num_gpus=1,  # not in fastchat
         conv_template=None,
         limit_worker_concurrency=5,
         stream_interval=2,
@@ -75,6 +74,7 @@ def create_model_worker_app(
             target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
         )
         self.heart_beat_thread.start()
+
     ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
@@ -147,9 +147,9 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-    
+
     MakeFastAPIOffline(app)
-    app.title = f"FastChat LLM Server ({LLM_MODEL})"
+    app.title = f"FastChat LLM Server ({model_names})"
     return app
 
 
@@ -228,47 +228,50 @@ def run_openai_api(q):
 if __name__ == "__main__":
     mp.set_start_method("spawn")
     queue = Queue()
-    logger.info(llm_model_dict[LLM_MODEL])
-    model_path = llm_model_dict[LLM_MODEL]["local_model_path"]
-
-    logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
-
-    if not model_path:
-        logger.error("local_model_path 不能为空")
+    if LLM_MODEL != "Local-LLM": ## 非本地模型的提示，不要执行这个代码
+        logger.info(f"你使用的为非本地模型，无需启动该服务，仅需从service/llm_api.py中调用即可")
     else:
-        controller_process = Process(
-            target=run_controller,
-            name=f"controller({os.getpid()})",
-            args=(queue,),
-            daemon=True,
-        )
-        controller_process.start()
+        logger.info(llm_model_dict[LLM_MODEL]["model_name"])
+        model_path = llm_model_dict[LLM_MODEL]["local_model_path"]
 
-        model_worker_process = Process(
-            target=run_model_worker,
-            name=f"model_worker({os.getpid()})",
-            args=(queue,),
-            # kwargs={"load_8bit": True},
-            daemon=True,
-        )
-        model_worker_process.start()
+        logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
-        openai_api_process = Process(
-            target=run_openai_api,
-            name=f"openai_api({os.getpid()})",
-            args=(queue,),
-            daemon=True,
-        )
-        openai_api_process.start()
+        if not model_path:
+            logger.error("local_model_path 不能为空")
+        else:
+            controller_process = Process(
+                target=run_controller,
+                name=f"controller({os.getpid()})",
+                args=(queue,),
+                daemon=True,
+            )
+            controller_process.start()
 
-        try:
-            model_worker_process.join()
-            controller_process.join()
-            openai_api_process.join()
-        except KeyboardInterrupt:
-            model_worker_process.terminate()
-            controller_process.terminate()
-            openai_api_process.terminate()
+            model_worker_process = Process(
+                target=run_model_worker,
+                name=f"model_worker({os.getpid()})",
+                args=(queue,),
+                # kwargs={"load_8bit": True},
+                daemon=True,
+            )
+            model_worker_process.start()
+
+            openai_api_process = Process(
+                target=run_openai_api,
+                name=f"openai_api({os.getpid()})",
+                args=(queue,),
+                daemon=True,
+            )
+            openai_api_process.start()
+
+            try:
+                model_worker_process.join()
+                controller_process.join()
+                openai_api_process.join()
+            except KeyboardInterrupt:
+                model_worker_process.terminate()
+                controller_process.terminate()
+                openai_api_process.terminate()
 
 # 服务启动后接口调用示例：
 # import openai
