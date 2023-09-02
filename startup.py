@@ -642,8 +642,18 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
+
+    if sys.version_info < (3, 10):
+        loop = asyncio.get_event_loop()
+    else:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+
+        asyncio.set_event_loop(loop)
     # 同步调用协程代码
-    asyncio.get_event_loop().run_until_complete(start_main_server())
+    loop.run_until_complete(start_main_server())
 # 服务启动后接口调用示例：
 # import openai
 # openai.api_key = "EMPTY" # Not support yet
