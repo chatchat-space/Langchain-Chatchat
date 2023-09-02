@@ -71,6 +71,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 7. 项目中搜索引擎对话，除 Bing 搜索外，增加 DuckDuckGo 搜索选项，DuckDuckGo 搜索无需配置 API Key，在可访问国外服务环境下可直接使用。
 
 ---
+## 分词器支持
+本项目支持使用Langchian主流的分词器，包括
++ SpacyTextSplitter
++ MarkdownHeaderTextSplitter
++ CharacterTextSplitter.from_tiktoken_encoder
++ CharacterTextSplitter.from_huggingface_tokenizer
++ NLTKTextSplitter
++ SentenceTransformersTokenTextSplitter等Langchain支持的Text_splitter
+
+默认使用的是SpacyTextSplitter，如果需要使用其他分词器，可以在配置文件中进行修改。
+
 
 ## 模型支持
 
@@ -137,7 +148,14 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
 ---
+## 模型总结
+本项目支持Langchain中的三种模型总结方式
++ Map-reduce
++ Stuff
++ Refine
 
+由于使用模型总结后，调用了多次大模型，因此，响应时间较长，建议延长WebUI的响应时长。
+如果使用模型总结，建议将单次嵌入的最大长度提高，同时提升相关知识库筛选的数量，以最大化嵌入的知识信息。
 ## Docker 部署
 
 🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)`

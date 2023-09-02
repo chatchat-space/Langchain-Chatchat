@@ -69,11 +69,15 @@ llm_model_dict = {
     # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
     # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
     # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
-    "gpt-3.5-turbo": {
-        "local_model_path": "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k-0613": {
+        "model_name": "gpt-3.5-turbo-16k-0613",
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY"),
-        "openai_proxy": os.environ.get("OPENAI_PROXY")
+        "api_key": ""
+    },
+    "gpt-3.5-turbo-0613": {
+        "model_name": "gpt-3.5-turbo-0613",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": ""
     },
 }
 
@@ -84,6 +88,30 @@ LLM_MODEL = "chatglm2-6b"
 # LLM 运行设备
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
+
+summarization_config = {
+    "Stuff": {
+        "promot_template": """为下面材料提供一个中文总结:"{text}" """,
+        "map_document_variable_name": "text",
+    },
+    "Map_Reduce": {
+        "map_prompt_template": """以下是我提供的多个文档: "{docs}" 请将这些文档确定主题并摘要成有用的信息。""",
+        "reduce_prompt_template": """以下是我提供的多个摘要信息: "{doc_summaries}" 并使用中文请将这些摘要提取成最终有用的信息。""",
+        "reduce_document_variable_name": "doc_summaries",
+        "map_document_variable_name": "docs",
+        "token_max": 16000,
+    },
+    "Refine": {
+    },
+
+}
+
+# 总结模型名称
+SUMMARIZATION_MODEL = "gpt-3.5-turbo-16k-0613"
+# 总结类型
+SUMMARIZATION_TYPE = "Map_Reduce"
+
+
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
 if not os.path.exists(LOG_PATH):
@@ -91,6 +119,18 @@ if not os.path.exists(LOG_PATH):
 
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
+
+# 默认分词方法，默认为ChatGLM中使用的SpacyTextSplitter
+# 可选分词方法：
+# SpacyTextSplitter
+# MarkdownHeaderTextSplitter
+# CharacterTextSplitter.from_tiktoken_encoder
+# CharacterTextSplitter.from_huggingface_tokenizer
+# NLTKTextSplitter
+# SentenceTransformersTokenTextSplitter等Langchain支持的Text_splitter
+
+TEXT_SPLITTER_NAME = "MarkdownHeaderTextSplitter"
+
 
 # 数据库默认存储路径。
 # 如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。

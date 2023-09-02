@@ -27,7 +27,7 @@ import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
-def set_httpx_timeout(timeout=60.0):
+def set_httpx_timeout(timeout=600.0):
     '''
     设置httpx默认timeout到60秒。
     httpx默认timeout是5秒，在请求LLM回答时不够用。
