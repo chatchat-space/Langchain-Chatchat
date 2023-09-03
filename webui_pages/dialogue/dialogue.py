@@ -1,10 +1,14 @@
 import streamlit as st
+from configs.server_config import FSCHAT_MODEL_WORKERS
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
-from typing import List, Dict
 import os
+from configs.model_config import llm_model_dict, LLM_MODEL
+from server.utils import get_model_worker_config
+from typing import List, Dict
+
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -59,6 +63,38 @@ def dialogue_page(api: ApiRequest):
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
+
+        def on_llm_change():
+            st.session_state["prev_llm_model"] = llm_model
+
+        def llm_model_format_func(x):
+            if x in running_models:
+                return f"{x} (Running)"
+            return x
+
+        running_models = api.list_running_models()
+        config_models = api.list_config_models()
+        for x in running_models:
+            if x in config_models:
+                config_models.remove(x)
+        llm_models = running_models + config_models
+        if "prev_llm_model" not in st.session_state:
+            index = llm_models.index(LLM_MODEL)
+        else:
+            index = 0
+        llm_model = st.selectbox("选择LLM模型：",
+                                llm_models,
+                                index,
+                                format_func=llm_model_format_func,
+                                on_change=on_llm_change,
+                                # key="llm_model",
+                                )
+        if (st.session_state.get("prev_llm_model") != llm_model
+            and not get_model_worker_config(llm_model).get("online_api")):
+            with st.spinner(f"正在加载模型： {llm_model}"):
+                r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
+            st.session_state["prev_llm_model"] = llm_model
+
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
@@ -99,7 +135,7 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.chat_chat(prompt, history)
+            r = api.chat_chat(prompt, history=history, model=llm_model)
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)
@@ -114,7 +150,7 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="知识库匹配结果"),
             ])
             text = ""
-            for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history):
+            for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
@@ -127,8 +163,8 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="网络搜索结果"),
             ])
             text = ""
-            for d in api.search_engine_chat(prompt, search_engine, se_top_k):
-                if error_msg := check_error_msg(d):  # check whether error occured
+            for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
+                if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 else:
                     text += d["answer"]

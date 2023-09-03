@@ -69,6 +69,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                                                           "content": "虎头虎脑"}]]
                                                      ),
                        stream: bool = Body(False, description="流式输出"),
+                       model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -82,16 +83,17 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                                           search_engine_name: str,
                                           top_k: int,
                                           history: Optional[List[History]],
+                                          model_name: str = LLM_MODEL,
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = ChatOpenAI(
             streaming=True,
             verbose=True,
             callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+            openai_api_key=llm_model_dict[model_name]["api_key"],
+            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+            model_name=model_name,
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
 
         docs = lookup_search_engine(query, search_engine_name, top_k)
@@ -129,5 +131,5 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
                              ensure_ascii=False)
         await task
 
-    return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history),
+    return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history, model_name),
                              media_type="text/event-stream")
