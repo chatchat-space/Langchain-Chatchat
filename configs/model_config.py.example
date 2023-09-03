@@ -89,6 +89,7 @@ llm_model_dict = {
     # 线上模型。当前支持智谱AI。
     # 如果没有设置有效的local_model_path，则认为是在线模型API。
     # 请在server_config中为每个在线API设置不同的端口
+    # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "chatglm-api": {
         "api_base_url": "http://127.0.0.1:8888/v1",
         "api_key": os.environ.get("ZHIPUAI_API_KEY"),
