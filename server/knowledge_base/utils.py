@@ -197,7 +197,7 @@ class KnowledgeFile:
 
         print(f"{self.document_loader_name} used for {self.filepath}")
         try:
-            if self.document_loader_name in []:
+            if self.document_loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
                 document_loaders_module = importlib.import_module('document_loaders')
             else:
                 document_loaders_module = importlib.import_module('langchain.document_loaders')
