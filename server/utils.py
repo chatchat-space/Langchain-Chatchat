@@ -203,7 +203,6 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     from configs.model_config import llm_model_dict
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    config["device"] = llm_device(config["device"])
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
@@ -216,6 +215,7 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
             except Exception as e:
                 print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
 
+    config["device"] = llm_device(config.get("device") or LLM_DEVICE)
     return config
 
 
