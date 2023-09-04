@@ -3,5 +3,5 @@
 logs
 .idea/
 __pycache__/
-knowledge_base/
-configs/*.py
+/knowledge_base/
+/configs/*.py
