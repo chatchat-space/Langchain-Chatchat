@@ -73,6 +73,10 @@ class PGKBService(KBService):
     def do_clear_vs(self):
         self.pg_vector.delete_collection()
 
+        # langchain.vectorstores.PGVector always assumes that the collection exists. So after deleting the collection,
+        # we should recreate it to avoid errors.
+        self.pg_vector.create_collection()
+
 
 if __name__ == '__main__':
     from server.db.base import Base, engine
