@@ -5,13 +5,17 @@ import torch
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL
-from typing import Any, Optional
+from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE
+from configs.server_config import FSCHAT_MODEL_WORKERS
+import os
+from server import model_workers
+from typing import Literal, Optional, Any
 
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="API status code")
     msg: str = pydantic.Field("success", description="API status message")
+    data: Any = pydantic.Field(None, description="API data")
 
     class Config:
         schema_extra = {
@@ -201,7 +205,27 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
+
+    # 如果没有设置有效的local_model_path，则认为是在线模型API
+    if not os.path.isdir(config.get("local_model_path", "")):
+        config["online_api"] = True
+        if provider := config.get("provider"):
+            try:
+                config["worker_class"] = getattr(model_workers, provider)
+            except Exception as e:
+                print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
+
+    config["device"] = llm_device(config.get("device") or LLM_DEVICE)
     return config
+
+
+def get_all_model_worker_configs() -> dict:
+    result = {}
+    model_names = set(llm_model_dict.keys()) | set(FSCHAT_MODEL_WORKERS.keys())
+    for name in model_names:
+        if name != "default":
+            result[name] = get_model_worker_config(name)
+    return result
 
 
 def fschat_controller_address() -> str:
@@ -256,3 +280,28 @@ def set_httpx_timeout(timeout: float = None):
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+
+
+# 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
+def detect_device() -> Literal["cuda", "mps", "cpu"]:
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
+
+
+def llm_device(device: str = LLM_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
+
+
+def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
