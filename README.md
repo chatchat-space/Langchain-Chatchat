@@ -273,7 +273,13 @@ max_gpu_memory="20GiB"
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
-注：server_config.py的FSCHAT_MODEL_WORKERS字典中也
+注1：server_config.py的FSCHAT_MODEL_WORKERS字典中也增加了相关配置，如有需要也可通过修改FSCHAT_MODEL_WORKERS字典中对应参数实现多卡加载。
+
+注2：少数情况下，gpus参数会不生效，此时需要通过设置环境变量CUDA_VISIBLE_DEVICES来指定torch可见的gpu,示例代码：
+
+```shell
+CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
+```
 
 #### 5.4 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
 
