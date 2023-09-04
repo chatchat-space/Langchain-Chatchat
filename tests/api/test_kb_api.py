@@ -1,4 +1,3 @@
-from doctest import testfile
 import requests
 import json
 import sys

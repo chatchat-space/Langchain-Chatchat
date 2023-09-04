@@ -7,6 +7,19 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 
+# 分布式部署时，不运行LLM的机器上可以不装torch
+def default_device():
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
+
+
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
 # 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
@@ -33,7 +46,6 @@ EMBEDDING_MODEL = "m3e-base"
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
-
 
 llm_model_dict = {
     "chatglm-6b": {
@@ -74,6 +86,16 @@ llm_model_dict = {
         "api_key": os.environ.get("OPENAI_API_KEY"),
         "openai_proxy": os.environ.get("OPENAI_PROXY")
     },
+    # 线上模型。当前支持智谱AI。
+    # 如果没有设置有效的local_model_path，则认为是在线模型API。
+    # 请在server_config中为每个在线API设置不同的端口
+    # 具体注册及api key获取请前往 http://open.bigmodel.cn
+    "chatglm-api": {
+        "api_base_url": "http://127.0.0.1:8888/v1",
+        "api_key": os.environ.get("ZHIPUAI_API_KEY"),
+        "provider": "ChatGLMWorker",
+        "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
+    },
 }
 
 # LLM 名称
@@ -82,7 +104,7 @@ LLM_MODEL = "chatglm2-6b"
 # 历史对话轮数
 HISTORY_LEN = 3
 
-# LLM 运行设备。可选项同Embedding 运行设备。
+# LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
 
 # 日志存储路径
