@@ -565,9 +565,7 @@ async def start_main_server():
             args=(queue, process_count() + 1, log_level),
             daemon=True,
         )
-        process.start()
-        # 使用await asyncio.sleep(3)可以让后续代码等待一段时间
-        await asyncio.sleep(3)
+
         processes["controller"] = process
 
         process = Process(
@@ -576,7 +574,6 @@ async def start_main_server():
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
         processes["openai_api"] = process
 
     if args.model_worker:
@@ -588,7 +585,7 @@ async def start_main_server():
                 args=(args.model_name, args.controller_address, queue, process_count() + 1, log_level),
                 daemon=True,
             )
-            process.start()
+
             processes["model_worker"] = process
 
     if args.api_worker:
@@ -601,7 +598,7 @@ async def start_main_server():
                     args=(model_name, args.controller_address, queue, process_count() + 1, log_level),
                     daemon=True,
                 )
-                process.start()
+
                 processes["online-api"].append(process)
 
     if args.api:
@@ -611,7 +608,7 @@ async def start_main_server():
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
+
         processes["api"] = process
 
     if args.webui:
@@ -621,13 +618,26 @@ async def start_main_server():
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
+
         processes["webui"] = process
 
     if process_count() == 0:
         parser.print_help()
     else:
         try:
+            # 保证任务收到SIGINT后，能够正常退出
+            processes["controller"].start()
+            # 使用await asyncio.sleep(3)可以让后续代码等待一段时间
+            await asyncio.sleep(3)
+
+            processes["openai_api"].start()
+            processes["model_worker"].start()
+            for p in processes["online-api"]:
+                p.start()
+
+            processes["api"].start()
+            processes["webui"].start()
+
             while True:
                 no = queue.get()
                 if no == process_count():
@@ -652,16 +662,19 @@ async def start_main_server():
             #     model_worker_process.terminate()
             # for process in processes.pop("online-api", []):
             #     process.terminate()
-            # for name, process in processes.items():
-            #     process.terminate()
+            # for process in processes.values():
+            #
+            #     if isinstance(process, list):
+            #         for work_process in process:
+            #             work_process.terminate()
+            #     else:
+            #         process.terminate()
             logger.warning("Caught KeyboardInterrupt! Setting stop event...")
         finally:
             # Send SIGINT if process doesn't exit quickly enough, and kill it as last resort
             # .is_alive() also implicitly joins the process (good practice in linux)
             # while alive_procs := [p for p in processes.values() if p.is_alive()]:
 
-            for p in processes.values():
-                logger.info("Process status: %s", p)
             for p in processes.values():
                 logger.warning("Sending SIGKILL to %s", p)
                 # Queues and other inter-process communication primitives can break when
@@ -674,7 +687,6 @@ async def start_main_server():
                 else:
                     p.kill()
 
-            sleep(.01)
             for p in processes.values():
                 logger.info("Process status: %s", p)
 
