@@ -14,8 +14,8 @@
   * [2. 下载模型至本地](README.md#2.-下载模型至本地)
   * [3. 设置配置项](README.md#3.-设置配置项)
   * [4. 知识库初始化与迁移](README.md#4.-知识库初始化与迁移)
-  * [5. 启动 API 服务或 Web UI](README.md#5.-启动-API-服务或-Web-UI)
-  * [6. 一键启动](README.md#6.-一键启动)
+  * [5. 一键启动API服务或WebUI服务](README.md#6.-一键启动)
+  * [6. 分步启动 API 服务或 Web UI](README.md#5.-启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -226,9 +226,93 @@ embedding_model_dict = {
   $ python init_database.py --recreate-vs
   ```
 
-### 5. 启动 API 服务或 Web UI
+### 5. 一键启动API 服务或 Web UI
 
-#### 5.1 启动 LLM 服务
+#### 5.1 启动命令
+
+一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
+
+```shell
+$ python startup.py -a
+```
+
+并可使用 `Ctrl + C` 直接关闭所有运行服务。如果一次结束不了，可以多按几次。
+
+可选参数包括 `-a (或--all-webui)`, `--all-api`, `--llm-api`, `-c (或--controller)`, `--openai-api`,
+`-m (或--model-worker)`, `--api`, `--webui`，其中：
+
+- `--all-webui` 为一键启动 WebUI 所有依赖服务；
+- `--all-api` 为一键启动 API 所有依赖服务；
+- `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
+- `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
+- 其他为单独服务启动选项。
+
+#### 5.2 启动非默认模型
+
+若想指定非默认模型，需要用 `--model-name` 选项，示例：
+
+```shell
+$ python startup.py --all-webui --model-name Qwen-7B-Chat
+```
+
+更多信息可通过 `python startup.py -h`查看。
+
+#### 5.3 多卡加载
+
+项目支持多卡加载，需在 startup.py 中的 create_model_worker_app 函数中，修改如下三个参数:
+
+```python
+gpus=None, 
+num_gpus=1, 
+max_gpu_memory="20GiB"
+```
+
+其中，`gpus` 控制使用的显卡的ID，例如 "0,1";
+
+`num_gpus` 控制使用的卡数;
+
+`max_gpu_memory` 控制每个卡使用的显存容量。
+
+注1：server_config.py的FSCHAT_MODEL_WORKERS字典中也增加了相关配置，如有需要也可通过修改FSCHAT_MODEL_WORKERS字典中对应参数实现多卡加载。
+
+注2：少数情况下，gpus参数会不生效，此时需要通过设置环境变量CUDA_VISIBLE_DEVICES来指定torch可见的gpu,示例代码：
+
+```shell
+CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
+```
+
+#### 5.4 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
+
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含.bin 格式的 PEFT 权重，peft路径在startup.py中create_model_worker_app函数的args.model_names中指定，并开启环境变量PEFT_SHARE_BASE_WEIGHTS=true参数。
+
+注：如果上述方式启动失败，则需要以标准的fastchat服务启动方式分步启动，分步启动步骤参考第六节，PEFT加载详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)，
+
+#### **5.5 注意事项：**
+
+**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
+
+**2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
+
+**3. 在Linux上使用ctrl+C退出可能会由于linux的多进程机制导致multiprocessing遗留孤儿进程，可通过shutdown_all.sh进行退出**
+
+#### 5.6 启动界面示例：
+
+1. FastAPI docs 界面
+
+![](img/fastapi_docs_020_0.png)
+
+2. webui启动界面示例：
+
+- Web UI 对话界面：
+  ![img](img/webui_0813_0.png)
+- Web UI 知识库管理页面：
+  ![](img/webui_0813_1.png)
+
+### 6 分步启动 API 服务或 Web UI
+
+注意：如使用了一键启动方式，可忽略本节。
+
+#### 6.1 启动 LLM 服务
 
 如需使用开源模型进行本地部署，需首先启动 LLM 服务，启动方式分为三种：
 
@@ -240,7 +324,7 @@ embedding_model_dict = {
 
 如果启动在线的API服务（如 OPENAI 的 API 接口），则无需启动 LLM 服务，即 5.1 小节的任何命令均无需启动。
 
-##### 5.1.1 基于多进程脚本 llm_api.py 启动 LLM 服务
+##### 6.1.1 基于多进程脚本 llm_api.py 启动 LLM 服务
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -248,7 +332,7 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
+项目支持多卡加载，需在 llm_api.py 中的 create_model_worker_app 函数中，修改如下三个参数:
 
 ```python
 gpus=None, 
@@ -262,11 +346,11 @@ max_gpu_memory="20GiB"
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
-##### 5.1.2 基于命令行脚本 llm_api_stale.py 启动 LLM 服务
+##### 6.1.2 基于命令行脚本 llm_api_stale.py 启动 LLM 服务
 
 ⚠️ **注意:**
 
-**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wls;**
+**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wsl;**
 
 **2.加载非默认模型需要用命令行参数--model-path-address指定模型，不会读取model_config.py配置;**
 
@@ -302,14 +386,14 @@ $ python server/llm_api_shutdown.py --serve all
 
 亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
 
-##### 5.1.3 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia等)
+##### 6.1.3 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
 
 本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
 详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)
 
 ![image](https://github.com/chatchat-space/Langchain-Chatchat/assets/22924096/4e056c1c-5c4b-4865-a1af-859cd58a625d)
 
-#### 5.2 启动 API 服务
+#### 6.2 启动 API 服务
 
 本地部署情况下，按照 [5.1 节](README.md#5.1-启动-LLM-服务)**启动 LLM 服务后**，再执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
 
@@ -327,7 +411,7 @@ $ python server/api.py
 
   ![](img/fastapi_docs_020_0.png)
 
-#### 5.3 启动 Web UI 服务
+#### 6.3 启动 Web UI 服务
 
 按照 [5.2 节](README.md#5.2-启动-API-服务)**启动 API 服务后**，执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口 `8501`）
 
@@ -355,41 +439,6 @@ $ streamlit run webui.py --server.port 666
   ![](img/webui_0813_1.png)
 
 ---
-
-### 6. 一键启动
-
-更新一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
-
-```shell
-$ python startup.py -a
-```
-
-并可使用 `Ctrl + C` 直接关闭所有运行服务。如果一次结束不了，可以多按几次。
-
-可选参数包括 `-a (或--all-webui)`, `--all-api`, `--llm-api`, `-c (或--controller)`, `--openai-api`,
-`-m (或--model-worker)`, `--api`, `--webui`，其中：
-
-- `--all-webui` 为一键启动 WebUI 所有依赖服务；
-- `--all-api` 为一键启动 API 所有依赖服务；
-- `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
-- `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
-- 其他为单独服务启动选项。
-
-若想指定非默认模型，需要用 `--model-name` 选项，示例：
-
-```shell
-$ python startup.py --all-webui --model-name Qwen-7B-Chat
-```
-
-更多信息可通过 `python startup.py -h`查看。
-
-**注意：**
-
-**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
-
-**2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
-
-**3. 在Linux上使用ctrl+C退出可能会由于linux的多进程机制导致multiprocessing遗留孤儿进程，可通过shutdown_all.sh进行退出**
 
 ## 常见问题
 
@@ -433,6 +482,6 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 ## 项目交流群
 
-<img src="img/qr_code_56.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_58.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。

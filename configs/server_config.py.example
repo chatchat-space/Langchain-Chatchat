@@ -1,4 +1,8 @@
-from .model_config import LLM_MODEL, LLM_DEVICE
+from .model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE
+import httpx
+
+# httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
+HTTPX_DEFAULT_TIMEOUT = 300.0
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
@@ -29,15 +33,18 @@ FSCHAT_OPENAI_API = {
 # 这些模型必须是在model_config.llm_model_dict中正确配置的。
 # 在启动startup.py时，可用通过`--model-worker --model-name xxxx`指定模型，不指定则为LLM_MODEL
 FSCHAT_MODEL_WORKERS = {
-    LLM_MODEL: {
+    # 所有模型共用的默认配置，可在模型专项配置或llm_model_dict中进行覆盖。
+    "default": {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
-        # todo: 多卡加载需要配置的参数
-        "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"
-        "num_gpus": 1, # 使用GPU的数量
-        # 以下为非常用参数，可根据需要配置
+
+        # 多卡加载需要配置的参数
+        # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"
+        # "num_gpus": 1, # 使用GPU的数量
         # "max_gpu_memory": "20GiB", # 每个GPU占用的最大显存
+
+        # 以下为非常用参数，可根据需要配置
         # "load_8bit": False, # 开启8bit量化
         # "cpu_offloading": None,
         # "gptq_ckpt": None,
@@ -53,11 +60,17 @@ FSCHAT_MODEL_WORKERS = {
         # "stream_interval": 2,
         # "no_register": False,
     },
+    "baichuan-7b": { # 使用default中的IP和端口
+        "device": "cpu",
+    },
+    "chatglm-api": { # 请为每个在线API设置不同的端口
+        "port": 20003,
+    },
 }
 
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {
-    # todo
+    # TODO:
 }
 
 # fastchat controller server
@@ -66,35 +79,3 @@ FSCHAT_CONTROLLER = {
     "port": 20001,
     "dispatch_method": "shortest_queue",
 }
-
-
-# 以下不要更改
-def fschat_controller_address() -> str:
-    host = FSCHAT_CONTROLLER["host"]
-    port = FSCHAT_CONTROLLER["port"]
-    return f"http://{host}:{port}"
-
-
-def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
-    if model := FSCHAT_MODEL_WORKERS.get(model_name):
-        host = model["host"]
-        port = model["port"]
-        return f"http://{host}:{port}"
-
-
-def fschat_openai_api_address() -> str:
-    host = FSCHAT_OPENAI_API["host"]
-    port = FSCHAT_OPENAI_API["port"]
-    return f"http://{host}:{port}"
-
-
-def api_address() -> str:
-    host = API_SERVER["host"]
-    port = API_SERVER["port"]
-    return f"http://{host}:{port}"
-
-
-def webui_address() -> str:
-    host = WEBUI_SERVER["host"]
-    port = WEBUI_SERVER["port"]
-    return f"http://{host}:{port}"
