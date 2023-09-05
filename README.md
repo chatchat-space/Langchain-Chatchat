@@ -209,7 +209,7 @@ embedding_model_dict = {
                        }
 ```
 
-如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要鞥能够访问OpenAI官的API，或设置代理。
+如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要能够访问OpenAI官的API，或设置代理。
 
 ### 4. 知识库初始化与迁移
 
