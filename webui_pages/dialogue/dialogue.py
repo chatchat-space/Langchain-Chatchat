@@ -18,7 +18,10 @@ chat_box = ChatBox(
 )
 
 FILE_TOKENS = 3000
-
+HOST = ""
+USERNAME = ""
+PASSWORD = ""
+DATABASE = ""
 def get_messages_history(history_len: int) -> List[Dict]:
     def filter(msg):
         '''
@@ -61,6 +64,7 @@ def dialogue_page(api: ApiRequest):
                                       "知识库问答",
                                       "搜索引擎问答",
                                       "文件问答",
+                                      "数据库问答",
                                       ],
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
@@ -134,6 +138,16 @@ def dialogue_page(api: ApiRequest):
             file_content_str = ""
             if file:
                 file_content_str = parse_file(file, file_len)
+        elif dialogue_mode == "数据库问答":
+            global HOST
+            HOST = st.text_input("数据库地址", "localhost")
+            global USERNAME
+            USERNAME = st.text_input("用户名", "root")
+            global PASSWORD
+            PASSWORD = st.text_input("密码", "", type="password")
+            global DATABASE
+            DATABASE = st.text_input("数据库名称", "test")
+
     # Display chat messages from history on app rerun
 
     chat_box.output_messages()
@@ -185,7 +199,7 @@ def dialogue_page(api: ApiRequest):
         elif dialogue_mode == "文件问答":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.file_chat(prompt, file_content_str, history)
+            r = api.file_chat(prompt, file_content_str, history, model=llm_model)
             for t in r:
                 if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
@@ -193,6 +207,23 @@ def dialogue_page(api: ApiRequest):
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+        elif dialogue_mode == "数据库问答":
+            history = get_messages_history(history_len)
+            chat_box.ai_say([
+                f"正在查询数据库  ...",
+                Markdown("...", in_expander=True, title="数据库SQL语句"),
+                Markdown("...", in_expander=True, title="数据库查询结果"),
+            ])
+            text = ""
+            for d in api.db_chat(prompt, "MySql", HOST, USERNAME, PASSWORD, DATABASE, history, model=llm_model):
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+                else:
+                    text += d["answer"]
+                    chat_box.update_msg(text, 0)
+                    chat_box.update_msg(d["sql"], 1, streaming=False)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 2, streaming=False)
+            chat_box.update_msg(text, 0, streaming=False)
 
     now = datetime.now()
     with st.sidebar:

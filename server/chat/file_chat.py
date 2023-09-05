@@ -21,12 +21,14 @@ def file_chat(query: str = Body(..., description="用户输入", examples=["恼�
                                                 {"role": "assistant", "content": "虎头虎脑"}]]
                                             ),
               stream: bool = Body(False, description="流式输出"),
+              model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
               ):
     history = [History.from_data(h) for h in history]
 
     async def chat_iterator(query: str,
                             file_content_str: str,
                             history: List[History] = [],
+                            model_name: str = LLM_MODEL,
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
 
@@ -34,10 +36,10 @@ def file_chat(query: str = Body(..., description="用户输入", examples=["恼�
             streaming=True,
             verbose=True,
             callbacks=[callback],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+            openai_api_key=llm_model_dict[model_name]["api_key"],
+            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+            model_name=model_name,
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
 
         input_msg = History(role="user", content=FILE_PROMPT_TEMPLATE).to_msg_template(False)
@@ -63,5 +65,5 @@ def file_chat(query: str = Body(..., description="用户输入", examples=["恼�
 
         await task
 
-    return StreamingResponse(chat_iterator(query, file_content_str, history),
+    return StreamingResponse(chat_iterator(query, file_content_str, history, model_name),
                              media_type="text/event-stream")
