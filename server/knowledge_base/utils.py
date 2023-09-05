@@ -191,7 +191,7 @@ class KnowledgeFile:
         # TODO: 增加依据文件格式匹配text_splitter
         self.text_splitter_name = None
 
-    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False):
+    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False, build_meta_data: bool = True):
         if self.docs is not None and not refresh:
             return self.docs
 
@@ -250,6 +250,18 @@ class KnowledgeFile:
                 )
 
             docs = loader.load_and_split(text_splitter)
+
+        if build_meta_data:
+
+            meta_data = docs[0].metadata
+            # 对meta_data每项格式化成 "<key>":"<value>" 形式
+            meta_data = {f'"{k}":"{v}"' for k, v in meta_data.items()}
+            # 转换成字符串
+            meta_data = "<metadata>\r\n" + "\r\n\b".join(meta_data) + "\r\n</metadata>"
+            doc = Document(page_content=str(meta_data), metadata=docs[0].metadata)
+            # 将doc 添加到docs的第一项
+            docs.insert(0, doc)
+
         print(docs[0])
         if using_zh_title_enhance:
             docs = zh_title_enhance(docs)
@@ -264,9 +276,9 @@ class KnowledgeFile:
 
 
 def run_in_thread_pool(
-    func: Callable,
-    params: List[Dict] = [],
-    pool: ThreadPoolExecutor = None,
+        func: Callable,
+        params: List[Dict] = [],
+        pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
@@ -275,18 +287,18 @@ def run_in_thread_pool(
     tasks = []
     if pool is None:
         pool = ThreadPoolExecutor()
-    
+
     for kwargs in params:
         thread = pool.submit(func, **kwargs)
         tasks.append(thread)
-    
+
     for obj in as_completed(tasks):
         yield obj.result()
 
 
 def files2docs_in_thread(
-    files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
-    pool: ThreadPoolExecutor = None,
+        files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+        pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     利用多线程批量将文件转化成langchain Document.
@@ -310,6 +322,6 @@ def files2docs_in_thread(
             kwargs = file
         kwargs["file"] = file
         kwargs_list.append(kwargs)
-    
+
     for result in run_in_thread_pool(func=task, params=kwargs_list, pool=pool):
         yield result
