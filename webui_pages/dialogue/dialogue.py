@@ -127,7 +127,7 @@ def dialogue_page(api: ApiRequest):
 
     chat_box.output_messages()
 
-    chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
+    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
