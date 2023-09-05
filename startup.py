@@ -1,9 +1,9 @@
-from multiprocessing import Process, Queue
-import multiprocessing as mp
-import subprocess
 import asyncio
-import sys
+import multiprocessing as mp
 import os
+import subprocess
+import sys
+from multiprocessing import Process, Queue
 from pprint import pprint
 
 # 设置numexpr最大线程数，默认为CPU核心数
@@ -210,7 +210,7 @@ def _set_app_seq(app: FastAPI, q: Queue, run_seq: int):
             q.put(run_seq)
 
 
-def run_controller(q: Queue, run_seq: int = 1, log_level: str = "INFO"):
+def run_controller(q: Queue, run_seq: int = 1, log_level: str = "INFO", e: mp.Event = None):
     import uvicorn
     import httpx
     from fastapi import Body
@@ -222,6 +222,11 @@ def run_controller(q: Queue, run_seq: int = 1, log_level: str = "INFO"):
         log_level=log_level,
     )
     _set_app_seq(app, q, run_seq)
+
+    @app.on_event("startup")
+    def on_startup():
+        if e is not None:
+            e.set()
 
     # add interface to release and load model worker
     @app.post("/release_worker")
@@ -501,14 +506,25 @@ def dump_server_info(after_start=False, args=None):
 
 async def start_main_server():
     import time
+    import signal
+
+    def handler(signalname):
+        """
+        Python 3.9 has `signal.strsignal(signalnum)` so this closure would not be needed.
+        Also, 3.8 includes `signal.valid_signals()` that can be used to create a mapping for the same purpose.
+        """
+        def f(signal_received, frame):
+            raise KeyboardInterrupt(f"{signalname} received")
+        return f
+
+    # This will be inherited by the child process if it is forked (not spawned)
+    signal.signal(signal.SIGINT, handler("SIGINT"))
+    signal.signal(signal.SIGTERM, handler("SIGTERM"))
 
     mp.set_start_method("spawn")
-    # TODO 链式启动的队列，确实可以用于控制启动顺序，
-    #  但目前引入proxy_worker后，启动的独立于框架的work processes无法确认当前的位置，
-    #  导致注册器未启动时，无法注册。整个启动链因为异常被终止
-    #   使用await asyncio.sleep(3)可以让后续代码等待一段时间，但不是最优解
+    manager = mp.Manager()
 
-    queue = Queue()
+    queue = manager.Queue()
     args, parser = parse_args()
 
     if args.all_webui:
@@ -548,24 +564,23 @@ async def start_main_server():
     else:
         log_level = "INFO"
 
+    controller_started = manager.Event()
     if args.openai_api:
         process = Process(
             target=run_controller,
-            name=f"controller({os.getpid()})",
-            args=(queue, process_count() + 1, log_level),
+            name=f"controller",
+            args=(queue, process_count() + 1, log_level, controller_started),
             daemon=True,
         )
-        process.start()
-        await asyncio.sleep(3)
+
         processes["controller"] = process
 
         process = Process(
             target=run_openai_api,
-            name=f"openai_api({os.getpid()})",
+            name=f"openai_api",
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
         processes["openai_api"] = process
 
     if args.model_worker:
@@ -573,11 +588,11 @@ async def start_main_server():
         if not config.get("online_api"):
             process = Process(
                 target=run_model_worker,
-                name=f"model_worker - {args.model_name} ({os.getpid()})",
+                name=f"model_worker - {args.model_name}",
                 args=(args.model_name, args.controller_address, queue, process_count() + 1, log_level),
                 daemon=True,
             )
-            process.start()
+
             processes["model_worker"] = process
 
     if args.api_worker:
@@ -586,37 +601,63 @@ async def start_main_server():
             if config.get("online_api") and config.get("worker_class"):
                 process = Process(
                     target=run_model_worker,
-                    name=f"model_worker - {model_name} ({os.getpid()})",
+                    name=f"model_worker - {model_name}",
                     args=(model_name, args.controller_address, queue, process_count() + 1, log_level),
                     daemon=True,
                 )
-                process.start()
+
                 processes["online-api"].append(process)
 
     if args.api:
         process = Process(
             target=run_api_server,
-            name=f"API Server{os.getpid()})",
+            name=f"API Server",
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
+
         processes["api"] = process
 
     if args.webui:
         process = Process(
             target=run_webui,
-            name=f"WEBUI Server{os.getpid()})",
+            name=f"WEBUI Server",
             args=(queue, process_count() + 1),
             daemon=True,
         )
-        process.start()
+
         processes["webui"] = process
 
     if process_count() == 0:
         parser.print_help()
     else:
         try:
+            # 保证任务收到SIGINT后，能够正常退出
+            if p:= processes.get("controller"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+                controller_started.wait()
+
+            if p:= processes.get("openai_api"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            if p:= processes.get("model_worker"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            for p in processes.get("online-api", []):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            if p:= processes.get("api"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
+            if p:= processes.get("webui"):
+                p.start()
+                p.name = f"{p.name} ({p.pid})"
+
             while True:
                 no = queue.get()
                 if no == process_count():
@@ -626,20 +667,50 @@ async def start_main_server():
                 else:
                     queue.put(no)
 
-            if model_worker_process := processes.pop("model_worker", None):
+            if model_worker_process := processes.get("model_worker"):
                 model_worker_process.join()
-            for process in processes.pop("online-api", []):
+            for process in processes.get("online-api", []):
                 process.join()
             for name, process in processes.items():
-                process.join()
-        except:
-            if model_worker_process := processes.pop("model_worker", None):
-                model_worker_process.terminate()
-            for process in processes.pop("online-api", []):
-                process.terminate()
-            for name, process in processes.items():
-                process.terminate()
+                if name not in ["model_worker", "online-api"]:
+                    if isinstance(p, list):
+                        for work_process in p:
+                            work_process.join()
+                    else:
+                        process.join()
+        except Exception as e:
+            # if model_worker_process := processes.pop("model_worker", None):
+            #     model_worker_process.terminate()
+            # for process in processes.pop("online-api", []):
+            #     process.terminate()
+            # for process in processes.values():
+            #
+            #     if isinstance(process, list):
+            #         for work_process in process:
+            #             work_process.terminate()
+            #     else:
+            #         process.terminate()
+            logger.error(e)
+            logger.warning("Caught KeyboardInterrupt! Setting stop event...")
+        finally:
+            # Send SIGINT if process doesn't exit quickly enough, and kill it as last resort
+            # .is_alive() also implicitly joins the process (good practice in linux)
+            # while alive_procs := [p for p in processes.values() if p.is_alive()]:
 
+            for p in processes.values():
+                logger.warning("Sending SIGKILL to %s", p)
+                # Queues and other inter-process communication primitives can break when
+                # process is killed, but we don't care here
+
+                if isinstance(p, list):
+                    for process in p:
+                        process.kill()
+
+                else:
+                    p.kill()
+
+            for p in processes.values():
+                logger.info("Process status: %s", p)
 
 if __name__ == "__main__":
 
@@ -654,6 +725,8 @@ if __name__ == "__main__":
         asyncio.set_event_loop(loop)
     # 同步调用协程代码
     loop.run_until_complete(start_main_server())
+
+
 # 服务启动后接口调用示例：
 # import openai
 # openai.api_key = "EMPTY" # Not support yet

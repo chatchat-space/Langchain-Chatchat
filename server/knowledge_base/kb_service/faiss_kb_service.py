@@ -12,7 +12,7 @@ from functools import lru_cache
 from server.knowledge_base.utils import get_vs_path, load_embeddings, KnowledgeFile
 from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
-from typing import List
+from typing import List, Dict, Optional
 from langchain.docstore.document import Document
 from server.utils import torch_gc, embedding_device
 
@@ -88,6 +88,10 @@ class FaissKBService(KBService):
     def refresh_vs_cache(self):
         refresh_vs_cache(self.kb_name)
 
+    def get_doc_by_id(self, id: str) -> Optional[Document]:
+        vector_store = self.load_vector_store()
+        return vector_store.docstore._dict.get(id)
+
     def do_init(self):
         self.kb_path = self.get_kb_path()
         self.vs_path = self.get_vs_path()
@@ -114,14 +118,15 @@ class FaissKBService(KBService):
     def do_add_doc(self,
                    docs: List[Document],
                    **kwargs,
-                   ):
+                   ) -> List[Dict]:
         vector_store = self.load_vector_store()
-        vector_store.add_documents(docs)
+        ids = vector_store.add_documents(docs)
+        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
         torch_gc()
         if not kwargs.get("not_refresh_vs_cache"):
             vector_store.save_local(self.vs_path)
             self.refresh_vs_cache()
-        return vector_store
+        return doc_infos
 
     def do_delete_doc(self,
                       kb_file: KnowledgeFile,
