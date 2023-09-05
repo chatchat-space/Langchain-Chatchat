@@ -1,3 +1,4 @@
+import zhipuai
 from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
@@ -36,24 +37,40 @@ class ChatGLMWorker(ApiModelWorker):
     def generate_stream_gate(self, params):
         # TODO: 支持stream参数，维护request_id，传过来的prompt也有问题
         from server.utils import get_model_worker_config
-        import zhipuai
 
         super().generate_stream_gate(params)
         zhipuai.api_key = get_model_worker_config("chatglm-api").get("api_key")
 
-        response = zhipuai.model_api.sse_invoke(
-            model=self.version,
-            prompt=[{"role": "user", "content": params["prompt"]}],
-            temperature=params.get("temperature"),
-            top_p=params.get("top_p"),
-            incremental=False,
-        )
-        for e in response.events():
-            if e.event == "add":
-                yield json.dumps({"error_code": 0, "text": e.data}, ensure_ascii=False).encode() + b"\0"
-            # TODO: 更健壮的消息处理
-            # elif e.event == "finish":
-            #     ...
+        model=self.version,
+        prompt=self.prompt_collator(content_user=params["prompt"]) #[{"role": "user", "content": params["prompt"]}]
+        temperature=params.get("temperature")
+        top_p=params.get("top_p")
+        stream = params.get("stream")
+
+        if stream:
+            return self.create_stream(model=model,
+                                    message=prompt,
+                                    top_p=top_p,
+                                    temperature=temperature)
+        else:
+            return self.create_oneshot(model=model,
+                                        message=prompt,
+                                        top_p=top_p,
+                                        temperature=temperature)
+
+        # response = zhipuai.model_api.sse_invoke(
+        #     model=self.version,
+        #     prompt=[{"role": "user", "content": params["prompt"]}],
+        #     temperature=params.get("temperature"),
+        #     top_p=params.get("top_p"),
+        #     incremental=False,
+        # )
+        # for e in response.events():
+        #     if e.event == "add":
+        #         yield json.dumps({"error_code": 0, "text": e.data}, ensure_ascii=False).encode() + b"\0"
+        #     # TODO: 更健壮的消息处理
+        #     # elif e.event == "finish":
+        #     #     ...
     
     def get_embeddings(self, params):
         # TODO: 支持embeddings
