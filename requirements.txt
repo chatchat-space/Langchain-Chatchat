@@ -1,5 +1,6 @@
 langchain==0.0.266
 openai
+zhipuai
 sentence_transformers
 fschat==0.2.24
 transformers>=4.31.0
