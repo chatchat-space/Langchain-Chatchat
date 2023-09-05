@@ -6,12 +6,14 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    llm_model_dict,
     HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     logger,
 )
+from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import PyPDF2
 import docx
 import openpyxl
@@ -49,7 +51,7 @@ class ApiRequest:
     def __init__(
         self,
         base_url: str = "http://127.0.0.1:7861",
-        timeout: float = 60.0,
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
         no_remote_api: bool = False,   # call api view function directly
     ):
         self.base_url = base_url
@@ -202,7 +204,7 @@ class ApiRequest:
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
-
+        
         try:
             for chunk in  iter_over_async(response.body_iterator, loop):
                 if as_json and chunk:
@@ -296,6 +298,7 @@ class ApiRequest:
         query: str,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -308,6 +311,7 @@ class ApiRequest:
             "query": query,
             "history": history,
             "stream": stream,
+            "model_name": model,
         }
 
         print(f"received input message:")
@@ -329,6 +333,7 @@ class ApiRequest:
         score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -344,6 +349,7 @@ class ApiRequest:
             "score_threshold": score_threshold,
             "history": history,
             "stream": stream,
+            "model_name": model,
             "local_doc_url": no_remote_api,
         }
 
@@ -368,6 +374,7 @@ class ApiRequest:
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -381,6 +388,7 @@ class ApiRequest:
             "search_engine_name": search_engine_name,
             "top_k": top_k,
             "stream": stream,
+            "model_name": model,
         }
 
         print(f"received input message:")
@@ -403,6 +411,7 @@ class ApiRequest:
         query: str,
         file_content_str: str,
         history: List[Dict] = [],
+        model: str = LLM_MODEL,
         stream: bool = True,
         no_remote_api: bool = None,
     ):
@@ -417,6 +426,7 @@ class ApiRequest:
             "history": history,
             "file_content_str": file_content_str,
             "stream": stream,
+            "model_name": model,
         }
 
         if no_remote_api:
@@ -426,6 +436,49 @@ class ApiRequest:
         else:
             response = self.post("/chat/file_chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
+
+    def db_chat(
+        self,
+        query: str,
+        type: str,
+        host: str,
+        username: str,
+        password: str,
+        database: str,
+        history: List[Dict] = [],
+        model: str = LLM_MODEL,
+        stream: bool = True,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/db_chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "type": type,
+            "host": host,
+            "username": username,
+            "password": password,
+            "database": database,
+            "stream": stream,
+            "model_name": model,
+        }
+
+        if no_remote_api:
+            from server.chat.knowledge_base_chat import knowledge_base_chat
+            response = knowledge_base_chat(**data)
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post(
+                "/chat/db_chat",
+                json=data,
+                stream=True,
+            )
+            return self._httpx_stream2generator(response, as_json=True)
 
     # 知识库相关操作
 
@@ -680,6 +733,84 @@ class ApiRequest:
                 timeout=None,
             )
             return self._httpx_stream2generator(response, as_json=True)
+
+    def list_running_models(self, controller_address: str = None):
+        '''
+        获取Fastchat中正运行的模型列表
+        '''
+        r = self.post(
+            "/llm_model/list_models",
+        )
+        return r.json().get("data", [])
+
+    def list_config_models(self):
+        '''
+        获取configs中配置的模型列表
+        '''
+        return list(llm_model_dict.keys())
+
+    def stop_llm_model(
+        self,
+        model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        停止某个LLM模型。
+        注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
+        '''
+        data = {
+            "model_name": model_name,
+            "controller_address": controller_address,
+        }
+        r = self.post(
+            "/llm_model/stop",
+            json=data,
+        )
+        return r.json()
+
+    def change_llm_model(
+        self,
+        model_name: str,
+        new_model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        向fastchat controller请求切换LLM模型。
+        '''
+        if not model_name or not new_model_name:
+            return
+
+        if new_model_name == model_name:
+            return {
+                "code": 200,
+                "msg": "什么都不用做"
+            }
+
+        running_models = self.list_running_models()
+        if model_name not in running_models:
+            return {
+                "code": 500,
+                "msg": f"指定的模型'{model_name}'没有运行。当前运行模型：{running_models}"
+            }
+
+        config_models = self.list_config_models()
+        if new_model_name not in config_models:
+            return {
+                "code": 500,
+                "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
+            }
+
+        data = {
+            "model_name": model_name,
+            "new_model_name": new_model_name,
+            "controller_address": controller_address,
+        }
+        r = self.post(
+            "/llm_model/change",
+            json=data,
+            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+        )
+        return r.json()
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:

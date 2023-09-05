@@ -69,6 +69,7 @@ def folder2db(
                 print(result)
 
         if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
             kb.refresh_vs_cache()
     elif mode == "fill_info_only":
         files = list_files_from_folder(kb_name)
@@ -85,6 +86,7 @@ def folder2db(
             kb.update_doc(kb_file, not_refresh_vs_cache=True)
 
         if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
             kb.refresh_vs_cache()
     elif mode == "increament":
         db_files = kb.list_files()
@@ -102,6 +104,7 @@ def folder2db(
                 print(result)
 
         if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
             kb.refresh_vs_cache()
     else:
         print(f"unspported migrate mode: {mode}")
@@ -131,7 +134,10 @@ def prune_db_files(kb_name: str):
         files = list(set(files_in_db) - set(files_in_folder))
         kb_files = file_to_kbfile(kb_name, files)
         for kb_file in kb_files:
-            kb.delete_doc(kb_file)
+            kb.delete_doc(kb_file, not_refresh_vs_cache=True)
+        if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
+            kb.refresh_vs_cache()
         return kb_files
 
 def prune_folder_files(kb_name: str):
