@@ -79,7 +79,7 @@ def is_possible_title(
     else:
         text_5 = text[:5]
     alpha_in_text_5 = sum(list(map(lambda x: x.isnumeric(), list(text_5))))
-    if not alpha_in_text_5:
+    if alpha_in_text_5 >= non_alpha_threshold:
         return False
 
     return True
@@ -88,8 +88,8 @@ def is_possible_title(
 def zh_title_enhance(docs: Document) -> Document:
     title = None
     if len(docs) > 0:
-        for doc in docs:
-            if is_possible_title(doc.page_content):
+        for index, doc in enumerate(docs):
+            if index == 0 and is_possible_title(doc.page_content):
                 doc.metadata['category'] = 'cn_Title'
                 title = doc.page_content
             elif title:
