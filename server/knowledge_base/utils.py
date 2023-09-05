@@ -191,7 +191,7 @@ class KnowledgeFile:
         # TODO: 增加依据文件格式匹配text_splitter
         self.text_splitter_name = None
 
-    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False, build_meta_data: bool = True):
+    def file2text(self, using_zh_title_enhance=ZH_TITLE_ENHANCE, refresh: bool = False):
         if self.docs is not None and not refresh:
             return self.docs
 
@@ -250,17 +250,6 @@ class KnowledgeFile:
                 )
 
             docs = loader.load_and_split(text_splitter)
-
-        if build_meta_data:
-
-            meta_data = docs[0].metadata
-            # 对meta_data每项格式化成 "<key>":"<value>" 形式
-            meta_data = {f'"{k}":"{v}"' for k, v in meta_data.items()}
-            # 转换成字符串
-            meta_data = "<metadata>\r\n" + "\r\n\b".join(meta_data) + "\r\n</metadata>"
-            doc = Document(page_content=str(meta_data), metadata=docs[0].metadata)
-            # 将doc 添加到docs的第一项
-            docs.insert(0, doc)
 
         print(docs[0])
         if using_zh_title_enhance:
