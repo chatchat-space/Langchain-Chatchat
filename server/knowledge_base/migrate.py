@@ -75,7 +75,7 @@ def folder2db(
         files = list_files_from_folder(kb_name)
         kb_files = file_to_kbfile(kb_name, files)
 
-        for kb_file in kb_file:
+        for kb_file in kb_files:
             add_file_to_db(kb_file)
             print(f"已将 {kb_name}/{kb_file.filename} 添加到数据库")
     elif mode == "update_in_db":
