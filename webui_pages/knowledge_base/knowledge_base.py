@@ -189,7 +189,8 @@ def knowledge_base_page(api: ApiRequest):
                 custom_css={
                     "#gridToolBar": {"display": "none"},
                 },
-                allow_unsafe_jscode=True
+                allow_unsafe_jscode=True,
+                enable_enterprise_modules=False
             )
 
             selected_rows = doc_grid.get("selected_rows", [])
