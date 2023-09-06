@@ -5,10 +5,9 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs.model_config import llm_model_dict, LLM_MODEL
+from configs.model_config import llm_model_dict, LLM_MODEL, FILE_TOKENS, db_info
 from server.utils import get_model_worker_config
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -17,11 +16,7 @@ chat_box = ChatBox(
     )
 )
 
-FILE_TOKENS = 3000
-HOST = ""
-USERNAME = ""
-PASSWORD = ""
-DATABASE = ""
+
 def get_messages_history(history_len: int) -> List[Dict]:
     def filter(msg):
         '''
@@ -89,14 +84,14 @@ def dialogue_page(api: ApiRequest):
         else:
             index = 0
         llm_model = st.selectbox("选择LLM模型：",
-                                llm_models,
-                                index,
-                                format_func=llm_model_format_func,
-                                on_change=on_llm_change,
-                                # key="llm_model",
-                                )
+                                 llm_models,
+                                 index,
+                                 format_func=llm_model_format_func,
+                                 on_change=on_llm_change,
+                                 # key="llm_model",
+                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")):
+                and not get_model_worker_config(llm_model).get("online_api")):
             with st.spinner(f"正在加载模型： {llm_model}"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
@@ -129,9 +124,7 @@ def dialogue_page(api: ApiRequest):
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
         elif dialogue_mode == "文件问答":
-            global FILE_TOKENS
             file_len = st.number_input("上传字符数：", 1, 30000, FILE_TOKENS)
-            FILE_TOKENS = file_len
             file = st.file_uploader("上传文件",
                                     ['txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'xml', 'ppt']
                                     )
@@ -139,14 +132,14 @@ def dialogue_page(api: ApiRequest):
             if file:
                 file_content_str = parse_file(file, file_len)
         elif dialogue_mode == "数据库问答":
-            global HOST
-            HOST = st.text_input("数据库地址", "localhost")
-            global USERNAME
-            USERNAME = st.text_input("用户名", "root")
-            global PASSWORD
-            PASSWORD = st.text_input("密码", "", type="password")
-            global DATABASE
-            DATABASE = st.text_input("数据库名称", "test")
+            db_type = st.selectbox("选择数据库类型", db_info)
+            host = st.text_input("数据库地址", db_info.get(db_type).get("host"))
+            username = st.text_input("用户名", db_info.get(db_type).get("username"))
+            password = st.text_input("密码", db_info.get(db_type).get("password"), type="password")
+            database = st.text_input("数据库名称", db_info.get(db_type).get("database"))
+            schema = database
+            if db_type == "PgSQL":
+                schema = st.text_input("模式", db_info.get(db_type).get("schema"))
 
     # Display chat messages from history on app rerun
 
@@ -162,7 +155,7 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history=history, model=llm_model)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
+                if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
                 text += t
@@ -176,7 +169,7 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
                 chat_box.update_msg(text, 0)
@@ -189,7 +182,7 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 else:
                     text += d["answer"]
@@ -215,7 +208,7 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="数据库查询结果"),
             ])
             text = ""
-            for d in api.db_chat(prompt, "MySql", HOST, USERNAME, PASSWORD, DATABASE, history, model=llm_model):
+            for d in api.db_chat(prompt, db_type, host, username, password, database, schema,  history, model=llm_model):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 else:

@@ -440,11 +440,12 @@ class ApiRequest:
     def db_chat(
         self,
         query: str,
-        type: str,
+        db_type: str,
         host: str,
         username: str,
         password: str,
         database: str,
+        schema: str,
         history: List[Dict] = [],
         model: str = LLM_MODEL,
         stream: bool = True,
@@ -459,18 +460,19 @@ class ApiRequest:
         data = {
             "query": query,
             "history": history,
-            "type": type,
+            "db_type": db_type,
             "host": host,
             "username": username,
             "password": password,
             "database": database,
+            "schema": schema,
             "stream": stream,
             "model_name": model,
         }
 
         if no_remote_api:
-            from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(**data)
+            from server.chat.db_chat import db_chat
+            response = db_chat(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
