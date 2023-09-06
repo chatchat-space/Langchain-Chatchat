@@ -128,7 +128,7 @@ def knowledge_base_page(api: ApiRequest):
 
         # 上传文件
         # sentence_size = st.slider("文本入库分句长度限制", 1, 1000, SENTENCE_SIZE, disabled=True)
-        files = st.file_uploader("上传知识文件(暂不支持扫描PDF)",
+        files = st.file_uploader("上传知识文件",
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
@@ -190,7 +190,8 @@ def knowledge_base_page(api: ApiRequest):
                 custom_css={
                     "#gridToolBar": {"display": "none"},
                 },
-                allow_unsafe_jscode=True
+                allow_unsafe_jscode=True,
+                enable_enterprise_modules=False
             )
 
             selected_rows = doc_grid.get("selected_rows", [])

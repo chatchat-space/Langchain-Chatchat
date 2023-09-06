@@ -42,14 +42,14 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/Langchain-Chatchat) 中 `v6` 版本所使用代码已更新至本项目 `0.2.2` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/Langchain-Chatchat) 中 `v7` 版本所使用代码已更新至本项目 `v0.2.3` 版本。
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)
 
-💻 一行命令运行 Docker：
+💻 一行命令运行 Docker 🌲：
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3
 ```
 
 ---
@@ -127,10 +127,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
 - [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
-- [text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
-- [text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
-- [text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
+- [shibing624/text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
+- [shibing624/text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
+- [shibing624/text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
 - [shibing624/text2vec-base-chinese](https://huggingface.co/shibing624/text2vec-base-chinese)
+- [shibing624/text2vec-bge-large-chinese](https://huggingface.co/shibing624/text2vec-bge-large-chinese)
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
@@ -140,14 +141,14 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ## Docker 部署
 
-🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)`
+🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)`
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3
 ```
 
-- 该版本镜像大小 `33.9GB`，使用 `v0.2.0`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
-- 该版本内置一个 `embedding` 模型：`m3e-large`，内置 `chatglm2-6b-32k`
+- 该版本镜像大小 `35.3GB`，使用 `v0.2.3`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
+- 该版本内置两个 `embedding` 模型：`m3e-large`，`text2vec-bge-large-chinese`，默认启用后者，内置 `chatglm2-6b-32k`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
 - 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver` 以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - 首次拉取和启动均需要一定时间，首次启动时请参照下图使用 `docker logs -f <container id>` 查看日志
@@ -165,7 +166,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
-**请注意：** `0.2.0` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
+**请注意：** `0.2.3` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
 
 ### 2. 下载模型至本地
 
