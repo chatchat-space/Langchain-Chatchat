@@ -26,6 +26,8 @@ embedding_model_dict = {
     "bge-base-zh": "BAAI/bge-base-zh",
     "bge-large-zh": "BAAI/bge-large-zh",
     "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
+    "piccolo-base-zh": "sensenova/piccolo-base-zh",
+    "piccolo-large-zh": "sensenova/piccolo-large-zh",
     "text-embedding-ada-002": os.environ.get("OPENAI_API_KEY")
 }
 
