@@ -20,7 +20,8 @@ class SummaryChunkModel(Base):
     kb_name = Column(String(50), comment='知识库名称')
     summary_context = Column(String(255), comment='总结文本')
     doc_ids = Column(String(1024), comment="向量库id关联列表")
+    meta_data = Column(JSON, default={})
 
     def __repr__(self):
         return (f"<FileDoc(id='{self.id}', kb_name='{self.kb_name}', summary_context='{self.summary_context}',"
-                f" doc_ids='{self.doc_ids}')>")
+                f" doc_ids='{self.doc_ids}', metadata='{self.metadata}')>")

@@ -6,6 +6,7 @@ from typing import List, Dict
 @with_session
 def list_summary_from_db(session,
                          kb_name: str,
+                         metadata: Dict = {},
                          ) -> List[Dict]:
     '''
     列出某知识库chunk summary。
@@ -13,9 +14,13 @@ def list_summary_from_db(session,
     '''
     docs = session.query(SummaryChunkModel).filter_by(kb_name=kb_name)
 
+    for k, v in metadata.items():
+        docs = docs.filter(SummaryChunkModel.meta_data[k].as_string() == str(v))
+
     return [{"id": x.doc_id,
              "summary_context": x.summary_context,
-             "doc_ids": x.doc_ids} for x in docs.all()]
+             "doc_ids": x.doc_ids,
+             "metadata": x.metadata} for x in docs.all()]
 
 
 @with_session
@@ -35,8 +40,8 @@ def delete_summary_from_db(session,
 
 @with_session
 def add_summary_to_db(session,
-                    kb_name: str,
-                    summary_infos: List[Dict]):
+                      kb_name: str,
+                      summary_infos: List[Dict]):
     '''
     将总结信息添加到数据库。
     summary_infos形式：[{"summary_context": str, "doc_ids": str}, ...]
@@ -46,6 +51,7 @@ def add_summary_to_db(session,
             kb_name=kb_name,
             summary_context=summary["summary_context"],
             doc_ids=summary["doc_ids"],
+            meta_data=summary["metadata"],
         )
         session.add(obj)
 
@@ -56,4 +62,3 @@ def add_summary_to_db(session,
 @with_session
 def count_summary_from_db(session, kb_name: str) -> int:
     return session.query(SummaryChunkModel).filter_by(kb_name=kb_name).count()
-
