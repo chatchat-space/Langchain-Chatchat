@@ -153,9 +153,10 @@ def dialogue_page(api: ApiRequest):
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                else:
+                    text += d["answer"]
+                    chat_box.update_msg(text, 0)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
