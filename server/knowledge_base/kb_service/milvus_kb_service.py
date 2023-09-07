@@ -11,6 +11,7 @@ from configs.model_config import SCORE_THRESHOLD, kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.utils import KnowledgeFile
 
 
@@ -62,9 +63,9 @@ class MilvusKBService(KBService):
         self._load_milvus(embeddings=EmbeddingsFunAdapter(embeddings))
         return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
 
-    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[DocumentWithVSId]:
         ids = self.milvus.add_documents(docs)
-        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        doc_infos = [DocumentWithVSId(**doc.dict(), id=id) for id, doc in zip(ids, docs)]
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):

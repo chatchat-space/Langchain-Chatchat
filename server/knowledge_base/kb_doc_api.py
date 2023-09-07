@@ -47,7 +47,8 @@ async def list_files(
 async def upload_doc(file: UploadFile = File(..., description="上传文件"),
                      knowledge_base_name: str = Form(..., description="知识库名称", examples=["kb1"]),
                      override: bool = Form(False, description="覆盖已有文件"),
-                     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
+                     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）,是否不刷新向量库"),
+                     file_description: str = Form("", description="文件总体摘要"),
                      ) -> BaseResponse:
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -60,7 +61,8 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
 
     try:
         kb_file = KnowledgeFile(filename=file.filename,
-                                knowledge_base_name=knowledge_base_name)
+                                knowledge_base_name=knowledge_base_name,
+                                file_description=file_description)
 
         if (os.path.exists(kb_file.filepath)
                 and not override
@@ -88,7 +90,7 @@ async def upload_doc(file: UploadFile = File(..., description="上传文件"),
 async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
                      doc_name: str = Body(..., examples=["file_name.md"]),
                      delete_content: bool = Body(False),
-                     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
+                     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）,是否不刷新向量库")
                     ) -> BaseResponse:
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -115,7 +117,8 @@ async def delete_doc(knowledge_base_name: str = Body(..., examples=["samples"]),
 async def update_doc(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         file_name: str = Body(..., examples=["file_name"]),
-        not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
+        not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）,是否不刷新向量库"),
+        file_description: str = Form("", description="文件总体摘要"),
     ) -> BaseResponse:
     '''
     更新知识库文档
@@ -129,7 +132,8 @@ async def update_doc(
 
     try:
         kb_file = KnowledgeFile(filename=file_name,
-                                knowledge_base_name=knowledge_base_name)
+                                knowledge_base_name=knowledge_base_name,
+                                file_description=file_description)
         if os.path.exists(kb_file.filepath):
             kb.update_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
             return BaseResponse(code=200, msg=f"成功更新文件 {kb_file.filename}")

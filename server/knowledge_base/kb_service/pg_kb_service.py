@@ -11,6 +11,7 @@ from configs.model_config import EMBEDDING_DEVICE, kbs_config
 
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.utils import load_embeddings, KnowledgeFile
 from server.utils import embedding_device as get_embedding_device
 
@@ -61,9 +62,9 @@ class PGKBService(KBService):
         return score_threshold_process(score_threshold, top_k,
                                        self.pg_vector.similarity_search_with_score(query, top_k))
 
-    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[DocumentWithVSId]:
         ids = self.pg_vector.add_documents(docs)
-        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        doc_infos = [DocumentWithVSId(**doc.dict(), id=id) for id, doc in zip(ids, docs)]
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):

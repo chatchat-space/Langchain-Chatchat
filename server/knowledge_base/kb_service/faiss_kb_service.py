@@ -9,6 +9,8 @@ from configs.model_config import (
 )
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from functools import lru_cache
+
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.utils import get_vs_path, load_embeddings, KnowledgeFile
 from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
@@ -45,7 +47,7 @@ def load_faiss_vector_store(
         ids = [k for k, v in search_index.docstore._dict.items()]
         search_index.delete(ids)
         search_index.save_local(vs_path)
-    
+
     if tick == 0: # vector store is loaded first time
         _VECTOR_STORE_TICKS[knowledge_base_name] = 0
 
@@ -118,10 +120,10 @@ class FaissKBService(KBService):
     def do_add_doc(self,
                    docs: List[Document],
                    **kwargs,
-                   ) -> List[Dict]:
+                   ) -> List[DocumentWithVSId]:
         vector_store = self.load_vector_store()
         ids = vector_store.add_documents(docs)
-        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        doc_infos = [DocumentWithVSId(**doc.dict(), id=id) for id, doc in zip(ids, docs)]
         torch_gc()
         if not kwargs.get("not_refresh_vs_cache"):
             vector_store.save_local(self.vs_path)

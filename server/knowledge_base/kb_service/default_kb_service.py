@@ -4,6 +4,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 
 from server.knowledge_base.kb_service.base import KBService
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 
 
 class DefaultKBService(KBService):
@@ -13,7 +14,7 @@ class DefaultKBService(KBService):
     def do_drop_kb(self):
         pass
 
-    def do_add_doc(self, docs: List[Document]):
+    def do_add_doc(self, docs: List[DocumentWithVSId]):
         pass
 
     def do_clear_vs(self):

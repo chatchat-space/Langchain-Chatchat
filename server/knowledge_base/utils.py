@@ -177,7 +177,8 @@ class KnowledgeFile:
     def __init__(
             self,
             filename: str,
-            knowledge_base_name: str
+            knowledge_base_name: str,
+            file_description: str = ''
     ):
         self.kb_name = knowledge_base_name
         self.filename = filename
@@ -185,6 +186,7 @@ class KnowledgeFile:
         if self.ext not in SUPPORTED_EXTS:
             raise ValueError(f"暂未支持的文件格式 {self.ext}")
         self.filepath = get_file_path(knowledge_base_name, filename)
+        self.file_description = file_description
         self.docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
 

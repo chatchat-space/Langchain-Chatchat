@@ -2,6 +2,7 @@ import operator
 from abc import ABC, abstractmethod
 
 import os
+import asyncio
 
 import numpy as np
 from langchain.embeddings.base import Embeddings
@@ -18,8 +19,13 @@ from server.db.repository.knowledge_file_repository import (
     list_docs_from_db,
 )
 
-from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                  EMBEDDING_MODEL)
+from configs.model_config import (kbs_config,
+                                  VECTOR_SEARCH_TOP_K,
+                                  SCORE_THRESHOLD,
+                                  EMBEDDING_MODEL,
+                                  SUMMARY_CHUNK,)
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
@@ -41,12 +47,16 @@ class KBService(ABC):
     def __init__(self,
                  knowledge_base_name: str,
                  embed_model: str = EMBEDDING_MODEL,
+                 summary: bool = SUMMARY_CHUNK
                  ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model
+        self.summary = summary
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
+        # 文本摘要适配器
+        self.summary_adapter = SummaryAdapter()
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
@@ -67,6 +77,9 @@ class KBService(ABC):
         """
         self.do_clear_vs()
         status = delete_files_from_db(self.kb_name)
+
+        # 摘要
+        self.summary_adapter.clear_kb_summary(kb_name=self.kb_name)
         return status
 
     def drop_kb(self):
@@ -91,10 +104,18 @@ class KBService(ABC):
         if docs:
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
+
+            if self.summary:
+                # 异步摘要
+                asyncio.run(self.summary_adapter.asummarize(kb_name=self.kb_name,
+                                                            file_description=kb_file.file_description,
+                                                            docs=doc_infos))
+
+            doc_info_dicts = [doc.dict() for doc in doc_infos]
             status = add_file_to_db(kb_file,
                                     custom_docs=custom_docs,
                                     docs_count=len(docs),
-                                    doc_infos=doc_infos)
+                                    doc_infos=doc_info_dicts)
         else:
             status = False
         return status
@@ -198,7 +219,7 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
-                   ) -> List[Dict]:
+                   ) -> List[DocumentWithVSId]:
         """
         向知识库添加文档子类实自己逻辑
         """
