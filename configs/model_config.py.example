@@ -5,6 +5,8 @@ LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(mes
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
+# 是否显示详细日志
+log_verbose = False
 
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置

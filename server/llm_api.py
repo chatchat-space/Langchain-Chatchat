@@ -4,7 +4,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import llm_model_dict, LLM_MODEL, LOG_PATH, logger
+from configs.model_config import llm_model_dict, LLM_MODEL, LOG_PATH, logger, log_verbose
 from server.utils import MakeFastAPIOffline, set_httpx_timeout, llm_device
 
 
@@ -140,7 +140,7 @@ def create_model_worker_app(
     sys.modules["fastchat.serve.model_worker"].worker = worker
     sys.modules["fastchat.serve.model_worker"].args = args
     sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-    
+
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({LLM_MODEL})"
     return app

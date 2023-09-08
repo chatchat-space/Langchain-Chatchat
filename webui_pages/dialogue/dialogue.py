@@ -65,7 +65,9 @@ def dialogue_page(api: ApiRequest):
                                      )
 
         def on_llm_change():
-            st.session_state["prev_llm_model"] = llm_model
+            config = get_model_worker_config(llm_model)
+            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+                st.session_state["prev_llm_model"] = llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -91,7 +93,7 @@ def dialogue_page(api: ApiRequest):
                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
             and not get_model_worker_config(llm_model).get("online_api")):
-            with st.spinner(f"正在加载模型： {llm_model}"):
+            with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
