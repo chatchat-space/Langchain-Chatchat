@@ -2,6 +2,7 @@ from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
 from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
 from fastapi import Body
 from fastapi.responses import StreamingResponse
+from fastapi.concurrency import run_in_threadpool
 from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K, PROMPT_TEMPLATE)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
@@ -47,29 +48,30 @@ def search_result2docs(search_results):
     return docs
 
 
-def lookup_search_engine(
+async def lookup_search_engine(
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
 ):
-    results = SEARCH_ENGINES[search_engine_name](query, result_len=top_k)
+    search_engine = SEARCH_ENGINES[search_engine_name]
+    results = await run_in_threadpool(search_engine, query, result_len=top_k)
     docs = search_result2docs(results)
     return docs
 
 
-def search_engine_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
-                       search_engine_name: str = Body(..., description="搜索引擎名称", examples=["duckduckgo"]),
-                       top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
-                       history: List[History] = Body([],
-                                                     description="历史对话",
-                                                     examples=[[
-                                                         {"role": "user",
-                                                          "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                         {"role": "assistant",
-                                                          "content": "虎头虎脑"}]]
-                                                     ),
-                       stream: bool = Body(False, description="流式输出"),
-                       model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+async def search_engine_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
+                            search_engine_name: str = Body(..., description="搜索引擎名称", examples=["duckduckgo"]),
+                            top_k: int = Body(SEARCH_ENGINE_TOP_K, description="检索结果数量"),
+                            history: List[History] = Body([],
+                                                            description="历史对话",
+                                                            examples=[[
+                                                                {"role": "user",
+                                                                "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                                {"role": "assistant",
+                                                                "content": "虎头虎脑"}]]
+                                                            ),
+                            stream: bool = Body(False, description="流式输出"),
+                            model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -96,7 +98,7 @@ def search_engine_chat(query: str = Body(..., description="用户输入", exampl
             openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
 
-        docs = lookup_search_engine(query, search_engine_name, top_k)
+        docs = await lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
         input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
