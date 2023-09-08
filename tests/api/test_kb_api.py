@@ -8,13 +8,11 @@ sys.path.append(str(root_path))
 from server.utils import api_address
 from configs.model_config import VECTOR_SEARCH_TOP_K
 from server.knowledge_base.utils import get_kb_path, get_file_path
-from webui_pages.utils import ApiRequest
 
 from pprint import pprint
 
 
 api_base_url = api_address()
-api = ApiRequest(api_base_url)
 
 
 kb = "kb_for_api_test"
@@ -23,6 +21,8 @@ test_files = {
     "README.MD": str(root_path / "README.MD"),
     "test.txt": get_file_path("samples", "test.txt"),
 }
+
+print("\n\n直接url访问\n")
 
 
 def test_delete_kb_before(api="/knowledge_base/delete_knowledge_base"):

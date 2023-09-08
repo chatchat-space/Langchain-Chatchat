@@ -127,7 +127,7 @@ def knowledge_base_page(api: ApiRequest):
 
         # 上传文件
         # sentence_size = st.slider("文本入库分句长度限制", 1, 1000, SENTENCE_SIZE, disabled=True)
-        files = st.file_uploader("上传知识文件(暂不支持扫描PDF)",
+        files = st.file_uploader("上传知识文件",
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
@@ -138,14 +138,11 @@ def knowledge_base_page(api: ApiRequest):
                 # use_container_width=True,
                 disabled=len(files) == 0,
         ):
-            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True} for f in files]
-            data[-1]["not_refresh_vs_cache"]=False
-            for k in data:
-                ret = api.upload_kb_doc(**k)
-                if msg := check_success_msg(ret):
-                    st.toast(msg, icon="✔")
-                elif msg := check_error_msg(ret):
-                    st.toast(msg, icon="✖")
+            ret = api.upload_kb_docs(files, knowledge_base_name=kb, override=True)
+            if msg := check_success_msg(ret):
+                st.toast(msg, icon="✔")
+            elif msg := check_error_msg(ret):
+                st.toast(msg, icon="✖")
             st.session_state.files = []
 
         st.divider()
@@ -217,8 +214,8 @@ def knowledge_base_page(api: ApiRequest):
                     disabled=not file_exists(kb, selected_rows)[0],
                     use_container_width=True,
             ):
-                for row in selected_rows:
-                    api.update_kb_doc(kb, row["file_name"])
+                file_names = [row["file_name"] for row in selected_rows]
+                api.update_kb_docs(kb, file_names=file_names)
                 st.experimental_rerun()
 
             # 将文件从向量库中删除，但不删除文件本身。
@@ -227,8 +224,8 @@ def knowledge_base_page(api: ApiRequest):
                     disabled=not (selected_rows and selected_rows[0]["in_db"]),
                     use_container_width=True,
             ):
-                for row in selected_rows:
-                    api.delete_kb_doc(kb, row["file_name"])
+                file_names = [row["file_name"] for row in selected_rows]
+                api.delete_kb_docs(kb, file_names=file_names)
                 st.experimental_rerun()
 
             if cols[3].button(
@@ -236,9 +233,8 @@ def knowledge_base_page(api: ApiRequest):
                     type="primary",
                     use_container_width=True,
             ):
-                for row in selected_rows:
-                    ret = api.delete_kb_doc(kb, row["file_name"], True)
-                    st.toast(ret.get("msg", " "))
+                file_names = [row["file_name"] for row in selected_rows]
+                api.delete_kb_docs(kb, file_names=file_names, delete_content=True)
                 st.experimental_rerun()
 
         st.divider()

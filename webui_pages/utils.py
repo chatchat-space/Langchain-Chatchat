@@ -509,13 +509,45 @@ class ApiRequest:
             data = self._check_httpx_json_response(response)
             return data.get("data", [])
 
+    def search_kb_docs(
+        self,
+        query: str,
+        knowledge_base_name: str,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: int = SCORE_THRESHOLD,
+        no_remote_api: bool = None,
+    ) -> List:
+        '''
+        对应api.py/knowledge_base/search_docs接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "knowledge_base_name": knowledge_base_name,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+        }
+        
+        if no_remote_api:
+            from server.knowledge_base.kb_doc_api import search_docs
+            return search_docs(**data)
+        else:
+            response = self.post(
+                "/knowledge_base/search_docs",
+                json=data,
+            )
+            data = self._check_httpx_json_response(response)
+            return data
+
     def upload_kb_docs(
         self,
         files: List[Union[str, Path, bytes]],
         knowledge_base_name: str,
         override: bool = False,
         to_vector_store: bool = True,
-        docs: List[Dict] = [],
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
@@ -525,97 +557,113 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
-        if isinstance(file, bytes): # raw bytes
-            file = BytesIO(file)
-        elif hasattr(file, "read"): # a file io like object
-            filename = filename or file.name
-        else: # a local path
-            file = Path(file).absolute().open("rb")
-            filename = filename or file.name
+        def convert_file(file, filename=None):
+            if isinstance(file, bytes): # raw bytes
+                file = BytesIO(file)
+            elif hasattr(file, "read"): # a file io like object
+                filename = filename or file.name
+            else: # a local path
+                file = Path(file).absolute().open("rb")
+                filename = filename or file.name
+            return filename, file
+
+        files = [convert_file(file) for file in files]
+        data={
+            "knowledge_base_name": knowledge_base_name,
+            "override": override,
+            "to_vector_store": to_vector_store,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import upload_doc
+            from server.knowledge_base.kb_doc_api import upload_docs
             from fastapi import UploadFile
             from tempfile import SpooledTemporaryFile
 
-            temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
-            temp_file.write(file.read())
-            temp_file.seek(0)
-            response = run_async(upload_doc(
-                UploadFile(file=temp_file, filename=filename),
-                knowledge_base_name,
-                override,
-            ))
+            upload_files = []
+            for file, filename in files:
+                temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+                temp_file.write(file.read())
+                temp_file.seek(0)
+                upload_files.append(UploadFile(file=temp_file, filename=filename))
+
+            response = run_async(upload_docs(upload_files, **data))
             return response.dict()
         else:
+            if isinstance(data["docs"], dict):
+                data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
             response = self.post(
-                "/knowledge_base/upload_doc",
-                data={
-                    "knowledge_base_name": knowledge_base_name,
-                    "override": override,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
-                files={"file": (filename, file)},
+                "/knowledge_base/upload_docs",
+                data=data,
+                files=[("files", (filename, file)) for filename, file in files],
             )
             return self._check_httpx_json_response(response)
 
-    def delete_kb_doc(
+    def delete_kb_docs(
         self,
         knowledge_base_name: str,
-        doc_name: str,
+        file_names: List[str],
         delete_content: bool = False,
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/delete_doc接口
+        对应api.py/knowledge_base/delete_docs接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         data = {
             "knowledge_base_name": knowledge_base_name,
-            "doc_name": doc_name,
+            "file_names": file_names,
             "delete_content": delete_content,
             "not_refresh_vs_cache": not_refresh_vs_cache,
         }
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(**data))
+            from server.knowledge_base.kb_doc_api import delete_docs
+            response = run_async(delete_docs(**data))
             return response.dict()
         else:
             response = self.post(
-                "/knowledge_base/delete_doc",
+                "/knowledge_base/delete_docs",
                 json=data,
             )
             return self._check_httpx_json_response(response)
 
-    def update_kb_doc(
+    def update_kb_docs(
         self,
         knowledge_base_name: str,
-        file_name: str,
+        file_names: List[str],
+        override_custom_docs: bool = False,
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/update_doc接口
+        对应api.py/knowledge_base/update_docs接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "file_names": file_names,
+            "override_custom_docs": override_custom_docs,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import update_doc
-            response = run_async(update_doc(knowledge_base_name, file_name))
+            from server.knowledge_base.kb_doc_api import update_docs
+            response = run_async(update_docs(**data))
             return response.dict()
         else:
+            if isinstance(data["docs"], dict):
+                data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
             response = self.post(
-                "/knowledge_base/update_doc",
-                json={
-                    "knowledge_base_name": knowledge_base_name,
-                    "file_name": file_name,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
+                "/knowledge_base/update_docs",
+                json=data,
             )
             return self._check_httpx_json_response(response)
 
