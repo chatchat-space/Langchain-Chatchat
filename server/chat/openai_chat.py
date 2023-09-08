@@ -29,13 +29,13 @@ async def openai_chat(msg: OpenAiChatMsgIn):
     print(f"{openai.api_base=}")
     print(msg)
 
-    def get_response(msg):
+    async def get_response(msg):
         data = msg.dict()
 
         try:
-            response = openai.ChatCompletion.create(**data)
+            response = await openai.ChatCompletion.acreate(**data)
             if msg.stream:
-                for data in response:
+                async for data in response:
                     if choices := data.choices:
                         if chunk := choices[0].get("delta", {}).get("content"):
                             print(chunk, end="", flush=True)
@@ -46,8 +46,7 @@ async def openai_chat(msg: OpenAiChatMsgIn):
                     print(answer)
                     yield(answer)
         except Exception as e:
-            print(type(e))
-            logger.error(e)
+            logger.error(f"获取ChatCompletion时出错：{e}")
 
     return StreamingResponse(
         get_response(msg),

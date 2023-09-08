@@ -12,8 +12,8 @@ from typing import List
 from server.chat.utils import History
 
 
-def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-         history: List[History] = Body([],
+async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+                history: List[History] = Body([],
                                        description="历史对话",
                                        examples=[[
                                            {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},

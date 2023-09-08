@@ -7,7 +7,7 @@ from configs.model_config import EMBEDDING_MODEL, logger
 from fastapi import Body
 
 
-async def list_kbs():
+def list_kbs():
     # Get List of Knowledge Base
     return ListResponse(data=list_kbs_from_db())
 

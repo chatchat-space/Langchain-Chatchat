@@ -34,7 +34,7 @@ def search_docs(query: str = Body(..., description="用户输入", examples=["�
     return data
 
 
-async def list_files(
+def list_files(
     knowledge_base_name: str
 ) -> ListResponse:
     if not validate_kb_name(knowledge_base_name):
@@ -258,10 +258,10 @@ async def update_docs(
     return BaseResponse(code=200, msg=f"更新文档完成", data={"failed_files": failed_files})
 
 
-async def download_doc(
-        knowledge_base_name: str = Query(...,description="知识库名称", examples=["samples"]),
-        file_name: str = Query(...,description="文件名称", examples=["test.txt"]),
-        preview: bool = Query(False, description="是：浏览器内预览；否：下载"),
+def download_doc(
+    knowledge_base_name: str = Query(...,description="知识库名称", examples=["samples"]),
+    file_name: str = Query(...,description="文件名称", examples=["test.txt"]),
+    preview: bool = Query(False, description="是：浏览器内预览；否：下载"),
     ):
     '''
     下载知识库文档
