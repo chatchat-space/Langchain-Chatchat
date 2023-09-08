@@ -3,7 +3,7 @@ import urllib
 from fastapi import File, Form, Body, Query, UploadFile
 from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
                                 VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                logger,)
+                                logger, log_verbose,)
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder,get_file_path,
                                         files2docs_in_thread, KnowledgeFile)
@@ -80,7 +80,8 @@ def _save_files_in_thread(files: List[UploadFile],
             return dict(code=200, msg=f"成功上传文件 {filename}", data=data)
         except Exception as e:
             msg = f"{filename} 文件上传失败，报错信息为: {e}"
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             return dict(code=500, msg=msg, data=data)
 
     params = [{"file": file, "knowledge_base_name": knowledge_base_name, "override": override} for file in files]
@@ -100,7 +101,7 @@ def _save_files_in_thread(files: List[UploadFile],
 #             yield json.dumps(result, ensure_ascii=False)
 
 #     return StreamingResponse(generate(files, knowledge_base_name=knowledge_base_name, override=override), media_type="text/event-stream")
-        
+
 
 # TODO: 等langchain.document_loaders支持内存文件的时候再开通
 # def files2docs(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
@@ -141,7 +142,7 @@ async def upload_docs(files: List[UploadFile] = File(..., description="上传文
         filename = result["data"]["file_name"]
         if result["code"] != 200:
             failed_files[filename] = result["msg"]
-        
+
         if filename not in file_names:
             file_names.append(filename)
 
@@ -185,9 +186,10 @@ async def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"])
             kb.delete_doc(kb_file, delete_content, not_refresh_vs_cache=True)
         except Exception as e:
             msg = f"{file_name} 文件删除失败，错误信息：{e}"
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             failed_files[file_name] = msg
-    
+
     if not not_refresh_vs_cache:
         kb.save_vector_store()
 
@@ -225,7 +227,8 @@ async def update_docs(
                 kb_files.append(KnowledgeFile(filename=file_name, knowledge_base_name=knowledge_base_name))
             except Exception as e:
                 msg = f"加载文档 {file_name} 时出错：{e}"
-                logger.error(msg)
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 failed_files[file_name] = msg
 
     # 从文件生成docs，并进行向量化。
@@ -249,7 +252,8 @@ async def update_docs(
             kb.update_doc(kb_file, docs=v, not_refresh_vs_cache=True)
         except Exception as e:
             msg = f"为 {file_name} 添加自定义docs时出错：{e}"
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             failed_files[file_name] = msg
 
     if not not_refresh_vs_cache:
@@ -291,7 +295,8 @@ def download_doc(
             )
     except Exception as e:
         msg = f"{kb_file.filename} 读取文件失败，错误信息是：{e}"
-        logger.error(msg)
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=500, msg=f"{kb_file.filename} 读取文件失败")

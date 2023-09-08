@@ -1,4 +1,4 @@
-from configs.model_config import EMBEDDING_MODEL, DEFAULT_VS_TYPE
+from configs.model_config import EMBEDDING_MODEL, DEFAULT_VS_TYPE, logger, log_verbose
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         list_files_from_folder, run_in_thread_pool,
                                         files2docs_in_thread,
@@ -30,7 +30,9 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
             kb_file = KnowledgeFile(filename=file, knowledge_base_name=kb_name)
             kb_files.append(kb_file)
         except Exception as e:
-            print(f"{e}，已跳过")
+            msg = f"{e}，已跳过"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
     return kb_files
 
 

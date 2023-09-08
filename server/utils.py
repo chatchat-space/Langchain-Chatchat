@@ -4,7 +4,7 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE
+from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
 from server import model_workers
@@ -86,9 +86,10 @@ def torch_gc():
             from torch.mps import empty_cache
             empty_cache()
         except Exception as e:
-            print(e)
-            print("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
-
+            msg=("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，"
+                 "以支持及时清理 torch 产生的内存占用。")
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
 def run_async(cor):
     '''
@@ -217,7 +218,9 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
             try:
                 config["worker_class"] = getattr(model_workers, provider)
             except Exception as e:
-                print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
+                msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
 
     config["device"] = llm_device(config.get("device") or LLM_DEVICE)
     return config
@@ -322,11 +325,11 @@ def run_in_thread_pool(
     '''
     tasks = []
     pool = pool or thread_pool
-    
+
     for kwargs in params:
         thread = pool.submit(func, **kwargs)
         tasks.append(thread)
-    
+
     for obj in as_completed(tasks):
         yield obj.result()
 

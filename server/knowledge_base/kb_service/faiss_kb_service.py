@@ -6,7 +6,7 @@ from configs.model_config import (
     CACHED_VS_NUM,
     EMBEDDING_MODEL,
     SCORE_THRESHOLD,
-    logger,
+    logger, log_verbose,
 )
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from functools import lru_cache
@@ -46,7 +46,7 @@ def load_faiss_vector_store(
         ids = [k for k, v in search_index.docstore._dict.items()]
         search_index.delete(ids)
         search_index.save_local(vs_path)
-    
+
     if tick == 0: # vector store is loaded first time
         _VECTOR_STORE_TICKS[knowledge_base_name] = 0
 
