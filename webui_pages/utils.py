@@ -11,7 +11,7 @@ from configs.model_config import (
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
-    logger,
+    logger, log_verbose,
 )
 from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
@@ -78,7 +78,9 @@ class ApiRequest:
                 else:
                     return httpx.get(url, params=params, **kwargs)
             except Exception as e:
-                logger.error(f"error when get {url}: {e}")
+                msg = f"error when get {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def aget(
@@ -99,7 +101,9 @@ class ApiRequest:
                     else:
                         return await client.get(url, params=params, **kwargs)
                 except Exception as e:
-                    logger.error(f"error when aget {url}: {e}")
+                    msg = f"error when aget {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def post(
@@ -121,7 +125,9 @@ class ApiRequest:
                 else:
                     return httpx.post(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(f"error when post {url}: {e}")
+                msg = f"error when post {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def apost(
@@ -143,7 +149,9 @@ class ApiRequest:
                     else:
                         return await client.post(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(f"error when apost {url}: {e}")
+                    msg = f"error when apost {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def delete(
@@ -164,7 +172,9 @@ class ApiRequest:
                 else:
                     return httpx.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(f"error when delete {url}: {e}")
+                msg = f"error when delete {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def adelete(
@@ -186,7 +196,9 @@ class ApiRequest:
                     else:
                         return await client.delete(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(f"error when adelete {url}: {e}")
+                    msg = f"error when adelete {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
@@ -197,7 +209,7 @@ class ApiRequest:
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
-        
+
         try:
             for chunk in  iter_over_async(response.body_iterator, loop):
                 if as_json and chunk:
@@ -205,7 +217,9 @@ class ApiRequest:
                 elif chunk.strip():
                     yield chunk
         except Exception as e:
-            logger.error(f"error when run fastapi router: {e}")
+            msg = f"error when run fastapi router: {e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
     def _httpx_stream2generator(
         self,
@@ -226,7 +240,9 @@ class ApiRequest:
                             pprint(data, depth=1)
                             yield data
                         except Exception as e:
-                            logger.error(f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。")
+                            msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
+                            logger.error(f'{e.__class__.__name__}: {msg}',
+                                         exc_info=e if log_verbose else None)
                     else:
                         print(chunk, end="", flush=True)
                         yield chunk
@@ -241,7 +257,8 @@ class ApiRequest:
             yield {"code": 500, "msg": msg}
         except Exception as e:
             msg = f"API通信遇到错误：{e}"
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             yield {"code": 500, "msg": msg}
 
     # 对话相关操作
@@ -414,7 +431,8 @@ class ApiRequest:
             return response.json()
         except Exception as e:
             msg = "API未能返回正确的JSON。" + (errorMsg or str(e))
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             return {"code": 500, "msg": msg}
 
     def list_knowledge_bases(
@@ -531,7 +549,7 @@ class ApiRequest:
             "top_k": top_k,
             "score_threshold": score_threshold,
         }
-        
+
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import search_docs
             return search_docs(**data)
@@ -736,7 +754,7 @@ class ApiRequest:
             json=data,
         )
         return r.json()
-    
+
     def change_llm_model(
         self,
         model_name: str,

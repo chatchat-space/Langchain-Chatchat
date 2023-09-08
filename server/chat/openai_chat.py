@@ -1,7 +1,7 @@
 from fastapi.responses import StreamingResponse
 from typing import List
 import openai
-from configs.model_config import llm_model_dict, LLM_MODEL, logger
+from configs.model_config import llm_model_dict, LLM_MODEL, logger, log_verbose
 from pydantic import BaseModel
 
 
@@ -46,7 +46,9 @@ async def openai_chat(msg: OpenAiChatMsgIn):
                     print(answer)
                     yield(answer)
         except Exception as e:
-            logger.error(f"获取ChatCompletion时出错：{e}")
+            msg = f"获取ChatCompletion时出错：{e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
     return StreamingResponse(
         get_response(msg),

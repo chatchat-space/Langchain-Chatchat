@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs.model_config import LLM_MODEL, NLTK_DATA_PATH
 from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT
-from configs import VERSION
+from configs import VERSION, logger, log_verbose
 import argparse
 import uvicorn
 from fastapi import Body
@@ -140,6 +140,8 @@ def create_app():
             r = httpx.post(controller_address + "/list_models")
             return BaseResponse(data=r.json()["models"])
         except Exception as e:
+            logger.error(f'{e.__class__.__name__}: {e}',
+                         exc_info=e if log_verbose else None)
             return BaseResponse(
                 code=500,
                 data=[],
@@ -165,6 +167,8 @@ def create_app():
             )
             return r.json()
         except Exception as e:
+            logger.error(f'{e.__class__.__name__}: {e}',
+                         exc_info=e if log_verbose else None)
             return BaseResponse(
                 code=500,
                 msg=f"failed to stop LLM model {model_name} from controller: {controller_address}。错误信息是： {e}")
@@ -190,6 +194,8 @@ def create_app():
             )
             return r.json()
         except Exception as e:
+            logger.error(f'{e.__class__.__name__}: {e}',
+                         exc_info=e if log_verbose else None)
             return BaseResponse(
                 code=500,
                 msg=f"failed to switch LLM model from controller: {controller_address}。错误信息是： {e}")

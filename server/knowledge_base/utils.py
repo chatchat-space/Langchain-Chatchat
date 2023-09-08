@@ -8,7 +8,7 @@ from configs.model_config import (
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger,
+    logger, log_verbose,
 )
 from functools import lru_cache
 import importlib
@@ -189,7 +189,9 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
             document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
-        logger.error(f"为文件{file_path_or_content}查找加载器{loader_name}时出错：{e}")
+        msg = f"为文件{file_path_or_content}查找加载器{loader_name}时出错：{e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
         document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
@@ -228,7 +230,9 @@ def make_text_splitter(
             chunk_overlap=chunk_overlap,
         )
     except Exception as e:
-        logger.error(f"查找分词器 {splitter_name} 时出错：{e}")
+        msg = f"查找分词器 {splitter_name} 时出错：{e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
         text_splitter = TextSplitter(
             chunk_size=chunk_size,
@@ -330,7 +334,8 @@ def files2docs_in_thread(
             return True, (file.kb_name, file.filename, file.file2text(**kwargs))
         except Exception as e:
             msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
-            logger.error(msg)
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
             return False, (file.kb_name, file.filename, msg)
 
     kwargs_list = []
@@ -345,7 +350,7 @@ def files2docs_in_thread(
             file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
         kwargs["file"] = file
         kwargs_list.append(kwargs)
-    
+
     for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
         yield result
 
