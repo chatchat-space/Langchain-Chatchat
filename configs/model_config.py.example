@@ -18,6 +18,7 @@ embedding_model_dict = {
     "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
     "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
     "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
+    "text2vec-bge-large-chinese": "shibing624/text2vec-bge-large-chinese",
     "m3e-small": "moka-ai/m3e-small",
     "m3e-base": "moka-ai/m3e-base",
     "m3e-large": "moka-ai/m3e-large",
@@ -25,6 +26,8 @@ embedding_model_dict = {
     "bge-base-zh": "BAAI/bge-base-zh",
     "bge-large-zh": "BAAI/bge-large-zh",
     "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
+    "piccolo-base-zh": "sensenova/piccolo-base-zh",
+    "piccolo-large-zh": "sensenova/piccolo-large-zh",
     "text-embedding-ada-002": os.environ.get("OPENAI_API_KEY")
 }
 
@@ -101,7 +104,8 @@ if not os.path.exists(LOG_PATH):
 
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
-
+if not os.path.exists(KB_ROOT_PATH):
+    os.mkdir(KB_ROOT_PATH)
 # 数据库默认存储路径。
 # 如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
 DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")

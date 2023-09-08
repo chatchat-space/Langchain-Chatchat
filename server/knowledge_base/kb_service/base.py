@@ -51,6 +51,13 @@ class KBService(ABC):
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
 
+    def save_vector_store(self, vector_store=None):
+        '''
+        保存向量库，仅支持FAISS。对于其它向量库该函数不做任何操作。
+        减少FAISS向量库操作时的类型判断。
+        '''
+        pass
+
     def create_kb(self):
         """
         创建知识库
@@ -84,6 +91,8 @@ class KBService(ABC):
         """
         if docs:
             custom_docs = True
+            for doc in docs:
+                doc.metadata.setdefault("source", kb_file.filepath)
         else:
             docs = kb_file.file2text()
             custom_docs = False
