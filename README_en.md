@@ -4,12 +4,13 @@
 
 **LangChain-Chatchat** (former Langchain-ChatGLM):基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
 
-## Content
+## Content(目录)
 
 * Introduction
 * Change Log
 * Docker Deployment
 * Deployment
+
   * Enviroment Preresiquisite
   * Preparing Depolyment Enviroment
   * Downloading model to local disk(for offline deployment only)
@@ -20,14 +21,12 @@
 * FAQ
 * Roadmap
 * Wechat Group
-
-## 目录
-
 * [介绍](README.md#介绍)
 * [变更日志](README.md#变更日志)
 * [模型支持](README.md#模型支持)
 * [Docker 部署](README.md#Docker-部署)
 * [开发部署](README.md#开发部署)
+
   * [软件需求](README.md#软件需求)
   * [1. 开发环境准备](README.md#1.-开发环境准备)
   * [2. 下载模型至本地](README.md#2.-下载模型至本地)
@@ -45,17 +44,17 @@
 
 🤖️ A Q&A application based on local knowledge base implemented using the idea of [langchain](https://github.com/hwchase17/langchain). The goal is to build a KBQA(Knowledge based Q&A) solution that is friendly to Chinese scenarios and open source models and can run both offline and online.
 
-一种利用 [langchain](https://github.com/hwchase17/langchain) 思想实现的基于本地知识库的问答应用，目标期望建立一套对中文场景与开源模型支持友好、可离线运行的知识库问答解决方案。
-
 💡 Inspried by [document.ai](https://github.com/GanymedeNil/document.ai)  and [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) , we build a local knowledge base question answering application that can be implemented using an open source model  or remote LLM api throughout the process. In the latest version of this project, [FastChat](https://github.com/lm-sys/FastChat) is used to access Vicuna, Alpaca, LLaMA, Koala, RWKV and many other models. Relying on [langchain](https:// github.com/langchain-ai/langchain) , this project supports calling services through the API provided based on [FastAPI](https://github.com/tiangolo/fastapi), or using the WebUI based on [Streamlit](https://github.com /streamlit/streamlit) .
-
-受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai) 和 [AlexZhangji](https://github.com/AlexZhangji) 创建的 [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) 启发，建立了全流程可使用开源模型实现的本地知识库问答应用。本项目的最新版本中通过使用 [FastChat](https://github.com/lm-sys/FastChat) 接入 Vicuna, Alpaca, LLaMA, Koala, RWKV 等模型，依托于 [langchain](https://github.com/langchain-ai/langchain) 框架支持通过基于 [FastAPI](https://github.com/tiangolo/fastapi) 提供的 API 调用服务，或使用基于 [Streamlit](https://github.com/streamlit/streamlit) 的 WebUI 进行操作。
 
 ✅ Relying on the open source LLM and Embedding models, this project can realize full-process **offline private deployment**. At the same time, this project also supports the call of OpenAI GPT API- and Zhipu API, and will continue to expand the access to various models and remote APIs in the future.
 
-依托于本项目支持的开源 LLM 与 Embedding 模型，本项目可实现全部使用**开源**模型**离线私有部署**。与此同时，本项目也支持 OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 API 的接入。
-
 ⛓️ The implementation principle of this project is shown in the graph below. The main process includes: loading files -> reading text -> text segmentation -> text vectorization -> question vectorization -> matching the `top-k` most similar to the question vector in the text vector -> The matched text is added to `prompt `as context and question -> submitted to `LLM` to generate an answer.
+
+一种利用 [langchain](https://github.com/hwchase17/langchain) 思想实现的基于本地知识库的问答应用，目标期望建立一套对中文场景与开源模型支持友好、可离线运行的知识库问答解决方案。
+
+受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai) 和 [AlexZhangji](https://github.com/AlexZhangji) 创建的 [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) 启发，建立了全流程可使用开源模型实现的本地知识库问答应用。本项目的最新版本中通过使用 [FastChat](https://github.com/lm-sys/FastChat) 接入 Vicuna, Alpaca, LLaMA, Koala, RWKV 等模型，依托于 [langchain](https://github.com/langchain-ai/langchain) 框架支持通过基于 [FastAPI](https://github.com/tiangolo/fastapi) 提供的 API 调用服务，或使用基于 [Streamlit](https://github.com/streamlit/streamlit) 的 WebUI 进行操作。
+
+依托于本项目支持的开源 LLM 与 Embedding 模型，本项目可实现全部使用**开源**模型**离线私有部署**。与此同时，本项目也支持 OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 API 的接入。
 
 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 -> 在文本向量中匹配出与问句向量最相似的 `top k`个 -> 匹配出的文本作为上下文和问题一起添加到 `prompt`中 -> 提交给 `LLM`生成回答。
 
@@ -206,6 +205,12 @@ Following models are tested by developers with Embedding class of [HuggingFace](
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
 ```
 
+- The image size of this version is `33.9GB`, using `v0.2.0`, with `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` as the base image
+- This version has a built-in `embedding` model: `m3e-large`, built-in `chatglm2-6b-32k`
+- This version is designed to facilitate one-click deployment. Please make sure you have installed the NVIDIA driver on your Linux distribution.
+- Please note that you do not need to install the CUDA toolkit on the host system, but you need to install the `NVIDIA Driver` and the `NVIDIA Container Toolkit`, please refer to the [Installation Guide](https://docs.nvidia.com/datacenter/cloud -native/container-toolkit/latest/install-guide.html)
+- It takes a certain amount of time to pull and start for the first time. When starting for the first time, please refer to the figure below to use `docker logs -f <container id>` to view the log.
+- If the startup process is stuck in the `Waiting..` step, it is recommended to use `docker exec -it <container id> bash` to enter the `/logs/` directory to view the corresponding stage logs
 - 该版本镜像大小 `33.9GB`，使用 `v0.2.0`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
 - 该版本内置一个 `embedding` 模型：`m3e-large`，内置 `chatglm2-6b-32k`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
@@ -215,19 +220,37 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
-## 开发部署
+## Deployment(开发部署)
 
-### 软件需求
+### Enviroment Preresiquisite(软件需求)
+
+The project is tested under Python3.8-python 3.10, CUDA 11.0-CUDA11.7, Windows, macOS of ARM architecture, and Linux platform.
 
 本项目已在 Python 3.8.1 - 3.10，CUDA 11.7 环境下完成测试。已在 Windows、ARM 架构的 macOS、Linux 系统中完成测试。
 
-### 1. 开发环境准备
+### 1. Preparing Depolyment Enviroment(开发环境准备)
+
+Please refer to [install.md](docs/INSTALL.md)
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
 **请注意：** `0.2.0` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
 
-### 2. 下载模型至本地
+### 2. Downloading model to local disk(下载模型至本地)
+
+**For offline deployment only!**
+
+If you want to run this project in a local or offline environment, you need to first download the models required for the project to your local computer. Usually the open source LLM and Embedding models can be downloaded from [HuggingFace](https://huggingface.co/models).
+
+Take the LLM model [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b) and Embedding model [moka-ai/m3e-base](https://huggingface. co/moka-ai/m3e-base) for example:
+
+To download the model, you need to [install Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage), and then run:
+
+```Shell
+$ git clone https://huggingface.co/THUDM/chatglm2-6b
+
+$ git clone https://huggingface.co/moka-ai/m3e-base
+```
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
 
@@ -241,7 +264,32 @@ $ git clone https://huggingface.co/THUDM/chatglm2-6b
 $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 
-### 3. 设置配置项
+### 3. Setting Configuration(设置配置项)
+
+Copy the model-related parameter configuration template file [configs/model_config.py.example](configs/model_config.py.example) and save it in the `./configs` path under the project path, and rename it to `model_config.py`.
+
+Copy the service-related parameter configuration template file [configs/server_config.py.example](configs/server_config.py.example) to save in the `./configs` path under the project path, and rename it to `server_config.py`.
+
+Before starting to execute Web UI or command line interaction, please check whether each model parameter in `configs/model_config.py` and `configs/server_config.py` meets the requirements.
+
+* Please confirm that the path to local LLM model and embedding model have been written in `llm_dict` of `configs/model_config.py`, here is an example:
+* If you choose to use OpenAI's Embedding model, please write the model's ``key`` into `embedding_model_dict`. To use this model, you need to be able to access the OpenAI official API, or set up a proxy.
+
+```python
+llm_model_dict={
+                "chatglm2-6b": {
+                        "local_model_path": "/Users/xxx/Downloads/chatglm2-6b",
+                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为 FastChat 服务中的"api_base_url"
+                        "api_key": "EMPTY"
+                    },
+                }
+```
+
+```python
+embedding_model_dict = {
+                        "m3e-base": "/Users/xxx/Downloads/m3e-base",
+                       }
+```
 
 复制模型相关参数配置模板文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
 
@@ -271,7 +319,20 @@ embedding_model_dict = {
 
 如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要能够访问OpenAI官的API，或设置代理。
 
-### 4. 知识库初始化与迁移
+### 4. Knowledge Base Migration(知识库初始化与迁移)
+
+The knowledge base information  is stored in the database, please initialize the database before running the project (we strongly recommend one back up the knowledge files before performing operations).
+
+- If you migrate from `0.1.x`, for the established knowledge base, please confirm that the vector library type and Embedding model of the knowledge base are consistent with the default settings in `configs/model_config.py`, if there is no change, simply add the existing repository information to the database with the following command:
+
+  ```shell
+  $ python init_database.py
+  ```
+- If you are a beginner of the project whose knowledge base has not been established, or the knowledge base type and embedding model in the configuration file have changed, or the previous vector library did not enable `normalize_L2`, you need the following command to initialize or rebuild the knowledge base:
+
+  ```shell
+  $ python init_database.py --recreate-vs
+  ```
 
 当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
 
@@ -286,9 +347,24 @@ embedding_model_dict = {
   $ python init_database.py --recreate-vs
   ```
 
-### 5. 一键启动API 服务或 Web UI
+### 5. Luanching API Service or WebUI with One Command(一键启动API 服务或 Web UI)
 
-#### 5.1 启动命令
+#### 5.1 Command(启动命令)
+
+The script is `startuppy`, you can luanch all fastchat related, API,WebUI service with is, here is an example:
+
+```shell
+$ python startup.py -a
+```
+
+optional args including: `-a(or --all-webui), --all-api, --llm-api, -c(or --controller),--openai-api, -m(or --model-worker), --api, --webui`, where:
+
+* `--all-webui` means to launch all related services of WEBUI
+* `--all-api` means to launch all related services of API
+* `--llm-api` means to launch all related services of FastChat
+* `--openai-api` means to launch controller and openai-api-server  of FastChat only
+* `model-worker` means to launch model worker of FastChat only
+* any other optional arg is to launch one particular function only
 
 一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
 
@@ -307,7 +383,9 @@ $ python startup.py -a
 - `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
 - 其他为单独服务启动选项。
 
-#### 5.2 启动非默认模型
+#### 5.2 Launch none default model(启动非默认模型)
+
+If you want to specify a none default model, use `--model-name` arg, here is a example:
 
 若想指定非默认模型，需要用 `--model-name` 选项，示例：
 
@@ -317,7 +395,30 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 更多信息可通过 `python startup.py -h`查看。
 
-#### 5.3 多卡加载
+#### 5.3 Load model with multi-gpus(多卡加载)
+
+If you want to load model with multi-gpus, then the following three parameters in `startup.create_model_worker_app` should be changed:
+
+```python
+gpus=None, 
+num_gpus=1, 
+max_gpu_memory="20GiB"
+```
+
+where:
+
+* `gpus` is about specifying the gpus' ID, such as '0,1';
+* `num_gpus` is about specifying the number of gpus to be used under `gpus`;
+* `max_gpu_memory` is about specifying the gpu memory of every gpu.
+
+note: 
+
+* These parameters now can be specified by `server_config.FSCHST_MODEL_WORKERD`.
+* In some extreme senses, `gpus` doesn't work, then one should specify the used gpus with environment variable `CUDA_VISIBLE_DEVICES`, here is an example:
+
+```shell
+CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
+```
 
 项目支持多卡加载，需在 startup.py 中的 create_model_worker_app 函数中，修改如下三个参数:
 
@@ -341,21 +442,33 @@ max_gpu_memory="20GiB"
 CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 ```
 
-#### 5.4 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
+#### 5.4 Load PEFT(PEFT 加载)
+
+Including lora,p-tuning,prefix tuning, prompt tuning,ia3
+
+This project loads the LLM service based on FastChat, so one must load the PEFT in a FastChat way, that is, ensure that the word `peft` must be in the path name, the name of the configuration file must be `adapter_config.json`, and the path contains PEFT weights in `.bin` format. The peft path is specified in `args.model_names` of the `create_model_worker_app` function in `startup.py`, and enable the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` parameter.
+
+If the above method fails, you need to start standard fastchat service step by step.  Step-by-step procedure could be found Section 6. For further steps, please refer to [Model invalid after loading lora fine-tuning](https://github. com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822).
 
 本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含.bin 格式的 PEFT 权重，peft路径在startup.py中create_model_worker_app函数的args.model_names中指定，并开启环境变量PEFT_SHARE_BASE_WEIGHTS=true参数。
 
-注：如果上述方式启动失败，则需要以标准的fastchat服务启动方式分步启动，分步启动步骤参考第六节，PEFT加载详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)，
+注：如果上述方式启动失败，则需要以标准的fastchat服务启动方式分步启动，分步启动步骤参考第六节，PEFT加载详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822).
 
-#### **5.5 注意事项：**
+#### **5.5 Some Notes(注意事项)**
 
-**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
+1. **The `startup.py` uses multi-process mode to start the services of each module, which may cause printing order problems. Please wait for all services to be initiated before calling, and call the service according to the default or specified port (default LLM API service port: `127.0.0.1:8888 `, default API service port:`127.0.0.1:7861 `, default WebUI service port: `127.0.0.1: 8501`)**
+2. **The startup time of the service differs across devices, usually it takes 3-10 minutes. If it does not start for a long time, please go to the `./logs` directory to monitor the logs and locate the problem.**
+3. **Using ctrl+C to exit on Linux may cause orphan processes due to the multi-process mechanism of Linux. You can exit through `shutdown_all.sh`**
+
+**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`127.0.0.1：8501`)**
 
 **2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
 
 **3. 在Linux上使用ctrl+C退出可能会由于linux的多进程机制导致multiprocessing遗留孤儿进程，可通过shutdown_all.sh进行退出**
 
-#### 5.6 启动界面示例：
+#### 5.6 Interface Examples(启动界面示例)
+
+The API, chat interface of WebUI, and knowledge management interface of WebUI are list below respectively.
 
 1. FastAPI docs 界面
 
@@ -368,7 +481,9 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 - Web UI 知识库管理页面：
   ![](img/webui_0813_1.png)
 
-### 6 分步启动 API 服务或 Web UI
+### 6 Luanching API Service or WebUI step-by-step(分步启动 API 服务或 Web UI)
+
+**The developers will depreciate step-by-step procudure in the future one or two version, feel free to ignore this part.**
 
 注意：如使用了一键启动方式，可忽略本节。
 
@@ -500,15 +615,51 @@ $ streamlit run webui.py --server.port 666
 
 ---
 
-## 常见问题
+## FAQ(常见问题)
+
+Please refer to [FAQ](docs/FAQ.md)
 
 参见 [常见问题](docs/FAQ.md)。
 
 ---
 
-## 路线图
+## Roadmap(路线图)
 
+- [X] Langchain applications
+
+  - [X] Load local documents
+    - [X] Unstructed documents
+      - [X] .md
+      - [X] .txt
+      - [X] .docx
+    - [ ] Structed documents
+      - [X] .csv
+      - [ ] .xlsx
+    - [ ] TextSplliter and Retriever
+      - [ ] multipy TextSplitter
+      - [ ] ChineseTextSplitter
+      - [ ] Recontructed Context Retriever
+    - [ ] Webpage
+    - [ ] SQL
+    - [ ] Knowledge Database
+  - [X] Search Engines
+    - [X] Bing
+    - [X] DuckDuckGo
+  - [ ] Agent
+- [X] LLM  Models
+
+  - [X] [FastChat](https://github.com/lm-sys/fastchat) -based LLM Models
+  - [ ] Mutiply Remote LLM API
+- [X] Embedding Models
+
+  - [X] HuggingFace -based Embedding models
+  - [ ] Mutiply Remote Embedding API
+- [X] 基于 FastAPI -based API
+- [X] Web UI
+
+  - [X] Streamlit -based Web UI
 - [X] Langchain 应用
+
   - [X] 本地数据接入
     - [X] 接入非结构化文档
       - [X] .md
@@ -529,18 +680,21 @@ $ streamlit run webui.py --server.port 666
     - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
 - [X] LLM 模型接入
+
   - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
   - [ ] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
+
   - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
   - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
 - [X] 基于 FastAPI 的 API 方式调用
 - [X] Web UI
+
   - [X] 基于 Streamlit 的 Web UI
 
 ---
 
-## 项目交流群
+## WeChat Group QR Code(项目交流群)
 
 <img src="img/qr_code_58.jpg" alt="二维码" width="300" height="300" />
 
