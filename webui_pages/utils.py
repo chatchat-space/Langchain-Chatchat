@@ -48,6 +48,8 @@ class ApiRequest:
         self.base_url = base_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
+        if no_remote_api:
+            logger.warn("将来可能取消对no_remote_api的支持，更新版本时请注意。")
 
     def _parse_url(self, url: str) -> str:
         if (not url.startswith("http")
@@ -270,7 +272,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.openai_chat import openai_chat
-            response = openai_chat(msg)
+            response = run_async(openai_chat(msg))
             return self._fastapi_stream2generator(response)
         else:
             data = msg.dict(exclude_unset=True, exclude_none=True)
@@ -280,7 +282,7 @@ class ApiRequest:
             response = self.post(
                 "/chat/fastchat",
                 json=data,
-                stream=stream,
+                stream=True,
             )
             return self._httpx_stream2generator(response)
 
@@ -310,7 +312,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.chat import chat
-            response = chat(**data)
+            response = run_async(chat(**data))
             return self._fastapi_stream2generator(response)
         else:
             response = self.post("/chat/chat", json=data, stream=True)
@@ -349,7 +351,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(**data)
+            response = run_async(knowledge_base_chat(**data))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -387,7 +389,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.search_engine_chat import search_engine_chat
-            response = search_engine_chat(**data)
+            response = run_async(search_engine_chat(**data))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -427,7 +429,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import list_kbs
-            response = run_async(list_kbs())
+            response = list_kbs()
             return response.data
         else:
             response = self.get("/knowledge_base/list_knowledge_bases")
@@ -499,7 +501,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import list_files
-            response = run_async(list_files(knowledge_base_name))
+            response = list_files(knowledge_base_name)
             return response.data
         else:
             response = self.get(
