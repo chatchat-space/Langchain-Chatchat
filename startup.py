@@ -534,11 +534,7 @@ async def start_main_server():
     processes = {"online_api": {}, "model_worker": {}}
 
     def process_count():
-<<<<<<< Updated upstream
-        return len(processes) + len(processes["online_api"]) - 1
-=======
         return len(processes) + len(processes["online_api"]) + len(processes["model_worker"]) - 2
->>>>>>> Stashed changes
 
     if args.quiet:
         log_level = "ERROR"
