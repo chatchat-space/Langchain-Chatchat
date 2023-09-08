@@ -8,7 +8,11 @@ from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDIN
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
 from server import model_workers
-from typing import Literal, Optional, Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Literal, Optional, Callable, Generator, Dict, Any
+
+
+thread_pool = ThreadPoolExecutor()
 
 
 class BaseResponse(BaseModel):
@@ -305,3 +309,24 @@ def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
+
+
+def run_in_thread_pool(
+    func: Callable,
+    params: List[Dict] = [],
+    pool: ThreadPoolExecutor = None,
+) -> Generator:
+    '''
+    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+    '''
+    tasks = []
+    pool = pool or thread_pool
+    
+    for kwargs in params:
+        thread = pool.submit(func, **kwargs)
+        tasks.append(thread)
+    
+    for obj in as_completed(tasks):
+        yield obj.result()
+

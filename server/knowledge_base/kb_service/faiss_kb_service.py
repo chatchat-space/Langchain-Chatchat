@@ -5,7 +5,8 @@ from configs.model_config import (
     KB_ROOT_PATH,
     CACHED_VS_NUM,
     EMBEDDING_MODEL,
-    SCORE_THRESHOLD
+    SCORE_THRESHOLD,
+    logger,
 )
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from functools import lru_cache
@@ -28,7 +29,7 @@ def load_faiss_vector_store(
         embeddings: Embeddings = None,
         tick: int = 0,  # tick will be changed by upload_doc etc. and make cache refreshed.
 ) -> FAISS:
-    print(f"loading vector store in '{knowledge_base_name}'.")
+    logger.info(f"loading vector store in '{knowledge_base_name}'.")
     vs_path = get_vs_path(knowledge_base_name)
     if embeddings is None:
         embeddings = load_embeddings(embed_model, embed_device)
@@ -57,7 +58,7 @@ def refresh_vs_cache(kb_name: str):
     make vector store cache refreshed when next loading
     """
     _VECTOR_STORE_TICKS[kb_name] = _VECTOR_STORE_TICKS.get(kb_name, 0) + 1
-    print(f"知识库 {kb_name} 缓存刷新：{_VECTOR_STORE_TICKS[kb_name]}")
+    logger.info(f"知识库 {kb_name} 缓存刷新：{_VECTOR_STORE_TICKS[kb_name]}")
 
 
 class FaissKBService(KBService):
@@ -133,7 +134,7 @@ class FaissKBService(KBService):
                       **kwargs):
         vector_store = self.load_vector_store()
 
-        ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata["source"] == kb_file.filepath]
+        ids = [k for k, v in vector_store.docstore._dict.items() if v.metadata.get("source") == kb_file.filepath]
         if len(ids) == 0:
             return None
 
