@@ -5,7 +5,7 @@ from langchain.document_loaders.unstructured import UnstructuredFileLoader
 class RapidOCRPDFLoader(UnstructuredFileLoader):
     def _get_elements(self) -> List:
         def pdf2text(filepath):
-            import fitz
+            import fitz # pyMuPDF里面的fitz包，不要与pip install fitz混淆
             from rapidocr_onnxruntime import RapidOCR
             import numpy as np
             ocr = RapidOCR()
