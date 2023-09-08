@@ -21,9 +21,7 @@ from fastapi.responses import StreamingResponse
 import contextlib
 import json
 from io import BytesIO
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async, set_httpx_timeout
+from server.utils import run_async, iter_over_async, set_httpx_timeout, api_address
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
@@ -43,7 +41,7 @@ class ApiRequest:
     '''
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:7861",
+        base_url: str = api_address(),
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
         no_remote_api: bool = False,   # call api view function directly
     ):
@@ -78,7 +76,7 @@ class ApiRequest:
                 else:
                     return httpx.get(url, params=params, **kwargs)
             except Exception as e:
-                logger.error(e)
+                logger.error(f"error when get {url}: {e}")
                 retry -= 1
 
     async def aget(
@@ -99,7 +97,7 @@ class ApiRequest:
                     else:
                         return await client.get(url, params=params, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    logger.error(f"error when aget {url}: {e}")
                     retry -= 1
 
     def post(
@@ -121,7 +119,7 @@ class ApiRequest:
                 else:
                     return httpx.post(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                logger.error(f"error when post {url}: {e}")
                 retry -= 1
 
     async def apost(
@@ -143,7 +141,7 @@ class ApiRequest:
                     else:
                         return await client.post(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    logger.error(f"error when apost {url}: {e}")
                     retry -= 1
 
     def delete(
@@ -164,7 +162,7 @@ class ApiRequest:
                 else:
                     return httpx.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                logger.error(f"error when delete {url}: {e}")
                 retry -= 1
 
     async def adelete(
@@ -186,7 +184,7 @@ class ApiRequest:
                     else:
                         return await client.delete(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    logger.error(f"error when adelete {url}: {e}")
                     retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
@@ -205,7 +203,7 @@ class ApiRequest:
                 elif chunk.strip():
                     yield chunk
         except Exception as e:
-            logger.error(e)
+            logger.error(f"error when run fastapi router: {e}")
 
     def _httpx_stream2generator(
         self,
@@ -231,18 +229,18 @@ class ApiRequest:
                         print(chunk, end="", flush=True)
                         yield chunk
         except httpx.ConnectError as e:
-            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
+            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。({e})"
             logger.error(msg)
-            logger.error(e)
+            logger.error(msg)
             yield {"code": 500, "msg": msg}
         except httpx.ReadTimeout as e:
-            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）"
+            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）。（{e}）"
             logger.error(msg)
-            logger.error(e)
             yield {"code": 500, "msg": msg}
         except Exception as e:
-            logger.error(e)
-            yield {"code": 500, "msg": str(e)}
+            msg = f"API通信遇到错误：{e}"
+            logger.error(msg)
+            yield {"code": 500, "msg": msg}
 
     # 对话相关操作
 
@@ -413,8 +411,9 @@ class ApiRequest:
         try:
             return response.json()
         except Exception as e:
-            logger.error(e)
-            return {"code": 500, "msg": errorMsg or str(e)}
+            msg = "API未能返回正确的JSON。" + (errorMsg or str(e))
+            logger.error(msg)
+            return {"code": 500, "msg": msg}
 
     def list_knowledge_bases(
         self,
@@ -510,12 +509,13 @@ class ApiRequest:
             data = self._check_httpx_json_response(response)
             return data.get("data", [])
 
-    def upload_kb_doc(
+    def upload_kb_docs(
         self,
-        file: Union[str, Path, bytes],
+        files: List[Union[str, Path, bytes]],
         knowledge_base_name: str,
-        filename: str = None,
         override: bool = False,
+        to_vector_store: bool = True,
+        docs: List[Dict] = [],
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):

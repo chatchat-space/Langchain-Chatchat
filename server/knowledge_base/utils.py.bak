@@ -14,6 +14,8 @@ from functools import lru_cache
 import importlib
 from text_splitter import zh_title_enhance
 import langchain.document_loaders
+import document_loaders
+import unstructured.partition
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
@@ -21,6 +23,8 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from server.utils import run_in_thread_pool
 import io
+import builtins
+from datetime import datetime
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
 
 
@@ -36,6 +40,41 @@ def _embeddings_hash(self):
 HuggingFaceEmbeddings.__hash__ = _embeddings_hash
 OpenAIEmbeddings.__hash__ = _embeddings_hash
 HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
+
+
+# patch langchain.document_loaders和项目自定义document_loaders，替换其中的open函数。
+# 使其支持对str,bytes,io.StringIO,io.BytesIO进行向量化
+def _new_open(content: Union[str, bytes, io.StringIO, io.BytesIO, Path], *args, **kw):
+    if isinstance(content, (io.StringIO, io.BytesIO)):
+        return content
+    if isinstance(content, str):
+        if os.path.isfile(content):
+            return builtins.open(content, *args, **kw)
+        else:
+            return io.StringIO(content)
+    if isinstance(content, bytes):
+        return io.BytesIO(bytes)
+    if isinstance(content, Path):
+        return Path.open(*args, **kw)
+    return open(content, *args, **kw)
+
+for module in [langchain.document_loaders, document_loaders]:
+    for k, v in module.__dict__.items():
+        if type(v) == type(langchain.document_loaders):
+            v.open = _new_open
+
+# path unstructured 使其在处理非磁盘文件时不会出错
+def _new_get_last_modified_date(filename: str) -> Union[str, None]:
+    try:
+        modify_date = datetime.fromtimestamp(os.path.getmtime(filename))
+        return modify_date.strftime("%Y-%m-%dT%H:%M:%S%z")
+    except:
+        return None
+
+for k, v in unstructured.partition.__dict__.items():
+    if type(v) == type(unstructured.partition):
+        v.open = _new_open
+        v.get_last_modified_date = _new_get_last_modified_date
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -177,7 +216,6 @@ def get_LoaderClass(file_extension):
             return LoaderClass
 
 
-# 把一些向量化共用逻辑从KnowledgeFile抽取出来，等langchain支持内存文件的时候，可以将非磁盘文件向量化
 def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.StringIO, io.BytesIO]):
     '''
     根据loader_name和文件路径或内容返回文档加载器。
@@ -189,7 +227,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
             document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
-        logger.error(f"为文件{file_path_or_content}查找加载器{loader_name}时出错：{e}")
+        logger.error(e)
         document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
@@ -228,13 +266,39 @@ def make_text_splitter(
             chunk_overlap=chunk_overlap,
         )
     except Exception as e:
-        logger.error(f"查找分词器 {splitter_name} 时出错：{e}")
+        logger.error(e)
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
         text_splitter = TextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
         )
     return text_splitter
+
+
+def content_to_docs(content: Union[str, bytes, io.StringIO, io.BytesIO, Path], ext: str = ".md") -> List[Document]:
+    '''
+    将磁盘文件、文本、字节、内存文件等转化成Document
+    '''
+    if not ext.startswith("."):
+        ext = "." + ext
+    ext = ext.lower()
+    if ext not in SUPPORTED_EXTS:
+        raise ValueError(f"暂未支持的文件格式 {ext}")
+    
+    loader_name = get_LoaderClass(ext)
+    loader = get_loader(loader_name=loader_name, file_path_or_content=content)
+    return loader.load()
+
+
+def split_docs(
+    docs: List[Document],
+    splitter_name: str = "SpacyTextSplitter",
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = OVERLAP_SIZE,
+) -> List[Document]:
+    text_splitter = make_text_splitter(splitter_name=splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    return text_splitter.split_documents(docs)
+
 
 class KnowledgeFile:
     def __init__(
@@ -275,8 +339,7 @@ class KnowledgeFile:
         text_splitter: TextSplitter = None,
     ):
         docs = docs or self.file2docs(refresh=refresh)
-        if not docs:
-            return []
+
         if self.ext not in [".csv"]:
             if text_splitter is None:
                 text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
@@ -297,9 +360,7 @@ class KnowledgeFile:
         text_splitter: TextSplitter = None,
     ):
         if self.splited_docs is None or refresh:
-            docs = self.file2docs()
-            self.splited_docs = self.docs2texts(docs=docs,
-                                                using_zh_title_enhance=using_zh_title_enhance,
+            self.splited_docs = self.docs2texts(using_zh_title_enhance=using_zh_title_enhance,
                                                 refresh=refresh,
                                                 chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
@@ -317,21 +378,18 @@ class KnowledgeFile:
 
 
 def files2docs_in_thread(
-    files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+    files: List[Union[KnowledgeFile, Tuple[str, str], Dict]], # 如果是Tuple，形式为(filename, kb_name)
     pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     利用多线程批量将磁盘文件转化成langchain Document.
-    如果传入参数是Tuple，形式为(filename, kb_name)
-    生成器返回值为 status, (kb_name, file_name, docs | error)
+    生成器返回值为 status, (kb_name, file_name, docs)
     '''
     def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
         try:
             return True, (file.kb_name, file.filename, file.file2text(**kwargs))
         except Exception as e:
-            msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
-            logger.error(msg)
-            return False, (file.kb_name, file.filename, msg)
+            return False, e
 
     kwargs_list = []
     for i, file in enumerate(files):
@@ -353,10 +411,21 @@ def files2docs_in_thread(
 if __name__ == "__main__":
     from pprint import pprint
 
-    kb_file = KnowledgeFile(filename="test.txt", knowledge_base_name="samples")
-    # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
-    docs = kb_file.file2docs()
-    pprint(docs[-1])
+    # kb_file = KnowledgeFile(filename="test.txt", knowledge_base_name="samples")
+    # # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
+    # docs = kb_file.file2docs()
+    # pprint(docs[-1])
 
-    docs = kb_file.file2text()
-    pprint(docs[-1])
+    # docs = kb_file.file2text()
+    # pprint(docs[-1])
+
+    docs = content_to_docs("""
+    ## this is a title
+
+    ## another title
+
+    how are you
+    this a wonderful day.
+    """, "txt")
+    pprint(docs)
+    pprint(split_docs(docs, chunk_size=10, chunk_overlap=0))

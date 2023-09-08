@@ -15,8 +15,8 @@ from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
-from server.knowledge_base.kb_doc_api import (list_files, upload_doc, delete_doc,
-                                              update_doc, download_doc, recreate_vector_store,
+from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
+                                              update_docs, download_doc, recreate_vector_store,
                                               search_docs, DocumentWithScore)
 from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline, fschat_controller_address
 import httpx
@@ -98,23 +98,23 @@ def create_app():
              summary="搜索知识库"
              )(search_docs)
 
-    app.post("/knowledge_base/upload_doc",
+    app.post("/knowledge_base/upload_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
-             summary="上传文件到知识库"
-             )(upload_doc)
+             summary="上传文件到知识库，并/或进行向量化"
+             )(upload_docs)
 
-    app.post("/knowledge_base/delete_doc",
+    app.post("/knowledge_base/delete_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
              summary="删除知识库内指定文件"
-             )(delete_doc)
+             )(delete_docs)
 
-    app.post("/knowledge_base/update_doc",
+    app.post("/knowledge_base/update_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
              summary="更新现有文件到知识库"
-             )(update_doc)
+             )(update_docs)
 
     app.get("/knowledge_base/download_doc",
             tags=["Knowledge Base Management"],
