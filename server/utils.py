@@ -1,16 +1,20 @@
 import pydantic
 from pydantic import BaseModel
 from typing import List
-import torch
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from typing import Any, Optional
+from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE
+from configs.server_config import FSCHAT_MODEL_WORKERS
+import os
+from server import model_workers
+from typing import Literal, Optional, Any
 
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="API status code")
     msg: str = pydantic.Field("success", description="API status message")
+    data: Any = pydantic.Field(None, description="API data")
 
     class Config:
         schema_extra = {
@@ -68,6 +72,7 @@ class ChatMessage(BaseModel):
         }
 
 def torch_gc():
+    import torch
     if torch.cuda.is_available():
         # with torch.cuda.device(DEVICE):
         torch.cuda.empty_cache()
@@ -186,3 +191,117 @@ def MakeFastAPIOffline(
                 with_google_fonts=False,
                 redoc_favicon_url=favicon,
             )
+
+
+# 从server_config中获取服务信息
+def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
+    '''
+    加载model worker的配置项。
+    优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
+    '''
+    from configs.server_config import FSCHAT_MODEL_WORKERS
+    from configs.model_config import llm_model_dict
+
+    config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
+    config.update(llm_model_dict.get(model_name, {}))
+    config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
+
+    # 如果没有设置有效的local_model_path，则认为是在线模型API
+    if not os.path.isdir(config.get("local_model_path", "")):
+        config["online_api"] = True
+        if provider := config.get("provider"):
+            try:
+                config["worker_class"] = getattr(model_workers, provider)
+            except Exception as e:
+                print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
+
+    config["device"] = llm_device(config.get("device") or LLM_DEVICE)
+    return config
+
+
+def get_all_model_worker_configs() -> dict:
+    result = {}
+    model_names = set(llm_model_dict.keys()) | set(FSCHAT_MODEL_WORKERS.keys())
+    for name in model_names:
+        if name != "default":
+            result[name] = get_model_worker_config(name)
+    return result
+
+
+def fschat_controller_address() -> str:
+    from configs.server_config import FSCHAT_CONTROLLER
+
+    host = FSCHAT_CONTROLLER["host"]
+    port = FSCHAT_CONTROLLER["port"]
+    return f"http://{host}:{port}"
+
+
+def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
+    if model := get_model_worker_config(model_name):
+        host = model["host"]
+        port = model["port"]
+        return f"http://{host}:{port}"
+    return ""
+
+
+def fschat_openai_api_address() -> str:
+    from configs.server_config import FSCHAT_OPENAI_API
+
+    host = FSCHAT_OPENAI_API["host"]
+    port = FSCHAT_OPENAI_API["port"]
+    return f"http://{host}:{port}"
+
+
+def api_address() -> str:
+    from configs.server_config import API_SERVER
+
+    host = API_SERVER["host"]
+    port = API_SERVER["port"]
+    return f"http://{host}:{port}"
+
+
+def webui_address() -> str:
+    from configs.server_config import WEBUI_SERVER
+
+    host = WEBUI_SERVER["host"]
+    port = WEBUI_SERVER["port"]
+    return f"http://{host}:{port}"
+
+
+def set_httpx_timeout(timeout: float = None):
+    '''
+    设置httpx默认timeout。
+    httpx默认timeout是5秒，在请求LLM回答时不够用。
+    '''
+    import httpx
+    from configs.server_config import HTTPX_DEFAULT_TIMEOUT
+
+    timeout = timeout or HTTPX_DEFAULT_TIMEOUT
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
+    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+
+
+# 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
+def detect_device() -> Literal["cuda", "mps", "cpu"]:
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+    except:
+        pass
+    return "cpu"
+
+
+def llm_device(device: str = LLM_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device
+
+
+def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu"]:
+        device = detect_device()
+    return device

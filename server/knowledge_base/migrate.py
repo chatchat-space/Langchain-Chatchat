@@ -1,10 +1,17 @@
 from configs.model_config import EMBEDDING_MODEL, DEFAULT_VS_TYPE
-from server.knowledge_base.utils import get_file_path, list_kbs_from_folder, list_docs_from_folder, KnowledgeFile
-from server.knowledge_base.kb_service.base import KBServiceFactory
-from server.db.repository.knowledge_file_repository import add_doc_to_db
+from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
+                                        list_files_from_folder, run_in_thread_pool,
+                                        files2docs_in_thread,
+                                        KnowledgeFile,)
+from server.knowledge_base.kb_service.base import KBServiceFactory, SupportedVSType
+from server.db.repository.knowledge_file_repository import add_file_to_db
 from server.db.base import Base, engine
 import os
-from typing import Literal, Callable, Any
+from concurrent.futures import ThreadPoolExecutor
+from typing import Literal, Any, List
+
+
+pool = ThreadPoolExecutor(os.cpu_count())
 
 
 def create_tables():
@@ -16,13 +23,22 @@ def reset_tables():
     create_tables()
 
 
+def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
+    kb_files = []
+    for file in files:
+        try:
+            kb_file = KnowledgeFile(filename=file, knowledge_base_name=kb_name)
+            kb_files.append(kb_file)
+        except Exception as e:
+            print(f"{e}，已跳过")
+    return kb_files
+
+
 def folder2db(
     kb_name: str,
     mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
-    callback_before: Callable = None,
-    callback_after: Callable = None,
 ):
     '''
     use existed files in local folder to populate database and/or vector store.
@@ -36,70 +52,62 @@ def folder2db(
     kb.create_kb()
 
     if mode == "recreate_vs":
+        files_count = kb.count_files()
+        print(f"知识库 {kb_name} 中共有 {files_count} 个文档。\n即将清除向量库。")
         kb.clear_vs()
-        docs = list_docs_from_folder(kb_name)
-        for i, doc in enumerate(docs):
-            try:
-                kb_file = KnowledgeFile(doc, kb_name)
-                if callable(callback_before):
-                    callback_before(kb_file, i, docs)
-                if i == len(docs) - 1:
-                    not_refresh_vs_cache = False
-                else:
-                    not_refresh_vs_cache = True
-                kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
-                if callable(callback_after):
-                    callback_after(kb_file, i, docs)
-            except Exception as e:
-                print(e)
+        files_count = kb.count_files()
+        print(f"清理后，知识库 {kb_name} 中共有 {files_count} 个文档。")
+
+        kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
+        for success, result in files2docs_in_thread(kb_files, pool=pool):
+            if success:
+                _, filename, docs = result
+                print(f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档")
+                kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+                kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
+            else:
+                print(result)
+
+        if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
+            kb.refresh_vs_cache()
     elif mode == "fill_info_only":
-        docs = list_docs_from_folder(kb_name)
-        for i, doc in enumerate(docs):
-            try:
-                kb_file = KnowledgeFile(doc, kb_name)
-                if callable(callback_before):
-                    callback_before(kb_file, i, docs)
-                add_doc_to_db(kb_file)
-                if callable(callback_after):
-                    callback_after(kb_file, i, docs)
-            except Exception as e:
-                print(e)
+        files = list_files_from_folder(kb_name)
+        kb_files = file_to_kbfile(kb_name, files)
+
+        for kb_file in kb_files:
+            add_file_to_db(kb_file)
+            print(f"已将 {kb_name}/{kb_file.filename} 添加到数据库")
     elif mode == "update_in_db":
-        docs = kb.list_docs()
-        for i, doc in enumerate(docs):
-            try:
-                kb_file = KnowledgeFile(doc, kb_name)
-                if callable(callback_before):
-                    callback_before(kb_file, i, docs)
-                if i == len(docs) - 1:
-                    not_refresh_vs_cache = False
-                else:
-                    not_refresh_vs_cache = True
-                kb.update_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
-                if callable(callback_after):
-                    callback_after(kb_file, i, docs)
-            except Exception as e:
-                print(e)
+        files = kb.list_files()
+        kb_files = file_to_kbfile(kb_name, files)
+
+        for kb_file in kb_files:
+            kb.update_doc(kb_file, not_refresh_vs_cache=True)
+
+        if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
+            kb.refresh_vs_cache()
     elif mode == "increament":
-        db_docs = kb.list_docs()
-        folder_docs = list_docs_from_folder(kb_name)
-        docs = list(set(folder_docs) - set(db_docs))
-        for i, doc in enumerate(docs):
-            try:
-                kb_file = KnowledgeFile(doc, kb_name)
-                if callable(callback_before):
-                    callback_before(kb_file, i, docs)
-                if i == len(docs) - 1:
-                    not_refresh_vs_cache = False
-                else:
-                    not_refresh_vs_cache = True
-                kb.add_doc(kb_file, not_refresh_vs_cache=not_refresh_vs_cache)
-                if callable(callback_after):
-                    callback_after(kb_file, i, docs)
-            except Exception as e:
-                print(e)
+        db_files = kb.list_files()
+        folder_files = list_files_from_folder(kb_name)
+        files = list(set(folder_files) - set(db_files))
+        kb_files = file_to_kbfile(kb_name, files)
+
+        for success, result in files2docs_in_thread(kb_files, pool=pool):
+            if success:
+                _, filename, docs = result
+                print(f"正在将 {kb_name}/{filename} 添加到向量库")
+                kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+                kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
+            else:
+                print(result)
+
+        if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
+            kb.refresh_vs_cache()
     else:
-        raise ValueError(f"unspported migrate mode: {mode}")
+        print(f"unspported migrate mode: {mode}")
 
 
 def recreate_all_vs(
@@ -114,30 +122,34 @@ def recreate_all_vs(
         folder2db(kb_name, "recreate_vs", vs_type, embed_mode, **kwargs)
 
 
-def prune_db_docs(kb_name: str):
+def prune_db_files(kb_name: str):
     '''
-    delete docs in database that not existed in local folder.
-    it is used to delete database docs after user deleted some doc files in file browser
+    delete files in database that not existed in local folder.
+    it is used to delete database files after user deleted some doc files in file browser
     '''
     kb = KBServiceFactory.get_service_by_name(kb_name)
     if kb.exists():
-        docs_in_db = kb.list_docs()
-        docs_in_folder = list_docs_from_folder(kb_name)
-        docs = list(set(docs_in_db) - set(docs_in_folder))
-        for doc in docs:
-            kb.delete_doc(KnowledgeFile(doc, kb_name))
-        return docs
+        files_in_db = kb.list_files()
+        files_in_folder = list_files_from_folder(kb_name)
+        files = list(set(files_in_db) - set(files_in_folder))
+        kb_files = file_to_kbfile(kb_name, files)
+        for kb_file in kb_files:
+            kb.delete_doc(kb_file, not_refresh_vs_cache=True)
+        if kb.vs_type() == SupportedVSType.FAISS:
+            kb.save_vector_store()
+            kb.refresh_vs_cache()
+        return kb_files
 
-def prune_folder_docs(kb_name: str):
+def prune_folder_files(kb_name: str):
     '''
     delete doc files in local folder that not existed in database.
     is is used to free local disk space by delete unused doc files.
     '''
     kb = KBServiceFactory.get_service_by_name(kb_name)
     if kb.exists():
-        docs_in_db = kb.list_docs()
-        docs_in_folder = list_docs_from_folder(kb_name)
-        docs = list(set(docs_in_folder) - set(docs_in_db))
-        for doc in docs:
-            os.remove(get_file_path(kb_name, doc))
-        return docs
+        files_in_db = kb.list_files()
+        files_in_folder = list_files_from_folder(kb_name)
+        files = list(set(files_in_folder) - set(files_in_db))
+        for file in files:
+            os.remove(get_file_path(kb_name, file))
+        return files

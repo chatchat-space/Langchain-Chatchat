@@ -6,11 +6,14 @@ from configs.model_config import (
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
+    llm_model_dict,
+    HISTORY_LEN,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     logger,
 )
+from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -20,21 +23,12 @@ import json
 from io import BytesIO
 from server.db.repository.knowledge_base_repository import get_kb_detail
 from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async
+from server.utils import run_async, iter_over_async, set_httpx_timeout
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
-
-
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+from pprint import pprint
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
@@ -50,7 +44,7 @@ class ApiRequest:
     def __init__(
         self,
         base_url: str = "http://127.0.0.1:7861",
-        timeout: float = 60.0,
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
         no_remote_api: bool = False,   # call api view function directly
     ):
         self.base_url = base_url
@@ -224,9 +218,17 @@ class ApiRequest:
         try:
             with response as r:
                 for chunk in r.iter_text(None):
-                    if as_json and chunk:
-                        yield json.loads(chunk)
-                    elif chunk.strip():
+                    if not chunk: # fastchat api yield empty bytes on start and end
+                        continue
+                    if as_json:
+                        try:
+                            data = json.loads(chunk)
+                            pprint(data, depth=1)
+                            yield data
+                        except Exception as e:
+                            logger.error(f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。")
+                    else:
+                        print(chunk, end="", flush=True)
                         yield chunk
         except httpx.ConnectError as e:
             msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
@@ -274,6 +276,9 @@ class ApiRequest:
             return self._fastapi_stream2generator(response)
         else:
             data = msg.dict(exclude_unset=True, exclude_none=True)
+            print(f"received input message:")
+            pprint(data)
+
             response = self.post(
                 "/chat/fastchat",
                 json=data,
@@ -286,6 +291,7 @@ class ApiRequest:
         query: str,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -298,7 +304,11 @@ class ApiRequest:
             "query": query,
             "history": history,
             "stream": stream,
+            "model_name": model,
         }
+
+        print(f"received input message:")
+        pprint(data)
 
         if no_remote_api:
             from server.chat.chat import chat
@@ -316,6 +326,7 @@ class ApiRequest:
         score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -331,8 +342,12 @@ class ApiRequest:
             "score_threshold": score_threshold,
             "history": history,
             "stream": stream,
+            "model_name": model,
             "local_doc_url": no_remote_api,
         }
+
+        print(f"received input message:")
+        pprint(data)
 
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
@@ -352,6 +367,7 @@ class ApiRequest:
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
         stream: bool = True,
+        model: str = LLM_MODEL,
         no_remote_api: bool = None,
     ):
         '''
@@ -365,7 +381,11 @@ class ApiRequest:
             "search_engine_name": search_engine_name,
             "top_k": top_k,
             "stream": stream,
+            "model_name": model,
         }
+
+        print(f"received input message:")
+        pprint(data)
 
         if no_remote_api:
             from server.chat.search_engine_chat import search_engine_chat
@@ -473,18 +493,18 @@ class ApiRequest:
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/list_docs接口
+        对应api.py/knowledge_base/list_files接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
+            from server.knowledge_base.kb_doc_api import list_files
+            response = run_async(list_files(knowledge_base_name))
             return response.data
         else:
             response = self.get(
-                "/knowledge_base/list_docs",
+                "/knowledge_base/list_files",
                 params={"knowledge_base_name": knowledge_base_name}
             )
             data = self._check_httpx_json_response(response)
@@ -632,6 +652,84 @@ class ApiRequest:
                 timeout=None,
             )
             return self._httpx_stream2generator(response, as_json=True)
+
+    def list_running_models(self, controller_address: str = None):
+        '''
+        获取Fastchat中正运行的模型列表
+        '''
+        r = self.post(
+            "/llm_model/list_models",
+        )
+        return r.json().get("data", [])
+
+    def list_config_models(self):
+        '''
+        获取configs中配置的模型列表
+        '''
+        return list(llm_model_dict.keys())
+
+    def stop_llm_model(
+        self,
+        model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        停止某个LLM模型。
+        注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
+        '''
+        data = {
+            "model_name": model_name,
+            "controller_address": controller_address,
+        }
+        r = self.post(
+            "/llm_model/stop",
+            json=data,
+        )
+        return r.json()
+    
+    def change_llm_model(
+        self,
+        model_name: str,
+        new_model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        向fastchat controller请求切换LLM模型。
+        '''
+        if not model_name or not new_model_name:
+            return
+
+        if new_model_name == model_name:
+            return {
+                "code": 200,
+                "msg": "什么都不用做"
+            }
+
+        running_models = self.list_running_models()
+        if model_name not in running_models:
+            return {
+                "code": 500,
+                "msg": f"指定的模型'{model_name}'没有运行。当前运行模型：{running_models}"
+            }
+
+        config_models = self.list_config_models()
+        if new_model_name not in config_models:
+            return {
+                "code": 500,
+                "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
+            }
+
+        data = {
+            "model_name": model_name,
+            "new_model_name": new_model_name,
+            "controller_address": controller_address,
+        }
+        r = self.post(
+            "/llm_model/change",
+            json=data,
+            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+        )
+        return r.json()
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:

@@ -4,20 +4,22 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from configs.model_config import NLTK_DATA_PATH
-from configs.server_config import OPEN_CROSS_DOMAIN
+from configs.model_config import LLM_MODEL, NLTK_DATA_PATH
+from configs.server_config import OPEN_CROSS_DOMAIN, HTTPX_DEFAULT_TIMEOUT
 from configs import VERSION
 import argparse
 import uvicorn
+from fastapi import Body
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from server.chat import (chat, knowledge_base_chat, openai_chat,
                          search_engine_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
-from server.knowledge_base.kb_doc_api import (list_docs, upload_doc, delete_doc,
+from server.knowledge_base.kb_doc_api import (list_files, upload_doc, delete_doc,
                                               update_doc, download_doc, recreate_vector_store,
                                               search_docs, DocumentWithScore)
-from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline, fschat_controller_address
+import httpx
 from typing import List
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -84,11 +86,11 @@ def create_app():
              summary="删除知识库"
              )(delete_kb)
 
-    app.get("/knowledge_base/list_docs",
+    app.get("/knowledge_base/list_files",
             tags=["Knowledge Base Management"],
             response_model=ListResponse,
             summary="获取知识库内的文件列表"
-            )(list_docs)
+            )(list_files)
 
     app.post("/knowledge_base/search_docs",
              tags=["Knowledge Base Management"],
@@ -122,6 +124,75 @@ def create_app():
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
+
+    # LLM模型相关接口
+    @app.post("/llm_model/list_models",
+            tags=["LLM Model Management"],
+            summary="列出当前已加载的模型")
+    def list_models(
+        controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
+    ) -> BaseResponse:
+        '''
+        从fastchat controller获取已加载模型列表
+        '''
+        try:
+            controller_address = controller_address or fschat_controller_address()
+            r = httpx.post(controller_address + "/list_models")
+            return BaseResponse(data=r.json()["models"])
+        except Exception as e:
+            return BaseResponse(
+                code=500,
+                data=[],
+                msg=f"failed to get available models from controller: {controller_address}。错误信息是： {e}")
+
+    @app.post("/llm_model/stop",
+            tags=["LLM Model Management"],
+            summary="停止指定的LLM模型（Model Worker)",
+            )
+    def stop_llm_model(
+        model_name: str = Body(..., description="要停止的LLM模型名称", examples=[LLM_MODEL]),
+        controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
+    ) -> BaseResponse:
+        '''
+        向fastchat controller请求停止某个LLM模型。
+        注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
+        '''
+        try:
+            controller_address = controller_address or fschat_controller_address()
+            r = httpx.post(
+                controller_address + "/release_worker",
+                json={"model_name": model_name},
+            )
+            return r.json()
+        except Exception as e:
+            return BaseResponse(
+                code=500,
+                msg=f"failed to stop LLM model {model_name} from controller: {controller_address}。错误信息是： {e}")
+
+    @app.post("/llm_model/change",
+            tags=["LLM Model Management"],
+            summary="切换指定的LLM模型（Model Worker)",
+            )
+    def change_llm_model(
+        model_name: str = Body(..., description="当前运行模型", examples=[LLM_MODEL]),
+        new_model_name: str = Body(..., description="要切换的新模型", examples=[LLM_MODEL]),
+        controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
+    ):
+        '''
+        向fastchat controller请求切换LLM模型。
+        '''
+        try:
+            controller_address = controller_address or fschat_controller_address()
+            r = httpx.post(
+                controller_address + "/release_worker",
+                json={"model_name": model_name, "new_model_name": new_model_name},
+                timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+            )
+            return r.json()
+        except Exception as e:
+            return BaseResponse(
+                code=500,
+                msg=f"failed to switch LLM model from controller: {controller_address}。错误信息是： {e}")
 
     return app
 

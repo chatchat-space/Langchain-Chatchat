@@ -1,4 +1,3 @@
-from doctest import testfile
 import requests
 import json
 import sys
@@ -6,7 +5,7 @@ from pathlib import Path
 
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
-from configs.server_config import api_address
+from server.utils import api_address
 from configs.model_config import VECTOR_SEARCH_TOP_K
 from server.knowledge_base.utils import get_kb_path
 
@@ -112,7 +111,7 @@ def test_upload_doc(api="/knowledge_base/upload_doc"):
         assert data["msg"] == f"成功上传文件 {name}"
 
 
-def test_list_docs(api="/knowledge_base/list_docs"):
+def test_list_files(api="/knowledge_base/list_files"):
     url = api_base_url + api
     print("\n获取知识库中文件列表：")
     r = requests.get(url, params={"knowledge_base_name": kb})

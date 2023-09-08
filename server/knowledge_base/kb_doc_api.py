@@ -3,7 +3,7 @@ import urllib
 from fastapi import File, Form, Body, Query, UploadFile
 from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
 from server.utils import BaseResponse, ListResponse
-from server.knowledge_base.utils import validate_kb_name, list_docs_from_folder, KnowledgeFile
+from server.knowledge_base.utils import validate_kb_name, list_files_from_folder, KnowledgeFile
 from fastapi.responses import StreamingResponse, FileResponse
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
@@ -29,7 +29,7 @@ def search_docs(query: str = Body(..., description="用户输入", examples=["�
     return data
 
 
-async def list_docs(
+async def list_files(
     knowledge_base_name: str
 ) -> ListResponse:
     if not validate_kb_name(knowledge_base_name):
@@ -40,7 +40,7 @@ async def list_docs(
     if kb is None:
         return ListResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[])
     else:
-        all_doc_names = kb.list_docs()
+        all_doc_names = kb.list_files()
         return ListResponse(data=all_doc_names)
 
 
@@ -183,14 +183,14 @@ async def recreate_vector_store(
     set allow_empty_kb to True make it applied on empty knowledge base which it not in the info.db or having no documents.
     '''
 
-    async def output():
+    def output():
         kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
         else:
             kb.create_kb()
             kb.clear_vs()
-            docs = list_docs_from_folder(knowledge_base_name)
+            docs = list_files_from_folder(knowledge_base_name)
             for i, doc in enumerate(docs):
                 try:
                     kb_file = KnowledgeFile(doc, knowledge_base_name)
