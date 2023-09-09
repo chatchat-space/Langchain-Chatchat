@@ -72,7 +72,7 @@ plese refer to [version change log](https://github.com/imClumsyPanda/langchain-C
 
 The default LLM model in the project is changed to [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b), and the default Embedding model is changed to [moka-ai/m3e-base](https:// huggingface.co/moka-ai/m3e-base).
 
-### Supported LLM models 
+### Supported LLM models
 
 The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the API service of the open source LLM models, supported models include:
 
@@ -354,3 +354,9 @@ Please refer to [FAQ](docs/FAQ.md)
 ## WeChat Group QR Code
 
 <img src="img/qr_code_59.jpg" alt="二维码" width="300" height="300" />
+
+**WeChat Group**
+
+![1694252029167](image/README_en/1694252029167.png)
+
+**WeChat Subscription**

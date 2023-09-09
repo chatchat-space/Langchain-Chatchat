@@ -491,3 +491,7 @@ $ streamlit run webui.py --server.port 666
 <img src="img/qr_code_59.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+
+![1694251762513](image/README/1694251762513.png)
+
+🎉 langchain-ChatGLM 项目新开通了订阅号，欢迎订阅。
