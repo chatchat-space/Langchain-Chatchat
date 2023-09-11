@@ -146,7 +146,6 @@ class KBService(ABC):
         docs = self.do_search(query, top_k, score_threshold, embeddings)
         return docs
 
-    # TODO: milvus/pg需要实现该方法
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         return None
 

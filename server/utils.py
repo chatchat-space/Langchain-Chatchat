@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Literal, Optional, Callable, Generator, Dict, Any
 
 
-thread_pool = ThreadPoolExecutor()
+thread_pool = ThreadPoolExecutor(os.cpu_count())
 
 
 class BaseResponse(BaseModel):

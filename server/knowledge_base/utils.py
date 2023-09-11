@@ -4,13 +4,13 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from configs.model_config import (
     embedding_model_dict,
+    EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
     logger, log_verbose,
 )
-from functools import lru_cache
 import importlib
 from text_splitter import zh_title_enhance
 import langchain.document_loaders
@@ -19,23 +19,9 @@ from langchain.text_splitter import TextSplitter
 from pathlib import Path
 import json
 from concurrent.futures import ThreadPoolExecutor
-from server.utils import run_in_thread_pool
+from server.utils import run_in_thread_pool, embedding_device
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
-
-
-# make HuggingFaceEmbeddings hashable
-def _embeddings_hash(self):
-    if isinstance(self, HuggingFaceEmbeddings):
-        return hash(self.model_name)
-    elif isinstance(self, HuggingFaceBgeEmbeddings):
-        return hash(self.model_name)
-    elif isinstance(self, OpenAIEmbeddings):
-        return hash(self.model)
-
-HuggingFaceEmbeddings.__hash__ = _embeddings_hash
-OpenAIEmbeddings.__hash__ = _embeddings_hash
-HuggingFaceBgeEmbeddings.__hash__ = _embeddings_hash
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -72,19 +58,12 @@ def list_files_from_folder(kb_name: str):
             if os.path.isfile(os.path.join(doc_path, file))]
 
 
-@lru_cache(1)
-def load_embeddings(model: str, device: str):
-    if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-        embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
-    elif 'bge-' in model:
-        embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
-                                              model_kwargs={'device': device},
-                                              query_instruction="为这个句子生成表示以用于检索相关文章：")
-        if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
-            embeddings.query_instruction = ""
-    else:
-        embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model], model_kwargs={'device': device})
-    return embeddings
+def load_embeddings(model: str = EMBEDDING_MODEL, device: str = embedding_device()):
+    '''
+    从缓存中加载embeddings，可以避免多线程时竞争加载。
+    '''
+    from server.knowledge_base.kb_cache.base import embeddings_pool
+    return embeddings_pool.load_embeddings(model=model, device=device)
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],

@@ -14,7 +14,7 @@ from pprint import pprint
 
 
 api_base_url = api_address()
-api: ApiRequest = ApiRequest(api_base_url)
+api: ApiRequest = ApiRequest(api_base_url, no_remote_api=True)
 
 
 kb = "kb_for_api_test"
@@ -84,7 +84,7 @@ def test_upload_docs():
 
     print(f"\n尝试重新上传知识文件， 覆盖，自定义docs")
     docs = {"FAQ.MD": [{"page_content": "custom docs", "metadata": {}}]}
-    data = {"knowledge_base_name": kb, "override": True, "docs": json.dumps(docs)}
+    data = {"knowledge_base_name": kb, "override": True, "docs": docs}
     data = api.upload_kb_docs(files, **data)
     pprint(data)
     assert data["code"] == 200

@@ -20,6 +20,7 @@ from server.chat.openai_chat import OpenAiChatMsgIn
 from fastapi.responses import StreamingResponse
 import contextlib
 import json
+import os
 from io import BytesIO
 from server.utils import run_async, iter_over_async, set_httpx_timeout, api_address
 
@@ -475,7 +476,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(**data))
+            response = create_kb(**data)
             return response.dict()
         else:
             response = self.post(
@@ -497,7 +498,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import delete_kb
-            response = run_async(delete_kb(knowledge_base_name))
+            response = delete_kb(knowledge_base_name)
             return response.dict()
         else:
             response = self.post(
@@ -584,7 +585,7 @@ class ApiRequest:
                 filename = filename or file.name
             else: # a local path
                 file = Path(file).absolute().open("rb")
-                filename = filename or file.name
+                filename = filename or os.path.split(file.name)[-1]
             return filename, file
 
         files = [convert_file(file) for file in files]
@@ -602,13 +603,13 @@ class ApiRequest:
             from tempfile import SpooledTemporaryFile
 
             upload_files = []
-            for file, filename in files:
+            for filename, file in files:
                 temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
                 temp_file.write(file.read())
                 temp_file.seek(0)
                 upload_files.append(UploadFile(file=temp_file, filename=filename))
 
-            response = run_async(upload_docs(upload_files, **data))
+            response = upload_docs(upload_files, **data)
             return response.dict()
         else:
             if isinstance(data["docs"], dict):
@@ -643,7 +644,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import delete_docs
-            response = run_async(delete_docs(**data))
+            response = delete_docs(**data)
             return response.dict()
         else:
             response = self.post(
@@ -676,7 +677,7 @@ class ApiRequest:
         }
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import update_docs
-            response = run_async(update_docs(**data))
+            response = update_docs(**data)
             return response.dict()
         else:
             if isinstance(data["docs"], dict):
@@ -710,7 +711,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import recreate_vector_store
-            response = run_async(recreate_vector_store(**data))
+            response = recreate_vector_store(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -721,14 +722,30 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
-    def list_running_models(self, controller_address: str = None):
+    # LLM模型相关操作
+    def list_running_models(
+        self,
+        controller_address: str = None,
+        no_remote_api: bool = None,
+    ):
         '''
         获取Fastchat中正运行的模型列表
         '''
-        r = self.post(
-            "/llm_model/list_models",
-        )
-        return r.json().get("data", [])
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "controller_address": controller_address,
+        }
+        if no_remote_api:
+            from server.llm_api import list_llm_models
+            return list_llm_models(**data).data
+        else:
+            r = self.post(
+                "/llm_model/list_models",
+                json=data,
+            )
+            return r.json().get("data", [])
 
     def list_config_models(self):
         '''
@@ -740,30 +757,43 @@ class ApiRequest:
         self,
         model_name: str,
         controller_address: str = None,
+        no_remote_api: bool = None,
     ):
         '''
         停止某个LLM模型。
         注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
         '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
         data = {
             "model_name": model_name,
             "controller_address": controller_address,
         }
-        r = self.post(
-            "/llm_model/stop",
-            json=data,
-        )
-        return r.json()
+
+        if no_remote_api:
+            from server.llm_api import stop_llm_model
+            return stop_llm_model(**data).dict()
+        else:
+            r = self.post(
+                "/llm_model/stop",
+                json=data,
+            )
+            return r.json()
 
     def change_llm_model(
         self,
         model_name: str,
         new_model_name: str,
         controller_address: str = None,
+        no_remote_api: bool = None,
     ):
         '''
         向fastchat controller请求切换LLM模型。
         '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
         if not model_name or not new_model_name:
             return
 
@@ -792,12 +822,17 @@ class ApiRequest:
             "new_model_name": new_model_name,
             "controller_address": controller_address,
         }
-        r = self.post(
-            "/llm_model/change",
-            json=data,
-            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
-        )
-        return r.json()
+
+        if no_remote_api:
+            from server.llm_api import change_llm_model
+            return change_llm_model(**data).dict()
+        else:
+            r = self.post(
+                "/llm_model/change",
+                json=data,
+                timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+            )
+            return r.json()
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
