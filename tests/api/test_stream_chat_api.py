@@ -47,7 +47,6 @@ data = {
 }
 
 
-
 def test_chat_fastchat(api="/chat/fastchat"):
     url = f"{api_base_url}{api}"
     data2 = {
