@@ -117,13 +117,13 @@ def _save_files_in_thread(files: List[UploadFile],
 #             yield json.dumps(result, ensure_ascii=False)
 
 
-async def upload_docs(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
-                     knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
-                     override: bool = Form(False, description="覆盖已有文件"),
-                     to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
-                     docs: Json = Form({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
-                     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
-                     ) -> BaseResponse:
+def upload_docs(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
+                knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
+                override: bool = Form(False, description="覆盖已有文件"),
+                to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
+                docs: Json = Form({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+                not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
+                ) -> BaseResponse:
     '''
     API接口：上传文件，并/或向量化
     '''
@@ -148,7 +148,7 @@ async def upload_docs(files: List[UploadFile] = File(..., description="上传文
 
     # 对保存的文件进行向量化
     if to_vector_store:
-        result = await update_docs(
+        result = update_docs(
             knowledge_base_name=knowledge_base_name,
             file_names=file_names,
             override_custom_docs=True,
@@ -162,11 +162,11 @@ async def upload_docs(files: List[UploadFile] = File(..., description="上传文
     return BaseResponse(code=200, msg="文件上传与向量化完成", data={"failed_files": failed_files})
 
 
-async def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
-                     file_names: List[str] = Body(..., examples=[["file_name.md", "test.txt"]]),
-                     delete_content: bool = Body(False),
-                     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
-                    ) -> BaseResponse:
+def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
+                file_names: List[str] = Body(..., examples=[["file_name.md", "test.txt"]]),
+                delete_content: bool = Body(False),
+                not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
+            ) -> BaseResponse:
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
 
@@ -196,12 +196,12 @@ async def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"])
     return BaseResponse(code=200, msg=f"文件删除完成", data={"failed_files": failed_files})
 
 
-async def update_docs(
-        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
-        file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=["file_name"]),
-        override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
-        docs: Json = Body({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
-        not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
+def update_docs(
+    knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+    file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=["file_name"]),
+    override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
+    docs: Json = Body({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+    not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
     ) -> BaseResponse:
     '''
     更新知识库文档
@@ -302,11 +302,11 @@ def download_doc(
     return BaseResponse(code=500, msg=f"{kb_file.filename} 读取文件失败")
 
 
-async def recreate_vector_store(
-        knowledge_base_name: str = Body(..., examples=["samples"]),
-        allow_empty_kb: bool = Body(True),
-        vs_type: str = Body(DEFAULT_VS_TYPE),
-        embed_model: str = Body(EMBEDDING_MODEL),
+def recreate_vector_store(
+    knowledge_base_name: str = Body(..., examples=["samples"]),
+    allow_empty_kb: bool = Body(True),
+    vs_type: str = Body(DEFAULT_VS_TYPE),
+    embed_model: str = Body(EMBEDDING_MODEL),
     ):
     '''
     recreate vector store from the content.
