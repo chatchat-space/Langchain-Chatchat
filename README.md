@@ -2,6 +2,8 @@
 
 **LangChain-Chatchat** (原 Langchain-ChatGLM):  基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
 
+*Read this in [English](README.en-US.md).*
+
 ## 目录
 
 * [介绍](README.md#介绍)
