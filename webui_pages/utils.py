@@ -11,26 +11,18 @@ from configs.model_config import (
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
-    logger,
+    logger, log_verbose,
 )
 from configs.server_config import HTTPX_DEFAULT_TIMEOUT
-import PyPDF2
-import docx
-import openpyxl
-import csv
-import markdown
-import xml.etree.ElementTree as ET
-from pptx import Presentation
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
 from fastapi.responses import StreamingResponse
 import contextlib
 import json
+import os
 from io import BytesIO
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async, set_httpx_timeout
+from server.utils import run_async, iter_over_async, set_httpx_timeout, api_address
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
@@ -50,13 +42,15 @@ class ApiRequest:
     '''
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:7861",
+        base_url: str = api_address(),
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
         no_remote_api: bool = False,   # call api view function directly
     ):
         self.base_url = base_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
+        if no_remote_api:
+            logger.warn("将来可能取消对no_remote_api的支持，更新版本时请注意。")
 
     def _parse_url(self, url: str) -> str:
         if (not url.startswith("http")
@@ -85,7 +79,9 @@ class ApiRequest:
                 else:
                     return httpx.get(url, params=params, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when get {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def aget(
@@ -106,7 +102,9 @@ class ApiRequest:
                     else:
                         return await client.get(url, params=params, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    msg = f"error when aget {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def post(
@@ -128,7 +126,9 @@ class ApiRequest:
                 else:
                     return httpx.post(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when post {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def apost(
@@ -150,7 +150,9 @@ class ApiRequest:
                     else:
                         return await client.post(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    msg = f"error when apost {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def delete(
@@ -171,7 +173,9 @@ class ApiRequest:
                 else:
                     return httpx.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when delete {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
 
     async def adelete(
@@ -193,7 +197,9 @@ class ApiRequest:
                     else:
                         return await client.delete(url, data=data, json=json, **kwargs)
                 except Exception as e:
-                    logger.error(e)
+                    msg = f"error when adelete {url}: {e}"
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                 exc_info=e if log_verbose else None)
                     retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
@@ -204,7 +210,7 @@ class ApiRequest:
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
-        
+
         try:
             for chunk in  iter_over_async(response.body_iterator, loop):
                 if as_json and chunk:
@@ -212,7 +218,9 @@ class ApiRequest:
                 elif chunk.strip():
                     yield chunk
         except Exception as e:
-            logger.error(e)
+            msg = f"error when run fastapi router: {e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
     def _httpx_stream2generator(
         self,
@@ -233,23 +241,26 @@ class ApiRequest:
                             pprint(data, depth=1)
                             yield data
                         except Exception as e:
-                            logger.error(f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。")
+                            msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
+                            logger.error(f'{e.__class__.__name__}: {msg}',
+                                         exc_info=e if log_verbose else None)
                     else:
                         print(chunk, end="", flush=True)
                         yield chunk
         except httpx.ConnectError as e:
-            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
+            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。({e})"
             logger.error(msg)
-            logger.error(e)
+            logger.error(msg)
             yield {"code": 500, "msg": msg}
         except httpx.ReadTimeout as e:
-            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）"
+            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）。（{e}）"
             logger.error(msg)
-            logger.error(e)
             yield {"code": 500, "msg": msg}
         except Exception as e:
-            logger.error(e)
-            yield {"code": 500, "msg": str(e)}
+            msg = f"API通信遇到错误：{e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
+            yield {"code": 500, "msg": msg}
 
     # 对话相关操作
 
@@ -279,7 +290,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.openai_chat import openai_chat
-            response = openai_chat(msg)
+            response = run_async(openai_chat(msg))
             return self._fastapi_stream2generator(response)
         else:
             data = msg.dict(exclude_unset=True, exclude_none=True)
@@ -289,7 +300,7 @@ class ApiRequest:
             response = self.post(
                 "/chat/fastchat",
                 json=data,
-                stream=stream,
+                stream=True,
             )
             return self._httpx_stream2generator(response)
 
@@ -319,7 +330,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.chat import chat
-            response = chat(**data)
+            response = run_async(chat(**data))
             return self._fastapi_stream2generator(response)
         else:
             response = self.post("/chat/chat", json=data, stream=True)
@@ -358,7 +369,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(**data)
+            response = run_async(knowledge_base_chat(**data))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -396,85 +407,11 @@ class ApiRequest:
 
         if no_remote_api:
             from server.chat.search_engine_chat import search_engine_chat
-            response = search_engine_chat(**data)
+            response = run_async(search_engine_chat(**data))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
                 "/chat/search_engine_chat",
-                json=data,
-                stream=True,
-            )
-            return self._httpx_stream2generator(response, as_json=True)
-
-    def file_chat(
-        self,
-        query: str,
-        file_content_str: str,
-        history: List[Dict] = [],
-        model: str = LLM_MODEL,
-        stream: bool = True,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/file_chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        data = {
-            "query": query,
-            "history": history,
-            "file_content_str": file_content_str,
-            "stream": stream,
-            "model_name": model,
-        }
-
-        if no_remote_api:
-            from server.chat.file_chat import file_chat
-            response = file_chat(**data)
-            return self._fastapi_stream2generator(response)
-        else:
-            response = self.post("/chat/file_chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
-
-    def db_chat(
-        self,
-        query: str,
-        type: str,
-        host: str,
-        username: str,
-        password: str,
-        database: str,
-        history: List[Dict] = [],
-        model: str = LLM_MODEL,
-        stream: bool = True,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/db_chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        data = {
-            "query": query,
-            "history": history,
-            "type": type,
-            "host": host,
-            "username": username,
-            "password": password,
-            "database": database,
-            "stream": stream,
-            "model_name": model,
-        }
-
-        if no_remote_api:
-            from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(**data)
-            return self._fastapi_stream2generator(response, as_json=True)
-        else:
-            response = self.post(
-                "/chat/db_chat",
                 json=data,
                 stream=True,
             )
@@ -494,8 +431,10 @@ class ApiRequest:
         try:
             return response.json()
         except Exception as e:
-            logger.error(e)
-            return {"code": 500, "msg": errorMsg or str(e)}
+            msg = "API未能返回正确的JSON。" + (errorMsg or str(e))
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
+            return {"code": 500, "msg": msg}
 
     def list_knowledge_bases(
         self,
@@ -509,7 +448,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import list_kbs
-            response = run_async(list_kbs())
+            response = list_kbs()
             return response.data
         else:
             response = self.get("/knowledge_base/list_knowledge_bases")
@@ -537,7 +476,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(**data))
+            response = create_kb(**data)
             return response.dict()
         else:
             response = self.post(
@@ -559,7 +498,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_api import delete_kb
-            response = run_async(delete_kb(knowledge_base_name))
+            response = delete_kb(knowledge_base_name)
             return response.dict()
         else:
             response = self.post(
@@ -581,7 +520,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import list_files
-            response = run_async(list_files(knowledge_base_name))
+            response = list_files(knowledge_base_name)
             return response.data
         else:
             response = self.get(
@@ -591,12 +530,45 @@ class ApiRequest:
             data = self._check_httpx_json_response(response)
             return data.get("data", [])
 
-    def upload_kb_doc(
+    def search_kb_docs(
         self,
-        file: Union[str, Path, bytes],
+        query: str,
         knowledge_base_name: str,
-        filename: str = None,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: int = SCORE_THRESHOLD,
+        no_remote_api: bool = None,
+    ) -> List:
+        '''
+        对应api.py/knowledge_base/search_docs接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "knowledge_base_name": knowledge_base_name,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+        }
+
+        if no_remote_api:
+            from server.knowledge_base.kb_doc_api import search_docs
+            return search_docs(**data)
+        else:
+            response = self.post(
+                "/knowledge_base/search_docs",
+                json=data,
+            )
+            data = self._check_httpx_json_response(response)
+            return data
+
+    def upload_kb_docs(
+        self,
+        files: List[Union[str, Path, bytes]],
+        knowledge_base_name: str,
         override: bool = False,
+        to_vector_store: bool = True,
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
@@ -606,97 +578,113 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
-        if isinstance(file, bytes): # raw bytes
-            file = BytesIO(file)
-        elif hasattr(file, "read"): # a file io like object
-            filename = filename or file.name
-        else: # a local path
-            file = Path(file).absolute().open("rb")
-            filename = filename or file.name
+        def convert_file(file, filename=None):
+            if isinstance(file, bytes): # raw bytes
+                file = BytesIO(file)
+            elif hasattr(file, "read"): # a file io like object
+                filename = filename or file.name
+            else: # a local path
+                file = Path(file).absolute().open("rb")
+                filename = filename or os.path.split(file.name)[-1]
+            return filename, file
+
+        files = [convert_file(file) for file in files]
+        data={
+            "knowledge_base_name": knowledge_base_name,
+            "override": override,
+            "to_vector_store": to_vector_store,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import upload_doc
+            from server.knowledge_base.kb_doc_api import upload_docs
             from fastapi import UploadFile
             from tempfile import SpooledTemporaryFile
 
-            temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
-            temp_file.write(file.read())
-            temp_file.seek(0)
-            response = run_async(upload_doc(
-                UploadFile(file=temp_file, filename=filename),
-                knowledge_base_name,
-                override,
-            ))
+            upload_files = []
+            for filename, file in files:
+                temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+                temp_file.write(file.read())
+                temp_file.seek(0)
+                upload_files.append(UploadFile(file=temp_file, filename=filename))
+
+            response = upload_docs(upload_files, **data)
             return response.dict()
         else:
+            if isinstance(data["docs"], dict):
+                data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
             response = self.post(
-                "/knowledge_base/upload_doc",
-                data={
-                    "knowledge_base_name": knowledge_base_name,
-                    "override": override,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
-                files={"file": (filename, file)},
+                "/knowledge_base/upload_docs",
+                data=data,
+                files=[("files", (filename, file)) for filename, file in files],
             )
             return self._check_httpx_json_response(response)
 
-    def delete_kb_doc(
+    def delete_kb_docs(
         self,
         knowledge_base_name: str,
-        doc_name: str,
+        file_names: List[str],
         delete_content: bool = False,
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/delete_doc接口
+        对应api.py/knowledge_base/delete_docs接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
         data = {
             "knowledge_base_name": knowledge_base_name,
-            "doc_name": doc_name,
+            "file_names": file_names,
             "delete_content": delete_content,
             "not_refresh_vs_cache": not_refresh_vs_cache,
         }
 
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(**data))
+            from server.knowledge_base.kb_doc_api import delete_docs
+            response = delete_docs(**data)
             return response.dict()
         else:
             response = self.post(
-                "/knowledge_base/delete_doc",
+                "/knowledge_base/delete_docs",
                 json=data,
             )
             return self._check_httpx_json_response(response)
 
-    def update_kb_doc(
+    def update_kb_docs(
         self,
         knowledge_base_name: str,
-        file_name: str,
+        file_names: List[str],
+        override_custom_docs: bool = False,
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/update_doc接口
+        对应api.py/knowledge_base/update_docs接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "file_names": file_names,
+            "override_custom_docs": override_custom_docs,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
         if no_remote_api:
-            from server.knowledge_base.kb_doc_api import update_doc
-            response = run_async(update_doc(knowledge_base_name, file_name))
+            from server.knowledge_base.kb_doc_api import update_docs
+            response = update_docs(**data)
             return response.dict()
         else:
+            if isinstance(data["docs"], dict):
+                data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
             response = self.post(
-                "/knowledge_base/update_doc",
-                json={
-                    "knowledge_base_name": knowledge_base_name,
-                    "file_name": file_name,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
+                "/knowledge_base/update_docs",
+                json=data,
             )
             return self._check_httpx_json_response(response)
 
@@ -723,7 +711,7 @@ class ApiRequest:
 
         if no_remote_api:
             from server.knowledge_base.kb_doc_api import recreate_vector_store
-            response = run_async(recreate_vector_store(**data))
+            response = recreate_vector_store(**data)
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -734,14 +722,30 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
-    def list_running_models(self, controller_address: str = None):
+    # LLM模型相关操作
+    def list_running_models(
+        self,
+        controller_address: str = None,
+        no_remote_api: bool = None,
+    ):
         '''
         获取Fastchat中正运行的模型列表
         '''
-        r = self.post(
-            "/llm_model/list_models",
-        )
-        return r.json().get("data", [])
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "controller_address": controller_address,
+        }
+        if no_remote_api:
+            from server.llm_api import list_llm_models
+            return list_llm_models(**data).data
+        else:
+            r = self.post(
+                "/llm_model/list_models",
+                json=data,
+            )
+            return r.json().get("data", [])
 
     def list_config_models(self):
         '''
@@ -753,30 +757,43 @@ class ApiRequest:
         self,
         model_name: str,
         controller_address: str = None,
+        no_remote_api: bool = None,
     ):
         '''
         停止某个LLM模型。
         注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
         '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
         data = {
             "model_name": model_name,
             "controller_address": controller_address,
         }
-        r = self.post(
-            "/llm_model/stop",
-            json=data,
-        )
-        return r.json()
+
+        if no_remote_api:
+            from server.llm_api import stop_llm_model
+            return stop_llm_model(**data).dict()
+        else:
+            r = self.post(
+                "/llm_model/stop",
+                json=data,
+            )
+            return r.json()
 
     def change_llm_model(
         self,
         model_name: str,
         new_model_name: str,
         controller_address: str = None,
+        no_remote_api: bool = None,
     ):
         '''
         向fastchat controller请求切换LLM模型。
         '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
         if not model_name or not new_model_name:
             return
 
@@ -805,12 +822,17 @@ class ApiRequest:
             "new_model_name": new_model_name,
             "controller_address": controller_address,
         }
-        r = self.post(
-            "/llm_model/change",
-            json=data,
-            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
-        )
-        return r.json()
+
+        if no_remote_api:
+            from server.llm_api import change_llm_model
+            return change_llm_model(**data).dict()
+        else:
+            r = self.post(
+                "/llm_model/change",
+                json=data,
+                timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+            )
+            return r.json()
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
@@ -835,53 +857,6 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
         and data["code"] == 200):
         return data[key]
     return ""
-
-
-def parse_file(file, file_len):
-    content = ""
-    if "text" in file.type:
-        content = file.read().decode("utf-8")
-    elif "pdf" in file.type:
-        pdf_reader = PyPDF2.PdfReader(file)
-        for page in pdf_reader.pages:
-            content += page.extract_text()
-    elif "msword" in file.type:
-        doc = docx.Document(file)
-        for para in doc.paragraphs:
-            content += para.text + "\n"
-    elif "wordprocessingml.document" in file.type:
-        doc = docx.Document(file)
-        for para in doc.paragraphs:
-            content += para.text + "\n"
-    elif "spreadsheetml.sheet" in file.type:
-        workbook = openpyxl.load_workbook(file)
-        for sheet in workbook:
-            for row in sheet.iter_rows(values_only=True):
-                content += " ".join(str(cell) for cell in row) + "\n"
-    elif "csv" in file.type:
-        csv_reader = csv.reader(file)
-        for row in csv_reader:
-            content += ",".join(row) + "\n"
-    elif "json" in file.type:
-        data = json.load(file)
-        content = json.dumps(data, indent=2)
-    elif "markdown" in file.type:
-        markdown_content = file.read().decode("utf-8")
-        content = markdown.markdown(markdown_content)
-    elif "xml" in file.type:
-        root = ET.fromstring(file.read())
-        content = ET.tostring(root, encoding="utf-8", method="text").decode("utf-8")
-    elif "presentationml.presentation" in file.type:
-        prs = Presentation(file)
-        for slide in prs.slides:
-            for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    content += shape.text + "\n"
-
-    if len(content) > file_len:
-        content = content[:file_len]
-
-    return content
 
 
 if __name__ == "__main__":

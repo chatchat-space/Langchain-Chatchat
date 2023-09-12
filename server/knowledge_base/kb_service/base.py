@@ -14,7 +14,8 @@ from server.db.repository.knowledge_base_repository import (
 )
 from server.db.repository.knowledge_file_repository import (
     add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
-    count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db
+    count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db,
+    list_docs_from_db,
 )
 
 from configs.model_config import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
@@ -24,7 +25,7 @@ from server.knowledge_base.utils import (
     list_kbs_from_folder, list_files_from_folder,
 )
 from server.utils import embedding_device
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 
 class SupportedVSType:
@@ -48,6 +49,13 @@ class KBService(ABC):
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
+
+    def save_vector_store(self, vector_store=None):
+        '''
+        保存向量库，仅支持FAISS。对于其它向量库该函数不做任何操作。
+        减少FAISS向量库操作时的类型判断。
+        '''
+        pass
 
     def create_kb(self):
         """
@@ -82,14 +90,19 @@ class KBService(ABC):
         """
         if docs:
             custom_docs = True
+            for doc in docs:
+                doc.metadata.setdefault("source", kb_file.filepath)
         else:
             docs = kb_file.file2text()
             custom_docs = False
 
         if docs:
             self.delete_doc(kb_file)
-            self.do_add_doc(docs, **kwargs)
-            status = add_file_to_db(kb_file, custom_docs=custom_docs, docs_count=len(docs))
+            doc_infos = self.do_add_doc(docs, **kwargs)
+            status = add_file_to_db(kb_file,
+                                    custom_docs=custom_docs,
+                                    docs_count=len(docs),
+                                    doc_infos=doc_infos)
         else:
             status = False
         return status
@@ -130,6 +143,17 @@ class KBService(ABC):
                     ):
         embeddings = self._load_embeddings()
         docs = self.do_search(query, top_k, score_threshold, embeddings)
+        return docs
+
+    def get_doc_by_id(self, id: str) -> Optional[Document]:
+        return None
+
+    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[Document]:
+        '''
+        通过file_name或metadata检索Document
+        '''
+        doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
+        docs = [self.get_doc_by_id(x["id"]) for x in doc_infos]
         return docs
 
     @abstractmethod
@@ -181,7 +205,7 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
-                   ):
+                   ) -> List[Dict]:
         """
         向知识库添加文档子类实自己逻辑
         """

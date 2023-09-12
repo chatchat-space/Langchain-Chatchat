@@ -17,11 +17,7 @@ chat_box = ChatBox(
     )
 )
 
-FILE_TOKENS = 3000
-HOST = ""
-USERNAME = ""
-PASSWORD = ""
-DATABASE = ""
+
 def get_messages_history(history_len: int) -> List[Dict]:
     def filter(msg):
         '''
@@ -63,15 +59,15 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
-                                      "文件问答",
-                                      "数据库问答",
                                       ],
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
 
         def on_llm_change():
-            st.session_state["prev_llm_model"] = llm_model
+            config = get_model_worker_config(llm_model)
+            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+                st.session_state["prev_llm_model"] = llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -84,10 +80,8 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        if "prev_llm_model" not in st.session_state:
-            index = llm_models.index(LLM_MODEL)
-        else:
-            index = 0
+        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
+        index = llm_models.index(cur_model)
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
                                 index,
@@ -97,7 +91,7 @@ def dialogue_page(api: ApiRequest):
                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
             and not get_model_worker_config(llm_model).get("online_api")):
-            with st.spinner(f"正在加载模型： {llm_model}"):
+            with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
@@ -128,31 +122,12 @@ def dialogue_page(api: ApiRequest):
                     index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
-        elif dialogue_mode == "文件问答":
-            global FILE_TOKENS
-            file_len = st.number_input("上传字符数：", 1, 30000, FILE_TOKENS)
-            FILE_TOKENS = file_len
-            file = st.file_uploader("上传文件",
-                                    ['txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'xml', 'ppt']
-                                    )
-            file_content_str = ""
-            if file:
-                file_content_str = parse_file(file, file_len)
-        elif dialogue_mode == "数据库问答":
-            global HOST
-            HOST = st.text_input("数据库地址", "localhost")
-            global USERNAME
-            USERNAME = st.text_input("用户名", "root")
-            global PASSWORD
-            PASSWORD = st.text_input("密码", "", type="password")
-            global DATABASE
-            DATABASE = st.text_input("数据库名称", "test")
 
     # Display chat messages from history on app rerun
 
     chat_box.output_messages()
 
-    chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
+    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
@@ -178,10 +153,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, 0)
             chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -191,39 +167,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                else:
-                    text += d["answer"]
+                elif chunk := d.get("answer"):
+                    text += chunk
                     chat_box.update_msg(text, 0)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
-        elif dialogue_mode == "文件问答":
-            chat_box.ai_say("正在思考...")
-            text = ""
-            r = api.file_chat(prompt, file_content_str, history, model=llm_model)
-            for t in r:
-                if error_msg := check_error_msg(t):  # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t
-                chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-        elif dialogue_mode == "数据库问答":
-            history = get_messages_history(history_len)
-            chat_box.ai_say([
-                f"正在查询数据库  ...",
-                Markdown("...", in_expander=True, title="数据库SQL语句"),
-                Markdown("...", in_expander=True, title="数据库查询结果"),
-            ])
-            text = ""
-            for d in api.db_chat(prompt, "MySql", HOST, USERNAME, PASSWORD, DATABASE, history, model=llm_model):
-                if error_msg := check_error_msg(d):  # check whether error occured
-                    st.error(error_msg)
-                else:
-                    text += d["answer"]
-                    chat_box.update_msg(text, 0)
-                    chat_box.update_msg(d["sql"], 1, streaming=False)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 2, streaming=False)
-            chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
 
     now = datetime.now()
     with st.sidebar:

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Optional
 
 import numpy as np
 from faiss import normalize_L2
@@ -21,6 +21,14 @@ class MilvusKBService(KBService):
     def get_collection(milvus_name):
         from pymilvus import Collection
         return Collection(milvus_name)
+
+    def get_doc_by_id(self, id: str) -> Optional[Document]:
+        if self.milvus.col:
+            data_list = self.milvus.col.query(expr=f'pk == {id}', output_fields=["*"])
+            if len(data_list) > 0:
+                data = data_list[0]
+                text = data.pop("text")
+                return Document(page_content=text, metadata=data)
 
     @staticmethod
     def search(milvus_name, content, limit=3):
@@ -54,14 +62,17 @@ class MilvusKBService(KBService):
         self._load_milvus(embeddings=EmbeddingsFunAdapter(embeddings))
         return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
 
-    def do_add_doc(self, docs: List[Document], **kwargs):
-        self.milvus.add_documents(docs)
+    def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
+        ids = self.milvus.add_documents(docs)
+        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
-        filepath = kb_file.filepath.replace('\\', '\\\\')
-        delete_list = [item.get("pk") for item in
-                       self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
-        self.milvus.col.delete(expr=f'pk in {delete_list}')
+        if self.milvus.col:
+            filepath = kb_file.filepath.replace('\\', '\\\\')
+            delete_list = [item.get("pk") for item in
+                           self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
+            self.milvus.col.delete(expr=f'pk in {delete_list}')
 
     def do_clear_vs(self):
         if self.milvus.col:
@@ -74,7 +85,9 @@ if __name__ == '__main__':
 
     Base.metadata.create_all(bind=engine)
     milvusService = MilvusKBService("test")
-    milvusService.add_doc(KnowledgeFile("README.md", "test"))
-    milvusService.delete_doc(KnowledgeFile("README.md", "test"))
-    milvusService.do_drop_kb()
-    print(milvusService.search_docs("如何启动api服务"))
+    # milvusService.add_doc(KnowledgeFile("README.md", "test"))
+
+    print(milvusService.get_doc_by_id("444022434274215486"))
+    # milvusService.delete_doc(KnowledgeFile("README.md", "test"))
+    # milvusService.do_drop_kb()
+    # print(milvusService.search_docs("如何启动api服务"))
