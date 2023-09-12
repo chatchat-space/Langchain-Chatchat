@@ -406,37 +406,6 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
-    def file_chat(
-        self,
-        query: str,
-        file_content_str: str,
-        history: List[Dict] = [],
-        model: str = LLM_MODEL,
-        stream: bool = True,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/file_chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        data = {
-            "query": query,
-            "history": history,
-            "file_content_str": file_content_str,
-            "stream": stream,
-            "model_name": model,
-        }
-
-        if no_remote_api:
-            from server.chat.file_chat import file_chat
-            response = file_chat(**data)
-            return self._fastapi_stream2generator(response)
-        else:
-            response = self.post("/chat/file_chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
-
     def db_chat(
         self,
         query: str,

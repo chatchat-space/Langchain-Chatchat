@@ -7,14 +7,14 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs.model_config import llm_model_dict, LLM_MODEL, FILE_TOKENS, db_info
+from configs.model_config import llm_model_dict, LLM_MODEL, db_info
 from server.utils import get_model_worker_config
 from typing import List, Dict
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
-        "logo256.png"
+        "chatchat_icon_blue_square_v2.png"
     )
 )
 
@@ -60,7 +60,6 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
-                                      "文件问答",
                                       "数据库问答",
                                       ],
                                      on_change=on_mode_change,
@@ -125,14 +124,6 @@ def dialogue_page(api: ApiRequest):
                     index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
-        elif dialogue_mode == "文件问答":
-            file_len = st.number_input("上传字符数：", 1, 30000, FILE_TOKENS)
-            file = st.file_uploader("上传文件",
-                                    ['txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'xml', 'ppt']
-                                    )
-            file_content_str = ""
-            if file:
-                file_content_str = parse_file(file, file_len)
         elif dialogue_mode == "数据库问答":
             db_type = st.selectbox("选择数据库类型", db_info)
             host = st.text_input("数据库地址", db_info.get(db_type).get("host"))
@@ -191,22 +182,10 @@ def dialogue_page(api: ApiRequest):
                     chat_box.update_msg(text, 0)
                     chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
-        elif dialogue_mode == "文件问答":
-            chat_box.ai_say("正在思考...")
-            text = ""
-            r = api.file_chat(prompt, file_content_str, history, model=llm_model)
-            for t in r:
-                if error_msg := check_error_msg(t):  # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t
-                chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
         elif dialogue_mode == "数据库问答":
             history = get_messages_history(history_len)
             chat_box.ai_say([
                 f"正在查询数据库  ...",
-                Markdown("...", in_expander=True, title="图表解析"),
                 Markdown("...", in_expander=True, title="数据库SQL语句"),
                 Markdown("...", in_expander=True, title="数据库查询结果"),
             ])
@@ -217,20 +196,9 @@ def dialogue_page(api: ApiRequest):
                 else:
                     text += d["answer"]
                     chat_box.update_msg(text, 0)
-                    data_json = json.dumps(d["docs"])
-                    encoded_data = urllib.parse.quote(data_json)
-                    react_app_url = f"http://127.0.0.1:3000/app/{encoded_data}"  # 替换为你的 React 应用程序的实际 URL
-                    chat_box.update_msg(f'<iframe src="{react_app_url}" width="100%" height="400"></iframe>', 1, streaming=False)
-                    chat_box.update_msg(d["sql"], 2, streaming=False)
-                    source_db = []
-                    for doc in d["docs"]:
-                        text_doc = f"""\n\n{doc}\n\n"""
-                        source_db.append(text_doc)
-                    chat_box.update_msg("\n\n".join(source_db), 3, streaming=False)
+                    chat_box.update_msg(d["sql"], 1, streaming=False)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 2, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
-            # # 使用 st.components.iframe 嵌入 React 应用程序
-            # st.write(, unsafe_allow_html=True)
-            print(encoded_data)
 
     now = datetime.now()
     with st.sidebar:

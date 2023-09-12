@@ -77,6 +77,10 @@ def db_chat(query: str = Body(..., description="用户输入", examples=["恼羞
         else:
             sql_query_results = execute_sql_query(db_type, host, username, password, database, selected_part, schema)
             # 查询结果格式化
+            source_db = []
+            for doc in sql_query_results:
+                text_doc = f"""\n\n{doc}\n\n"""
+                source_db.append(text_doc)
             print(sql_query_results)
 
         # Begin a task that runs in the background.
@@ -94,7 +98,7 @@ def db_chat(query: str = Body(..., description="用户输入", examples=["恼羞
                 # Use server-sent-events to stream the response
                 yield json.dumps({"answer": token,
                                   "sql": sql,
-                                  "docs": sql_query_results},
+                                  "docs": source_db},
                                  ensure_ascii=False)
         else:
             answer = ""
@@ -102,7 +106,7 @@ def db_chat(query: str = Body(..., description="用户输入", examples=["恼羞
                 answer += token
             yield json.dumps({"answer": answer,
                               "sql": sql,
-                              "docs": sql_query_results},
+                              "docs": source_db},
                              ensure_ascii=False)
 
         await task

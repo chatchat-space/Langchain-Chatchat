@@ -167,10 +167,7 @@ FILE_PROMPT_TEMPLATE = """<指令>根据已知上传文件信息，简洁和专�
 
 <问题>{{ question }}</问题>"""
 
-# 上传文件限制token数
-FILE_TOKENS = 3000
-
-# 数据库信息
+# 数据库信息，注意：使用数据库查询时，需要完善表注释和字段注释
 db_info = {
     "MySQL": {  # 数据库类型
         "host": "localhost",  # 数据库地址
