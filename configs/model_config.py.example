@@ -88,6 +88,14 @@ llm_model_dict = {
         "provider": "ChatGLMWorker",
         "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
     },
+"minimax-api": {
+        "api_base_url": "http://127.0.0.1:8888/v1",
+        "group_id": "",
+        "api_key": "",
+        "is_pro": False,
+        "provider": "MiniMaxWorker",
+    },
+
 }
 
 # LLM 名称

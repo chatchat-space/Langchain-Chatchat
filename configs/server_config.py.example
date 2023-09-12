@@ -66,6 +66,9 @@ FSCHAT_MODEL_WORKERS = {
     "chatglm-api": { # 请为每个在线API设置不同的端口
         "port": 20003,
     },
+    "minimax-api": { # 请为每个在线API设置不同的端口
+        "port": 20004,
+    },
 }
 
 # fastchat multi model worker server
