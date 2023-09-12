@@ -74,8 +74,8 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
-                                          '.doc', '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],  # '.xlsx'
+                                          '.docx', '.epub', '.odt',
+                                          '.ppt', '.pptx', '.tsv'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
