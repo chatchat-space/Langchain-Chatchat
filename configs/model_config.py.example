@@ -165,7 +165,7 @@ FILE_PROMPT_TEMPLATE = """<指令>根据已知上传文件信息，简洁和专�
 # 上传文件限制token数
 FILE_TOKENS = 3000
 
-# 数据库信息,使用数据库问答，表注释和字段注释需要有语义且完善
+# 数据库信息
 db_info = {
     "MySQL": {  # 数据库类型
         "host": "localhost",  # 数据库地址
@@ -174,36 +174,24 @@ db_info = {
         "database": "test",  # 数据库名称
     },
     "PgSQL": {
-        "host": "localhost",
-        "username": "root",
-        "password": "123456",
-        "database": "test",
-        "schema": "public",
+        "host": "81.70.185.190",
+        "username": "dataminer",
+        "password": "*Mb!-rwUxv!cfoYCN4",
+        "database": "datadiggings",
+        "schema": "data_aidb",
     }
 }
+
 # 数据库问答的模板
-DB_PROMPT_TEMPLATE = """<指令>我将为您提供JSON格式的{{ dataSourceType }}表模式的表架构，以及一些说明和问题。<指令>
-
-<表架构>{{ tableSchemas }}<表架构>
-
-<说明>*where子句中的表出现在您从中选择的表或临时表中。
-*使用包括表名在内的完整列名。
-*您只能读取，不能更新或删除或对数据进行任何更改。
-*做假设来回答这个问题是可以的。
-*不要使用表架构中未包含的任何字段。
-*保持假设简洁。
-*将表名称用换行\`\`。
-*您应该只返回问题的假设和一个SQL语句。<说明>
-
+DB_PROMPT_TEMPLATE = """<指令>我将为您提供JSON格式的{{ dataSourceType }}表模式的表架构和问题。做假设来回答这个问题是可以的，但是请根据问题找到表架构中适合的的字段和表名来使用，不要虚构表名和字段名。查询条件一定要有城市和统计指标。sql语句以;结尾。不需要访问数据库或者执行sql语句，只需要提供问题的假设和一个SQL语句就行，我会自己使用sql去查询结果。<指令>
 <问题>{{ question }}<问题>
+<表架构>{{ tableSchemas }}<表架构>
 """
+
 # 数据库查询结果总结的模板
 SQL_PROMPT_TEMPLATE = """<指令>根据SQL查询结果，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据查询结果无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 </指令>
-
-<SQL查询结果>{{ queryResults }}</SQL查询结果>
-
 <问题>{{ question }}</问题>
-
+<SQL查询结果>{{ queryResults }}</SQL查询结果>
 """
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
