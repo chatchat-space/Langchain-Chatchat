@@ -7,6 +7,7 @@ from configs.model_config import (
     logger, log_verbose,
 )
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 from server.knowledge_base.utils import KnowledgeFile
 from langchain.embeddings.base import Embeddings
@@ -69,7 +70,7 @@ class FaissKBService(KBService):
             ids = vs.add_documents(docs)
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
-        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        doc_infos = [DocumentWithVSId(**doc.dict(), id=id) for id, doc in zip(ids, docs)]
         torch_gc()
         return doc_infos
 
