@@ -14,13 +14,6 @@ from configs.model_config import (
     logger,
 )
 from configs.server_config import HTTPX_DEFAULT_TIMEOUT
-import PyPDF2
-import docx
-import openpyxl
-import csv
-import markdown
-import xml.etree.ElementTree as ET
-from pptx import Presentation
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
