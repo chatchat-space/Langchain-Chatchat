@@ -2,7 +2,6 @@ import operator
 from abc import ABC, abstractmethod
 
 import os
-import asyncio
 
 import numpy as np
 from langchain.embeddings.base import Embeddings
@@ -23,15 +22,14 @@ from configs.model_config import (kbs_config,
                                   VECTOR_SEARCH_TOP_K,
                                   SCORE_THRESHOLD,
                                   EMBEDDING_MODEL,
-                                  SUMMARY_CHUNK,)
+                                  SUMMARY_CHUNK, )
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
-from server.utils import embedding_device
-from typing import List, Union, Dict
+from server.utils import embedding_device, run_async
 from typing import List, Union, Dict, Optional
 
 
@@ -116,9 +114,9 @@ class KBService(ABC):
 
             if self.summary:
                 # 异步摘要
-                asyncio.run(self.summary_adapter.asummarize(kb_name=self.kb_name,
-                                                            file_description=kb_file.file_description,
-                                                            docs=doc_infos))
+                run_async(self.summary_adapter.asummarize(kb_name=self.kb_name,
+                                                          file_description=kb_file.file_description,
+                                                          docs=doc_infos))
 
             doc_info_dicts = [doc.dict() for doc in doc_infos]
             status = add_file_to_db(kb_file,

@@ -35,6 +35,8 @@ class SummaryAdapter:
 
         logger.info("start summary")
 
+
+
     def clear_kb_summary(self,
                          kb_name: str):
         pass

@@ -196,7 +196,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
     if loader_name == "UnstructuredFileLoader":
-        loader = DocumentLoader(file_path_or_content, autodetect_encoding=True)
+        loader = DocumentLoader(file_path_or_content, autodetect_encoding=True,mode="paged")
     elif loader_name == "CSVLoader":
         loader = DocumentLoader(file_path_or_content, encoding="utf-8")
     elif loader_name == "JSONLoader":
@@ -204,11 +204,11 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     elif loader_name == "CustomJSONLoader":
         loader = DocumentLoader(file_path_or_content, text_content=False)
     elif loader_name == "UnstructuredMarkdownLoader":
-        loader = DocumentLoader(file_path_or_content, mode="elements")
+        loader = DocumentLoader(file_path_or_content, mode="paged")
     elif loader_name == "UnstructuredHTMLLoader":
-        loader = DocumentLoader(file_path_or_content, mode="elements")
+        loader = DocumentLoader(file_path_or_content, mode="paged")
     else:
-        loader = DocumentLoader(file_path_or_content)
+        loader = DocumentLoader(file_path_or_content, mode="paged")
     return loader
 
 
