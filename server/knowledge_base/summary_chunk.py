@@ -3,7 +3,6 @@ from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from configs.model_config import logger
 import sys
 import asyncio
-from server.knowledge_base import KMP
 
 
 # TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
