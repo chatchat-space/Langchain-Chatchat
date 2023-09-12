@@ -1,3 +1,5 @@
+import urllib
+
 import streamlit as st
 from configs.server_config import FSCHAT_MODEL_WORKERS
 from webui_pages.utils import *
@@ -12,7 +14,7 @@ from typing import List, Dict
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
-        "chatchat_icon_blue_square_v2.png"
+        "logo256.png"
     )
 )
 
@@ -204,6 +206,7 @@ def dialogue_page(api: ApiRequest):
             history = get_messages_history(history_len)
             chat_box.ai_say([
                 f"正在查询数据库  ...",
+                Markdown("...", in_expander=True, title="图表解析"),
                 Markdown("...", in_expander=True, title="数据库SQL语句"),
                 Markdown("...", in_expander=True, title="数据库查询结果"),
             ])
@@ -214,9 +217,20 @@ def dialogue_page(api: ApiRequest):
                 else:
                     text += d["answer"]
                     chat_box.update_msg(text, 0)
-                    chat_box.update_msg(d["sql"], 1, streaming=False)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 2, streaming=False)
+                    data_json = json.dumps(d["docs"])
+                    encoded_data = urllib.parse.quote(data_json)
+                    react_app_url = f"http://127.0.0.1:3000/app/{encoded_data}"  # 替换为你的 React 应用程序的实际 URL
+                    chat_box.update_msg(f'<iframe src="{react_app_url}" width="100%" height="400"></iframe>', 1, streaming=False)
+                    chat_box.update_msg(d["sql"], 2, streaming=False)
+                    source_db = []
+                    for doc in d["docs"]:
+                        text_doc = f"""\n\n{doc}\n\n"""
+                        source_db.append(text_doc)
+                    chat_box.update_msg("\n\n".join(source_db), 3, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
+            # # 使用 st.components.iframe 嵌入 React 应用程序
+            # st.write(, unsafe_allow_html=True)
+            print(encoded_data)
 
     now = datetime.now()
     with st.sidebar:

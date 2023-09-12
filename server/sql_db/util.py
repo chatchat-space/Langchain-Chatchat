@@ -121,9 +121,18 @@ def execute_sql_query(database_type, host, username, password, database, sql_que
 
         # 执行 SQL 查询
         cursor.execute(sql_query)
+        # 获取查询结果的列名
+        columns = [desc[0] for desc in cursor.description]
 
-        # 获取查询结果
-        result = cursor.fetchall()
+        # 初始化一个空的结果列表
+        result = []
+
+        # 遍历查询结果，将每一行转换为字典
+        for row in cursor.fetchall():
+            row_dict = {}
+            for i in range(len(columns)):
+                row_dict[columns[i]] = row[i]
+            result.append(row_dict)
 
         return result
 
