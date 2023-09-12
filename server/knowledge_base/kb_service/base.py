@@ -22,7 +22,8 @@ from configs.model_config import (kbs_config,
                                   VECTOR_SEARCH_TOP_K,
                                   SCORE_THRESHOLD,
                                   EMBEDDING_MODEL,
-                                  SUMMARY_CHUNK, )
+                                  SUMMARY_CHUNK,
+                                  OVERLAP_SIZE)
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
@@ -54,7 +55,7 @@ class KBService(ABC):
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
         # 文本摘要适配器
-        self.summary_adapter = SummaryAdapter()
+        self.summary_adapter = SummaryAdapter(overlap_size=OVERLAP_SIZE)
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)

@@ -11,6 +11,9 @@ class SummaryAdapter:
     _OVERLAP_SIZE: int
     _separator: str = "\n\n"
 
+    def __init__(self, overlap_size: int):
+        self._OVERLAP_SIZE = overlap_size
+
     def summarize(self,
                   kb_name: str,
                   file_description: str,
@@ -53,23 +56,22 @@ class SummaryAdapter:
         for doc in docs:
             # 第一个文档直接添加
             if len(merge_docs) == 0:
-
                 pre_doc = doc.page_content
                 merge_docs.append(doc.page_content)
                 continue
 
             # 列表中上一个结尾与下一个开头重叠的部分，删除下一个开头重叠的部分
             # 迭代递减pre_doc的长度，每次迭代删除前面的字符，
-            # 查询重叠部分，直到pre_doc的长度小于 _OVERLAP_SIZE-2len(separator)
-            for i in range(len(pre_doc), self._OVERLAP_SIZE - 2 * len(self._separator), -1):
+            # 查询重叠部分，直到pre_doc的长度小于 self._OVERLAP_SIZE // 2 - 2len(separator)
+            for i in range(len(pre_doc), self._OVERLAP_SIZE // 2 - 2 * len(self._separator), -1):
                 # 每次迭代删除前面的字符
-                tmp_doc = pre_doc[1:]
-                if doc.page_content[:len(tmp_doc)] == tmp_doc:
+                pre_doc = pre_doc[1:]
+                if doc.page_content[:len(pre_doc)] == pre_doc:
                     # 删除下一个开头重叠的部分
-                    merge_docs.append(doc.page_content[len(tmp_doc):])
-
-                    pre_doc = doc
+                    merge_docs.append(doc.page_content[len(pre_doc):])
                     break
+
+            pre_doc = doc.page_content
 
         return merge_docs
 
