@@ -1,3 +1,5 @@
+import urllib
+
 import streamlit as st
 from configs.server_config import FSCHAT_MODEL_WORKERS
 from webui_pages.utils import *
@@ -5,10 +7,9 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs.model_config import llm_model_dict, LLM_MODEL
+from configs.model_config import llm_model_dict, LLM_MODEL, db_info
 from server.utils import get_model_worker_config
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -59,15 +60,14 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
+                                      "数据库问答",
                                       ],
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
 
         def on_llm_change():
-            config = get_model_worker_config(llm_model)
-            if not config.get("online_api"): # 只有本地model_worker可以切换模型
-                st.session_state["prev_llm_model"] = llm_model
+            st.session_state["prev_llm_model"] = llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -80,18 +80,20 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
-        index = llm_models.index(cur_model)
+        if "prev_llm_model" not in st.session_state:
+            index = llm_models.index(LLM_MODEL)
+        else:
+            index = 0
         llm_model = st.selectbox("选择LLM模型：",
-                                llm_models,
-                                index,
-                                format_func=llm_model_format_func,
-                                on_change=on_llm_change,
-                                # key="llm_model",
-                                )
+                                 llm_models,
+                                 index,
+                                 format_func=llm_model_format_func,
+                                 on_change=on_llm_change,
+                                 # key="llm_model",
+                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")):
-            with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
+                and not get_model_worker_config(llm_model).get("online_api")):
+            with st.spinner(f"正在加载模型： {llm_model}"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
@@ -122,6 +124,15 @@ def dialogue_page(api: ApiRequest):
                     index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
+        elif dialogue_mode == "数据库问答":
+            db_type = st.selectbox("选择数据库类型", db_info)
+            host = st.text_input("数据库地址", db_info.get(db_type).get("host"))
+            username = st.text_input("用户名", db_info.get(db_type).get("username"))
+            password = st.text_input("密码", db_info.get(db_type).get("password"), type="password")
+            database = st.text_input("数据库名称", db_info.get(db_type).get("database"))
+            schema = database
+            if db_type == "PgSQL":
+                schema = st.text_input("模式", db_info.get(db_type).get("schema"))
 
     # Display chat messages from history on app rerun
 
@@ -137,7 +148,7 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history=history, model=llm_model)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
+                if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
                 text += t
@@ -151,13 +162,12 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
-                elif chunk := d.get("answer"):
-                    text += chunk
-                    chat_box.update_msg(text, 0)
+                text += d["answer"]
+                chat_box.update_msg(text, 0)
+                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -165,13 +175,30 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
-                elif chunk := d.get("answer"):
-                    text += chunk
+                else:
+                    text += d["answer"]
                     chat_box.update_msg(text, 0)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
+        elif dialogue_mode == "数据库问答":
+            history = get_messages_history(history_len)
+            chat_box.ai_say([
+                f"正在查询数据库  ...",
+                Markdown("...", in_expander=True, title="数据库SQL语句"),
+                Markdown("...", in_expander=True, title="数据库查询结果"),
+            ])
+            text = ""
+            for d in api.db_chat(prompt, db_type, host, username, password, database, schema,  history, model=llm_model):
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+                else:
+                    text += d["answer"]
+                    chat_box.update_msg(text, 0)
+                    chat_box.update_msg(d["sql"], 1, streaming=False)
+                    chat_box.update_msg("\n\n".join(d["docs"]), 2, streaming=False)
+            chat_box.update_msg(text, 0, streaming=False)
 
     now = datetime.now()
     with st.sidebar:
