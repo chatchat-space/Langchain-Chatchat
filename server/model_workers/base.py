@@ -69,3 +69,8 @@ class ApiModelWorker(BaseModelWorker):
             target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
         )
         self.heart_beat_thread.start()
+
+    # help methods
+    def get_config(self):
+        from server.utils import get_model_worker_config
+        return get_model_worker_config(self.model_names[0])

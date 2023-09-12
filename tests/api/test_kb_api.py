@@ -7,18 +7,22 @@ root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
 from server.utils import api_address
 from configs.model_config import VECTOR_SEARCH_TOP_K
-from server.knowledge_base.utils import get_kb_path
+from server.knowledge_base.utils import get_kb_path, get_file_path
 
 from pprint import pprint
 
 
 api_base_url = api_address()
 
+
 kb = "kb_for_api_test"
 test_files = {
+    "FAQ.MD": str(root_path / "docs" / "FAQ.MD"),
     "README.MD": str(root_path / "README.MD"),
-    "FAQ.MD": str(root_path / "docs" / "FAQ.MD")
+    "test.txt": get_file_path("samples", "test.txt"),
 }
+
+print("\n\n直接url访问\n")
 
 
 def test_delete_kb_before(api="/knowledge_base/delete_knowledge_base"):
@@ -78,37 +82,36 @@ def test_list_kbs(api="/knowledge_base/list_knowledge_bases"):
     assert kb in data["data"]
 
 
-def test_upload_doc(api="/knowledge_base/upload_doc"):
+def test_upload_docs(api="/knowledge_base/upload_docs"):
     url = api_base_url + api
-    for name, path in test_files.items():
-        print(f"\n上传知识文件： {name}")
-        data = {"knowledge_base_name": kb, "override": True}
-        files = {"file": (name, open(path, "rb"))}
-        r = requests.post(url, data=data, files=files)
-        data = r.json()
-        pprint(data)
-        assert data["code"] == 200
-        assert data["msg"] == f"成功上传文件 {name}"
+    files = [("files", (name, open(path, "rb"))) for name, path in test_files.items()]
 
-    for name, path in test_files.items():
-        print(f"\n尝试重新上传知识文件： {name}， 不覆盖")
-        data = {"knowledge_base_name": kb, "override": False}
-        files = {"file": (name, open(path, "rb"))}
-        r = requests.post(url, data=data, files=files)
-        data = r.json()
-        pprint(data)
-        assert data["code"] == 404
-        assert data["msg"] == f"文件 {name} 已存在。"
+    print(f"\n上传知识文件")
+    data = {"knowledge_base_name": kb, "override": True}
+    r = requests.post(url, data=data, files=files)
+    data = r.json()
+    pprint(data)
+    assert data["code"] == 200
+    assert len(data["data"]["failed_files"]) == 0
 
-    for name, path in test_files.items():
-        print(f"\n尝试重新上传知识文件： {name}， 覆盖")
-        data = {"knowledge_base_name": kb, "override": True}
-        files = {"file": (name, open(path, "rb"))}
-        r = requests.post(url, data=data, files=files)
-        data = r.json()
-        pprint(data)
-        assert data["code"] == 200
-        assert data["msg"] == f"成功上传文件 {name}"
+    print(f"\n尝试重新上传知识文件， 不覆盖")
+    data = {"knowledge_base_name": kb, "override": False}
+    files = [("files", (name, open(path, "rb"))) for name, path in test_files.items()]
+    r = requests.post(url, data=data, files=files)
+    data = r.json()
+    pprint(data)
+    assert data["code"] == 200
+    assert len(data["data"]["failed_files"]) == len(test_files)
+
+    print(f"\n尝试重新上传知识文件， 覆盖，自定义docs")
+    docs = {"FAQ.MD": [{"page_content": "custom docs", "metadata": {}}]}
+    data = {"knowledge_base_name": kb, "override": True, "docs": json.dumps(docs)}
+    files = [("files", (name, open(path, "rb"))) for name, path in test_files.items()]
+    r = requests.post(url, data=data, files=files)
+    data = r.json()
+    pprint(data)
+    assert data["code"] == 200
+    assert len(data["data"]["failed_files"]) == 0
 
 
 def test_list_files(api="/knowledge_base/list_files"):
@@ -134,26 +137,26 @@ def test_search_docs(api="/knowledge_base/search_docs"):
     assert isinstance(data, list) and len(data) == VECTOR_SEARCH_TOP_K
 
 
-def test_update_doc(api="/knowledge_base/update_doc"):
+def test_update_docs(api="/knowledge_base/update_docs"):
     url = api_base_url + api
-    for name, path in test_files.items():
-        print(f"\n更新知识文件： {name}")
-        r = requests.post(url, json={"knowledge_base_name": kb, "file_name": name})
-        data = r.json()
-        pprint(data)
-        assert data["code"] == 200
-        assert data["msg"] == f"成功更新文件 {name}"
+
+    print(f"\n更新知识文件")
+    r = requests.post(url, json={"knowledge_base_name": kb, "file_names": list(test_files)})
+    data = r.json()
+    pprint(data)
+    assert data["code"] == 200
+    assert len(data["data"]["failed_files"]) == 0
 
 
-def test_delete_doc(api="/knowledge_base/delete_doc"):
+def test_delete_docs(api="/knowledge_base/delete_docs"):
     url = api_base_url + api
-    for name, path in test_files.items():
-        print(f"\n删除知识文件： {name}")
-        r = requests.post(url, json={"knowledge_base_name": kb, "doc_name": name})
-        data = r.json()
-        pprint(data)
-        assert data["code"] == 200
-        assert data["msg"] == f"{name} 文件删除成功"
+
+    print(f"\n删除知识文件")
+    r = requests.post(url, json={"knowledge_base_name": kb, "file_names": list(test_files)})
+    data = r.json()
+    pprint(data)
+    assert data["code"] == 200
+    assert len(data["data"]["failed_files"]) == 0
 
     url = api_base_url + "/knowledge_base/search_docs"
     query = "介绍一下langchain-chatchat项目"

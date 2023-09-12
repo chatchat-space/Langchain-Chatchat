@@ -65,7 +65,9 @@ def dialogue_page(api: ApiRequest):
                                      )
 
         def on_llm_change():
-            st.session_state["prev_llm_model"] = llm_model
+            config = get_model_worker_config(llm_model)
+            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+                st.session_state["prev_llm_model"] = llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -78,10 +80,8 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        if "prev_llm_model" not in st.session_state:
-            index = llm_models.index(LLM_MODEL)
-        else:
-            index = 0
+        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
+        index = llm_models.index(cur_model)
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
                                 index,
@@ -91,7 +91,7 @@ def dialogue_page(api: ApiRequest):
                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
             and not get_model_worker_config(llm_model).get("online_api")):
-            with st.spinner(f"正在加载模型： {llm_model}"):
+            with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
             st.session_state["prev_llm_model"] = llm_model
 
@@ -127,7 +127,7 @@ def dialogue_page(api: ApiRequest):
 
     chat_box.output_messages()
 
-    chat_input_placeholder = "请输入对话内容，换行请使用Ctrl+Enter "
+    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
@@ -153,10 +153,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, 0)
             chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -166,11 +167,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                else:
-                    text += d["answer"]
+                elif chunk := d.get("answer"):
+                    text += chunk
                     chat_box.update_msg(text, 0)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
 
     now = datetime.now()
     with st.sidebar:

@@ -4,6 +4,7 @@ logs
 .idea/
 __pycache__/
 /knowledge_base/
-configs/*.py
+/configs/*.py
 .vscode/
 .pytest_cache/
+*.bak

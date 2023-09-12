@@ -5,8 +5,9 @@ from pathlib import Path
 
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
-from configs.server_config import api_address, FSCHAT_MODEL_WORKERS
+from configs.server_config import FSCHAT_MODEL_WORKERS
 from configs.model_config import LLM_MODEL, llm_model_dict
+from server.utils import api_address
 
 from pprint import pprint
 import random
