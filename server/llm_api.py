@@ -5,7 +5,8 @@ import httpx
 
 
 def list_llm_models(
-    controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
+    controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()]),
+    placeholder: str = Body(None, description="该参数未使用，占位用"),
 ) -> BaseResponse:
     '''
     从fastchat controller获取已加载模型列表
