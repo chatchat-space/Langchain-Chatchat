@@ -7,7 +7,6 @@ import asyncio
 from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
-from server import model_workers
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Literal, Optional, Callable, Generator, Dict, Any
 
@@ -205,6 +204,7 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
     from configs.server_config import FSCHAT_MODEL_WORKERS
+    from server import model_workers
     from configs.model_config import llm_model_dict
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
