@@ -80,10 +80,8 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        if "prev_llm_model" not in st.session_state:
-            index = llm_models.index(LLM_MODEL)
-        else:
-            index = 0
+        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
+        index = llm_models.index(cur_model)
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
                                 index,
@@ -155,10 +153,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, 0)
             chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -168,11 +167,11 @@ def dialogue_page(api: ApiRequest):
             for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                else:
-                    text += d["answer"]
+                elif chunk := d.get("answer"):
+                    text += chunk
                     chat_box.update_msg(text, 0)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
             chat_box.update_msg(text, 0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
 
     now = datetime.now()
     with st.sidebar:

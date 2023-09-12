@@ -122,7 +122,7 @@ class KBService(ABC):
             status = add_file_to_db(kb_file,
                                     custom_docs=custom_docs,
                                     docs_count=len(docs),
-                                    doc_infos=doc_info_dicts)
+                                    doc_infos=doc_infos)
         else:
             status = False
         return status

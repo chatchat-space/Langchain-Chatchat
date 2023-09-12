@@ -12,10 +12,10 @@ def list_kbs():
     return ListResponse(data=list_kbs_from_db())
 
 
-async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
-                    vector_store_type: str = Body("faiss"),
-                    embed_model: str = Body(EMBEDDING_MODEL),
-                    ) -> BaseResponse:
+def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
+            vector_store_type: str = Body("faiss"),
+            embed_model: str = Body(EMBEDDING_MODEL),
+            ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -38,8 +38,8 @@ async def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 
 
-async def delete_kb(
-        knowledge_base_name: str = Body(..., examples=["samples"])
+def delete_kb(
+    knowledge_base_name: str = Body(..., examples=["samples"])
     ) -> BaseResponse:
     # Delete selected knowledge base
     if not validate_kb_name(knowledge_base_name):
