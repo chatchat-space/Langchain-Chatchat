@@ -25,7 +25,6 @@ from server.knowledge_base.utils import (
     list_kbs_from_folder, list_files_from_folder,
 )
 from server.utils import embedding_device
-from typing import List, Union, Dict
 from typing import List, Union, Dict, Optional
 
 

@@ -18,7 +18,7 @@ except:
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
-    logger
+    logger, log_verbose
 from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, HTTPX_DEFAULT_TIMEOUT)
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
@@ -536,7 +536,7 @@ async def start_main_server():
     def process_count():
         return len(processes) + len(processes["online_api"]) + len(processes["model_worker"]) - 2
 
-    if args.quiet:
+    if args.quiet or not log_verbose:
         log_level = "ERROR"
     else:
         log_level = "INFO"
