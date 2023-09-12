@@ -169,11 +169,11 @@ db_info = {
         "database": "test",  # 数据库名称
     },
     "PgSQL": {
-        "host": "81.70.185.190",
-        "username": "dataminer",
-        "password": "*Mb!-rwUxv!cfoYCN4",
-        "database": "datadiggings",
-        "schema": "data_aidb",
+        "host": "localhost",
+        "username": "root",
+        "password": "123456",
+        "database": "test",
+        "schema": "test",
     }
 }
 
