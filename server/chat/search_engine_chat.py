@@ -3,7 +3,8 @@ from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
-from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K, PROMPT_TEMPLATE)
+from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K,
+                                  PROMPT_TEMPLATE, TEMPERATURE)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
 from langchain.chat_models import ChatOpenAI
@@ -72,6 +73,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                                             ),
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                            temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -95,6 +97,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
+            temperature=temperature,
             openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
 
