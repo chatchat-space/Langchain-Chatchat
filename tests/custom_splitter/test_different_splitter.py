@@ -13,7 +13,7 @@ import langchain.document_loaders
 import importlib
 
 
-def text_different_splitter(splitter_name, chunk_size: int = CHUNK_SIZE,
+def test_different_splitter(splitter_name, chunk_size: int = CHUNK_SIZE,
                             chunk_overlap: int = OVERLAP_SIZE, ):
     if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
         headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
