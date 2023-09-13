@@ -33,21 +33,13 @@ class MiniMaxWorker(ApiModelWorker):
         )
 
     def prompt_to_messages(self, prompt: str) -> List[Dict]:
-        result = []
-        user_start = self.conv.roles[0] + ":"
-        bot_start = self.conv.roles[1] + ":"
-        for msg in prompt.split(self.conv.sep)[1:-1]:
-            if msg.startswith(user_start):
-                result.append({"sender_type": "USER", "text": msg[len(user_start):].strip()})
-            elif msg.startswith(bot_start):
-                result.append({"sender_type": "BOT", "text": msg[len(bot_start):].strip()})
-            else:
-                raise RuntimeError(f"unknow role in msg: {msg}")
-        return result
+        result = super().prompt_to_messages(prompt)
+        messages = [{"sender_type": x["role"], "text": x["content"]} for x in result]
+        return messages
 
     def generate_stream_gate(self, params):
         # 按照官网推荐，直接调用abab 5.5模型
-        # TODO: 支持历史消息，支持指定回复要求，支持指定用户名称、AI名称
+        # TODO: 支持指定回复要求，支持指定用户名称、AI名称
 
         super().generate_stream_gate(params)
         config = self.get_config()
