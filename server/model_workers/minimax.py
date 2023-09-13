@@ -40,7 +40,7 @@ class MiniMaxWorker(ApiModelWorker):
             if msg.startswith(user_start):
                 result.append({"sender_type": "USER", "text": msg[len(user_start):].strip()})
             elif msg.startswith(bot_start):
-                result.append({"sender_type": "BOT", "text": msg[len(bot_start)].strip()})
+                result.append({"sender_type": "BOT", "text": msg[len(bot_start):].strip()})
             else:
                 raise RuntimeError(f"unknow role in msg: {msg}")
         return result
