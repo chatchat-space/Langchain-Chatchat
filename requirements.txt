@@ -1,7 +1,6 @@
 langchain==0.0.287
 fschat[model_worker]==0.2.28
 openai
-zhipuai
 sentence_transformers
 transformers>=4.31.0
 torch~=2.0.0
@@ -34,3 +33,4 @@ streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
 watchdog
 tqdm
+websockets
