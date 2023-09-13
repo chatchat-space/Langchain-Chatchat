@@ -4,7 +4,7 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
+from configs.model_config import LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -197,22 +197,42 @@ def MakeFastAPIOffline(
             )
 
 
+# 从model_config中获取模型信息
+def get_model_path(model_name: str) -> Optional[str]:
+    from configs.model_config import MODEL_PATH, MODEL_ROOT_PATH
+
+    if path_str := MODEL_PATH.get(model_name):
+        path = Path(path_str)
+        if path.is_dir(): # /xxx/xxx/chatglm-6b
+            return str(path)
+
+        MODEL_ROOT_PATH = Path(MODEL_ROOT_PATH)
+        if MODEL_ROOT_PATH.is_dir():
+            path = MODEL_ROOT_PATH / model_name
+            if path.is_dir(): # {MODEL_ROOT_PATH}/chatglm-6b
+                return str(path)
+            path = MODEL_ROOT_PATH / path_str
+            if path.is_dir(): # {MODEL_ROOT_PATH}/THUDM/chatglm06b
+                return str(path)
+        return path_str # THUDM/chatglm06b
+
+
 # 从server_config中获取服务信息
-def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
+def get_model_worker_config(model_name: str = None) -> dict:
     '''
     加载model worker的配置项。
-    优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
+    优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
+    from configs.model_config import ONLINE_LLM_MODEL
     from configs.server_config import FSCHAT_MODEL_WORKERS
     from server import model_workers
-    from configs.model_config import llm_model_dict
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    config.update(llm_model_dict.get(model_name, {}))
+    config.update(ONLINE_LLM_MODEL.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
-    # 如果没有设置有效的local_model_path，则认为是在线模型API
-    if not os.path.isdir(config.get("local_model_path", "")):
+    # 在线模型API
+    if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True
         if provider := config.get("provider"):
             try:
@@ -222,13 +242,14 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
                 logger.error(f'{e.__class__.__name__}: {msg}',
                              exc_info=e if log_verbose else None)
 
-    config["device"] = llm_device(config.get("device") or LLM_DEVICE)
+    config["model_path"] = get_model_path(model_name)
+    config["device"] = llm_device(config.get("device"))
     return config
 
 
 def get_all_model_worker_configs() -> dict:
     result = {}
-    model_names = set(llm_model_dict.keys()) | set(FSCHAT_MODEL_WORKERS.keys())
+    model_names = set(FSCHAT_MODEL_WORKERS.keys())
     for name in model_names:
         if name != "default":
             result[name] = get_model_worker_config(name)
@@ -302,13 +323,15 @@ def detect_device() -> Literal["cuda", "mps", "cpu"]:
     return "cpu"
 
 
-def llm_device(device: str = LLM_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or LLM_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
 
 
-def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or EMBEDDING_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
