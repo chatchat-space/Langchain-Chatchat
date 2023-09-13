@@ -2,12 +2,10 @@ from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
 import json
-import httpx
-from pprint import pprint
 from server.model_workers import SparkApi
 import websockets
 from server.utils import iter_over_async, asyncio
-from typing import List, Dict
+from typing import List
 
 
 async def request(appid, api_key, api_secret, Spark_url,domain, question, temperature):
