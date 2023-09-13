@@ -108,8 +108,43 @@ HISTORY_LEN = 3
 TEMPERATURE = 0.7
 # TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
+
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
+
+# TextSplitter
+
+text_splitter_dict = {
+    "ChineseRecursiveTextSplitter": {
+        "source": "huggingface",  ## 选择tiktoken则使用openai的方法
+        "tokenizer_name_or_path": "gpt2",
+    },
+    "RecursiveCharacterTextSplitter": {
+        "source": "tiktoken",
+        "tokenizer_name_or_path": "cl100k_base",
+
+    },
+    "MarkdownHeaderTextSplitter": {
+        "headers_to_split_on":
+            [
+                ("#", "head1"),
+                ("##", "head2"),
+                ("###", "head3"),
+                ("####", "head4"),
+            ]
+    },
+}
+
+# TEXT_SPLITTER 名称
+TEXT_SPLITTER_NAME = "RecursiveCharacterTextSplitter"
+
+
+# 知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)
+CHUNK_SIZE = 250
+
+# 知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)
+OVERLAP_SIZE = 50
+
 
 # 日志存储路径
 LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -124,6 +159,7 @@ if not os.path.exists(KB_ROOT_PATH):
 # 如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
 DB_ROOT_PATH = os.path.join(KB_ROOT_PATH, "info.db")
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_ROOT_PATH}"
+
 
 # 可选向量库类型及对应配置
 kbs_config = {
@@ -146,12 +182,6 @@ DEFAULT_VS_TYPE = "faiss"
 
 # 缓存向量库数量
 CACHED_VS_NUM = 1
-
-# 知识库中单段文本长度
-CHUNK_SIZE = 250
-
-# 知识库中相邻文本重合长度
-OVERLAP_SIZE = 50
 
 # 知识库匹配向量数量
 VECTOR_SEARCH_TOP_K = 5
