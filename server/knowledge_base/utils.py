@@ -237,7 +237,7 @@ class KnowledgeFile:
     def docs2texts(
         self,
         docs: List[Document] = None,
-        using_zh_title_enhance=ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         refresh: bool = False,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
@@ -252,14 +252,14 @@ class KnowledgeFile:
             docs = text_splitter.split_documents(docs)
 
         print(f"文档切分示例：{docs[0]}")
-        if using_zh_title_enhance:
+        if zh_title_enhance:
             docs = zh_title_enhance(docs)
         self.splited_docs = docs
         return self.splited_docs
 
     def file2text(
         self,
-        using_zh_title_enhance=ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         refresh: bool = False,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
@@ -268,7 +268,7 @@ class KnowledgeFile:
         if self.splited_docs is None or refresh:
             docs = self.file2docs()
             self.splited_docs = self.docs2texts(docs=docs,
-                                                using_zh_title_enhance=using_zh_title_enhance,
+                                                zh_title_enhance=zh_title_enhance,
                                                 refresh=refresh,
                                                 chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
@@ -287,6 +287,9 @@ class KnowledgeFile:
 
 def files2docs_in_thread(
         files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+        chunk_size: int = CHUNK_SIZE,
+        chunk_overlap: int = OVERLAP_SIZE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
@@ -314,6 +317,9 @@ def files2docs_in_thread(
             kwargs = file
             file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
         kwargs["file"] = file
+        kwargs["chunk_size"] = chunk_size
+        kwargs["chunk_overlap"] = chunk_overlap
+        kwargs["zh_title_enhance"] = zh_title_enhance
         kwargs_list.append(kwargs)
 
     for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
