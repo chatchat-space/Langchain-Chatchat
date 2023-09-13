@@ -8,6 +8,7 @@ from configs.model_config import (
     LLM_MODEL,
     llm_model_dict,
     HISTORY_LEN,
+    TEMPERATURE,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
@@ -269,7 +270,7 @@ class ApiRequest:
         messages: List[Dict],
         stream: bool = True,
         model: str = LLM_MODEL,
-        temperature: float = 0.7,
+        temperature: float = TEMPERATURE,
         max_tokens: int = 1024, # todo:根据message内容自动计算max_tokens
         no_remote_api: bool = None,
         **kwargs: Any,
@@ -310,6 +311,7 @@ class ApiRequest:
         history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -323,6 +325,7 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
         }
 
         print(f"received input message:")
@@ -345,6 +348,7 @@ class ApiRequest:
         history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -361,6 +365,7 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
             "local_doc_url": no_remote_api,
         }
 
@@ -386,6 +391,7 @@ class ApiRequest:
         top_k: int = SEARCH_ENGINE_TOP_K,
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -400,6 +406,7 @@ class ApiRequest:
             "top_k": top_k,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
         }
 
         print(f"received input message:")

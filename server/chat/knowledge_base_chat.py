@@ -1,7 +1,8 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
+                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                                  TEMPERATURE)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
 from langchain.chat_models import ChatOpenAI
@@ -32,6 +33,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                                                       ),
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                            temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
                             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
                             request: Request = None,
                         ):
@@ -55,6 +57,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
+            temperature=temperature,
             openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
