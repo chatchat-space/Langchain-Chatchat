@@ -50,6 +50,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                                            model_name: str = LLM_MODEL,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
+
         model = ChatOpenAI(
             streaming=True,
             verbose=True,

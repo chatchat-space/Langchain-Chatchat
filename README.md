@@ -144,6 +144,28 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
+### 知识库Text Splitter类型支持
+
+本项目支持调用 [Langchain](https://api.python.langchain.com/en/latest/api_reference.html#module-langchain.text_splitter) 的Text Splitter分词器以及基于此改进的自定义分词器，已支持的Text Splitter类型如下：
+
+- CharacterTextSplitter
+- LatexTextSplitter
+- MarkdownHeaderTextSplitter
+- MarkdownTextSplitter
+- NLTKTextSplitter
+- PythonCodeTextSplitter
+- RecursiveCharacterTextSplitter
+- SentenceTransformersTokenTextSplitter
+- SpacyTextSplitter
+
+已经支持的定制分词器如下：
+
+- AliTextSplitter
+- ChineseRecursiveTextSplitter
+- ChineseTextSplitter
+
+关于如何使用自定义分词器和贡献自己的分词器，可以参考[这里](docs/splitter.md)
+
 ## Docker 部署
 
 🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)`
@@ -214,6 +236,20 @@ embedding_model_dict = {
                         "m3e-base": "/Users/xxx/Downloads/m3e-base",
                        }
 ```
+
+- 请确认本地分词器路径是否已经填写，如：
+
+```python
+text_splitter_dict = {
+    "ChineseRecursiveTextSplitter": {
+        "source": "huggingface",  ## 选择tiktoken则使用openai的方法
+        "tokenizer_name_or_path": "", ## 空格不填则默认使用大模型的分词器。 
+        "chunk_size": 250, # 知识库中单段文本长度
+        "overlap_size": 50, # 知识库中相邻文本重合长度
+    }
+}
+ ```
+
 
 如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要能够访问OpenAI官的API，或设置代理。
 
