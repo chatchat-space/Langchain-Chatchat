@@ -70,6 +70,9 @@ FSCHAT_MODEL_WORKERS = {
     "minimax-api": { # 请为每个在线API设置不同的端口
         "port": 20004,
     },
+    "xinghuo-api": { # 请为每个在线API设置不同的端口
+        "port": 20005,
+    },
 }
 
 # fastchat multi model worker server
