@@ -6,7 +6,9 @@ import pandas as pd
 from server.knowledge_base.utils import get_file_path, LOADER_DICT
 from server.knowledge_base.kb_service.base import get_kb_details, get_kb_file_details
 from typing import Literal, Dict, Tuple
-from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE
+from configs.model_config import (embedding_model_dict, kbs_config,
+                                  EMBEDDING_MODEL, DEFAULT_VS_TYPE,
+                                  CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
 import os
 import time
 
@@ -125,25 +127,32 @@ def knowledge_base_page(api: ApiRequest):
     elif selected_kb:
         kb = selected_kb
 
+        with st.sidebar:
+            chunk_size = st.number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
+            chunk_overlap = st.number_input("相邻文本重合长度：", 0, 500, OVERLAP_SIZE)
+            zh_title_enhance = st.checkbox("开启中文标题加强：", ZH_TITLE_ENHANCE)
+
         # 上传文件
-        # sentence_size = st.slider("文本入库分句长度限制", 1, 1000, SENTENCE_SIZE, disabled=True)
-        files = st.file_uploader("上传知识文件",
+        files = st.file_uploader("上传知识文件：",
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
 
         if st.button(
                 "添加文件到知识库",
-                # help="请先上传文件，再点击添加",
                 # use_container_width=True,
                 disabled=len(files) == 0,
         ):
-            ret = api.upload_kb_docs(files, knowledge_base_name=kb, override=True)
+            ret = api.upload_kb_docs(files,
+                                     knowledge_base_name=kb,
+                                     override=True,
+                                     chunk_size=chunk_size,
+                                     chunk_overlap=chunk_overlap,
+                                     zh_title_enhance=zh_title_enhance)
             if msg := check_success_msg(ret):
                 st.toast(msg, icon="✔")
             elif msg := check_error_msg(ret):
                 st.toast(msg, icon="✖")
-            st.session_state.files = []
 
         st.divider()
 
@@ -216,7 +225,11 @@ def knowledge_base_page(api: ApiRequest):
                     use_container_width=True,
             ):
                 file_names = [row["file_name"] for row in selected_rows]
-                api.update_kb_docs(kb, file_names=file_names)
+                api.update_kb_docs(kb,
+                                   file_names=file_names,
+                                   chunk_size=chunk_size,
+                                   chunk_overlap=chunk_overlap,
+                                   zh_title_enhance=zh_title_enhance)
                 st.experimental_rerun()
 
             # 将文件从向量库中删除，但不删除文件本身。
@@ -251,7 +264,10 @@ def knowledge_base_page(api: ApiRequest):
             with st.spinner("向量库重构中，请耐心等待，勿刷新或关闭页面。"):
                 empty = st.empty()
                 empty.progress(0.0, "")
-                for d in api.recreate_vector_store(kb):
+                for d in api.recreate_vector_store(kb,
+                                                chunk_size=chunk_size,
+                                                chunk_overlap=chunk_overlap,
+                                                zh_title_enhance=zh_title_enhance):
                     if msg := check_error_msg(d):
                         st.toast(msg)
                     else:

@@ -5,7 +5,7 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs.model_config import llm_model_dict, LLM_MODEL
+from configs.model_config import LLM_MODEL, TEMPERATURE
 from server.utils import get_model_worker_config
 from typing import List, Dict
 
@@ -55,7 +55,7 @@ def dialogue_page(api: ApiRequest):
             st.toast(text)
             # sac.alert(text, description="descp", type="success", closable=True, banner=True)
 
-        dialogue_mode = st.selectbox("请选择对话模式",
+        dialogue_mode = st.selectbox("请选择对话模式：",
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
@@ -80,7 +80,7 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
+        cur_model = st.session_state.get("cur_llm_model", LLM_MODEL)
         index = llm_models.index(cur_model)
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
@@ -93,8 +93,9 @@ def dialogue_page(api: ApiRequest):
             and not get_model_worker_config(llm_model).get("online_api")):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
-            st.session_state["prev_llm_model"] = llm_model
+        st.session_state["cur_llm_model"] = llm_model
 
+        temperature = st.number_input("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
@@ -135,7 +136,7 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            r = api.chat_chat(prompt, history=history, model=llm_model)
+            r = api.chat_chat(prompt, history=history, model=llm_model, temperature=temperature)
             for t in r:
                 if error_msg := check_error_msg(t): # check whether error occured
                     st.error(error_msg)
@@ -150,7 +151,13 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="知识库匹配结果"),
             ])
             text = ""
-            for d in api.knowledge_base_chat(prompt, selected_kb, kb_top_k, score_threshold, history, model=llm_model):
+            for d in api.knowledge_base_chat(prompt,
+                                             knowledge_base_name=selected_kb,
+                                             top_k=kb_top_k,
+                                             score_threshold=score_threshold,
+                                             history=history,
+                                             model=llm_model,
+                                             temperature=temperature):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
@@ -164,7 +171,11 @@ def dialogue_page(api: ApiRequest):
                 Markdown("...", in_expander=True, title="网络搜索结果"),
             ])
             text = ""
-            for d in api.search_engine_chat(prompt, search_engine, se_top_k, model=llm_model):
+            for d in api.search_engine_chat(prompt,
+                                            search_engine_name=search_engine,
+                                            top_k=se_top_k,
+                                            model=llm_model,
+                                            temperature=temperature):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):

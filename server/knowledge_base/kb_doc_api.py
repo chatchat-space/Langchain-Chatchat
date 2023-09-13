@@ -3,6 +3,7 @@ import urllib
 from fastapi import File, Form, Body, Query, UploadFile
 from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
                                 VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                                CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
                                 logger, log_verbose,)
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder,get_file_path,
@@ -121,6 +122,9 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
                 override: bool = Form(False, description="覆盖已有文件"),
                 to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
+                chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+                chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+                zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
                 docs: Json = Form({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
                 not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
                 ) -> BaseResponse:
@@ -152,6 +156,9 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
             knowledge_base_name=knowledge_base_name,
             file_names=file_names,
             override_custom_docs=True,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            zh_title_enhance=zh_title_enhance,
             docs=docs,
             not_refresh_vs_cache=True,
         )
@@ -199,6 +206,9 @@ def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
 def update_docs(
     knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
     file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=["file_name"]),
+    chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
     docs: Json = Body({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
@@ -233,7 +243,10 @@ def update_docs(
 
     # 从文件生成docs，并进行向量化。
     # 这里利用了KnowledgeFile的缓存功能，在多线程中加载Document，然后传给KnowledgeFile
-    for status, result in files2docs_in_thread(kb_files):
+    for status, result in files2docs_in_thread(kb_files,
+                                               chunk_size=chunk_size,
+                                               chunk_overlap=chunk_overlap,
+                                               zh_title_enhance=zh_title_enhance):
         if status:
             kb_name, file_name, new_docs = result
             kb_file = KnowledgeFile(filename=file_name,
@@ -307,7 +320,10 @@ def recreate_vector_store(
     allow_empty_kb: bool = Body(True),
     vs_type: str = Body(DEFAULT_VS_TYPE),
     embed_model: str = Body(EMBEDDING_MODEL),
-    ):
+    chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+):
     '''
     recreate vector store from the content.
     this is usefull when user can copy files to content folder directly instead of upload through network.
@@ -325,7 +341,10 @@ def recreate_vector_store(
             files = list_files_from_folder(knowledge_base_name)
             kb_files = [(file, knowledge_base_name) for file in files]
             i = 0
-            for status, result in files2docs_in_thread(kb_files):
+            for status, result in files2docs_in_thread(kb_files,
+                                                    chunk_size=chunk_size,
+                                                    chunk_overlap=chunk_overlap,
+                                                    zh_title_enhance=zh_title_enhance):
                 if status:
                     kb_name, file_name, docs = result
                     kb_file = KnowledgeFile(filename=file_name, knowledge_base_name=kb_name)

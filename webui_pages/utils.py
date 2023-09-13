@@ -8,7 +8,11 @@ from configs.model_config import (
     LLM_MODEL,
     llm_model_dict,
     HISTORY_LEN,
+    TEMPERATURE,
     SCORE_THRESHOLD,
+    CHUNK_SIZE,
+    OVERLAP_SIZE,
+    ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     logger, log_verbose,
@@ -269,7 +273,7 @@ class ApiRequest:
         messages: List[Dict],
         stream: bool = True,
         model: str = LLM_MODEL,
-        temperature: float = 0.7,
+        temperature: float = TEMPERATURE,
         max_tokens: int = 1024, # todo:根据message内容自动计算max_tokens
         no_remote_api: bool = None,
         **kwargs: Any,
@@ -310,6 +314,7 @@ class ApiRequest:
         history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -323,6 +328,7 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
         }
 
         print(f"received input message:")
@@ -345,6 +351,7 @@ class ApiRequest:
         history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -361,6 +368,7 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
             "local_doc_url": no_remote_api,
         }
 
@@ -386,6 +394,7 @@ class ApiRequest:
         top_k: int = SEARCH_ENGINE_TOP_K,
         stream: bool = True,
         model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
         no_remote_api: bool = None,
     ):
         '''
@@ -400,6 +409,7 @@ class ApiRequest:
             "top_k": top_k,
             "stream": stream,
             "model_name": model,
+            "temperature": temperature,
         }
 
         print(f"received input message:")
@@ -568,6 +578,9 @@ class ApiRequest:
         knowledge_base_name: str,
         override: bool = False,
         to_vector_store: bool = True,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
         docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
@@ -593,6 +606,9 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "override": override,
             "to_vector_store": to_vector_store,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
             "docs": docs,
             "not_refresh_vs_cache": not_refresh_vs_cache,
         }
@@ -658,6 +674,9 @@ class ApiRequest:
         knowledge_base_name: str,
         file_names: List[str],
         override_custom_docs: bool = False,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
         docs: Dict = {},
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
@@ -672,6 +691,9 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "file_names": file_names,
             "override_custom_docs": override_custom_docs,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
             "docs": docs,
             "not_refresh_vs_cache": not_refresh_vs_cache,
         }
@@ -694,6 +716,9 @@ class ApiRequest:
         allow_empty_kb: bool = True,
         vs_type: str = DEFAULT_VS_TYPE,
         embed_model: str = EMBEDDING_MODEL,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
         no_remote_api: bool = None,
     ):
         '''
@@ -707,6 +732,9 @@ class ApiRequest:
             "allow_empty_kb": allow_empty_kb,
             "vs_type": vs_type,
             "embed_model": embed_model,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
         }
 
         if no_remote_api:

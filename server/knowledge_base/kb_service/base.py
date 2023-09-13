@@ -50,10 +50,9 @@ class KBService(ABC):
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
 
-    def save_vector_store(self, vector_store=None):
+    def save_vector_store(self):
         '''
-        保存向量库，仅支持FAISS。对于其它向量库该函数不做任何操作。
-        减少FAISS向量库操作时的类型判断。
+        保存向量库:FAISS保存到磁盘，milvus保存到数据库。PGVector暂未支持
         '''
         pass
 
