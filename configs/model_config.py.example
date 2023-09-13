@@ -123,11 +123,11 @@ LLM_DEVICE = "auto"
 
 text_splitter_dict = {
     "ChineseRecursiveTextSplitter": {
-        "source": "huggingface",  ## 选择tiktoken则使用openai的方法
+        "source": "huggingface",
         "tokenizer_name_or_path": "gpt2",
     },
     "SpacyTextSplitter": {
-        "source": "huggingface",
+        "source": "",
         "tokenizer_name_or_path": "",
     },
     "RecursiveCharacterTextSplitter": {
@@ -148,8 +148,6 @@ text_splitter_dict = {
 
 # TEXT_SPLITTER 名称
 TEXT_SPLITTER_NAME = "SpacyTextSplitter"
-
-
 
 # 知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)
 CHUNK_SIZE = 250

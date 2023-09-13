@@ -144,7 +144,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
-### 知识库Text Splitter类型支持
+### Text Splitter 个性化支持
 
 本项目支持调用 [Langchain](https://api.python.langchain.com/en/latest/api_reference.html#module-langchain.text_splitter) 的Text Splitter分词器以及基于此改进的自定义分词器，已支持的Text Splitter类型如下：
 
@@ -242,10 +242,8 @@ embedding_model_dict = {
 ```python
 text_splitter_dict = {
     "ChineseRecursiveTextSplitter": {
-        "source": "huggingface",  ## 选择tiktoken则使用openai的方法
+        "source": "huggingface",  ## 选择tiktoken则使用openai的方法,不填写则默认为字符长度切割方法。
         "tokenizer_name_or_path": "", ## 空格不填则默认使用大模型的分词器。 
-        "chunk_size": 250, # 知识库中单段文本长度
-        "overlap_size": 50, # 知识库中相邻文本重合长度
     }
 }
  ```

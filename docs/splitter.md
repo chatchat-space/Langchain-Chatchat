@@ -7,12 +7,10 @@ from .my_splitter import MySplitter
 ```
 2. 修改```config/model_config.py```文件，将您的分词器名字添加到```text_splitter_dict```中，如下所示：
 ```python
-MySplitter": {
+MySplitter: {
         "source": "huggingface",  ## 选择tiktoken则使用openai的方法
-        "tokenizer_name_or_path": "your tokenizer",
-        "chunk_size": 250,
-        "overlap_size": 50,
-    },
+        "tokenizer_name_or_path": "your tokenizer", #如果选择huggingface则使用huggingface的方法，部分tokenizer需要从Huggingface下载
+    }
 TEXT_SPLITTER_NAME = "MySplitter"
 ```
 完成上述步骤后，就能使用自己的分词器了。
