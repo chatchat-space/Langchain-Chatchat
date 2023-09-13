@@ -95,7 +95,14 @@ llm_model_dict = {
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
-
+"xinghuo-api": {
+        "api_base_url": "http://127.0.0.1:8888/v1",
+        "APPID": "",
+        "APISecret": "",
+        "api_key": "",
+        "is_v2": False,
+        "provider": "XingHuoWorker",
+    }
 }
 
 # LLM 名称
