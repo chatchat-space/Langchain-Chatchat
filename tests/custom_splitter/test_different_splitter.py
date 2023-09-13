@@ -13,8 +13,11 @@ import langchain.document_loaders
 import importlib
 
 
-def test_different_splitter(splitter_name, chunk_size: int = CHUNK_SIZE,
-                            chunk_overlap: int = OVERLAP_SIZE, ):
+def test_different_splitter(
+        splitter_name,
+        chunk_size: int = CHUNK_SIZE,
+        chunk_overlap: int = OVERLAP_SIZE,
+):
     if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
         headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
         text_splitter = langchain.text_splitter.MarkdownHeaderTextSplitter(
@@ -72,7 +75,7 @@ if __name__ == "__main__":
     filepath = "../../knowledge_base/samples/content/test.txt"
     loader = document_loaders.UnstructuredFileLoader(filepath, autodetect_encoding=True)
     docs = loader.load()
-    text_splitter = text_different_splitter(TEXT_SPLITTER_NAME, CHUNK_SIZE, OVERLAP_SIZE)
+    text_splitter = test_different_splitter(TEXT_SPLITTER_NAME, CHUNK_SIZE, OVERLAP_SIZE)
     # 使用text_splitter进行分词
 
     if TEXT_SPLITTER_NAME == "MarkdownHeaderTextSplitter":
