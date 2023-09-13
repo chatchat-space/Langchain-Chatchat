@@ -10,30 +10,6 @@ from server.utils import iter_over_async, asyncio
 from typing import List, Dict
 
 
-# copy from xinghuo's python example code
-text = []
-def getText(role,content):
-    jsoncon = {}
-    jsoncon["role"] = role
-    jsoncon["content"] = content
-    text.append(jsoncon)
-    return text
-
-def getlength(text):
-    length = 0
-    for content in text:
-        temp = content["content"]
-        leng = len(temp)
-        length += leng
-    return length
-
-def checklen(text):
-    while (getlength(text) > 8000):
-        del text[0]
-    return text
-# copy from xinghuo's python example code
-
-
 async def request(appid, api_key, api_secret, Spark_url,domain, question, temperature):
     # print("星火:")
     wsParam = SparkApi.Ws_Param(appid, api_key, api_secret, Spark_url)
