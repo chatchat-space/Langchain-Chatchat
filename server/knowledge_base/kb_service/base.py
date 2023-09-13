@@ -34,6 +34,7 @@ class SupportedVSType:
     MILVUS = 'milvus'
     DEFAULT = 'default'
     PG = 'pg'
+    ES = 'es'
 
 
 class KBService(ABC):
@@ -239,6 +240,9 @@ class KBServiceFactory:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,
                                    embed_model=embed_model)  # other milvus parameters are set in model_config.kbs_config
+        elif SupportedVSType.ES == vector_store_type:
+            from server.knowledge_base.kb_service.es_kb_service import ESKBService
+            return ESKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.DEFAULT == vector_store_type:  # kb_exists of default kbservice is False, to make validation easier.
             from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
             return DefaultKBService(kb_name)
