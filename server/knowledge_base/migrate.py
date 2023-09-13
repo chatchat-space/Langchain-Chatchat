@@ -1,4 +1,6 @@
-from configs.model_config import EMBEDDING_MODEL, DEFAULT_VS_TYPE, logger, log_verbose
+from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE,
+                                  CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+                                  logger, log_verbose)
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         list_files_from_folder,files2docs_in_thread,
                                         KnowledgeFile,)
@@ -6,11 +8,7 @@ from server.knowledge_base.kb_service.base import KBServiceFactory, SupportedVST
 from server.db.repository.knowledge_file_repository import add_file_to_db
 from server.db.base import Base, engine
 import os
-from concurrent.futures import ThreadPoolExecutor
 from typing import Literal, Any, List
-
-
-pool = ThreadPoolExecutor(os.cpu_count())
 
 
 def create_tables():
@@ -40,6 +38,9 @@ def folder2db(
     mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = OVERLAP_SIZE,
+    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
     use existed files in local folder to populate database and/or vector store.
@@ -60,7 +61,10 @@ def folder2db(
         print(f"清理后，知识库 {kb_name} 中共有 {files_count} 个文档。")
 
         kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
-        for success, result in files2docs_in_thread(kb_files, pool=pool):
+        for success, result in files2docs_in_thread(kb_files,
+                                                    chunk_size=chunk_size,
+                                                    chunk_overlap=chunk_overlap,
+                                                    zh_title_enhance=zh_title_enhance):
             if success:
                 _, filename, docs = result
                 print(f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档")
@@ -89,7 +93,10 @@ def folder2db(
         files = list(set(folder_files) - set(db_files))
         kb_files = file_to_kbfile(kb_name, files)
 
-        for success, result in files2docs_in_thread(kb_files, pool=pool):
+        for success, result in files2docs_in_thread(kb_files,
+                                                    chunk_size=chunk_size,
+                                                    chunk_overlap=chunk_overlap,
+                                                    zh_title_enhance=zh_title_enhance):
             if success:
                 _, filename, docs = result
                 print(f"正在将 {kb_name}/{filename} 添加到向量库")
