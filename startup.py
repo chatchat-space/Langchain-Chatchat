@@ -18,7 +18,7 @@ except:
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
-    logger, log_verbose
+    logger, log_verbose, TEXT_SPLITTER_NAME
 from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, HTTPX_DEFAULT_TIMEOUT)
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
@@ -464,7 +464,10 @@ def dump_server_info(after_start=False, args=None):
     models = [LLM_MODEL]
     if args and args.model_name:
         models = args.model_name
+
+    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
     print(f"当前启动的LLM模型：{models} @ {llm_device()}")
+
     for model in models:
         pprint(llm_model_dict[model])
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")

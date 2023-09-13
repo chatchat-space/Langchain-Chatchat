@@ -88,14 +88,14 @@ llm_model_dict = {
         "provider": "ChatGLMWorker",
         "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
     },
-"minimax-api": {
+    "minimax-api": {
         "api_base_url": "http://127.0.0.1:8888/v1",
         "group_id": "",
         "api_key": "",
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
-"xinghuo-api": {
+    "xinghuo-api": {
         "api_base_url": "http://127.0.0.1:8888/v1",
         "APPID": "",
         "APISecret": "",
@@ -126,11 +126,15 @@ text_splitter_dict = {
         "source": "huggingface",  ## 选择tiktoken则使用openai的方法
         "tokenizer_name_or_path": "gpt2",
     },
+    "SpacyTextSplitter": {
+        "source": "huggingface",
+        "tokenizer_name_or_path": "",
+    },
     "RecursiveCharacterTextSplitter": {
         "source": "tiktoken",
         "tokenizer_name_or_path": "cl100k_base",
-
     },
+
     "MarkdownHeaderTextSplitter": {
         "headers_to_split_on":
             [
@@ -143,7 +147,8 @@ text_splitter_dict = {
 }
 
 # TEXT_SPLITTER 名称
-TEXT_SPLITTER_NAME = "RecursiveCharacterTextSplitter"
+TEXT_SPLITTER_NAME = "SpacyTextSplitter"
+
 
 
 # 知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)

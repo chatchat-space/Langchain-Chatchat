@@ -8,7 +8,7 @@ from configs.model_config import (
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger, log_verbose, text_splitter_dict, llm_model_dict, LLM_MODEL,
+    logger, log_verbose, text_splitter_dict, llm_model_dict, LLM_MODEL,TEXT_SPLITTER_NAME
 )
 import importlib
 from text_splitter import zh_title_enhance
@@ -177,7 +177,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = "SpacyTextSplitter",
+    splitter_name: str = TEXT_SPLITTER_NAME,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = OVERLAP_SIZE,
 ):
@@ -185,13 +185,11 @@ def make_text_splitter(
     根据参数获取特定的分词器
     '''
     splitter_name = splitter_name or "SpacyTextSplitter"
-    text_splitter_module = importlib.import_module('langchain.text_splitter')
     try:
         if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
             headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
             text_splitter = langchain.text_splitter.MarkdownHeaderTextSplitter(
                 headers_to_split_on=headers_to_split_on)
-
         else:
 
             try:  ## 优先使用用户自定义的text_splitter
@@ -258,9 +256,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-
-        # TODO: 增加依据文件格式匹配text_splitter
-        self.text_splitter_name = None
+        self.text_splitter_name = TEXT_SPLITTER_NAME
 
     def file2docs(self, refresh: bool=False):
         if self.docs is None or refresh:
@@ -284,7 +280,14 @@ class KnowledgeFile:
         if self.ext not in [".csv"]:
             if text_splitter is None:
                 text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            docs = text_splitter.split_documents(docs)
+            if self.text_splitter_name == "MarkdownHeaderTextSplitter":
+                docs = text_splitter.split_text(docs[0].page_content)
+                for doc in docs:
+                    # 如果文档有元数据
+                    if doc.metadata:
+                        doc.metadata["source"] = os.path.basename(self.filepath)
+            else:
+                docs = text_splitter.split_documents(docs)
 
         print(f"文档切分示例：{docs[0]}")
         if zh_title_enhance:
