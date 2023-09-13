@@ -68,10 +68,14 @@ class MilvusKBService(KBService):
         return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
-        # TODO: workaround for bug #10492 in langchain==0.0.286
+        # TODO: workaround for bug #10492 in langchain
         for doc in docs:
+            for k, v in doc.metadata.items():
+                doc.metadata[k] = str(v)
             for field in self.milvus.fields:
                 doc.metadata.setdefault(field, "")
+            doc.metadata.pop(self.milvus._text_field, None)
+            doc.metadata.pop(self.milvus._vector_field, None)
 
         ids = self.milvus.add_documents(docs)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]

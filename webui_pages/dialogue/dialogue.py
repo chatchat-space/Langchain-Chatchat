@@ -80,7 +80,7 @@ def dialogue_page(api: ApiRequest):
             if x in config_models:
                 config_models.remove(x)
         llm_models = running_models + config_models
-        cur_model = st.session_state.get("prev_llm_model", LLM_MODEL)
+        cur_model = st.session_state.get("cur_llm_model", LLM_MODEL)
         index = llm_models.index(cur_model)
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
@@ -93,7 +93,7 @@ def dialogue_page(api: ApiRequest):
             and not get_model_worker_config(llm_model).get("online_api")):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
-            st.session_state["prev_llm_model"] = llm_model
+        st.session_state["cur_llm_model"] = llm_model
 
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 

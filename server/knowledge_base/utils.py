@@ -82,16 +82,16 @@ SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
 class CustomJSONLoader(langchain.document_loaders.JSONLoader):
     '''
-    langchain的JSONLoader需要jq，在win上使用不便，进行替代。
+    langchain的JSONLoader需要jq，在win上使用不便，进行替代。针对langchain==0.0.286
     '''
 
     def __init__(
-            self,
-            file_path: Union[str, Path],
-            content_key: Optional[str] = None,
-            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-            text_content: bool = True,
-            json_lines: bool = False,
+        self,
+        file_path: Union[str, Path],
+        content_key: Optional[str] = None,
+        metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
+        text_content: bool = True,
+        json_lines: bool = False,
     ):
         """Initialize the JSONLoader.
 
@@ -113,21 +113,6 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
         self._text_content = text_content
         self._json_lines = json_lines
 
-    # TODO: langchain's JSONLoader.load has a encoding bug, raise gbk encoding error on windows.
-    # This is a workaround for langchain==0.0.266. I have make a pr(#9785) to langchain, it should be deleted after langchain upgraded.
-    def load(self) -> List[Document]:
-        """Load and return documents from the JSON file."""
-        docs: List[Document] = []
-        if self._json_lines:
-            with self.file_path.open(encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        self._parse(line, docs)
-        else:
-            self._parse(self.file_path.read_text(encoding="utf-8"), docs)
-        return docs
-
     def _parse(self, content: str, docs: List[Document]) -> None:
         """Convert given content to documents."""
         data = json.loads(content)
@@ -137,13 +122,14 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
         # and prevent the user from getting a cryptic error later on.
         if self._content_key is not None:
             self._validate_content_key(data)
+        if self._metadata_func is not None:
+            self._validate_metadata_func(data)
 
         for i, sample in enumerate(data, len(docs) + 1):
-            metadata = dict(
-                source=str(self.file_path),
-                seq_num=i,
+            text = self._get_text(sample=sample)
+            metadata = self._get_metadata(
+                sample=sample, source=str(self.file_path), seq_num=i
             )
-            text = self._get_text(sample=sample, metadata=metadata)
             docs.append(Document(page_content=text, metadata=metadata))
 
 

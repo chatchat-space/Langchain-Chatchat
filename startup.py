@@ -88,6 +88,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     args.limit_worker_concurrency = 5
     args.stream_interval = 2
     args.no_register = False
+    args.embed_in_truncate = False
 
     for k, v in kwargs.items():
         setattr(args, k, v)
@@ -148,6 +149,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             awq_config=awq_config,
             stream_interval=args.stream_interval,
             conv_template=args.conv_template,
+            embed_in_truncate=args.embed_in_truncate,
         )
         sys.modules["fastchat.serve.model_worker"].args = args
         sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config

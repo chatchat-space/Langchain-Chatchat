@@ -14,7 +14,7 @@ from pprint import pprint
 
 
 api_base_url = api_address()
-api: ApiRequest = ApiRequest(api_base_url, no_remote_api=True)
+api: ApiRequest = ApiRequest(api_base_url, no_remote_api=False)
 
 
 kb = "kb_for_api_test"
