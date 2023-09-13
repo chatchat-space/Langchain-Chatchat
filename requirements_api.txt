@@ -1,7 +1,7 @@
-langchain==0.0.266
+langchain==0.0.287
+fschat[model_worker]==0.2.28
 openai
 sentence_transformers
-fschat==0.2.24
 transformers>=4.31.0
 torch~=2.0.0
 fastapi~=0.99.1
