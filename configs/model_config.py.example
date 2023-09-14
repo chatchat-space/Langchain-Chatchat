@@ -75,8 +75,8 @@ llm_model_dict = {
     # 比如: "openai_proxy": 'http://127.0.0.1:4780'
     "gpt-3.5-turbo": {
         "api_base_url": "https://api.openai.com/v1",
-        "api_key": os.environ.get("OPENAI_API_KEY"),
-        "openai_proxy": os.environ.get("OPENAI_PROXY")
+        "api_key": "",
+        "openai_proxy": ""
     },
     # 线上模型。当前支持智谱AI。
     # 如果没有设置有效的local_model_path，则认为是在线模型API。
@@ -84,7 +84,7 @@ llm_model_dict = {
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "chatglm-api": {
         "api_base_url": "http://127.0.0.1:8888/v1",
-        "api_key": os.environ.get("ZHIPUAI_API_KEY"),
+        "api_key": "",
         "provider": "ChatGLMWorker",
         "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
     },
