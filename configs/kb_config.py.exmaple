@@ -1,8 +1,6 @@
 import os
 
 
-
-
 # 默认向量库类型。可选：faiss, milvus, pg.
 DEFAULT_VS_TYPE = "faiss"
 
