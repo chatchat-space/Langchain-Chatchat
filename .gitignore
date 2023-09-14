@@ -6,4 +6,7 @@ __pycache__/
 /knowledge_base/
 /configs/*.py
 .vscode/
-.pytest_cache/
+.pytest_cache
+.DS_Store
+
+
