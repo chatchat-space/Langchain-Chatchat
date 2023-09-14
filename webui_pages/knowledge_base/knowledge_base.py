@@ -130,7 +130,7 @@ def knowledge_base_page(api: ApiRequest):
         with st.sidebar:
             chunk_size = st.number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
             chunk_overlap = st.number_input("相邻文本重合长度：", 0, 500, OVERLAP_SIZE)
-            zh_title_enhance = st.checkbox("开启中文标题加强：", ZH_TITLE_ENHANCE)
+            zh_title_enhance = st.checkbox("开启中文标题加强", ZH_TITLE_ENHANCE)
 
         # 上传文件
         files = st.file_uploader("上传知识文件：",
