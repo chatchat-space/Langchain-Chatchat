@@ -133,7 +133,7 @@ class SummaryAdapter:
         print(summary_combine)
         print(summary_intermediate_steps)
 
-        if summary_combine in None:
+        if len(summary_combine) == 0:
             # 为空重新生成，数量减半
             result_docs = [
                 Document(page_content=question_result_key, metadata=docs[i].metadata)
