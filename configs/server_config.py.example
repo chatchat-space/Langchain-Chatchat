@@ -1,4 +1,4 @@
-from server.utils import llm_device
+from configs.model_config import LLM_DEVICE
 import httpx
 
 # httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
@@ -37,7 +37,7 @@ FSCHAT_MODEL_WORKERS = {
     "default": {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
-        "device": llm_device(),
+        "device": LLM_DEVICE,
 
         # 多卡加载需要配置的参数
         # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"

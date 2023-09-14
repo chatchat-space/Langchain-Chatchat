@@ -6,9 +6,10 @@ import pandas as pd
 from server.knowledge_base.utils import get_file_path, LOADER_DICT
 from server.knowledge_base.kb_service.base import get_kb_details, get_kb_file_details
 from typing import Literal, Dict, Tuple
-from configs.model_config import (embedding_model_dict, kbs_config,
-                                  EMBEDDING_MODEL, DEFAULT_VS_TYPE,
-                                  CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
+from configs import (kbs_config,
+                    EMBEDDING_MODEL, DEFAULT_VS_TYPE,
+                    CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
+from server.utils import list_embed_models
 import os
 import time
 
@@ -94,7 +95,7 @@ def knowledge_base_page(api: ApiRequest):
                 key="vs_type",
             )
 
-            embed_models = list(embedding_model_dict.keys())
+            embed_models = list_embed_models()
 
             embed_model = cols[1].selectbox(
                 "Embedding 模型",

@@ -1,3 +1,6 @@
+import os
+
+
 # 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
 # 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录
 MODEL_ROOT_PATH = ""
@@ -11,31 +14,33 @@ MODEL_ROOT_PATH = ""
 #           - text2vec-large-chinese
 #       2.2 如果以上本地路径不存在，则使用huggingface模型
 MODEL_PATH = {
-    # embedding models
-    "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
-    "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec-base": "shibing624/text2vec-base-chinese",
-    "text2vec": "GanymedeNil/text2vec-large-chinese",
-    "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
-    "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
-    "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
-    "text2vec-bge-large-chinese": "shibing624/text2vec-bge-large-chinese",
-    "m3e-small": "moka-ai/m3e-small",
-    "m3e-base": "moka-ai/m3e-base",
-    "m3e-large": "moka-ai/m3e-large",
-    "bge-small-zh": "BAAI/bge-small-zh",
-    "bge-base-zh": "BAAI/bge-base-zh",
-    "bge-large-zh": "BAAI/bge-large-zh",
-    "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
-    "piccolo-base-zh": "sensenova/piccolo-base-zh",
-    "piccolo-large-zh": "sensenova/piccolo-large-zh",
-    "text-embedding-ada-002": "your OPENAI_API_KEY",
-
-    # llm models. 
+    "embed_model": {
+        "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
+        "ernie-base": "nghuyong/ernie-3.0-base-zh",
+        "text2vec-base": "shibing624/text2vec-base-chinese",
+        "text2vec": "GanymedeNil/text2vec-large-chinese",
+        "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
+        "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
+        "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
+        "text2vec-bge-large-chinese": "shibing624/text2vec-bge-large-chinese",
+        "m3e-small": "moka-ai/m3e-small",
+        "m3e-base": "moka-ai/m3e-base",
+        "m3e-large": "moka-ai/m3e-large",
+        "bge-small-zh": "BAAI/bge-small-zh",
+        "bge-base-zh": "BAAI/bge-base-zh",
+        "bge-large-zh": "BAAI/bge-large-zh",
+        "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
+        "piccolo-base-zh": "sensenova/piccolo-base-zh",
+        "piccolo-large-zh": "sensenova/piccolo-large-zh",
+        "text-embedding-ada-002": "your OPENAI_API_KEY",
+}, 
     # TODO: add all supported llm models
-    "chatglm-6b": "THUDM/chatglm-6b",
-    "chatglm2-6b": "THUDM/chatglm2-6b",
-    "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+    "llm_model": {
+        "chatglm-6b": "THUDM/chatglm-6b",
+        "chatglm2-6b": "THUDM/chatglm2-6b",
+        "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
+        "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+    },
 }
 
 # 选用的 Embedding 名称
@@ -78,21 +83,21 @@ ONLINE_LLM_MODEL = {
         "api_key": "your OPENAI_API_KEY",
         "openai_proxy": "your OPENAI_PROXY",
     },
-    # 线上模型。当前支持智谱AI。
-    # 如果没有设置有效的local_model_path，则认为是在线模型API。
-    # 请在server_config中为每个在线API设置不同的端口
+    # 线上模型。请在server_config中为每个在线API设置不同的端口
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "chatglm-api": {
         "api_key": "",
-        "provider": "ChatGLMWorker",
         "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
+        "provider": "ChatGLMWorker",
     },
+    # 具体注册及api key获取请前往 https://api.minimax.chat/
     "minimax-api": {
         "group_id": "",
         "api_key": "",
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
+# 具体注册及api key获取请前往 https://xinghuo.xfyun.cn/
     "xinghuo-api": {
         "APPID": "",
         "APISecret": "",
@@ -101,3 +106,9 @@ ONLINE_LLM_MODEL = {
         "provider": "XingHuoWorker",
     }
 }
+
+
+# 通常情况下不需要更改以下内容
+
+# nltk 模型存储路径
+NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")

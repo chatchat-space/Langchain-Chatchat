@@ -4,8 +4,10 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
-from configs.server_config import FSCHAT_MODEL_WORKERS
+from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
+                     MODEL_PATH, MODEL_ROOT_PATH,
+                     logger, log_verbose,
+                    FSCHAT_MODEL_WORKERS)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Literal, Optional, Callable, Generator, Dict, Any
@@ -198,20 +200,31 @@ def MakeFastAPIOffline(
 
 
 # 从model_config中获取模型信息
-def get_model_path(model_name: str) -> Optional[str]:
-    from configs.model_config import MODEL_PATH, MODEL_ROOT_PATH
+def list_embed_models() -> List[str]:
+    return list(MODEL_PATH["embed_model"])
 
-    if path_str := MODEL_PATH.get(model_name):
+def list_llm_models() -> List[str]:
+    return list(MODEL_PATH["llm_model"])
+
+def get_model_path(model_name: str, type: str = None) -> Optional[str]:
+    if type in MODEL_PATH:
+        paths = MODEL_PATH[type]
+    else:
+        paths = {}
+        for v in MODEL_PATH.values():
+            paths.update(v)
+
+    if path_str := paths.get(model_name):
         path = Path(path_str)
         if path.is_dir(): # /xxx/xxx/chatglm-6b
             return str(path)
 
-        MODEL_ROOT_PATH = Path(MODEL_ROOT_PATH)
-        if MODEL_ROOT_PATH.is_dir():
-            path = MODEL_ROOT_PATH / model_name
+        root_path = Path(MODEL_ROOT_PATH)
+        if root_path.is_dir():
+            path = root_path / model_name
             if path.is_dir(): # {MODEL_ROOT_PATH}/chatglm-6b
                 return str(path)
-            path = MODEL_ROOT_PATH / path_str
+            path = root_path / path_str
             if path.is_dir(): # {MODEL_ROOT_PATH}/THUDM/chatglm06b
                 return str(path)
         return path_str # THUDM/chatglm06b
@@ -277,7 +290,7 @@ def fschat_openai_api_address() -> str:
 
     host = FSCHAT_OPENAI_API["host"]
     port = FSCHAT_OPENAI_API["port"]
-    return f"http://{host}:{port}"
+    return f"http://{host}:{port}/v1"
 
 
 def api_address() -> str:

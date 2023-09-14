@@ -1,8 +1,8 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
-from configs.model_config import (LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                  TEMPERATURE)
+from configs import (LLM_MODEL, PROMPT_TEMPLATE,
+                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                    TEMPERATURE)
 from server.chat.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse
 from langchain import LLMChain

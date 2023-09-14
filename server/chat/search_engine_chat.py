@@ -1,10 +1,10 @@
 from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
-from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
+from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, 
+                     LLM_MODEL, SEARCH_ENGINE_TOP_K,
+                    PROMPT_TEMPLATE, TEMPERATURE)
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
-from configs.model_config import (LLM_MODEL, SEARCH_ENGINE_TOP_K,
-                                  PROMPT_TEMPLATE, TEMPERATURE)
 from server.chat.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse
 from langchain import LLMChain

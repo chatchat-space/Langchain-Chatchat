@@ -4,7 +4,7 @@ from transformers import AutoTokenizer
 import sys
 
 sys.path.append("../..")
-from configs.model_config import (
+from configs import (
     CHUNK_SIZE,
     OVERLAP_SIZE
 )

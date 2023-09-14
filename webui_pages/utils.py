@@ -15,9 +15,9 @@ from configs import (
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     FSCHAT_MODEL_WORKERS,
+    HTTPX_DEFAULT_TIMEOUT,
     logger, log_verbose,
 )
-from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn

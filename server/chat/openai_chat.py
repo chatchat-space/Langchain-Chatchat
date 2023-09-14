@@ -1,7 +1,7 @@
 from fastapi.responses import StreamingResponse
 from typing import List
 import openai
-from configs.model_config import LLM_MODEL, logger, log_verbose
+from configs import LLM_MODEL, logger, log_verbose
 from server.utils import get_model_worker_config, fschat_openai_api_address
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class OpenAiChatMsgIn(BaseModel):
 
 async def openai_chat(msg: OpenAiChatMsgIn):
     config = get_model_worker_config(msg.model)
-    openai.api_key = config.get("api_key")
+    openai.api_key = config.get("api_key", "EMPTY")
     print(f"{openai.api_key=}")
     openai.api_base = fschat_openai_api_address()
     print(f"{openai.api_base=}")

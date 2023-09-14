@@ -17,7 +17,7 @@ def get_ChatOpenAI(
         streaming=True,
         verbose=True,
         callbacks=callbacks,
-        openai_api_key=config.get("api_key"),
+        openai_api_key=config.get("api_key", "EMPTY"),
         openai_api_base=fschat_openai_api_address(),
         model_name=model_name,
         temperature=temperature,
