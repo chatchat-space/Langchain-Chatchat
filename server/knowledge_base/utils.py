@@ -1,15 +1,14 @@
 import os
-from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+
+from transformers import AutoTokenizer
+
 from configs.model_config import (
-    embedding_model_dict,
     EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger, log_verbose,
+    logger, log_verbose, text_splitter_dict, llm_model_dict, LLM_MODEL,TEXT_SPLITTER_NAME
 )
 import importlib
 from text_splitter import zh_title_enhance
@@ -82,16 +81,16 @@ SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
 class CustomJSONLoader(langchain.document_loaders.JSONLoader):
     '''
-    langchain的JSONLoader需要jq，在win上使用不便，进行替代。
+    langchain的JSONLoader需要jq，在win上使用不便，进行替代。针对langchain==0.0.286
     '''
 
     def __init__(
-            self,
-            file_path: Union[str, Path],
-            content_key: Optional[str] = None,
-            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-            text_content: bool = True,
-            json_lines: bool = False,
+        self,
+        file_path: Union[str, Path],
+        content_key: Optional[str] = None,
+        metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
+        text_content: bool = True,
+        json_lines: bool = False,
     ):
         """Initialize the JSONLoader.
 
@@ -113,21 +112,6 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
         self._text_content = text_content
         self._json_lines = json_lines
 
-    # TODO: langchain's JSONLoader.load has a encoding bug, raise gbk encoding error on windows.
-    # This is a workaround for langchain==0.0.266. I have make a pr(#9785) to langchain, it should be deleted after langchain upgraded.
-    def load(self) -> List[Document]:
-        """Load and return documents from the JSON file."""
-        docs: List[Document] = []
-        if self._json_lines:
-            with self.file_path.open(encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        self._parse(line, docs)
-        else:
-            self._parse(self.file_path.read_text(encoding="utf-8"), docs)
-        return docs
-
     def _parse(self, content: str, docs: List[Document]) -> None:
         """Convert given content to documents."""
         data = json.loads(content)
@@ -137,13 +121,14 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
         # and prevent the user from getting a cryptic error later on.
         if self._content_key is not None:
             self._validate_content_key(data)
+        if self._metadata_func is not None:
+            self._validate_metadata_func(data)
 
         for i, sample in enumerate(data, len(docs) + 1):
-            metadata = dict(
-                source=str(self.file_path),
-                seq_num=i,
+            text = self._get_text(sample=sample)
+            metadata = self._get_metadata(
+                sample=sample, source=str(self.file_path), seq_num=i
             )
-            text = self._get_text(sample=sample, metadata=metadata)
             docs.append(Document(page_content=text, metadata=metadata))
 
 
@@ -192,7 +177,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = "SpacyTextSplitter",
+    splitter_name: str = TEXT_SPLITTER_NAME,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = OVERLAP_SIZE,
 ):
@@ -200,23 +185,69 @@ def make_text_splitter(
     根据参数获取特定的分词器
     '''
     splitter_name = splitter_name or "SpacyTextSplitter"
-    text_splitter_module = importlib.import_module('langchain.text_splitter')
     try:
-        TextSplitter = getattr(text_splitter_module, splitter_name)
-        text_splitter = TextSplitter(
-            pipeline="zh_core_web_sm",
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-        )
+        if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
+            headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
+            text_splitter = langchain.text_splitter.MarkdownHeaderTextSplitter(
+                headers_to_split_on=headers_to_split_on)
+        else:
+
+            try:  ## 优先使用用户自定义的text_splitter
+                text_splitter_module = importlib.import_module('text_splitter')
+                TextSplitter = getattr(text_splitter_module, splitter_name)
+            except:  ## 否则使用langchain的text_splitter
+                text_splitter_module = importlib.import_module('langchain.text_splitter')
+                TextSplitter = getattr(text_splitter_module, splitter_name)
+
+            if text_splitter_dict[splitter_name]["source"] == "tiktoken":  ## 从tiktoken加载
+                try:
+                    text_splitter = TextSplitter.from_tiktoken_encoder(
+                        encoding_name=text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        pipeline="zh_core_web_sm",
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap
+                    )
+                except:
+                    text_splitter = TextSplitter.from_tiktoken_encoder(
+                        encoding_name=text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap
+                    )
+            elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
+                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
+                    text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
+                        llm_model_dict[LLM_MODEL]["local_model_path"]
+
+                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
+                    from transformers import GPT2TokenizerFast
+                    from langchain.text_splitter import CharacterTextSplitter
+                    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+                else:  ## 字符长度加载
+                    tokenizer = AutoTokenizer.from_pretrained(
+                        text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        trust_remote_code=True)
+                text_splitter = TextSplitter.from_huggingface_tokenizer(
+                    tokenizer=tokenizer,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap
+                )
+            else:
+                try:
+                    text_splitter = TextSplitter(
+                        pipeline="zh_core_web_sm",
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap
+                    )
+                except:
+                    text_splitter = TextSplitter(
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap
+                    )
     except Exception as e:
-        msg = f"查找分词器 {splitter_name} 时出错：{e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
+        print(e)
+        text_splitter_module = importlib.import_module('langchain.text_splitter')
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
-        text_splitter = TextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-        )
+        text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
     return text_splitter
 
 class KnowledgeFile:
@@ -239,9 +270,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-
-        # TODO: 增加依据文件格式匹配text_splitter
-        self.text_splitter_name = None
+        self.text_splitter_name = TEXT_SPLITTER_NAME
 
     def file2docs(self, refresh: bool=False):
         if self.docs is None or refresh:
@@ -253,7 +282,7 @@ class KnowledgeFile:
     def docs2texts(
         self,
         docs: List[Document] = None,
-        using_zh_title_enhance=ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         refresh: bool = False,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
@@ -265,17 +294,24 @@ class KnowledgeFile:
         if self.ext not in [".csv"]:
             if text_splitter is None:
                 text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            docs = text_splitter.split_documents(docs)
+            if self.text_splitter_name == "MarkdownHeaderTextSplitter":
+                docs = text_splitter.split_text(docs[0].page_content)
+                for doc in docs:
+                    # 如果文档有元数据
+                    if doc.metadata:
+                        doc.metadata["source"] = os.path.basename(self.filepath)
+            else:
+                docs = text_splitter.split_documents(docs)
 
         print(f"文档切分示例：{docs[0]}")
-        if using_zh_title_enhance:
+        if zh_title_enhance:
             docs = zh_title_enhance(docs)
         self.splited_docs = docs
         return self.splited_docs
 
     def file2text(
         self,
-        using_zh_title_enhance=ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         refresh: bool = False,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
@@ -284,7 +320,7 @@ class KnowledgeFile:
         if self.splited_docs is None or refresh:
             docs = self.file2docs()
             self.splited_docs = self.docs2texts(docs=docs,
-                                                using_zh_title_enhance=using_zh_title_enhance,
+                                                zh_title_enhance=zh_title_enhance,
                                                 refresh=refresh,
                                                 chunk_size=chunk_size,
                                                 chunk_overlap=chunk_overlap,
@@ -303,6 +339,9 @@ class KnowledgeFile:
 
 def files2docs_in_thread(
         files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+        chunk_size: int = CHUNK_SIZE,
+        chunk_overlap: int = OVERLAP_SIZE,
+        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
         pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
@@ -330,6 +369,9 @@ def files2docs_in_thread(
             kwargs = file
             file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
         kwargs["file"] = file
+        kwargs["chunk_size"] = chunk_size
+        kwargs["chunk_overlap"] = chunk_overlap
+        kwargs["zh_title_enhance"] = zh_title_enhance
         kwargs_list.append(kwargs)
 
     for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):

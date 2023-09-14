@@ -8,3 +8,4 @@ streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
 nltk
 watchdog
+websockets

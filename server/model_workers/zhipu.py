@@ -12,7 +12,7 @@ class ChatGLMWorker(ApiModelWorker):
     def __init__(
         self,
         *,
-        model_names: List[str] = ["chatglm-api"],
+        model_names: List[str] = ["zhipu-api"],
         version: Literal["chatglm_pro", "chatglm_std", "chatglm_lite"] = "chatglm_std",
         controller_addr: str,
         worker_addr: str,

@@ -18,7 +18,7 @@ except:
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
-    logger, log_verbose
+    logger, log_verbose, TEXT_SPLITTER_NAME
 from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
                                    FSCHAT_OPENAI_API, HTTPX_DEFAULT_TIMEOUT)
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
@@ -88,6 +88,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     args.limit_worker_concurrency = 5
     args.stream_interval = 2
     args.no_register = False
+    args.embed_in_truncate = False
 
     for k, v in kwargs.items():
         setattr(args, k, v)
@@ -148,6 +149,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             awq_config=awq_config,
             stream_interval=args.stream_interval,
             conv_template=args.conv_template,
+            embed_in_truncate=args.embed_in_truncate,
         )
         sys.modules["fastchat.serve.model_worker"].args = args
         sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
@@ -358,7 +360,12 @@ def run_webui(started_event: mp.Event = None):
 
     p = subprocess.Popen(["streamlit", "run", "webui.py",
                           "--server.address", host,
-                          "--server.port", str(port)])
+                          "--server.port", str(port),
+                          "--theme.base", "light",
+                          "--theme.primaryColor", "#165dff",
+                          "--theme.secondaryBackgroundColor", "#f5f5f5",
+                          "--theme.textColor", "#000000",
+                        ])
     started_event.set()
     p.wait()
 
@@ -462,7 +469,10 @@ def dump_server_info(after_start=False, args=None):
     models = [LLM_MODEL]
     if args and args.model_name:
         models = args.model_name
+
+    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
     print(f"当前启动的LLM模型：{models} @ {llm_device()}")
+
     for model in models:
         pprint(llm_model_dict[model])
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
