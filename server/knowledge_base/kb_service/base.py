@@ -58,6 +58,7 @@ class KBService(ABC):
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
         llm = OpenAI(
+            temperature=0.01,
             openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
             model_name=LLM_MODEL,

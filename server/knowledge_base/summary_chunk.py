@@ -10,7 +10,8 @@ import asyncio
 
 from langchain.chains import StuffDocumentsChain, LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.llms import OpenAI
+
+from langchain.docstore.document import Document
 from langchain.output_parsers.regex import RegexParser
 from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, MapReduceDocumentsChain
 
@@ -43,8 +44,13 @@ class SummaryAdapter:
         # `document_variable_name`
         prompt_template = (
             "根据文本执行任务。以下任务信息\r\n"
-            "task_briefing: {task_briefing}\r\n"
-            "Summarize this content: {context}"
+            "\r\n"
+            "{task_briefing}\r\n"
+            "\r\n"
+            "\r\n"
+            "文本内容如下: "
+            "\r\n"
+            "{context}"
         )
         prompt = PromptTemplate(
             template=prompt_template,
@@ -122,10 +128,24 @@ class SummaryAdapter:
         )
         """
         summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs,
-                                                                              task_briefing="强调不同方法之间的交叉点和重叠部分，"
-                                                                                            "以表明它们在某些方面可能有共同之处。")
+                                                                              task_briefing="描述不同方法之间的接近度和相似性，"
+                                                                                            "以帮助读者理解它们之间的关系。")
         print(summary_combine)
         print(summary_intermediate_steps)
+
+        if summary_combine in None:
+            # 为空重新生成，数量减半
+            result_docs = [
+                Document(page_content=question_result_key, metadata=docs[i].metadata)
+                # This uses metadata from the docs, and the textual results from `results`
+                for i, question_result_key in enumerate(
+                    summary_intermediate_steps["intermediate_steps"][
+                        :len(summary_intermediate_steps["intermediate_steps"])//2
+                        ])
+            ]
+            summary_combine, summary_intermediate_steps = self.chain.reduce_documents_chain.combine_docs(
+                result_docs, token_max=self.token_max
+            )
         logger.info("end summary")
         doc_ids = ",".join([doc.id for doc in docs])
         _metadata = {
