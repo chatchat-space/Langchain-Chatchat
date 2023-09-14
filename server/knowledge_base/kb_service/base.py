@@ -35,6 +35,7 @@ from server.knowledge_base.utils import (
 )
 from server.utils import embedding_device, run_async
 from typing import List, Union, Dict, Optional
+from langchain.chat_models import ChatOpenAI
 
 
 class SupportedVSType:
@@ -57,7 +58,7 @@ class KBService(ABC):
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
-        llm = OpenAI(
+        llm = ChatOpenAI(
             temperature=0.01,
             openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
             openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
