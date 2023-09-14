@@ -1,5 +1,4 @@
-from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE,
-                                  CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
                                   logger, log_verbose)
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         list_files_from_folder,files2docs_in_thread,
@@ -38,8 +37,8 @@ def folder2db(
     mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = OVERLAP_SIZE,
+    chunk_size: int = -1,
+    chunk_overlap: int = -1,
     zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
