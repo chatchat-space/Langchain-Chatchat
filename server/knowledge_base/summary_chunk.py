@@ -4,15 +4,79 @@ from configs.model_config import logger
 import sys
 import asyncio
 
+from langchain.chains import StuffDocumentsChain, LLMChain
+from langchain.prompts import PromptTemplate
+from langchain.llms import OpenAI
+from langchain.output_parsers.regex import RegexParser
+from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, MapReduceDocumentsChain
+
 
 # TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class SummaryAdapter:
-
     _OVERLAP_SIZE: int
     _separator: str = "\n\n"
+    chain: MapReduceDocumentsChain
 
-    def __init__(self, overlap_size: int):
+    def __init__(self, overlap_size: int, chain: MapReduceDocumentsChain):
         self._OVERLAP_SIZE = overlap_size
+        self.chain = chain
+
+    @classmethod
+    def form_summary(cls, overlap_size: int):
+        import langchain
+
+        langchain.verbose = True
+
+        llm = OpenAI(
+
+            model_name='chatglm2-6b',
+            openai_api_key='N',
+            openai_api_base='http://localhost:10001/v1')
+
+        # This controls how each document will be formatted. Specifically,
+        # it will be passed to `format_document` - see that function for more
+        # details.
+        document_prompt = PromptTemplate(
+            input_variables=["page_content"],
+            template="{page_content}"
+        )
+
+        document_variable_name = "context"
+
+        # The prompt here should take as an input variable the
+        # `document_variable_name`
+        prompt_template = (
+            "根据文本执行任务。以下任务信息\r\n"
+            "task_briefing: {task_briefing}\r\n"
+            "Summarize this content: {context}"
+        )
+        prompt = PromptTemplate(
+            template=prompt_template,
+            input_variables=["task_briefing", "context"]
+        )
+        llm_chain = LLMChain(llm=llm, prompt=prompt)
+        # We now define how to combine these summaries
+        reduce_prompt = PromptTemplate.from_template(
+            "Combine these summaries: {context}"
+        )
+        reduce_llm_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+        combine_documents_chain = StuffDocumentsChain(
+            llm_chain=reduce_llm_chain,
+            document_prompt=document_prompt,
+            document_variable_name=document_variable_name
+        )
+        reduce_documents_chain = ReduceDocumentsChain(
+            token_max=1300,
+            combine_documents_chain=combine_documents_chain,
+        )
+        chain = MapReduceDocumentsChain(
+            llm_chain=llm_chain,
+            document_variable_name=document_variable_name,
+            reduce_documents_chain=reduce_documents_chain,
+            # 返回中间步骤
+            return_intermediate_steps=True
+        )
+        return cls(overlap_size=overlap_size, chain=chain)
 
     def summarize(self,
                   kb_name: str,
@@ -40,8 +104,31 @@ class SummaryAdapter:
                          docs: List[DocumentWithVSId] = []):
 
         logger.info("start summary")
-        merge_docs = self._drop_overlap(docs)
-        print(merge_docs)
+        # TODO 暂不处理文档中涉及语义重复、上下文缺失的问题
+        # merge_docs = self._drop_overlap(docs)
+        # # 将merge_docs中的句子合并成一个文档
+        # text = self._join_docs(merge_docs)
+        #
+
+        """
+        这个过程分成两个部分：
+        1. 对每个文档进行处理，得到每个文档的摘要
+         map_results = self.llm_chain.apply(
+            # FYI - this is parallelized and so it is fast.
+            [{self.document_variable_name: d.page_content, **kwargs} for d in docs],
+            callbacks=callbacks,
+        )
+        2. 对每个文档的摘要进行合并，得到最终的摘要，return_intermediate_steps=True，返回中间步骤
+        result, extra_return_dict = self.reduce_documents_chain.combine_docs(
+            result_docs, token_max=token_max, callbacks=callbacks, **kwargs
+        )
+        """
+        summary_combine, summary_intermediate_steps = chain.combine_docs(docs=docs[6:],
+                                                                         task_briefing="强调不同方法之间的交叉点和重叠部分，以表明它们在某些方面可能有共同之处。")
+        print(summary_combine)
+        print(summary_intermediate_steps)
+        logger.info("end summary")
+
 
     def _drop_overlap(self, docs: List[DocumentWithVSId]) -> List[str]:
         """
@@ -108,7 +195,6 @@ if __name__ == '__main__':
     for doc in docs:
         # 第一个文档直接添加
         if len(merge_docs) == 0:
-
             pre_doc = doc
             merge_docs.append(doc)
             continue
@@ -126,8 +212,6 @@ if __name__ == '__main__':
 
                 pre_doc = doc
                 break
-
-
 
     # 将merge_docs中的句子合并成一个文档
     text = separator.join(merge_docs)
