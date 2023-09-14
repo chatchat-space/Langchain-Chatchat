@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import os
 
 import numpy as np
+from langchain import OpenAI
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from sklearn.preprocessing import normalize
@@ -23,7 +24,9 @@ from configs.model_config import (kbs_config,
                                   SCORE_THRESHOLD,
                                   EMBEDDING_MODEL,
                                   SUMMARY_CHUNK,
-                                  OVERLAP_SIZE)
+                                  OVERLAP_SIZE,
+                                  llm_model_dict,
+                                  LLM_MODEL)
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
@@ -46,16 +49,22 @@ class KBService(ABC):
     def __init__(self,
                  knowledge_base_name: str,
                  embed_model: str = EMBEDDING_MODEL,
-                 summary: bool = SUMMARY_CHUNK
+                 enable_summary: bool = SUMMARY_CHUNK
                  ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model
-        self.summary = summary
+        self.enable_summary = enable_summary
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
+        llm = OpenAI(
+            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+            model_name=LLM_MODEL,
+            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+        )
         # 文本摘要适配器
-        self.summary_adapter = SummaryAdapter(overlap_size=OVERLAP_SIZE)
+        self.summary = SummaryAdapter.form_summary(llm=llm, overlap_size=OVERLAP_SIZE)
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
@@ -85,7 +94,7 @@ class KBService(ABC):
         status = delete_files_from_db(self.kb_name)
 
         # 摘要
-        self.summary_adapter.clear_kb_summary(kb_name=self.kb_name)
+        self.summary.clear_kb_summary(kb_name=self.kb_name)
         return status
 
     def drop_kb(self):
@@ -113,17 +122,17 @@ class KBService(ABC):
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
 
-            if self.summary:
+            if self.enable_summary:
                 # 异步摘要
-                run_async(self.summary_adapter.asummarize(kb_name=self.kb_name,
-                                                          file_description=kb_file.file_description,
-                                                          docs=doc_infos))
+                run_async(self.summary.asummarize(kb_name=self.kb_name,
+                                                  file_description=kb_file.file_description,
+                                                  docs=doc_infos))
 
             doc_info_dicts = [doc.dict() for doc in doc_infos]
             status = add_file_to_db(kb_file,
                                     custom_docs=custom_docs,
                                     docs_count=len(docs),
-                                    doc_infos=doc_infos)
+                                    doc_infos=doc_info_dicts)
         else:
             status = False
         return status
@@ -149,7 +158,7 @@ class KBService(ABC):
 
     def exist_doc(self, file_name: str):
         return file_exists_in_db(KnowledgeFile(knowledge_base_name=self.kb_name,
-                                        filename=file_name))
+                                               filename=file_name))
 
     def list_files(self):
         return list_files_from_db(self.kb_name)

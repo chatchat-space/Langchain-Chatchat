@@ -1,4 +1,8 @@
 from typing import List, Optional
+
+from langchain.schema.language_model import BaseLanguageModel
+
+from server.db.repository.knowledge_metadata_repository import add_summary_to_db, delete_summary_from_db
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from configs.model_config import logger
 import sys
@@ -14,34 +18,26 @@ from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, 
 # TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class SummaryAdapter:
     _OVERLAP_SIZE: int
+    token_max: int
     _separator: str = "\n\n"
     chain: MapReduceDocumentsChain
 
-    def __init__(self, overlap_size: int, chain: MapReduceDocumentsChain):
+    def __init__(self, overlap_size: int, token_max: int, chain: MapReduceDocumentsChain):
         self._OVERLAP_SIZE = overlap_size
         self.chain = chain
+        self.token_max = token_max
 
     @classmethod
-    def form_summary(cls, overlap_size: int):
+    def form_summary(cls, llm: BaseLanguageModel, overlap_size: int, token_max: int = 1300):
         import langchain
 
         langchain.verbose = True
 
-        llm = OpenAI(
-
-            model_name='chatglm2-6b',
-            openai_api_key='N',
-            openai_api_base='http://localhost:10001/v1')
-
         # This controls how each document will be formatted. Specifically,
-        # it will be passed to `format_document` - see that function for more
-        # details.
         document_prompt = PromptTemplate(
             input_variables=["page_content"],
             template="{page_content}"
         )
-
-        document_variable_name = "context"
 
         # The prompt here should take as an input variable the
         # `document_variable_name`
@@ -60,13 +56,15 @@ class SummaryAdapter:
             "Combine these summaries: {context}"
         )
         reduce_llm_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+
+        document_variable_name = "context"
         combine_documents_chain = StuffDocumentsChain(
             llm_chain=reduce_llm_chain,
             document_prompt=document_prompt,
             document_variable_name=document_variable_name
         )
         reduce_documents_chain = ReduceDocumentsChain(
-            token_max=1300,
+            token_max=token_max,
             combine_documents_chain=combine_documents_chain,
         )
         chain = MapReduceDocumentsChain(
@@ -76,7 +74,7 @@ class SummaryAdapter:
             # 返回中间步骤
             return_intermediate_steps=True
         )
-        return cls(overlap_size=overlap_size, chain=chain)
+        return cls(overlap_size=overlap_size, chain=chain, token_max=token_max)
 
     def summarize(self,
                   kb_name: str,
@@ -108,7 +106,7 @@ class SummaryAdapter:
         # merge_docs = self._drop_overlap(docs)
         # # 将merge_docs中的句子合并成一个文档
         # text = self._join_docs(merge_docs)
-        #
+        # 根据段落于句子的分隔符，将文档分成chunk，每个chunk长度小于token_max长度
 
         """
         这个过程分成两个部分：
@@ -123,12 +121,23 @@ class SummaryAdapter:
             result_docs, token_max=token_max, callbacks=callbacks, **kwargs
         )
         """
-        summary_combine, summary_intermediate_steps = chain.combine_docs(docs=docs[6:],
-                                                                         task_briefing="强调不同方法之间的交叉点和重叠部分，以表明它们在某些方面可能有共同之处。")
+        summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs,
+                                                                              task_briefing="强调不同方法之间的交叉点和重叠部分，"
+                                                                                            "以表明它们在某些方面可能有共同之处。")
         print(summary_combine)
         print(summary_intermediate_steps)
         logger.info("end summary")
+        doc_ids = ",".join([doc.id for doc in docs])
+        _metadata = {
+            "file_description": file_description,
+            "summary_intermediate_steps": summary_intermediate_steps,
+            "doc_ids": doc_ids
+        }
 
+        summary_infos = [{"summary_context": summary_combine,
+                          "doc_ids": doc_ids,
+                          "metadata": _metadata}]
+        add_summary_to_db(kb_name=kb_name, summary_infos=summary_infos)
 
     def _drop_overlap(self, docs: List[DocumentWithVSId]) -> List[str]:
         """
@@ -163,7 +172,7 @@ class SummaryAdapter:
         return merge_docs
 
     def _join_docs(self, docs: List[str]) -> Optional[str]:
-        text = separator.join(docs)
+        text = self._separator.join(docs)
         text = text.strip()
         if text == "":
             return None
@@ -172,7 +181,12 @@ class SummaryAdapter:
 
     def clear_kb_summary(self,
                          kb_name: str):
-        pass
+        """
+        删除知识库chunk summary
+        :param kb_name:
+        :return:
+        """
+        delete_summary_from_db(kb_name=kb_name)
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ def list_summary_from_db(session,
     for k, v in metadata.items():
         docs = docs.filter(SummaryChunkModel.meta_data[k].as_string() == str(v))
 
-    return [{"id": x.doc_id,
+    return [{"id": x.id,
              "summary_context": x.summary_context,
              "doc_ids": x.doc_ids,
              "metadata": x.metadata} for x in docs.all()]
