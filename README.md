@@ -112,6 +112,8 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [FlagAlpha/Llama2-Chinese-13b-Chat](https://huggingface.co/FlagAlpha/Llama2-Chinese-13b-Chat) and others
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
 - [all models of OpenOrca](https://huggingface.co/Open-Orca)
+- [Spicyboros](https://huggingface.co/jondurbin/spicyboros-7b-2.2?not-for-all-audiences=true) + [airoboros 2.2](https://huggingface.co/jondurbin/airoboros-l2-13b-2.2)
+- [VMware&#39;s OpenLLaMa OpenInstruct](https://huggingface.co/VMware/open-llama-7b-open-instruct)
 - 任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)
 - 在以上模型基础上训练的任何 [Peft](https://github.com/huggingface/peft) 适配器。为了激活，模型路径中必须有 `peft` 。注意：如果加载多个peft模型，你可以通过在任何模型工作器中设置环境变量 `PEFT_SHARE_BASE_WEIGHTS=true` 来使它们共享基础模型的权重。
 
@@ -246,8 +248,7 @@ text_splitter_dict = {
         "tokenizer_name_or_path": "", ## 空格不填则默认使用大模型的分词器。 
     }
 }
- ```
-
+```
 
 如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要能够访问OpenAI官的API，或设置代理。
 
@@ -525,7 +526,3 @@ $ streamlit run webui.py --server.port 666
 <img src="img/qr_code_60.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
-
-![1694251762513](image/README/1694251762513.png)
-
-🎉 langchain-ChatGLM 项目新开通了订阅号，欢迎订阅。

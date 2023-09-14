@@ -108,6 +108,8 @@ The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the AP
 - [FlagAlpha/Llama2-Chinese-13b-Chat](https://huggingface.co/FlagAlpha/Llama2-Chinese-13b-Chat) and other models of FlagAlpha
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
 - [all models of OpenOrca](https://huggingface.co/Open-Orca)
+- [Spicyboros](https://huggingface.co/jondurbin/spicyboros-7b-2.2?not-for-all-audiences=true) + [airoboros 2.2](https://huggingface.co/jondurbin/airoboros-l2-13b-2.2)
+- [VMware&#39;s OpenLLaMa OpenInstruct](https://huggingface.co/VMware/open-llama-7b-open-instruct)
 
 * Any [EleutherAI](https://huggingface.co/EleutherAI) pythia model such as [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)(任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b))
 * Any [Peft](https://github.com/huggingface/peft) adapter trained on top of a model above. To activate, must have `peft` in the model path. Note: If loading multiple peft models, you can have them share the base model weights by setting the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` in any model worker.
@@ -356,7 +358,3 @@ Please refer to [FAQ](docs/FAQ.md)
 <img src="img/qr_code_59.jpg" alt="二维码" width="300" height="300" />
 
 **WeChat Group**
-
-![1694252029167](image/README_en/1694252029167.png)
-
-**WeChat Subscription**
