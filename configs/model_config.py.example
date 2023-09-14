@@ -103,9 +103,9 @@ llm_model_dict = {
         "is_v2": False,
         "provider": "XingHuoWorker",
     },
-    # Ernie Bot Turbo API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
-    "ernie-api": {
-        "version": "ernie-bot-turbo",  # 当前支持 "ernie-bot" 或 "ernie-bot-turbo"
+    # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
+    "qianfan-api": {
+        "version": "ernie-bot",  # 当前支持 "ernie-bot" 或 "ernie-bot-turbo"
         "api_base_url": "http://127.0.0.1:8888/v1",
         "api_key": "",
         "secret_key": "",
