@@ -766,23 +766,31 @@ class ApiRequest:
             "controller_address": controller_address,
         }
         if no_remote_api:
-            from server.llm_api import list_llm_models
-            return list_llm_models(**data).data
+            from server.llm_api import list_running_models
+            return list_running_models(**data).data
         else:
             r = self.post(
-                "/llm_model/list_models",
+                "/llm_model/list_running_models",
                 json=data,
             )
             return r.json().get("data", [])
 
-    def list_config_models(self):
+    def list_config_models(self, no_remote_api: bool = None) -> Dict[str, List[str]]:
         '''
-        获取configs中配置的模型列表
+        获取configs中配置的模型列表，返回形式为{"type": [model_name1, model_name2, ...], ...}。
+        如果no_remote_api=True, 从运行ApiRequest的机器上获取；否则从运行api.py的机器上获取。
         '''
-        models = list(FSCHAT_MODEL_WORKERS.keys())
-        if "default" in models:
-            models.remove("default")
-        return models
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        if no_remote_api:
+            from server.llm_api import list_config_models
+            return list_config_models().data
+        else:
+            r = self.post(
+                "/llm_model/list_config_models",
+            )
+            return r.json().get("data", {})
 
     def stop_llm_model(
         self,
@@ -828,13 +836,13 @@ class ApiRequest:
         if not model_name or not new_model_name:
             return
 
-        if new_model_name == model_name:
+        running_models = self.list_running_models()
+        if new_model_name == model_name or new_model_name in running_models:
             return {
                 "code": 200,
-                "msg": "什么都不用做"
+                "msg": "无需切换"
             }
 
-        running_models = self.list_running_models()
         if model_name not in running_models:
             return {
                 "code": 500,
@@ -842,7 +850,7 @@ class ApiRequest:
             }
 
         config_models = self.list_config_models()
-        if new_model_name not in config_models:
+        if new_model_name not in config_models.get("local", []):
             return {
                 "code": 500,
                 "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"

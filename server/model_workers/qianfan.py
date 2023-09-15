@@ -72,7 +72,10 @@ def request_qianfan_api(
     version_url = config.get("version_url")
     access_token = get_baidu_access_token(config.get("api_key"), config.get("secret_key"))
     if not access_token:
-        raise RuntimeError(f"failed to get access token. have you set the correct api_key and secret key?")
+        yield {
+            "error_code": 403,
+            "error_msg": f"failed to get access token. have you set the correct api_key and secret key?",
+        }
 
     url = BASE_URL.format(
         model_version=version_url or MODEL_VERSIONS[version],

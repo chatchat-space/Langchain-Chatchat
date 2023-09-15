@@ -40,6 +40,7 @@ MODEL_PATH = {
         "chatglm2-6b": "THUDM/chatglm2-6b",
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+        "baichuan-7b": "baichuan-inc/Baichuan-7B",
     },
 }
 
