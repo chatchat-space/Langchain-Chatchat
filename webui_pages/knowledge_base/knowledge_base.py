@@ -175,7 +175,7 @@ def knowledge_base_page(api: ApiRequest):
             st.info("知识库中包含源文件与向量库，请从下表中选择文件后操作")
             doc_details.drop(columns=["kb_name"], inplace=True)
             doc_details = doc_details[[
-                "No", "file_name", "document_loader", "docs_count", "in_folder", "in_db",
+                "No", "file_name", "document_loader", "text_splitter", "docs_count", "in_folder", "in_db",
             ]]
             # doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
             # doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
@@ -188,7 +188,7 @@ def knowledge_base_page(api: ApiRequest):
                     # ("file_version", "文档版本"): {},
                     ("document_loader", "文档加载器"): {},
                     ("docs_count", "文档数量"): {},
-                    # ("text_splitter", "分词器"): {},
+                    ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
                     ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
                     ("in_db", "向量库"): {"cellRenderer": cell_renderer},
