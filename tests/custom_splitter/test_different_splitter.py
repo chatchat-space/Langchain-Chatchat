@@ -20,22 +20,34 @@ def text(splitter_name):
     docs = loader.load()
     text_splitter = make_text_splitter(splitter_name, CHUNK_SIZE, OVERLAP_SIZE)
     if splitter_name == "MarkdownHeaderTextSplitter":
-        split_docs = text_splitter.split_text(docs[0].page_content)
+        docs = text_splitter.split_text(docs[0].page_content)
         for doc in docs:
             if doc.metadata:
                 doc.metadata["source"] = os.path.basename(filepath)
     else:
-        split_docs = text_splitter.split_documents(docs)
+        docs = text_splitter.split_documents(docs)
+    for doc in docs:
+        print(doc)
     return docs
 
 
 
 
 import pytest
-@pytest.mark.parametrize("splitter_name", ["ChineseRecursiveTextSplitter", "SpacyTextSplitter", "RecursiveCharacterTextSplitter","MarkdownHeaderTextSplitter"])
+from langchain.docstore.document import Document
+
+@pytest.mark.parametrize("splitter_name",
+                         [
+                             "ChineseRecursiveTextSplitter",
+                             "SpacyTextSplitter",
+                             "RecursiveCharacterTextSplitter",
+                             "MarkdownHeaderTextSplitter"
+                         ])
 def test_different_splitter(splitter_name):
     try:
         docs = text(splitter_name)
-        assert docs is not None
+        assert isinstance(docs, list)
+        if len(docs)>0:
+            assert isinstance(docs[0], Document)
     except Exception as e:
         pytest.fail(f"test_different_splitter failed with {splitter_name}, error: {str(e)}")

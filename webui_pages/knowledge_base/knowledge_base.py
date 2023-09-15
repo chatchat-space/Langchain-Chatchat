@@ -128,16 +128,25 @@ def knowledge_base_page(api: ApiRequest):
     elif selected_kb:
         kb = selected_kb
 
-        with st.sidebar:
-            chunk_size = st.number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
-            chunk_overlap = st.number_input("相邻文本重合长度：", 0, 500, OVERLAP_SIZE)
-            zh_title_enhance = st.checkbox("开启中文标题加强：", ZH_TITLE_ENHANCE)
 
         # 上传文件
         files = st.file_uploader("上传知识文件：",
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
+
+
+        # with st.sidebar:
+        with st.expander(
+                "文件处理配置",
+                expanded=True,
+        ):
+            cols = st.columns(3)
+            chunk_size = cols[0].number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
+            chunk_overlap = cols[1].number_input("相邻文本重合长度：", 0, chunk_size, OVERLAP_SIZE)
+            cols[2].write("")
+            cols[2].write("")
+            zh_title_enhance = cols[2].checkbox("开启中文标题加强", ZH_TITLE_ENHANCE)
 
         if st.button(
                 "添加文件到知识库",
@@ -167,7 +176,7 @@ def knowledge_base_page(api: ApiRequest):
             st.info("知识库中包含源文件与向量库，请从下表中选择文件后操作")
             doc_details.drop(columns=["kb_name"], inplace=True)
             doc_details = doc_details[[
-                "No", "file_name", "document_loader", "docs_count", "in_folder", "in_db",
+                "No", "file_name", "document_loader", "text_splitter", "docs_count", "in_folder", "in_db",
             ]]
             # doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
             # doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
@@ -180,7 +189,7 @@ def knowledge_base_page(api: ApiRequest):
                     # ("file_version", "文档版本"): {},
                     ("document_loader", "文档加载器"): {},
                     ("docs_count", "文档数量"): {},
-                    # ("text_splitter", "分词器"): {},
+                    ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
                     ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
                     ("in_db", "向量库"): {"cellRenderer": cell_renderer},

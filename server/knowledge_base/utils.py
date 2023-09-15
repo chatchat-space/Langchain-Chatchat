@@ -8,8 +8,12 @@ from configs import (
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger, log_verbose, text_splitter_dict,
-    LLM_MODEL,TEXT_SPLITTER_NAME
+    logger, 
+    log_verbose, 
+    text_splitter_dict, 
+    llm_model_dict, 
+    LLM_MODEL, 
+    TEXT_SPLITTER
 )
 import importlib
 from text_splitter import zh_title_enhance
@@ -178,14 +182,14 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = TEXT_SPLITTER_NAME,
+    splitter_name: str = TEXT_SPLITTER,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = OVERLAP_SIZE,
     llm_model: str = LLM_MODEL,
 ):
-    '''
+    """
     根据参数获取特定的分词器
-    '''
+    """
     splitter_name = splitter_name or "SpacyTextSplitter"
     try:
         if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
@@ -271,7 +275,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-        self.text_splitter_name = TEXT_SPLITTER_NAME
+        self.text_splitter_name = TEXT_SPLITTER
 
     def file2docs(self, refresh: bool=False):
         if self.docs is None or refresh:

@@ -18,6 +18,12 @@ spacy
 PyMuPDF==1.22.5
 rapidocr_onnxruntime>=1.3.2
 
+requests
+pathlib
+pytest
+scikit-learn
+numexpr
+
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3
 # psycopg2
