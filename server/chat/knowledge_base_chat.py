@@ -1,11 +1,10 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
-from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                  TEMPERATURE)
-from server.chat.utils import wrap_done
+from configs import (LLM_MODEL, PROMPT_TEMPLATE,
+                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                    TEMPERATURE)
+from server.chat.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse
-from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, List, Optional
@@ -50,16 +49,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                                            model_name: str = LLM_MODEL,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+        model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
+            callbacks=[callback],
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])

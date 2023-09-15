@@ -7,7 +7,7 @@ from langchain.schema import Document
 from langchain.vectorstores import Milvus
 from sklearn.preprocessing import normalize
 
-from configs.model_config import SCORE_THRESHOLD, kbs_config
+from configs import SCORE_THRESHOLD, kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process

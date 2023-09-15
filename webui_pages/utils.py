@@ -1,12 +1,11 @@
 # 该文件包含webui通用工具，可以被不同的webui使用
 from typing import *
 from pathlib import Path
-from configs.model_config import (
+from configs import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
-    llm_model_dict,
     HISTORY_LEN,
     TEMPERATURE,
     SCORE_THRESHOLD,
@@ -15,9 +14,10 @@ from configs.model_config import (
     ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
+    FSCHAT_MODEL_WORKERS,
+    HTTPX_DEFAULT_TIMEOUT,
     logger, log_verbose,
 )
-from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -779,7 +779,10 @@ class ApiRequest:
         '''
         获取configs中配置的模型列表
         '''
-        return list(llm_model_dict.keys())
+        models = list(FSCHAT_MODEL_WORKERS.keys())
+        if "default" in models:
+            models.remove("default")
+        return models
 
     def stop_llm_model(
         self,

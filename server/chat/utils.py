@@ -1,8 +1,29 @@
 import asyncio
-from typing import Awaitable, List, Tuple, Dict, Union
 from pydantic import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
 from configs import logger, log_verbose
+from server.utils import get_model_worker_config, fschat_openai_api_address
+from langchain.chat_models import ChatOpenAI
+from typing import Awaitable, List, Tuple, Dict, Union, Callable
+
+
+def get_ChatOpenAI(
+    model_name: str,
+    temperature: float,
+    callbacks: List[Callable] = [],
+) -> ChatOpenAI:
+    config = get_model_worker_config(model_name)
+    model = ChatOpenAI(
+        streaming=True,
+        verbose=True,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=fschat_openai_api_address(),
+        model_name=model_name,
+        temperature=temperature,
+        openai_proxy=config.get("openai_proxy")
+    )
+    return model
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):

@@ -6,7 +6,7 @@ from pathlib import Path
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
 from server.utils import api_address
-from configs.model_config import VECTOR_SEARCH_TOP_K
+from configs import VECTOR_SEARCH_TOP_K
 from server.knowledge_base.utils import get_kb_path, get_file_path
 
 from pprint import pprint

@@ -1,5 +1,5 @@
-from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
-                                  logger, log_verbose)
+from configs import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
+                    logger, log_verbose)
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         list_files_from_folder,files2docs_in_thread,
                                         KnowledgeFile,)
