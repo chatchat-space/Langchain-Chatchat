@@ -80,6 +80,7 @@ ONLINE_LLM_MODEL = {
     # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
     # 比如: "openai_proxy": 'http://127.0.0.1:4780'
     "gpt-3.5-turbo": {
+        "api_base_url": "https://api.openai.com/v1",
         "api_key": "your OPENAI_API_KEY",
         "openai_proxy": "your OPENAI_PROXY",
     },
