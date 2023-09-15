@@ -27,7 +27,7 @@ async def openai_chat(msg: OpenAiChatMsgIn):
     config = get_model_worker_config(msg.model)
     openai.api_key = config.get("api_key", "EMPTY")
     print(f"{openai.api_key=}")
-    openai.api_base = fschat_openai_api_address()
+    openai.api_base = config.get("api_base_url", fschat_openai_api_address())
     print(f"{openai.api_base=}")
     print(msg)
 
