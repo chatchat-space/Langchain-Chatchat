@@ -361,11 +361,11 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 - Web UI 对话界面：
 
-  ![img](img/webui_0813_0.png)
+![img](img/webui_0915_0.png)
 
 - Web UI 知识库管理页面：
 
-  ![](img/webui_0813_1.png)
+![](img/webui_0915_1.png)
 
 ---
 

@@ -300,10 +300,13 @@ The API, chat interface of WebUI, and knowledge management interface of WebUI ar
 
 2. Chat Interface of WebUI
 
-![img](img/webui_0813_0.png)
+- Dialogue interface of WebUI
+
+![img](img/webui_0915_0.png)
 
 - Knowledge management interface of WebUI
-  ![img](img/webui_0813_1.png)
+
+![img](img/webui_0915_1.png)
 
 ### 6 Luanching API Service or WebUI step-by-step
 

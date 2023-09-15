@@ -60,6 +60,7 @@ def dialogue_page(api: ApiRequest):
                                       "知识库问答",
                                       "搜索引擎问答",
                                       ],
+                                     index=1,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
@@ -95,7 +96,7 @@ def dialogue_page(api: ApiRequest):
                 r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
         st.session_state["cur_llm_model"] = llm_model
 
-        temperature = st.number_input("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
+        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
 
         def on_kb_change():
@@ -111,7 +112,7 @@ def dialogue_page(api: ApiRequest):
                     key="selected_kb",
                 )
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
-                score_threshold = st.number_input("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
@@ -158,7 +159,7 @@ def dialogue_page(api: ApiRequest):
                                              history=history,
                                              model=llm_model,
                                              temperature=temperature):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
@@ -176,7 +177,7 @@ def dialogue_page(api: ApiRequest):
                                             top_k=se_top_k,
                                             model=llm_model,
                                             temperature=temperature):
-                if error_msg := check_error_msg(d): # check whether error occured
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
