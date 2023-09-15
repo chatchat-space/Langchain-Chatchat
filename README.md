@@ -120,10 +120,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 以上模型支持列表可能随 [FastChat](https://github.com/lm-sys/FastChat) 更新而持续更新，可参考 [FastChat 已支持模型列表](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)。
 
+
+除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的配置信息。
+
 在线 LLM 模型目前已支持： 
+- [ChatGPT](https://api.openai.com)
+- [智谱AI](http://open.bigmodel.cn)
+- [MiniMax](https://api.minimax.chat)
+- [讯飞星火](https://xinghuo.xfyun.cn)
+- [百度千帆](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
 
-
-项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `` 进行修改。
+项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `LLM_MODEL` 进行修改。
 
 ### Embedding 模型支持
 
