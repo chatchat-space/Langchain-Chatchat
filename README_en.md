@@ -1,24 +1,26 @@
 ![](img/logo-long-chatchat-trans-v2.png)
 
-**LangChain-Chatchat** (former Langchain-ChatGLM):  A LLM application aims to implement knowledge- and search engineer- based QA based on Langchain and open-source or remote LLM api.
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
+
+🌍 [中文文档](README.md)
+
+📃 **LangChain-Chatchat** (formerly Langchain-ChatGLM):  A LLM application aims to implement knowledge and search engine based QA based on Langchain and open-source or remote LLM API.
 
 ## Content
 
-* Introduction
-* Change Log
-* Docker Deployment
-* Deployment
-
-  * Enviroment Preresiquisite
-  * Preparing Depolyment Enviroment
-  * Downloading model to local disk(for offline deployment only)
-  * Setting Configuration
-  * Knowledge Base Migration
-  * Luanching API Service or WebUI with One Command
-  * Luanching API Service or WebUI step-by-step
-* FAQ
-* Roadmap
-* Wechat Group
+* [Introduction](README_en.md#Introduction)
+* [Change Log](README_en.md#Change-Log)
+* [Supported Models](README_en.md#Supported-Models)
+* [Docker Deployment](README_en.md#Docker-Deployment)
+* [Development](README_en.md#Development)
+  * [Environment Prerequisite](README_en.md#Environment-Prerequisite)
+  * [Preparing Deployment Environment](README_en.md#1.-Preparing-Deployment-Environment)
+  * [Downloading model to local disk](README_en.md#2.-Downloading-model-to-local-disk)
+  * [Setting Configuration](README_en.md#3.-Setting-Configuration)
+  * [Knowledge Base Migration](README_en.md#4.-Knowledge-Base-Migration)
+  * [Launching API Service or WebUI](README_en.md#5.-Launching-API-Service-or-WebUI-with-One-Command)
+* [FAQ](README_en.md#FAQ)
+* [Roadmap](README_en.md#Roadmap)
 
 ---
 
@@ -139,7 +141,7 @@ Following models are tested by developers with Embedding class of [HuggingFace](
 
 ---
 
-## Docker image
+## Docker Deployment
 
 🐳 Docker image path: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)`
 
@@ -156,13 +158,13 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
-## Deployment
+## Development
 
-### Enviroment Preresiquisite
+### Environment Prerequisite
 
 The project is tested under Python3.8-python 3.10, CUDA 11.0-CUDA11.7, Windows, macOS of ARM architecture, and Linux platform.
 
-### 1. Preparing Depolyment Enviroment
+### 1. Preparing Deployment Environment
 
 Please refer to [install.md](docs/INSTALL.md)
 
@@ -224,7 +226,7 @@ The knowledge base information  is stored in the database, please initialize the
   $ python init_database.py --recreate-vs
   ```
 
-### 5. Luanching API Service or WebUI with One Command
+### 5. Launching API Service or WebUI with One Command
 
 #### 5.1 Command
 
@@ -308,10 +310,6 @@ The API, chat interface of WebUI, and knowledge management interface of WebUI ar
 
 ![img](img/webui_0915_1.png)
 
-### 6 Luanching API Service or WebUI step-by-step
-
-**The developers will depreciate step-by-step procudure in the future one or two version, feel free to ignore this part.**
-
 ## FAQ
 
 Please refer to [FAQ](docs/FAQ.md)
@@ -323,17 +321,17 @@ Please refer to [FAQ](docs/FAQ.md)
 - [X] Langchain applications
 
   - [X] Load local documents
-    - [X] Unstructed documents
+    - [X] Unstructured documents
       - [X] .md
       - [X] .txt
       - [X] .docx
-    - [ ] Structed documents
+    - [ ] Structured documents
       - [X] .csv
       - [ ] .xlsx
-    - [ ] TextSplliter and Retriever
-      - [ ] multipy TextSplitter
-      - [ ] ChineseTextSplitter
-      - [ ] Recontructed Context Retriever
+    - [ ] TextSplitter and Retriever
+      - [x] multiple TextSplitter
+      - [x] ChineseTextSplitter
+      - [ ] Reconstructed Context Retriever
     - [ ] Webpage
     - [ ] SQL
     - [ ] Knowledge Database
@@ -342,22 +340,11 @@ Please refer to [FAQ](docs/FAQ.md)
     - [X] DuckDuckGo
   - [ ] Agent
 - [X] LLM  Models
-
   - [X] [FastChat](https://github.com/lm-sys/fastchat) -based LLM Models
   - [ ] Mutiply Remote LLM API
 - [X] Embedding Models
-
   - [X] HuggingFace -based Embedding models
   - [ ] Mutiply Remote Embedding API
-- [X] 基于 FastAPI -based API
+- [X] FastAPI-based API
 - [X] Web UI
-
   - [X] Streamlit -based Web UI
-
----
-
-## WeChat Group QR Code
-
-<img src="img/qr_code_59.jpg" alt="二维码" width="300" height="300" />
-
-**WeChat Group**
