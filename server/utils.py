@@ -5,12 +5,12 @@ from fastapi import FastAPI
 from pathlib import Path
 import asyncio
 from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
-                     MODEL_PATH, MODEL_ROOT_PATH,
+                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL,
                      logger, log_verbose,
                     FSCHAT_MODEL_WORKERS)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Literal, Optional, Callable, Generator, Dict, Any
+from typing import Literal, Optional, Callable, Generator, Dict, Any, Tuple
 
 
 thread_pool = ThreadPoolExecutor(os.cpu_count())
@@ -201,10 +201,25 @@ def MakeFastAPIOffline(
 
 # 从model_config中获取模型信息
 def list_embed_models() -> List[str]:
+    '''
+    get names of configured embedding models
+    '''
     return list(MODEL_PATH["embed_model"])
 
-def list_llm_models() -> List[str]:
-    return list(MODEL_PATH["llm_model"])
+def list_llm_models() -> Dict[str, List[str]]:
+    '''
+    get names of configured llm models with different types.
+    return [(model_name, config_type), ...]
+    '''
+    workers = list(FSCHAT_MODEL_WORKERS)
+    if "default" in workers:
+        workers.remove("default")
+    return {
+        "local": list(MODEL_PATH["llm_model"]),
+        "online": list(ONLINE_LLM_MODEL),
+        "worker": workers,
+    }
+
 
 def get_model_path(model_name: str, type: str = None) -> Optional[str]:
     if type in MODEL_PATH:

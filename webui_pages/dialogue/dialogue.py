@@ -68,6 +68,7 @@ def dialogue_page(api: ApiRequest):
             config = get_model_worker_config(llm_model)
             if not config.get("online_api"): # 只有本地model_worker可以切换模型
                 st.session_state["prev_llm_model"] = llm_model
+            st.session_state["cur_llm_model"] = st.session_state.llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -75,25 +76,32 @@ def dialogue_page(api: ApiRequest):
             return x
 
         running_models = api.list_running_models()
+        available_models = []
         config_models = api.list_config_models()
-        for x in running_models:
-            if x in config_models:
-                config_models.remove(x)
-        llm_models = running_models + config_models
-        cur_model = st.session_state.get("cur_llm_model", LLM_MODEL)
-        index = llm_models.index(cur_model)
+        for models in config_models.values():
+            for m in models:
+                if m not in running_models:
+                    available_models.append(m)
+        llm_models = running_models + available_models
+        index = llm_models.index(st.session_state.get("cur_llm_model", LLM_MODEL))
         llm_model = st.selectbox("选择LLM模型：",
                                 llm_models,
                                 index,
                                 format_func=llm_model_format_func,
                                 on_change=on_llm_change,
-                                # key="llm_model",
+                                key="llm_model",
                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")):
+            and not get_model_worker_config(llm_model).get("online_api")
+            and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
-                r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
-        st.session_state["cur_llm_model"] = llm_model
+                prev_model = st.session_state.get("prev_llm_model")
+                r = api.change_llm_model(prev_model, llm_model)
+                if msg := check_error_msg(r):
+                    st.error(msg)
+                elif msg := check_success_msg(r):
+                    st.success(msg)
+                    st.session_state["prev_llm_model"] = llm_model
 
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)

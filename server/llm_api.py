@@ -1,10 +1,10 @@
 from fastapi import Body
 from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
-from server.utils import BaseResponse, fschat_controller_address
+from server.utils import BaseResponse, fschat_controller_address, list_llm_models
 import httpx
 
 
-def list_llm_models(
+def list_running_models(
     controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()]),
     placeholder: str = Body(None, description="该参数未使用，占位用"),
 ) -> BaseResponse:
@@ -22,6 +22,13 @@ def list_llm_models(
             code=500,
             data=[],
             msg=f"failed to get available models from controller: {controller_address}。错误信息是： {e}")
+
+
+def list_config_models() -> BaseResponse:
+    '''
+    从本地获取configs中配置的模型列表
+    '''
+    return BaseResponse(data=list_llm_models())
 
 
 def stop_llm_model(
