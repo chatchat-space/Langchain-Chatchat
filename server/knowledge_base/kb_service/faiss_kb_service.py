@@ -65,7 +65,7 @@ class FaissKBService(KBService):
     def do_add_doc(self,
                    docs: List[Document],
                    **kwargs,
-                   ) -> List[Dict]:
+                   ) -> List[DocumentWithVSId]:
         with self.load_vector_store().acquire() as vs:
             ids = vs.add_documents(docs)
             if not kwargs.get("not_refresh_vs_cache"):

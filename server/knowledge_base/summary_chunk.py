@@ -4,7 +4,7 @@ from langchain.schema.language_model import BaseLanguageModel
 
 from server.db.repository.knowledge_metadata_repository import add_summary_to_db, delete_summary_from_db
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from configs.model_config import logger
+from configs import logger
 import sys
 import asyncio
 

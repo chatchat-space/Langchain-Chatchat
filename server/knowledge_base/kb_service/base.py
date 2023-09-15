@@ -18,16 +18,14 @@ from server.db.repository.knowledge_file_repository import (
     list_docs_from_db,
 )
 
-from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                    EMBEDDING_MODEL)
-from configs.model_config import (kbs_config,
-                                  VECTOR_SEARCH_TOP_K,
-                                  SCORE_THRESHOLD,
-                                  EMBEDDING_MODEL,
-                                  SUMMARY_CHUNK,
-                                  OVERLAP_SIZE,
-                                  llm_model_dict,
-                                  LLM_MODEL)
+from configs import (kbs_config,
+                     VECTOR_SEARCH_TOP_K,
+                     SCORE_THRESHOLD,
+                     EMBEDDING_MODEL,
+                     SUMMARY_CHUNK,
+                     OVERLAP_SIZE,
+                     LLM_MODEL,
+                     TEMPERATURE)
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
@@ -36,7 +34,7 @@ from server.knowledge_base.utils import (
 )
 from server.utils import embedding_device, run_async
 from typing import List, Union, Dict, Optional
-from langchain.chat_models import ChatOpenAI
+from server.chat.utils import wrap_done, get_ChatOpenAI
 
 
 class SupportedVSType:
@@ -59,12 +57,9 @@ class KBService(ABC):
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
-        llm = ChatOpenAI(
-            temperature=0.01,
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+        llm = get_ChatOpenAI(
             model_name=LLM_MODEL,
-            openai_proxy=llm_model_dict[LLM_MODEL].get("openai_proxy")
+            temperature=TEMPERATURE
         )
         # 文本摘要适配器
         self.summary = SummaryAdapter.form_summary(llm=llm, overlap_size=OVERLAP_SIZE)
