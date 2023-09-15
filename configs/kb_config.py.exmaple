@@ -20,7 +20,7 @@ VECTOR_SEARCH_TOP_K = 3
 SCORE_THRESHOLD = 1
 
 # 搜索引擎匹配结题数量
-SEARCH_ENGINE_TOP_K = 10
+SEARCH_ENGINE_TOP_K = 3
 
 
 # 基于本地知识问答的提示词模版（使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号

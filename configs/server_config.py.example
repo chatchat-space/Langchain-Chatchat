@@ -64,14 +64,17 @@ FSCHAT_MODEL_WORKERS = {
     "baichuan-7b": { # 使用default中的IP和端口
         "device": "cpu",
     },
-    "chatglm-api": { # 请为每个在线API设置不同的端口
+    "zhipu-api": { # 请为每个要运行的在线API设置不同的端口
         "port": 21001,
     },
-    "minimax-api": { # 请为每个在线API设置不同的端口
+    "minimax-api": {
         "port": 21002,
     },
-    "xinghuo-api": { # 请为每个在线API设置不同的端口
+    "xinghuo-api": {
         "port": 21003,
+    },
+    "qianfan-api": {
+        "port": 21004,
     },
 }
 

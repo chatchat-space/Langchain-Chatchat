@@ -33,7 +33,7 @@ MODEL_PATH = {
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "text-embedding-ada-002": "your OPENAI_API_KEY",
-}, 
+    },
     # TODO: add all supported llm models
     "llm_model": {
         "chatglm-6b": "THUDM/chatglm-6b",
@@ -50,12 +50,12 @@ EMBEDDING_MODEL = "m3e-base"
 EMBEDDING_DEVICE = "auto"
 
 # LLM 名称
-LLM_MODEL = "chatglm2-6b-int4"
+LLM_MODEL = "chatglm2-6b"
 
-    # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+# LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
 
-    # 历史对话轮数
+# 历史对话轮数
 HISTORY_LEN = 3
 
 # LLM通用对话参数
@@ -85,7 +85,7 @@ ONLINE_LLM_MODEL = {
     },
     # 线上模型。请在server_config中为每个在线API设置不同的端口
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
-    "chatglm-api": {
+    "zhipu-api": {
         "api_key": "",
         "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
         "provider": "ChatGLMWorker",
@@ -97,14 +97,22 @@ ONLINE_LLM_MODEL = {
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
-# 具体注册及api key获取请前往 https://xinghuo.xfyun.cn/
+    # 具体注册及api key获取请前往 https://xinghuo.xfyun.cn/
     "xinghuo-api": {
         "APPID": "",
         "APISecret": "",
         "api_key": "",
         "is_v2": False,
         "provider": "XingHuoWorker",
-    }
+    },
+    # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
+    "qianfan-api": {
+        "version": "ernie-bot-turbo",  # 当前支持 "ernie-bot" 或 "ernie-bot-turbo"， 更多的见文档模型支持列表中千帆部分。
+        "version_url": "", # 也可以不填写version，直接填写在千帆申请模型发布的API地址
+        "api_key": "",
+        "secret_key": "",
+        "provider": "QianFanWorker",
+    },
 }
 
 
