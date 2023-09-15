@@ -2,6 +2,7 @@ import asyncio
 from typing import Awaitable, List, Tuple, Dict, Union
 from pydantic import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
+from configs import logger, log_verbose
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -10,7 +11,9 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         await fn
     except Exception as e:
         # TODO: handle exception
-        print(f"Caught exception: {e}")
+        msg = f"Caught exception: {e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
     finally:
         # Signal the aiter to stop.
         event.set()

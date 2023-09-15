@@ -6,14 +6,14 @@ sys.path.append(str(root_path))
 from pprint import pprint
 
 test_files = {
-    "ocr_test.jpg": str(root_path / "tests" / "samples" / "ocr_test.jpg"),
+    "ocr_test.pdf": str(root_path / "tests" / "samples" / "ocr_test.pdf"),
 }
 
-def test_rapidocrloader():
-    img_path = test_files["ocr_test.jpg"]
-    from document_loaders import RapidOCRLoader
+def test_rapidocrpdfloader():
+    pdf_path = test_files["ocr_test.pdf"]
+    from document_loaders import RapidOCRPDFLoader
 
-    loader = RapidOCRLoader(img_path)
+    loader = RapidOCRPDFLoader(pdf_path)
     docs = loader.load()
     pprint(docs)
     assert isinstance(docs, list) and len(docs) > 0 and isinstance(docs[0].page_content, str)

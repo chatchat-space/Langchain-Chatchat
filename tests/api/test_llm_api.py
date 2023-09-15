@@ -5,8 +5,9 @@ from pathlib import Path
 
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
-from configs.server_config import api_address, FSCHAT_MODEL_WORKERS
+from configs.server_config import FSCHAT_MODEL_WORKERS
 from configs.model_config import LLM_MODEL, llm_model_dict
+from server.utils import api_address, get_model_worker_config
 
 from pprint import pprint
 import random
@@ -64,7 +65,8 @@ def test_change_model(api="/llm_model/change"):
     assert len(availabel_new_models) > 0
     print(availabel_new_models)
 
-    model_name = random.choice(running_models)
+    local_models = [x for x in running_models if not get_model_worker_config(x).get("online_api")]
+    model_name = random.choice(local_models)
     new_model_name = random.choice(availabel_new_models)
     print(f"\n尝试将模型从 {model_name} 切换到 {new_model_name}")
     r = requests.post(url, json={"model_name": model_name, "new_model_name": new_model_name})

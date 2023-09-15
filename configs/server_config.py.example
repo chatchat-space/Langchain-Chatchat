@@ -59,12 +59,22 @@ FSCHAT_MODEL_WORKERS = {
         # "limit_worker_concurrency": 5,
         # "stream_interval": 2,
         # "no_register": False,
+        # "embed_in_truncate": False,
     },
     "baichuan-7b": { # 使用default中的IP和端口
         "device": "cpu",
     },
-    "chatglm-api": { # 请为每个在线API设置不同的端口
+    "zhipu-api": { # 请为每个在线API设置不同的端口
         "port": 20003,
+    },
+    "minimax-api": { # 请为每个在线API设置不同的端口
+        "port": 20004,
+    },
+    "xinghuo-api": { # 请为每个在线API设置不同的端口
+        "port": 20005,
+    },
+    "qianfan-api": {
+        "port": 20006,
     },
 }
 

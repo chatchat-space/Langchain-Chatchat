@@ -1,7 +1,8 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
+                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                                  TEMPERATURE)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
 from langchain.chat_models import ChatOpenAI
@@ -18,11 +19,11 @@ from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
 
 
-def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
-                        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
-                        top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
-                        score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
-                        history: List[History] = Body([],
+async def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
+                            knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+                            top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+                            score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
+                            history: List[History] = Body([],
                                                       description="历史对话",
                                                       examples=[[
                                                           {"role": "user",
@@ -30,10 +31,11 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                                           {"role": "assistant",
                                                            "content": "虎头虎脑"}]]
                                                       ),
-                        stream: bool = Body(False, description="流式输出"),
-                        model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
-                        local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
-                        request: Request = None,
+                            stream: bool = Body(False, description="流式输出"),
+                            model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                            temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
+                            local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
+                            request: Request = None,
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -48,6 +50,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                            model_name: str = LLM_MODEL,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
+
         model = ChatOpenAI(
             streaming=True,
             verbose=True,
@@ -55,6 +58,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
+            temperature=temperature,
             openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
@@ -86,9 +90,8 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         if stream:
             async for token in callback.aiter():
                 # Use server-sent-events to stream the response
-                yield json.dumps({"answer": token,
-                                  "docs": source_documents},
-                                 ensure_ascii=False)
+                yield json.dumps({"answer": token}, ensure_ascii=False)
+            yield json.dumps({"docs": source_documents}, ensure_ascii=False)
         else:
             answer = ""
             async for token in callback.aiter():

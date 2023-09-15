@@ -69,3 +69,28 @@ class ApiModelWorker(BaseModelWorker):
             target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
         )
         self.heart_beat_thread.start()
+
+    # help methods
+    def get_config(self):
+        from server.utils import get_model_worker_config
+        return get_model_worker_config(self.model_names[0])
+
+    def prompt_to_messages(self, prompt: str) -> List[Dict]:
+        '''
+        将prompt字符串拆分成messages.
+        '''
+        result = []
+        user_role = self.conv.roles[0]
+        ai_role = self.conv.roles[1]
+        user_start = user_role + ":"
+        ai_start = ai_role + ":"
+        for msg in prompt.split(self.conv.sep)[1:-1]:
+            if msg.startswith(user_start):
+                if content := msg[len(user_start):].strip():
+                    result.append({"role": user_role, "content": content})
+            elif msg.startswith(ai_start):
+                if content := msg[len(ai_start):].strip():
+                    result.append({"role": ai_role, "content": content})
+            else:
+                raise RuntimeError(f"unknow role in msg: {msg}")
+        return result
