@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from configs.model_config import (
+from configs import (
     KB_ROOT_PATH,
     SCORE_THRESHOLD,
     logger, log_verbose,

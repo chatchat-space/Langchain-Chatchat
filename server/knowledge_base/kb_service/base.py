@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 import os
 
 import numpy as np
-from langchain import OpenAI
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from sklearn.preprocessing import normalize
@@ -19,6 +18,8 @@ from server.db.repository.knowledge_file_repository import (
     list_docs_from_db,
 )
 
+from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                    EMBEDDING_MODEL)
 from configs.model_config import (kbs_config,
                                   VECTOR_SEARCH_TOP_K,
                                   SCORE_THRESHOLD,
@@ -176,7 +177,6 @@ class KBService(ABC):
         docs = self.do_search(query, top_k, score_threshold, embeddings)
         return docs
 
-    # TODO: milvus/pg需要实现该方法
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         return None
 

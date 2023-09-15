@@ -1,13 +1,12 @@
 from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
-from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
+from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, 
+                     LLM_MODEL, SEARCH_ENGINE_TOP_K,
+                    PROMPT_TEMPLATE, TEMPERATURE)
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
-from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K,
-                                  PROMPT_TEMPLATE, TEMPERATURE)
-from server.chat.utils import wrap_done
+from server.chat.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse
-from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
@@ -90,15 +89,10 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                           model_name: str = LLM_MODEL,
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+        model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
+            callbacks=[callback],
         )
 
         docs = await lookup_search_engine(query, search_engine_name, top_k)

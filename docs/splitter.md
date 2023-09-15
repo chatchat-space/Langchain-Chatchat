@@ -12,7 +12,7 @@ MySplitter: {
         "source": "huggingface",  ## 选择tiktoken则使用openai的方法
         "tokenizer_name_or_path": "your tokenizer", #如果选择huggingface则使用huggingface的方法，部分tokenizer需要从Huggingface下载
     }
-TEXT_SPLITTER_NAME = "MySplitter"
+TEXT_SPLITTER = "MySplitter"
 ```
 
 完成上述步骤后，就能使用自己的分词器了。

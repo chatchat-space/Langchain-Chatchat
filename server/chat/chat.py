@@ -1,8 +1,7 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs.model_config import llm_model_dict, LLM_MODEL, TEMPERATURE
-from server.chat.utils import wrap_done
-from langchain.chat_models import ChatOpenAI
+from configs.model_config import LLM_MODEL, TEMPERATURE
+from server.chat.utils import wrap_done, get_ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
@@ -31,18 +30,11 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                             model_name: str = LLM_MODEL,
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+        model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
+            callbacks=[callback],
         )
-
         input_msg = History(role="user", content="{{ input }}").to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])

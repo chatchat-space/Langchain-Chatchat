@@ -1,6 +1,10 @@
 ![](img/logo-long-chatchat-trans-v2.png)
 
-**LangChain-Chatchat** (原 Langchain-ChatGLM):  基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
+
+🌍 [READ THIS IN ENGLISH](README_en.md)
+
+📃 **LangChain-Chatchat** (原 Langchain-ChatGLM):  基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
 
 ## 目录
 
@@ -14,8 +18,7 @@
   * [2. 下载模型至本地](README.md#2.-下载模型至本地)
   * [3. 设置配置项](README.md#3.-设置配置项)
   * [4. 知识库初始化与迁移](README.md#4.-知识库初始化与迁移)
-  * [5. 一键启动API服务或WebUI服务](README.md#6.-一键启动)
-  * [6. 分步启动 API 服务或 Web UI](README.md#5.-启动-API-服务或-Web-UI)
+  * [5. 一键启动 API 服务或 Web UI](README.md#5.-一键启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -78,7 +81,9 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ### LLM 模型支持
 
-本项目最新版本中基于 [FastChat](https://github.com/lm-sys/FastChat) 进行本地 LLM 模型接入，支持模型如下：
+本项目最新版本中支持接入**本地模型**与**在线 LLM API**。
+
+本地 LLM 模型接入基于 [FastChat](https://github.com/lm-sys/FastChat) 实现，支持模型如下：
 
 - [meta-llama/Llama-2-7b-chat-hf](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)
 - Vicuna, Alpaca, LLaMA, Koala
@@ -119,7 +124,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 以上模型支持列表可能随 [FastChat](https://github.com/lm-sys/FastChat) 更新而持续更新，可参考 [FastChat 已支持模型列表](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)。
 
-除本地模型外，本项目也支持直接接入 OpenAI API，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的 `openai-chatgpt-3.5` 配置信息。
+
+除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的配置信息。
+
+在线 LLM 模型目前已支持： 
+- [ChatGPT](https://api.openai.com)
+- [智谱AI](http://open.bigmodel.cn)
+- [MiniMax](https://api.minimax.chat)
+- [讯飞星火](https://xinghuo.xfyun.cn)
+- [百度千帆](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
+
+项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `LLM_MODEL` 进行修改。
 
 ### Embedding 模型支持
 
@@ -144,11 +159,13 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
+项目中默认使用的 Embedding 类型为 `moka-ai/m3e-base`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
+
 ---
 
 ### Text Splitter 个性化支持
 
-本项目支持调用 [Langchain](https://api.python.langchain.com/en/latest/api_reference.html#module-langchain.text_splitter) 的Text Splitter分词器以及基于此改进的自定义分词器，已支持的Text Splitter类型如下：
+本项目支持调用 [Langchain](https://api.python.langchain.com/en/latest/api_reference.html#module-langchain.text_splitter) 的 Text Splitter 分词器以及基于此改进的自定义分词器，已支持的 Text Splitter 类型如下：
 
 - CharacterTextSplitter
 - LatexTextSplitter
@@ -162,11 +179,13 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 已经支持的定制分词器如下：
 
-- AliTextSplitter
-- ChineseRecursiveTextSplitter
-- ChineseTextSplitter
+- [AliTextSplitter](text_splitter/ali_text_splitter.py)
+- [ChineseRecursiveTextSplitter](text_splitter/chinese_recursive_text_splitter.py)
+- [ChineseTextSplitter](text_splitter/chinese_text_splitter.py)
 
-关于如何使用自定义分词器和贡献自己的分词器，可以参考[这里](docs/splitter.md)
+项目中默认使用的 Text Splitter 类型为 `ChineseRecursiveTextSplitter`，如需使用其他 Text Splitter 类型，请在 [configs/model_config.py] 中对 `text_splitter_dict` 和 `TEXT_SPLITTER` 进行修改。
+
+关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
 
 ## Docker 部署
 
@@ -267,7 +286,7 @@ text_splitter_dict = {
   $ python init_database.py --recreate-vs
   ```
 
-### 5. 一键启动API 服务或 Web UI
+### 5. 一键启动 API 服务或 Web UI
 
 #### 5.1 启动命令
 
@@ -345,139 +364,12 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 2. webui启动界面示例：
 
 - Web UI 对话界面：
-  ![img](img/webui_0813_0.png)
-- Web UI 知识库管理页面：
-  ![](img/webui_0813_1.png)
 
-### 6 分步启动 API 服务或 Web UI
+![img](img/webui_0915_0.png)
 
-注意：如使用了一键启动方式，可忽略本节。
-
-#### 6.1 启动 LLM 服务
-
-如需使用开源模型进行本地部署，需首先启动 LLM 服务，启动方式分为三种：
-
-- [基于多进程脚本 llm_api.py 启动 LLM 服务](README.md#5.1.1-基于多进程脚本-llm_api.py-启动-LLM-服务)
-- [基于命令行脚本 llm_api_stale.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_stale.py-启动-LLM-服务)
-- [PEFT 加载](README.md#5.1.3-PEFT-加载)
-
-三种方式只需选择一个即可，具体操作方式详见 5.1.1 - 5.1.3。
-
-如果启动在线的API服务（如 OPENAI 的 API 接口），则无需启动 LLM 服务，即 5.1 小节的任何命令均无需启动。
-
-##### 6.1.1 基于多进程脚本 llm_api.py 启动 LLM 服务
-
-在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
-
-```shell
-$ python server/llm_api.py
-```
-
-项目支持多卡加载，需在 llm_api.py 中的 create_model_worker_app 函数中，修改如下三个参数:
-
-```python
-gpus=None, 
-num_gpus=1, 
-max_gpu_memory="20GiB"
-```
-
-其中，`gpus` 控制使用的显卡的ID，如果 "0,1";
-
-`num_gpus` 控制使用的卡数;
-
-`max_gpu_memory` 控制每个卡使用的显存容量。
-
-##### 6.1.2 基于命令行脚本 llm_api_stale.py 启动 LLM 服务
-
-⚠️ **注意:**
-
-**1.llm_api_stale.py脚本原生仅适用于linux,mac设备需要安装对应的linux命令,win平台请使用wsl;**
-
-**2.加载非默认模型需要用命令行参数--model-path-address指定模型，不会读取model_config.py配置;**
-
-在项目根目录下，执行 [server/llm_api_stale.py](server/llm_api_stale.py) 脚本启动 **LLM 模型**服务：
-
-```shell
-$ python server/llm_api_stale.py
-```
-
-该方式支持启动多个worker，示例启动方式：
-
-```shell
-$ python server/llm_api_stale.py --model-path-address model1@host1@port1 model2@host2@port2
-```
-
-如果出现server端口占用情况，需手动指定server端口,并同步修改model_config.py下对应模型的base_api_url为指定端口:
-
-```shell
-$ python server/llm_api_stale.py --server-port 8887
-```
-
-如果要启动多卡加载，示例命令如下：
-
-```shell
-$ python server/llm_api_stale.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
-```
-
-注：以如上方式启动LLM服务会以nohup命令在后台运行 FastChat 服务，如需停止服务，可以运行如下命令：
-
-```shell
-$ python server/llm_api_shutdown.py --serve all 
-```
-
-亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
-
-##### 6.1.3 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
-
-本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 PEFT 权重。
-详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)
-
-![image](https://github.com/chatchat-space/Langchain-Chatchat/assets/22924096/4e056c1c-5c4b-4865-a1af-859cd58a625d)
-
-#### 6.2 启动 API 服务
-
-本地部署情况下，按照 [5.1 节](README.md#5.1-启动-LLM-服务)**启动 LLM 服务后**，再执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
-
-在线调用API服务的情况下，直接执执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
-
-调用命令示例：
-
-```shell
-$ python server/api.py
-```
-
-启动 API 服务后，可访问 `localhost:7861` 或 `{API 所在服务器 IP}:7861` FastAPI 自动生成的 docs 进行接口查看与测试。
-
-- FastAPI docs 界面
-
-  ![](img/fastapi_docs_020_0.png)
-
-#### 6.3 启动 Web UI 服务
-
-按照 [5.2 节](README.md#5.2-启动-API-服务)**启动 API 服务后**，执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口 `8501`）
-
-```shell
-$ streamlit run webui.py
-```
-
-使用 Langchain-Chatchat 主题色启动 **Web UI** 服务（默认使用端口 `8501`）
-
-```shell
-$ streamlit run webui.py --theme.base "light" --theme.primaryColor "#165dff" --theme.secondaryBackgroundColor "#f5f5f5" --theme.textColor "#000000"
-```
-
-或使用以下命令指定启动 **Web UI** 服务并指定端口号
-
-```shell
-$ streamlit run webui.py --server.port 666
-```
-
-- Web UI 对话界面：
-
-  ![](img/webui_0813_0.png)
 - Web UI 知识库管理页面：
 
-  ![](img/webui_0813_1.png)
+![](img/webui_0915_1.png)
 
 ---
 
@@ -523,6 +415,6 @@ $ streamlit run webui.py --server.port 666
 
 ## 项目交流群
 
-<img src="img/qr_code_60.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_61.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
