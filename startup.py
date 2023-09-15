@@ -479,7 +479,7 @@ def dump_server_info(after_start=False, args=None):
     if args and args.model_name:
         models = args.model_name
 
-    print(f"当前使用的分词器：{TEXT_SPLITTER}")
+    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
     print(f"当前启动的LLM模型：{models} @ {llm_device()}")
 
     for model in models:

@@ -8,7 +8,7 @@ DEFAULT_VS_TYPE = "faiss"
 CACHED_VS_NUM = 1
 
 # 知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)
-CHUNK_SIZE = 500
+CHUNK_SIZE = 250
 
 # 知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)
 OVERLAP_SIZE = 50
@@ -104,4 +104,4 @@ text_splitter_dict = {
 }
 
 # TEXT_SPLITTER 名称
-TEXT_SPLITTER_NAME = "SpacyTextSplitter"
+TEXT_SPLITTER_NAME = "ChineseRecursiveTextSplitter"
