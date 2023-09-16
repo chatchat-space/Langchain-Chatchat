@@ -115,6 +115,14 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "QianFanWorker",
     },
+    # 火山方舟 API
+    "fangzhou-api": {
+        "version": "chatglm-6b-model",  # 当前支持 "chatglm-6b-model"， 更多的见文档模型支持列表中方舟部分。
+        "version_url": "",  # 可以不填写version，直接填写在方舟申请模型发布的API地址
+        "api_key": "",
+        "secret_key": "",
+        "provider": "FangZhouWorker",
+    },
 }
 
 
