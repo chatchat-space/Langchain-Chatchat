@@ -2,7 +2,7 @@ import os
 
 from transformers import AutoTokenizer
 
-from configs.model_config import (
+from configs import (
     EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
@@ -10,10 +10,9 @@ from configs.model_config import (
     ZH_TITLE_ENHANCE,
     logger, 
     log_verbose, 
-    text_splitter_dict, 
-    llm_model_dict, 
-    LLM_MODEL, 
-    TEXT_SPLITTER
+    text_splitter_dict,
+    LLM_MODEL,
+    TEXT_SPLITTER_NAME,
 )
 import importlib
 from text_splitter import zh_title_enhance
@@ -23,7 +22,7 @@ from langchain.text_splitter import TextSplitter
 from pathlib import Path
 import json
 from concurrent.futures import ThreadPoolExecutor
-from server.utils import run_in_thread_pool, embedding_device
+from server.utils import run_in_thread_pool, embedding_device, get_model_worker_config
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
 
@@ -182,9 +181,10 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = TEXT_SPLITTER,
+    splitter_name: str = TEXT_SPLITTER_NAME,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = OVERLAP_SIZE,
+    llm_model: str = LLM_MODEL,
 ):
     """
     根据参数获取特定的分词器
@@ -220,8 +220,9 @@ def make_text_splitter(
                     )
             elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
+                    config = get_model_worker_config(llm_model)
                     text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
-                        llm_model_dict[LLM_MODEL]["local_model_path"]
+                        config.get("model_path")
 
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast
@@ -273,7 +274,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-        self.text_splitter_name = TEXT_SPLITTER
+        self.text_splitter_name = TEXT_SPLITTER_NAME
 
     def file2docs(self, refresh: bool=False):
         if self.docs is None or refresh:

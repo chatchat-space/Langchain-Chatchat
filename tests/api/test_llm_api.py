@@ -6,21 +6,19 @@ from pathlib import Path
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
 from configs.server_config import FSCHAT_MODEL_WORKERS
-from configs.model_config import LLM_MODEL, llm_model_dict
+from configs.model_config import LLM_MODEL
 from server.utils import api_address, get_model_worker_config
 
 from pprint import pprint
 import random
+from typing import List
 
 
-def get_configured_models():
+def get_configured_models() -> List[str]:
     model_workers = list(FSCHAT_MODEL_WORKERS)
     if "default" in model_workers:
         model_workers.remove("default")
-    
-    llm_dict = list(llm_model_dict)
-
-    return model_workers, llm_dict
+    return model_workers
 
 
 api_base_url = api_address()
@@ -56,12 +54,9 @@ def test_change_model(api="/llm_model/change"):
     running_models = get_running_models()
     assert len(running_models) > 0
 
-    model_workers, llm_dict = get_configured_models()
+    model_workers = get_configured_models()
 
-    availabel_new_models = set(model_workers) - set(running_models)
-    if len(availabel_new_models) == 0:
-        availabel_new_models = set(llm_dict) - set(running_models)
-    availabel_new_models = list(availabel_new_models)
+    availabel_new_models = list(set(model_workers) - set(running_models))
     assert len(availabel_new_models) > 0
     print(availabel_new_models)
 

@@ -7,7 +7,7 @@ from langchain.vectorstores import PGVector
 from langchain.vectorstores.pgvector import DistanceStrategy
 from sqlalchemy import text
 
-from configs.model_config import EMBEDDING_DEVICE, kbs_config
+from configs import kbs_config
 
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process

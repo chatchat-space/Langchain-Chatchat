@@ -1,10 +1,10 @@
 import os
 import urllib
 from fastapi import File, Form, Body, Query, UploadFile
-from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
-                                VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
-                                logger, log_verbose,)
+from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
+                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                    CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+                    logger, log_verbose,)
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder,get_file_path,
                                         files2docs_in_thread, KnowledgeFile)
