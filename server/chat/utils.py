@@ -15,7 +15,7 @@ def get_ChatOpenAI(
 ) -> ChatOpenAI:
     config = get_model_worker_config(model_name)
     model = ChatOpenAI(
-        streaming=True,
+        streaming=streaming,
         verbose=True,
         callbacks=callbacks,
         openai_api_key=config.get("api_key", "EMPTY"),
