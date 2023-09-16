@@ -110,7 +110,7 @@ llm_model_dict = {
         "api_base_url": "http://127.0.0.1:8888/v1",
         "api_key": "",
         "secret_key": "",
-        "provider": "ErnieWorker",
+        "provider": "QianFanWorker",
     }
 }
 
