@@ -111,6 +111,14 @@ llm_model_dict = {
         "api_key": "",
         "secret_key": "",
         "provider": "QianFanWorker",
+    },
+    # 火山方舟 API
+    "fangzhou-api": {
+        "version": "chatglm-6b-model",  # 当前支持 "chatglm-6b-model"， 更多的见文档模型支持列表中方舟部分。
+        "api_base_url": "http://127.0.0.1:8888/v1",
+        "api_key": "",
+        "secret_key": "",
+        "provider": "FangZhouWorker",
     }
 }
 
