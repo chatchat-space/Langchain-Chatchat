@@ -18,7 +18,6 @@ from langchain.callbacks.manager import (
 )
 from langchain.chains.base import Chain
 from langchain.chains.llm import LLMChain
-from langchain.chains.llm_math.prompt import PROMPT
 from langchain.pydantic_v1 import Extra, root_validator
 from langchain.schema import BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
@@ -127,7 +126,7 @@ class LLMWeatherChain(Chain):
     llm_chain: LLMChain
     llm: Optional[BaseLanguageModel] = None
     """[Deprecated] LLM wrapper to use."""
-    prompt: BasePromptTemplate = PROMPT
+    prompt: BasePromptTemplate
     """[Deprecated] Prompt to use to translate to python if necessary."""
     input_key: str = "question"  #: :meta private:
     output_key: str = "answer"  #: :meta private:
@@ -250,13 +249,13 @@ class LLMWeatherChain(Chain):
 
     @property
     def _chain_type(self) -> str:
-        return "llm_math_chain"
+        return "llm_weather_chain"
 
     @classmethod
     def from_llm(
             cls,
             llm: BaseLanguageModel,
-            prompt: BasePromptTemplate = PROMPT,
+            prompt: BasePromptTemplate,
             **kwargs: Any,
     ) -> LLMWeatherChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
@@ -353,3 +352,4 @@ def weathercheck(query: str):
     llm_weather = LLMWeatherChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_weather.run(query)
     return ans
+
