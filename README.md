@@ -14,11 +14,11 @@
 * [Docker 部署](README.md#Docker-部署)
 * [开发部署](README.md#开发部署)
   * [软件需求](README.md#软件需求)
-  * [1. 开发环境准备](README.md#1.-开发环境准备)
-  * [2. 下载模型至本地](README.md#2.-下载模型至本地)
-  * [3. 设置配置项](README.md#3.-设置配置项)
-  * [4. 知识库初始化与迁移](README.md#4.-知识库初始化与迁移)
-  * [5. 一键启动 API 服务或 Web UI](README.md#5.-一键启动-API-服务或-Web-UI)
+  * [1. 开发环境准备](README.md#1-开发环境准备)
+  * [2. 下载模型至本地](README.md#2-下载模型至本地)
+  * [3. 设置配置项](README.md#3-设置配置项)
+  * [4. 知识库初始化与迁移](README.md#4-知识库初始化与迁移)
+  * [5. 一键启动 API 服务或 Web UI](README.md#5-一键启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -61,7 +61,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
-从 `0.1.x` 升级过来的用户请注意，需要按照[开发部署](README.md#3.-开发部署)过程操作，将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
+从 `0.1.x` 升级过来的用户请注意，需要按照[开发部署](README.md#3-开发部署)过程操作，将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
 
 ### `0.2.0` 版本与 `0.1.x` 版本区别
 
@@ -236,7 +236,7 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 
 复制服务相关参数配置模板文件 [configs/server_config.py.example](configs/server_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `server_config.py`。
 
-在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 和 `configs/server_config.py` 中的各项模型参数设计是否符合需求：
+在开始执行 Web UI 或命令行交互前，请先检查 [configs/model_config.py](configs/model_config.py) 和 [configs/server_config.py](configs/server_config.py) 中的各项模型参数设计是否符合需求：
 
 - 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
 
