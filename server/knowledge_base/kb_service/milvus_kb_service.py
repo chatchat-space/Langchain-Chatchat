@@ -22,9 +22,9 @@ class MilvusKBService(KBService):
         from pymilvus import Collection
         return Collection(milvus_name)
 
-    def save_vector_store(self):
-        if self.milvus.col:
-            self.milvus.col.flush()
+    # def save_vector_store(self):
+    #     if self.milvus.col:
+    #         self.milvus.col.flush()
 
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         if self.milvus.col:
