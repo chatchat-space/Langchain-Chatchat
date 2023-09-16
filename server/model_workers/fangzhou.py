@@ -54,6 +54,7 @@ class FangZhouWorker(ApiModelWorker):
     火山方舟
     """
     SUPPORT_MODELS = ["chatglm-6b-model"]
+
     def __init__(
             self,
             *,
@@ -65,6 +66,7 @@ class FangZhouWorker(ApiModelWorker):
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384) # TODO: 不同的模型有不同的大小
+
         super().__init__(**kwargs)
 
         config = self.get_config()
