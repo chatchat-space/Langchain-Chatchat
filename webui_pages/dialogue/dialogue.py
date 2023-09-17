@@ -167,7 +167,6 @@ def dialogue_page(api: ApiRequest):
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
         elif dialogue_mode == "知识库问答":
-            history = get_messages_history(history_len)
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",
                 Markdown("...", in_expander=True, title="知识库匹配结果"),
@@ -196,6 +195,7 @@ def dialogue_page(api: ApiRequest):
             for d in api.search_engine_chat(prompt,
                                             search_engine_name=search_engine,
                                             top_k=se_top_k,
+                                            history=history,
                                             model=llm_model,
                                             temperature=temperature):
                 if error_msg := check_error_msg(d):  # check whether error occured
