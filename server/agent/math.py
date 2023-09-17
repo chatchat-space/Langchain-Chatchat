@@ -1,6 +1,6 @@
 from langchain import PromptTemplate
 from langchain.chains import LLMMathChain
-from server.chat.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_ChatOpenAI
 from configs.model_config import LLM_MODEL, TEMPERATURE
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.manager import CallbackManagerForToolRun

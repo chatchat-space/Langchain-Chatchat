@@ -1,7 +1,7 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs import LLM_MODEL, TEMPERATURE
-from server.chat.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable

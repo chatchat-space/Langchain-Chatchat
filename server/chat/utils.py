@@ -1,46 +1,7 @@
-import asyncio
 from pydantic import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
 from configs import logger, log_verbose
-from server.utils import get_model_worker_config, fschat_openai_api_address
-from langchain.chat_models import ChatOpenAI
-from typing import Awaitable, List, Tuple, Dict, Union, Callable, Any
-
-
-def get_ChatOpenAI(
-    model_name: str,
-    temperature: float,
-    streaming: bool = True,
-    callbacks: List[Callable] = [],
-    **kwargs: Any,
-) -> ChatOpenAI:
-    config = get_model_worker_config(model_name)
-    model = ChatOpenAI(
-        streaming=streaming,
-        verbose=True,
-        callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-        model_name=model_name,
-        temperature=temperature,
-        openai_proxy=config.get("openai_proxy"),
-        **kwargs
-    )
-    return model
-
-
-async def wrap_done(fn: Awaitable, event: asyncio.Event):
-    """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-    try:
-        await fn
-    except Exception as e:
-        # TODO: handle exception
-        msg = f"Caught exception: {e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
-    finally:
-        # Signal the aiter to stop.
-        event.set()
+from typing import List, Tuple, Dict, Union
 
 
 class History(BaseModel):

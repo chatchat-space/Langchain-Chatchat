@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 import os
 
-from server.chat.utils import get_ChatOpenAI
+from server.utils import get_ChatOpenAI
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 

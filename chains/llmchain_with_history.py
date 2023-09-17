@@ -1,4 +1,4 @@
-from server.chat.utils import get_ChatOpenAI
+from server.utils import get_ChatOpenAI
 from configs.model_config import LLM_MODEL, TEMPERATURE
 from langchain import LLMChain
 from langchain.prompts.chat import (
