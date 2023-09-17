@@ -114,7 +114,7 @@ def test_search_engine_chat(api="/chat/search_engine_chat"):
             assert data["msg"] == f"要使用Bing搜索引擎，需要设置 `BING_SUBSCRIPTION_KEY`"
 
         print("\n")
-        print("=" * 30 + api + " by {se}  output" + "="*30)
+        print("=" * 30 + api + f" by {se}  output" + "="*30)
         for line in response.iter_content(None, decode_unicode=True):
             data = json.loads(line)
             if "answer" in data:
