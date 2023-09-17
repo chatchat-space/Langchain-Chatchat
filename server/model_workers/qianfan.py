@@ -72,7 +72,10 @@ def request_qianfan_api(
     version_url = config.get("version_url")
     access_token = get_baidu_access_token(config.get("api_key"), config.get("secret_key"))
     if not access_token:
-        raise RuntimeError(f"failed to get access token. have you set the correct api_key and secret key?")
+        yield {
+            "error_code": 403,
+            "error_msg": f"failed to get access token. have you set the correct api_key and secret key?",
+        }
 
     url = BASE_URL.format(
         model_version=version_url or MODEL_VERSIONS[version],
@@ -165,8 +168,8 @@ if __name__ == "__main__":
 
     worker = QianFanWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:20006",
+        worker_addr="http://127.0.0.1:21004"
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=20006)
+    uvicorn.run(app, port=21004)

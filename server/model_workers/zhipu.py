@@ -67,8 +67,8 @@ if __name__ == "__main__":
 
     worker = ChatGLMWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:20003",
+        worker_addr="http://127.0.0.1:21001",
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=20003)
+    uvicorn.run(app, port=21001)
