@@ -327,6 +327,17 @@ def webui_address() -> str:
     return f"http://{host}:{port}"
 
 
+def get_prompt_template(name: str) -> Optional[str]:
+    '''
+    从prompt_config中加载模板内容
+    '''
+    from configs import prompt_config
+    import importlib
+    importlib.reload(prompt_config) # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+
+    return prompt_config.PROMPT_TEMPLATES.get(name)
+
+
 def set_httpx_timeout(timeout: float = None):
     '''
     设置httpx默认timeout。

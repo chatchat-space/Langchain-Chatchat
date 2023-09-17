@@ -315,10 +315,46 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "llm_chat",
         no_remote_api: bool = None,
     ):
         '''
         对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "prompt_name": prompt_name,
+        }
+
+        print(f"received input message:")
+        pprint(data)
+
+        if no_remote_api:
+            from server.chat.chat import chat
+            response = run_async(chat(**data))
+            return self._fastapi_stream2generator(response)
+        else:
+            response = self.post("/chat/chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
+
+    def agent_chat(
+            self,
+            query: str,
+            history: List[Dict] = [],
+            stream: bool = True,
+            model: str = LLM_MODEL,
+            temperature: float = TEMPERATURE,
+            no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/agent_chat 接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
@@ -335,13 +371,12 @@ class ApiRequest:
         pprint(data)
 
         if no_remote_api:
-            from server.chat.chat import chat
-            response = run_async(chat(**data))
+            from server.chat.agent_chat import agent_chat
+            response = run_async(agent_chat(**data))
             return self._fastapi_stream2generator(response)
         else:
-            response = self.post("/chat/chat", json=data, stream=True)
+            response = self.post("/chat/agent_chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
-
     def knowledge_base_chat(
         self,
         query: str,
@@ -352,6 +387,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -370,6 +406,7 @@ class ApiRequest:
             "model_name": model,
             "temperature": temperature,
             "local_doc_url": no_remote_api,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -395,6 +432,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -410,6 +448,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")

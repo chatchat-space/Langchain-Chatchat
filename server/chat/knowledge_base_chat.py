@@ -1,10 +1,8 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
-from configs import (LLM_MODEL, PROMPT_TEMPLATE,
-                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                    TEMPERATURE)
+from configs import (LLM_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
 from server.chat.utils import wrap_done, get_ChatOpenAI
-from server.utils import BaseResponse
+from server.utils import BaseResponse, get_prompt_template
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, List, Optional
@@ -33,6 +31,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
+                            prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
                             request: Request = None,
                         ):
@@ -43,10 +42,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
     history = [History.from_data(h) for h in history]
 
     async def knowledge_base_chat_iterator(query: str,
-                                           kb: KBService,
                                            top_k: int,
                                            history: Optional[List[History]],
                                            model_name: str = LLM_MODEL,
+                                           prompt_name: str = prompt_name,
                                            ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
         model = get_ChatOpenAI(
@@ -57,7 +56,8 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
 
-        input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
+        prompt_template = get_prompt_template(prompt_name)
+        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         # 用户最后一个问题会进入PROMPT_TEMPLATE，不用再作为history 了
         if len(history) >= 1:
             history.pop()
@@ -98,5 +98,9 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
 
         await task
 
-    return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history, model_name),
+    return StreamingResponse(knowledge_base_chat_iterator(query=query,
+                                                          top_k=top_k,
+                                                          history=history,
+                                                          model_name=model_name,
+                                                          prompt_name=prompt_name),
                              media_type="text/event-stream")
