@@ -19,6 +19,7 @@ class SummaryChunkModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, comment='ID')
     kb_name = Column(String(50), comment='知识库名称')
     summary_context = Column(String(255), comment='总结文本')
+    summary_id = Column(String(255), comment='总结矢量id')
     doc_ids = Column(String(1024), comment="向量库id关联列表")
     meta_data = Column(JSON, default={})
 

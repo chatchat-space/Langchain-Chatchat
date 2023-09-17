@@ -19,6 +19,7 @@ def list_summary_from_db(session,
 
     return [{"id": x.id,
              "summary_context": x.summary_context,
+             "summary_id": x.summary_id,
              "doc_ids": x.doc_ids,
              "metadata": x.metadata} for x in docs.all()]
 
@@ -50,6 +51,7 @@ def add_summary_to_db(session,
         obj = SummaryChunkModel(
             kb_name=kb_name,
             summary_context=summary["summary_context"],
+            summary_id=summary["summary_id"],
             doc_ids=summary["doc_ids"],
             meta_data=summary["metadata"],
         )
