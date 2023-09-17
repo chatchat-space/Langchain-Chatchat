@@ -4,13 +4,14 @@ from langchain.prompts.chat import ChatMessagePromptTemplate
 from configs import logger, log_verbose
 from server.utils import get_model_worker_config, fschat_openai_api_address
 from langchain.chat_models import ChatOpenAI
-from typing import Awaitable, List, Tuple, Dict, Union, Callable
+from typing import Awaitable, List, Tuple, Dict, Union, Callable, Any
 
 
 def get_ChatOpenAI(
     model_name: str,
     temperature: float,
     callbacks: List[Callable] = [],
+    **kwargs: Any,
 ) -> ChatOpenAI:
     config = get_model_worker_config(model_name)
     model = ChatOpenAI(
@@ -21,7 +22,8 @@ def get_ChatOpenAI(
         openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
         model_name=model_name,
         temperature=temperature,
-        openai_proxy=config.get("openai_proxy")
+        openai_proxy=config.get("openai_proxy"),
+        **kwargs
     )
     return model
 
