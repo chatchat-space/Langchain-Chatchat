@@ -26,6 +26,7 @@ from concurrent.futures import ThreadPoolExecutor
 from server.utils import run_in_thread_pool, embedding_device
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
+import chardet
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -167,7 +168,14 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     if loader_name == "UnstructuredFileLoader":
         loader = DocumentLoader(file_path_or_content, autodetect_encoding=True)
     elif loader_name == "CSVLoader":
-        loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+        # 自动识别文件编码类型，避免langchain loader 加载文件报编码错误
+        with open(file_path_or_content, 'rb') as struct_file:
+            encode_detect = chardet.detect(struct_file.read())
+        if encode_detect:
+            loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+        else:
+            loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+
     elif loader_name == "JSONLoader":
         loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
     elif loader_name == "CustomJSONLoader":
