@@ -23,7 +23,7 @@ import shutil
 
 # TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class SummaryAdapter:
-    summary_kb_name: str
+    kb_name: str
     vs_path: str
     kb_path: str
     _OVERLAP_SIZE: int
@@ -31,9 +31,9 @@ class SummaryAdapter:
     _separator: str = "\n\n"
     chain: MapReduceDocumentsChain
 
-    def __init__(self, summary_kb_name: str, embed_model: str, overlap_size: int, token_max: int,
+    def __init__(self, kb_name: str, embed_model: str, overlap_size: int, token_max: int,
                  chain: MapReduceDocumentsChain):
-        self.summary_kb_name = summary_kb_name
+        self.kb_name = kb_name
         self.embed_model = embed_model
         self._OVERLAP_SIZE = overlap_size
         self.chain = chain
@@ -60,9 +60,7 @@ class SummaryAdapter:
         :param token_max: 最大的chunk数量，每个chunk长度小于token_max长度，第一次生成摘要时，大于token_max长度的摘要会报错
         :return:
         """
-        import langchain
 
-        langchain.verbose = True
 
         # This controls how each document will be formatted. Specifically,
         document_prompt = PromptTemplate(
@@ -110,7 +108,7 @@ class SummaryAdapter:
             # 返回中间步骤
             return_intermediate_steps=True
         )
-        return cls(summary_kb_name=f"summary_chunk_{kb_name}",
+        return cls(kb_name=kb_name,
                    embed_model=embed_model,
                    overlap_size=overlap_size,
                    chain=chain,
@@ -120,10 +118,13 @@ class SummaryAdapter:
         return os.path.join(self.get_kb_path(), "vector_store")
 
     def get_kb_path(self):
-        return os.path.join(KB_ROOT_PATH, self.summary_kb_name)
+        return os.path.join(KB_ROOT_PATH, self.kb_name)
 
     def load_vector_store(self) -> ThreadSafeFaiss:
-        return kb_faiss_pool.load_vector_store(kb_name=self.summary_kb_name, embed_model=self.embed_model, create=True)
+        return kb_faiss_pool.load_vector_store(kb_name=self.kb_name,
+                                               vector_name="summary_vector_store",
+                                               embed_model=self.embed_model,
+                                               create=True)
 
     def summarize(self,
                   kb_name: str,
