@@ -22,7 +22,11 @@ class ThreadSafeObject:
 
     def __repr__(self) -> str:
         cls = type(self).__name__
-        return f"<{cls}: key: {self._key}, obj: {self._obj}>"
+        return f"<{cls}: key: {self.key}, obj: {self._obj}>"
+
+    @property
+    def key(self):
+        return self._key
 
     @contextmanager
     def acquire(self, owner: str = "", msg: str = ""):
@@ -30,13 +34,13 @@ class ThreadSafeObject:
         try:
             self._lock.acquire()
             if self._pool is not None:
-                self._pool._cache.move_to_end(self._key)
+                self._pool._cache.move_to_end(self.key)
             if log_verbose:
-                logger.info(f"{owner} 开始操作：{self._key}。{msg}")
+                logger.info(f"{owner} 开始操作：{self.key}。{msg}")
             yield self._obj
         finally:
             if log_verbose:
-                logger.info(f"{owner} 结束操作：{self._key}。{msg}")
+                logger.info(f"{owner} 结束操作：{self.key}。{msg}")
             self._lock.release()
 
     def start_loading(self):
