@@ -8,8 +8,8 @@ from configs import (
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger, 
-    log_verbose, 
+    logger,
+    log_verbose,
     text_splitter_dict,
     LLM_MODEL,
     TEXT_SPLITTER_NAME,
@@ -42,8 +42,8 @@ def get_doc_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "content")
 
 
-def get_vs_path(knowledge_base_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
+def get_vs_path(knowledge_base_name: str, vector_name: str):
+    return os.path.join(get_kb_path(knowledge_base_name), vector_name)
 
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
