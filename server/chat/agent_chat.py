@@ -5,7 +5,7 @@ from server.agent.custom_template import CustomOutputParser, prompt
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import LLM_MODEL, TEMPERATURE, HISTORY_LEN
-from server.chat.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.callbacks.streaming_aiter_final_only import AsyncFinalIteratorCallbackHandler
