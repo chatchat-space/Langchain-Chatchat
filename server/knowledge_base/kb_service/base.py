@@ -59,10 +59,15 @@ class KBService(ABC):
         self.do_init()
         llm = get_ChatOpenAI(
             model_name=LLM_MODEL,
-            temperature=TEMPERATURE
+            temperature=TEMPERATURE,
+            frequency_penalty=2.0,
+            presence_penalty=-1.0
         )
         # 文本摘要适配器
-        self.summary = SummaryAdapter.form_summary(llm=llm, overlap_size=OVERLAP_SIZE)
+        self.summary = SummaryAdapter.form_summary(llm=llm,
+                                                   kb_name=self.kb_name,
+                                                   embed_model=embed_model,
+                                                   overlap_size=OVERLAP_SIZE)
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)

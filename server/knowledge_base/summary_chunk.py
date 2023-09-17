@@ -4,32 +4,62 @@ from langchain.schema.language_model import BaseLanguageModel
 
 from server.db.repository.knowledge_metadata_repository import add_summary_to_db, delete_summary_from_db
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from configs import logger
-import sys
-import asyncio
-
+from configs import (logger,
+                     KB_ROOT_PATH
+                     )
 from langchain.chains import StuffDocumentsChain, LLMChain
 from langchain.prompts import PromptTemplate
 
 from langchain.docstore.document import Document
 from langchain.output_parsers.regex import RegexParser
 from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, MapReduceDocumentsChain
+from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
+
+import sys
+import asyncio
+import os
+import shutil
 
 
 # TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class SummaryAdapter:
+    summary_kb_name: str
+    vs_path: str
+    kb_path: str
     _OVERLAP_SIZE: int
     token_max: int
     _separator: str = "\n\n"
     chain: MapReduceDocumentsChain
 
-    def __init__(self, overlap_size: int, token_max: int, chain: MapReduceDocumentsChain):
+    def __init__(self, summary_kb_name: str, embed_model: str, overlap_size: int, token_max: int,
+                 chain: MapReduceDocumentsChain):
+        self.summary_kb_name = summary_kb_name
+        self.embed_model = embed_model
         self._OVERLAP_SIZE = overlap_size
         self.chain = chain
         self.token_max = token_max
 
+        self.kb_path = self.get_kb_path()
+        self.vs_path = self.get_vs_path()
+        if not os.path.exists(self.vs_path):
+            os.makedirs(self.vs_path)
+
     @classmethod
-    def form_summary(cls, llm: BaseLanguageModel, overlap_size: int, token_max: int = 1300):
+    def form_summary(cls,
+                     llm: BaseLanguageModel,
+                     kb_name: str,
+                     embed_model: str,
+                     overlap_size: int,
+                     token_max: int = 1300):
+        """
+        获取实例
+        :param llm:
+        :param kb_name:
+        :param embed_model:
+        :param overlap_size: 重叠部分大小
+        :param token_max: 最大的chunk数量，每个chunk长度小于token_max长度，第一次生成摘要时，大于token_max长度的摘要会报错
+        :return:
+        """
         import langchain
 
         langchain.verbose = True
@@ -80,7 +110,20 @@ class SummaryAdapter:
             # 返回中间步骤
             return_intermediate_steps=True
         )
-        return cls(overlap_size=overlap_size, chain=chain, token_max=token_max)
+        return cls(summary_kb_name=f"summary_chunk_{kb_name}",
+                   embed_model=embed_model,
+                   overlap_size=overlap_size,
+                   chain=chain,
+                   token_max=token_max)
+
+    def get_vs_path(self):
+        return os.path.join(self.get_kb_path(), "vector_store")
+
+    def get_kb_path(self):
+        return os.path.join(KB_ROOT_PATH, self.summary_kb_name)
+
+    def load_vector_store(self) -> ThreadSafeFaiss:
+        return kb_faiss_pool.load_vector_store(kb_name=self.summary_kb_name, embed_model=self.embed_model, create=True)
 
     def summarize(self,
                   kb_name: str,
@@ -127,7 +170,7 @@ class SummaryAdapter:
             result_docs, token_max=token_max, callbacks=callbacks, **kwargs
         )
         """
-        summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs,
+        summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs[:1],
                                                                               task_briefing="描述不同方法之间的接近度和相似性，"
                                                                                             "以帮助读者理解它们之间的关系。")
         print(summary_combine)
@@ -140,8 +183,8 @@ class SummaryAdapter:
                 # This uses metadata from the docs, and the textual results from `results`
                 for i, question_result_key in enumerate(
                     summary_intermediate_steps["intermediate_steps"][
-                        :len(summary_intermediate_steps["intermediate_steps"])//2
-                        ])
+                    :len(summary_intermediate_steps["intermediate_steps"]) // 2
+                    ])
             ]
             summary_combine, summary_intermediate_steps = self.chain.reduce_documents_chain.combine_docs(
                 result_docs, token_max=self.token_max
@@ -153,8 +196,13 @@ class SummaryAdapter:
             "summary_intermediate_steps": summary_intermediate_steps,
             "doc_ids": doc_ids
         }
+        summary_combine_doc = Document(page_content=summary_combine, metadata=_metadata)
+        with self.load_vector_store().acquire() as vs:
+            ids = vs.add_documents(documents=[summary_combine_doc])
+            vs.save_local(self.vs_path)
 
         summary_infos = [{"summary_context": summary_combine,
+                          "summary_id": ids[0],
                           "doc_ids": doc_ids,
                           "metadata": _metadata}]
         add_summary_to_db(kb_name=kb_name, summary_infos=summary_infos)
