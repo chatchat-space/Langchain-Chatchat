@@ -315,6 +315,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "llm_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -329,6 +330,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -352,6 +354,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -370,6 +373,7 @@ class ApiRequest:
             "model_name": model,
             "temperature": temperature,
             "local_doc_url": no_remote_api,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -395,6 +399,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -410,6 +415,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")

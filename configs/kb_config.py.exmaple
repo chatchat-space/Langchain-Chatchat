@@ -23,14 +23,6 @@ SCORE_THRESHOLD = 1
 SEARCH_ENGINE_TOP_K = 3
 
 
-# 基于本地知识问答的提示词模版（使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
-PROMPT_TEMPLATE = """<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 </指令>
-
-<已知信息>{{ context }}</已知信息>
-
-<问题>{{ question }}</问题>"""
-
-
 # Bing 搜索必备变量
 # 使用 Bing 搜索需要使用 Bing Subscription Key,需要在azure port中申请试用bing search
 # 具体申请方式请见
