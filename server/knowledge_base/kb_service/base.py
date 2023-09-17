@@ -13,28 +13,21 @@ from server.db.repository.knowledge_base_repository import (
     load_kb_from_db, get_kb_detail,
 )
 from server.db.repository.knowledge_file_repository import (
-    add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
+    add_file_to_db, delete_files_from_db, file_exists_in_db,
     count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db,
     list_docs_from_db,
 )
-
 from configs import (kbs_config,
                      VECTOR_SEARCH_TOP_K,
                      SCORE_THRESHOLD,
-                     EMBEDDING_MODEL,
-                     SUMMARY_CHUNK,
-                     OVERLAP_SIZE,
-                     LLM_MODEL,
-                     TEMPERATURE)
+                     EMBEDDING_MODEL)
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from server.knowledge_base.summary_chunk import SummaryAdapter
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
-from server.utils import embedding_device, run_async
+from server.utils import embedding_device
 from typing import List, Union, Dict, Optional
-from server.chat.utils import wrap_done, get_ChatOpenAI
 
 
 class SupportedVSType:
@@ -48,8 +41,7 @@ class KBService(ABC):
 
     def __init__(self,
                  knowledge_base_name: str,
-                 embed_model: str = EMBEDDING_MODEL,
-                 enable_summary: bool = SUMMARY_CHUNK
+                 embed_model: str = EMBEDDING_MODEL
                  ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model
@@ -57,17 +49,6 @@ class KBService(ABC):
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
-        llm = get_ChatOpenAI(
-            model_name=LLM_MODEL,
-            temperature=TEMPERATURE,
-            frequency_penalty=2.0,
-            presence_penalty=-1.0
-        )
-        # 文本摘要适配器
-        self.summary = SummaryAdapter.form_summary(llm=llm,
-                                                   kb_name=self.kb_name,
-                                                   embed_model=embed_model,
-                                                   overlap_size=OVERLAP_SIZE)
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
@@ -95,8 +76,6 @@ class KBService(ABC):
         self.do_clear_vs()
         status = delete_files_from_db(self.kb_name)
 
-        # 摘要
-        self.summary.clear_kb_summary(kb_name=self.kb_name)
         return status
 
     def drop_kb(self):
@@ -123,13 +102,6 @@ class KBService(ABC):
         if docs:
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
-
-            if self.enable_summary:
-                # 异步摘要
-                run_async(self.summary.asummarize(kb_name=self.kb_name,
-                                                  file_description=kb_file.file_description,
-                                                  docs=doc_infos))
-
             doc_info_dicts = [doc.dict() for doc in doc_infos]
             status = add_file_to_db(kb_file,
                                     custom_docs=custom_docs,
@@ -180,12 +152,12 @@ class KBService(ABC):
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         return None
 
-    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[Document]:
+    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
         '''
         通过file_name或metadata检索Document
         '''
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
-        docs = [self.get_doc_by_id(x["id"]) for x in doc_infos]
+        docs = [DocumentWithVSId(**self.get_doc_by_id(x["id"]).dict(), id=x["id"]) for x in doc_infos]
         return docs
 
     @abstractmethod

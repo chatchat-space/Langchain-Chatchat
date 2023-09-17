@@ -2,30 +2,20 @@ from typing import List, Optional
 
 from langchain.schema.language_model import BaseLanguageModel
 
-from server.db.repository.knowledge_metadata_repository import add_summary_to_db, delete_summary_from_db
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from configs import (logger,
-                     KB_ROOT_PATH
-                     )
+from configs import (logger)
 from langchain.chains import StuffDocumentsChain, LLMChain
 from langchain.prompts import PromptTemplate
 
 from langchain.docstore.document import Document
 from langchain.output_parsers.regex import RegexParser
 from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, MapReduceDocumentsChain
-from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 
 import sys
 import asyncio
-import os
-import shutil
 
 
-# TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class SummaryAdapter:
-    kb_name: str
-    vs_path: str
-    kb_path: str
     _OVERLAP_SIZE: int
     token_max: int
     _separator: str = "\n\n"
@@ -33,16 +23,9 @@ class SummaryAdapter:
 
     def __init__(self, kb_name: str, embed_model: str, overlap_size: int, token_max: int,
                  chain: MapReduceDocumentsChain):
-        self.kb_name = kb_name
-        self.embed_model = embed_model
         self._OVERLAP_SIZE = overlap_size
         self.chain = chain
         self.token_max = token_max
-
-        self.kb_path = self.get_kb_path()
-        self.vs_path = self.get_vs_path()
-        if not os.path.exists(self.vs_path):
-            os.makedirs(self.vs_path)
 
     @classmethod
     def form_summary(cls,
@@ -60,7 +43,6 @@ class SummaryAdapter:
         :param token_max: 最大的chunk数量，每个chunk长度小于token_max长度，第一次生成摘要时，大于token_max长度的摘要会报错
         :return:
         """
-
 
         # This controls how each document will be formatted. Specifically,
         document_prompt = PromptTemplate(
@@ -114,23 +96,11 @@ class SummaryAdapter:
                    chain=chain,
                    token_max=token_max)
 
-    def get_vs_path(self):
-        return os.path.join(self.get_kb_path(), "vector_store")
-
-    def get_kb_path(self):
-        return os.path.join(KB_ROOT_PATH, self.kb_name)
-
-    def load_vector_store(self) -> ThreadSafeFaiss:
-        return kb_faiss_pool.load_vector_store(kb_name=self.kb_name,
-                                               vector_name="summary_vector_store",
-                                               embed_model=self.embed_model,
-                                               create=True)
-
     def summarize(self,
                   kb_name: str,
                   file_description: str,
                   docs: List[DocumentWithVSId] = []
-                  ):
+                  ) -> List[Document]:
 
         if sys.version_info < (3, 10):
             loop = asyncio.get_event_loop()
@@ -142,14 +112,14 @@ class SummaryAdapter:
 
             asyncio.set_event_loop(loop)
         # 同步调用协程代码
-        loop.run_until_complete(self.asummarize(kb_name=kb_name,
-                                                file_description=file_description,
-                                                docs=docs))
+        return loop.run_until_complete(self.asummarize(kb_name=kb_name,
+                                                       file_description=file_description,
+                                                       docs=docs))
 
     async def asummarize(self,
                          kb_name: str,
                          file_description: str,
-                         docs: List[DocumentWithVSId] = []):
+                         docs: List[DocumentWithVSId] = []) -> List[Document]:
 
         logger.info("start summary")
         # TODO 暂不处理文档中涉及语义重复、上下文缺失、document was longer than the context length 的问题
@@ -198,15 +168,8 @@ class SummaryAdapter:
             "doc_ids": doc_ids
         }
         summary_combine_doc = Document(page_content=summary_combine, metadata=_metadata)
-        with self.load_vector_store().acquire() as vs:
-            ids = vs.add_documents(documents=[summary_combine_doc])
-            vs.save_local(self.vs_path)
 
-        summary_infos = [{"summary_context": summary_combine,
-                          "summary_id": ids[0],
-                          "doc_ids": doc_ids,
-                          "metadata": _metadata}]
-        add_summary_to_db(kb_name=kb_name, summary_infos=summary_infos)
+        return [summary_combine_doc]
 
     def _drop_overlap(self, docs: List[DocumentWithVSId]) -> List[str]:
         """
@@ -247,15 +210,6 @@ class SummaryAdapter:
             return None
         else:
             return text
-
-    def clear_kb_summary(self,
-                         kb_name: str):
-        """
-        删除知识库chunk summary
-        :param kb_name:
-        :return:
-        """
-        delete_summary_from_db(kb_name=kb_name)
 
 
 if __name__ == '__main__':

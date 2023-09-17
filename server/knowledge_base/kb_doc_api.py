@@ -1,11 +1,16 @@
 import os
 import urllib
 from fastapi import File, Form, Body, Query, UploadFile
+from langchain.chat_models import ChatOpenAI
+
 from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
-                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                    CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
-                    logger, log_verbose,)
-from server.utils import BaseResponse, ListResponse, run_in_thread_pool
+                     VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                     CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+                     logger, log_verbose, LLM_MODEL, TEMPERATURE)
+from server.knowledge_base.kb_summary.base import KBSummaryService
+from server.knowledge_base.kb_summary.summary_chunk import SummaryAdapter
+from server.utils import BaseResponse, ListResponse, run_in_thread_pool, get_model_worker_config, \
+    fschat_openai_api_address
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder,get_file_path,
                                         files2docs_in_thread, KnowledgeFile)
 from fastapi.responses import StreamingResponse, FileResponse
@@ -360,6 +365,77 @@ def recreate_vector_store(
                 else:
                     kb_name, file_name, error = result
                     msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
+                    logger.error(msg)
+                    yield json.dumps({
+                        "code": 500,
+                        "msg": msg,
+                    })
+                i += 1
+
+    return StreamingResponse(output(), media_type="text/event-stream")
+
+
+def recreate_summary_vector_store(
+        knowledge_base_name: str = Body(..., examples=["samples"]),
+        allow_empty_kb: bool = Body(True),
+        vs_type: str = Body(DEFAULT_VS_TYPE),
+        embed_model: str = Body(EMBEDDING_MODEL),
+        file_description: str = Body(''),
+):
+    """
+    重建文件摘要
+    :param knowledge_base_name:
+    :param allow_empty_kb:
+    :param vs_type:
+    :param embed_model:
+    :return:
+    """
+
+    def output():
+        kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+        if not kb.exists() and not allow_empty_kb:
+            yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
+        else:
+            # 重新创建知识库
+            kb_summary = KBSummaryService(knowledge_base_name, embed_model)
+            kb_summary.drop_kb_summary()
+            kb_summary.create_kb_summary()
+            config = get_model_worker_config(LLM_MODEL)
+            llm = ChatOpenAI(
+                streaming=False,
+                verbose=True,
+                # callbacks=callbacks,
+                openai_api_key=config.get("api_key", "EMPTY"),
+                openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+                model_name=LLM_MODEL,
+                temperature=TEMPERATURE,
+                openai_proxy=config.get("openai_proxy"),
+                frequency_penalty=2.0,
+                presence_penalty=-1.0,
+                stop=['.', '。']
+            )
+            # 文本摘要适配器
+            summary = SummaryAdapter.form_summary(llm=llm,
+                                                  kb_name=knowledge_base_name,
+                                                  embed_model=embed_model,
+                                                  overlap_size=OVERLAP_SIZE)
+            files = list_files_from_folder(knowledge_base_name)
+
+            i = 0
+            for i, file_name in enumerate(files):
+
+                doc_infos = kb.list_docs(file_name=file_name)
+                docs = summary.summarize(kb_name=knowledge_base_name,
+                                         file_description=file_description,
+                                         docs=doc_infos)
+
+                status_kb_summary = kb_summary.add_kb_summary(summary_combine_docs=docs)
+                if status_kb_summary:
+                    logger.info(f"({i + 1} / {len(files)}): {file_name} 向量化总结完成")
+
+                else:
+
+                    msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
                     logger.error(msg)
                     yield json.dumps({
                         "code": 500,
