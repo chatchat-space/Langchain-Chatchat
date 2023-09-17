@@ -58,6 +58,7 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
+                                      "自定义Agent问答",
                                       ],
                                      index=1,
                                      on_change=on_mode_change,
@@ -152,6 +153,19 @@ def dialogue_page(api: ApiRequest):
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+
+        elif dialogue_mode == "自定义Agent问答":
+            chat_box.ai_say("正在调用工具回答...")
+            text = ""
+            r = api.agent_chat(prompt, history=history, model=llm_model, temperature=temperature)
+            for t in r:
+                if error_msg := check_error_msg(t):  # check whether error occured
+                    st.error(error_msg)
+                    break
+                text += t
+                chat_box.update_msg(text)
+            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+
         elif dialogue_mode == "知识库问答":
             history = get_messages_history(history_len)
             chat_box.ai_say([

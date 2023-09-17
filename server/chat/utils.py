@@ -10,11 +10,12 @@ from typing import Awaitable, List, Tuple, Dict, Union, Callable
 def get_ChatOpenAI(
     model_name: str,
     temperature: float,
+    streaming: bool = True,
     callbacks: List[Callable] = [],
 ) -> ChatOpenAI:
     config = get_model_worker_config(model_name)
     model = ChatOpenAI(
-        streaming=True,
+        streaming=streaming,
         verbose=True,
         callbacks=callbacks,
         openai_api_key=config.get("api_key", "EMPTY"),
