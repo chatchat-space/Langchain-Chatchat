@@ -15,7 +15,7 @@ from configs import (
     TEXT_SPLITTER_NAME,
 )
 import importlib
-from text_splitter import zh_title_enhance
+from text_splitter import zh_title_enhance as func_zh_title_enhance
 import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
@@ -309,7 +309,7 @@ class KnowledgeFile:
 
         print(f"文档切分示例：{docs[0]}")
         if zh_title_enhance:
-            docs = zh_title_enhance(docs)
+            docs = func_zh_title_enhance(docs)
         self.splited_docs = docs
         return self.splited_docs
 
