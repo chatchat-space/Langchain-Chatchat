@@ -211,8 +211,8 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
-    # 如果没有设置有效的local_model_path，则认为是在线模型API
-    if not os.path.isdir(config.get("local_model_path", "")):
+    # 如果没有设置local_model_path，则认为是在线模型API
+    if not config.get("local_model_path"):
         config["online_api"] = True
         if provider := config.get("provider"):
             try:
