@@ -25,7 +25,6 @@ from server.knowledge_base.utils import (
     list_kbs_from_folder, list_files_from_folder,
 )
 from server.utils import embedding_device
-from typing import List, Union, Dict
 from typing import List, Union, Dict, Optional
 
 
@@ -50,6 +49,12 @@ class KBService(ABC):
 
     def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
         return load_embeddings(self.embed_model, embed_device)
+
+    def save_vector_store(self):
+        '''
+        保存向量库:FAISS保存到磁盘，milvus保存到数据库。PGVector暂未支持
+        '''
+        pass
 
     def create_kb(self):
         """
@@ -84,6 +89,8 @@ class KBService(ABC):
         """
         if docs:
             custom_docs = True
+            for doc in docs:
+                doc.metadata.setdefault("source", kb_file.filepath)
         else:
             docs = kb_file.file2text()
             custom_docs = False
@@ -137,7 +144,6 @@ class KBService(ABC):
         docs = self.do_search(query, top_k, score_threshold, embeddings)
         return docs
 
-    # TODO: milvus/pg需要实现该方法
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         return None
 

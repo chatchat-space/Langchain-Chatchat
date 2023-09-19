@@ -4,11 +4,14 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE
+from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
 from configs.server_config import FSCHAT_MODEL_WORKERS
 import os
-from server import model_workers
-from typing import Literal, Optional, Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Literal, Optional, Callable, Generator, Dict, Any
+
+
+thread_pool = ThreadPoolExecutor(os.cpu_count())
 
 
 class BaseResponse(BaseModel):
@@ -82,9 +85,10 @@ def torch_gc():
             from torch.mps import empty_cache
             empty_cache()
         except Exception as e:
-            print(e)
-            print("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
-
+            msg=("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，"
+                 "以支持及时清理 torch 产生的内存占用。")
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
 def run_async(cor):
     '''
@@ -200,20 +204,23 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
     优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
     from configs.server_config import FSCHAT_MODEL_WORKERS
+    from server import model_workers
     from configs.model_config import llm_model_dict
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
     config.update(llm_model_dict.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
-    # 如果没有设置有效的local_model_path，则认为是在线模型API
-    if not os.path.isdir(config.get("local_model_path", "")):
+    # 如果没有设置local_model_path，则认为是在线模型API
+    if not config.get("local_model_path"):
         config["online_api"] = True
         if provider := config.get("provider"):
             try:
                 config["worker_class"] = getattr(model_workers, provider)
             except Exception as e:
-                print(f"在线模型 ‘{model_name}’ 的provider没有正确配置")
+                msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
 
     config["device"] = llm_device(config.get("device") or LLM_DEVICE)
     return config
@@ -305,3 +312,24 @@ def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
+
+
+def run_in_thread_pool(
+    func: Callable,
+    params: List[Dict] = [],
+    pool: ThreadPoolExecutor = None,
+) -> Generator:
+    '''
+    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+    '''
+    tasks = []
+    pool = pool or thread_pool
+
+    for kwargs in params:
+        thread = pool.submit(func, **kwargs)
+        tasks.append(thread)
+
+    for obj in as_completed(tasks):
+        yield obj.result()
+

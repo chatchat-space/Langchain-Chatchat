@@ -1,4 +1,3 @@
-import zhipuai
 from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
@@ -13,7 +12,7 @@ class ChatGLMWorker(ApiModelWorker):
     def __init__(
         self,
         *,
-        model_names: List[str] = ["chatglm-api"],
+        model_names: List[str] = ["zhipu-api"],
         version: Literal["chatglm_pro", "chatglm_std", "chatglm_lite"] = "chatglm_std",
         controller_addr: str,
         worker_addr: str,
@@ -26,7 +25,7 @@ class ChatGLMWorker(ApiModelWorker):
 
         # 这里的是chatglm api的模板，其它API的conv_template需要定制
         self.conv = conv.Conversation(
-            name="chatglm-api",
+            name=self.model_names[0],
             system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
             messages=[],
             roles=["Human", "Assistant"],
@@ -35,11 +34,11 @@ class ChatGLMWorker(ApiModelWorker):
         )
 
     def generate_stream_gate(self, params):
-        # TODO: 支持stream参数，维护request_id，传过来的prompt也有问题
-        from server.utils import get_model_worker_config
+        # TODO: 维护request_id
+        import zhipuai
 
         super().generate_stream_gate(params)
-        zhipuai.api_key = get_model_worker_config("chatglm-api").get("api_key")
+        zhipuai.api_key = self.get_config().get("api_key")
 
         response = zhipuai.model_api.sse_invoke(
             model=self.version,

@@ -43,9 +43,9 @@ data = {
             "content": "你好，我是人工智能大模型"
         }
     ],
-    "stream": True
+    "stream": True,
+    "temperature": 0.7,
 }
-
 
 
 def test_chat_fastchat(api="/chat/fastchat"):
@@ -89,14 +89,12 @@ def test_knowledge_chat(api="/chat/knowledge_base_chat"):
     response = requests.post(url, headers=headers, json=data, stream=True)
     print("\n")
     print("=" * 30 + api + "  output" + "="*30)
-    first = True
     for line in response.iter_content(None, decode_unicode=True):
         data = json.loads(line)
-        if first:
-            for doc in data["docs"]:
-                print(doc)
-            first = False
-        print(data["answer"], end="", flush=True)
+        if "anser" in data:
+            print(data["answer"], end="", flush=True)
+    assert "docs" in data and len(data["docs"]) > 0
+    pprint(data["docs"])
     assert response.status_code == 200
 
 
@@ -117,14 +115,11 @@ def test_search_engine_chat(api="/chat/search_engine_chat"):
 
         print("\n")
         print("=" * 30 + api + " by {se}  output" + "="*30)
-        first = True
         for line in response.iter_content(None, decode_unicode=True):
             data = json.loads(line)
-            assert "docs" in data and len(data["docs"]) > 0
-            if first:
-                for doc in data.get("docs", []):
-                    print(doc)
-                first = False
-            print(data["answer"], end="", flush=True)
+            if "answer" in data:
+                print(data["answer"], end="", flush=True)
+        assert "docs" in data and len(data["docs"]) > 0
+        pprint(data["docs"])
         assert response.status_code == 200
 

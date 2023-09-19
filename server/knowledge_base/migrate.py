@@ -1,17 +1,13 @@
-from configs.model_config import EMBEDDING_MODEL, DEFAULT_VS_TYPE
+from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
+                                  logger, log_verbose)
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
-                                        list_files_from_folder, run_in_thread_pool,
-                                        files2docs_in_thread,
+                                        list_files_from_folder,files2docs_in_thread,
                                         KnowledgeFile,)
 from server.knowledge_base.kb_service.base import KBServiceFactory, SupportedVSType
 from server.db.repository.knowledge_file_repository import add_file_to_db
 from server.db.base import Base, engine
 import os
-from concurrent.futures import ThreadPoolExecutor
 from typing import Literal, Any, List
-
-
-pool = ThreadPoolExecutor(os.cpu_count())
 
 
 def create_tables():
@@ -30,7 +26,9 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
             kb_file = KnowledgeFile(filename=file, knowledge_base_name=kb_name)
             kb_files.append(kb_file)
         except Exception as e:
-            print(f"{e}，已跳过")
+            msg = f"{e}，已跳过"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
     return kb_files
 
 
@@ -39,6 +37,9 @@ def folder2db(
     mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
+    chunk_size: int = -1,
+    chunk_overlap: int = -1,
+    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
     use existed files in local folder to populate database and/or vector store.
@@ -59,7 +60,10 @@ def folder2db(
         print(f"清理后，知识库 {kb_name} 中共有 {files_count} 个文档。")
 
         kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
-        for success, result in files2docs_in_thread(kb_files, pool=pool):
+        for success, result in files2docs_in_thread(kb_files,
+                                                    chunk_size=chunk_size,
+                                                    chunk_overlap=chunk_overlap,
+                                                    zh_title_enhance=zh_title_enhance):
             if success:
                 _, filename, docs = result
                 print(f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档")
@@ -67,10 +71,7 @@ def folder2db(
                 kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
             else:
                 print(result)
-
-        if kb.vs_type() == SupportedVSType.FAISS:
-            kb.save_vector_store()
-            kb.refresh_vs_cache()
+        kb.save_vector_store()
     elif mode == "fill_info_only":
         files = list_files_from_folder(kb_name)
         kb_files = file_to_kbfile(kb_name, files)
@@ -84,17 +85,17 @@ def folder2db(
 
         for kb_file in kb_files:
             kb.update_doc(kb_file, not_refresh_vs_cache=True)
-
-        if kb.vs_type() == SupportedVSType.FAISS:
-            kb.save_vector_store()
-            kb.refresh_vs_cache()
+        kb.save_vector_store()
     elif mode == "increament":
         db_files = kb.list_files()
         folder_files = list_files_from_folder(kb_name)
         files = list(set(folder_files) - set(db_files))
         kb_files = file_to_kbfile(kb_name, files)
 
-        for success, result in files2docs_in_thread(kb_files, pool=pool):
+        for success, result in files2docs_in_thread(kb_files,
+                                                    chunk_size=chunk_size,
+                                                    chunk_overlap=chunk_overlap,
+                                                    zh_title_enhance=zh_title_enhance):
             if success:
                 _, filename, docs = result
                 print(f"正在将 {kb_name}/{filename} 添加到向量库")
@@ -102,10 +103,7 @@ def folder2db(
                 kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
             else:
                 print(result)
-
-        if kb.vs_type() == SupportedVSType.FAISS:
-            kb.save_vector_store()
-            kb.refresh_vs_cache()
+        kb.save_vector_store()
     else:
         print(f"unspported migrate mode: {mode}")
 
@@ -135,9 +133,7 @@ def prune_db_files(kb_name: str):
         kb_files = file_to_kbfile(kb_name, files)
         for kb_file in kb_files:
             kb.delete_doc(kb_file, not_refresh_vs_cache=True)
-        if kb.vs_type() == SupportedVSType.FAISS:
-            kb.save_vector_store()
-            kb.refresh_vs_cache()
+        kb.save_vector_store()
         return kb_files
 
 def prune_folder_files(kb_name: str):

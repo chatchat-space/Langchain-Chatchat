@@ -1,6 +1,6 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs.model_config import llm_model_dict, LLM_MODEL
+from configs.model_config import llm_model_dict, LLM_MODEL, TEMPERATURE
 from server.chat.utils import wrap_done
 from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
@@ -12,15 +12,17 @@ from typing import List
 from server.chat.utils import History
 
 
-def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-         history: List[History] = Body([],
+async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+                history: List[History] = Body([],
                                        description="历史对话",
                                        examples=[[
                                            {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
                                            {"role": "assistant", "content": "虎头虎脑"}]]
                                        ),
-         stream: bool = Body(False, description="流式输出"),
-         model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                stream: bool = Body(False, description="流式输出"),
+                model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
+                # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
          ):
     history = [History.from_data(h) for h in history]
 
@@ -37,6 +39,7 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
+            temperature=temperature,
             openai_proxy=llm_model_dict[model_name].get("openai_proxy")
         )
 
