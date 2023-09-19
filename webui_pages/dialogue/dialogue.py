@@ -17,26 +17,23 @@ chat_box = ChatBox(
 )
 
 
-def get_messages_history(history_len: int) -> List[Dict]:
+def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
+    '''
+    返回消息历史。
+    content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
+    '''
     def filter(msg):
-        '''
-        针对当前简单文本对话，只返回每条消息的第一个element的内容
-        '''
-        content = [x._content for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        if not content_in_expander:
+            content = [x for x in content if not x._in_expander]
+        content = [x.content for x in content]
+
         return {
             "role": msg["role"],
-            "content": content[0] if content else "",
+            "content": "\n\n".join(content),
         }
 
-    history = chat_box.filter_history(100000, filter)  # workaround before upgrading streamlit-chatbox.
-    user_count = 0
-    i = 1
-    for i in range(1, len(history) + 1):
-        if history[-i]["role"] == "user":
-            user_count += 1
-            if user_count >= history_len:
-                break
-    return history[-i:]
+    return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
 def dialogue_page(api: ApiRequest):
@@ -162,14 +159,15 @@ def dialogue_page(api: ApiRequest):
                 if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
-                text += t
-                chat_box.update_msg(text)
+                else:
+                    text += t.get("llm_token", "")
+                    chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
         elif dialogue_mode == "知识库问答":
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",
-                Markdown("...", in_expander=True, title="知识库匹配结果"),
+                Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt,
@@ -189,7 +187,7 @@ def dialogue_page(api: ApiRequest):
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
-                Markdown("...", in_expander=True, title="网络搜索结果"),
+                Markdown("...", in_expander=True, title="网络搜索结果", state="complete"),
             ])
             text = ""
             for d in api.search_engine_chat(prompt,

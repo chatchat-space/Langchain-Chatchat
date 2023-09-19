@@ -123,3 +123,16 @@ def test_search_engine_chat(api="/chat/search_engine_chat"):
         pprint(data["docs"])
         assert response.status_code == 200
 
+
+def test_agent_chat(api="/chat/agent_chat"):
+    url = f"{api_base_url}{api}"
+
+    data = {
+        "query": "苏州今天天气怎么样？",
+        "stream": True,
+    }
+
+    response = requests.post(url, json=data, stream=True)
+    for line in response.iter_content(None, decode_unicode=True):
+        data = json.loads(line)
+        pprint(data)
