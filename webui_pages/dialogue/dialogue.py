@@ -29,7 +29,11 @@ def get_messages_history(history_len: int) -> List[Dict]:
             "content": content[0] if content else "",
         }
 
-    history = chat_box.filter_history(100000, filter)  # workaround before upgrading streamlit-chatbox.
+    # workaround before upgrading streamlit-chatbox.
+    def stop(h):
+        return False
+
+    history = chat_box.filter_history(history_len=100000, filter=filter, stop=stop)
     user_count = 0
     i = 1
     for i in range(1, len(history) + 1):
@@ -163,9 +167,9 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
-                    chat_box.update_msg(text, 0)
-            chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -181,9 +185,9 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
-                    chat_box.update_msg(text, 0)
-            chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
 
     now = datetime.now()
     with st.sidebar:
