@@ -74,12 +74,11 @@ class FangZhouWorker(ApiModelWorker):
         self.api_key = config.get("api_key")
         self.secret_key = config.get("secret_key")
 
-        from volcengine.maas import ChatRole
         self.conv = conv.Conversation(
             name=self.model_names[0],
             system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
             messages=[],
-            roles=[ChatRole.USER, ChatRole.ASSISTANT, ChatRole.SYSTEM],
+            roles=["user", "assistant", "system"],
             sep="\n### ",
             stop_str="###",
         )
