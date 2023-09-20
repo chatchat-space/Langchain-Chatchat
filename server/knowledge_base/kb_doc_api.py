@@ -165,7 +165,7 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance,
             docs=docs,
-            not_refresh_vs_cache=not_refresh_vs_cache,#需要保存至磁盘
+            not_refresh_vs_cache=True,
         )
         failed_files.update(result.data["failed_files"])
         if not not_refresh_vs_cache:
@@ -328,6 +328,7 @@ def recreate_vector_store(
     chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ):
     '''
     重建项目库所有文件的摘要信息，并生成向量入库
@@ -358,9 +359,7 @@ def recreate_vector_store(
                         "finished": i,
                         "doc": file_name,
                     }, ensure_ascii=False)
-                    kb.add_doc(kb_file,
-                               not_refresh_vs_cache=False # 需要保存至磁盘
-                               )
+                    kb.add_doc(kb_file, not_refresh_vs_cache=True)
                 else:
                     kb_name, file_name, error = result
                     msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
