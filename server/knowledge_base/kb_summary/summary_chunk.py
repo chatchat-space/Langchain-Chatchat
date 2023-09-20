@@ -21,7 +21,7 @@ class SummaryAdapter:
     _separator: str = "\n\n"
     chain: MapReduceDocumentsChain
 
-    def __init__(self, kb_name: str, embed_model: str, overlap_size: int, token_max: int,
+    def __init__(self, overlap_size: int, token_max: int,
                  chain: MapReduceDocumentsChain):
         self._OVERLAP_SIZE = overlap_size
         self.chain = chain
@@ -30,15 +30,13 @@ class SummaryAdapter:
     @classmethod
     def form_summary(cls,
                      llm: BaseLanguageModel,
-                     kb_name: str,
-                     embed_model: str,
+                     reduce_llm: BaseLanguageModel,
                      overlap_size: int,
                      token_max: int = 1300):
         """
         获取实例
-        :param llm:
-        :param kb_name:
-        :param embed_model:
+        :param reduce_llm: 用于合并摘要的llm
+        :param llm: 用于生成摘要的llm
         :param overlap_size: 重叠部分大小
         :param token_max: 最大的chunk数量，每个chunk长度小于token_max长度，第一次生成摘要时，大于token_max长度的摘要会报错
         :return:
@@ -53,11 +51,8 @@ class SummaryAdapter:
         # The prompt here should take as an input variable the
         # `document_variable_name`
         prompt_template = (
-            "根据文本执行任务。以下任务信息\r\n"
-            "\r\n"
-            "{task_briefing}\r\n"
-            "\r\n"
-            "\r\n"
+            "根据文本执行任务。以下任务信息" 
+            "{task_briefing}" 
             "文本内容如下: "
             "\r\n"
             "{context}"
@@ -71,7 +66,7 @@ class SummaryAdapter:
         reduce_prompt = PromptTemplate.from_template(
             "Combine these summaries: {context}"
         )
-        reduce_llm_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+        reduce_llm_chain = LLMChain(llm=reduce_llm, prompt=reduce_prompt)
 
         document_variable_name = "context"
         combine_documents_chain = StuffDocumentsChain(
@@ -90,9 +85,7 @@ class SummaryAdapter:
             # 返回中间步骤
             return_intermediate_steps=True
         )
-        return cls(kb_name=kb_name,
-                   embed_model=embed_model,
-                   overlap_size=overlap_size,
+        return cls(overlap_size=overlap_size,
                    chain=chain,
                    token_max=token_max)
 
@@ -141,25 +134,25 @@ class SummaryAdapter:
             result_docs, token_max=token_max, callbacks=callbacks, **kwargs
         )
         """
-        summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs[:1],
+        summary_combine, summary_intermediate_steps = self.chain.combine_docs(docs=docs,
                                                                               task_briefing="描述不同方法之间的接近度和相似性，"
                                                                                             "以帮助读者理解它们之间的关系。")
         print(summary_combine)
         print(summary_intermediate_steps)
 
-        if len(summary_combine) == 0:
-            # 为空重新生成，数量减半
-            result_docs = [
-                Document(page_content=question_result_key, metadata=docs[i].metadata)
-                # This uses metadata from the docs, and the textual results from `results`
-                for i, question_result_key in enumerate(
-                    summary_intermediate_steps["intermediate_steps"][
-                    :len(summary_intermediate_steps["intermediate_steps"]) // 2
-                    ])
-            ]
-            summary_combine, summary_intermediate_steps = self.chain.reduce_documents_chain.combine_docs(
-                result_docs, token_max=self.token_max
-            )
+        # if len(summary_combine) == 0:
+        #     # 为空重新生成，数量减半
+        #     result_docs = [
+        #         Document(page_content=question_result_key, metadata=docs[i].metadata)
+        #         # This uses metadata from the docs, and the textual results from `results`
+        #         for i, question_result_key in enumerate(
+        #             summary_intermediate_steps["intermediate_steps"][
+        #             :len(summary_intermediate_steps["intermediate_steps"]) // 2
+        #             ])
+        #     ]
+        #     summary_combine, summary_intermediate_steps = self.chain.reduce_documents_chain.combine_docs(
+        #         result_docs, token_max=self.token_max
+        #     )
         logger.info("end summary")
         doc_ids = ",".join([doc.id for doc in docs])
         _metadata = {

@@ -165,7 +165,7 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance,
             docs=docs,
-            not_refresh_vs_cache=True,
+            not_refresh_vs_cache=not_refresh_vs_cache,#需要保存至磁盘
         )
         failed_files.update(result.data["failed_files"])
         if not not_refresh_vs_cache:
@@ -330,10 +330,7 @@ def recreate_vector_store(
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
 ):
     '''
-    recreate vector store from the content.
-    this is usefull when user can copy files to content folder directly instead of upload through network.
-    by default, get_service_by_name only return knowledge base in the info.db and having document files in it.
-    set allow_empty_kb to True make it applied on empty knowledge base which it not in the info.db or having no documents.
+    重建项目库所有文件的摘要信息，并生成向量入库
     '''
 
     def output():
@@ -361,7 +358,9 @@ def recreate_vector_store(
                         "finished": i,
                         "doc": file_name,
                     }, ensure_ascii=False)
-                    kb.add_doc(kb_file, not_refresh_vs_cache=True)
+                    kb.add_doc(kb_file,
+                               not_refresh_vs_cache=False # 需要保存至磁盘
+                               )
                 else:
                     kb_name, file_name, error = result
                     msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
@@ -414,10 +413,19 @@ def recreate_summary_vector_store(
                 presence_penalty=-1.0,
                 stop=['.', '。']
             )
+            reduce_llm = ChatOpenAI(
+                streaming=False,
+                verbose=True,
+                # callbacks=callbacks,
+                openai_api_key=config.get("api_key", "EMPTY"),
+                openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+                model_name=LLM_MODEL,
+                temperature=TEMPERATURE,
+                openai_proxy=config.get("openai_proxy")
+            )
             # 文本摘要适配器
             summary = SummaryAdapter.form_summary(llm=llm,
-                                                  kb_name=knowledge_base_name,
-                                                  embed_model=embed_model,
+                                                  reduce_llm=reduce_llm,
                                                   overlap_size=OVERLAP_SIZE)
             files = list_files_from_folder(knowledge_base_name)
 

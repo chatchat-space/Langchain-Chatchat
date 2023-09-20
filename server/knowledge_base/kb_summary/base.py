@@ -74,6 +74,6 @@ class KBSummaryService(ABC):
         :return:
         """
         with kb_faiss_pool.atomic:
-            kb_faiss_pool.pop(self.kb_name+"summary_vector_store")
+            kb_faiss_pool.pop(self.kb_name)
             shutil.rmtree(self.vs_path)
         delete_summary_from_db(kb_name=self.kb_name)

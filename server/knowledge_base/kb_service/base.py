@@ -156,7 +156,17 @@ class KBService(ABC):
         通过file_name或metadata检索Document
         '''
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
-        docs = [DocumentWithVSId(**self.get_doc_by_id(x["id"]).dict(), id=x["id"]) for x in doc_infos]
+        docs = []
+        for x in doc_infos:
+            doc = self.get_doc_by_id(x["id"])
+            if doc is not None:
+                # 处理非空的情况
+                doc_with_id = DocumentWithVSId(**doc.dict(), id=x["id"])
+                docs.append(doc_with_id)
+            else:
+                # 处理空的情况
+                # 可以选择跳过当前循环迭代或执行其他操作
+                pass
         return docs
 
     @abstractmethod
