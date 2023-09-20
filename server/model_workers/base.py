@@ -92,5 +92,5 @@ class ApiModelWorker(BaseModelWorker):
                 if content := msg[len(ai_start):].strip():
                     result.append({"role": ai_role, "content": content})
             else:
-                raise RuntimeError(f"unknow role in msg: {msg}")
+                raise RuntimeError(f"unknown role in msg: {msg}")
         return result

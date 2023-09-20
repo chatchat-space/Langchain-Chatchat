@@ -369,6 +369,8 @@ def recreate_vector_store(
                         "msg": msg,
                     })
                 i += 1
+            if not not_refresh_vs_cache:
+                kb.save_vector_store()
 
     return StreamingResponse(output(), media_type="text/event-stream")
 
