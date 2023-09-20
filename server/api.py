@@ -16,7 +16,8 @@ from server.chat import (chat, knowledge_base_chat, openai_chat,
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
                                               update_docs, download_doc, recreate_vector_store,
-                                              search_docs, DocumentWithScore)
+                                              search_docs, DocumentWithScore,
+                                              recreate_summary_vector_store)
 from server.llm_api import list_running_models, list_config_models, change_llm_model, stop_llm_model
 from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
 from typing import List
@@ -127,6 +128,16 @@ def create_app():
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
+
+    app.post("/knowledge_base/recreate_summary_vector_store",
+             tags=["Knowledge Base Management"],
+             summary="重建项目库所有文件的摘要信息，并生成向量入库。"
+             )(recreate_summary_vector_store)
+
+    app.post("/knowledge_base/summary_file_to_vector_store",
+             tags=["Knowledge Base Management"],
+             summary="获取文件的摘要信息，并生成向量入库。"
+             )(recreate_summary_vector_store)
 
     # LLM模型相关接口
     app.post("/llm_model/list_running_models",
