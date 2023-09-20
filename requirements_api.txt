@@ -17,6 +17,7 @@ accelerate
 spacy
 PyMuPDF==1.22.5
 rapidocr_onnxruntime>=1.3.2
+dashscope>=1.10.0
 
 requests
 pathlib
