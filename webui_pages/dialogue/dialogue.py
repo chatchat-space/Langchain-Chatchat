@@ -181,9 +181,9 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
-                    chat_box.update_msg(text, 0)
-            chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -200,9 +200,9 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
                     text += chunk
-                    chat_box.update_msg(text, 0)
-            chat_box.update_msg(text, 0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), 1, streaming=False)
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
 
     now = datetime.now()
     with st.sidebar:

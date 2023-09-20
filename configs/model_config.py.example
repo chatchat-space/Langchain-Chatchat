@@ -115,13 +115,19 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "QianFanWorker",
     },
-    # 火山方舟 API
+    # 火山方舟 API，文档参考 https://www.volcengine.com/docs/82379
     "fangzhou-api": {
         "version": "chatglm-6b-model",  # 当前支持 "chatglm-6b-model"， 更多的见文档模型支持列表中方舟部分。
         "version_url": "",  # 可以不填写version，直接填写在方舟申请模型发布的API地址
         "api_key": "",
         "secret_key": "",
         "provider": "FangZhouWorker",
+    },
+    # 阿里云通义千问 API，文档参考 https://help.aliyun.com/zh/dashscope/developer-reference/api-details
+    "qwen-api": {
+        "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"
+        "api_key": "",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建
+        "provider": "QwenWorker",
     },
 }
 
