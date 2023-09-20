@@ -323,6 +323,7 @@ def recreate_vector_store(
     chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ):
     '''
     recreate vector store from the content.
@@ -366,5 +367,7 @@ def recreate_vector_store(
                         "msg": msg,
                     })
                 i += 1
+            if not not_refresh_vs_cache:
+                kb.save_vector_store()
 
     return StreamingResponse(output(), media_type="text/event-stream")
