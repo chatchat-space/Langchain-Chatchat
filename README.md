@@ -133,6 +133,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [MiniMax](https://api.minimax.chat)
 - [讯飞星火](https://xinghuo.xfyun.cn)
 - [百度千帆](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
+- [阿里云通义千问](https://dashscope.aliyun.com/)
 
 项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `LLM_MODEL` 进行修改。
 

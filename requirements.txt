@@ -24,6 +24,12 @@ pytest
 scikit-learn
 numexpr
 
+# online api libs
+# zhipuai
+# dashscope>=1.10.0 # qwen
+# qianfan
+# volcengine>=1.0.106 # fangzhou
+
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3
 # psycopg2
