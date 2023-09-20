@@ -376,7 +376,7 @@ class ApiRequest:
             return self._fastapi_stream2generator(response)
         else:
             response = self.post("/chat/agent_chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
+            return self._httpx_stream2generator(response, as_json=True)
 
     def knowledge_base_chat(
         self,
