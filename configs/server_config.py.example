@@ -80,7 +80,7 @@ FSCHAT_MODEL_WORKERS = {
         "port": 21005,
     },
     "qwen-api": {
-        "port": 20007,
+        "port": 20006,
     },
 }
 
