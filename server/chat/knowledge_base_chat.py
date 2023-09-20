@@ -1,7 +1,7 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs import (LLM_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
-from server.chat.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -58,9 +58,6 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
 
         prompt_template = get_prompt_template(prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-        # 用户最后一个问题会进入PROMPT_TEMPLATE，不用再作为history 了
-        if len(history) >= 1:
-            history.pop()
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
 

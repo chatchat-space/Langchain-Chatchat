@@ -7,7 +7,7 @@ import os
 class ThreadSafeFaiss(ThreadSafeObject):
     def __repr__(self) -> str:
         cls = type(self).__name__
-        return f"<{cls}: key: {self._key}, obj: {self._obj}, docs_count: {self.docs_count()}>"
+        return f"<{cls}: key: {self.key}, obj: {self._obj}, docs_count: {self.docs_count()}>"
 
     def docs_count(self) -> int:
         return len(self._obj.docstore._dict)
@@ -17,7 +17,7 @@ class ThreadSafeFaiss(ThreadSafeObject):
             if not os.path.isdir(path) and create_path:
                 os.makedirs(path)
             ret = self._obj.save_local(path)
-            logger.info(f"已将向量库 {self._key} 保存到磁盘")
+            logger.info(f"已将向量库 {self.key} 保存到磁盘")
         return ret
 
     def clear(self):
@@ -27,7 +27,7 @@ class ThreadSafeFaiss(ThreadSafeObject):
             if ids:
                 ret = self._obj.delete(ids)
                 assert len(self._obj.docstore._dict) == 0
-            logger.info(f"已将向量库 {self._key} 清空")
+            logger.info(f"已将向量库 {self.key} 清空")
         return ret
 
 
@@ -66,10 +66,10 @@ class KBFaissPool(_FaissPool):
             embed_device: str = embedding_device(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
-        cache = self.get(kb_name+vector_name)
+        cache = self.get((kb_name, vector_name)) # 用元组比拼接字符串好一些
         if cache is None:
-            item = ThreadSafeFaiss(kb_name, pool=self)
-            self.set(kb_name+vector_name, item)
+            item = ThreadSafeFaiss((kb_name, vector_name), pool=self)
+            self.set((kb_name, vector_name), item)
             with item.acquire(msg="初始化"):
                 self.atomic.release()
                 logger.info(f"loading vector store in '{kb_name}/{vector_name}' from disk.")
@@ -90,7 +90,7 @@ class KBFaissPool(_FaissPool):
                 item.finish_loading()
         else:
             self.atomic.release()
-        return self.get(kb_name+vector_name)
+        return self.get((kb_name, vector_name))
 
 
 class MemoFaissPool(_FaissPool):

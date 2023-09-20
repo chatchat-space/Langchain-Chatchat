@@ -377,6 +377,7 @@ class ApiRequest:
         else:
             response = self.post("/chat/agent_chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
+
     def knowledge_base_chat(
         self,
         query: str,
@@ -429,6 +430,7 @@ class ApiRequest:
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
+        history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
@@ -445,6 +447,7 @@ class ApiRequest:
             "query": query,
             "search_engine_name": search_engine_name,
             "top_k": top_k,
+            "history": history,
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
