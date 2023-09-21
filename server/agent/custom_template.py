@@ -1,14 +1,14 @@
 template = """
 尽可能地回答以下问题。你可以使用以下工具:{tools}
 请按照以下格式进行:
-Question: 需要你回答的输入问题
-Thought: 你应该总是思考该做什么
+Question: 需要你回答的输入问题。
+Thought: 你应该总是思考该做什么，并告诉我你要用什么工具。
 Action: 需要使用的工具，应该是[{tool_names}]中的一个
 Action Input: 传入工具的内容
 Observation: 行动的结果
            ... (这个Thought/Action/Action Input/Observation可以重复N次)
-Thought: 我现在知道最后的答案
-Final Answer: 对原始输入问题的最终答案
+Thought: 通过使用工具，我是否知道了答案
+Final Answer: 自然的回答的问题
 
 现在开始！
 
@@ -84,7 +84,7 @@ class CustomOutputParser(AgentOutputParser):
             return AgentFinish(
                 # Return values is generally always a dictionary with a single `output` key
                 # It is not recommended to try anything else at the moment :)
-                return_values={"output": llm_output.split("Final Answer:")[-1].strip()},
+                return_values={"output": llm_output.replace("Final Answer:", "").strip()},
                 log=llm_output,
             )
         # Parse out the action and action input
@@ -95,10 +95,13 @@ class CustomOutputParser(AgentOutputParser):
                 return_values={"output": f"调用agent失败: `{llm_output}`"},
                 log=llm_output,
             )
-            raise OutputParserException(f"调用agent失败: `{llm_output}`")
         action = match.group(1).strip()
         action_input = match.group(2)
         # Return the action and action input
-        return AgentAction(tool=action, tool_input=action_input.strip(" ").strip('"'), log=llm_output)
+        return AgentAction(
+            tool=action,
+            tool_input=action_input.strip(" ").strip('"'),
+            log=llm_output
+        )
 
 

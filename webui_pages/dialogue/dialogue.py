@@ -9,6 +9,30 @@ from server.utils import get_model_worker_config
 from typing import List, Dict
 
 
+class CustomChatBox(ChatBox):
+    def ai_say(
+            self,
+            elements: Union[OutputElement, str, List[Union[OutputElement, str]]] = None,
+            metadata: Dict = {},
+            append: bool = False,  # add a new parameter here
+    ) -> List[OutputElement]:
+        self.init_session()
+        elements = self._prepare_elements(elements)
+
+        if append and self._chat_containers:  # if append is True and there is at least one container
+            container = self._chat_containers[-1]  # use the last container
+        else:
+            chat_ele = st.chat_message("assistant", avatar=self._assistant_avatar)
+            container = chat_ele.container()
+            self._chat_containers.append(container)
+
+        for element in elements:
+            element(render_to=container)
+
+        self.history.append({"role": "assistant", "elements": elements, "metadata": metadata})
+        return elements
+
+
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
@@ -22,6 +46,7 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     返回消息历史。
     content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
     '''
+
     def filter(msg):
         content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
         if not content_in_expander:
@@ -57,14 +82,14 @@ def dialogue_page(api: ApiRequest):
                                       "搜索引擎问答",
                                       "自定义Agent问答",
                                       ],
-                                     index=1,
+                                     index=3,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
 
         def on_llm_change():
             config = get_model_worker_config(llm_model)
-            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+            if not config.get("online_api"):  # 只有本地model_worker可以切换模型
                 st.session_state["prev_llm_model"] = llm_model
             st.session_state["cur_llm_model"] = st.session_state.llm_model
 
@@ -83,15 +108,15 @@ def dialogue_page(api: ApiRequest):
         llm_models = running_models + available_models
         index = llm_models.index(st.session_state.get("cur_llm_model", LLM_MODEL))
         llm_model = st.selectbox("选择LLM模型：",
-                                llm_models,
-                                index,
-                                format_func=llm_model_format_func,
-                                on_change=on_llm_change,
-                                key="llm_model",
-                                )
+                                 llm_models,
+                                 index,
+                                 format_func=llm_model_format_func,
+                                 on_change=on_llm_change,
+                                 key="llm_model",
+                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")
-            and llm_model not in running_models):
+                and not get_model_worker_config(llm_model).get("online_api")
+                and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 prev_model = st.session_state.get("prev_llm_model")
                 r = api.change_llm_model(prev_model, llm_model)
@@ -144,25 +169,55 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history=history, model=llm_model, temperature=temperature)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
+                if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
+        # elif dialogue_mode == "自定义Agent问答":
+        #     chat_box.ai_say([
+        #         f"正在使用工具 ...",
+        #         Markdown("...", in_expander=True, title="使用的工具",state="complete"),
+        #     ])
+        #     text = ""
+        #     for d in api.agent_chat(prompt,
+        #                             history=history,
+        #                             model=llm_model,
+        #                             temperature=temperature):
+        #         if error_msg := check_error_msg(d):  # check whether error occured
+        #             st.error(error_msg)
+        #         elif chunk := d.get("answer"):
+        #             text += chunk
+        #             chat_box.update_msg(text, element_index=0)
+        #         elif chunk := d.get("tools"):
+        #             chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=1, streaming=False)
+        #     chat_box.update_msg(text, element_index=0, streaming=False)
+        #     chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=1, streaming=False)
         elif dialogue_mode == "自定义Agent问答":
-            chat_box.ai_say("正在调用工具回答...")
+            chat_box.ai_say([
+                f"正在使用工具 ...",
+            ])
             text = ""
-            r = api.agent_chat(prompt, history=history, model=llm_model, temperature=temperature)
-            for t in r:
-                if error_msg := check_error_msg(t):  # check whether error occured
+            element_index = 0
+            for d in api.agent_chat(prompt,
+                                    history=history,
+                                    model=llm_model,
+                                    temperature=temperature):
+                if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
-                    break
-                else:
-                    text += t.get("llm_token", "")
-                    chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=0)
+                elif chunk := d.get("tools"):
+                    element_index +=1
+                    chat_box.insert_msg(Markdown("...", in_expander=True, title="正在使用工具...",state="complete"))
+                    chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=element_index, streaming=False)
+                    # expander = st.expander("正在使用工具...", expanded=True)
+                    # tools_content = "\n\n".join(d.get("tools", []))
+                    # expander.markdown(tools_content)
+            chat_box.update_msg(text, element_index=0, streaming=False)
 
         elif dialogue_mode == "知识库问答":
             chat_box.ai_say([
@@ -184,6 +239,7 @@ def dialogue_page(api: ApiRequest):
                     chat_box.update_msg(text, element_index=0)
             chat_box.update_msg(text, element_index=0, streaming=False)
             chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
