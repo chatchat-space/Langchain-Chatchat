@@ -31,7 +31,7 @@ from configs import (
     HTTPX_DEFAULT_TIMEOUT,
 )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                          fschat_openai_api_address, set_httpx_timeout,
+                          fschat_openai_api_address, set_httpx_config, get_httpx_client,
                           get_model_worker_config, get_all_model_worker_configs,
                           MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 import argparse
@@ -203,7 +203,6 @@ def create_openai_api_app(
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
     @app.on_event("startup")
     async def on_startup():
-        set_httpx_timeout()
         if started_event is not None:
             started_event.set()
 
@@ -214,6 +213,8 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
     from fastapi import Body
     import time
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     app = create_controller_app(
         dispatch_method=FSCHAT_CONTROLLER.get("dispatch_method"),
@@ -251,12 +252,13 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
             logger.error(msg)
             return {"code": 500, "msg": msg}
 
-        r = httpx.post(worker_address + "/release",
-                       json={"new_model_name": new_model_name, "keep_origin": keep_origin})
-        if r.status_code != 200:
-            msg = f"failed to release model: {model_name}"
-            logger.error(msg)
-            return {"code": 500, "msg": msg}
+        with get_httpx_client() as client:
+            r = client.post(worker_address + "/release",
+                        json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+            if r.status_code != 200:
+                msg = f"failed to release model: {model_name}"
+                logger.error(msg)
+                return {"code": 500, "msg": msg}
 
         if new_model_name:
             timer = HTTPX_DEFAULT_TIMEOUT  # wait for new model_worker register
@@ -299,6 +301,8 @@ def run_model_worker(
     import uvicorn
     from fastapi import Body
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
@@ -337,6 +341,8 @@ def run_model_worker(
 def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     import uvicorn
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     controller_addr = fschat_controller_address()
     app = create_openai_api_app(controller_addr, log_level=log_level)  # TODO: not support keys yet.
@@ -353,6 +359,8 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
 def run_api_server(started_event: mp.Event = None):
     from server.api import create_app
     import uvicorn
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     app = create_app()
     _set_app_event(app, started_event)
@@ -364,6 +372,9 @@ def run_api_server(started_event: mp.Event = None):
 
 
 def run_webui(started_event: mp.Event = None):
+    from server.utils import set_httpx_config
+    set_httpx_config()
+
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 

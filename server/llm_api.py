@@ -1,7 +1,7 @@
 from fastapi import Body
 from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
-from server.utils import BaseResponse, fschat_controller_address, list_llm_models
-import httpx
+from server.utils import BaseResponse, fschat_controller_address, list_llm_models, get_httpx_client
+
 
 
 def list_running_models(
@@ -13,8 +13,9 @@ def list_running_models(
     '''
     try:
         controller_address = controller_address or fschat_controller_address()
-        r = httpx.post(controller_address + "/list_models")
-        return BaseResponse(data=r.json()["models"])
+        with get_httpx_client() as client:
+            r = client.post(controller_address + "/list_models")
+            return BaseResponse(data=r.json()["models"])
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',
                         exc_info=e if log_verbose else None)
@@ -41,11 +42,12 @@ def stop_llm_model(
     '''
     try:
         controller_address = controller_address or fschat_controller_address()
-        r = httpx.post(
-            controller_address + "/release_worker",
-            json={"model_name": model_name},
-        )
-        return r.json()
+        with get_httpx_client() as client:
+            r = client.post(
+                controller_address + "/release_worker",
+                json={"model_name": model_name},
+            )
+            return r.json()
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',
                         exc_info=e if log_verbose else None)
@@ -64,12 +66,13 @@ def change_llm_model(
     '''
     try:
         controller_address = controller_address or fschat_controller_address()
-        r = httpx.post(
-            controller_address + "/release_worker",
-            json={"model_name": model_name, "new_model_name": new_model_name},
-            timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
-        )
-        return r.json()
+        with get_httpx_client() as client:
+            r = client.post(
+                controller_address + "/release_worker",
+                json={"model_name": model_name, "new_model_name": new_model_name},
+                timeout=HTTPX_DEFAULT_TIMEOUT, # wait for new worker_model
+            )
+            return r.json()
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',
                         exc_info=e if log_verbose else None)
