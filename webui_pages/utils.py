@@ -26,7 +26,7 @@ import contextlib
 import json
 import os
 from io import BytesIO
-from server.utils import run_async, iter_over_async, set_httpx_timeout, api_address
+from server.utils import run_async, iter_over_async, set_httpx_config, api_address, get_httpx_client
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
@@ -35,7 +35,7 @@ from pprint import pprint
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
-set_httpx_timeout()
+set_httpx_config()
 
 
 class ApiRequest:
@@ -53,6 +53,8 @@ class ApiRequest:
         self.base_url = base_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
+        self._client = get_httpx_client()
+        self._aclient = get_httpx_client(use_async=True)
         if no_remote_api:
             logger.warn("将来可能取消对no_remote_api的支持，更新版本时请注意。")
 
@@ -79,9 +81,9 @@ class ApiRequest:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("GET", url, params=params, **kwargs)
+                    return self._client.stream("GET", url, params=params, **kwargs)
                 else:
-                    return httpx.get(url, params=params, **kwargs)
+                    return self._client.get(url, params=params, **kwargs)
             except Exception as e:
                 msg = f"error when get {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -98,18 +100,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("GET", url, params=params, **kwargs)
-                    else:
-                        return await client.get(url, params=params, **kwargs)
-                except Exception as e:
-                    msg = f"error when aget {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._aclient.stream("GET", url, params=params, **kwargs)
+                else:
+                    return await self._aclient.get(url, params=params, **kwargs)
+            except Exception as e:
+                msg = f"error when aget {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def post(
         self,
@@ -124,11 +126,10 @@ class ApiRequest:
         kwargs.setdefault("timeout", self.timeout)
         while retry > 0:
             try:
-                # return requests.post(url, data=data, json=json, stream=stream, **kwargs)
                 if stream:
-                    return httpx.stream("POST", url, data=data, json=json, **kwargs)
+                    return self._client.stream("POST", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.post(url, data=data, json=json, **kwargs)
+                    return self._client.post(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when post {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -146,18 +147,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("POST", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.post(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    msg = f"error when apost {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._client.stream("POST", url, data=data, json=json, **kwargs)
+                else:
+                    return await self._client.post(url, data=data, json=json, **kwargs)
+            except Exception as e:
+                msg = f"error when apost {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def delete(
         self,
@@ -173,9 +174,9 @@ class ApiRequest:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("DELETE", url, data=data, json=json, **kwargs)
+                    return self._client.stream("DELETE", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.delete(url, data=data, json=json, **kwargs)
+                    return self._client.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when delete {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -193,18 +194,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("DELETE", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.delete(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    msg = f"error when adelete {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._aclient.stream("DELETE", url, data=data, json=json, **kwargs)
+                else:
+                    return await self._aclient.delete(url, data=data, json=json, **kwargs)
+            except Exception as e:
+                msg = f"error when adelete {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
         '''
