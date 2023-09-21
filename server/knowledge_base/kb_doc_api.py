@@ -122,10 +122,10 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
                 override: bool = Form(False, description="覆盖已有文件"),
                 to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
-                chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-                chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-                zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
-                docs: Json = Form({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+                chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+                chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+                zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+                docs: Json = Form({}, description="自定义的docs，需要转为json字符串", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
                 not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
                 ) -> BaseResponse:
     '''
@@ -205,12 +205,12 @@ def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
 
 def update_docs(
     knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
-    file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=["file_name"]),
+    file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),
     chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
-    docs: Json = Body({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+    docs: Json = Body({}, description="自定义的docs，需要转为json字符串", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
     ) -> BaseResponse:
     '''
