@@ -1,5 +1,5 @@
 langchain==0.0.287
-fschat[model_worker]==0.2.28
+fschat[model_worker]==0.2.29
 openai
 sentence_transformers
 transformers>=4.31.0

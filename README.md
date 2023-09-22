@@ -119,15 +119,16 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [all models of OpenOrca](https://huggingface.co/Open-Orca)
 - [Spicyboros](https://huggingface.co/jondurbin/spicyboros-7b-2.2?not-for-all-audiences=true) + [airoboros 2.2](https://huggingface.co/jondurbin/airoboros-l2-13b-2.2)
 - [VMware&#39;s OpenLLaMa OpenInstruct](https://huggingface.co/VMware/open-llama-7b-open-instruct)
+- [baichuan2-7b/baichuan2-13b](https://huggingface.co/baichuan-inc)
 - 任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)
 - 在以上模型基础上训练的任何 [Peft](https://github.com/huggingface/peft) 适配器。为了激活，模型路径中必须有 `peft` 。注意：如果加载多个peft模型，你可以通过在任何模型工作器中设置环境变量 `PEFT_SHARE_BASE_WEIGHTS=true` 来使它们共享基础模型的权重。
 
 以上模型支持列表可能随 [FastChat](https://github.com/lm-sys/FastChat) 更新而持续更新，可参考 [FastChat 已支持模型列表](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)。
 
-
 除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的配置信息。
 
-在线 LLM 模型目前已支持： 
+在线 LLM 模型目前已支持：
+
 - [ChatGPT](https://api.openai.com)
 - [智谱AI](http://open.bigmodel.cn)
 - [MiniMax](https://api.minimax.chat)
