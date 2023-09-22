@@ -111,6 +111,7 @@ The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the AP
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
 - [all models of OpenOrca](https://huggingface.co/Open-Orca)
 - [Spicyboros](https://huggingface.co/jondurbin/spicyboros-7b-2.2?not-for-all-audiences=true) + [airoboros 2.2](https://huggingface.co/jondurbin/airoboros-l2-13b-2.2)
+- [baichuan2-7b/baichuan2-13b](https://huggingface.co/baichuan-inc)
 - [VMware&#39;s OpenLLaMa OpenInstruct](https://huggingface.co/VMware/open-llama-7b-open-instruct)
 
 * Any [EleutherAI](https://huggingface.co/EleutherAI) pythia model such as [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)(任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b))
@@ -329,8 +330,8 @@ Please refer to [FAQ](docs/FAQ.md)
       - [X] .csv
       - [ ] .xlsx
     - [ ] TextSplitter and Retriever
-      - [x] multiple TextSplitter
-      - [x] ChineseTextSplitter
+      - [X] multiple TextSplitter
+      - [X] ChineseTextSplitter
       - [ ] Reconstructed Context Retriever
     - [ ] Webpage
     - [ ] SQL
@@ -340,11 +341,14 @@ Please refer to [FAQ](docs/FAQ.md)
     - [X] DuckDuckGo
   - [ ] Agent
 - [X] LLM  Models
+
   - [X] [FastChat](https://github.com/lm-sys/fastchat) -based LLM Models
   - [ ] Mutiply Remote LLM API
 - [X] Embedding Models
+
   - [X] HuggingFace -based Embedding models
   - [ ] Mutiply Remote Embedding API
 - [X] FastAPI-based API
 - [X] Web UI
+
   - [X] Streamlit -based Web UI
