@@ -153,7 +153,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             sys.modules["fastchat.serve.vllm_worker"].worker = worker
 
         else:
-                # default args. should be deleted after pr is merged by fastchat
             args.gpus = "1"
             args.max_gpu_memory = "20GiB"
             args.load_8bit = False
