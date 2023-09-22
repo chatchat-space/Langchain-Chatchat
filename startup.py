@@ -58,6 +58,21 @@ def create_controller_app(
 
 
 def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
+    """ 
+    kwargs包含的字段如下：
+    host:
+    port:
+    model_names:[`model_name`]
+    controller_address:
+    worker_address:
+
+    对于online_api: 
+        online_api:True
+        worker_class: `provider`
+    对于离线模型：
+        model_path: `model_name_or_path`,huggingface的repo-id或本地路径
+        device:`LLM_DEVICE`
+    """
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id, logger
@@ -66,104 +81,141 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     import fastchat.serve.model_worker
     logger.setLevel(log_level)
 
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def _new_init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
-
-    ModelWorker.init_heart_beat = _new_init_heart_beat
-
     parser = argparse.ArgumentParser()
     args = parser.parse_args([])
-    # default args. should be deleted after pr is merged by fastchat
-    args.gpus = None
-    args.max_gpu_memory = "20GiB"
-    args.load_8bit = False
-    args.cpu_offloading = None
-    args.gptq_ckpt = None
-    args.gptq_wbits = 16
-    args.gptq_groupsize = -1
-    args.gptq_act_order = False
-    args.awq_ckpt = None
-    args.awq_wbits = 16
-    args.awq_groupsize = -1
-    args.num_gpus = 1
-    args.model_names = []
-    args.conv_template = None
-    args.limit_worker_concurrency = 5
-    args.stream_interval = 2
-    args.no_register = False
-    args.embed_in_truncate = False
 
     for k, v in kwargs.items():
         setattr(args, k, v)
-
-    if args.gpus:
-        if args.num_gpus is None:
-            args.num_gpus = len(args.gpus.split(','))
-        if len(args.gpus.split(",")) < args.num_gpus:
-            raise ValueError(
-                f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
-            )
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
     # 在线模型API
     if worker_class := kwargs.get("worker_class"):
         worker = worker_class(model_names=args.model_names,
                               controller_addr=args.controller_address,
                               worker_addr=args.worker_address)
+        sys.modules["fastchat.serve.model_worker"].worker = worker
     # 本地模型
     else:
-        # workaround to make program exit with Ctrl+c
-        # it should be deleted after pr is merged by fastchat
-        def _new_init_heart_beat(self):
-            self.register_to_controller()
-            self.heart_beat_thread = threading.Thread(
-                target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+        from configs.model_config import VLLM_MODEL_DICT
+        if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+            from fastchat.serve.vllm_worker import VLLMWorker
+            from vllm import AsyncLLMEngine
+            from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs
+            #! -------------似乎会在这个地方加入tokenizer------------
+
+            # parser = AsyncEngineArgs.add_cli_args(args)
+            # # args = parser.parse_args()
+
+
+            args.tokenizer = args.model_path # 如果tokenizer与model_path不一致在此处添加
+            args.tokenizer_mode = 'auto'
+            args.trust_remote_code= True
+            args.download_dir= None
+            args.load_format = 'auto'
+            args.dtype = 'auto'
+            args.seed = 0
+            args.worker_use_ray = False
+            args.pipeline_parallel_size = 1
+            args.tensor_parallel_size = 1
+            args.block_size = 16
+            args.swap_space = 4  # GiB
+            args.gpu_memory_utilization = 0.90
+            args.max_num_batched_tokens = 2560
+            args.max_num_seqs = 256
+            args.disable_log_stats = False
+            args.conv_template = None
+            args.limit_worker_concurrency = 5
+            args.no_register = False
+            args.num_gpus = 1
+            args.engine_use_ray = False
+            args.disable_log_requests = False
+            if args.model_path:
+                args.model = args.model_path
+            if args.num_gpus > 1:
+                args.tensor_parallel_size = args.num_gpus
+
+            for k, v in kwargs.items():
+                setattr(args, k, v)
+
+            engine_args = AsyncEngineArgs.from_cli_args(args)
+            engine = AsyncLLMEngine.from_engine_args(engine_args)
+
+            worker = VLLMWorker(
+                        controller_addr = args.controller_address,
+                        worker_addr = args.worker_address,
+                        worker_id = worker_id,
+                        model_path = args.model_path,
+                        model_names = args.model_names,
+                        limit_worker_concurrency = args.limit_worker_concurrency,
+                        no_register = args.no_register,
+                        llm_engine =  engine,
+                        conv_template = args.conv_template,
+                        )
+            sys.modules["fastchat.serve.vllm_worker"].worker = worker
+
+        else:
+            args.gpus = "1"
+            args.max_gpu_memory = "20GiB"
+            args.load_8bit = False
+            args.cpu_offloading = None
+            args.gptq_ckpt = None
+            args.gptq_wbits = 16
+            args.gptq_groupsize = -1
+            args.gptq_act_order = False
+            args.awq_ckpt = None
+            args.awq_wbits = 16
+            args.awq_groupsize = -1
+            args.num_gpus = 1
+            args.model_names = []
+            args.conv_template = None
+            args.limit_worker_concurrency = 5
+            args.stream_interval = 2
+            args.no_register = False
+            args.embed_in_truncate = False
+            for k, v in kwargs.items():
+                setattr(args, k, v)
+            if args.gpus:
+                if args.num_gpus is None:
+                    args.num_gpus = len(args.gpus.split(','))
+                if len(args.gpus.split(",")) < args.num_gpus:
+                    raise ValueError(
+                        f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
+                    )
+                os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
+            gptq_config = GptqConfig(
+                ckpt=args.gptq_ckpt or args.model_path,
+                wbits=args.gptq_wbits,
+                groupsize=args.gptq_groupsize,
+                act_order=args.gptq_act_order,
             )
-            self.heart_beat_thread.start()
+            awq_config = AWQConfig(
+                ckpt=args.awq_ckpt or args.model_path,
+                wbits=args.awq_wbits,
+                groupsize=args.awq_groupsize,
+            )
 
-        ModelWorker.init_heart_beat = _new_init_heart_beat
+            worker = ModelWorker(
+                controller_addr=args.controller_address,
+                worker_addr=args.worker_address,
+                worker_id=worker_id,
+                model_path=args.model_path,
+                model_names=args.model_names,
+                limit_worker_concurrency=args.limit_worker_concurrency,
+                no_register=args.no_register,
+                device=args.device,
+                num_gpus=args.num_gpus,
+                max_gpu_memory=args.max_gpu_memory,
+                load_8bit=args.load_8bit,
+                cpu_offloading=args.cpu_offloading,
+                gptq_config=gptq_config,
+                awq_config=awq_config,
+                stream_interval=args.stream_interval,
+                conv_template=args.conv_template,
+                embed_in_truncate=args.embed_in_truncate,
+            )
+            sys.modules["fastchat.serve.model_worker"].args = args
+            sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
-        gptq_config = GptqConfig(
-            ckpt=args.gptq_ckpt or args.model_path,
-            wbits=args.gptq_wbits,
-            groupsize=args.gptq_groupsize,
-            act_order=args.gptq_act_order,
-        )
-        awq_config = AWQConfig(
-            ckpt=args.awq_ckpt or args.model_path,
-            wbits=args.awq_wbits,
-            groupsize=args.awq_groupsize,
-        )
-
-        worker = ModelWorker(
-            controller_addr=args.controller_address,
-            worker_addr=args.worker_address,
-            worker_id=worker_id,
-            model_path=args.model_path,
-            model_names=args.model_names,
-            limit_worker_concurrency=args.limit_worker_concurrency,
-            no_register=args.no_register,
-            device=args.device,
-            num_gpus=args.num_gpus,
-            max_gpu_memory=args.max_gpu_memory,
-            load_8bit=args.load_8bit,
-            cpu_offloading=args.cpu_offloading,
-            gptq_config=gptq_config,
-            awq_config=awq_config,
-            stream_interval=args.stream_interval,
-            conv_template=args.conv_template,
-            embed_in_truncate=args.embed_in_truncate,
-        )
-        sys.modules["fastchat.serve.model_worker"].args = args
-        sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-
-    sys.modules["fastchat.serve.model_worker"].worker = worker
+            sys.modules["fastchat.serve.model_worker"].worker = worker
 
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({args.model_names[0]})"
