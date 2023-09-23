@@ -1,6 +1,6 @@
 # 基于本地知识库的 ChatGLM 等大语言模型应用实现
 
-## 介绍 **
+## 介绍 ****
 
 🌍 [_READ THIS IN ENGLISH_](README_en.md)
 
