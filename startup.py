@@ -75,10 +75,10 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     """
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id, logger
+    from fastchat.serve.model_worker import worker_id, logger
     import argparse
-    import threading
     import fastchat.serve.model_worker
+    import fastchat.serve.vllm_worker
     logger.setLevel(log_level)
 
     parser = argparse.ArgumentParser()
@@ -89,6 +89,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
 
     # 在线模型API
     if worker_class := kwargs.get("worker_class"):
+        from fastchat.serve.model_worker import app
         worker = worker_class(model_names=args.model_names,
                               controller_addr=args.controller_address,
                               worker_addr=args.worker_address)
@@ -97,15 +98,10 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     else:
         from configs.model_config import VLLM_MODEL_DICT
         if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
-            from fastchat.serve.vllm_worker import VLLMWorker
+            from fastchat.serve.vllm_worker import VLLMWorker,app
             from vllm import AsyncLLMEngine
             from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs
-            #! -------------似乎会在这个地方加入tokenizer------------
-
-            # parser = AsyncEngineArgs.add_cli_args(args)
-            # # args = parser.parse_args()
-
-
+            
             args.tokenizer = args.model_path # 如果tokenizer与model_path不一致在此处添加
             args.tokenizer_mode = 'auto'
             args.trust_remote_code= True
@@ -150,9 +146,11 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
                         llm_engine =  engine,
                         conv_template = args.conv_template,
                         )
+            sys.modules["fastchat.serve.vllm_worker"].engine = engine
             sys.modules["fastchat.serve.vllm_worker"].worker = worker
-
+            
         else:
+            from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
             args.gpus = "1"
             args.max_gpu_memory = "20GiB"
             args.load_8bit = False

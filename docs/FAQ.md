@@ -185,18 +185,10 @@ A16.pymilvus版本需要匹配和milvus对应否则会超时参考pymilvus==2.1.
 
 Q16: 使用vllm推理加速框架时，已经下载了模型但出现HuggingFace通信问题
 
-A16: 参照如下代码修改python环境下/site-packages/vllm/model_executor/weight_utils.py文件的prepare_hf_model_weights函数如下：
+A16: 参照如下代码修改python环境下/site-packages/vllm/model_executor/weight_utils.py文件的prepare_hf_model_weights函数如下对应代码：
 
 ```python
-def prepare_hf_model_weights(
-    model_name_or_path: str,
-    cache_dir: Optional[str] = None,
-    use_safetensors: bool = False,
-    fall_back_to_pt: bool = True,
-):
-    # Download model weights from huggingface.
-    is_local = os.path.isdir(model_name_or_path)
-    allow_patterns = "*.safetensors" if use_safetensors else "*.bin"
+
     if not is_local:
         # Use file lock to prevent multiple processes from
         # downloading the same model weights at the same time.
@@ -225,22 +217,7 @@ def prepare_hf_model_weights(
                                             tqdm_class=Disabledtqdm)
     else:
         hf_folder = model_name_or_path
-    hf_weights_files = glob.glob(os.path.join(hf_folder, allow_patterns))
-    if not use_safetensors:
-        hf_weights_files = [
-            x for x in hf_weights_files if not x.endswith("training_args.bin")
-        ]
 
-    if len(hf_weights_files) == 0 and use_safetensors and fall_back_to_pt:
-        return prepare_hf_model_weights(model_name_or_path,
-                                        cache_dir=cache_dir,
-                                        use_safetensors=False,
-                                        fall_back_to_pt=False)
 
-    if len(hf_weights_files) == 0:
-        raise RuntimeError(
-            f"Cannot find any model weights with `{model_name_or_path}`")
-
-    return hf_folder, hf_weights_files, use_safetensors
 
 ```

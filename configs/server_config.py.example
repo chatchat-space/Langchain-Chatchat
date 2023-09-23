@@ -88,6 +88,11 @@ FSCHAT_MODEL_WORKERS = {
         # 'disable_log_requests': False
 
     },
+    # 可以如下示例方式更改默认配置
+    # "baichuan-7b": { # 使用default中的IP和端口
+    #    "device": "cpu",
+    # },
+
     "zhipu-api": { # 请为每个要运行的在线API设置不同的端口
         "port": 21001,
     },
