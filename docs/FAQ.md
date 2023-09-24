@@ -107,7 +107,7 @@ embedding_model_dict = {
 
 Q9: 执行 `python cli_demo.py`过程中，显卡内存爆了，提示 "OutOfMemoryError: CUDA out of memory"
 
-A9: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。或者打开量化，请在 [configs/model_config.py](../configs/model_config.py) 文件中，对`LOAD_IN_8BIT`参数进行修改
+A9: 将 `VECTOR_SEARCH_TOP_K` 和 `LLM_HISTORY_LEN` 的值调低，比如 `VECTOR_SEARCH_TOP_K = 5` 和 `LLM_HISTORY_LEN = 2`，这样由 `query` 和 `context` 拼接得到的 `prompt` 会变短，会减少内存的占用。或者打开量化，请在 [configs/model_config.py](../configs/model_config.py) 文件中，对 `LOAD_IN_8BIT`参数进行修改
 
 ---
 
@@ -171,7 +171,6 @@ Q14: 修改配置中路径后，加载 text2vec-large-chinese 依然提示 `WARN
 
 A14: 尝试更换 embedding，如 text2vec-base-chinese，请在 [configs/model_config.py](../configs/model_config.py) 文件中，修改 `text2vec-base`参数为本地路径，绝对路径或者相对路径均可
 
-
 ---
 
 Q15: 使用pg向量库建表报错
@@ -183,3 +182,42 @@ A15: 需要手动安装对应的vector扩展(连接pg执行 CREATE EXTENSION IF 
 Q16: pymilvus 连接超时
 
 A16.pymilvus版本需要匹配和milvus对应否则会超时参考pymilvus==2.1.3
+
+Q16: 使用vllm推理加速框架时，已经下载了模型但出现HuggingFace通信问题
+
+A16: 参照如下代码修改python环境下/site-packages/vllm/model_executor/weight_utils.py文件的prepare_hf_model_weights函数如下对应代码：
+
+```python
+
+    if not is_local:
+        # Use file lock to prevent multiple processes from
+        # downloading the same model weights at the same time.
+        model_path_temp = os.path.join(
+            os.getenv("HOME"),
+            ".cache/huggingface/hub",
+            "models--" + model_name_or_path.replace("/", "--"),
+            "snapshots/",
+        )
+        downloaded = False
+        if os.path.exists(model_path_temp):
+            temp_last_dir = os.listdir(model_path_temp)[-1]
+            model_path_temp = os.path.join(model_path_temp, temp_last_dir)
+            base_pattern = os.path.join(model_path_temp, "pytorch_model*.bin")
+            files = glob.glob(base_pattern)
+            if len(files) > 0:
+                downloaded = True
+
+        if downloaded:
+           hf_folder = model_path_temp
+        else:
+            with get_lock(model_name_or_path, cache_dir):
+                hf_folder = snapshot_download(model_name_or_path,
+                                            allow_patterns=allow_patterns,
+                                            cache_dir=cache_dir,
+                                            tqdm_class=Disabledtqdm)
+    else:
+        hf_folder = model_name_or_path
+
+
+
+```
