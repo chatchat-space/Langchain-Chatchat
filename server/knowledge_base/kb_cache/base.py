@@ -120,9 +120,18 @@ class EmbeddingsPool(CachePool):
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
                     embeddings = OpenAIEmbeddings(openai_api_key=embedding_model_dict[model], chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:
+                    if 'zh' in model:
+                        # for chinese model
+                        query_instruction = "为这个句子生成表示以用于检索相关文章："
+                    elif 'en' in model:
+                        # for english model
+                        query_instruction = "Represent this sentence for searching relevant passages:"
+                    else:
+                        # maybe ReRanker or else, just use empty string instead
+                        query_instruction = ""
                     embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
-                                                        model_kwargs={'device': device},
-                                                        query_instruction="为这个句子生成表示以用于检索相关文章：")
+                                                          model_kwargs={'device': device},
+                                                          query_instruction=query_instruction)
                     if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
                         embeddings.query_instruction = ""
                 else:
