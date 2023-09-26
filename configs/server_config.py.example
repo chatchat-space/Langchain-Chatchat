@@ -38,10 +38,10 @@ FSCHAT_MODEL_WORKERS = {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
-        "infer_turbo": "vllm" # False,'vllm',使用的推理加速框架,使用vllm如果出现HuggingFace通信问题，参见doc/FAQ
+        "infer_turbo": False # 可选[False,'vllm'],使用的推理加速框架,使用vllm如果出现HuggingFace通信问题，参见doc/FAQ
 
         # model_worker多卡加载需要配置的参数
-        # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"
+        # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"，如失效请使用CUDA_VISIBLE_DEVICES="0,1"等形式指定
         # "num_gpus": 1, # 使用GPU的数量
         # "max_gpu_memory": "20GiB", # 每个GPU占用的最大显存
 
@@ -62,7 +62,7 @@ FSCHAT_MODEL_WORKERS = {
         # "no_register": False,
         # "embed_in_truncate": False,
 
-        # 以下为vllm_woker配置参数,注意使用vllm必须有gpu
+        # 以下为vllm_woker配置参数,注意使用vllm必须有gpu，仅在Linux测试通过
 
         # tokenizer = model_path # 如果tokenizer与model_path不一致在此处添加
         # 'tokenizer_mode':'auto',

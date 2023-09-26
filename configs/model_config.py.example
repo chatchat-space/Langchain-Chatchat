@@ -36,6 +36,7 @@ MODEL_PATH = {
     },
     # TODO: add all supported llm models
     "llm_model": {
+        # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
         "chatglm-6b": "THUDM/chatglm-6b",
         "chatglm2-6b": "THUDM/chatglm2-6b",
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
@@ -93,7 +94,7 @@ EMBEDDING_MODEL = "m3e-base"
 EMBEDDING_DEVICE = "auto"
 
 # LLM 名称
-LLM_MODEL = "baichuan-7b"
+LLM_MODEL = "chatglm2-6b"
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
