@@ -262,7 +262,7 @@ class LLMWeatherChain(Chain):
         return cls(llm_chain=llm_chain, **kwargs)
 
 
-from langchain import PromptTemplate
+from langchain.prompts import PromptTemplate
 
 _PROMPT_TEMPLATE = """用户将会向您咨询天气问题，您不需要自己回答天气问题，而是将用户提问的信息提取出来区，市和时间三个元素后使用我为你编写好的工具进行查询并返回结果，格式为 区+市+时间 每个元素用空格隔开。如果缺少信息，则用 None 代替。
 问题: ${{用户的问题}}

@@ -78,7 +78,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     from fastchat.serve.model_worker import worker_id, logger
     import argparse
     import fastchat.serve.model_worker
-    import fastchat.serve.vllm_worker
     logger.setLevel(log_level)
 
     parser = argparse.ArgumentParser()
@@ -98,6 +97,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     else:
         from configs.model_config import VLLM_MODEL_DICT
         if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+            import fastchat.serve.vllm_worker
             from fastchat.serve.vllm_worker import VLLMWorker,app
             from vllm import AsyncLLMEngine
             from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs

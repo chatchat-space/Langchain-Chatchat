@@ -1,4 +1,5 @@
-from langchain import PromptTemplate, LLMChain
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
 import sys
 import os
 

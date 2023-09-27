@@ -1,6 +1,6 @@
 from server.utils import get_ChatOpenAI
 from configs.model_config import LLM_MODEL, TEMPERATURE
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
