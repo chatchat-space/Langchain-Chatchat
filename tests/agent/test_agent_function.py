@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from configs import LLM_MODEL, TEMPERATURE
 from server.utils import get_ChatOpenAI
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.agents import LLMSingleActionAgent, AgentExecutor
 from server.agent.tools import tools, tool_names
 from langchain.memory import ConversationBufferWindowMemory

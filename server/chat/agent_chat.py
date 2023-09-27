@@ -7,7 +7,7 @@ from fastapi import Body
 from fastapi.responses import StreamingResponse
 from configs.model_config import LLM_MODEL, TEMPERATURE, HISTORY_LEN
 from server.utils import wrap_done, get_ChatOpenAI
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
