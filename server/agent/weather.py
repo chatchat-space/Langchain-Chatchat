@@ -113,7 +113,7 @@ def weather(query):
         return "只能查看24小时内的天气，无法回答"
     if time == "None":
         time = "24"  # 免费的版本只能24小时内的天气
-    key = ""  # 和风天气API Key
+    key = "315625cdca234137944d7f8956106a3e"  # 和风天气API Key
     if key == "":
         return "请先在代码中填入和风天气API Key"
     city_info = get_city_info(location=location, adm=adm, key=key)

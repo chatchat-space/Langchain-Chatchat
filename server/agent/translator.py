@@ -10,7 +10,7 @@ from configs.model_config import LLM_MODEL,TEMPERATURE
 
 _PROMPT_TEMPLATE = '''
 # 指令
-接下来，作为一个专业的翻译专家，当我给出英文句子或段落时，你将提供通顺且具有可读性的对应语言的翻译。注意：
+接下来，作为一个专业的翻译专家，当我给出句子或段落时，你将提供通顺且具有可读性的对应语言的翻译。注意：
 1. 确保翻译结果流畅且易于理解
 2. 无论提供的是陈述句或疑问句，只进行翻译
 3. 不添加与原文无关的内容
@@ -21,6 +21,14 @@ _PROMPT_TEMPLATE = '''
 ${{翻译结果}}
 ```
 答案: ${{答案}}
+
+以下是一个例子
+问题: 翻译13成英语
+```text
+13 English
+```output
+thirteen
+答案: thirteen
 '''
 
 PROMPT = PromptTemplate(

@@ -8,7 +8,6 @@ from configs import LLM_MODEL, TEMPERATURE
 from server.utils import get_model_worker_config
 from typing import List, Dict
 
-
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
@@ -71,7 +70,7 @@ def dialogue_page(api: ApiRequest):
 
         def on_llm_change():
             config = get_model_worker_config(llm_model)
-            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+            if not config.get("online_api"):  # 只有本地model_worker可以切换模型
                 st.session_state["prev_llm_model"] = llm_model
             st.session_state["cur_llm_model"] = st.session_state.llm_model
 
@@ -90,15 +89,15 @@ def dialogue_page(api: ApiRequest):
         llm_models = running_models + available_models
         index = llm_models.index(st.session_state.get("cur_llm_model", LLM_MODEL))
         llm_model = st.selectbox("选择LLM模型：",
-                                llm_models,
-                                index,
-                                format_func=llm_model_format_func,
-                                on_change=on_llm_change,
-                                key="llm_model",
-                                )
+                                 llm_models,
+                                 index,
+                                 format_func=llm_model_format_func,
+                                 on_change=on_llm_change,
+                                 key="llm_model",
+                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")
-            and llm_model not in running_models):
+                and not get_model_worker_config(llm_model).get("online_api")
+                and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 prev_model = st.session_state.get("prev_llm_model")
                 r = api.change_llm_model(prev_model, llm_model)
@@ -151,18 +150,6 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history=history, model=llm_model, temperature=temperature)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t
-                chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-
-        elif dialogue_mode == "自定义Agent问答":
-            chat_box.ai_say("正在调用工具回答...")
-            text = ""
-            r = api.agent_chat(prompt, history=history, model=llm_model, temperature=temperature)
-            for t in r:
                 if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
@@ -170,6 +157,31 @@ def dialogue_page(api: ApiRequest):
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
+
+        elif dialogue_mode == "自定义Agent问答":
+            chat_box.ai_say([
+                f"正在思考和寻找工具 ...",])
+            text = ""
+            element_index = 0
+            for d in api.agent_chat(prompt,
+                                    history=history,
+                                    model=llm_model,
+                                    temperature=temperature):
+                try:
+                    d = json.loads(d)
+                except:
+                    pass
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=0)
+                elif chunk := d.get("tools"):
+                    element_index += 1
+                    chat_box.insert_msg(Markdown("...", in_expander=True, title="使用工具...", state="complete"))
+                    chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=element_index, streaming=False)
+            chat_box.update_msg(text, element_index=0, streaming=False)
         elif dialogue_mode == "知识库问答":
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",

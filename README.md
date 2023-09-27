@@ -189,6 +189,18 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
 
+## Agent生态
+### 基础的Agent
+在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
++ OpenAI GPT4
++ ChatGLM2-130B
+
+目前版本的Agent仍然需要对提示词进行大量调试，调试位置
+
+### 构建自己的Agent工具
+
+详见 (docs/自定义Agent.md)
+
 ## Docker 部署
 
 🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)`
@@ -392,23 +404,24 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
     - [ ] 结构化数据接入
       - [X] .csv
       - [ ] .xlsx
-    - [ ] 分词及召回
-      - [ ] 接入不同类型 TextSplitter
-      - [ ] 优化依据中文标点符号设计的 ChineseTextSplitter
-      - [ ] 重新实现上下文拼接召回
+    - [X] 分词及召回
+      - [X] 接入不同类型 TextSplitter
+      - [X] 优化依据中文标点符号设计的 ChineseTextSplitter
+      - [X] 重新实现上下文拼接召回
     - [ ] 本地网页接入
     - [ ] SQL 接入
     - [ ] 知识图谱/图数据库接入
   - [X] 搜索引擎接入
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
-  - [ ] Agent 实现
+  - [X] Agent 实现
+    - [X]基础React形式的Agent实现，包括调用计算器等
 - [X] LLM 模型接入
   - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
-  - [ ] 支持 ChatGLM API 等 LLM API 的接入
+  - [X] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
   - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
-  - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
+  - [X] 支持 OpenAI Embedding API 等 Embedding API 的接入
 - [X] 基于 FastAPI 的 API 方式调用
 - [X] Web UI
   - [X] 基于 Streamlit 的 Web UI
