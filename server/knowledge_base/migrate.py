@@ -37,8 +37,8 @@ def folder2db(
     mode: Literal["recreate_vs", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
-    chunk_size: int = -1,
-    chunk_overlap: int = -1,
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = CHUNK_SIZE,
     zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
