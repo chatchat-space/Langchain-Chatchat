@@ -3,7 +3,7 @@ pandas~=2.0.3
 streamlit>=1.26.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
-streamlit-chatbox >=1.1.6, <=1.1.7
+streamlit-chatbox>=1.1.9
 streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
 nltk
