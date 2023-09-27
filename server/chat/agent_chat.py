@@ -23,7 +23,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                                                    ),
                      stream: bool = Body(False, description="流式输出"),
                      model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
-                     temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
+                     temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                      # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
                      ):
     history = [History.from_data(h) for h in history]
