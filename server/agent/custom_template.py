@@ -1,57 +1,9 @@
-template = """
-尽可能地回答以下问题。你可以使用以下工具:{tools}
-请按照以下格式进行:  
-
-Question: 需要你回答的输入问题。 
-Thought: 你应该总是思考该做什么，并告诉我你要用什么工具。  
-Action: 需要使用的工具，应该是[{tool_names}]中的一个  
-Action Input: 传入工具的内容  
-Observation: 行动的结果
-           ... (这个Thought/Action/Action Input/Observation可以重复N次)
-Thought: 通过使用工具，我是否知道了答案，如果知道，就自然的回答问题，如果不知道，继续使用工具或者自己的知识 \n
-Final Answer: 这个问题的答案是，输出完整的句子。
-现在开始！ 
-
-之前的对话: 
-{history}
-New question: 
-{input} 
-Thought:  
-{agent_scratchpad}"""
-
-
-# ChatGPT 提示词模板
-# template = """Answer the following questions as best you can， You have access to the following tools:
-# {tools}
-# Use the following format:
-#
-# Question: the input question you must answer
-# Thought: you should always think about what to do
-# Action: the action to take, should be one of [{tool_names}]
-# Action Input: the input to the action
-# Observation: the result of the action
-# ... (this Thought/Action/Action Input/Observation can repeat N times)
-# Thought: I now know the final answer
-# Final Answer: the final answer to the original input question
-#
-# Begin!
-#
-# Previous conversation history:
-# {history}
-#
-# New question: {input}
-# {agent_scratchpad}"""
-
-
-from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
+from langchain.agents import Tool, AgentOutputParser
 from langchain.prompts import StringPromptTemplate
-from langchain.llms import OpenAI
-from langchain.utilities import SerpAPIWrapper
-from langchain.chains import LLMChain
 from typing import List, Union
-from langchain.schema import AgentAction, AgentFinish, OutputParserException
-from server.agent.tools import tools
+from langchain.schema import AgentAction, AgentFinish
 import re
+
 class CustomPromptTemplate(StringPromptTemplate):
     # The template to use
     template: str
@@ -73,15 +25,9 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
-
-prompt = CustomPromptTemplate(
-    template=template,
-    tools=tools,
-    input_variables=["input", "intermediate_steps", "history"]
-)
 class CustomOutputParser(AgentOutputParser):
 
-    def parse(self, llm_output: str) -> Union[AgentAction, AgentFinish]:
+    def parse(self, llm_output: str) -> AgentFinish | AgentAction | str:
         # Check if agent should finish
         if "Final Answer:" in llm_output:
             return AgentFinish(
@@ -101,10 +47,18 @@ class CustomOutputParser(AgentOutputParser):
         action = match.group(1).strip()
         action_input = match.group(2)
         # Return the action and action input
-        return AgentAction(
+        try:
+            ans = AgentAction(
             tool=action,
             tool_input=action_input.strip(" ").strip('"'),
             log=llm_output
-        )
+            )
+            return ans
+        except:
+            return AgentFinish(
+                return_values={"output": f"调用agent失败: `{llm_output}`"},
+                log=llm_output,
+            )
+
 
 

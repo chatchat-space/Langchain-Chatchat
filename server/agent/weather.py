@@ -1,12 +1,14 @@
 ## 使用和风天气API查询天气
-
 from __future__ import annotations
+
+## 单独运行的时候需要添加
 import sys
 import os
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 
 from server.utils import get_ChatOpenAI
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import re
 import warnings
@@ -25,6 +27,8 @@ import requests
 from typing import List, Any, Optional
 from configs.model_config import LLM_MODEL, TEMPERATURE
 
+## 使用和风天气API查询天气
+KEY = ""
 
 def get_city_info(location, adm, key):
     base_url = 'https://geoapi.qweather.com/v2/city/lookup?'
@@ -109,11 +113,11 @@ def split_query(query):
 
 def weather(query):
     location, adm, time = split_query(query)
+    key = KEY
     if time != "None" and int(time) > 24:
         return "只能查看24小时内的天气，无法回答"
     if time == "None":
         time = "24"  # 免费的版本只能24小时内的天气
-    key = "315625cdca234137944d7f8956106a3e"  # 和风天气API Key
     if key == "":
         return "请先在代码中填入和风天气API Key"
     city_info = get_city_info(location=location, adm=adm, key=key)
@@ -272,7 +276,7 @@ _PROMPT_TEMPLATE = """用户将会向您咨询天气问题，您不需要自己�
 ${{拆分的区，市和时间}}
 ```
 
-... weather(query)...
+... weather(提取后的关键字，用空格隔开)...
 ```output
 
 ${{提取后的答案}}
@@ -283,7 +287,6 @@ ${{提取后的答案}}
 问题: 上海浦东未来1小时天气情况？
 
 ```text
-
 浦东 上海 1
 ```
 ...weather(浦东 上海 1)...
@@ -353,3 +356,10 @@ def weathercheck(query: str):
     ans = llm_weather.run(query)
     return ans
 
+if __name__ == '__main__':
+
+    ## 检测api是否能正确返回
+    query = "上海浦东未来1小时天气情况"
+    # ans = weathercheck(query)
+    ans = weather("浦东 上海 1")
+    print(ans)

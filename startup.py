@@ -151,7 +151,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             
         else:
             from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
-            args.gpus = "1"
+            args.gpus = "0"
             args.max_gpu_memory = "20GiB"
             args.load_8bit = False
             args.cpu_offloading = None
@@ -163,6 +163,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.awq_wbits = 16
             args.awq_groupsize = -1
             args.num_gpus = 1
+            # args.model_names = ["/data/Code/yuxuan/LLaMA-Efficient-Tuning/output_0927-Qwen_peft"]
             args.model_names = []
             args.conv_template = None
             args.limit_worker_concurrency = 5

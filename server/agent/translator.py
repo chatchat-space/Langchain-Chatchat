@@ -23,13 +23,18 @@ ${{翻译结果}}
 ```
 答案: ${{答案}}
 
-以下是一个例子
+以下是两个例子
 问题: 翻译13成英语
 ```text
-13 English
+13 英语
 ```output
 thirteen
-答案: thirteen
+以下是两个例子
+问题: 翻译 我爱你 成法语
+```text
+13 法语
+```output
+Je t'aime.
 '''
 
 PROMPT = PromptTemplate(
