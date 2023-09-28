@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from configs.model_config import (
+from configs import (
     KB_ROOT_PATH,
     SCORE_THRESHOLD,
     logger, log_verbose,
@@ -18,18 +18,21 @@ from server.utils import torch_gc
 class FaissKBService(KBService):
     vs_path: str
     kb_path: str
+    vector_name: str = "vector_store"
 
     def vs_type(self) -> str:
         return SupportedVSType.FAISS
 
     def get_vs_path(self):
-        return os.path.join(self.get_kb_path(), "vector_store")
+        return os.path.join(self.get_kb_path(), self.vector_name)
 
     def get_kb_path(self):
         return os.path.join(KB_ROOT_PATH, self.kb_name)
 
     def load_vector_store(self) -> ThreadSafeFaiss:
-        return kb_faiss_pool.load_vector_store(kb_name=self.kb_name, embed_model=self.embed_model)
+        return kb_faiss_pool.load_vector_store(kb_name=self.kb_name,
+                                               vector_name=self.vector_name,
+                                               embed_model=self.embed_model)
 
     def save_vector_store(self):
         self.load_vector_store().save(self.vs_path)

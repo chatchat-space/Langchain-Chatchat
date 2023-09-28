@@ -57,6 +57,25 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
+## 环境最低要求
+
+想顺利运行本代码，请按照以下的最低要求进行配置：
++ Python版本: >= 3.8.5, < 3.11
++ Cuda版本: >= 11.7, 且能顺利安装Python
+
+如果想要顺利在GPU运行本地模型(int4版本)，你至少需要以下的硬件配置:
+
++ chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
++ LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
++ Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
++ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
++ LLaMA-65B 最低显存要求: 40GB  推荐显卡：A100,A40,A6000
+
+如果是int8 则显存x1.5 fp16 x2.5的要求
+如：使用fp16 推理Qwen-7B-Chat 模型 则需要使用16GB显存。
+
+以上仅为估算，实际情况以nvidia-smi占用为准。
+
 ## 变更日志
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
@@ -112,27 +131,29 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [WizardLM/WizardCoder-15B-V1.0](https://huggingface.co/WizardLM/WizardCoder-15B-V1.0)
 - [baichuan-inc/baichuan-7B](https://huggingface.co/baichuan-inc/baichuan-7B)
 - [internlm/internlm-chat-7b](https://huggingface.co/internlm/internlm-chat-7b)
-- [Qwen/Qwen-7B-Chat](https://huggingface.co/Qwen/Qwen-7B-Chat)
+- [Qwen/Qwen-7B-Chat/Qwen-14B-Chat](https://huggingface.co/Qwen/)
 - [HuggingFaceH4/starchat-beta](https://huggingface.co/HuggingFaceH4/starchat-beta)
 - [FlagAlpha/Llama2-Chinese-13b-Chat](https://huggingface.co/FlagAlpha/Llama2-Chinese-13b-Chat) and others
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
 - [all models of OpenOrca](https://huggingface.co/Open-Orca)
 - [Spicyboros](https://huggingface.co/jondurbin/spicyboros-7b-2.2?not-for-all-audiences=true) + [airoboros 2.2](https://huggingface.co/jondurbin/airoboros-l2-13b-2.2)
 - [VMware&#39;s OpenLLaMa OpenInstruct](https://huggingface.co/VMware/open-llama-7b-open-instruct)
+- [baichuan2-7b/baichuan2-13b](https://huggingface.co/baichuan-inc)
 - 任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)
 - 在以上模型基础上训练的任何 [Peft](https://github.com/huggingface/peft) 适配器。为了激活，模型路径中必须有 `peft` 。注意：如果加载多个peft模型，你可以通过在任何模型工作器中设置环境变量 `PEFT_SHARE_BASE_WEIGHTS=true` 来使它们共享基础模型的权重。
 
 以上模型支持列表可能随 [FastChat](https://github.com/lm-sys/FastChat) 更新而持续更新，可参考 [FastChat 已支持模型列表](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)。
 
-
 除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的配置信息。
 
-在线 LLM 模型目前已支持： 
+在线 LLM 模型目前已支持：
+
 - [ChatGPT](https://api.openai.com)
 - [智谱AI](http://open.bigmodel.cn)
 - [MiniMax](https://api.minimax.chat)
 - [讯飞星火](https://xinghuo.xfyun.cn)
 - [百度千帆](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
+- [阿里云通义千问](https://dashscope.aliyun.com/)
 
 项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `LLM_MODEL` 进行修改。
 
@@ -157,9 +178,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-large-zh)
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
-项目中默认使用的 Embedding 类型为 `moka-ai/m3e-base`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
+项目中默认使用的 Embedding 类型为 `sensenova/piccolo-base-zh`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
 
 ---
 
@@ -187,15 +210,27 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
 
+## Agent生态
+### 基础的Agent
+在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
++ OpenAI GPT4
++ ChatGLM2-130B
+
+目前版本的Agent仍然需要对提示词进行大量调试，调试位置
+
+### 构建自己的Agent工具
+
+详见 [自定义Agent说明](docs/自定义Agent.md)
+
 ## Docker 部署
 
-🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)`
+🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)`
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
-- 该版本镜像大小 `35.3GB`，使用 `v0.2.3`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
+- 该版本镜像大小 `35.3GB`，使用 `v0.2.5`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
 - 该版本内置两个 `embedding` 模型：`m3e-large`，`text2vec-bge-large-chinese`，默认启用后者，内置 `chatglm2-6b-32k`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
 - 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver` 以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
@@ -391,8 +426,8 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
       - [X] .csv
       - [ ] .xlsx
     - [ ] 分词及召回
-      - [ ] 接入不同类型 TextSplitter
-      - [ ] 优化依据中文标点符号设计的 ChineseTextSplitter
+      - [X] 接入不同类型 TextSplitter
+      - [X] 优化依据中文标点符号设计的 ChineseTextSplitter
       - [ ] 重新实现上下文拼接召回
     - [ ] 本地网页接入
     - [ ] SQL 接入
@@ -400,13 +435,17 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
   - [X] 搜索引擎接入
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
-  - [ ] Agent 实现
+  - [X] Agent 实现
+    - [X] 基础React形式的Agent实现，包括调用计算器等
+    - [X] Langchain 自带的Agent实现和调用
+    - [ ] 更多模型的Agent支持
+    - [ ] 更多工具
 - [X] LLM 模型接入
   - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
-  - [ ] 支持 ChatGLM API 等 LLM API 的接入
+  - [X] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
   - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
-  - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
+  - [X] 支持 OpenAI Embedding API 等 Embedding API 的接入
 - [X] 基于 FastAPI 的 API 方式调用
 - [X] Web UI
   - [X] 基于 Streamlit 的 Web UI
@@ -417,4 +456,12 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 <img src="img/qr_code_64.jpg" alt="二维码" width="300" height="300" />
 
-🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+
+
+## 关注我们
+
+<img src="img/official_account.png" alt="图片" width="900" height="300" />
+🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+
+
