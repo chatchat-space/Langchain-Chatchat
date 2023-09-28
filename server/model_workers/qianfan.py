@@ -5,7 +5,7 @@ import sys
 import json
 import httpx
 from cachetools import cached, TTLCache
-from server.utils import get_model_worker_config
+from server.utils import get_model_worker_config, get_httpx_client
 from typing import List, Literal, Dict
 
 
@@ -54,7 +54,8 @@ def get_baidu_access_token(api_key: str, secret_key: str) -> str:
     url = "https://aip.baidubce.com/oauth/2.0/token"
     params = {"grant_type": "client_credentials", "client_id": api_key, "client_secret": secret_key}
     try:
-        return httpx.get(url, params=params).json().get("access_token")
+        with get_httpx_client() as client:
+            return client.get(url, params=params).json().get("access_token")
     except Exception as e:
         print(f"failed to get token from baidu: {e}")
 
@@ -72,7 +73,10 @@ def request_qianfan_api(
     version_url = config.get("version_url")
     access_token = get_baidu_access_token(config.get("api_key"), config.get("secret_key"))
     if not access_token:
-        raise RuntimeError(f"failed to get access token. have you set the correct api_key and secret key?")
+        yield {
+            "error_code": 403,
+            "error_msg": f"failed to get access token. have you set the correct api_key and secret key?",
+        }
 
     url = BASE_URL.format(
         model_version=version_url or MODEL_VERSIONS[version],
@@ -88,14 +92,15 @@ def request_qianfan_api(
         'Accept': 'application/json',
     }
 
-    with httpx.stream("POST", url, headers=headers, json=payload) as response:
-        for line in response.iter_lines():
-            if not line.strip():
-                continue
-            if line.startswith("data: "):
-                line = line[6:]
-            resp = json.loads(line)
-            yield resp
+    with get_httpx_client() as client:
+        with client.stream("POST", url, headers=headers, json=payload) as response:
+            for line in response.iter_lines():
+                if not line.strip():
+                    continue
+                if line.startswith("data: "):
+                    line = line[6:]
+                resp = json.loads(line)
+                yield resp
 
 
 class QianFanWorker(ApiModelWorker):
@@ -165,8 +170,8 @@ if __name__ == "__main__":
 
     worker = QianFanWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:20006",
+        worker_addr="http://127.0.0.1:21004"
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=20006)
+    uvicorn.run(app, port=21004)

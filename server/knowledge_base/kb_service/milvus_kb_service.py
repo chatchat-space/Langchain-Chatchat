@@ -7,7 +7,7 @@ from langchain.schema import Document
 from langchain.vectorstores import Milvus
 from sklearn.preprocessing import normalize
 
-from configs.model_config import SCORE_THRESHOLD, kbs_config
+from configs import SCORE_THRESHOLD, kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process
@@ -22,9 +22,9 @@ class MilvusKBService(KBService):
         from pymilvus import Collection
         return Collection(milvus_name)
 
-    def save_vector_store(self):
-        if self.milvus.col:
-            self.milvus.col.flush()
+    # def save_vector_store(self):
+    #     if self.milvus.col:
+    #         self.milvus.col.flush()
 
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         if self.milvus.col:

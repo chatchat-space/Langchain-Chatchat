@@ -1,14 +1,12 @@
 import streamlit as st
-from configs.server_config import FSCHAT_MODEL_WORKERS
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs.model_config import LLM_MODEL, TEMPERATURE
+from configs import LLM_MODEL, TEMPERATURE
 from server.utils import get_model_worker_config
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -18,30 +16,24 @@ chat_box = ChatBox(
 )
 
 
-def get_messages_history(history_len: int) -> List[Dict]:
+def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
+    '''
+    返回消息历史。
+    content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
+    '''
+
     def filter(msg):
-        '''
-        针对当前简单文本对话，只返回每条消息的第一个element的内容
-        '''
-        content = [x._content for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        if not content_in_expander:
+            content = [x for x in content if not x._in_expander]
+        content = [x.content for x in content]
+
         return {
             "role": msg["role"],
-            "content": content[0] if content else "",
+            "content": "\n\n".join(content),
         }
 
-    # workaround before upgrading streamlit-chatbox.
-    def stop(h):
-        return False
-
-    history = chat_box.filter_history(history_len=100000, filter=filter, stop=stop)
-    user_count = 0
-    i = 1
-    for i in range(1, len(history) + 1):
-        if history[-i]["role"] == "user":
-            user_count += 1
-            if user_count >= history_len:
-                break
-    return history[-i:]
+    return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
 def dialogue_page(api: ApiRequest):
@@ -63,6 +55,7 @@ def dialogue_page(api: ApiRequest):
                                      ["LLM 对话",
                                       "知识库问答",
                                       "搜索引擎问答",
+                                      "自定义Agent问答",
                                       ],
                                      index=1,
                                      on_change=on_mode_change,
@@ -71,8 +64,9 @@ def dialogue_page(api: ApiRequest):
 
         def on_llm_change():
             config = get_model_worker_config(llm_model)
-            if not config.get("online_api"): # 只有本地model_worker可以切换模型
+            if not config.get("online_api"):  # 只有本地model_worker可以切换模型
                 st.session_state["prev_llm_model"] = llm_model
+            st.session_state["cur_llm_model"] = st.session_state.llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
@@ -80,25 +74,32 @@ def dialogue_page(api: ApiRequest):
             return x
 
         running_models = api.list_running_models()
+        available_models = []
         config_models = api.list_config_models()
-        for x in running_models:
-            if x in config_models:
-                config_models.remove(x)
-        llm_models = running_models + config_models
-        cur_model = st.session_state.get("cur_llm_model", LLM_MODEL)
-        index = llm_models.index(cur_model)
+        for models in config_models.values():
+            for m in models:
+                if m not in running_models:
+                    available_models.append(m)
+        llm_models = running_models + available_models
+        index = llm_models.index(st.session_state.get("cur_llm_model", LLM_MODEL))
         llm_model = st.selectbox("选择LLM模型：",
-                                llm_models,
-                                index,
-                                format_func=llm_model_format_func,
-                                on_change=on_llm_change,
-                                # key="llm_model",
-                                )
+                                 llm_models,
+                                 index,
+                                 format_func=llm_model_format_func,
+                                 on_change=on_llm_change,
+                                 key="llm_model",
+                                 )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not get_model_worker_config(llm_model).get("online_api")):
+                and not get_model_worker_config(llm_model).get("online_api")
+                and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
-                r = api.change_llm_model(st.session_state.get("prev_llm_model"), llm_model)
-        st.session_state["cur_llm_model"] = llm_model
+                prev_model = st.session_state.get("prev_llm_model")
+                r = api.change_llm_model(prev_model, llm_model)
+                if msg := check_error_msg(r):
+                    st.error(msg)
+                elif msg := check_success_msg(r):
+                    st.success(msg)
+                    st.session_state["prev_llm_model"] = llm_model
 
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
         history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
@@ -143,17 +144,42 @@ def dialogue_page(api: ApiRequest):
             text = ""
             r = api.chat_chat(prompt, history=history, model=llm_model, temperature=temperature)
             for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
+                if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
                 text += t
                 chat_box.update_msg(text)
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+
+
+        elif dialogue_mode == "自定义Agent问答":
+            chat_box.ai_say([
+                f"正在思考和寻找工具 ...",])
+            text = ""
+            element_index = 0
+            for d in api.agent_chat(prompt,
+                                    history=history,
+                                    model=llm_model,
+                                    temperature=temperature):
+                try:
+                    d = json.loads(d)
+                except:
+                    pass
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=0)
+                elif chunk := d.get("tools"):
+                    element_index += 1
+                    chat_box.insert_msg(Markdown("...", in_expander=True, title="使用工具...", state="complete"))
+                    chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=element_index, streaming=False)
+            chat_box.update_msg(text, element_index=0, streaming=False)
         elif dialogue_mode == "知识库问答":
-            history = get_messages_history(history_len)
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",
-                Markdown("...", in_expander=True, title="知识库匹配结果"),
+                Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt,
@@ -173,12 +199,13 @@ def dialogue_page(api: ApiRequest):
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
-                Markdown("...", in_expander=True, title="网络搜索结果"),
+                Markdown("...", in_expander=True, title="网络搜索结果", state="complete"),
             ])
             text = ""
             for d in api.search_engine_chat(prompt,
                                             search_engine_name=search_engine,
                                             top_k=se_top_k,
+                                            history=history,
                                             model=llm_model,
                                             temperature=temperature):
                 if error_msg := check_error_msg(d):  # check whether error occured

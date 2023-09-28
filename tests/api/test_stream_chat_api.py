@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from configs.model_config import BING_SUBSCRIPTION_KEY
+from configs import BING_SUBSCRIPTION_KEY
 from server.utils import api_address
 
 from pprint import pprint
@@ -91,7 +91,7 @@ def test_knowledge_chat(api="/chat/knowledge_base_chat"):
     print("=" * 30 + api + "  output" + "="*30)
     for line in response.iter_content(None, decode_unicode=True):
         data = json.loads(line)
-        if "anser" in data:
+        if "answer" in data:
             print(data["answer"], end="", flush=True)
     assert "docs" in data and len(data["docs"]) > 0
     pprint(data["docs"])
@@ -114,7 +114,7 @@ def test_search_engine_chat(api="/chat/search_engine_chat"):
             assert data["msg"] == f"要使用Bing搜索引擎，需要设置 `BING_SUBSCRIPTION_KEY`"
 
         print("\n")
-        print("=" * 30 + api + " by {se}  output" + "="*30)
+        print("=" * 30 + api + f" by {se}  output" + "="*30)
         for line in response.iter_content(None, decode_unicode=True):
             data = json.loads(line)
             if "answer" in data:

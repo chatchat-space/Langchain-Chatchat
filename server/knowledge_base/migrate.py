@@ -1,9 +1,10 @@
-from configs.model_config import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
-                                  logger, log_verbose)
+from configs import (EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
+                     CHUNK_SIZE, OVERLAP_SIZE,
+                    logger, log_verbose)
 from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         list_files_from_folder,files2docs_in_thread,
                                         KnowledgeFile,)
-from server.knowledge_base.kb_service.base import KBServiceFactory, SupportedVSType
+from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import add_file_to_db
 from server.db.base import Base, engine
 import os
@@ -33,33 +34,23 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
 
 
 def folder2db(
-    kb_name: str,
-    mode: Literal["recreate_vs", "fill_info_only", "update_in_db", "increament"],
+    kb_names: List[str],
+    mode: Literal["recreate_vs", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
     embed_model: str = EMBEDDING_MODEL,
-    chunk_size: int = -1,
-    chunk_overlap: int = -1,
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = CHUNK_SIZE,
     zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
     use existed files in local folder to populate database and/or vector store.
     set parameter `mode` to:
         recreate_vs: recreate all vector store and fill info to database using existed files in local folder
-        fill_info_only: do not create vector store, fill info to db using existed files only
+        fill_info_only(disabled): do not create vector store, fill info to db using existed files only
         update_in_db: update vector store and database info using local files that existed in database only
         increament: create vector store and database info for local files that not existed in database only
     '''
-    kb = KBServiceFactory.get_service(kb_name, vs_type, embed_model)
-    kb.create_kb()
-
-    if mode == "recreate_vs":
-        files_count = kb.count_files()
-        print(f"知识库 {kb_name} 中共有 {files_count} 个文档。\n即将清除向量库。")
-        kb.clear_vs()
-        files_count = kb.count_files()
-        print(f"清理后，知识库 {kb_name} 中共有 {files_count} 个文档。")
-
-        kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
+    def files2vs(kb_name: str, kb_files: List[KnowledgeFile]):
         for success, result in files2docs_in_thread(kb_files,
                                                     chunk_size=chunk_size,
                                                     chunk_overlap=chunk_overlap,
@@ -68,84 +59,77 @@ def folder2db(
                 _, filename, docs = result
                 print(f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档")
                 kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
-                kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
+                kb_file.splited_docs = docs
+                kb.add_doc(kb_file=kb_file, not_refresh_vs_cache=True)
             else:
                 print(result)
-        kb.save_vector_store()
-    elif mode == "fill_info_only":
-        files = list_files_from_folder(kb_name)
-        kb_files = file_to_kbfile(kb_name, files)
 
-        for kb_file in kb_files:
-            add_file_to_db(kb_file)
-            print(f"已将 {kb_name}/{kb_file.filename} 添加到数据库")
-    elif mode == "update_in_db":
-        files = kb.list_files()
-        kb_files = file_to_kbfile(kb_name, files)
+    kb_names = kb_names or list_kbs_from_folder()
+    for kb_name in kb_names:
+        kb = KBServiceFactory.get_service(kb_name, vs_type, embed_model)
+        kb.create_kb()
 
-        for kb_file in kb_files:
-            kb.update_doc(kb_file, not_refresh_vs_cache=True)
-        kb.save_vector_store()
-    elif mode == "increament":
-        db_files = kb.list_files()
-        folder_files = list_files_from_folder(kb_name)
-        files = list(set(folder_files) - set(db_files))
-        kb_files = file_to_kbfile(kb_name, files)
+        # 清除向量库，从本地文件重建
+        if mode == "recreate_vs":
+            kb.clear_vs()
+            kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
+            files2vs(kb_name, kb_files)
+            kb.save_vector_store()
+        # # 不做文件内容的向量化，仅将文件元信息存到数据库
+        # # 由于现在数据库存了很多与文本切分相关的信息，单纯存储文件信息意义不大，该功能取消。
+        # elif mode == "fill_info_only":
+        #     files = list_files_from_folder(kb_name)
+        #     kb_files = file_to_kbfile(kb_name, files)
+        #     for kb_file in kb_files:
+        #         add_file_to_db(kb_file)
+        #         print(f"已将 {kb_name}/{kb_file.filename} 添加到数据库")
+        # 以数据库中文件列表为基准，利用本地文件更新向量库
+        elif mode == "update_in_db":
+            files = kb.list_files()
+            kb_files = file_to_kbfile(kb_name, files)
+            files2vs(kb_name, kb_files)
+            kb.save_vector_store()
+        # 对比本地目录与数据库中的文件列表，进行增量向量化
+        elif mode == "increament":
+            db_files = kb.list_files()
+            folder_files = list_files_from_folder(kb_name)
+            files = list(set(folder_files) - set(db_files))
+            kb_files = file_to_kbfile(kb_name, files)
+            files2vs(kb_name, kb_files)
+            kb.save_vector_store()
+        else:
+            print(f"unspported migrate mode: {mode}")
 
-        for success, result in files2docs_in_thread(kb_files,
-                                                    chunk_size=chunk_size,
-                                                    chunk_overlap=chunk_overlap,
-                                                    zh_title_enhance=zh_title_enhance):
-            if success:
-                _, filename, docs = result
-                print(f"正在将 {kb_name}/{filename} 添加到向量库")
-                kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
-                kb.add_doc(kb_file=kb_file, docs=docs, not_refresh_vs_cache=True)
-            else:
-                print(result)
-        kb.save_vector_store()
-    else:
-        print(f"unspported migrate mode: {mode}")
 
-
-def recreate_all_vs(
-    vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
-    embed_mode: str = EMBEDDING_MODEL,
-    **kwargs: Any,
-):
+def prune_db_docs(kb_names: List[str]):
     '''
-    used to recreate a vector store or change current vector store to another type or embed_model
+    delete docs in database that not existed in local folder.
+    it is used to delete database docs after user deleted some doc files in file browser
     '''
-    for kb_name in list_kbs_from_folder():
-        folder2db(kb_name, "recreate_vs", vs_type, embed_mode, **kwargs)
+    for kb_name in kb_names:
+        kb = KBServiceFactory.get_service_by_name(kb_name)
+        if kb and kb.exists():
+            files_in_db = kb.list_files()
+            files_in_folder = list_files_from_folder(kb_name)
+            files = list(set(files_in_db) - set(files_in_folder))
+            kb_files = file_to_kbfile(kb_name, files)
+            for kb_file in kb_files:
+                kb.delete_doc(kb_file, not_refresh_vs_cache=True)
+                print(f"success to delete docs for file: {kb_name}/{kb_file.filename}")
+            kb.save_vector_store()
 
 
-def prune_db_files(kb_name: str):
-    '''
-    delete files in database that not existed in local folder.
-    it is used to delete database files after user deleted some doc files in file browser
-    '''
-    kb = KBServiceFactory.get_service_by_name(kb_name)
-    if kb.exists():
-        files_in_db = kb.list_files()
-        files_in_folder = list_files_from_folder(kb_name)
-        files = list(set(files_in_db) - set(files_in_folder))
-        kb_files = file_to_kbfile(kb_name, files)
-        for kb_file in kb_files:
-            kb.delete_doc(kb_file, not_refresh_vs_cache=True)
-        kb.save_vector_store()
-        return kb_files
-
-def prune_folder_files(kb_name: str):
+def prune_folder_files(kb_names: List[str]):
     '''
     delete doc files in local folder that not existed in database.
     is is used to free local disk space by delete unused doc files.
     '''
-    kb = KBServiceFactory.get_service_by_name(kb_name)
-    if kb.exists():
-        files_in_db = kb.list_files()
-        files_in_folder = list_files_from_folder(kb_name)
-        files = list(set(files_in_folder) - set(files_in_db))
-        for file in files:
-            os.remove(get_file_path(kb_name, file))
-        return files
+    for kb_name in kb_names:
+        kb = KBServiceFactory.get_service_by_name(kb_name)
+        if kb and kb.exists():
+            files_in_db = kb.list_files()
+            files_in_folder = list_files_from_folder(kb_name)
+            files = list(set(files_in_folder) - set(files_in_db))
+            for file in files:
+                os.remove(get_file_path(kb_name, file))
+                print(f"success to delete file: {kb_name}/{file}")

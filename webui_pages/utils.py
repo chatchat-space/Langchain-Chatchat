@@ -1,12 +1,11 @@
 # 该文件包含webui通用工具，可以被不同的webui使用
 from typing import *
 from pathlib import Path
-from configs.model_config import (
+from configs import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
     LLM_MODEL,
-    llm_model_dict,
     HISTORY_LEN,
     TEMPERATURE,
     SCORE_THRESHOLD,
@@ -15,9 +14,10 @@ from configs.model_config import (
     ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
+    FSCHAT_MODEL_WORKERS,
+    HTTPX_DEFAULT_TIMEOUT,
     logger, log_verbose,
 )
-from configs.server_config import HTTPX_DEFAULT_TIMEOUT
 import httpx
 import asyncio
 from server.chat.openai_chat import OpenAiChatMsgIn
@@ -26,7 +26,7 @@ import contextlib
 import json
 import os
 from io import BytesIO
-from server.utils import run_async, iter_over_async, set_httpx_timeout, api_address
+from server.utils import run_async, iter_over_async, set_httpx_config, api_address, get_httpx_client
 
 from configs.model_config import NLTK_DATA_PATH
 import nltk
@@ -35,7 +35,7 @@ from pprint import pprint
 
 
 KB_ROOT_PATH = Path(KB_ROOT_PATH)
-set_httpx_timeout()
+set_httpx_config()
 
 
 class ApiRequest:
@@ -53,6 +53,8 @@ class ApiRequest:
         self.base_url = base_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
+        self._client = get_httpx_client()
+        self._aclient = get_httpx_client(use_async=True)
         if no_remote_api:
             logger.warn("将来可能取消对no_remote_api的支持，更新版本时请注意。")
 
@@ -79,9 +81,9 @@ class ApiRequest:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("GET", url, params=params, **kwargs)
+                    return self._client.stream("GET", url, params=params, **kwargs)
                 else:
-                    return httpx.get(url, params=params, **kwargs)
+                    return self._client.get(url, params=params, **kwargs)
             except Exception as e:
                 msg = f"error when get {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -98,18 +100,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("GET", url, params=params, **kwargs)
-                    else:
-                        return await client.get(url, params=params, **kwargs)
-                except Exception as e:
-                    msg = f"error when aget {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._aclient.stream("GET", url, params=params, **kwargs)
+                else:
+                    return await self._aclient.get(url, params=params, **kwargs)
+            except Exception as e:
+                msg = f"error when aget {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def post(
         self,
@@ -124,11 +126,10 @@ class ApiRequest:
         kwargs.setdefault("timeout", self.timeout)
         while retry > 0:
             try:
-                # return requests.post(url, data=data, json=json, stream=stream, **kwargs)
                 if stream:
-                    return httpx.stream("POST", url, data=data, json=json, **kwargs)
+                    return self._client.stream("POST", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.post(url, data=data, json=json, **kwargs)
+                    return self._client.post(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when post {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -146,18 +147,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("POST", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.post(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    msg = f"error when apost {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._client.stream("POST", url, data=data, json=json, **kwargs)
+                else:
+                    return await self._client.post(url, data=data, json=json, **kwargs)
+            except Exception as e:
+                msg = f"error when apost {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def delete(
         self,
@@ -173,9 +174,9 @@ class ApiRequest:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("DELETE", url, data=data, json=json, **kwargs)
+                    return self._client.stream("DELETE", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.delete(url, data=data, json=json, **kwargs)
+                    return self._client.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when delete {url}: {e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',
@@ -193,18 +194,18 @@ class ApiRequest:
     ) -> Union[httpx.Response, None]:
         url = self._parse_url(url)
         kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("DELETE", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.delete(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    msg = f"error when adelete {url}: {e}"
-                    logger.error(f'{e.__class__.__name__}: {msg}',
-                                 exc_info=e if log_verbose else None)
-                    retry -= 1
+
+        while retry > 0:
+            try:
+                if stream:
+                    return await self._aclient.stream("DELETE", url, data=data, json=json, **kwargs)
+                else:
+                    return await self._aclient.delete(url, data=data, json=json, **kwargs)
+            except Exception as e:
+                msg = f"error when adelete {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                retry -= 1
 
     def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
         '''
@@ -315,10 +316,46 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "llm_chat",
         no_remote_api: bool = None,
     ):
         '''
         对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "prompt_name": prompt_name,
+        }
+
+        print(f"received input message:")
+        pprint(data)
+
+        if no_remote_api:
+            from server.chat.chat import chat
+            response = run_async(chat(**data))
+            return self._fastapi_stream2generator(response)
+        else:
+            response = self.post("/chat/chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
+
+    def agent_chat(
+            self,
+            query: str,
+            history: List[Dict] = [],
+            stream: bool = True,
+            model: str = LLM_MODEL,
+            temperature: float = TEMPERATURE,
+            no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/agent_chat 接口
         '''
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
@@ -335,11 +372,11 @@ class ApiRequest:
         pprint(data)
 
         if no_remote_api:
-            from server.chat.chat import chat
-            response = run_async(chat(**data))
+            from server.chat.agent_chat import agent_chat
+            response = run_async(agent_chat(**data))
             return self._fastapi_stream2generator(response)
         else:
-            response = self.post("/chat/chat", json=data, stream=True)
+            response = self.post("/chat/agent_chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
 
     def knowledge_base_chat(
@@ -352,6 +389,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -370,6 +408,7 @@ class ApiRequest:
             "model_name": model,
             "temperature": temperature,
             "local_doc_url": no_remote_api,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -392,9 +431,11 @@ class ApiRequest:
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
+        history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
         '''
@@ -407,9 +448,11 @@ class ApiRequest:
             "query": query,
             "search_engine_name": search_engine_name,
             "top_k": top_k,
+            "history": history,
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -766,20 +809,31 @@ class ApiRequest:
             "controller_address": controller_address,
         }
         if no_remote_api:
-            from server.llm_api import list_llm_models
-            return list_llm_models(**data).data
+            from server.llm_api import list_running_models
+            return list_running_models(**data).data
         else:
             r = self.post(
-                "/llm_model/list_models",
+                "/llm_model/list_running_models",
                 json=data,
             )
             return r.json().get("data", [])
 
-    def list_config_models(self):
+    def list_config_models(self, no_remote_api: bool = None) -> Dict[str, List[str]]:
         '''
-        获取configs中配置的模型列表
+        获取configs中配置的模型列表，返回形式为{"type": [model_name1, model_name2, ...], ...}。
+        如果no_remote_api=True, 从运行ApiRequest的机器上获取；否则从运行api.py的机器上获取。
         '''
-        return list(llm_model_dict.keys())
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        if no_remote_api:
+            from server.llm_api import list_config_models
+            return list_config_models().data
+        else:
+            r = self.post(
+                "/llm_model/list_config_models",
+            )
+            return r.json().get("data", {})
 
     def stop_llm_model(
         self,
@@ -825,13 +879,13 @@ class ApiRequest:
         if not model_name or not new_model_name:
             return
 
-        if new_model_name == model_name:
+        running_models = self.list_running_models()
+        if new_model_name == model_name or new_model_name in running_models:
             return {
                 "code": 200,
-                "msg": "什么都不用做"
+                "msg": "无需切换"
             }
 
-        running_models = self.list_running_models()
         if model_name not in running_models:
             return {
                 "code": 500,
@@ -839,7 +893,7 @@ class ApiRequest:
             }
 
         config_models = self.list_config_models()
-        if new_model_name not in config_models:
+        if new_model_name not in config_models.get("local", []):
             return {
                 "code": 500,
                 "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"

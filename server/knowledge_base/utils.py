@@ -2,18 +2,17 @@ import os
 
 from transformers import AutoTokenizer
 
-from configs.model_config import (
+from configs import (
     EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger, 
-    log_verbose, 
-    text_splitter_dict, 
-    llm_model_dict, 
-    LLM_MODEL, 
-    TEXT_SPLITTER
+    logger,
+    log_verbose,
+    text_splitter_dict,
+    LLM_MODEL,
+    TEXT_SPLITTER_NAME,
 )
 import importlib
 from text_splitter import zh_title_enhance as func_zh_title_enhance
@@ -23,9 +22,10 @@ from langchain.text_splitter import TextSplitter
 from pathlib import Path
 import json
 from concurrent.futures import ThreadPoolExecutor
-from server.utils import run_in_thread_pool, embedding_device
+from server.utils import run_in_thread_pool, embedding_device, get_model_worker_config
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
+import chardet
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -43,8 +43,8 @@ def get_doc_path(knowledge_base_name: str):
     return os.path.join(get_kb_path(knowledge_base_name), "content")
 
 
-def get_vs_path(knowledge_base_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), "vector_store")
+def get_vs_path(knowledge_base_name: str, vector_name: str):
+    return os.path.join(get_kb_path(knowledge_base_name), vector_name)
 
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
@@ -167,7 +167,14 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     if loader_name == "UnstructuredFileLoader":
         loader = DocumentLoader(file_path_or_content, autodetect_encoding=True)
     elif loader_name == "CSVLoader":
-        loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+        # 自动识别文件编码类型，避免langchain loader 加载文件报编码错误
+        with open(file_path_or_content, 'rb') as struct_file:
+            encode_detect = chardet.detect(struct_file.read())
+        if encode_detect:
+            loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+        else:
+            loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+
     elif loader_name == "JSONLoader":
         loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
     elif loader_name == "CustomJSONLoader":
@@ -182,9 +189,10 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = TEXT_SPLITTER,
+    splitter_name: str = TEXT_SPLITTER_NAME,
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = OVERLAP_SIZE,
+    llm_model: str = LLM_MODEL,
 ):
     """
     根据参数获取特定的分词器
@@ -220,8 +228,9 @@ def make_text_splitter(
                     )
             elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
+                    config = get_model_worker_config(llm_model)
                     text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
-                        llm_model_dict[LLM_MODEL]["local_model_path"]
+                        config.get("model_path")
 
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast
@@ -273,7 +282,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-        self.text_splitter_name = TEXT_SPLITTER
+        self.text_splitter_name = TEXT_SPLITTER_NAME
 
     def file2docs(self, refresh: bool=False):
         if self.docs is None or refresh:
@@ -364,18 +373,23 @@ def files2docs_in_thread(
     kwargs_list = []
     for i, file in enumerate(files):
         kwargs = {}
-        if isinstance(file, tuple) and len(file) >= 2:
-            file = KnowledgeFile(filename=file[0], knowledge_base_name=file[1])
-        elif isinstance(file, dict):
-            filename = file.pop("filename")
-            kb_name = file.pop("kb_name")
-            kwargs = file
-            file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
-        kwargs["file"] = file
-        kwargs["chunk_size"] = chunk_size
-        kwargs["chunk_overlap"] = chunk_overlap
-        kwargs["zh_title_enhance"] = zh_title_enhance
-        kwargs_list.append(kwargs)
+        try:
+            if isinstance(file, tuple) and len(file) >= 2:
+                filename=file[0]
+                kb_name=file[1]
+                file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+            elif isinstance(file, dict):
+                filename = file.pop("filename")
+                kb_name = file.pop("kb_name")
+                kwargs.update(file)
+                file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+            kwargs["file"] = file
+            kwargs["chunk_size"] = chunk_size
+            kwargs["chunk_overlap"] = chunk_overlap
+            kwargs["zh_title_enhance"] = zh_title_enhance
+            kwargs_list.append(kwargs)
+        except Exception as e:
+            yield False, (kb_name, filename, str(e))
 
     for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
         yield result

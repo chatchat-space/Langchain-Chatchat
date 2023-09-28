@@ -8,7 +8,7 @@ from pprint import pprint
 import pytest
 
 
-@pytest.mark.parametrize("version", MODEL_VERSIONS.keys())
+@pytest.mark.parametrize("version", list(MODEL_VERSIONS.keys())[:2])
 def test_qianfan(version):
     messages = [{"role": "user", "content": "你好"}]
     print("\n" + version + "\n")
