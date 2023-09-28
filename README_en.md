@@ -68,7 +68,7 @@ If you want to run the native model (int4 version) on the GPU without problems, 
 + LLaMA-13B Minimum graphics memory requirement: 11GB Recommended cards: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
 + Qwen-14B-Chat Minimum memory requirement: 13GB Recommended graphics card: RTX 3090
 + LLaMA-30B Minimum Memory Requirement: 22GB Recommended Cards: RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
-+ Minimum memory requirement for LLaMA-65B: 22GB Recommended cards: A100,A40,A6000
++ Minimum memory requirement for LLaMA-65B: 40GB Recommended cards: A100,A40,A6000
 
 If int8 then memory x1.5 fp16 x2.5 requirement.
 For example: using fp16 to reason about the Qwen-7B-Chat model requires 16GB of video memory.
