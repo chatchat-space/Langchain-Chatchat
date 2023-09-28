@@ -370,7 +370,7 @@ Please refer to [FAQ](docs/FAQ.md)
     - [ ] Structured documents
       - [X] .csv
       - [ ] .xlsx
-    - [ ] TextSplitter and Retriever
+    - [] TextSplitter and Retriever
       - [X] multiple TextSplitter
       - [X] ChineseTextSplitter
       - [ ] Reconstructed Context Retriever
@@ -380,16 +380,30 @@ Please refer to [FAQ](docs/FAQ.md)
   - [X] Search Engines
     - [X] Bing
     - [X] DuckDuckGo
-  - [ ] Agent
+  - [X] Agent
+    - [X] Agent implementation in the form of basic React, including calls to calculators, etc.
+    - [X] Langchain's own Agent implementation and calls
+    - [ ] More Agent support for models
+    - [ ] More tools
 - [X] LLM  Models
-
   - [X] [FastChat](https://github.com/lm-sys/fastchat) -based LLM Models
   - [ ] Mutiply Remote LLM API
 - [X] Embedding Models
-
   - [X] HuggingFace -based Embedding models
   - [ ] Mutiply Remote Embedding API
 - [X] FastAPI-based API
 - [X] Web UI
-
   - [X] Streamlit -based Web UI
+
+---
+
+## Wechat Group
+
+<img src="img/qr_code_64.jpg" alt="QR Code" width="300" height="300" />
+
+🎉 langchain-Chatchat project WeChat exchange group, if you are also interested in this project, welcome to join the group chat to participate in the discussion and exchange.
+
+## Follow us
+
+<img src="img/official_account.png" alt="image" width="900" height="300" />
+🎉 langchain-Chatchat project official public number, welcome to scan the code to follow.
