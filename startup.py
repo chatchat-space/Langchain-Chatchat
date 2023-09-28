@@ -96,6 +96,10 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     # 本地模型
     else:
         from configs.model_config import VLLM_MODEL_DICT
+
+        args.num_gpus = 1  # GPU的数量，有几个GPU就设置为几
+        args.gpus = "0"  # GPU的编号，如果有多个GPU，可以设置为"0,1,2,3"
+
         if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
             import fastchat.serve.vllm_worker
             from fastchat.serve.vllm_worker import VLLMWorker,app
@@ -121,7 +125,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.conv_template = None
             args.limit_worker_concurrency = 5
             args.no_register = False
-            args.num_gpus = 1
             args.engine_use_ray = False
             args.disable_log_requests = False
             if args.model_path:
@@ -151,7 +154,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             
         else:
             from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
-            args.gpus = "0"
+
             args.max_gpu_memory = "20GiB"
             args.load_8bit = False
             args.cpu_offloading = None
@@ -162,8 +165,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.awq_ckpt = None
             args.awq_wbits = 16
             args.awq_groupsize = -1
-            args.num_gpus = 1
-            # args.model_names = ["/data/Code/yuxuan/LLaMA-Efficient-Tuning/output_0927-Qwen_peft"]
             args.model_names = []
             args.conv_template = None
             args.limit_worker_concurrency = 5
