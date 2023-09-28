@@ -91,7 +91,7 @@ def test_knowledge_chat(api="/chat/knowledge_base_chat"):
     print("=" * 30 + api + "  output" + "="*30)
     for line in response.iter_content(None, decode_unicode=True):
         data = json.loads(line)
-        if "anser" in data:
+        if "answer" in data:
             print(data["answer"], end="", flush=True)
     assert "docs" in data and len(data["docs"]) > 0
     pprint(data["docs"])
