@@ -17,12 +17,21 @@ except:
     pass
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import EMBEDDING_MODEL, llm_model_dict, LLM_MODEL, LOG_PATH, \
-    logger, log_verbose, TEXT_SPLITTER
-from configs.server_config import (WEBUI_SERVER, API_SERVER, FSCHAT_CONTROLLER,
-                                   FSCHAT_OPENAI_API, HTTPX_DEFAULT_TIMEOUT)
+from configs import (
+    LOG_PATH,
+    log_verbose,
+    logger,
+    LLM_MODEL,
+    EMBEDDING_MODEL,
+    TEXT_SPLITTER_NAME,
+    FSCHAT_CONTROLLER,
+    FSCHAT_OPENAI_API,
+    API_SERVER,
+    WEBUI_SERVER,
+    HTTPX_DEFAULT_TIMEOUT,
+)
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                          fschat_openai_api_address, set_httpx_timeout,
+                          fschat_openai_api_address, set_httpx_config, get_httpx_client,
                           get_model_worker_config, get_all_model_worker_configs,
                           MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 import argparse
@@ -49,112 +58,162 @@ def create_controller_app(
 
 
 def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
+    """
+    kwargs包含的字段如下：
+    host:
+    port:
+    model_names:[`model_name`]
+    controller_address:
+    worker_address:
+
+
+    对于online_api:
+        online_api:True
+        worker_class: `provider`
+    对于离线模型：
+        model_path: `model_name_or_path`,huggingface的repo-id或本地路径
+        device:`LLM_DEVICE`
+    """
     import fastchat.constants
     fastchat.constants.LOGDIR = LOG_PATH
-    from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker, worker_id, logger
+    from fastchat.serve.model_worker import worker_id, logger
     import argparse
-    import threading
-    import fastchat.serve.model_worker
     logger.setLevel(log_level)
-
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def _new_init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
-
-    ModelWorker.init_heart_beat = _new_init_heart_beat
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args([])
-    # default args. should be deleted after pr is merged by fastchat
-    args.gpus = None
-    args.max_gpu_memory = "20GiB"
-    args.load_8bit = False
-    args.cpu_offloading = None
-    args.gptq_ckpt = None
-    args.gptq_wbits = 16
-    args.gptq_groupsize = -1
-    args.gptq_act_order = False
-    args.awq_ckpt = None
-    args.awq_wbits = 16
-    args.awq_groupsize = -1
-    args.num_gpus = 1
-    args.model_names = []
-    args.conv_template = None
-    args.limit_worker_concurrency = 5
-    args.stream_interval = 2
-    args.no_register = False
-    args.embed_in_truncate = False
 
     for k, v in kwargs.items():
         setattr(args, k, v)
 
-    if args.gpus:
-        if args.num_gpus is None:
-            args.num_gpus = len(args.gpus.split(','))
-        if len(args.gpus.split(",")) < args.num_gpus:
-            raise ValueError(
-                f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
-            )
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
-
     # 在线模型API
     if worker_class := kwargs.get("worker_class"):
+        from fastchat.serve.model_worker import app
         worker = worker_class(model_names=args.model_names,
                               controller_addr=args.controller_address,
                               worker_addr=args.worker_address)
+        sys.modules["fastchat.serve.model_worker"].worker = worker
     # 本地模型
     else:
-        # workaround to make program exit with Ctrl+c
-        # it should be deleted after pr is merged by fastchat
-        def _new_init_heart_beat(self):
-            self.register_to_controller()
-            self.heart_beat_thread = threading.Thread(
-                target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
+        from configs.model_config import VLLM_MODEL_DICT
+        if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+            import fastchat.serve.vllm_worker
+            from fastchat.serve.vllm_worker import VLLMWorker,app
+            from vllm import AsyncLLMEngine
+            from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs
+            args.tokenizer = args.model_path # 如果tokenizer与model_path不一致在此处添加
+            args.tokenizer_mode = 'auto'
+            args.trust_remote_code= True
+            args.download_dir= None
+            args.load_format = 'auto'
+            args.dtype = 'auto'
+            args.seed = 0
+            args.worker_use_ray = False
+            args.pipeline_parallel_size = 1
+            args.tensor_parallel_size = 1
+            args.block_size = 16
+            args.swap_space = 4  # GiB
+            args.gpu_memory_utilization = 0.90
+            args.max_num_batched_tokens = 2560
+            args.max_num_seqs = 256
+            args.disable_log_stats = False
+            args.conv_template = None
+            args.limit_worker_concurrency = 5
+            args.no_register = False
+            args.num_gpus = 1 # vllm worker的切分是tensor并行，这里填写显卡的数量
+            args.engine_use_ray = False
+            args.disable_log_requests = False
+            if args.model_path:
+                args.model = args.model_path
+            if args.num_gpus > 1:
+                args.tensor_parallel_size = args.num_gpus
+
+            for k, v in kwargs.items():
+                setattr(args, k, v)
+
+            engine_args = AsyncEngineArgs.from_cli_args(args)
+            engine = AsyncLLMEngine.from_engine_args(engine_args)
+
+            worker = VLLMWorker(
+                        controller_addr = args.controller_address,
+                        worker_addr = args.worker_address,
+                        worker_id = worker_id,
+                        model_path = args.model_path,
+                        model_names = args.model_names,
+                        limit_worker_concurrency = args.limit_worker_concurrency,
+                        no_register = args.no_register,
+                        llm_engine =  engine,
+                        conv_template = args.conv_template,
+                        )
+            sys.modules["fastchat.serve.vllm_worker"].engine = engine
+            sys.modules["fastchat.serve.vllm_worker"].worker = worker
+
+        else:
+            from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
+            args.gpus = "0" # GPU的编号,如果有多个GPU，可以设置为"0,1,2,3"
+            args.max_gpu_memory = "20GiB"
+            args.num_gpus = 1  # model worker的切分是model并行，这里填写显卡的数量
+
+            args.load_8bit = False
+            args.cpu_offloading = None
+            args.gptq_ckpt = None
+            args.gptq_wbits = 16
+            args.gptq_groupsize = -1
+            args.gptq_act_order = False
+            args.awq_ckpt = None
+            args.awq_wbits = 16
+            args.awq_groupsize = -1
+            args.model_names = []
+            args.conv_template = None
+            args.limit_worker_concurrency = 5
+            args.stream_interval = 2
+            args.no_register = False
+            args.embed_in_truncate = False
+            for k, v in kwargs.items():
+                setattr(args, k, v)
+            if args.gpus:
+                if args.num_gpus is None:
+                    args.num_gpus = len(args.gpus.split(','))
+                if len(args.gpus.split(",")) < args.num_gpus:
+                    raise ValueError(
+                        f"Larger --num-gpus ({args.num_gpus}) than --gpus {args.gpus}!"
+                    )
+                os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
+            gptq_config = GptqConfig(
+                ckpt=args.gptq_ckpt or args.model_path,
+                wbits=args.gptq_wbits,
+                groupsize=args.gptq_groupsize,
+                act_order=args.gptq_act_order,
             )
-            self.heart_beat_thread.start()
+            awq_config = AWQConfig(
+                ckpt=args.awq_ckpt or args.model_path,
+                wbits=args.awq_wbits,
+                groupsize=args.awq_groupsize,
+            )
 
-        ModelWorker.init_heart_beat = _new_init_heart_beat
+            worker = ModelWorker(
+                controller_addr=args.controller_address,
+                worker_addr=args.worker_address,
+                worker_id=worker_id,
+                model_path=args.model_path,
+                model_names=args.model_names,
+                limit_worker_concurrency=args.limit_worker_concurrency,
+                no_register=args.no_register,
+                device=args.device,
+                num_gpus=args.num_gpus,
+                max_gpu_memory=args.max_gpu_memory,
+                load_8bit=args.load_8bit,
+                cpu_offloading=args.cpu_offloading,
+                gptq_config=gptq_config,
+                awq_config=awq_config,
+                stream_interval=args.stream_interval,
+                conv_template=args.conv_template,
+                embed_in_truncate=args.embed_in_truncate,
+            )
+            sys.modules["fastchat.serve.model_worker"].args = args
+            sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
 
-        gptq_config = GptqConfig(
-            ckpt=args.gptq_ckpt or args.model_path,
-            wbits=args.gptq_wbits,
-            groupsize=args.gptq_groupsize,
-            act_order=args.gptq_act_order,
-        )
-        awq_config = AWQConfig(
-            ckpt=args.awq_ckpt or args.model_path,
-            wbits=args.awq_wbits,
-            groupsize=args.awq_groupsize,
-        )
-
-        worker = ModelWorker(
-            controller_addr=args.controller_address,
-            worker_addr=args.worker_address,
-            worker_id=worker_id,
-            model_path=args.model_path,
-            model_names=args.model_names,
-            limit_worker_concurrency=args.limit_worker_concurrency,
-            no_register=args.no_register,
-            device=args.device,
-            num_gpus=args.num_gpus,
-            max_gpu_memory=args.max_gpu_memory,
-            load_8bit=args.load_8bit,
-            cpu_offloading=args.cpu_offloading,
-            gptq_config=gptq_config,
-            awq_config=awq_config,
-            stream_interval=args.stream_interval,
-            conv_template=args.conv_template,
-            embed_in_truncate=args.embed_in_truncate,
-        )
-        sys.modules["fastchat.serve.model_worker"].args = args
-        sys.modules["fastchat.serve.model_worker"].gptq_config = gptq_config
-
-    sys.modules["fastchat.serve.model_worker"].worker = worker
+            sys.modules["fastchat.serve.model_worker"].worker = worker
 
     MakeFastAPIOffline(app)
     app.title = f"FastChat LLM Server ({args.model_names[0]})"
@@ -194,7 +253,6 @@ def create_openai_api_app(
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
     @app.on_event("startup")
     async def on_startup():
-        set_httpx_timeout()
         if started_event is not None:
             started_event.set()
 
@@ -205,6 +263,8 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
     from fastapi import Body
     import time
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     app = create_controller_app(
         dispatch_method=FSCHAT_CONTROLLER.get("dispatch_method"),
@@ -216,7 +276,7 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
     @app.post("/release_worker")
     def release_worker(
             model_name: str = Body(..., description="要释放模型的名称", samples=["chatglm-6b"]),
-            # worker_address: str = Body(None, description="要释放模型的地址，与名称二选一", samples=[fschat_controller_address()]),
+            # worker_address: str = Body(None, description="要释放模型的地址，与名称二选一", samples=[FSCHAT_CONTROLLER_address()]),
             new_model_name: str = Body(None, description="释放后加载该模型"),
             keep_origin: bool = Body(False, description="不释放原模型，加载新模型")
     ) -> Dict:
@@ -242,15 +302,16 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
             logger.error(msg)
             return {"code": 500, "msg": msg}
 
-        r = httpx.post(worker_address + "/release",
-                       json={"new_model_name": new_model_name, "keep_origin": keep_origin})
-        if r.status_code != 200:
-            msg = f"failed to release model: {model_name}"
-            logger.error(msg)
-            return {"code": 500, "msg": msg}
+        with get_httpx_client() as client:
+            r = client.post(worker_address + "/release",
+                        json={"new_model_name": new_model_name, "keep_origin": keep_origin})
+            if r.status_code != 200:
+                msg = f"failed to release model: {model_name}"
+                logger.error(msg)
+                return {"code": 500, "msg": msg}
 
         if new_model_name:
-            timer = HTTPX_DEFAULT_TIMEOUT * 2  # wait for new model_worker register
+            timer = HTTPX_DEFAULT_TIMEOUT  # wait for new model_worker register
             while timer > 0:
                 models = app._controller.list_models()
                 if new_model_name in models:
@@ -290,6 +351,8 @@ def run_model_worker(
     import uvicorn
     from fastapi import Body
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     kwargs = get_model_worker_config(model_name)
     host = kwargs.pop("host")
@@ -297,7 +360,7 @@ def run_model_worker(
     kwargs["model_names"] = [model_name]
     kwargs["controller_address"] = controller_address or fschat_controller_address()
     kwargs["worker_address"] = fschat_model_worker_address(model_name)
-    model_path = kwargs.get("local_model_path", "")
+    model_path = kwargs.get("model_path", "")
     kwargs["model_path"] = model_path
 
     app = create_model_worker_app(log_level=log_level, **kwargs)
@@ -328,6 +391,8 @@ def run_model_worker(
 def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     import uvicorn
     import sys
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     controller_addr = fschat_controller_address()
     app = create_openai_api_app(controller_addr, log_level=log_level)  # TODO: not support keys yet.
@@ -344,6 +409,8 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
 def run_api_server(started_event: mp.Event = None):
     from server.api import create_app
     import uvicorn
+    from server.utils import set_httpx_config
+    set_httpx_config()
 
     app = create_app()
     _set_app_event(app, started_event)
@@ -355,6 +422,9 @@ def run_api_server(started_event: mp.Event = None):
 
 
 def run_webui(started_event: mp.Event = None):
+    from server.utils import set_httpx_config
+    set_httpx_config()
+
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
@@ -418,7 +488,7 @@ def parse_args() -> argparse.ArgumentParser:
         "-c",
         "--controller",
         type=str,
-        help="specify controller address the worker is registered to. default is server_config.FSCHAT_CONTROLLER",
+        help="specify controller address the worker is registered to. default is FSCHAT_CONTROLLER",
         dest="controller_address",
     )
     parser.add_argument(
@@ -470,19 +540,18 @@ def dump_server_info(after_start=False, args=None):
     if args and args.model_name:
         models = args.model_name
 
-    print(f"当前使用的分词器：{TEXT_SPLITTER}")
+    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
     print(f"当前启动的LLM模型：{models} @ {llm_device()}")
 
     for model in models:
-        pprint(llm_model_dict[model])
+        pprint(get_model_worker_config(model))
     print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
 
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
         if args.openai_api:
-            print(f"    OpenAI API Server: {fschat_openai_api_address()}/v1")
-            print("     (请确认llm_model_dict中配置的api_base_url与上面地址一致。)")
+            print(f"    OpenAI API Server: {fschat_openai_api_address()}")
         if args.api:
             print(f"    Chatchat  API  Server: {api_address()}")
         if args.webui:

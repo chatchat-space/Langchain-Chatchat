@@ -2,7 +2,7 @@ from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
 import json
-import httpx
+from server.utils import get_httpx_client
 from pprint import pprint
 from typing import List, Dict
 
@@ -63,22 +63,23 @@ class MiniMaxWorker(ApiModelWorker):
         }
         print("request data sent to minimax:")
         pprint(data)
-        response = httpx.stream("POST",
-                                self.BASE_URL.format(pro=pro, group_id=group_id),
-                                headers=headers,
-                                json=data)
-        with response as r:
-            text = ""
-            for e in r.iter_text():
-                if e.startswith("data: "): # 真是优秀的返回
-                    data = json.loads(e[6:])
-                    if not data.get("usage"):
-                        if choices := data.get("choices"):
-                            chunk = choices[0].get("delta", "").strip()
-                            if chunk:
-                                print(chunk)
-                                text += chunk
-                                yield json.dumps({"error_code": 0, "text": text}, ensure_ascii=False).encode() + b"\0"
+        with get_httpx_client() as client:
+            response = client.stream("POST",
+                                    self.BASE_URL.format(pro=pro, group_id=group_id),
+                                    headers=headers,
+                                    json=data)
+            with response as r:
+                text = ""
+                for e in r.iter_text():
+                    if e.startswith("data: "): # 真是优秀的返回
+                        data = json.loads(e[6:])
+                        if not data.get("usage"):
+                            if choices := data.get("choices"):
+                                chunk = choices[0].get("delta", "").strip()
+                                if chunk:
+                                    print(chunk)
+                                    text += chunk
+                                    yield json.dumps({"error_code": 0, "text": text}, ensure_ascii=False).encode() + b"\0"
     
     def get_embeddings(self, params):
         # TODO: 支持embeddings
@@ -93,8 +94,8 @@ if __name__ == "__main__":
 
     worker = MiniMaxWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:20004",
+        worker_addr="http://127.0.0.1:21002",
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=20003)
+    uvicorn.run(app, port=21002)

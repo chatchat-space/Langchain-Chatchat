@@ -4,14 +4,55 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs.model_config import LLM_MODEL, llm_model_dict, LLM_DEVICE, EMBEDDING_DEVICE, logger, log_verbose
-from configs.server_config import FSCHAT_MODEL_WORKERS
+from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
+                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL,
+                     logger, log_verbose,
+                    FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Literal, Optional, Callable, Generator, Dict, Any
+from langchain.chat_models import ChatOpenAI
+import httpx
+from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
 
 
 thread_pool = ThreadPoolExecutor(os.cpu_count())
+
+
+async def wrap_done(fn: Awaitable, event: asyncio.Event):
+    """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+    try:
+        await fn
+    except Exception as e:
+        # TODO: handle exception
+        msg = f"Caught exception: {e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
+    finally:
+        # Signal the aiter to stop.
+        event.set()
+
+
+def get_ChatOpenAI(
+    model_name: str,
+    temperature: float,
+    streaming: bool = True,
+    callbacks: List[Callable] = [],
+    verbose: bool = True,
+    **kwargs: Any,
+) -> ChatOpenAI:
+    config = get_model_worker_config(model_name)
+    model = ChatOpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        model_name=model_name,
+        temperature=temperature,
+        openai_proxy=config.get("openai_proxy"),
+        **kwargs
+    )
+    return model
 
 
 class BaseResponse(BaseModel):
@@ -197,22 +238,71 @@ def MakeFastAPIOffline(
             )
 
 
+# 从model_config中获取模型信息
+def list_embed_models() -> List[str]:
+    '''
+    get names of configured embedding models
+    '''
+    return list(MODEL_PATH["embed_model"])
+
+def list_llm_models() -> Dict[str, List[str]]:
+    '''
+    get names of configured llm models with different types.
+    return [(model_name, config_type), ...]
+    '''
+    workers = list(FSCHAT_MODEL_WORKERS)
+    if "default" in workers:
+        workers.remove("default")
+    return {
+        "local": list(MODEL_PATH["llm_model"]),
+        "online": list(ONLINE_LLM_MODEL),
+        "worker": workers,
+    }
+
+
+def get_model_path(model_name: str, type: str = None) -> Optional[str]:
+    if type in MODEL_PATH:
+        paths = MODEL_PATH[type]
+    else:
+        paths = {}
+        for v in MODEL_PATH.values():
+            paths.update(v)
+
+    if path_str := paths.get(model_name): # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
+        path = Path(path_str)
+        if path.is_dir(): # 任意绝对路径
+            return str(path)
+
+        root_path = Path(MODEL_ROOT_PATH)
+        if root_path.is_dir():
+            path = root_path / model_name
+            if path.is_dir(): # use key, {MODEL_ROOT_PATH}/chatglm-6b
+                return str(path)
+            path = root_path / path_str
+            if path.is_dir(): # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
+                return str(path)
+            path = root_path / path_str.split("/")[-1]
+            if path.is_dir(): # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
+                return str(path)
+        return path_str # THUDM/chatglm06b
+
+
 # 从server_config中获取服务信息
-def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
+def get_model_worker_config(model_name: str = None) -> dict:
     '''
     加载model worker的配置项。
-    优先级:FSCHAT_MODEL_WORKERS[model_name] > llm_model_dict[model_name] > FSCHAT_MODEL_WORKERS["default"]
+    优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
+    from configs.model_config import ONLINE_LLM_MODEL
     from configs.server_config import FSCHAT_MODEL_WORKERS
     from server import model_workers
-    from configs.model_config import llm_model_dict
 
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    config.update(llm_model_dict.get(model_name, {}))
+    config.update(ONLINE_LLM_MODEL.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
-    # 如果没有设置local_model_path，则认为是在线模型API
-    if not config.get("local_model_path"):
+    # 在线模型API
+    if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True
         if provider := config.get("provider"):
             try:
@@ -222,13 +312,14 @@ def get_model_worker_config(model_name: str = LLM_MODEL) -> dict:
                 logger.error(f'{e.__class__.__name__}: {msg}',
                              exc_info=e if log_verbose else None)
 
-    config["device"] = llm_device(config.get("device") or LLM_DEVICE)
+    config["model_path"] = get_model_path(model_name)
+    config["device"] = llm_device(config.get("device"))
     return config
 
 
 def get_all_model_worker_configs() -> dict:
     result = {}
-    model_names = set(llm_model_dict.keys()) | set(FSCHAT_MODEL_WORKERS.keys())
+    model_names = set(FSCHAT_MODEL_WORKERS.keys())
     for name in model_names:
         if name != "default":
             result[name] = get_model_worker_config(name)
@@ -256,7 +347,7 @@ def fschat_openai_api_address() -> str:
 
     host = FSCHAT_OPENAI_API["host"]
     port = FSCHAT_OPENAI_API["port"]
-    return f"http://{host}:{port}"
+    return f"http://{host}:{port}/v1"
 
 
 def api_address() -> str:
@@ -275,18 +366,73 @@ def webui_address() -> str:
     return f"http://{host}:{port}"
 
 
-def set_httpx_timeout(timeout: float = None):
+def get_prompt_template(name: str) -> Optional[str]:
     '''
-    设置httpx默认timeout。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
+    从prompt_config中加载模板内容
+    '''
+    from configs import prompt_config
+    import importlib
+    importlib.reload(prompt_config) # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+
+    return prompt_config.PROMPT_TEMPLATES.get(name)
+
+
+def set_httpx_config(
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        proxy: Union[str, Dict] = None,
+    ):
+    '''
+    设置httpx默认timeout。httpx默认timeout是5秒，在请求LLM回答时不够用。
+    将本项目相关服务加入无代理列表，避免fastchat的服务器请求错误。(windows下无效)
+    对于chatgpt等在线API，如要使用代理需要手动配置。搜索引擎的代理如何处置还需考虑。
     '''
     import httpx
-    from configs.server_config import HTTPX_DEFAULT_TIMEOUT
+    import os
 
-    timeout = timeout or HTTPX_DEFAULT_TIMEOUT
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
+
+    # 在进程范围内设置系统级代理
+    proxies = {}
+    if isinstance(proxy, str):
+        for n in ["http", "https", "all"]:
+            proxies[n + "_proxy"] = proxy
+    elif isinstance(proxy, dict):
+        for n in ["http", "https", "all"]:
+            if p:= proxy.get(n):
+                proxies[n + "_proxy"] = p
+            elif p:= proxy.get(n + "_proxy"):
+                proxies[n + "_proxy"] = p
+
+    for k, v in proxies.items():
+        os.environ[k] = v
+
+    # set host to bypass proxy
+    no_proxy = [x.strip() for x in os.environ.get("no_proxy", "").split(",") if x.strip()]
+    no_proxy += [
+        # do not use proxy for locahost
+        "http://127.0.0.1",
+        "http://localhost",
+    ]
+    # do not use proxy for user deployed fastchat servers
+    for x in [
+        fschat_controller_address(),
+        fschat_model_worker_address(),
+        fschat_openai_api_address(),
+    ]:
+        host = ":".join(x.split(":")[:2])
+        if host not in no_proxy:
+            no_proxy.append(host)
+    os.environ["NO_PROXY"] = ",".join(no_proxy)
+    
+    # TODO: 简单的清除系统代理不是个好的选择，影响太多。似乎修改代理服务器的bypass列表更好。
+    # patch requests to use custom proxies instead of system settings
+    # def _get_proxies():
+    #     return {}
+
+    # import urllib.request
+    # urllib.request.getproxies = _get_proxies
 
 
 # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
@@ -302,13 +448,15 @@ def detect_device() -> Literal["cuda", "mps", "cpu"]:
     return "cpu"
 
 
-def llm_device(device: str = LLM_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or LLM_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
 
 
-def embedding_device(device: str = EMBEDDING_DEVICE) -> Literal["cuda", "mps", "cpu"]:
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or EMBEDDING_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
@@ -332,4 +480,52 @@ def run_in_thread_pool(
 
     for obj in as_completed(tasks):
         yield obj.result()
+
+
+def get_httpx_client(
+    use_async: bool = False,
+    proxies: Union[str, Dict] = None,
+    timeout: float = HTTPX_DEFAULT_TIMEOUT,
+    **kwargs,
+) -> Union[httpx.Client, httpx.AsyncClient]:
+    '''
+    helper to get httpx client with default proxies that bypass local addesses.
+    '''
+    default_proxies = {
+        # do not use proxy for locahost
+        "all://127.0.0.1": None,
+        "all://localhost": None,
+    }
+    # do not use proxy for user deployed fastchat servers
+    for x in [
+        fschat_controller_address(),
+        fschat_model_worker_address(),
+        fschat_openai_api_address(),
+    ]:
+        host = ":".join(x.split(":")[:2])
+        default_proxies.update({host: None})
+
+    # get proxies from system envionrent
+    default_proxies.update({
+        "http://": os.environ.get("http_proxy"),
+        "https://": os.environ.get("https_proxy"),
+        "all://": os.environ.get("all_proxy"),
+    })
+    for host in os.environ.get("no_proxy", "").split(","):
+        if host := host.strip():
+            default_proxies.update({host: None})
+
+    # merge default proxies with user provided proxies
+    if isinstance(proxies, str):
+        proxies = {"all://": proxies}
+
+    if isinstance(proxies, dict):
+        default_proxies.update(proxies)
+
+    # construct Client
+    kwargs.update(timeout=timeout, proxies=default_proxies)
+    if use_async:
+        return httpx.AsyncClient(**kwargs)
+    else:
+        return httpx.Client(**kwargs)
 

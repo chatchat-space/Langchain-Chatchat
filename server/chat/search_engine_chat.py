@@ -1,14 +1,12 @@
 from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
-from configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
+from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, 
+                     LLM_MODEL, SEARCH_ENGINE_TOP_K, TEMPERATURE)
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
-from configs.model_config import (llm_model_dict, LLM_MODEL, SEARCH_ENGINE_TOP_K,
-                                  PROMPT_TEMPLATE, TEMPERATURE)
-from server.chat.utils import wrap_done
-from server.utils import BaseResponse
-from langchain.chat_models import ChatOpenAI
-from langchain import LLMChain
+from server.utils import wrap_done, get_ChatOpenAI
+from server.utils import BaseResponse, get_prompt_template
+from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
@@ -73,7 +71,8 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                                             ),
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
-                            temperature: float = Body(TEMPERATURE, description="LLM 采样温度", gt=0.0, le=1.0),
+                            temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
+                            prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -88,23 +87,20 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                           top_k: int,
                                           history: Optional[List[History]],
                                           model_name: str = LLM_MODEL,
+                                          prompt_name: str = prompt_name,
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callbacks=[callback],
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+        model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
+            callbacks=[callback],
         )
 
         docs = await lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
-        input_msg = History(role="user", content=PROMPT_TEMPLATE).to_msg_template(False)
+        prompt_template = get_prompt_template(prompt_name)
+        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
 
@@ -135,5 +131,10 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                              ensure_ascii=False)
         await task
 
-    return StreamingResponse(search_engine_chat_iterator(query, search_engine_name, top_k, history, model_name),
+    return StreamingResponse(search_engine_chat_iterator(query=query,
+                                                         search_engine_name=search_engine_name,
+                                                         top_k=top_k,
+                                                         history=history,
+                                                         model_name=model_name,
+                                                         prompt_name=prompt_name),
                              media_type="text/event-stream")

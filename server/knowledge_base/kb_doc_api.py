@@ -1,10 +1,10 @@
 import os
 import urllib
 from fastapi import File, Form, Body, Query, UploadFile
-from configs.model_config import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
-                                VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                                CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
-                                logger, log_verbose,)
+from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
+                    VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                    CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+                    logger, log_verbose,)
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder,get_file_path,
                                         files2docs_in_thread, KnowledgeFile)
@@ -122,10 +122,10 @@ def upload_docs(files: List[UploadFile] = File(..., description="上传文件，
                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
                 override: bool = Form(False, description="覆盖已有文件"),
                 to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
-                chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-                chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-                zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
-                docs: Json = Form({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+                chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+                chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+                zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+                docs: Json = Form({}, description="自定义的docs，需要转为json字符串", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
                 not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
                 ) -> BaseResponse:
     '''
@@ -205,12 +205,12 @@ def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
 
 def update_docs(
     knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
-    file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=["file_name"]),
+    file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),
     chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
-    docs: Json = Body({}, description="自定义的docs", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+    docs: Json = Body({}, description="自定义的docs，需要转为json字符串", examples=[{"test.txt": [Document(page_content="custom doc")]}]),
     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
     ) -> BaseResponse:
     '''
@@ -323,6 +323,7 @@ def recreate_vector_store(
     chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ):
     '''
     recreate vector store from the content.
@@ -366,5 +367,7 @@ def recreate_vector_store(
                         "msg": msg,
                     })
                 i += 1
+            if not not_refresh_vs_cache:
+                kb.save_vector_store()
 
     return StreamingResponse(output(), media_type="text/event-stream")
