@@ -373,18 +373,23 @@ def files2docs_in_thread(
     kwargs_list = []
     for i, file in enumerate(files):
         kwargs = {}
-        if isinstance(file, tuple) and len(file) >= 2:
-            file = KnowledgeFile(filename=file[0], knowledge_base_name=file[1])
-        elif isinstance(file, dict):
-            filename = file.pop("filename")
-            kb_name = file.pop("kb_name")
-            kwargs = file
-            file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
-        kwargs["file"] = file
-        kwargs["chunk_size"] = chunk_size
-        kwargs["chunk_overlap"] = chunk_overlap
-        kwargs["zh_title_enhance"] = zh_title_enhance
-        kwargs_list.append(kwargs)
+        try:
+            if isinstance(file, tuple) and len(file) >= 2:
+                filename=file[0]
+                kb_name=file[1]
+                file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+            elif isinstance(file, dict):
+                filename = file.pop("filename")
+                kb_name = file.pop("kb_name")
+                kwargs.update(file)
+                file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+            kwargs["file"] = file
+            kwargs["chunk_size"] = chunk_size
+            kwargs["chunk_overlap"] = chunk_overlap
+            kwargs["zh_title_enhance"] = zh_title_enhance
+            kwargs_list.append(kwargs)
+        except Exception as e:
+            yield False, (kb_name, filename, str(e))
 
     for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
         yield result
