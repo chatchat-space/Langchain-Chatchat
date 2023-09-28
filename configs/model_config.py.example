@@ -83,12 +83,14 @@ MODEL_PATH = {
         "opt-iml-max-30b":"facebook/opt-iml-max-30b",
 
         "Qwen-7B":"Qwen/Qwen-7B",
-        "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",  
+        "Qwen-14B":"Qwen/Qwen-14B",
+        "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
+        "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
     },
 }
 
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "m3e-base"
+EMBEDDING_MODEL = "piccolo-large-zh" # 最新的嵌入式sota模型
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
@@ -221,6 +223,8 @@ VLLM_MODEL_DICT = {
     "opt-iml-max-30b":"facebook/opt-iml-max-30b",
 
     "Qwen-7B":"Qwen/Qwen-7B",
-    "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",   
-   
+    "Qwen-14B":"Qwen/Qwen-14B",
+    "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
+    "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+
 }

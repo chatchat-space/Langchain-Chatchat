@@ -58,7 +58,7 @@ def create_controller_app(
 
 
 def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
-    """ 
+    """
     kwargs包含的字段如下：
     host:
     port:
@@ -66,7 +66,8 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     controller_address:
     worker_address:
 
-    对于online_api: 
+
+    对于online_api:
         online_api:True
         worker_class: `provider`
     对于离线模型：
@@ -77,7 +78,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     fastchat.constants.LOGDIR = LOG_PATH
     from fastchat.serve.model_worker import worker_id, logger
     import argparse
-    import fastchat.serve.model_worker
     logger.setLevel(log_level)
 
     parser = argparse.ArgumentParser()
@@ -101,7 +101,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             from fastchat.serve.vllm_worker import VLLMWorker,app
             from vllm import AsyncLLMEngine
             from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs
-            
             args.tokenizer = args.model_path # 如果tokenizer与model_path不一致在此处添加
             args.tokenizer_mode = 'auto'
             args.trust_remote_code= True
@@ -121,7 +120,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.conv_template = None
             args.limit_worker_concurrency = 5
             args.no_register = False
-            args.num_gpus = 1
+            args.num_gpus = 1 # vllm worker的切分是tensor并行，这里填写显卡的数量
             args.engine_use_ray = False
             args.disable_log_requests = False
             if args.model_path:
@@ -148,11 +147,13 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
                         )
             sys.modules["fastchat.serve.vllm_worker"].engine = engine
             sys.modules["fastchat.serve.vllm_worker"].worker = worker
-            
+
         else:
             from fastchat.serve.model_worker import app, GptqConfig, AWQConfig, ModelWorker
-            args.gpus = "1"
+            args.gpus = "0" # GPU的编号,如果有多个GPU，可以设置为"0,1,2,3"
             args.max_gpu_memory = "20GiB"
+            args.num_gpus = 1  # model worker的切分是model并行，这里填写显卡的数量
+
             args.load_8bit = False
             args.cpu_offloading = None
             args.gptq_ckpt = None
@@ -162,7 +163,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.awq_ckpt = None
             args.awq_wbits = 16
             args.awq_groupsize = -1
-            args.num_gpus = 1
             args.model_names = []
             args.conv_template = None
             args.limit_worker_concurrency = 5

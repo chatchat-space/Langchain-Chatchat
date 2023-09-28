@@ -56,7 +56,6 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_tool_error(self, error: Exception | KeyboardInterrupt, *, run_id: UUID,
                             parent_run_id: UUID | None = None, tags: List[str] | None = None, **kwargs: Any) -> None:
-        self.out = True
         self.cur_tool.update(
             status=Status.error,
             error=str(error),
@@ -65,19 +64,19 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         if token:
-            if token == "Action":
+            if "Action" in token:
                 self.out = False
                 self.cur_tool.update(
                     status=Status.running,
                     llm_token="\n\n",
                 )
-
+                self.queue.put_nowait(dumps(self.cur_tool))
             if self.out:
                 self.cur_tool.update(
                     status=Status.running,
                     llm_token=token,
                 )
-            self.queue.put_nowait(dumps(self.cur_tool))
+                self.queue.put_nowait(dumps(self.cur_tool))
 
     async def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
         self.cur_tool.update(
@@ -95,6 +94,7 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(self.cur_tool))
 
     async def on_llm_error(self, error: Exception | KeyboardInterrupt, **kwargs: Any) -> None:
+        self.out = True
         self.cur_tool.update(
             status=Status.error,
             error=str(error),
