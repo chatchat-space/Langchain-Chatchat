@@ -56,6 +56,25 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
+## Environment Minimum Requirements
+
+To run this code smoothly, please configure it according to the following minimum requirements:
++ Python version: >= 3.8.5, < 3.11
++ Cuda version: >= 11.7, with Python installed.
+
+If you want to run the native model (int4 version) on the GPU without problems, you need at least the following hardware configuration.
+
++ chatglm2-6b & LLaMA-7B Minimum RAM requirement: 7GB Recommended graphics cards: RTX 3060, RTX 2060
++ LLaMA-13B Minimum graphics memory requirement: 11GB Recommended cards: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
++ Qwen-14B-Chat Minimum memory requirement: 13GB Recommended graphics card: RTX 3090
++ LLaMA-30B Minimum Memory Requirement: 22GB Recommended Cards: RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
++ Minimum memory requirement for LLaMA-65B: 22GB Recommended cards: A100,A40,A6000
+
+If int8 then memory x1.5 fp16 x2.5 requirement.
+For example: using fp16 to reason about the Qwen-7B-Chat model requires 16GB of video memory.
+
+The above is only an estimate, the actual situation is based on nvidia-smi occupancy.
+
 ## Change Log
 
 plese refer to [version change log](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)
@@ -105,7 +124,7 @@ The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the AP
 - [WizardLM/WizardCoder-15B-V1.0](https://huggingface.co/WizardLM/WizardCoder-15B-V1.0)
 - [baichuan-inc/baichuan-7B](https://huggingface.co/baichuan-inc/baichuan-7B)
 - [internlm/internlm-chat-7b](https://huggingface.co/internlm/internlm-chat-7b)
-- [Qwen/Qwen-7B-Chat](https://huggingface.co/Qwen/Qwen-7B-Chat)
+- [Qwen/Qwen-7B-Chat/Qwen-14B-Chat](https://huggingface.co/Qwen/)
 - [HuggingFaceH4/starchat-beta](https://huggingface.co/HuggingFaceH4/starchat-beta)
 - [FlagAlpha/Llama2-Chinese-13b-Chat](https://huggingface.co/FlagAlpha/Llama2-Chinese-13b-Chat) and other models of FlagAlpha
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
@@ -117,7 +136,19 @@ The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the AP
 * Any [EleutherAI](https://huggingface.co/EleutherAI) pythia model such as [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)(任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b))
 * Any [Peft](https://github.com/huggingface/peft) adapter trained on top of a model above. To activate, must have `peft` in the model path. Note: If loading multiple peft models, you can have them share the base model weights by setting the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` in any model worker.
 
-Please refer to `llm_model_dict` in `configs.model_configs.py.example` to invoke OpenAI API.
+
+The above model support list may be updated continuously as [FastChat](https://github.com/lm-sys/FastChat) is updated, see [FastChat Supported Models List](https://github.com/lm-sys/FastChat/blob/main /docs/model_support.md).
+In addition to local models, this project also supports direct access to online models such as OpenAI API, Wisdom Spectrum AI, etc. For specific settings, please refer to the configuration information of `llm_model_dict` in `configs/model_configs.py.example`.
+Online LLM models are currently supported:
+
+- [ChatGPT](https://api.openai.com)
+- [Smart Spectrum AI](http://open.bigmodel.cn)
+- [MiniMax](https://api.minimax.chat)
+- [Xunfei Starfire](https://xinghuo.xfyun.cn)
+- [Baidu Qianfan](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
+- [Aliyun Tongyi Qianqian](https://dashscope.aliyun.com/)
+
+The default LLM type used in the project is `THUDM/chatglm2-6b`, if you need to use other LLM types, please modify `llm_model_dict` and `LLM_MODEL` in [configs/model_config.py].
 
 ### Supported Embedding models
 
@@ -130,6 +161,8 @@ Following models are tested by developers with Embedding class of [HuggingFace](
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
 - [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
+- [sensenova/piccolo-large-zh](https://huggingface.co/sensenova/piccolo-large-zh)
 - [shibing624/text2vec-base-chinese-sentence](https://huggingface.co/shibing624/text2vec-base-chinese-sentence)
 - [shibing624/text2vec-base-chinese-paraphrase](https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase)
 - [shibing624/text2vec-base-multilingual](https://huggingface.co/shibing624/text2vec-base-multilingual)
@@ -138,16 +171,24 @@ Following models are tested by developers with Embedding class of [HuggingFace](
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-large-zh)
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
+
+The default Embedding type used in the project is `sensenova/piccolo-base-zh`, if you want to use other Embedding types, please modify `embedding_model_dict` and `embedding_model_dict` and `embedding_model_dict` in [configs/model_config.py]. MODEL` in [configs/model_config.py].
+
+### Build your own Agent tool!
+
+See [Custom Agent Instructions](docs/自定义Agent.md) for details.
 
 ---
 
 ## Docker Deployment
 
-🐳 Docker image path: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)`
+🐳 Docker image path: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)`
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
 - The image size of this version is `33.9GB`, using `v0.2.0`, with `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` as the base image

@@ -57,6 +57,25 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ---
 
+## 环境最低要求
+
+想顺利运行本代码，请按照以下的最低要求进行配置：
++ Python版本: >= 3.8.5, < 3.11
++ Cuda版本: >= 11.7, 且能顺利安装Python
+
+如果想要顺利在GPU运行本地模型(int4版本)，你至少需要以下的硬件配置:
+
++ chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
++ LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
++ Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
++ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
++ LLaMA-65B 最低显存要求: 22GB  推荐显卡：A100,A40,A6000
+
+如果是int8 则显存x1.5 fp16 x2.5的要求
+如：使用fp16 推理Qwen-7B-Chat 模型 则需要使用16GB显存。
+
+以上仅为估算，实际情况以nvidia-smi占用为准。
+
 ## 变更日志
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
@@ -112,7 +131,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [WizardLM/WizardCoder-15B-V1.0](https://huggingface.co/WizardLM/WizardCoder-15B-V1.0)
 - [baichuan-inc/baichuan-7B](https://huggingface.co/baichuan-inc/baichuan-7B)
 - [internlm/internlm-chat-7b](https://huggingface.co/internlm/internlm-chat-7b)
-- [Qwen/Qwen-7B-Chat](https://huggingface.co/Qwen/Qwen-7B-Chat)
+- [Qwen/Qwen-7B-Chat/Qwen-14B-Chat](https://huggingface.co/Qwen/)
 - [HuggingFaceH4/starchat-beta](https://huggingface.co/HuggingFaceH4/starchat-beta)
 - [FlagAlpha/Llama2-Chinese-13b-Chat](https://huggingface.co/FlagAlpha/Llama2-Chinese-13b-Chat) and others
 - [BAAI/AquilaChat-7B](https://huggingface.co/BAAI/AquilaChat-7B)
@@ -159,9 +178,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [GanymedeNil/text2vec-large-chinese](https://huggingface.co/GanymedeNil/text2vec-large-chinese)
 - [nghuyong/ernie-3.0-nano-zh](https://huggingface.co/nghuyong/ernie-3.0-nano-zh)
 - [nghuyong/ernie-3.0-base-zh](https://huggingface.co/nghuyong/ernie-3.0-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
+- [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-large-zh)
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
-项目中默认使用的 Embedding 类型为 `moka-ai/m3e-base`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
+项目中默认使用的 Embedding 类型为 `sensenova/piccolo-base-zh`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
 
 ---
 
@@ -199,17 +220,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ### 构建自己的Agent工具
 
-详见 (docs/自定义Agent.md)
+详见 [自定义Agent说明](docs/自定义Agent.md)
 
 ## Docker 部署
 
-🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)`
+🐳 Docker 镜像地址: `registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)`
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
-- 该版本镜像大小 `35.3GB`，使用 `v0.2.3`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
+- 该版本镜像大小 `35.3GB`，使用 `v0.2.5`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
 - 该版本内置两个 `embedding` 模型：`m3e-large`，`text2vec-bge-large-chinese`，默认启用后者，内置 `chatglm2-6b-32k`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
 - 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver` 以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
