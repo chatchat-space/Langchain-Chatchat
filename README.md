@@ -425,10 +425,10 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
     - [ ] 结构化数据接入
       - [X] .csv
       - [ ] .xlsx
-    - [X] 分词及召回
+    - [ ] 分词及召回
       - [X] 接入不同类型 TextSplitter
       - [X] 优化依据中文标点符号设计的 ChineseTextSplitter
-      - [X] 重新实现上下文拼接召回
+      - [ ] 重新实现上下文拼接召回
     - [ ] 本地网页接入
     - [ ] SQL 接入
     - [ ] 知识图谱/图数据库接入
@@ -436,7 +436,10 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
   - [X] Agent 实现
-    - [X]基础React形式的Agent实现，包括调用计算器等
+    - [X] 基础React形式的Agent实现，包括调用计算器等
+    - [X] Langchain 自带的Agent实现和调用
+    - [ ] 更多模型的Agent支持
+    - [ ] 更多工具
 - [X] LLM 模型接入
   - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
   - [X] 支持 ChatGLM API 等 LLM API 的接入
@@ -451,6 +454,14 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 ## 项目交流群
 
-<img src="img/qr_code_62.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_64.jpg" alt="二维码" width="300" height="300" />
 
-🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+
+
+## 关注我们
+
+<img src="img/official_account.png" alt="图片" width="900" height="300" />
+🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+
+
