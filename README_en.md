@@ -160,6 +160,8 @@ Following models are tested by developers with Embedding class of [HuggingFace](
 - [moka-ai/m3e-large](https://huggingface.co/moka-ai/m3e-large)
 - [BAAI/bge-small-zh](https://huggingface.co/BAAI/bge-small-zh)
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
+- [BAAI/bge-base-zh-v1.5](https://huggingface.co/BAAI/bge-base-zh-v1.5)
+- [BAAI/bge-large-zh-v1.5](https://huggingface.co/BAAI/bge-large-zh-v1.5)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
 - [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
 - [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
@@ -228,30 +230,33 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 
 ### 3. Setting Configuration
+Copy the model-related parameter configuration template file [configs/model_config.py.example](configs/model_config.py.example) and store it under the project path `. /configs` path and rename it `model_config.py`.
 
-Copy the model-related parameter configuration template file [configs/model_config.py.example](configs/model_config.py.example) and save it in the `./configs` path under the project path, and rename it to `model_config.py`.
+Copy the service-related parameter configuration template file [configs/server_config.py.example](configs/server_config.py.example) and store it under the project path `. /configs` path and rename it `server_config.py`.
 
-Copy the service-related parameter configuration template file [configs/server_config.py.example](configs/server_config.py.example) to save in the `./configs` path under the project path, and rename it to `server_config.py`.
+Before you start executing the Web UI or command line interactions, check that each of the items in [configs/model_config.py](configs/model_config.py) and [configs/server_config.py](configs/server_config.py) The model parameters are designed to meet the requirements:
 
-Before starting to execute Web UI or command line interaction, please check whether each model parameter in `configs/model_config.py` and `configs/server_config.py` meets the requirements.
+- Please make sure that the local storage path of the downloaded LLM model is written in the `local_model_path` attribute of the corresponding model in `llm_model_dict`, e.g..
+```
+"chatglm2-6b":"/Users/xxx/Downloads/chatglm2-6b",
 
-* Please confirm that the path to local LLM model and embedding model have been written in `llm_dict` of `configs/model_config.py`, here is an example:
-* If you choose to use OpenAI's Embedding model, please write the model's ``key`` into `embedding_model_dict`. To use this model, you need to be able to access the OpenAI official API, or set up a proxy.
-
-```python
-llm_model_dict={
-                "chatglm2-6b": {
-                        "local_model_path": "/Users/xxx/Downloads/chatglm2-6b",
-                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为 FastChat 服务中的"api_base_url"
-                        "api_key": "EMPTY"
-                    },
-                }
 ```
 
-```python
-embedding_model_dict = {
-                        "m3e-base": "/Users/xxx/Downloads/m3e-base",
-                       }
+- Please make sure that the local storage path of the downloaded Embedding model is written in `embedding_model_dict` corresponding to the model location, e.g.:
+
+```
+"m3e-base":"/Users/xxx/Downloads/m3e-base", ``` Please make sure that the local storage path of the downloaded Embedding model is written in the location of the corresponding model, e.g.
+```
+
+- Please make sure that the local participle path is filled in, e.g.:
+
+```
+text_splitter_dict = {
+    "ChineseRecursiveTextSplitter": {
+        "source": "huggingface", ## Select tiktoken to use openai's method, don't fill it in then it defaults to character length cutting method.
+        "tokenizer_name_or_path": "", ## Leave blank to use the big model of the tokeniser. 
+    }
+}
 ```
 
 ### 4. Knowledge Base Migration

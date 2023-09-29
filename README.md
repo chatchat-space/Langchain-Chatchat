@@ -167,6 +167,9 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [BAAI/bge-small-zh](https://huggingface.co/BAAI/bge-small-zh)
 - [BAAI/bge-base-zh](https://huggingface.co/BAAI/bge-base-zh)
 - [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh)
+- [BAAI/bge-base-zh-v1.5](https://huggingface.co/BAAI/bge-base-zh-v1.5)
+- [BAAI/bge-large-zh-v1.5](https://huggingface.co/BAAI/bge-large-zh-v1.5)- [BAAI/bge-base-zh-v1.5](https://huggingface.co/BAAI/bge-base-zh-v1.5)
+- [BAAI/bge-large-zh-v1.5](https://huggingface.co/BAAI/bge-large-zh-v1.5)
 - [BAAI/bge-large-zh-noinstruct](https://huggingface.co/BAAI/bge-large-zh-noinstruct)
 - [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-base-zh)
 - [sensenova/piccolo-large-zh](https://huggingface.co/sensenova/piccolo-large-zh)
@@ -274,28 +277,20 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 在开始执行 Web UI 或命令行交互前，请先检查 [configs/model_config.py](configs/model_config.py) 和 [configs/server_config.py](configs/server_config.py) 中的各项模型参数设计是否符合需求：
 
 - 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
+```
+"chatglm2-6b": "/Users/xxx/Downloads/chatglm2-6b",
 
-```python
-llm_model_dict={
-                "chatglm2-6b": {
-                        "local_model_path": "/Users/xxx/Downloads/chatglm2-6b",
-                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为 FastChat 服务中的"api_base_url"
-                        "api_key": "EMPTY"
-                    },
-                }
 ```
 
 - 请确认已下载至本地的 Embedding 模型本地存储路径写在 `embedding_model_dict` 对应模型位置，如：
 
-```python
-embedding_model_dict = {
-                        "m3e-base": "/Users/xxx/Downloads/m3e-base",
-                       }
+```
+"m3e-base": "/Users/xxx/Downloads/m3e-base",
 ```
 
 - 请确认本地分词器路径是否已经填写，如：
 
-```python
+```
 text_splitter_dict = {
     "ChineseRecursiveTextSplitter": {
         "source": "huggingface",  ## 选择tiktoken则使用openai的方法,不填写则默认为字符长度切割方法。
@@ -358,7 +353,7 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 
 ```python
 gpus=None, 
-num_gpus=1, 
+num_gpus= 1, 
 max_gpu_memory="20GiB"
 ```
 

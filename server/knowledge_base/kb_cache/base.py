@@ -133,7 +133,7 @@ class EmbeddingsPool(CachePool):
                     else:
                         # maybe ReRanker or else, just use empty string instead
                         query_instruction = ""
-                    embeddings = HuggingFaceBgeEmbeddings(model_name=embedding_model_dict[model],
+                    embeddings = HuggingFaceBgeEmbeddings(model_name=get_model_path(model),
                                                           model_kwargs={'device': device},
                                                           query_instruction=query_instruction)             
                     if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
