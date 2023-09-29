@@ -68,7 +68,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 + chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
 + LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
 + Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
-+ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
++ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40
 + LLaMA-65B 最低显存要求: 40GB  推荐显卡：A100,A40,A6000
 
 如果是int8 则显存x1.5 fp16 x2.5的要求
