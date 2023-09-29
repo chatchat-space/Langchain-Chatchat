@@ -26,39 +26,42 @@ def add_keyword_file_to_model(model_name, keyword_file, output_model_path):
 
 
 if __name__ == '__main__':
+    from configs import (
+        MODEL_PATH,
+        EMBEDDING_MODEL,
+        EMBEDDING_KEYWORD_FILE,
+        EMBEDDING_MODEL_OUTPUT_PATH
+    )
+    keyword_file = EMBEDDING_KEYWORD_FILE
+    model_name = MODEL_PATH["embed_model"][EMBEDDING_MODEL]
+    output_model_path = EMBEDDING_MODEL_OUTPUT_PATH
 
-    def print_token_ids(output, tokenizer, sentences):
-        for idx, ids in enumerate(output['input_ids']):
-            print(f'\nsentence={sentences[idx]}')
-            print(f'ids={ids}')
-            for id in ids:
-                decoded_id = tokenizer.decode(id)
-                print(f'    {decoded_id}->{id}')
+    add_keyword_file_to_model(model_name, keyword_file, output_model_path)
 
-    model_name = '/Users/cju/ml/m3e-base'
-    output_model_path = os.path.join(os.path.dirname(__file__), 'output')
-
-    key_words = ['iphone13pro', '13pro', '中石油']
-    add_keyword_to_model(model_name, key_words, output_model_path)
-
-    # keyword_file = 'keywords.txt'
-    # add_keyword_file_to_model(model_name, keyword_file, output_model_path)
-
-    tokenizer_without_keywords = SentenceTransformer(model_name).tokenizer
-    tokenizer_with_keywords = SentenceTransformer(output_model_path).tokenizer
-    sentences = [
-        '任务中国',
-        '中石油',
-        'iphone13pro is good',
-        'iphone13pro',
-        'iphone 13 pro',
-        'iphone 13pro']
-
-    output = tokenizer_without_keywords(sentences)
-    print("===== tokenizer with keyword =====")
-    print_token_ids(output, tokenizer_without_keywords, sentences)
-
-    output = tokenizer_with_keywords(sentences)
-    print("===== tokenizer with keyword =====")
-    print_token_ids(output, tokenizer_with_keywords, sentences)
+    # 以下为加入关键字前后tokenizer的测试用例对比
+    # def print_token_ids(output, tokenizer, sentences):
+    #     for idx, ids in enumerate(output['input_ids']):
+    #         print(f'\nsentence={sentences[idx]}')
+    #         print(f'ids={ids}')
+    #         for id in ids:
+    #             decoded_id = tokenizer.decode(id)
+    #             print(f'    {decoded_id}->{id}')
+    #
+    # tokenizer_without_keywords = SentenceTransformer(model_name).tokenizer
+    # tokenizer_with_keywords = SentenceTransformer(output_model_path).tokenizer
+    # sentences = [
+    #     '任务中国',
+    #     '中石油',
+    #     'iphone13pro is good',
+    #     'iphone13pro',
+    #     'iphone 13 pro',
+    #     'iphone 13pro']
+    #
+    # output = tokenizer_without_keywords(sentences)
+    # print("===== tokenizer with keyword =====")
+    # print_token_ids(output, tokenizer_without_keywords, sentences)
+    #
+    # output = tokenizer_with_keywords(sentences)
+    # print("===== tokenizer with keyword =====")
+    # print_token_ids(output, tokenizer_with_keywords, sentences)
 

@@ -95,6 +95,10 @@ EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：piccol
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
 
+# 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
+EMBEDDING_KEYWORD_FILE = "keywords.txt"
+EMBEDDING_MODEL_OUTPUT_PATH = "output"
+
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
 
