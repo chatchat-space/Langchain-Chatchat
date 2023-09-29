@@ -101,8 +101,10 @@ def dialogue_page(api: ApiRequest):
                     st.success(msg)
                     st.session_state["prev_llm_model"] = llm_model
 
-        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
-        history_len = st.number_input("历史对话轮数：", 0, 10, HISTORY_LEN)
+        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.01)
+
+        ## 部分模型可以超过10抡对话
+        history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -117,7 +119,10 @@ def dialogue_page(api: ApiRequest):
                     key="selected_kb",
                 )
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
+
+                ## Bge 模型会超过1
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
