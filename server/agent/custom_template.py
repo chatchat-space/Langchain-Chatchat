@@ -1,3 +1,4 @@
+from __future__ import annotations
 from langchain.agents import Tool, AgentOutputParser
 from langchain.prompts import StringPromptTemplate
 from typing import List, Union
