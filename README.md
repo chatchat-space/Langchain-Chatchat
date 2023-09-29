@@ -45,14 +45,13 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v8` 版本所使用代码已更新至本项目 `v0.2.4` 版本。
-
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3)
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v9` 版本所使用代码已更新至本项目 `v0.2.5` 版本。
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
 
 💻 一行命令运行 Docker 🌲：
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
 ---
@@ -61,14 +60,15 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 想顺利运行本代码，请按照以下的最低要求进行配置：
 + Python版本: >= 3.8.5, < 3.11
-+ Cuda版本: >= 11.7, 且能顺利安装Python
++ Cuda版本: >= 11.7
++ 强烈推荐使用Python3.10，部分Agent功能可能没有完全支持Python3.10以下版本。
 
 如果想要顺利在GPU运行本地模型(int4版本)，你至少需要以下的硬件配置:
 
 + chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
 + LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
 + Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
-+ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
++ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40
 + LLaMA-65B 最低显存要求: 40GB  推荐显卡：A100,A40,A6000
 
 如果是int8 则显存x1.5 fp16 x2.5的要求
@@ -249,7 +249,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
-**请注意：** `0.2.3` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
+**请注意：** `0.2.5` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
 
 ### 2. 下载模型至本地
 

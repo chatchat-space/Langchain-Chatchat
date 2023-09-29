@@ -44,14 +44,14 @@ The main process analysis from the aspect of document process:
 
 🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0) is supported, and in v7 the codes are update to v0.2.3.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update to v0.2.5.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
+🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
 
 💻 Run Docker with one command:
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
 ---
@@ -60,16 +60,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 To run this code smoothly, please configure it according to the following minimum requirements:
 + Python version: >= 3.8.5, < 3.11
-+ Cuda version: >= 11.7, with Python installed.
++ Cuda version: >= 11.7
++ Python 3.10 is highly recommended, some Agent features may not be fully supported below Python 3.10.
 
 If you want to run the native model (int4 version) on the GPU without problems, you need at least the following hardware configuration.
 
 + chatglm2-6b & LLaMA-7B Minimum RAM requirement: 7GB Recommended graphics cards: RTX 3060, RTX 2060
 + LLaMA-13B Minimum graphics memory requirement: 11GB Recommended cards: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
 + Qwen-14B-Chat Minimum memory requirement: 13GB Recommended graphics card: RTX 3090
+
 + LLaMA-30B Minimum Memory Requirement: 22GB Recommended Cards: RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40 
 + Minimum memory requirement for LLaMA-65B: 40GB Recommended cards: A100,A40,A6000
-
 If int8 then memory x1.5 fp16 x2.5 requirement.
 For example: using fp16 to reason about the Qwen-7B-Chat model requires 16GB of video memory.
 
@@ -191,7 +192,7 @@ See [Custom Agent Instructions](docs/自定义Agent.md) for details.
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5
 ```
 
-- The image size of this version is `33.9GB`, using `v0.2.0`, with `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` as the base image
+- The image size of this version is `33.9GB`, using `v0.2.5`, with `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` as the base image
 - This version has a built-in `embedding` model: `m3e-large`, built-in `chatglm2-6b-32k`
 - This version is designed to facilitate one-click deployment. Please make sure you have installed the NVIDIA driver on your Linux distribution.
 - Please note that you do not need to install the CUDA toolkit on the host system, but you need to install the `NVIDIA Driver` and the `NVIDIA Container Toolkit`, please refer to the [Installation Guide](https://docs.nvidia.com/datacenter/cloud -native/container-toolkit/latest/install-guide.html)
