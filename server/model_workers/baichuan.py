@@ -149,15 +149,15 @@ class BaiChuanWorker(ApiModelWorker):
         print(params)
 
 if __name__ == "__main__":
-    # import uvicorn
-    # from server.utils import MakeFastAPIOffline
-    # from fastchat.serve.model_worker import app
+    import uvicorn
+    from server.utils import MakeFastAPIOffline
+    from fastchat.serve.model_worker import app
 
-    # worker = BaiChuanWorker(
-    #     controller_addr="http://127.0.0.1:20001",
-    #     worker_addr="http://127.0.0.1:21001",
-    # )
-    # sys.modules["fastchat.serve.model_worker"].worker = worker
-    # MakeFastAPIOffline(app)
-    # uvicorn.run(app, port=21001)
+    worker = BaiChuanWorker(
+        controller_addr="http://127.0.0.1:20001",
+        worker_addr="http://127.0.0.1:21001",
+    )
+    sys.modules["fastchat.serve.model_worker"].worker = worker
+    MakeFastAPIOffline(app)
+    uvicorn.run(app, port=21001)
     # do_request()
