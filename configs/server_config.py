@@ -42,6 +42,9 @@ FSCHAT_MODEL_WORKERS = {
         "infer_turbo": "vllm" if sys.platform.startswith("linux") else False,
 
         # model_worker多卡加载需要配置的参数
+        "gpus": "0", # 使用的GPU，以str的格式指定，如"0,1"，如失效请使用CUDA_VISIBLE_DEVICES="0,1"等形式指定
+        "num_gpus": 1, # 使用GPU的数量
+        "max_gpu_memory": "24GiB", # 每个GPU占用的最大显存
         # "gpus": None, # 使用的GPU，以str的格式指定，如"0,1"，如失效请使用CUDA_VISIBLE_DEVICES="0,1"等形式指定
         # "num_gpus": 1, # 使用GPU的数量
         # "max_gpu_memory": "20GiB", # 每个GPU占用的最大显存
