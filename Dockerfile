@@ -32,24 +32,24 @@ WORKDIR /Langchain-Chatchat
 # 安装Langchain-Chatchat主程序
 RUN git clone https://github.com/tommyvinny/docker-for-Chatchat.git /Langchain-Chatchat
 # 安装embed_model
-RUN git clone https://huggingface.co/nghuyong/ernie-3.0-nano-zh /ernie-3.0-nano-zh
-RUN git clone https://huggingface.co/nghuyong/ernie-3.0-base-zh /ernie-3.0-base-zh
-RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese /text2vec-base-chinese
-RUN git clone https://huggingface.co/GanymedeNil/text2vec-large-chinese /text2vec-large-chinese
-RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase /text2vec-base-chinese-paraphrase
-RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese-sentence /text2vec-base-chinese-sentence
-RUN git clone https://huggingface.co/shibing624/text2vec-base-multilingual /text2vec-base-multilingual
-RUN git clone https://huggingface.co/shibing624/text2vec-bge-large-chinese /text2vec-bge-large-chinese
-RUN git clone https://huggingface.co/moka-ai/m3e-small /m3e-small
-RUN git clone https://huggingface.co/moka-ai/m3e-base /m3e-base
-RUN git clone https://huggingface.co/moka-ai/m3e-large /m3e-large
-RUN git clone https://huggingface.co/BAAI/bge-small-zh /bge-small-zh
-RUN git clone https://huggingface.co/BAAI/bge-base-zh /bge-base-zh
-RUN git clone https://huggingface.co/BAAI/bge-large-zh /bge-large-zh
-RUN git clone https://huggingface.co/BAAI/bge-large-zh-noinstruct /bge-large-zh-noinstruct
-RUN git clone https://huggingface.co/BAAI/bge-base-zh-v1.5 /bge-base-zh-v1.5
-RUN git clone https://huggingface.co/BAAI/bge-large-zh-v1.5 /bge-large-zh-v1.5
-RUN git clone https://huggingface.co/sensenova/piccolo-base-zh /piccolo-base-zh
+# RUN git clone https://huggingface.co/nghuyong/ernie-3.0-nano-zh /ernie-3.0-nano-zh
+# RUN git clone https://huggingface.co/nghuyong/ernie-3.0-base-zh /ernie-3.0-base-zh
+# RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese /text2vec-base-chinese
+# RUN git clone https://huggingface.co/GanymedeNil/text2vec-large-chinese /text2vec-large-chinese
+# RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese-paraphrase /text2vec-base-chinese-paraphrase
+# RUN git clone https://huggingface.co/shibing624/text2vec-base-chinese-sentence /text2vec-base-chinese-sentence
+# RUN git clone https://huggingface.co/shibing624/text2vec-base-multilingual /text2vec-base-multilingual
+# RUN git clone https://huggingface.co/shibing624/text2vec-bge-large-chinese /text2vec-bge-large-chinese
+# RUN git clone https://huggingface.co/moka-ai/m3e-small /m3e-small
+# RUN git clone https://huggingface.co/moka-ai/m3e-base /m3e-base
+# RUN git clone https://huggingface.co/moka-ai/m3e-large /m3e-large
+# RUN git clone https://huggingface.co/BAAI/bge-small-zh /bge-small-zh
+# RUN git clone https://huggingface.co/BAAI/bge-base-zh /bge-base-zh
+# RUN git clone https://huggingface.co/BAAI/bge-large-zh /bge-large-zh
+# RUN git clone https://huggingface.co/BAAI/bge-large-zh-noinstruct /bge-large-zh-noinstruct
+# RUN git clone https://huggingface.co/BAAI/bge-base-zh-v1.5 /bge-base-zh-v1.5
+# RUN git clone https://huggingface.co/BAAI/bge-large-zh-v1.5 /bge-large-zh-v1.5
+# RUN git clone https://huggingface.co/sensenova/piccolo-base-zh /piccolo-base-zh
 RUN git clone https://huggingface.co/sensenova/piccolo-large-zh /piccolo-large-zh
         
 # 安装llm_model
@@ -59,7 +59,7 @@ RUN git clone https://huggingface.co/THUDM/chatglm2-6b-32k /chatglm2-6b-32k
 # RUN git clone https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat /Baichuan2-7B-Chat
 # RUN git clone https://huggingface.co/meta-llama/Llama-2-13b-hf /Llama-2-13b-hf 
 RUN git clone https://huggingface.co/Qwen/Qwen-7B /Qwen-7B
-RUN git clone https://huggingface.co/Qwen/Qwen-14B /Qwen-14B
+# RUN git clone https://huggingface.co/Qwen/Qwen-14B /Qwen-14B
 # RUN git clone https://huggingface.co/Qwen/Qwen-7B-Chat /Qwen-7B-Chat
 # RUN git clone https://huggingface.co/Qwen/Qwen-14B-Chat /Qwen-14B-Chat
 
