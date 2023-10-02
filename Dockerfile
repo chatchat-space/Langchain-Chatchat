@@ -55,13 +55,13 @@ RUN git clone https://huggingface.co/sensenova/piccolo-large-zh /piccolo-large-z
 # 安装llm_model
 RUN git clone https://huggingface.co/THUDM/chatglm2-6b /chatglm2-6b
 RUN git clone https://huggingface.co/THUDM/chatglm2-6b-32k /chatglm2-6b-32k
-RUN git clone https://huggingface.co/baichuan-inc/Baichuan-13B-Chat /Baichuan-13B-Chat
-RUN git clone https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat /Baichuan2-7B-Chat
-RUN git clone https://huggingface.co/meta-llama/Llama-2-13b-hf /Llama-2-13b-hf 
+# RUN git clone https://huggingface.co/baichuan-inc/Baichuan-13B-Chat /Baichuan-13B-Chat
+# RUN git clone https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat /Baichuan2-7B-Chat
+# RUN git clone https://huggingface.co/meta-llama/Llama-2-13b-hf /Llama-2-13b-hf 
 RUN git clone https://huggingface.co/Qwen/Qwen-7B /Qwen-7B
 RUN git clone https://huggingface.co/Qwen/Qwen-14B /Qwen-14B
-RUN git clone https://huggingface.co/Qwen/Qwen-7B-Chat /Qwen-7B-Chat
-RUN git clone https://huggingface.co/Qwen/Qwen-14B-Chat /Qwen-14B-Chat
+# RUN git clone https://huggingface.co/Qwen/Qwen-7B-Chat /Qwen-7B-Chat
+# RUN git clone https://huggingface.co/Qwen/Qwen-14B-Chat /Qwen-14B-Chat
 
 RUN python3 -m pip install --upgrade pip
 RUN pip install --upgrade streamlit
