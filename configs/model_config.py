@@ -44,8 +44,8 @@ MODEL_PATH = {
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         "chatglm2-6b-32k": "/chatglm2-6b-32k",
 
-        "baichuan2-13b": "/Baichuan-13B-Chat",
-        "baichuan2-7b":"/Baichuan2-7B-Chat",
+        "baichuan2-13b": "baichuan-inc/Baichuan-13B-Chat",
+        "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
 
         "baichuan-7b": "baichuan-inc/Baichuan-7B",
         "baichuan-13b": "baichuan-inc/Baichuan-13B",
@@ -86,8 +86,8 @@ MODEL_PATH = {
 
         "Qwen-7B":"/Qwen-7B",
         "Qwen-14B":"/Qwen-14B",
-        "Qwen-7B-Chat":"/Qwen-7B-Chat",
-        "Qwen-14B-Chat":"/Qwen-14B-Chat",
+        "Qwen-7B-Chat":"/Qwen/Qwen-7B-Chat",
+        "Qwen-14B-Chat":"/Qwen/Qwen-14B-Chat",
     },
 }
 
