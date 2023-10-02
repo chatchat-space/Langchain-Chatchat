@@ -32,7 +32,7 @@ MODEL_PATH = {
         "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
         "bge-base-zh-v1.5": "BAAI/bge-base-zh-v1.5",
         "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
-        "piccolo-base-zh": "/piccolo-base-zh",
+        "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "/piccolo-large-zh",
         "text-embedding-ada-002": "your OPENAI_API_KEY",
     },
