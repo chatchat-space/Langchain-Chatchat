@@ -15,6 +15,7 @@ unstructured[all-docs]>=0.10.4
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
+faiss-gpu
 accelerate
 spacy
 PyMuPDF==1.22.5
@@ -27,7 +28,7 @@ pytest
 scikit-learn
 numexpr
 vllm==0.1.7; sys_platform == "linux"
-online api libs
+# online api libs
 zhipuai
 dashscope>=1.10.0 # qwen
 qianfan
