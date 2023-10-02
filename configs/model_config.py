@@ -72,7 +72,7 @@ MODEL_PATH = {
         "dolly-v2-12b":"databricks/dolly-v2-12b",    
         "stablelm-tuned-alpha-7b":"stabilityai/stablelm-tuned-alpha-7b",
 
-        "Llama-2-13b-hf":"/Llama-2-13b-hf",    
+        "Llama-2-13b-hf":"meta-llama/Llama-2-13b-hf",    
         "Llama-2-70b-hf":"meta-llama/Llama-2-70b-hf",
         "open_llama_13b":"openlm-research/open_llama_13b",    
         "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
