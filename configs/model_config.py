@@ -84,7 +84,7 @@ MODEL_PATH = {
         "opt-66b":"facebook/opt-66b",    
         "opt-iml-max-30b":"facebook/opt-iml-max-30b",
 
-        "Qwen-7B":"/Qwen-7B",
+        "Qwen-7B":"/Qwen/Qwen-7B",
         "Qwen-14B":"/Qwen/Qwen-14B",
         "Qwen-7B-Chat":"/Qwen/Qwen-7B-Chat",
         "Qwen-14B-Chat":"/Qwen/Qwen-14B-Chat",
