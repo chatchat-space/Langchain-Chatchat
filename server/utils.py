@@ -330,6 +330,8 @@ def fschat_controller_address() -> str:
     from configs.server_config import FSCHAT_CONTROLLER
 
     host = FSCHAT_CONTROLLER["host"]
+    if host == "0.0.0.0":
+        host = "127.0.0.1"
     port = FSCHAT_CONTROLLER["port"]
     return f"http://{host}:{port}"
 
@@ -337,6 +339,8 @@ def fschat_controller_address() -> str:
 def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
     if model := get_model_worker_config(model_name):
         host = model["host"]
+        if host == "0.0.0.0":
+            host = "127.0.0.1"
         port = model["port"]
         return f"http://{host}:{port}"
     return ""
@@ -346,6 +350,8 @@ def fschat_openai_api_address() -> str:
     from configs.server_config import FSCHAT_OPENAI_API
 
     host = FSCHAT_OPENAI_API["host"]
+    if host == "0.0.0.0":
+        host = "127.0.0.1"
     port = FSCHAT_OPENAI_API["port"]
     return f"http://{host}:{port}/v1"
 
@@ -354,6 +360,8 @@ def api_address() -> str:
     from configs.server_config import API_SERVER
 
     host = API_SERVER["host"]
+    if host == "0.0.0.0":
+        host = "127.0.0.1"
     port = API_SERVER["port"]
     return f"http://{host}:{port}"
 
