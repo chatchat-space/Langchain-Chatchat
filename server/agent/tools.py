@@ -7,8 +7,9 @@ from server.agent.math import calculate
 from server.agent.translator import translate
 from server.agent.weather import weathercheck
 from server.agent.shell import shell
-from server.agent.google_search import google_search
 from langchain.agents import Tool
+from server.agent.search_knowledge import search_knowledge
+from server.agent.search_internet import search_internet
 
 tools = [
     Tool.from_function(
@@ -32,9 +33,15 @@ tools = [
         description="使用命令行工具输出",
     ),
     Tool.from_function(
-        func=google_search,
-        name="谷歌搜索工具",
-        description="使用谷歌搜索",
-    )
+        func=search_knowledge,
+        name="知识库查询工具",
+        description="使用西交利物浦大学大数据专业的本专业数据库来解答问题",
+    ),
+    Tool.from_function(
+        func=search_internet,
+        name="互联网查询工具",
+        description="访问Bing互联网来解答问题",
+    ),
+
 ]
 tool_names = [tool.name for tool in tools]

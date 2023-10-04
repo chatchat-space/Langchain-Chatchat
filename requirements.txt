@@ -1,17 +1,17 @@
 langchain>=0.0.302
-fschat[model_worker]==0.2.29
+fschat[model_worker]==0.2.30
 openai
 sentence_transformers
 transformers>=4.33.0
 torch>=2.0.1
 torchvision
 torchaudio
-fastapi>=0.103.1
+fastapi>=0.103.2
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
 pydantic~=1.10.11
-unstructured[all-docs]>=0.10.4
+unstructured[all-docs]>=0.10.12
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
@@ -25,7 +25,7 @@ pathlib
 pytest
 scikit-learn
 numexpr
-vllm==0.1.7; sys_platform == "linux"
+vllm>=0.2.0; sys_platform == "linux"
 # online api libs
 # zhipuai
 # dashscope>=1.10.0 # qwen
