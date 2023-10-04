@@ -114,7 +114,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.block_size = 16
             args.swap_space = 4  # GiB
             args.gpu_memory_utilization = 0.90
-            args.max_num_batched_tokens = 2560
+            args.max_num_batched_tokens = 16384 # 一个批次中的最大令牌（tokens）数量，这个取决于你的显卡和大模型设置，设置太大显存会不够
             args.max_num_seqs = 256
             args.disable_log_stats = False
             args.conv_template = None
@@ -123,6 +123,13 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.num_gpus = 1 # vllm worker的切分是tensor并行，这里填写显卡的数量
             args.engine_use_ray = False
             args.disable_log_requests = False
+
+            # 0.2.0 vllm后要加的参数
+            args.max_model_len = 8192 # 模型可以处理的最大序列长度。请根据你的大模型设置，
+            args.revision = None
+            args.quantization = None
+            args.max_log_len = None
+
             if args.model_path:
                 args.model = args.model_path
             if args.num_gpus > 1:
