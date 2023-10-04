@@ -2,7 +2,7 @@ langchain>=0.0.302
 fschat[model_worker]==0.2.29
 openai
 sentence_transformers
-transformers>=4.33.0
+transformers==4.33.3
 torch>=2.0.1
 torchvision
 torchaudio

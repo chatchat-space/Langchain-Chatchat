@@ -425,7 +425,7 @@ def set_httpx_config(
         if host not in no_proxy:
             no_proxy.append(host)
     os.environ["NO_PROXY"] = ",".join(no_proxy)
-    
+
     # TODO: 简单的清除系统代理不是个好的选择，影响太多。似乎修改代理服务器的bypass列表更好。
     # patch requests to use custom proxies instead of system settings
     # def _get_proxies():
@@ -506,10 +506,11 @@ def get_httpx_client(
         default_proxies.update({host: None})
 
     # get proxies from system envionrent
+    # proxy not str empty string, None, False, 0, [] or {}
     default_proxies.update({
-        "http://": os.environ.get("http_proxy"),
-        "https://": os.environ.get("https_proxy"),
-        "all://": os.environ.get("all_proxy"),
+        "http://": os.environ.get("http_proxy") if len(os.environ.get("http_proxy").strip()) > 0 else None,
+        "https://": os.environ.get("https_proxy") if len(os.environ.get("https_proxy").strip()) > 0 else None,
+        "all://": os.environ.get("all_proxy") if len(os.environ.get("all_proxy").strip()) > 0 else None,
     })
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
@@ -524,6 +525,7 @@ def get_httpx_client(
 
     # construct Client
     kwargs.update(timeout=timeout, proxies=default_proxies)
+    print(kwargs)
     if use_async:
         return httpx.AsyncClient(**kwargs)
     else:
