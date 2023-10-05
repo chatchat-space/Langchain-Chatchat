@@ -112,6 +112,9 @@ FSCHAT_MODEL_WORKERS = {
     "qwen-api": {
         "port": 21006,
     },
+    "baichuan-api": {
+        "port": 21007,
+    },
 }
 
 # fastchat multi model worker server
