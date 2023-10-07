@@ -123,6 +123,8 @@ def dialogue_page(api: ApiRequest):
                 )
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                # chunk_content = st.checkbox("关联上下文", False, disabled=True)
+                # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = list(SEARCH_ENGINES.keys())
             with st.expander("搜索引擎配置", True):

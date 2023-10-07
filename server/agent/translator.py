@@ -37,7 +37,6 @@ def translate(query: str):
     )
     llm_translate = LLMChain(llm=model, prompt=PROMPT)
     ans = llm_translate.run(query)
-
     return ans
 
 if __name__ == "__main__":
