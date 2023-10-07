@@ -26,10 +26,10 @@ class ChatGLMWorker(ApiModelWorker):
         # 这里的是chatglm api的模板，其它API的conv_template需要定制
         self.conv = conv.Conversation(
             name=self.model_names[0],
-            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
+            system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
             messages=[],
             roles=["Human", "Assistant"],
-            sep="\n### ",
+            sep="\n###",
             stop_str="###",
         )
 
@@ -57,7 +57,7 @@ class ChatGLMWorker(ApiModelWorker):
     def get_embeddings(self, params):
         # TODO: 支持embeddings
         print("embedding")
-        print(params)
+        # print(params)
 
 
 if __name__ == "__main__":

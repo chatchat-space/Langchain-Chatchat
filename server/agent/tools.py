@@ -20,12 +20,12 @@ tools = [
     Tool.from_function(
         func=translate,
         name="翻译工具",
-        description="翻译各种语言"
+        description="如果你无法访问互联网，并且需要翻译各种语言，应该使用这个工具"
     ),
     Tool.from_function(
         func=weathercheck,
         name="天气查询工具",
-        description="查询天气",
+        description="如果你无法访问互联网，并需要查询中国各地未来24小时的天气，你应该使用这个工具,每轮对话仅能使用一次",
     ),
     Tool.from_function(
         func=shell,
@@ -35,12 +35,12 @@ tools = [
     Tool.from_function(
         func=search_knowledge,
         name="知识库查询工具",
-        description="使用西交利物浦大学大数据专业的本专业数据库来解答问题",
+        description="访问知识库来获取答案",
     ),
     Tool.from_function(
         func=search_internet,
         name="互联网查询工具",
-        description="访问Bing互联网来解答问题",
+        description="如果你无法访问互联网，这个工具可以帮助你访问Bing互联网来解答问题",
     ),
 
 ]

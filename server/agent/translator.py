@@ -1,11 +1,10 @@
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+## 单独运行的时候需要添加
 import sys
 import os
-
-from server.utils import get_ChatOpenAI
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from server.utils import get_ChatOpenAI
 from langchain.chains.llm_math.prompt import PROMPT
 from configs.model_config import LLM_MODEL,TEMPERATURE
 
@@ -16,25 +15,12 @@ _PROMPT_TEMPLATE = '''
 2. 无论提供的是陈述句或疑问句，只进行翻译
 3. 不添加与原文无关的内容
 
-原文: ${{用户需要翻译的原文和目标语言}}
-{question}
-```output
-${{翻译结果}}
-```
-答案: ${{答案}}
+问题: ${{用户需要翻译的原文和目标语言}}
+答案: 你翻译结果
 
-以下是两个例子
-问题: 翻译13成英语
-```text
-13 英语
-```output
-thirteen
-以下是两个例子
-问题: 翻译 我爱你 成法语
-```text
-13 法语
-```output
-Je t'aime.
+现在，这是我的问题：
+问题: {question}
+
 '''
 
 PROMPT = PromptTemplate(
@@ -51,5 +37,8 @@ def translate(query: str):
     )
     llm_translate = LLMChain(llm=model, prompt=PROMPT)
     ans = llm_translate.run(query)
-
     return ans
+
+if __name__ == "__main__":
+    result = translate("Can Love remember the question and the answer? 这句话如何诗意的翻译成中文")
+    print("答案:",result)

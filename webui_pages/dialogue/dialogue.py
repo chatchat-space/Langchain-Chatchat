@@ -7,13 +7,15 @@ import os
 from configs import LLM_MODEL, TEMPERATURE
 from server.utils import get_model_worker_config
 from typing import List, Dict
-
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
         "chatchat_icon_blue_square_v2.png"
     )
 )
+
+
+
 
 
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
@@ -104,6 +106,8 @@ def dialogue_page(api: ApiRequest):
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
 
         history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
+        LLM_MODEL_WEBUI = llm_model
+        TEMPERATURE_WEBUI = temperature
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -155,9 +159,17 @@ def dialogue_page(api: ApiRequest):
 
         elif dialogue_mode == "自定义Agent问答":
             chat_box.ai_say([
-                f"正在思考和寻找工具 ...",])
+                f"正在思考...",
+                Markdown("...", in_expander=True, title="思考过程", state="complete"),
+            ])
             text = ""
-            element_index = 0
+            ans = ""
+            support_agent = ["gpt", "Qwen", "qwen-api", "baichuan-api"] # 目前支持agent的模型
+            if not any(agent in llm_model for agent in support_agent):
+                ans += "正在思考... \n\n <span style='color:red'>改模型并没有进行Agent对齐，无法正常使用Agent功能！</span>\n\n\n<span style='color:red'>请更换 GPT4或Qwen-14B等支持Agent的模型获得更好的体验！ </span> \n\n\n"
+                chat_box.update_msg(ans, element_index=0, streaming=False)
+
+
             for d in api.agent_chat(prompt,
                                     history=history,
                                     model=llm_model,
@@ -169,14 +181,17 @@ def dialogue_page(api: ApiRequest):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
 
+                elif chunk := d.get("final_answer"):
+                    ans += chunk
+                    chat_box.update_msg(ans, element_index=0)
                 elif chunk := d.get("answer"):
                     text += chunk
-                    chat_box.update_msg(text, element_index=0)
+                    chat_box.update_msg(text, element_index=1)
                 elif chunk := d.get("tools"):
-                    element_index += 1
-                    chat_box.insert_msg(Markdown("...", in_expander=True, title="使用工具...", state="complete"))
-                    chat_box.update_msg("\n\n".join(d.get("tools", [])), element_index=element_index, streaming=False)
-            chat_box.update_msg(text, element_index=0, streaming=False)
+                    text += "\n\n".join(d.get("tools", []))
+                    chat_box.update_msg(text, element_index=1)
+            chat_box.update_msg(ans, element_index=0, streaming=False)
+            chat_box.update_msg(text, element_index=1, streaming=False)
         elif dialogue_mode == "知识库问答":
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",
