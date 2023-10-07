@@ -44,7 +44,8 @@ class ApiModelWorker(BaseModelWorker):
 
     def count_token(self, params):
         # TODO：需要完善
-        print("count token")
+        # print("count token")
+        print("\n\n\n")
         print(params)
         prompt = params["prompt"]
         return {"count": len(str(prompt)), "error_code": 0}

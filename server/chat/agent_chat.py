@@ -53,13 +53,11 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         agent = LLMSingleActionAgent(
             llm_chain=llm_chain,
             output_parser=output_parser,
-            stop=["Observation:", "Observation:\n", "<|im_end|>"], # Qwen模型中使用这个
-            # stop=["Observation:", "Observation:\n"], # 其他模型，注意模板
+            stop=["\nObservation:", "Observation:", "<|im_end|>"], # Qwen模型中使用这个
             allowed_tools=tool_names,
         )
         # 把history转成agent的memory
         memory = ConversationBufferWindowMemory(k=HISTORY_LEN * 2)
-
         for message in history:
             # 检查消息的角色
             if message.role == 'user':
@@ -74,29 +72,41 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                                                             memory=memory,
                                                             )
         input_msg = History(role="user", content="{{ input }}").to_msg_template(False)
-        task = asyncio.create_task(wrap_done(
-            agent_executor.acall(query, callbacks=[callback], include_run_info=True),
-            callback.done),
-        )
+        while True:
+            try:
+                task = asyncio.create_task(wrap_done(
+                agent_executor.acall(query, callbacks=[callback], include_run_info=True),
+                callback.done))
+                break
+            except:
+                pass
         if stream:
             async for chunk in callback.aiter():
                 tools_use = []
                 # Use server-sent-events to stream the response
                 data = json.loads(chunk)
-                if data["status"] == Status.error:
-                    tools_use.append("工具调用失败:\n" + data["error"])
-                    yield json.dumps({"tools": tools_use}, ensure_ascii=False)
-                    yield json.dumps({"answer": "(工具调用失败，请查看工具栏报错) \n\n"}, ensure_ascii=False)
                 if data["status"] == Status.start or data["status"] == Status.complete:
                     continue
-                if data["status"] == Status.agent_action:
-                    yield json.dumps({"answer": "(正在使用工具，请注意工具栏变化) \n\n"}, ensure_ascii=False)
-                if data["status"] == Status.agent_finish:
+                if data["status"] == Status.error:
                     tools_use.append("工具名称: " + data["tool_name"])
+                    tools_use.append("工具状态: " + "调用失败")
+                    tools_use.append("错误信息: " + data["error"])
+                    tools_use.append("重新开始尝试")
+                    tools_use.append("\n```\n")
+                    yield json.dumps({"tools": tools_use}, ensure_ascii=False)
+                if data["status"] == Status.agent_action:
+                    yield json.dumps({"answer": "\n\n```\n\n"}, ensure_ascii=False)
+                if data["status"] == Status.tool_finish:
+                    tools_use.append("工具名称: " + data["tool_name"])
+                    tools_use.append("工具状态: " + "调用成功")
                     tools_use.append("工具输入: " + data["input_str"])
                     tools_use.append("工具输出: " + data["output_str"])
+                    tools_use.append("\n```\n")
                     yield json.dumps({"tools": tools_use}, ensure_ascii=False)
-                yield json.dumps({"answer": data["llm_token"]}, ensure_ascii=False)
+                if data["status"] == Status.agent_finish:
+                    yield json.dumps({"final_answer": data["final_answer"]}, ensure_ascii=False)
+                else:
+                    yield json.dumps({"answer": data["llm_token"]}, ensure_ascii=False)
 
         else:
             pass

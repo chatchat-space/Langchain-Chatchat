@@ -250,7 +250,7 @@ class ApiRequest:
                             logger.error(f'{e.__class__.__name__}: {msg}',
                                          exc_info=e if log_verbose else None)
                     else:
-                        print(chunk, end="", flush=True)
+                        # print(chunk, end="", flush=True)
                         yield chunk
         except httpx.ConnectError as e:
             msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。({e})"
