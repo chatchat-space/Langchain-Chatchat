@@ -1,7 +1,7 @@
-langchain>=0.0.302
+langchain>=0.0.310
 fschat[model_worker]>=0.2.30
 openai
-sentence_transformers
+sentence_transformers>=2.2.2
 transformers>=4.34
 torch>=2.0.1
 torchvision
