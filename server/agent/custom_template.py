@@ -27,8 +27,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["tools"] = "\n".join([f"{tool.name}: {tool.description}" for tool in self.tools])
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-        # Return the formatted templatepr
-        # print( self.template.format(**kwargs), end="\n\n")
         return self.template.format(**kwargs)
 
 
@@ -52,13 +50,9 @@ class CustomOutputParser(AgentOutputParser):
                 llm_output = llm_output[:min_index]
 
         if "Final Answer:" in llm_output:
-            output = llm_output.split("Final Answer:", 1)[-1].strip()
             self.begin = True
             return AgentFinish(
-                # Return values is generally always a dictionary with a single `output` key
-                # It is not recommended to try anything else at the moment :)
-                # return_values={"output": llm_output.replace("Final Answer:", "").strip()},
-                return_values={"output": output},
+                return_values={"output": llm_output.split("Final Answer:", 1)[-1].strip()},
                 log=llm_output,
             )
 
