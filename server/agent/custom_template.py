@@ -52,13 +52,9 @@ class CustomOutputParser(AgentOutputParser):
                 llm_output = llm_output[:min_index]
 
         if "Final Answer:" in llm_output:
-            output = llm_output.split("Final Answer:", 1)[-1].strip()
             self.begin = True
             return AgentFinish(
-                # Return values is generally always a dictionary with a single `output` key
-                # It is not recommended to try anything else at the moment :)
-                # return_values={"output": llm_output.replace("Final Answer:", "").strip()},
-                return_values={"output": output},
+                return_values={"output": llm_output.split("Final Answer:", 1)[-1].strip()},
                 log=llm_output,
             )
 
