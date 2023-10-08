@@ -4,5 +4,5 @@ from .kb_config import *
 from .server_config import *
 from .prompt_config import *
 
-
 VERSION = "v0.2.5"
+TAG = ["desmond_test"]
