@@ -33,6 +33,7 @@ class SupportedVSType:
     MILVUS = 'milvus'
     DEFAULT = 'default'
     PG = 'pg'
+    ZILLIZ = 'zilliz'
 
 
 class KBService(ABC):
@@ -241,6 +242,9 @@ class KBServiceFactory:
         if SupportedVSType.PG == vector_store_type:
             from server.knowledge_base.kb_service.pg_kb_service import PGKBService
             return PGKBService(kb_name, embed_model=embed_model)
+        if SupportedVSType.ZILLIZ == vector_store_type:
+            from server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
+            return ZillizKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.MILVUS == vector_store_type:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,
