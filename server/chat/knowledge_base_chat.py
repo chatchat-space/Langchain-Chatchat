@@ -2,7 +2,7 @@ from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs import (LLM_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
 from server.utils import wrap_done, get_ChatOpenAI
-from server.utils import BaseResponse, get_prompt_template
+from server.utils import BaseResponse, get_prompt_template,get_prompt_template_kb
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, List, Optional
@@ -56,7 +56,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
 
-        prompt_template = get_prompt_template(prompt_name)
+        prompt_template = get_prompt_template_kb(prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])

@@ -4,7 +4,7 @@ from streamlit_chatbox import *
 from datetime import datetime
 from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs import LLM_MODEL, TEMPERATURE
+from configs import LLM_MODEL, TEMPERATURE, PROMPT_TEMPLATES, PROMPT_TEMPLATES_KB
 from server.utils import get_model_worker_config
 from typing import List, Dict
 
@@ -100,6 +100,32 @@ def dialogue_page(api: ApiRequest):
                 elif msg := check_success_msg(r):
                     st.success(msg)
                     st.session_state["prev_llm_model"] = llm_model
+
+        # TODO: 设置知识库问答的Prompt业务模板
+        prompt_templates_kb_list = list(PROMPT_TEMPLATES_KB.keys())
+        # print(f"20231008 - prompt_templates_kb_list: {prompt_templates_kb_list}")
+        prompt_template_name = prompt_templates_kb_list[0]
+        if "prompt_template_select" not in st.session_state:
+            st.session_state.prompt_template_select = prompt_templates_kb_list[0]
+        
+        print(f"默认的知识问答Prompt模板是 : {prompt_template_name}")
+        
+        if dialogue_mode == "知识库问答":
+            def on_prompt_change():
+                text = f"已切换到 {prompt_template_name} 业务模板。"
+                st.toast(text)
+
+            # print(f"20231008 -1- prompt_template_name : {prompt_template_name}")
+            prompt_template_select = st.selectbox(
+                "请选择Prompt业务模板：",
+                prompt_templates_kb_list,
+                index=0,
+                on_change=on_prompt_change,
+                key="prompt_template_select",
+                )
+            prompt_template_name = st.session_state.prompt_template_select
+            print(f"您选择的知识问答Prompt模板是 : {prompt_template_name}")
+
 
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.01)
 

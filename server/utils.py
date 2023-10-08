@@ -381,6 +381,15 @@ def get_prompt_template(name: str) -> Optional[str]:
 
     return prompt_config.PROMPT_TEMPLATES.get(name)
 
+def get_prompt_template_kb(name: str) -> Optional[str]:  # 384行
+    '''
+    从prompt_config中加载模板内容
+    '''
+    from configs import prompt_config
+    import importlib
+    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+
+    return prompt_config.PROMPT_TEMPLATES_KB.get(name)
 
 def set_httpx_config(
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
