@@ -9,8 +9,10 @@
 ## 目录
 
 * [介绍](README.md#介绍)
+* [环境最低要求](README.md#环境最低要求)
 * [变更日志](README.md#变更日志)
 * [模型支持](README.md#模型支持)
+* [Agent 生态](README.md#Agent-生态)
 * [Docker 部署](README.md#Docker-部署)
 * [开发部署](README.md#开发部署)
   * [软件需求](README.md#软件需求)
@@ -20,6 +22,7 @@
   * [4. 知识库初始化与迁移](README.md#4-知识库初始化与迁移)
   * [5. 一键启动 API 服务或 Web UI](README.md#5-一键启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
+* [项目 Wiki](README.md#项目-Wiki)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
 
@@ -59,22 +62,34 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ## 环境最低要求
 
 想顺利运行本代码，请按照以下的最低要求进行配置：
-+ Python版本: >= 3.8.5, < 3.11
-+ Cuda版本: >= 11.7
-+ 强烈推荐使用Python3.10，部分Agent功能可能没有完全支持Python3.10以下版本。
++ Python 版本: >= 3.8.5, < 3.11
++ CUDA 版本: >= 11.7
++ 强烈推荐使用 Python 3.10，部分 Agent 功能可能没有完全支持 Python 3.10 以下版本。
 
-如果想要顺利在GPU运行本地模型(int4版本)，你至少需要以下的硬件配置:
+如果想要顺利在 GPU 运行本地模型(int4 版本)，你至少需要以下的硬件配置:
 
-+ chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
-+ LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
-+ Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
-+ LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40
-+ LLaMA-65B 最低显存要求: 40GB  推荐显卡：A100,A40,A6000
++ ChatGLM2-6B & LLaMA-7B  
+  + 最低显存要求: 7GB
+  + 推荐显卡: RTX 3060, RTX 2060
++ LLaMA-13B 
+  + 最低显存要求: 11GB  
+  + 推荐显卡: RTX 2060 12GB, RTX 3060 12GB, RTX 3080, RTX A2000 
++ Qwen-14B-Chat 
+  + 最低显存要求: 13GB 
+  + 推荐显卡: RTX 3090
++ LLaMA-30B 
+  + 最低显存要求: 22GB  
+  + 推荐显卡: RTX A5000, RTX 3090, RTX 4090, RTX 6000, Tesla V100, RTX Tesla P40
++ LLaMA-65B 
+  + 最低显存要求: 40GB  
+  + 推荐显卡: A100, A40, A6000
 
-如果是int8 则显存x1.5 fp16 x2.5的要求
-如：使用fp16 推理Qwen-7B-Chat 模型 则需要使用16GB显存。
+如果使用 int8 推理，则以显存x1.5倍要求；使用 fp16 推理，则以显存x2.5倍要求。
+例如，使用 Qwen-7B-Chat 模型 fp16 推理，则需要使用 16GB 显存。
 
-以上仅为估算，实际情况以nvidia-smi占用为准。
+以上仅为估算，实际情况以 nvidia-smi 占用为准。
+
+---
 
 ## 变更日志
 
@@ -187,8 +202,6 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 项目中默认使用的 Embedding 类型为 `sensenova/piccolo-base-zh`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
 
----
-
 ### Text Splitter 个性化支持
 
 本项目支持调用 [Langchain](https://api.python.langchain.com/en/latest/api_reference.html#module-langchain.text_splitter) 的 Text Splitter 分词器以及基于此改进的自定义分词器，已支持的 Text Splitter 类型如下：
@@ -213,17 +226,21 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
 
-## Agent生态
-### 基础的Agent
+---
+
+## Agent 生态
+### 基础的 Agent
 在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
 + OpenAI GPT4
 + ChatGLM2-130B
 
 目前版本的Agent仍然需要对提示词进行大量调试，调试位置
 
-### 构建自己的Agent工具
+### 构建自己的 Agent 工具
 
-详见 [自定义Agent说明](docs/自定义Agent.md)
+详见 [自定义 Agent 说明](docs/自定义Agent.md)
+
+---
 
 ## Docker 部署
 
@@ -352,9 +369,9 @@ $ python startup.py --all-webui --model-name Qwen-7B-Chat
 项目支持多卡加载，需在 startup.py 中的 create_model_worker_app 函数中，修改如下三个参数:
 
 ```python
-gpus=None, 
-num_gpus= 1, 
-max_gpu_memory="20GiB"
+gpus = None, 
+num_gpus = 1, 
+max_gpu_memory = "20GiB"
 ```
 
 其中，`gpus` 控制使用的显卡的ID，例如 "0,1";
@@ -409,6 +426,12 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 ---
 
+## 项目 Wiki
+
+更多项目相关开发介绍、参数配置、最佳实践等信息，请参见 [项目 Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki)
+
+---
+
 ## 路线图
 
 - [X] Langchain 应用
@@ -449,14 +472,15 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 ## 项目交流群
 
-<img src="img/qr_65.png" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_64_2.png" alt="二维码" width="300" height="300" />
 
 🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
 
 ## 关注我们
 
-<img src="img/official_account.png" alt="图片" width="900" height="300" />
+![](img/official_wechat_mp_account.png)
+
 🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
 
