@@ -22,6 +22,7 @@
   * [4. 知识库初始化与迁移](README.md#4-知识库初始化与迁移)
   * [5. 一键启动 API 服务或 Web UI](README.md#5-一键启动-API-服务或-Web-UI)
 * [常见问题](README.md#常见问题)
+* [最佳实践](README.md#最佳实践)
 * [项目 Wiki](README.md#项目-Wiki)
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
@@ -61,7 +62,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ## 环境最低要求
 
-想顺利运行本代码，请按照以下的最低要求进行配置：
+想顺利运行本项目代码，请按照以下的最低要求进行配置：
 + Python 版本: >= 3.8.5, < 3.11
 + CUDA 版本: >= 11.7
 + 强烈推荐使用 Python 3.10，部分 Agent 功能可能没有完全支持 Python 3.10 以下版本。
@@ -275,9 +276,9 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
 
-以本项目中默认使用的 LLM 模型 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
+以本项目中默认使用的 LLM 模型 [THUDM/ChatGLM2-6B](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
 
-下载模型需要先[安装Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
+下载模型需要先[安装 Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
 
 ```Shell
 $ git clone https://huggingface.co/THUDM/chatglm2-6b
@@ -426,9 +427,14 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 ---
 
+## 最佳实践
+
+请参见 [最佳实践](https://github.com/chatchat-space/Langchain-Chatchat/wiki/最佳实践)
+
+---
 ## 项目 Wiki
 
-更多项目相关开发介绍、参数配置、最佳实践等信息，请参见 [项目 Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki)
+更多项目相关开发介绍、参数配置等信息，请参见 [项目 Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki)
 
 ---
 
