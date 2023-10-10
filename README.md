@@ -85,8 +85,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
   + 最低显存要求: 40GB  
   + 推荐显卡: A100, A40, A6000
 
-如果使用 int8 推理，则以显存x1.5倍要求；使用 fp16 推理，则以显存x2.5倍要求。
-例如，使用 Qwen-7B-Chat 模型 fp16 推理，则需要使用 16GB 显存。
+若使用 int8 推理，则显存大致为 int4 推理要求的 1.5 倍；
+
+若使用 fp16 推理，则显存大致为 int4 推理要求的 2.5 倍。
+
+💡 例如：使用 fp16 推理 Qwen-7B-Chat 模型，则需要使用 16GB 显存。
 
 以上仅为估算，实际情况以 nvidia-smi 占用为准。
 
