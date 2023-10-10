@@ -104,7 +104,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 2. 使用 [langchain](https://github.com/langchain-ai/langchain) 中已有 Chain 的实现，便于后续接入不同类型 Chain，并将对 Agent 接入开展测试；
 3. 使用 [FastAPI](https://github.com/tiangolo/fastapi) 提供 API 服务，全部接口可在 FastAPI 自动生成的 docs 中开展测试，且所有对话接口支持通过参数设置流式或非流式输出；
 4. 使用 [Streamlit](https://github.com/streamlit/streamlit) 提供 WebUI 服务，可选是否基于 API 服务启动 WebUI，增加会话管理，可以自定义会话主题并切换，且后续可支持不同形式输出内容的显示；
-5. 项目中默认 LLM 模型改为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置；
+5. 项目中默认 LLM 模型改为 [THUDM/ChatGLM2-6B](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置；
 6. 项目中扩充了对不同类型向量库的支持，除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
 7. 项目中搜索引擎对话，除 Bing 搜索外，增加 DuckDuckGo 搜索选项，DuckDuckGo 搜索无需配置 API Key，在可访问国外服务环境下可直接使用。
 
@@ -112,7 +112,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ## 模型支持
 
-本项目中默认使用的 LLM 模型为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认使用的 Embedding 模型为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例。
+本项目中默认使用的 LLM 模型为 [THUDM/ChatGLM2-6B](https://huggingface.co/THUDM/chatglm2-6b)，默认使用的 Embedding 模型为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例。
 
 ### LLM 模型支持
 
@@ -160,7 +160,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 以上模型支持列表可能随 [FastChat](https://github.com/lm-sys/FastChat) 更新而持续更新，可参考 [FastChat 已支持模型列表](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)。
 
-除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `llm_model_dict` 的配置信息。
+除本地模型外，本项目也支持直接接入 OpenAI API、智谱AI等在线模型，具体设置可参考 `configs/model_configs.py.example` 中的 `ONLINE_LLM_MODEL` 的配置信息。
 
 在线 LLM 模型目前已支持：
 
@@ -169,9 +169,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [MiniMax](https://api.minimax.chat)
 - [讯飞星火](https://xinghuo.xfyun.cn)
 - [百度千帆](https://cloud.baidu.com/product/wenxinworkshop?track=dingbutonglan)
+- [字节火山方舟](https://www.volcengine.com/docs/82379)
 - [阿里云通义千问](https://dashscope.aliyun.com/)
+- [百川](https://www.baichuan-ai.com/home#api-enter) (个人用户 API_KEY 暂未开放)
 
-项目中默认使用的 LLM 类型为 `THUDM/chatglm2-6b`，如需使用其他 LLM 类型，请在 [configs/model_config.py] 中对 `llm_model_dict` 和 `LLM_MODEL` 进行修改。
+项目中默认使用的 LLM 类型为 `THUDM/ChatGLM2-6B`，如需使用其他 LLM 类型，请在 `configs/model_config.py` 中对 `MODEL_PATH` 和 `LLM_MODEL` 进行修改。
 
 ### Embedding 模型支持
 
@@ -201,7 +203,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [sensenova/piccolo-base-zh](https://huggingface.co/sensenova/piccolo-large-zh)
 - [OpenAI/text-embedding-ada-002](https://platform.openai.com/docs/guides/embeddings)
 
-项目中默认使用的 Embedding 类型为 `sensenova/piccolo-base-zh`，如需使用其他 Embedding 类型，请在 [configs/model_config.py] 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
+项目中默认使用的 Embedding 类型为 `moka-ai/m3e-base`，如需使用其他 Embedding 类型，请在 `configs/model_config.py` 中对 `embedding_model_dict` 和 `EMBEDDING_MODEL` 进行修改。
 
 ### Text Splitter 个性化支持
 
@@ -223,19 +225,19 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 - [ChineseRecursiveTextSplitter](text_splitter/chinese_recursive_text_splitter.py)
 - [ChineseTextSplitter](text_splitter/chinese_text_splitter.py)
 
-项目中默认使用的 Text Splitter 类型为 `ChineseRecursiveTextSplitter`，如需使用其他 Text Splitter 类型，请在 [configs/model_config.py] 中对 `text_splitter_dict` 和 `TEXT_SPLITTER` 进行修改。
+项目中默认使用的 Text Splitter 类型为 `ChineseRecursiveTextSplitter`，如需使用其他 Text Splitter 类型，请在 `configs/model_config.py` 中对 `text_splitter_dict` 和 `TEXT_SPLITTER` 进行修改。
 
-关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
+关于如何使用自定义分词器和贡献自己的分词器，可以参考 [如何自定义分词器](docs/splitter.md)。
 
 ---
 
 ## Agent 生态
 ### 基础的 Agent
-在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
+在本版本中，我们实现了一个简单的基于 OpenAI 的 ReAct 的 Agent 模型，目前，经过我们测试，仅有以下两个模型支持：
 + OpenAI GPT4
 + ChatGLM2-130B
 
-目前版本的Agent仍然需要对提示词进行大量调试，调试位置
+目前版本的 Agent 仍然需要对提示词进行大量调试。
 
 ### 构建自己的 Agent 工具
 
@@ -288,19 +290,17 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 
 ### 3. 设置配置项
 
-复制模型相关参数配置模板文件 [configs/model_config.py.example](configs/model_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `model_config.py`。
+复制相关参数配置模板文件 `configs/*_config.py.example`，存储至项目路径下 `./configs` 路径下，并重命名为 `*_config.py`。
 
-复制服务相关参数配置模板文件 [configs/server_config.py.example](configs/server_config.py.example) 存储至项目路径下 `./configs` 路径下，并重命名为 `server_config.py`。
+在开始执行 Web UI 或命令行交互前，请先检查 `configs/model_config.py` 和 `configs/server_config.py` 中的各项模型参数设计是否符合需求：
 
-在开始执行 Web UI 或命令行交互前，请先检查 [configs/model_config.py](configs/model_config.py) 和 [configs/server_config.py](configs/server_config.py) 中的各项模型参数设计是否符合需求：
+- 请确认已下载至本地的 LLM 模型本地存储路径（请使用绝对路径）写在 `MODEL_PATH` 对应模型位置，如:
 
-- 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
 ```
 "chatglm2-6b": "/Users/xxx/Downloads/chatglm2-6b",
-
 ```
 
-- 请确认已下载至本地的 Embedding 模型本地存储路径写在 `embedding_model_dict` 对应模型位置，如：
+- 请确认已下载至本地的 Embedding 模型本地存储路径写在 `MODEL_PATH` 对应模型位置，如：
 
 ```
 "m3e-base": "/Users/xxx/Downloads/m3e-base",
@@ -311,13 +311,15 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 text_splitter_dict = {
     "ChineseRecursiveTextSplitter": {
-        "source": "huggingface",  ## 选择tiktoken则使用openai的方法,不填写则默认为字符长度切割方法。
-        "tokenizer_name_or_path": "", ## 空格不填则默认使用大模型的分词器。 
+        "source": "huggingface",  
+        ## 选择tiktoken则使用openai的方法,不填写则默认为字符长度切割方法。
+        "tokenizer_name_or_path": "", 
+        ## 空格不填则默认使用大模型的分词器。 
     }
 }
 ```
 
-如果你选择使用OpenAI的Embedding模型，请将模型的 ``key``写入 `embedding_model_dict`中。使用该模型，你需要能够访问OpenAI官的API，或设置代理。
+如果你选择使用 OpenAI 的 Embedding 模型，请将模型的 `key` 写入 `ONLINE_LLM_MODEL` 中。使用该模型，你需要能够访问 OpenAI 官方的 API，或设置代理。
 
 ### 4. 知识库初始化与迁移
 
@@ -328,6 +330,7 @@ text_splitter_dict = {
   ```shell
   $ python init_database.py
   ```
+  
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，或者之前的向量库没有开启 `normalize_L2`，需要以下命令初始化或重建知识库：
 
   ```shell
@@ -338,7 +341,7 @@ text_splitter_dict = {
 
 #### 5.1 启动命令
 
-一键启动脚本 startup.py,一键启动所有 Fastchat 服务、API 服务、WebUI 服务，示例代码：
+一键启动脚本 `startup.py`，一键启动所有 FastChat 服务、API 服务、WebUI 服务，示例代码：
 
 ```shell
 $ python startup.py -a
@@ -351,9 +354,11 @@ $ python startup.py -a
 
 - `--all-webui` 为一键启动 WebUI 所有依赖服务；
 - `--all-api` 为一键启动 API 所有依赖服务；
-- `--llm-api` 为一键启动 Fastchat 所有依赖的 LLM 服务；
+- `--llm-api` 为一键启动 FastChat 所有依赖的 LLM 服务；
 - `--openai-api` 为仅启动 FastChat 的 controller 和 openai-api-server 服务；
 - 其他为单独服务启动选项。
+
+更多信息可以通过 `python startup.py -h` 查看
 
 #### 5.2 启动非默认模型
 
@@ -363,11 +368,11 @@ $ python startup.py -a
 $ python startup.py --all-webui --model-name Qwen-7B-Chat
 ```
 
-更多信息可通过 `python startup.py -h`查看。
+请注意，指定的模型必须在 `model_config.py` 中进行了配置。
 
 #### 5.3 多卡加载
 
-项目支持多卡加载，需在 startup.py 中的 create_model_worker_app 函数中，修改如下三个参数:
+项目支持多卡加载，需在 `startup.py` 中的 `create_model_worker_app` 函数中，修改如下三个参数:
 
 ```python
 gpus = None, 
@@ -375,41 +380,41 @@ num_gpus = 1,
 max_gpu_memory = "20GiB"
 ```
 
-其中，`gpus` 控制使用的显卡的ID，例如 "0,1";
+其中，`gpus` 控制使用的显卡的 ID，例如 "0,1";
 
 `num_gpus` 控制使用的卡数;
 
 `max_gpu_memory` 控制每个卡使用的显存容量。
 
-注1：server_config.py的FSCHAT_MODEL_WORKERS字典中也增加了相关配置，如有需要也可通过修改FSCHAT_MODEL_WORKERS字典中对应参数实现多卡加载。
+注1：`server_config.py` 的 `FSCHAT_MODEL_WORKERS` 字典中也增加了相关配置，如有需要也可通过修改 `FSCHAT_MODEL_WORKERS` 字典中对应参数实现多卡加载。
 
-注2：少数情况下，gpus参数会不生效，此时需要通过设置环境变量CUDA_VISIBLE_DEVICES来指定torch可见的gpu,示例代码：
+注2：少数情况下，`gpus` 参数会不生效，此时需要通过设置环境变量 `CUDA_VISIBLE_DEVICES` 来指定 torch 可见的 GPU，示例代码：
 
 ```shell
 CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 ```
 
-#### 5.4 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
+#### 5.4 PEFT 加载(包括 lora, p-tuning, prefix tuning, ia3等)
 
-本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含.bin 格式的 PEFT 权重，peft路径在startup.py中create_model_worker_app函数的args.model_names中指定，并开启环境变量PEFT_SHARE_BASE_WEIGHTS=true参数。
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 `adapter_config.json`，peft 路径下包含 .bin 格式的 PEFT 权重，peft 路径在 `startup.py` 中 `create_model_worker_app` 函数的 `args.model_names` 中指定，并开启环境变量 `PEFT_SHARE_BASE_WEIGHTS=true` 参数。
 
-注：如果上述方式启动失败，则需要以标准的fastchat服务启动方式分步启动，分步启动步骤参考第六节，PEFT加载详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)，
+注：如果上述方式启动失败，则需要以标准的 FastChat 服务启动方式分步启动。PEFT 加载详细步骤参考 [加载 LoRA 微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)
 
-#### **5.5 注意事项：**
+#### 5.5 注意事项
 
-**1. startup 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:8888`,默认 API 服务端口：`127.0.0.1:7861`,默认 WebUI 服务端口：`本机IP：8501`)**
+1. `startup.py` 脚本用多进程方式启动各模块的服务，可能会导致打印顺序问题，请等待全部服务发起后再调用，并根据默认或指定端口调用服务（默认 LLM API 服务端口：`127.0.0.1:20000`，默认 API 服务端口：`127.0.0.1:7861`，默认 WebUI 服务端口：`本机IP:8501`)。
 
-**2.服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。**
+2. 服务启动时间示设备不同而不同，约 3-10 分钟，如长时间没有启动请前往 `./logs`目录下监控日志，定位问题。
 
-**3. 在Linux上使用ctrl+C退出可能会由于linux的多进程机制导致multiprocessing遗留孤儿进程，可通过shutdown_all.sh进行退出**
+3. 在 Linux 上使用 `Ctrl+C` 退出可能会由于 Linux 的多进程机制导致 multiprocessing 遗留孤儿进程，可通过运行 `shutdown_all.sh` 进行退出
 
 #### 5.6 启动界面示例：
 
-1. FastAPI docs 界面
+1. FastAPI Docs 界面
 
 ![](img/fastapi_docs_020_0.png)
 
-2. webui启动界面示例：
+2. Web UI 启动界面示例：
 
 - Web UI 对话界面：
 
