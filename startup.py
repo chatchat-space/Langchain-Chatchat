@@ -7,6 +7,7 @@ from multiprocessing import Process
 from datetime import datetime
 from pprint import pprint
 
+
 # 设置numexpr最大线程数，默认为CPU核心数
 try:
     import numexpr
@@ -26,6 +27,7 @@ from configs import (
     TEXT_SPLITTER_NAME,
     FSCHAT_CONTROLLER,
     FSCHAT_OPENAI_API,
+    FSCHAT_MODEL_WORKERS,
     API_SERVER,
     WEBUI_SERVER,
     HTTPX_DEFAULT_TIMEOUT,
@@ -666,7 +668,9 @@ async def start_main_server():
     if args.api_worker:
         configs = get_all_model_worker_configs()
         for model_name, config in configs.items():
-            if config.get("online_api") and config.get("worker_class"):
+            if (config.get("online_api")
+                and config.get("worker_class")
+                and model_name in FSCHAT_MODEL_WORKERS):
                 e = manager.Event()
                 model_worker_started.append(e)
                 process = Process(
