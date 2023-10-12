@@ -194,7 +194,7 @@ def MakeFastAPIOffline(
                 index = i
                 break
         if isinstance(index, int):
-            app.routes.pop(i)
+            app.routes.pop(index)
 
     # Set up static file mount
     app.mount(
