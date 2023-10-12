@@ -34,6 +34,7 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
 def get_ChatOpenAI(
         model_name: str,
         temperature: float,
+        max_tokens: int = None,
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
@@ -48,6 +49,7 @@ def get_ChatOpenAI(
         openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
         model_name=model_name,
         temperature=temperature,
+        max_tokens=max_tokens,
         openai_proxy=config.get("openai_proxy"),
         **kwargs
     )
@@ -144,7 +146,7 @@ def run_async(cor):
     return loop.run_until_complete(cor)
 
 
-def iter_over_async(ait, loop):
+def iter_over_async(ait, loop=None):
     '''
     将异步生成器封装成同步生成器.
     '''
@@ -156,6 +158,12 @@ def iter_over_async(ait, loop):
             return False, obj
         except StopAsyncIteration:
             return True, None
+
+    if loop is None:
+        try:
+            loop = asyncio.get_event_loop()
+        except:
+            loop = asyncio.new_event_loop()
 
     while True:
         done, obj = loop.run_until_complete(get_next())

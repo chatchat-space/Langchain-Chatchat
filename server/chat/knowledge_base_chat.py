@@ -31,6 +31,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
+                            max_tokens: int = Body(1024, description="限制LLM生成Token数量，当前默认为1024"), # TODO: fastchat更新后默认值设为None，自动使用LLM支持的最大值。
                             prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
                             request: Request = None,
@@ -51,6 +52,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
+            max_tokens=max_tokens,
             callbacks=[callback],
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)

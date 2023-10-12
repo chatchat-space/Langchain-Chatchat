@@ -166,7 +166,7 @@ def dialogue_page(api: ApiRequest):
             ans = ""
             support_agent = ["gpt", "Qwen", "qwen-api", "baichuan-api"] # 目前支持agent的模型
             if not any(agent in llm_model for agent in support_agent):
-                ans += "正在思考... \n\n <span style='color:red'>改模型并没有进行Agent对齐，无法正常使用Agent功能！</span>\n\n\n<span style='color:red'>请更换 GPT4或Qwen-14B等支持Agent的模型获得更好的体验！ </span> \n\n\n"
+                ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，无法正常使用Agent功能！</span>\n\n\n<span style='color:red'>请更换 GPT4或Qwen-14B等支持Agent的模型获得更好的体验！ </span> \n\n\n"
                 chat_box.update_msg(ans, element_index=0, streaming=False)
 
 
