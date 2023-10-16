@@ -3,6 +3,8 @@ import os
 
 # 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
 # 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录
+# 支持按embedding和llm分类存储:
+# 格式支持{MODEL_ROOT_PATH}/{category}/{model_name}
 MODEL_ROOT_PATH = ""
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置。支持3种设置方法：
@@ -12,6 +14,8 @@ MODEL_ROOT_PATH = ""
 #           - text2vec
 #           - GanymedeNil/text2vec-large-chinese
 #           - text2vec-large-chinese
+#           - embedding/text2vec-large-chinese
+#           - embedding/GanymedeNil/text2vec-large-chinese
 #       2.2 如果以上本地路径不存在，则使用huggingface模型
 MODEL_PATH = {
     "embed_model": {
