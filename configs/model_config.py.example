@@ -6,6 +6,8 @@ import os
 # 支持按embedding和llm分类存储:
 # 格式支持{MODEL_ROOT_PATH}/{category}/{model_name}
 MODEL_ROOT_PATH = ""
+# 可选的模型分类，可以选择将模型分类存储
+CATEGORY = ["embedding", "llm", "favorite"]
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置。支持3种设置方法：
 # 1、将对应的值修改为模型绝对路径

@@ -6,6 +6,7 @@ from pathlib import Path
 import asyncio
 from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
                      MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL,
+                     CATEGORY,
                      logger, log_verbose,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
@@ -286,21 +287,17 @@ def get_model_path(model_name: str, type: str = None) -> Optional[str]:
             path = root_path / path_str
             if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
                 return str(path)
-            path = root_path / "embedding" / path_str
-            if path.is_dir(): # use category and value, {MODEL_ROOT_PATH}/embedding/mokai/m3e-large
-                return str(path)
-            path = root_path / "llm" / path_str
-            if path.is_dir(): # use category and value, {MODEL_ROOT_PATH}/llm/THUDM/chatglm-6b-new
-                return str(path)
+            for category in CATEGORY:
+                path = root_path / category / path_str
+                if path.is_dir():
+                    return str(path)
             path = root_path / path_str.split("/")[-1]
             if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
                 return str(path)
-            path = root_path / "embedding" / path_str.split("/")[-1]
-            if path.is_dir(): # use category and value split by "/", {MODEL_ROOT_PATH}/embedding/m3e-large
-                return str(path)
-            path = root_path / "llm" / path_str.split("/")[-1]
-            if path.is_dir(): # use category and value split by "/", {MODEL_ROOT_PATH}/llm/chatglm-6b-new
-                return str(path)
+            for category in CATEGORY:
+                path = root_path / category / path_str.split("/")[-1]
+                if path.is_dir():
+                    return str(path)
         return path_str  # THUDM/chatglm06b
 
 
