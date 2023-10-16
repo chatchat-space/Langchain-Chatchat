@@ -72,6 +72,7 @@ def folder2db(
         # 清除向量库，从本地文件重建
         if mode == "recreate_vs":
             kb.clear_vs()
+            kb.create_kb()
             kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
             files2vs(kb_name, kb_files)
             kb.save_vector_store()

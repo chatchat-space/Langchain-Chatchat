@@ -337,8 +337,9 @@ def recreate_vector_store(
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
         else:
+            if kb.exists():
+                kb.clear_vs()
             kb.create_kb()
-            kb.clear_vs()
             files = list_files_from_folder(knowledge_base_name)
             kb_files = [(file, knowledge_base_name) for file in files]
             i = 0
