@@ -89,7 +89,7 @@ class FaissKBService(KBService):
 
     def do_clear_vs(self):
         with kb_faiss_pool.atomic:
-            kb_faiss_pool.pop(self.kb_name)
+            kb_faiss_pool.pop((self.kb_name, self.vector_name))
         shutil.rmtree(self.vs_path)
         os.makedirs(self.vs_path)
 

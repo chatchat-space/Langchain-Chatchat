@@ -275,7 +275,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024, # todo:根据message内容自动计算max_tokens
+        max_tokens: int = 1024, # TODO:根据message内容自动计算max_tokens
         no_remote_api: bool = None,
         **kwargs: Any,
     ):
@@ -316,6 +316,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        max_tokens: int = 1024,
         prompt_name: str = "llm_chat",
         no_remote_api: bool = None,
     ):
@@ -331,6 +332,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "max_tokens": max_tokens,
             "prompt_name": prompt_name,
         }
 
@@ -346,13 +348,14 @@ class ApiRequest:
             return self._httpx_stream2generator(response)
 
     def agent_chat(
-            self,
-            query: str,
-            history: List[Dict] = [],
-            stream: bool = True,
-            model: str = LLM_MODEL,
-            temperature: float = TEMPERATURE,
-            no_remote_api: bool = None,
+        self,
+        query: str,
+        history: List[Dict] = [],
+        stream: bool = True,
+        model: str = LLM_MODEL,
+        temperature: float = TEMPERATURE,
+        max_tokens: int = 1024,
+        no_remote_api: bool = None,
     ):
         '''
         对应api.py/chat/agent_chat 接口
@@ -366,6 +369,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "max_tokens": max_tokens,
         }
 
         print(f"received input message:")
@@ -389,6 +393,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        max_tokens: int = 1024,
         prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
@@ -407,6 +412,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "max_tokens": max_tokens,
             "local_doc_url": no_remote_api,
             "prompt_name": prompt_name,
         }
@@ -435,6 +441,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
+        max_tokens: int = 1024,
         prompt_name: str = "knowledge_base_chat",
         no_remote_api: bool = None,
     ):
@@ -452,6 +459,7 @@ class ApiRequest:
             "stream": stream,
             "model_name": model,
             "temperature": temperature,
+            "max_tokens": max_tokens,
             "prompt_name": prompt_name,
         }
 
@@ -475,7 +483,7 @@ class ApiRequest:
     def _check_httpx_json_response(
             self,
             response: httpx.Response,
-            errorMsg: str = f"无法连接API服务器，请确认已执行python server\\api.py",
+            errorMsg: str = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。",
         ) -> Dict:
         '''
         check whether httpx returns correct data with normal Response.
