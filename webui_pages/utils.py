@@ -650,6 +650,30 @@ class ApiRequest:
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
 
+    def get_model_config(
+        self,
+        model_name: str,
+    ) -> Dict:
+        '''
+        获取服务器上模型配置
+        '''
+        data={
+            "model_name": model_name,
+        }
+        response = self.post(
+            "/llm_model/get_model_config",
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
+
+    def list_search_engines(self) -> List[str]:
+        '''
+        获取服务器支持的搜索引擎
+        '''
+        response = self.post(
+            "/server/list_search_engines",
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
+
     def stop_llm_model(
         self,
         model_name: str,
