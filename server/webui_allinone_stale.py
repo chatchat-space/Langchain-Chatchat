@@ -52,6 +52,7 @@ def launch_api(args,args_list=api_args,log_name=None):
 def launch_webui(args,args_list=web_args,log_name=None):
     print("Launching webui...")
     print("启动webui服务...")
+    venv_bin_path: str = os.path.join(sys.exec_prefix, 'bin')
     if not log_name:
         log_name = f"{LOG_PATH}webui"
 
@@ -59,11 +60,11 @@ def launch_webui(args,args_list=web_args,log_name=None):
     if args.nohup:
         print(f"logs on api are written in {log_name}")
         print(f"webui服务日志位于{log_name}下，如启动异常请查看日志")
-        webui_sh = "streamlit run webui.py {args_str} >{log_name}.log 2>&1 &".format(
-        args_str=args_str,log_name=log_name)
+        webui_sh = "{venv_bin_path}/streamlit run webui.py {args_str} >{log_name}.log 2>&1 &".format(
+            venv_bin_path=venv_bin_path, args_str=args_str, log_name=log_name)
     else:
-        webui_sh = "streamlit run webui.py {args_str}".format(
-        args_str=args_str)
+        webui_sh = "{venv_bin_path}/streamlit run webui.py {args_str}".format(
+            venv_bin_path=venv_bin_path, args_str=args_str)
     subprocess.run(webui_sh, shell=True, check=True)
     print("launch webui done!")
     print("启动webui服务完毕.")

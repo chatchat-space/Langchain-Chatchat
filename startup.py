@@ -428,7 +428,9 @@ def run_webui(started_event: mp.Event = None):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
-    p = subprocess.Popen(["streamlit", "run", "webui.py",
+    venv_bin_path: str = os.path.join(sys.exec_prefix, 'bin')
+    p = subprocess.Popen(["{venv_bin_path}/streamlit".format(venv_bin_path=venv_bin_path),
+                          "run", "webui.py",
                           "--server.address", host,
                           "--server.port", str(port),
                           "--theme.base", "light",

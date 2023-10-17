@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
 
 from server.db.base import Base
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class KnowledgeBaseModel(Base):
