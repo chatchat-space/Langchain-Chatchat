@@ -32,7 +32,7 @@ def get_running_models(api="/llm_model/list_models"):
     return []
 
 
-def test_running_models(api="/llm_model/list_models"):
+def test_running_models(api="/llm_model/list_running_models"):
     url = api_base_url + api
     r = requests.post(url)
     assert r.status_code == 200
@@ -48,7 +48,7 @@ def test_running_models(api="/llm_model/list_models"):
 #     r = requests.post(url, json={""})
 
 
-def test_change_model(api="/llm_model/change"):
+def test_change_model(api="/llm_model/change_model"):
     url = api_base_url + api
 
     running_models = get_running_models()

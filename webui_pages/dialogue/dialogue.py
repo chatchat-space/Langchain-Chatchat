@@ -2,20 +2,17 @@ import streamlit as st
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
-from server.chat.search_engine_chat import SEARCH_ENGINES
 import os
-from configs import LLM_MODEL, TEMPERATURE
-from server.utils import get_model_worker_config
+from configs import LLM_MODEL, TEMPERATURE, HISTORY_LEN
 from typing import List, Dict
+
+
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
         "chatchat_icon_blue_square_v2.png"
     )
 )
-
-
-
 
 
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
@@ -38,6 +35,26 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
+def get_default_llm_model(api: ApiRequest) -> (str, bool):
+    '''
+    从服务器上获取当前运行的LLM模型，如果本机配置的LLM_MODEL属于本地模型且在其中，则优先返回
+    返回类型为（model_name, is_local_model）
+    '''
+    running_models = api.list_running_models()
+
+    if not running_models:
+        return "", False
+
+    if LLM_MODEL in running_models:
+        return LLM_MODEL, True
+    
+    local_models = [k for k, v in running_models.items() if not v.get("online_api")]
+    if local_models:
+        return local_models[0], True
+    
+    return running_models[0], False
+
+
 def dialogue_page(api: ApiRequest):
     chat_box.init_session()
 
@@ -51,7 +68,6 @@ def dialogue_page(api: ApiRequest):
                 if cur_kb:
                     text = f"{text} 当前知识库： `{cur_kb}`。"
             st.toast(text)
-            # sac.alert(text, description="descp", type="success", closable=True, banner=True)
 
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      ["LLM 对话",
@@ -65,7 +81,7 @@ def dialogue_page(api: ApiRequest):
                                      )
 
         def on_llm_change():
-            config = get_model_worker_config(llm_model)
+            config = api.get_model_config(llm_model)
             if not config.get("online_api"):  # 只有本地model_worker可以切换模型
                 st.session_state["prev_llm_model"] = llm_model
             st.session_state["cur_llm_model"] = st.session_state.llm_model
@@ -75,15 +91,20 @@ def dialogue_page(api: ApiRequest):
                 return f"{x} (Running)"
             return x
 
-        running_models = api.list_running_models()
+        running_models = list(api.list_running_models())
         available_models = []
         config_models = api.list_config_models()
-        for models in config_models.values():
-            for m in models:
-                if m not in running_models:
-                    available_models.append(m)
+        worker_models = list(config_models.get("worker", {})) # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
+        for m in worker_models:
+            if m not in running_models and m != "default":
+                available_models.append(m)
+        for k, v in config_models.get("online", {}).items(): # 列出ONLINE_MODELS中直接访问的模型（如GPT）
+            if not v.get("provider") and k not in running_models:
+                print(k, v)
+                available_models.append(k)
+
         llm_models = running_models + available_models
-        index = llm_models.index(st.session_state.get("cur_llm_model", LLM_MODEL))
+        index = llm_models.index(st.session_state.get("cur_llm_model", get_default_llm_model(api)[0]))
         llm_model = st.selectbox("选择LLM模型：",
                                  llm_models,
                                  index,
@@ -92,7 +113,7 @@ def dialogue_page(api: ApiRequest):
                                  key="llm_model",
                                  )
         if (st.session_state.get("prev_llm_model") != llm_model
-                and not get_model_worker_config(llm_model).get("online_api")
+                and not api.get_model_config(llm_model).get("online_api")
                 and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 prev_model = st.session_state.get("prev_llm_model")
@@ -114,7 +135,7 @@ def dialogue_page(api: ApiRequest):
 
         if dialogue_mode == "知识库问答":
             with st.expander("知识库配置", True):
-                kb_list = api.list_knowledge_bases(no_remote_api=True)
+                kb_list = api.list_knowledge_bases()
                 selected_kb = st.selectbox(
                     "请选择知识库：",
                     kb_list,
@@ -126,7 +147,7 @@ def dialogue_page(api: ApiRequest):
                 # chunk_content = st.checkbox("关联上下文", False, disabled=True)
                 # chunk_size = st.slider("关联长度：", 0, 500, 250, disabled=True)
         elif dialogue_mode == "搜索引擎问答":
-            search_engine_list = list(SEARCH_ENGINES.keys())
+            search_engine_list = api.list_search_engines()
             with st.expander("搜索引擎配置", True):
                 search_engine = st.selectbox(
                     label="请选择搜索引擎",

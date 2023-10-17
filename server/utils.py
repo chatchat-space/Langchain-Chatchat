@@ -258,17 +258,18 @@ def list_embed_models() -> List[str]:
     return list(MODEL_PATH["embed_model"])
 
 
-def list_llm_models() -> Dict[str, List[str]]:
+def list_config_llm_models() -> Dict[str, Dict]:
     '''
-    get names of configured llm models with different types.
+    get configured llm models with different types.
     return [(model_name, config_type), ...]
     '''
     workers = list(FSCHAT_MODEL_WORKERS)
-    if "default" in workers:
-        workers.remove("default")
+    if LLM_MODEL not in workers:
+        workers.insert(0, LLM_MODEL)
+
     return {
-        "local": list(MODEL_PATH["llm_model"]),
-        "online": list(ONLINE_LLM_MODEL),
+        "local": MODEL_PATH["llm_model"],
+        "online": ONLINE_LLM_MODEL,
         "worker": workers,
     }
 
@@ -306,7 +307,7 @@ def get_model_worker_config(model_name: str = None) -> dict:
     加载model worker的配置项。
     优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
-    from configs.model_config import ONLINE_LLM_MODEL
+    from configs.model_config import ONLINE_LLM_MODEL, MODEL_PATH
     from configs.server_config import FSCHAT_MODEL_WORKERS
     from server import model_workers
 
@@ -324,9 +325,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
                 msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
                 logger.error(f'{e.__class__.__name__}: {msg}',
                              exc_info=e if log_verbose else None)
-
-    config["model_path"] = get_model_path(model_name)
-    config["device"] = llm_device(config.get("device"))
+    # 本地模型
+    if model_name in MODEL_PATH["llm_model"]:
+        config["model_path"] = get_model_path(model_name)
+        config["device"] = llm_device(config.get("device"))
     return config
 
 
@@ -449,11 +451,11 @@ def set_httpx_config(
 
     # TODO: 简单的清除系统代理不是个好的选择，影响太多。似乎修改代理服务器的bypass列表更好。
     # patch requests to use custom proxies instead of system settings
-    # def _get_proxies():
-    #     return {}
+    def _get_proxies():
+        return proxies
 
-    # import urllib.request
-    # urllib.request.getproxies = _get_proxies
+    import urllib.request
+    urllib.request.getproxies = _get_proxies
 
 
 # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
@@ -557,3 +559,35 @@ def get_httpx_client(
         return httpx.AsyncClient(**kwargs)
     else:
         return httpx.Client(**kwargs)
+
+
+def get_server_configs() -> Dict:
+    '''
+    获取configs中的原始配置项，供前端使用
+    '''
+    from configs.kb_config import (
+        DEFAULT_VS_TYPE,
+        CHUNK_SIZE,
+        OVERLAP_SIZE,
+        SCORE_THRESHOLD,
+        VECTOR_SEARCH_TOP_K,
+        SEARCH_ENGINE_TOP_K,
+        ZH_TITLE_ENHANCE,
+        text_splitter_dict,
+        TEXT_SPLITTER_NAME,
+    )
+    from configs.model_config import (
+        LLM_MODEL,
+        EMBEDDING_MODEL,
+        HISTORY_LEN,
+        TEMPERATURE,
+    )
+    from configs.prompt_config import PROMPT_TEMPLATES
+
+    _custom = {
+        "controller_address": fschat_controller_address(),
+        "openai_api_address": fschat_openai_api_address(),
+        "api_address": api_address(),
+    }
+
+    return {**{k: v for k, v in locals().items() if k[0] != "_"}, **_custom}

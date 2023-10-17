@@ -22,9 +22,10 @@ if __name__ == "__main__":
     )
 
     if not chat_box.chat_inited:
+        running_models = api.list_running_models()
         st.toast(
             f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
-            f"当前使用模型`{LLM_MODEL}`, 您可以开始提问了."
+            f"当前运行中的模型`{running_models}`, 您可以开始提问了."
         )
 
     pages = {
