@@ -724,7 +724,7 @@ class ApiRequest:
                 }
 
             config_models = self.list_config_models()
-            if new_model_name not in config_models.get("local", []):
+            if new_model_name not in config_models.get("local", {}):
                 return {
                     "code": 500,
                     "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
@@ -757,7 +757,7 @@ class ApiRequest:
                 }
 
             config_models = await self.list_config_models()
-            if new_model_name not in config_models.get("local", []):
+            if new_model_name not in config_models.get("local", {}):
                 return {
                     "code": 500,
                     "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"

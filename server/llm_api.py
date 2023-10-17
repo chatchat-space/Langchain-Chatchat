@@ -1,6 +1,6 @@
 from fastapi import Body
 from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
-from server.utils import (BaseResponse, fschat_controller_address, list_llm_models,
+from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 
 
@@ -31,7 +31,18 @@ def list_config_models() -> BaseResponse:
     '''
     从本地获取configs中配置的模型列表
     '''
-    return BaseResponse(data=list_llm_models())
+    configs = list_config_llm_models()
+
+    # 删除ONLINE_MODEL配置中的敏感信息
+    for config in configs["online"].values():
+        del_keys = set(["worker_class"])
+        for k in config:
+            if "key" in k.lower() or "secret" in k.lower():
+                del_keys.add(k)
+        for k in del_keys:
+            config.pop(k, None)
+
+    return BaseResponse(data=configs)
 
 
 def get_model_config(
@@ -41,7 +52,17 @@ def get_model_config(
     '''
     获取LLM模型配置项（合并后的）
     '''
-    return BaseResponse(data=get_model_worker_config(model_name=model_name))
+    config = get_model_worker_config(model_name=model_name)
+
+    # 删除ONLINE_MODEL配置中的敏感信息
+    del_keys = set(["worker_class"])
+    for k in config:
+        if "key" in k.lower() or "secret" in k.lower():
+            del_keys.add(k)
+    for k in del_keys:
+        config.pop(k, None)
+
+    return BaseResponse(data=config)
 
 
 def stop_llm_model(

@@ -93,10 +93,16 @@ def dialogue_page(api: ApiRequest):
 
         running_models = list(api.list_running_models())
         available_models = []
-        worker_models = api.list_config_models().get("worker", []) # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
+        config_models = api.list_config_models()
+        worker_models = list(config_models.get("worker", {})) # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
         for m in worker_models:
-            if m not in running_models:
+            if m not in running_models and m != "default":
                 available_models.append(m)
+        for k, v in config_models.get("online", {}).items(): # 列出ONLINE_MODELS中直接访问的模型（如GPT）
+            if not v.get("provider") and k not in running_models:
+                print(k, v)
+                available_models.append(k)
+
         llm_models = running_models + available_models
         index = llm_models.index(st.session_state.get("cur_llm_model", get_default_llm_model(api)[0]))
         llm_model = st.selectbox("选择LLM模型：",
@@ -129,7 +135,7 @@ def dialogue_page(api: ApiRequest):
 
         if dialogue_mode == "知识库问答":
             with st.expander("知识库配置", True):
-                kb_list = api.list_knowledge_bases(no_remote_api=True)
+                kb_list = api.list_knowledge_bases()
                 selected_kb = st.selectbox(
                     "请选择知识库：",
                     kb_list,

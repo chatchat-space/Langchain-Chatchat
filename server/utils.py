@@ -258,19 +258,18 @@ def list_embed_models() -> List[str]:
     return list(MODEL_PATH["embed_model"])
 
 
-def list_llm_models() -> Dict[str, List[str]]:
+def list_config_llm_models() -> Dict[str, Dict]:
     '''
     get configured llm models with different types.
     return [(model_name, config_type), ...]
     '''
     workers = list(FSCHAT_MODEL_WORKERS)
-    if "default" in workers:
-        workers.remove("default")
     if LLM_MODEL not in workers:
         workers.insert(0, LLM_MODEL)
+
     return {
-        "local": list(MODEL_PATH["llm_model"]),
-        "online": list(ONLINE_LLM_MODEL),
+        "local": MODEL_PATH["llm_model"],
+        "online": ONLINE_LLM_MODEL,
         "worker": workers,
     }
 
@@ -308,7 +307,7 @@ def get_model_worker_config(model_name: str = None) -> dict:
     加载model worker的配置项。
     优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
-    from configs.model_config import ONLINE_LLM_MODEL
+    from configs.model_config import ONLINE_LLM_MODEL, MODEL_PATH
     from configs.server_config import FSCHAT_MODEL_WORKERS
     from server import model_workers
 
@@ -326,9 +325,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
                 msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
                 logger.error(f'{e.__class__.__name__}: {msg}',
                              exc_info=e if log_verbose else None)
-
-    config["model_path"] = get_model_path(model_name)
-    config["device"] = llm_device(config.get("device"))
+    # 本地模型
+    if model_name in MODEL_PATH["llm_model"]:
+        config["model_path"] = get_model_path(model_name)
+        config["device"] = llm_device(config.get("device"))
     return config
 
 
