@@ -3,8 +3,10 @@ from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 import os
-from configs import LLM_MODEL, TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES
+from configs import (LLM_MODEL, TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE)
 from typing import List, Dict
+
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -55,7 +57,13 @@ def get_default_llm_model(api: ApiRequest) -> (str, bool):
 
 
 def dialogue_page(api: ApiRequest):
-    chat_box.init_session()
+    if not chat_box.chat_inited:
+        default_model = get_default_llm_model(api)[0]
+        st.toast(
+            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
+            f"当前运行的模型`{default_model}`, 您可以开始提问了."
+        )
+        chat_box.init_session()
 
     with st.sidebar:
         # TODO: 对话模型与会话绑定
@@ -156,9 +164,13 @@ def dialogue_page(api: ApiRequest):
         if dialogue_mode == "知识库问答":
             with st.expander("知识库配置", True):
                 kb_list = api.list_knowledge_bases()
+                index = 0
+                if DEFAULT_KNOWLEDGE_BASE in kb_list:
+                    index = kb_list.index(DEFAULT_KNOWLEDGE_BASE)
                 selected_kb = st.selectbox(
                     "请选择知识库：",
                     kb_list,
+                    index=index,
                     on_change=on_kb_change,
                     key="selected_kb",
                 )
@@ -167,11 +179,15 @@ def dialogue_page(api: ApiRequest):
 
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
+            if DEFAULT_SEARCH_ENGINE in search_engine_list:
+                index = search_engine_list.index(DEFAULT_SEARCH_ENGINE)
+            else:
+                index = search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0
             with st.expander("搜索引擎配置", True):
                 search_engine = st.selectbox(
                     label="请选择搜索引擎",
                     options=search_engine_list,
-                    index=search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0,
+                    index=index,
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
 

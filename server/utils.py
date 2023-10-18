@@ -568,6 +568,8 @@ def get_server_configs() -> Dict:
     获取configs中的原始配置项，供前端使用
     '''
     from configs.kb_config import (
+        DEFAULT_KNOWLEDGE_BASE,
+        DEFAULT_SEARCH_ENGINE,
         DEFAULT_VS_TYPE,
         CHUNK_SIZE,
         OVERLAP_SIZE,
