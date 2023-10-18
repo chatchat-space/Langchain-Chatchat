@@ -7,6 +7,7 @@ import os
 from configs import LLM_MODEL, TEMPERATURE
 from server.utils import get_model_worker_config
 from typing import List, Dict
+import time, re
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -35,10 +36,58 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
 
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
+def create_chat_fun():
+    '''
+    创建历史对话窗口按钮
+    '''
+    st.session_state["history_chats"] = [
+        "新的对话_" + str(int(time.time()))
+    ] + st.session_state["history_chats"]
+    st.session_state["curent_chat_index"] = 0
+
+
+def delete_chat_fun():
+    '''
+    删除历史对话窗口
+    '''
+    if len(st.session_state["history_chats"]) == 1:
+        create_chat_fun()
+    st.session_state["history_chats"].remove(st.session_state['current_chat'])
+    st.session_state["current_chat_index"] = 0
+    
 
 def dialogue_page(api: ApiRequest):
+    if "initial_settings" not in st.session_state:
+        st.session_state["history_chats"] = ["新的对话_" + str(int(time.time()))]
+        st.session_state["current_chat_index"] = 0
+        st.session_state["initial_settings"] = True
     chat_box.init_session()
+    st.write(st.session_state)
+    with st.sidebar:
+        st.radio(
+            label="历史聊天窗口",
+            index=st.session_state["current_chat_index"],
+            format_func=lambda x: x.split("_")[0] if "_" in x else x,
+            options=st.session_state["history_chats"],
+            label_visibility="collapsed",
+            key="current_chat"
+        )
+    with st.sidebar:
+        c1, c2 = st.columns(2)
+        create_chat_button = c1.button(
+            "新建", use_container_width=True, key="create_chat_button"
+        )
+        if create_chat_button:
+            create_chat_fun()
+            st.experimental_rerun()
 
+        delete_chat_button = c2.button(
+            "删除", use_container_width=True, key="delete_chat_button"
+        )
+        if delete_chat_button:
+            delete_chat_fun()
+            st.experimental_rerun()
+        st.write("---")
     with st.sidebar:
         # TODO: 对话模型与会话绑定
         def on_mode_change():
@@ -135,14 +184,27 @@ def dialogue_page(api: ApiRequest):
                 )
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
 
-    # Display chat messages from history on app rerun
+    def reset_chat_name():
+        pattern = r"[^\w\.-]"
+        new_chat_name = re.sub(pattern, "", st.session_state["prompt"])[:8] + "_" + str(int(time.time()))
+        chat_box.use_chat_name(new_chat_name)
+        current_chat_index = st.session_state["history_chats"].index(st.session_state["current_chat"])
+        print('print(st.session_stat["current_chat_index"])')
+        print(st.session_state["current_chat_index"])
+        st.session_state["history_chats"][current_chat_index] = new_chat_name
+        st.session_state["current_chat_index"] = current_chat_index
+        print(st.session_state["current_chat_index"])
 
+    # Display chat messages from history on app rerun
+    chat_box.use_chat_name(st.session_state["current_chat"])
     chat_box.output_messages()
 
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
+        if len(history) == 0:
+            reset_chat_name()
         chat_box.user_say(prompt)
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
@@ -220,6 +282,7 @@ def dialogue_page(api: ApiRequest):
                     chat_box.update_msg(text, element_index=0)
             chat_box.update_msg(text, element_index=0, streaming=False)
             chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+        st.experimental_rerun()
 
     now = datetime.now()
     with st.sidebar:
