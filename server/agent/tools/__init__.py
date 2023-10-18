@@ -2,7 +2,7 @@
 from .search_knowledge_simple import knowledge_search_simple
 from .search_all_knowledge_once import knowledge_search_once
 from .search_all_knowledge_more import knowledge_search_more
-from .travel_assistant import travel_assistant
+# from .travel_assistant import travel_assistant
 from .calculate import calculate
 from .translator import translate
 from .weather import weathercheck
