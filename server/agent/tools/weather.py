@@ -1,16 +1,11 @@
 ## 使用和风天气API查询天气,这个模型仅仅对免费的API进行了适配
 ## 这个模型的提示词非常复杂，我们推荐使用GPT4模型进行运行
-
 from __future__ import annotations
 
 ## 单独运行的时候需要添加
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-
-from server.utils import get_ChatOpenAI
-
 
 import re
 import warnings
@@ -27,10 +22,9 @@ from langchain.schema import BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 import requests
 from typing import List, Any, Optional
-from configs.model_config import LLM_MODEL, TEMPERATURE
 from datetime import datetime
 from langchain.prompts import PromptTemplate
-
+from server.agent import model_container
 
 ## 使用和风天气API查询天气
 KEY = "ac880e5a877042809ac7ffdd19d95b0d"
@@ -237,9 +231,6 @@ class LLMWeatherChain(Chain):
             output = weather(expression)
         except Exception as e:
             output = "输入的信息有误，请再次尝试"
-            return {self.output_key: output}
-            raise ValueError(f"错误: {expression}，输入的信息不对")
-
         return output
 
     def _process_llm_result(
@@ -262,7 +253,6 @@ class LLMWeatherChain(Chain):
             answer = "Answer: " + llm_output.split("Answer:")[-1]
         else:
             return {self.output_key: f"输入的格式不对: {llm_output},应该输入 (市 区)的组合"}
-            # raise ValueError(f"unknown format from LLM: {llm_output}")
         return {self.output_key: answer}
 
     async def _aprocess_llm_result(
@@ -273,6 +263,7 @@ class LLMWeatherChain(Chain):
         await run_manager.on_text(llm_output, color="green", verbose=self.verbose)
         llm_output = llm_output.strip()
         text_match = re.search(r"^```text(.*?)```", llm_output, re.DOTALL)
+
         if text_match:
             expression = text_match.group(1)
             output = self._evaluate_expression(expression)
@@ -332,14 +323,10 @@ class LLMWeatherChain(Chain):
 
 
 def weathercheck(query: str):
-    model = get_ChatOpenAI(
-        streaming=False,
-        model_name=LLM_MODEL,
-        temperature=TEMPERATURE,
-    )
+    model = model_container.MODEL
     llm_weather = LLMWeatherChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_weather.run(query)
     return ans
 
 if __name__ == '__main__':
-    result = weathercheck("苏州工姑苏区今晚热不热？")
+    result = weathercheck("苏州姑苏区今晚热不热？")

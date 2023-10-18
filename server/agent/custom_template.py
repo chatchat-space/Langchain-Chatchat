@@ -1,11 +1,9 @@
 from __future__ import annotations
 from langchain.agents import Tool, AgentOutputParser
 from langchain.prompts import StringPromptTemplate
-from typing import List, Union, Tuple, Dict
+from typing import List
 from langchain.schema import AgentAction, AgentFinish
-import re
-from configs.model_config import LLM_MODEL, TEMPERATURE, HISTORY_LEN
-
+from server.agent import model_container
 begin = False
 class CustomPromptTemplate(StringPromptTemplate):
     # The template to use
@@ -41,7 +39,7 @@ class CustomOutputParser(AgentOutputParser):
     def parse(self, llm_output: str) -> AgentFinish | tuple[dict[str, str], str] | AgentAction:
         # Check if agent should finish
         support_agent = ["gpt","Qwen","qwen-api","baichuan-api"]
-        if not any(agent in LLM_MODEL for agent in support_agent) and self.begin:
+        if not any(agent in model_container.MODEL for agent in support_agent) and self.begin:
             self.begin = False
             stop_words = ["Observation:"]
             min_index = len(llm_output)

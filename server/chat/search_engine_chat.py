@@ -72,8 +72,9 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                            max_tokens: int = Body(1024, description="限制LLM生成Token数量，当前默认为1024"), # TODO: fastchat更新后默认值设为None，自动使用LLM支持的最大值。
-                            prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                            max_tokens: int = Body(1024, description="限制LLM生成Token数量，当前默认为1024"),
+                            # TODO: fastchat更新后默认值设为None，自动使用LLM支持的最大值。
+                            prompt_name: str = Body("default",description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -101,7 +102,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
         docs = await lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
-        prompt_template = get_prompt_template(prompt_name)
+        prompt_template = get_prompt_template("search_engine_chat", prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])

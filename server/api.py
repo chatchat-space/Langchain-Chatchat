@@ -16,7 +16,7 @@ from server.chat import (chat, knowledge_base_chat, openai_chat,
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
                                               update_docs, download_doc, recreate_vector_store,
-                                              search_docs, DocumentWithScore)
+                                              search_docs, DocumentWithScore, update_info)
 from server.llm_api import (list_running_models, list_config_models,
                             change_llm_model, stop_llm_model,
                             get_model_config, list_search_engines)
@@ -115,6 +115,11 @@ def create_app():
              summary="删除知识库内指定文件"
              )(delete_docs)
 
+    app.post("/knowledge_base/update_info",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="更新知识库介绍"
+             )(update_info)
     app.post("/knowledge_base/update_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
