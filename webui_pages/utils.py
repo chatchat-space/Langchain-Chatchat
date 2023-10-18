@@ -279,7 +279,7 @@ class ApiRequest:
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
         max_tokens: int = 1024,
-        prompt_name: str = "llm_chat",
+        prompt_name: str = "default",
         **kwargs,
     ):
         '''
@@ -309,6 +309,7 @@ class ApiRequest:
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
         max_tokens: int = 1024,
+        prompt_name: str = "default",
     ):
         '''
         对应api.py/chat/agent_chat 接口
@@ -320,6 +321,7 @@ class ApiRequest:
             "model_name": model,
             "temperature": temperature,
             "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
         }
 
         print(f"received input message:")
@@ -339,7 +341,7 @@ class ApiRequest:
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
         max_tokens: int = 1024,
-        prompt_name: str = "knowledge_base_chat",
+        prompt_name: str = "default",
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
@@ -377,7 +379,7 @@ class ApiRequest:
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
         max_tokens: int = 1024,
-        prompt_name: str = "knowledge_base_chat",
+        prompt_name: str = "default",
     ):
         '''
         对应api.py/chat/search_engine_chat接口
@@ -652,7 +654,7 @@ class ApiRequest:
 
     def get_model_config(
         self,
-        model_name: str,
+        model_name: str = None,
     ) -> Dict:
         '''
         获取服务器上模型配置
@@ -662,6 +664,7 @@ class ApiRequest:
         }
         response = self.post(
             "/llm_model/get_model_config",
+            json=data,
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
 

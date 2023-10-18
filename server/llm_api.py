@@ -32,7 +32,6 @@ def list_config_models() -> BaseResponse:
     从本地获取configs中配置的模型列表
     '''
     configs = list_config_llm_models()
-
     # 删除ONLINE_MODEL配置中的敏感信息
     for config in configs["online"].values():
         del_keys = set(["worker_class"])

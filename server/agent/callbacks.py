@@ -29,6 +29,7 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue = asyncio.Queue()
         self.done = asyncio.Event()
         self.cur_tool = {}
+        self.out = True
 
     async def on_tool_start(self, serialized: Dict[str, Any], input_str: str, *, run_id: UUID,
                             parent_run_id: UUID | None = None, tags: List[str] | None = None,
@@ -57,6 +58,7 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_tool_end(self, output: str, *, run_id: UUID, parent_run_id: UUID | None = None,
                           tags: List[str] | None = None, **kwargs: Any) -> None:
+        self.out = True ## 重置输出
         self.cur_tool.update(
             status=Status.tool_finish,
             output_str=output.replace("Answer:", ""),
@@ -72,7 +74,17 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(self.cur_tool))
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        if token:
+        if "Action" in token: ## 减少重复输出
+            before_action = token.split("Action")[0]
+            self.cur_tool.update(
+                status=Status.running,
+                llm_token=before_action + "\n",
+            )
+            self.queue.put_nowait(dumps(self.cur_tool))
+
+            self.out = False
+
+        if token and self.out:
             self.cur_tool.update(
                     status=Status.running,
                     llm_token=token,
@@ -80,6 +92,14 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             self.queue.put_nowait(dumps(self.cur_tool))
 
     async def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
+        self.cur_tool.update(
+            status=Status.start,
+            llm_token="",
+        )
+        self.queue.put_nowait(dumps(self.cur_tool))
+
+    async def on_chat_model_start(self,serialized: Dict[str, Any], **kwargs: Any,
+    ) -> None:
         self.cur_tool.update(
             status=Status.start,
             llm_token="",

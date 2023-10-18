@@ -1,12 +1,11 @@
 ## 单独运行的时候需要添加
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# import sys
+# import os
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from server.utils import get_ChatOpenAI
-from langchain.chains.llm_math.prompt import PROMPT
-from configs.model_config import LLM_MODEL,TEMPERATURE
+from server.agent import model_container
 
 _PROMPT_TEMPLATE = '''
 # 指令
@@ -30,11 +29,7 @@ PROMPT = PromptTemplate(
 
 
 def translate(query: str):
-    model = get_ChatOpenAI(
-        streaming=False,
-        model_name=LLM_MODEL,
-        temperature=TEMPERATURE,
-    )
+    model = model_container.MODEL
     llm_translate = LLMChain(llm=model, prompt=PROMPT)
     ans = llm_translate.run(query)
     return ans
