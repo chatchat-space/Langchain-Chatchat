@@ -84,7 +84,7 @@ bigdata,大数据的就业情况如何
 Question: ${{用户的问题}}
 
 ```text
-${{知识库名称,查询问题}}
+${{知识库名称,查询问题,不要带有任何除了,之外的符号}}
 
 ```output
 数据库查询的结果
@@ -177,14 +177,13 @@ class LLMKnowledgeChain(LLMChain):
         # text_match = re.search(r"^```text(.*?)```", llm_output, re.DOTALL)
         text_match = re.search(r"```text(.*)", llm_output, re.DOTALL)
         if text_match:
-
             expression = text_match.group(1).strip()
             cleaned_input_str = (expression.replace("\"", "").replace("“", "").
                                  replace("”", "").replace("```", "").strip())
             lines = cleaned_input_str.split("\n")
             # 使用逗号分割每一行，然后形成一个（数据库，查询）元组的列表
-            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
 
+            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
             run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue", verbose=self.verbose)
             output = self._evaluate_expression(queries)
             run_manager.on_text("\nAnswer: ", verbose=self.verbose)

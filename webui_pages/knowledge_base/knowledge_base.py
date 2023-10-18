@@ -68,7 +68,6 @@ def knowledge_base_page(api: ApiRequest):
 
     def format_selected_kb(kb_name: str) -> str:
         if kb := kb_list.get(kb_name):
-            st.session_state["selected_kb_info"] = kb['kb_info']
             return f"{kb_name} ({kb['vs_type']} @ {kb['embed_model']})"
         else:
             return kb_name
@@ -137,6 +136,7 @@ def knowledge_base_page(api: ApiRequest):
 
     elif selected_kb:
         kb = selected_kb
+        st.session_state["selected_kb_info"] = kb_list[kb]['kb_info']
         # 上传文件
         files = st.file_uploader("上传知识文件：",
                                  [i for ls in LOADER_DICT.values() for i in ls],
@@ -145,6 +145,9 @@ def knowledge_base_page(api: ApiRequest):
         kb_info = st.text_area("请输入知识库介绍:", value=st.session_state["selected_kb_info"], max_chars=None, key=None,
                                help=None, on_change=None, args=None, kwargs=None)
 
+        if kb_info != st.session_state["selected_kb_info"]:
+            st.session_state["selected_kb_info"] = kb_info
+            api.update_kb_info(kb, kb_info)
 
         # with st.sidebar:
         with st.expander(

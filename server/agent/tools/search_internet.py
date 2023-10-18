@@ -12,7 +12,7 @@ from server.agent import model_container
 async def search_engine_iter(query: str):
     response = await search_engine_chat(query=query,
                                          search_engine_name="bing", # 这里切换搜索引擎
-                                         model_name="Qwen-14B-Chat-Int4",
+                                         model_name=model_container.MODEL.model_name,
                                          temperature=0.01, # Agent 搜索互联网的时候，温度设置为0.01
                                          history=[],
                                          top_k = VECTOR_SEARCH_TOP_K,

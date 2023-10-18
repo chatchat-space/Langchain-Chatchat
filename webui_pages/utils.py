@@ -560,6 +560,22 @@ class ApiRequest:
         )
         return self._get_response_value(response, as_json=True)
 
+
+    def update_kb_info(self,knowledge_base_name,kb_info):
+        '''
+        对应api.py/knowledge_base/update_info接口
+        '''
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "kb_info": kb_info,
+        }
+
+        response = self.post(
+            "/knowledge_base/update_info",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
+
     def update_kb_docs(
         self,
         knowledge_base_name: str,

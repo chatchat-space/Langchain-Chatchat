@@ -116,6 +116,14 @@ class KBService(ABC):
             os.remove(kb_file.filepath)
         return status
 
+    def update_info(self, kb_info: str):
+        """
+        更新知识库介绍
+        """
+        self.kb_info = kb_info
+        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
+        return status
+
     def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
         使用content中的文件更新向量库
