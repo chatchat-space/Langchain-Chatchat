@@ -4,6 +4,10 @@ import hashlib
 import hmac
 import json
 import os
+import pickle
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from params import *
 import time
 import requests
 import urllib
@@ -50,6 +54,16 @@ class RequestApi(object):
         param_dict["fileSize"] = file_len
         param_dict["fileName"] = file_name
         param_dict["duration"] = "200"
+        # 如果../knowledge_base/keyphrases.pkl存在，则读取热词
+        # 当前文件的父级目录
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        path = os.path.join(parent_dir,"knowledge_base/keyphrases.pkl")
+        if os.path.exists(path):
+            # 从文件中反序列化 keyphrases
+            with open(path, "rb") as f:
+                keyphrases = pickle.load(f)
+            param_dict['hotWord'] = keyphrases
         print("upload参数：", param_dict)
         data = open(upload_file_path, 'rb').read(file_len)
 

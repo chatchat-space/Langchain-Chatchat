@@ -8,12 +8,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from Ifasr import RequestApi,get_transcript_from_lattice
-
-API = True
-audio_model = "damo/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
-model_revision="v1.2.4"
-appid = "00853967"
-secret_key = "4fcabeb7dbc584a4c80f180d96a2be84"
+from params import *
 def get_audio_from_path(filepath):
     # 获取文件扩展名
     ext = os.path.splitext(filepath)[1].lower()

@@ -30,3 +30,4 @@ umap
 torchaudio
 funasr
 modelscope
+textrank4zh
