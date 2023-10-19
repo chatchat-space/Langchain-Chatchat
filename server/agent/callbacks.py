@@ -98,7 +98,16 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         )
         self.queue.put_nowait(dumps(self.cur_tool))
 
-    async def on_chat_model_start(self,serialized: Dict[str, Any], **kwargs: Any,
+    async def on_chat_model_start(
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> None:
         self.cur_tool.update(
             status=Status.start,
