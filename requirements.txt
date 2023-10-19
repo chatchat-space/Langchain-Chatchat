@@ -1,6 +1,7 @@
-langchain>=0.0.314
-langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.30
+langchain==0.0.317
+langchain-experimental==0.0.30
+fschat[model_worker]==0.2.31
+xformers==0.0.22.post4
 openai
 sentence_transformers
 transformers>=4.34
@@ -43,7 +44,7 @@ pandas~=2.0.3
 streamlit>=1.26.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
-streamlit-chatbox>=1.1.9
+streamlit-chatbox==1.1.10
 streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
 watchdog

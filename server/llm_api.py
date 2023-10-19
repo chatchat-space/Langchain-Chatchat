@@ -16,7 +16,7 @@ def list_running_models(
         with get_httpx_client() as client:
             r = client.post(controller_address + "/list_models")
             models = r.json()["models"]
-            data = {m: get_model_worker_config(m) for m in models}
+            data = {m: get_model_config(m).data for m in models}
             return BaseResponse(data=data)
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',

@@ -1,7 +1,7 @@
 from configs.basic_config import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
-from fastchat.serve.model_worker import BaseModelWorker
+from fastchat.serve.base_model_worker import BaseModelWorker
 import uuid
 import json
 import sys
@@ -61,15 +61,6 @@ class ApiModelWorker(BaseModelWorker):
     def get_embeddings(self, params):
         print("embedding")
         print(params)
-
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
 
     # help methods
     def get_config(self):

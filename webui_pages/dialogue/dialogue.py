@@ -53,7 +53,7 @@ def get_default_llm_model(api: ApiRequest) -> (str, bool):
     if local_models:
         return local_models[0], True
 
-    return running_models[0], False
+    return list(running_models)[0], False
 
 
 def dialogue_page(api: ApiRequest):
