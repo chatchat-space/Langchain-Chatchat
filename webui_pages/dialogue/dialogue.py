@@ -43,7 +43,7 @@ def create_chat_fun():
     st.session_state["history_chats"] = [
         "新的对话_" + str(int(time.time()))
     ] + st.session_state["history_chats"]
-    st.session_state["curent_chat_index"] = 0
+    st.session_state["current_chat_index"] = 0
 
 
 def delete_chat_fun():
@@ -189,11 +189,9 @@ def dialogue_page(api: ApiRequest):
         new_chat_name = re.sub(pattern, "", st.session_state["prompt"])[:8] + "_" + str(int(time.time()))
         chat_box.use_chat_name(new_chat_name)
         current_chat_index = st.session_state["history_chats"].index(st.session_state["current_chat"])
-        print('print(st.session_stat["current_chat_index"])')
-        print(st.session_state["current_chat_index"])
         st.session_state["history_chats"][current_chat_index] = new_chat_name
         st.session_state["current_chat_index"] = current_chat_index
-        print(st.session_state["current_chat_index"])
+        
 
     # Display chat messages from history on app rerun
     chat_box.use_chat_name(st.session_state["current_chat"])
