@@ -7,7 +7,7 @@ import json
 import sys
 from pydantic import BaseModel
 import fastchat
-import threading
+import asyncio
 from typing import Dict, List
 
 
@@ -40,6 +40,7 @@ class ApiModelWorker(BaseModelWorker):
                         worker_addr=worker_addr,
                         **kwargs)
         self.context_len = context_len
+        self.semaphore = asyncio.Semaphore(self.limit_worker_concurrency)
         self.init_heart_beat()
 
     def count_token(self, params):
