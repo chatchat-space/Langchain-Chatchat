@@ -13,8 +13,6 @@ chat_box = ChatBox(
         "chatchat_icon_blue_square_v2.png"
     )
 )
-
-
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
     '''
     返回消息历史。
@@ -61,7 +59,6 @@ def dialogue_page(api: ApiRequest):
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
         )
         chat_box.init_session()
-
     with st.sidebar:
         # TODO: 对话模型与会话绑定
         def on_mode_change():
@@ -154,9 +151,6 @@ def dialogue_page(api: ApiRequest):
             key="prompt_template_select",
         )
         prompt_template_name = st.session_state.prompt_template_select
-
-        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
-
         history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
 
         def on_kb_change():

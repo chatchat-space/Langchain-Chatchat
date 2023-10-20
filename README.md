@@ -90,7 +90,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 3. 使用 [FastAPI](https://github.com/tiangolo/fastapi) 提供 API 服务，全部接口可在 FastAPI 自动生成的 docs 中开展测试，且所有对话接口支持通过参数设置流式或非流式输出；
 4. 使用 [Streamlit](https://github.com/streamlit/streamlit) 提供 WebUI 服务，可选是否基于 API 服务启动 WebUI，增加会话管理，可以自定义会话主题并切换，且后续可支持不同形式输出内容的显示；
 5. 项目中默认 LLM 模型改为 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)，默认 Embedding 模型改为 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base)，文件加载方式与文段划分方式也有调整，后续将重新实现上下文扩充，并增加可选设置；
-6. 项目中扩充了对不同类型向量库的支持，除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://github.com/milvus-io/milvus), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
+6. 项目中扩充了对不同类型向量库的支持，除支持 [FAISS](https://github.com/facebookresearch/faiss) 向量库外，还提供 [Milvus](https://milvus.io/),[Zilliz](https://zilliz.com/), [PGVector](https://github.com/pgvector/pgvector) 向量库的接入；
 7. 项目中搜索引擎对话，除 Bing 搜索外，增加 DuckDuckGo 搜索选项，DuckDuckGo 搜索无需配置 API Key，在可访问国外服务环境下可直接使用。
 
 ---
@@ -218,13 +218,10 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ## Agent生态
 
 ### 基础的Agent
-
+我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
 在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
-
 + OpenAI GPT4
-+ ChatGLM2-130B
-
-目前版本的Agent仍然需要对提示词进行大量调试，调试位置
++ Qwen-14B-Chat
 
 ### 构建自己的Agent工具
 
@@ -399,17 +396,17 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 1. FastAPI docs 界面
 
-![](img/fastapi_docs_020_0.png)
+![](img/fastapi_docs_026.png)
 
 2. webui启动界面示例：
 
 - Web UI 对话界面：
 
-![img](img/webui_0915_0.png)
+![img](img/LLM_success.png)
 
 - Web UI 知识库管理页面：
 
-![](img/webui_0915_1.png)
+![](img/init_knowledge_base.jpg)
 
 ---
 
@@ -440,10 +437,11 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
   - [X] 搜索引擎接入
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
+    - [X] Metaphor 搜索
   - [X] Agent 实现
     - [X] 基础React形式的Agent实现，包括调用计算器等
     - [X] Langchain 自带的Agent实现和调用
-    - [ ] 更多模型的Agent支持
+    - [X] 智能调用不同的数据库和联网知识
     - [ ] 更多工具
 - [X] LLM 模型接入
   - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
@@ -459,7 +457,7 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 ## 项目交流群
 
-<img src="img/qr_code_64.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_67.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
@@ -467,3 +465,14 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 <img src="img/official_account.png" alt="图片" width="900" height="300" />
 🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+
+## 合作伙伴名单
+
+🎉 langchain-Chatchat 项目合作伙伴，感谢以下赞助者对本项目的支持。
+
+
++ AutoDL
+ + 弹性、好用、省钱！ 
+ + 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上[AutoDL.com](https://www.autodl.com/)
+
++ ChatGLM

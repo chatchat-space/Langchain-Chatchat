@@ -46,8 +46,6 @@ class ApiModelWorker(BaseModelWorker):
     def count_token(self, params):
         # TODO：需要完善
         # print("count token")
-        print("\n\n\n")
-        print(params)
         prompt = params["prompt"]
         return {"count": len(str(prompt)), "error_code": 0}
 
@@ -61,7 +59,7 @@ class ApiModelWorker(BaseModelWorker):
 
     def get_embeddings(self, params):
         print("embedding")
-        print(params)
+        # print(params)
 
     # help methods
     def get_config(self):
