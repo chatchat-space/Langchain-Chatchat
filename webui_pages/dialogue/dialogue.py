@@ -4,9 +4,8 @@ from streamlit_chatbox import *
 from datetime import datetime
 import os
 from configs import (LLM_MODEL, TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE)
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE,LANGCHAIN_LLM_MODEL)
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -42,7 +41,6 @@ def get_default_llm_model(api: ApiRequest) -> (str, bool):
     返回类型为（model_name, is_local_model）
     '''
     running_models = api.list_running_models()
-
     if not running_models:
         return "", False
 
@@ -52,7 +50,6 @@ def get_default_llm_model(api: ApiRequest) -> (str, bool):
     local_models = [k for k, v in running_models.items() if not v.get("online_api")]
     if local_models:
         return local_models[0], True
-
     return list(running_models)[0], False
 
 
@@ -82,7 +79,7 @@ def dialogue_page(api: ApiRequest):
                                       "搜索引擎问答",
                                       "自定义Agent问答",
                                       ],
-                                     index=3,
+                                     index=0,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
@@ -100,16 +97,18 @@ def dialogue_page(api: ApiRequest):
             return x
 
         running_models = list(api.list_running_models())
+        running_models += LANGCHAIN_LLM_MODEL.keys()
         available_models = []
         config_models = api.list_config_models()
         worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
         for m in worker_models:
             if m not in running_models and m != "default":
                 available_models.append(m)
-        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型（如GPT）
+        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
-                print(k, v)
                 available_models.append(k)
+        for k, v in config_models.get("langchain", {}).items():  # 列出LANGCHAIN_LLM_MODEL支持的模型
+            available_models.append(k)
         llm_models = running_models + available_models
         index = llm_models.index(st.session_state.get("cur_llm_model", get_default_llm_model(api)[0]))
         llm_model = st.selectbox("选择LLM模型：",
@@ -119,10 +118,10 @@ def dialogue_page(api: ApiRequest):
                                  on_change=on_llm_change,
                                  key="llm_model",
                                  )
-        if (llm_model
-            and st.session_state.get("prev_llm_model") != llm_model
-            and not api.get_model_config(llm_model).get("online_api")
-            and llm_model not in running_models):
+        if (st.session_state.get("prev_llm_model") != llm_model
+                and not llm_model in config_models.get("online", {})
+                and not llm_model in config_models.get("langchain", {})
+                and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 prev_model = st.session_state.get("prev_llm_model")
                 r = api.change_llm_model(prev_model, llm_model)
@@ -228,9 +227,9 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             ans = ""
-            support_agent = ["gpt", "Qwen", "qwen-api", "baichuan-api"]  # 目前支持agent的模型
+            support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api"]  # 目前支持agent的模型
             if not any(agent in llm_model for agent in support_agent):
-                ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，无法正常使用Agent功能！</span>\n\n\n<span style='color:red'>请更换 GPT4或Qwen-14B等支持Agent的模型获得更好的体验！ </span> \n\n\n"
+                ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n"
                 chat_box.update_msg(ans, element_index=0, streaming=False)
             for d in api.agent_chat(prompt,
                                     history=history,
