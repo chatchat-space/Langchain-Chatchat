@@ -132,9 +132,6 @@ $ python startup.py -a
 
 以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式 ，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
----
-## 项目里程碑
-
 
 ---
 ## 联系我们
