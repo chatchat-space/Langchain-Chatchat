@@ -41,9 +41,9 @@ The main process analysis from the aspect of document process:
 
 🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0) is supported, and in v7 the codes are update to v0.2.3.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update to v0.2.5.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
+🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
 
 ## Pain Points Addressed
 
@@ -143,4 +143,3 @@ The above instructions are provided for a quick start. If you need more features
 + [AutoDL 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上 AutoDL.com](https://www.autodl.com)
 + [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
 + [百川智能](https://www.baichuan-ai.com/home)
-  

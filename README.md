@@ -43,7 +43,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v8` 版本所使用代码已更新至本项目 `v0.2.4` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v9` 版本所使用代码已更新至本项目 `v0.2.5` 版本。
 
 🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3) 已经更新到 ```0.2.3``` 版本, 如果想体验最新内容请源码安装。
 
@@ -87,9 +87,9 @@ $ pip install -r requirements_webui.txt
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
 
-以本项目中默认使用的 LLM 模型 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
+以本项目中默认使用的 LLM 模型 [THUDM/ChatGLM2-6B](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
 
-下载模型需要先[安装Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
+下载模型需要先[安装 Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
 
 ```Shell
 $ git lfs install
@@ -113,11 +113,11 @@ $ python startup.py -a
 
 如果正常启动，你将能看到以下界面
 
-1. FastAPI docs 界面
+1. FastAPI Docs 界面
 
 ![](img/fastapi_docs_026.png)
 
-2. webui启动界面示例：
+2. Web UI 启动界面示例：
 
 - Web UI 对话界面：
 
@@ -133,7 +133,6 @@ $ python startup.py -a
 以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式 ，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ---
-
 ## 项目里程碑
 
 
@@ -141,6 +140,7 @@ $ python startup.py -a
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
+
 ### 项目交流群
 <img src="img/qr_code_67.jpg" alt="二维码" width="300" height="300" />
 
@@ -151,8 +151,7 @@ $ python startup.py -a
 
 ## 合作伙伴名单
 🎉 Langchain-Chatchat 项目合作伙伴，感谢以下合作伙伴对本项目的支持。
-
++ [ChatGLM: 国内最早的开源中文大模型之一](https://chatglm.cn/)
 + [AutoDL 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上 AutoDL.com](https://www.autodl.com)
-+ [百川智能](https://www.baichuan-ai.com/home)
-+ [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
-  
+
+
