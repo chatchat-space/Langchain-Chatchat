@@ -345,8 +345,8 @@ def get_model_path(model_name: str, type: str = None) -> Optional[str]:
                 return str(path)
         return path_str  # THUDM/chatglm06b
 
-    # 从server_config中获取服务信息
 
+# 从server_config中获取服务信息
 
 def get_model_worker_config(model_name: str = None) -> dict:
     '''

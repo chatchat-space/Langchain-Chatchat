@@ -41,9 +41,9 @@ The main process analysis from the aspect of document process:
 
 🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0) is supported, and in v7 the codes are update to v0.2.3.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update to v0.2.5.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
+🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
 
 ## Pain Points Addressed
 

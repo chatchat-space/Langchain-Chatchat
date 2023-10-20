@@ -43,7 +43,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v8` 版本所使用代码已更新至本项目 `v0.2.4` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v9` 版本所使用代码已更新至本项目 `v0.2.5` 版本。
 
 🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3) 已经更新到 ```0.2.3``` 版本, 如果想体验最新内容请源码安装。
 
@@ -87,9 +87,9 @@ $ pip install -r requirements_webui.txt
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
 
-以本项目中默认使用的 LLM 模型 [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
+以本项目中默认使用的 LLM 模型 [THUDM/ChatGLM2-6B](https://huggingface.co/THUDM/chatglm2-6b) 与 Embedding 模型 [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) 为例：
 
-下载模型需要先[安装Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
+下载模型需要先[安装 Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
 
 ```Shell
 $ git lfs install
@@ -113,11 +113,11 @@ $ python startup.py -a
 
 如果正常启动，你将能看到以下界面
 
-1. FastAPI docs 界面
+1. FastAPI Docs 界面
 
 ![](img/fastapi_docs_026.png)
 
-2. webui启动界面示例：
+2. Web UI 启动界面示例：
 
 - Web UI 对话界面：
 
