@@ -85,10 +85,11 @@ def dialogue_page(api: ApiRequest):
                                      )
 
         def on_llm_change():
-            config = api.get_model_config(llm_model)
-            if not config.get("online_api"):  # 只有本地model_worker可以切换模型
-                st.session_state["prev_llm_model"] = llm_model
-            st.session_state["cur_llm_model"] = st.session_state.llm_model
+            if llm_model:
+                config = api.get_model_config(llm_model)
+                if not config.get("online_api"):  # 只有本地model_worker可以切换模型
+                    st.session_state["prev_llm_model"] = llm_model
+                st.session_state["cur_llm_model"] = st.session_state.llm_model
 
         def llm_model_format_func(x):
             if x in running_models:
