@@ -143,6 +143,6 @@ $ python startup.py -a
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 ### 公众号
-<img src="img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
+![](img/official_wechat_mp_account.png)
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
