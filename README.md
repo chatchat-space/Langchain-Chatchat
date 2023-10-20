@@ -148,11 +148,4 @@ $ python startup.py -a
 ### 公众号
 <img src="img/official_account.png" alt="图片" width="900" height="300" />
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-
-## 合作伙伴名单
-🎉 Langchain-Chatchat 项目合作伙伴，感谢以下合作伙伴对本项目的支持。
-
-+ [AutoDL 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上 AutoDL.com](https://www.autodl.com)
-+ [百川智能](https://www.baichuan-ai.com/home)
-+ [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
   

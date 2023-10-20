@@ -137,10 +137,3 @@ The above instructions are provided for a quick start. If you need more features
 
 <img src="img/official_account.png" alt="图片" width="900" height="300" />
 
-## Partners
-🎉A big thank you to the following partners for their support of this project.
-
-+ [AutoDL 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上 AutoDL.com](https://www.autodl.com)
-+ [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
-+ [百川智能](https://www.baichuan-ai.com/home)
-  
