@@ -2,9 +2,10 @@
 
 🌍 [中文文档](README.md)
 
-📃 **LangChain-Chatchat** (formerly Langchain-ChatGLM):  
+📃 **LangChain-Chatchat** (formerly Langchain-ChatGLM):
 
-A LLM application aims to implement knowledge and search engine based QA based on Langchain and open-source or remote LLM API.
+A LLM application aims to implement knowledge and search engine based QA based on Langchain and open-source or remote
+LLM API.
 
 ---
 
@@ -13,23 +14,36 @@ A LLM application aims to implement knowledge and search engine based QA based o
 - [Introduction](README.md#Introduction)
 - [Pain Points Addressed](README.md#Pain-Points-Addressed)
 - [Quick Start](README.md#Quick-Start)
-  - [1. Environment Setup](README.md#1-Environment-Setup)
-  - [2. Model Download](README.md#2-Model-Download)
-  - [3. Initialize Knowledge Base and Configuration Files](README.md#3-Initialize-Knowledge-Base-and-Configuration-Files)
-  - [4. One-Click Startup](README.md#4-One-Click-Startup)
-  - [5. Startup Interface Examples](README.md#5-Startup-Interface-Examples)
+    - [1. Environment Setup](README.md#1-Environment-Setup)
+    - [2. Model Download](README.md#2-Model-Download)
+    - [3. Initialize Knowledge Base and Configuration Files](README.md#3-Initialize-Knowledge-Base-and-Configuration-Files)
+    - [4. One-Click Startup](README.md#4-One-Click-Startup)
+    - [5. Startup Interface Examples](README.md#5-Startup-Interface-Examples)
 - [Contact Us](README.md#Contact-Us)
 - [List of Partner Organizations](README.md#List-of-Partner-Organizations)
 
 ## Introduction
 
-🤖️ A Q&A application based on local knowledge base implemented using the idea of [langchain](https://github.com/hwchase17/langchain). The goal is to build a KBQA(Knowledge based Q&A) solution that is friendly to Chinese scenarios and open source models and can run both offline and online.
+🤖️ A Q&A application based on local knowledge base implemented using the idea
+of [langchain](https://github.com/hwchase17/langchain). The goal is to build a KBQA(Knowledge based Q&A) solution that
+is friendly to Chinese scenarios and open source models and can run both offline and online.
 
-💡 Inspried by [document.ai](https://github.com/GanymedeNil/document.ai) and [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) , we build a local knowledge base question answering application that can be implemented using an open source model or remote LLM api throughout the process. In the latest version of this project, [FastChat](https://github.com/lm-sys/FastChat) is used to access Vicuna, Alpaca, LLaMA, Koala, RWKV and many other models. Relying on [langchain](https://github.com/langchain-ai/langchain) , this project supports calling services through the API provided based on [FastAPI](https://github.com/tiangolo/fastapi), or using the WebUI based on [Streamlit](https://github.com/streamlit/streamlit).
+💡 Inspried by [document.ai](https://github.com/GanymedeNil/document.ai)
+and [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) , we build a local knowledge base question
+answering application that can be implemented using an open source model or remote LLM api throughout the process. In
+the latest version of this project, [FastChat](https://github.com/lm-sys/FastChat) is used to access Vicuna, Alpaca,
+LLaMA, Koala, RWKV and many other models. Relying on [langchain](https://github.com/langchain-ai/langchain) , this
+project supports calling services through the API provided based on [FastAPI](https://github.com/tiangolo/fastapi), or
+using the WebUI based on [Streamlit](https://github.com/streamlit/streamlit).
 
-✅ Relying on the open source LLM and Embedding models, this project can realize full-process **offline private deployment**. At the same time, this project also supports the call of OpenAI GPT API- and Zhipu API, and will continue to expand the access to various models and remote APIs in the future.
+✅ Relying on the open source LLM and Embedding models, this project can realize full-process **offline private
+deployment**. At the same time, this project also supports the call of OpenAI GPT API- and Zhipu API, and will continue
+to expand the access to various models and remote APIs in the future.
 
-⛓️ The implementation principle of this project is shown in the graph below. The main process includes: loading files -> reading text -> text segmentation -> text vectorization -> question vectorization -> matching the `top-k` most similar to the question vector in the text vector -> The matched text is added to `prompt `as context and question -> submitted to `LLM` to generate an answer.
+⛓️ The implementation principle of this project is shown in the graph below. The main process includes: loading files ->
+reading text -> text segmentation -> text vectorization -> question vectorization -> matching the `top-k` most similar
+to the question vector in the text vector -> The matched text is added to `prompt `as context and question -> submitted
+to `LLM` to generate an answer.
 
 📺[video introdution](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
@@ -39,26 +53,37 @@ The main process analysis from the aspect of document process:
 
 ![实现原理图2](img/langchain+chatglm2.png)
 
-🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do these.
+🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do
+these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update to v0.2.5.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update
+to v0.2.5.
 
 🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
 
 ## Pain Points Addressed
 
-This project is a solution for enhancing knowledge bases with fully localized inference, specifically addressing the pain points of data security and private deployments for businesses.
-This open-source solution is under the Apache License and can be used for commercial purposes for free, with no fees required.
-We support mainstream local large prophecy models and Embedding models available in the market, as well as open-source local vector databases. For a detailed list of supported models and databases, please refer to our [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+This project is a solution for enhancing knowledge bases with fully localized inference, specifically addressing the
+pain points of data security and private deployments for businesses.
+This open-source solution is under the Apache License and can be used for commercial purposes for free, with no fees
+required.
+We support mainstream local large prophecy models and Embedding models available in the market, as well as open-source
+local vector databases. For a detailed list of supported models and databases, please refer to
+our [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ## Quick Start
+
 ### Environment Setup
+
 First, make sure your machine has Python 3.10 installed.
+
 ```
 $ python --version
 Python 3.10.12
 ```
+
 Then, create a virtual environment and install the project's dependencies within the virtual environment.
+
 ```shell
 
 # 拉取仓库
@@ -74,13 +99,18 @@ $ pip install -r requirements_webui.txt
 
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
+
 ### Model Download
 
-If you need to run this project locally or in an offline environment, you must first download the required models for the project. Typically, open-source LLM and Embedding models can be downloaded from HuggingFace.
+If you need to run this project locally or in an offline environment, you must first download the required models for
+the project. Typically, open-source LLM and Embedding models can be downloaded from HuggingFace.
 
-Taking the default LLM model used in this project, [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b), and the Embedding model [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) as examples:
+Taking the default LLM model used in this project, [THUDM/chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b), and
+the Embedding model [moka-ai/m3e-base](https://huggingface.co/moka-ai/m3e-base) as examples:
 
-To download the models, you need to first install [Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) and then run:
+To download the models, you need to first
+install [Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
+and then run:
 
 ```Shell
 $ git lfs install
@@ -88,9 +118,10 @@ $ git clone https://huggingface.co/THUDM/chatglm2-6b
 $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 
-###  Initializing the Knowledge Base and Config File
+### Initializing the Knowledge Base and Config File
 
 Follow the steps below to initialize your own knowledge base and config file:
+
 ```shell
 $ python copy_config_example.py
 $ python init_database.py --recreate-vs
@@ -99,11 +130,13 @@ $ python init_database.py --recreate-vs
 ### One-Click Launch
 
 To start the project, run the following command:
+
 ```shell
 $ python startup.py -a
 ```
 
 ### Example of Launch Interface
+
 1. FastAPI docs interface
 
 ![](img/fastapi_docs_026.png)
@@ -120,11 +153,13 @@ $ python startup.py -a
 
 ### Note
 
-The above instructions are provided for a quick start. If you need more features or want to customize the launch method, please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/).
+The above instructions are provided for a quick start. If you need more features or want to customize the launch method,
+please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/).
 
 ---
 
 ## Contact Us
+
 ### Telegram
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
@@ -135,5 +170,4 @@ The above instructions are provided for a quick start. If you need more features
 
 ### WeChat Official Account
 
-<img src="img/official_account.png" alt="图片" width="900" height="300" />
-
+<img src="img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />

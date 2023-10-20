@@ -133,6 +133,10 @@ $ python startup.py -a
 以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式 ，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ---
+## 项目里程碑
+
+
+---
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
@@ -142,6 +146,6 @@ $ python startup.py -a
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 ### 公众号
-<img src="img/official_account.png" alt="图片" width="900" height="300" />
+<img src="img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-  
+
