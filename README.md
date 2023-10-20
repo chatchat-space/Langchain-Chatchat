@@ -7,6 +7,22 @@
 
 基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
 
+---
+
+## 目录
+
+* [介绍](README.md#介绍)
+* [解决的痛点](README.md#解决的痛点)
+* [快速上手](README.md#快速上手)
+  * [1. 环境配置](README.md#1-环境配置)
+  * [2. 模型下载](README.md#2-模型下载)
+  * [3. 初始化知识库和配置文件](README.md#3-初始化知识库和配置文件)
+  * [4. 一键启动](README.md#4-一键启动)
+  * [5. 启动界面示例](README.md#5-启动界面示例)
+* [联系我们](README.md#联系我们)
+* [合作伙伴名单](README.md#合作伙伴名单)
+
+
 ## 介绍
 
 🤖️ 一种利用 [langchain](https://github.com/hwchase17/langchain) 思想实现的基于本地知识库的问答应用，目标期望建立一套对中文场景与开源模型支持友好、可离线运行的知识库问答解决方案。
@@ -67,7 +83,7 @@ $ pip install -r requirements_webui.txt
 
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
-### 模型下载
+### 2， 模型下载
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
 
@@ -80,17 +96,22 @@ $ git lfs install
 $ git clone https://huggingface.co/THUDM/chatglm2-6b
 $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
-### 初始化知识库
-按照下列方式初始化自己的知识库
+### 3. 初始化知识库和配置文件
+
+按照下列方式初始化自己的知识库和简单的复制配置文件
 ```shell
+$ python copy_config_example.py
 $ python init_database.py --recreate-vs
  ```
-### 一键启动
+### 4. 一键启动
+
 按照以下命令启动项目
 ```shell
 $ python startup.py -a
 ```
-### 启动界面示例
+### 5. 启动界面示例
+
+如果正常启动，你将能看到以下界面
 
 1. FastAPI docs 界面
 
@@ -123,15 +144,15 @@ $ python startup.py -a
 ### 项目交流群
 <img src="img/qr_code_67.jpg" alt="二维码" width="300" height="300" />
 
-🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 ### 公众号
 <img src="img/official_account.png" alt="图片" width="900" height="300" />
-🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
 ## 合作伙伴名单
-🎉 langchain-Chatchat 项目合作伙伴，感谢以下合作伙伴对本项目的支持。
+🎉 Langchain-Chatchat 项目合作伙伴，感谢以下合作伙伴对本项目的支持。
 
 + [AutoDL 提供弹性、好用、省钱的云GPU租用服务。缺显卡就上 AutoDL.com](https://www.autodl.com)
-+ [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
 + [百川智能](https://www.baichuan-ai.com/home)
++ [ChatGLM: 国内最早的中文聊天模型](https://chatglm.cn/)
   

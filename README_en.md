@@ -8,6 +8,19 @@ A LLM application aims to implement knowledge and search engine based QA based o
 
 ---
 
+## Table of Contents
+
+- [Introduction](README.md#Introduction)
+- [Pain Points Addressed](README.md#Pain-Points-Addressed)
+- [Quick Start](README.md#Quick-Start)
+  - [1. Environment Setup](README.md#1-Environment-Setup)
+  - [2. Model Download](README.md#2-Model-Download)
+  - [3. Initialize Knowledge Base and Configuration Files](README.md#3-Initialize-Knowledge-Base-and-Configuration-Files)
+  - [4. One-Click Startup](README.md#4-One-Click-Startup)
+  - [5. Startup Interface Examples](README.md#5-Startup-Interface-Examples)
+- [Contact Us](README.md#Contact-Us)
+- [List of Partner Organizations](README.md#List-of-Partner-Organizations)
+
 ## Introduction
 
 🤖️ A Q&A application based on local knowledge base implemented using the idea of [langchain](https://github.com/hwchase17/langchain). The goal is to build a KBQA(Knowledge based Q&A) solution that is friendly to Chinese scenarios and open source models and can run both offline and online.
@@ -75,10 +88,11 @@ $ git clone https://huggingface.co/THUDM/chatglm2-6b
 $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 
-###  Initializing the Knowledge Base
+###  Initializing the Knowledge Base and Config File
 
-Follow the steps below to initialize your own knowledge base:
+Follow the steps below to initialize your own knowledge base and config file:
 ```shell
+$ python copy_config_example.py
 $ python init_database.py --recreate-vs
  ```
 
