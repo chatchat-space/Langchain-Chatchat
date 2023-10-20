@@ -58,17 +58,17 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ## Environment Minimum Requirements
 
 To run this code smoothly, please configure it according to the following minimum requirements:
+
 + Python version: >= 3.8.5, < 3.11
 + Cuda version: >= 11.7, with Python installed.
 
 If you want to run the native model (int4 version) on the GPU without problems, you need at least the following hardware configuration.
 
 + chatglm2-6b & LLaMA-7B Minimum RAM requirement: 7GB Recommended graphics cards: RTX 3060, RTX 2060
-+ LLaMA-13B Minimum graphics memory requirement: 11GB Recommended cards: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
++ LLaMA-13B Minimum graphics memory requirement: 11GB Recommended cards: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000
 + Qwen-14B-Chat Minimum memory requirement: 13GB Recommended graphics card: RTX 3090
 + LLaMA-30B Minimum Memory Requirement: 22GB Recommended Cards: RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40
 + Minimum memory requirement for LLaMA-65B: 40GB Recommended cards: A100,A40,A6000
-
 
 If int8 then memory x1.5 fp16 x2.5 requirement.
 For example: using fp16 to reason about the Qwen-7B-Chat model requires 16GB of video memory.
@@ -135,6 +135,7 @@ The project use [FastChat](https://github.com/lm-sys/FastChat) to provide the AP
 
 * Any [EleutherAI](https://huggingface.co/EleutherAI) pythia model such as [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b)(任何 [EleutherAI](https://huggingface.co/EleutherAI) 的 pythia 模型，如 [pythia-6.9b](https://huggingface.co/EleutherAI/pythia-6.9b))
 * Any [Peft](https://github.com/huggingface/peft) adapter trained on top of a model above. To activate, must have `peft` in the model path. Note: If loading multiple peft models, you can have them share the base model weights by setting the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` in any model worker.
+
 
 
 The above model support list may be updated continuously as [FastChat](https://github.com/lm-sys/FastChat) is updated, see [FastChat Supported Models List](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md).
@@ -232,6 +233,7 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 ```
 
 ### 3. Setting Configuration
+
 Copy the model-related parameter configuration template file [configs/model_config.py.example](configs/model_config.py.example) and store it under the project path `. /configs` path and rename it `model_config.py`.
 
 Copy the service-related parameter configuration template file [configs/server_config.py.example](configs/server_config.py.example) and store it under the project path `. /configs` path and rename it `server_config.py`.
@@ -239,6 +241,7 @@ Copy the service-related parameter configuration template file [configs/server_c
 Before you start executing the Web UI or command line interactions, check that each of the items in [configs/model_config.py](configs/model_config.py) and [configs/server_config.py](configs/server_config.py) The model parameters are designed to meet the requirements:
 
 - Please make sure that the local storage path of the downloaded LLM model is written in the `local_model_path` attribute of the corresponding model in `llm_model_dict`, e.g..
+
 ```
 "chatglm2-6b":"/Users/xxx/Downloads/chatglm2-6b",
 
@@ -332,7 +335,8 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 Including lora,p-tuning,prefix tuning, prompt tuning,ia3
 
-This project loads the LLM service based on FastChat, so one must load the PEFT in a FastChat way, that is, ensure that the word `peft` must be in the path name, the name of the configuration file must be `adapter_config.json`, and the path contains PEFT weights in `.bin` format. The peft path is specified in `args.model_names` of the `create_model_worker_app` function in `startup.py`, and enable the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` parameter.
+This project loads the LLM service based on FastChat, so one must load the PEFT in a FastChat way. For models other than "chatglm", "falcon" or "code5p" and peft other than "p-tuning", ensure that the word `peft` must be in the path name, the name of the configuration file must be `adapter_config.json`, and the path contains PEFT weights in `.bin` format. The peft path is specified in `args.model_names` of the `create_model_worker_app` function in `startup.py`, and enable the environment variable `PEFT_SHARE_BASE_WEIGHTS=true` parameter.
+
 
 If the above method fails, you need to start standard fastchat service step by step.  Step-by-step procedure could be found Section 6. For further steps, please refer to [Model invalid after loading lora fine-tuning](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822).
 
@@ -371,6 +375,7 @@ Please refer to [FAQ](docs/FAQ.md)
 - [X] Langchain applications
 
   - [X] Load local documents
+
     - [X] Unstructured documents
       - [X] .md
       - [X] .txt
@@ -382,19 +387,23 @@ Please refer to [FAQ](docs/FAQ.md)
       - [X] multiple TextSplitter
       - [X] ChineseTextSplitter
       - [ ] Reconstructed Context Retriever
+
     - [ ] Webpage
     - [ ] SQL
     - [ ] Knowledge Database
   - [X] Search Engines
+
     - [X] Bing
     - [X] DuckDuckGo
     - [X] Metaphor
   - [X] Agent
+
     - [X] Agent implementation in the form of basic React, including calls to calculators, etc.
     - [X] Langchain's own Agent implementation and calls
     - [X] Intelligent calls to different vector databases and networking knowledge
     - [ ] More tools
 - [X] LLM  Models
+
   - [X] [FastChat](https://github.com/lm-sys/fastchat) -based LLM Models
   - [ ] Mutiply Remote LLM API
 - [X] Embedding Models
@@ -402,6 +411,7 @@ Please refer to [FAQ](docs/FAQ.md)
   - [ ] Mutiply Remote Embedding API
 - [X] FastAPI-based API
 - [X] Web UI
+
   - [X] Streamlit -based Web UI
 
 ---
@@ -415,4 +425,4 @@ Please refer to [FAQ](docs/FAQ.md)
 ## Follow us
 
 <img src="img/official_account.png" alt="image" width="900" height="300" />
-🎉 Langchain-Chatchat project official public number, welcome to scan the code to follow.
+🎉 langchain-Chatchat project official public number, welcome to scan the code to follow.
