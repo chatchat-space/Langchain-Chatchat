@@ -1,5 +1,5 @@
 from fastapi import Body
-from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
+from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT,LANGCHAIN_LLM_MODEL
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 
@@ -16,7 +16,7 @@ def list_running_models(
         with get_httpx_client() as client:
             r = client.post(controller_address + "/list_models")
             models = r.json()["models"]
-            data = {m: get_model_worker_config(m) for m in models}
+            data = {m: get_model_config(m).data for m in models}
             return BaseResponse(data=data)
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',
@@ -52,7 +52,6 @@ def get_model_config(
     获取LLM模型配置项（合并后的）
     '''
     config = get_model_worker_config(model_name=model_name)
-
     # 删除ONLINE_MODEL配置中的敏感信息
     del_keys = set(["worker_class"])
     for k in config:

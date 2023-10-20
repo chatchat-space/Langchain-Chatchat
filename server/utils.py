@@ -5,12 +5,11 @@ from fastapi import FastAPI
 from pathlib import Path
 import asyncio
 from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
-                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL,
-                     logger, log_verbose,
+                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, LANGCHAIN_LLM_MODEL, logger, log_verbose,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, AzureChatOpenAI, ChatAnthropic
 import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
 
@@ -40,19 +39,64 @@ def get_ChatOpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> ChatOpenAI:
-    config = get_model_worker_config(model_name)
-    model = ChatOpenAI(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        openai_proxy=config.get("openai_proxy"),
-        **kwargs
-    )
+    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
+    config_models = list_config_llm_models()
+    if model_name in config_models.get("langchain", {}):
+        config = config_models["langchain"][model_name]
+        if model_name == "Azure-OpenAI":
+            model = AzureChatOpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                deployment_name=config.get("deployment_name"),
+                model_version=config.get("model_version"),
+                openai_api_type=config.get("openai_api_type"),
+                openai_api_base=config.get("api_base_url"),
+                openai_api_version=config.get("api_version"),
+                openai_api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+        elif model_name == "OpenAI":
+            model = ChatOpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                model_name=config.get("model_name"),
+                openai_api_base=config.get("api_base_url"),
+                openai_api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        elif model_name == "Anthropic":
+            model = ChatAnthropic(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                model_name=config.get("model_name"),
+                anthropic_api_key=config.get("api_key"),
+
+            )
+    ## TODO 支持其他的Langchain原生支持的模型
+    else:
+        ## 非Langchain原生支持的模型，走Fschat封装
+        config = get_model_worker_config(model_name)
+        model = ChatOpenAI(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            openai_api_key=config.get("api_key", "EMPTY"),
+            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            openai_proxy=config.get("openai_proxy"),
+            **kwargs
+        )
+
     return model
 
 
@@ -249,8 +293,9 @@ def MakeFastAPIOffline(
                 redoc_favicon_url=favicon,
             )
 
+    # 从model_config中获取模型信息
 
-# 从model_config中获取模型信息
+
 def list_embed_models() -> List[str]:
     '''
     get names of configured embedding models
@@ -266,9 +311,9 @@ def list_config_llm_models() -> Dict[str, Dict]:
     workers = list(FSCHAT_MODEL_WORKERS)
     if LLM_MODEL not in workers:
         workers.insert(0, LLM_MODEL)
-
     return {
         "local": MODEL_PATH["llm_model"],
+        "langchain": LANGCHAIN_LLM_MODEL,
         "online": ONLINE_LLM_MODEL,
         "worker": workers,
     }
@@ -300,8 +345,9 @@ def get_model_path(model_name: str, type: str = None) -> Optional[str]:
                 return str(path)
         return path_str  # THUDM/chatglm06b
 
+    # 从server_config中获取服务信息
 
-# 从server_config中获取服务信息
+
 def get_model_worker_config(model_name: str = None) -> dict:
     '''
     加载model worker的配置项。
@@ -316,6 +362,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
     # 在线模型API
+    if model_name in LANGCHAIN_LLM_MODEL:
+        config["langchain_model"] = True
+        config["worker_class"] = ""
+
     if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True
         if provider := config.get("provider"):
@@ -389,7 +439,7 @@ def webui_address() -> str:
     return f"http://{host}:{port}"
 
 
-def get_prompt_template(type:str,name: str) -> Optional[str]:
+def get_prompt_template(type: str, name: str) -> Optional[str]:
     '''
     从prompt_config中加载模板内容
     type: "llm_chat","agent_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
@@ -459,8 +509,9 @@ def set_httpx_config(
     import urllib.request
     urllib.request.getproxies = _get_proxies
 
+    # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
-# 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
+
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
     try:
         import torch
@@ -568,6 +619,8 @@ def get_server_configs() -> Dict:
     获取configs中的原始配置项，供前端使用
     '''
     from configs.kb_config import (
+        DEFAULT_KNOWLEDGE_BASE,
+        DEFAULT_SEARCH_ENGINE,
         DEFAULT_VS_TYPE,
         CHUNK_SIZE,
         OVERLAP_SIZE,

@@ -245,7 +245,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024,
+        max_tokens: int = None,
         **kwargs: Any,
     ):
         '''
@@ -278,7 +278,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024,
+        max_tokens: int = None,
         prompt_name: str = "default",
         **kwargs,
     ):
@@ -308,7 +308,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024,
+        max_tokens: int = None,
         prompt_name: str = "default",
     ):
         '''
@@ -340,7 +340,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024,
+        max_tokens: int = None,
         prompt_name: str = "default",
     ):
         '''
@@ -378,7 +378,7 @@ class ApiRequest:
         stream: bool = True,
         model: str = LLM_MODEL,
         temperature: float = TEMPERATURE,
-        max_tokens: int = 1024,
+        max_tokens: int = None,
         prompt_name: str = "default",
     ):
         '''
