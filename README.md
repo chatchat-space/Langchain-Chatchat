@@ -133,14 +133,10 @@ $ python startup.py -a
 以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式 ，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ---
-
-## 项目里程碑
-
-
----
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
+
 ### 项目交流群
 <img src="img/qr_code_67.jpg" alt="二维码" width="300" height="300" />
 
