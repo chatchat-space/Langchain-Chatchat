@@ -140,7 +140,7 @@ if __name__ == "__main__":
                 ids = vs.add_texts([f"text added by {name}"], embeddings=embeddings)
                 pprint(ids)
             elif r == 2: # search docs
-                docs = vs.similarity_search_with_score(f"{name}", top_k=3, score_threshold=1.0)
+                docs = vs.similarity_search_with_score(f"{name}", k=3, score_threshold=1.0)
                 pprint(docs)
         if r == 3: # delete docs
             logger.warning(f"清除 {vs_name} by {name}")

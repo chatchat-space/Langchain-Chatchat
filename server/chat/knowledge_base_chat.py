@@ -31,8 +31,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                            max_tokens: int = Body(1024, description="限制LLM生成Token数量，当前默认为1024"),
-                              # TODO: fastchat更新后默认值设为None，自动使用LLM支持的最大值。
+                            max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                             prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
