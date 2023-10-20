@@ -60,13 +60,14 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ## 环境最低要求
 
 想顺利运行本代码，请按照以下的最低要求进行配置：
+
 + Python版本: >= 3.8.5, < 3.11
 + Cuda版本: >= 11.7, 且能顺利安装Python
 
 如果想要顺利在GPU运行本地模型(int4版本)，你至少需要以下的硬件配置:
 
 + chatglm2-6b & LLaMA-7B  最低显存要求: 7GB   推荐显卡: RTX 3060, RTX 2060
-+ LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000 
++ LLaMA-13B 最低显存要求: 11GB  推荐显卡: RTX 2060 12GB, RTX3060 12GB, RTX3080, RTXA2000
 + Qwen-14B-Chat 最低显存要求: 13GB 推荐显卡: RTX 3090
 + LLaMA-30B 最低显存要求: 22GB  推荐显卡：RTX A5000,RTX 3090,RTX 4090,RTX 6000,Tesla V100,RTX Tesla P40
 + LLaMA-65B 最低显存要求: 40GB  推荐显卡：A100,A40,A6000
@@ -215,8 +216,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 关于如何使用自定义分词器和贡献自己的分词器，可以参考[Text Splitter 贡献说明](docs/splitter.md)。
 
 ## Agent生态
+
 ### 基础的Agent
+
 在本版本中，我们实现了一个简单的基于OpenAI的React的Agent模型，目前，经过我们测试，仅有以下两个模型支持：
+
 + OpenAI GPT4
 + ChatGLM2-130B
 
@@ -278,6 +282,7 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 在开始执行 Web UI 或命令行交互前，请先检查 [configs/model_config.py](configs/model_config.py) 和 [configs/server_config.py](configs/server_config.py) 中的各项模型参数设计是否符合需求：
 
 - 请确认已下载至本地的 LLM 模型本地存储路径写在 `llm_model_dict` 对应模型的 `local_model_path` 属性中，如:
+
 ```
 "chatglm2-6b": "/Users/xxx/Downloads/chatglm2-6b",
 
@@ -374,9 +379,13 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 #### 5.4 PEFT 加载(包括lora,p-tuning,prefix tuning, prompt tuning,ia3等)
 
-本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含.bin 格式的 PEFT 权重，peft路径在startup.py中create_model_worker_app函数的args.model_names中指定，并开启环境变量PEFT_SHARE_BASE_WEIGHTS=true参数。
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 PEFT 路径，针对chatglm,falcon，codet5p以外的模型，以及非p-tuning以外的peft方法，步骤如下：
 
-注：如果上述方式启动失败，则需要以标准的fastchat服务启动方式分步启动，分步启动步骤参考第六节，PEFT加载详细步骤参考[加载lora微调后模型失效](https://github.com/chatchat-space/Langchain-Chatchat/issues/1130#issuecomment-1685291822)，
+1. 将训练peft生成的config.json文件命名为adapter_config.json；
+2. 重命名文件夹，保证文件夹中包含'peft'一词；
+3. 开启 `PEFT_SHARE_BASE_WEIGHTS=true`环境变量，再执行python startup.py -a
+
+针对p-tuning和chatglm模型，需要对fastchat进行较大幅度的修改，详细步骤参考[chatchat加载p-tuning](docs/chatchat加载ptuning.md)
 
 #### **5.5 注意事项：**
 
@@ -454,10 +463,7 @@ CUDA_VISIBLE_DEVICES=0,1 python startup.py -a
 
 🎉 langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
-
 ## 关注我们
 
 <img src="img/official_account.png" alt="图片" width="900" height="300" />
 🎉 langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-
-
