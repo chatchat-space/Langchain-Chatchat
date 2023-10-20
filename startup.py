@@ -68,7 +68,9 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     controller_address:
     worker_address:
 
-
+    对于Langchain支持的模型：
+        langchain_model:True
+        不会使用fschat
     对于online_api:
         online_api:True
         worker_class: `provider`
@@ -85,9 +87,11 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
 
     for k, v in kwargs.items():
         setattr(args, k, v)
-
+    if worker_class := kwargs.get("langchain_model"): #Langchian支持的模型不用做操作
+        from fastchat.serve.base_model_worker import app
+        worker = ""
     # 在线模型API
-    if worker_class := kwargs.get("worker_class"):
+    elif worker_class := kwargs.get("worker_class"):
         from fastchat.serve.base_model_worker import app
 
         worker = worker_class(model_names=args.model_names,
@@ -127,8 +131,8 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.engine_use_ray = False
             args.disable_log_requests = False
 
-            # 0.2.0 vllm后要加的参数
-            args.max_model_len = 8192 # 模型可以处理的最大序列长度。请根据你的大模型设置，
+            # 0.2.0 vllm后要加的参数, 但是这里不需要
+            args.max_model_len = None
             args.revision = None
             args.quantization = None
             args.max_log_len = None
