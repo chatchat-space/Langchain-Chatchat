@@ -16,9 +16,11 @@ from server.chat import (chat, knowledge_base_chat, openai_chat,
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
                                               update_docs, download_doc, recreate_vector_store,
-                                              search_docs, DocumentWithScore)
-from server.llm_api import list_running_models, list_config_models, change_llm_model, stop_llm_model
-from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+                                              search_docs, DocumentWithScore, update_info)
+from server.llm_api import (list_running_models, list_config_models,
+                            change_llm_model, stop_llm_model,
+                            get_model_config, list_search_engines)
+from server.utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline, get_server_configs
 from typing import List
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -113,6 +115,11 @@ def create_app():
              summary="删除知识库内指定文件"
              )(delete_docs)
 
+    app.post("/knowledge_base/update_info",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="更新知识库介绍"
+             )(update_info)
     app.post("/knowledge_base/update_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
@@ -139,6 +146,11 @@ def create_app():
              summary="列出configs已配置的模型",
              )(list_config_models)
 
+    app.post("/llm_model/get_model_config",
+             tags=["LLM Model Management"],
+             summary="获取模型配置（合并后）",
+             )(get_model_config)
+
     app.post("/llm_model/stop",
              tags=["LLM Model Management"],
              summary="停止指定的LLM模型（Model Worker)",
@@ -148,6 +160,17 @@ def create_app():
              tags=["LLM Model Management"],
              summary="切换指定的LLM模型（Model Worker)",
              )(change_llm_model)
+
+    # 服务器相关接口
+    app.post("/server/configs",
+             tags=["Server State"],
+             summary="获取服务器原始配置信息",
+             )(get_server_configs)
+
+    app.post("/server/list_search_engines",
+             tags=["Server State"],
+             summary="获取服务器支持的搜索引擎",
+             )(list_search_engines)
 
     return app
 

@@ -203,6 +203,20 @@ def delete_docs(knowledge_base_name: str = Body(..., examples=["samples"]),
     return BaseResponse(code=200, msg=f"文件删除完成", data={"failed_files": failed_files})
 
 
+def update_info(knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+                kb_info:str = Body(..., description="知识库介绍", examples=["这是一个知识库"]),
+                ):
+    if not validate_kb_name(knowledge_base_name):
+        return BaseResponse(code=403, msg="Don't attack me")
+
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    kb.update_info(kb_info)
+
+    return BaseResponse(code=200, msg=f"知识库介绍修改完成", data={"kb_info": kb_info})
+
+
 def update_docs(
     knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
     file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),
@@ -337,8 +351,9 @@ def recreate_vector_store(
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
         else:
+            if kb.exists():
+                kb.clear_vs()
             kb.create_kb()
-            kb.clear_vs()
             files = list_files_from_folder(knowledge_base_name)
             kb_files = [(file, knowledge_base_name) for file in files]
             i = 0

@@ -44,7 +44,7 @@ MODEL_PATH = {
         "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
 
-        "baichuan2-13b": "baichuan-inc/Baichuan-13B-Chat",
+        "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
         "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
 
         "baichuan-7b": "baichuan-inc/Baichuan-7B",
@@ -90,9 +90,8 @@ MODEL_PATH = {
         "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
     },
 }
-
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：piccolo-large-zh
+EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：bge-large-zh-v1.5
 
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
@@ -112,7 +111,8 @@ TEMPERATURE = 0.7
 # TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
 
-ONLINE_LLM_MODEL = {
+LANGCHAIN_LLM_MODEL = {
+    # 不需要走Fschat封装的，Langchain直接支持的模型。
     # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
     #  Max retries exceeded with url: /v1/chat/completions
     # 则需要将urllib3版本修改为1.25.11
@@ -128,11 +128,29 @@ ONLINE_LLM_MODEL = {
     # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
     # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
     # 比如: "openai_proxy": 'http://127.0.0.1:4780'
-    "gpt-3.5-turbo": {
+
+    # 这些配置文件的名字不能改动
+    "Azure-OpenAI": {
+        "deployment_name": "your Azure deployment name",
+        "model_version": "0701",
+        "openai_api_type": "azure",
+        "api_base_url": "https://your Azure point.azure.com",
+        "api_version": "2023-07-01-preview",
+        "api_key": "your Azure api key",
+        "openai_proxy": "",
+    },
+    "OpenAI": {
+        "model_name": "your openai model name(such as gpt-4)",
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "your OPENAI_API_KEY",
-        "openai_proxy": "your OPENAI_PROXY",
+        "openai_proxy": "",
     },
+    "Anthropic": {
+        "model_name": "your claude model name(such as claude2-100k)",
+        "api_key":"your ANTHROPIC_API_KEY",
+    }
+}
+ONLINE_LLM_MODEL = {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {

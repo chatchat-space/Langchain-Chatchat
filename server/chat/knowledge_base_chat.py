@@ -31,9 +31,8 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                            prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
-                            local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
-                            request: Request = None,
+                            max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
+                            prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -51,12 +50,13 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
+            max_tokens=max_tokens,
             callbacks=[callback],
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
 
-        prompt_template = get_prompt_template(prompt_name)
+        prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
@@ -72,14 +72,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         source_documents = []
         for inum, doc in enumerate(docs):
             filename = os.path.split(doc.metadata["source"])[-1]
-            if local_doc_url:
-                url = "file://" + doc.metadata["source"]
-            else:
-                parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
-                url = f"{request.base_url}knowledge_base/download_doc?" + parameters
+            parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
+            url = f"/knowledge_base/download_doc?" + parameters
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
-
         if stream:
             async for token in callback.aiter():
                 # Use server-sent-events to stream the response

@@ -63,6 +63,9 @@ def knowledge_base_page(api: ApiRequest):
     else:
         selected_kb_index = 0
 
+    if "selected_kb_info" not in st.session_state:
+        st.session_state["selected_kb_info"] = ""
+
     def format_selected_kb(kb_name: str) -> str:
         if kb := kb_list.get(kb_name):
             return f"{kb_name} ({kb['vs_type']} @ {kb['embed_model']})"
@@ -83,6 +86,11 @@ def knowledge_base_page(api: ApiRequest):
                 "新建知识库名称",
                 placeholder="新知识库名称，不支持中文命名",
                 key="kb_name",
+            )
+            kb_info = st.text_input(
+                "知识库简介",
+                placeholder="知识库简介，方便Agent查找",
+                key="kb_info",
             )
 
             cols = st.columns(2)
@@ -123,18 +131,23 @@ def knowledge_base_page(api: ApiRequest):
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
+                st.session_state["selected_kb_info"] = kb_info
                 st.experimental_rerun()
 
     elif selected_kb:
         kb = selected_kb
-
-
+        st.session_state["selected_kb_info"] = kb_list[kb]['kb_info']
         # 上传文件
         files = st.file_uploader("上传知识文件：",
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
+        kb_info = st.text_area("请输入知识库介绍:", value=st.session_state["selected_kb_info"], max_chars=None, key=None,
+                               help=None, on_change=None, args=None, kwargs=None)
 
+        if kb_info != st.session_state["selected_kb_info"]:
+            st.session_state["selected_kb_info"] = kb_info
+            api.update_kb_info(kb, kb_info)
 
         # with st.sidebar:
         with st.expander(

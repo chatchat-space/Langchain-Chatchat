@@ -37,9 +37,10 @@ def folder2db(
     kb_names: List[str],
     mode: Literal["recreate_vs", "update_in_db", "increament"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
+    kb_info: dict[str, Any] = {},
     embed_model: str = EMBEDDING_MODEL,
     chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = CHUNK_SIZE,
+    chunk_overlap: int = OVERLAP_SIZE,
     zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     '''
@@ -72,6 +73,7 @@ def folder2db(
         # 清除向量库，从本地文件重建
         if mode == "recreate_vs":
             kb.clear_vs()
+            kb.create_kb()
             kb_files = file_to_kbfile(kb_name, list_files_from_folder(kb_name))
             files2vs(kb_name, kb_files)
             kb.save_vector_store()

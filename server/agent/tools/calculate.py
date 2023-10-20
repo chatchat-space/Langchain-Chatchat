@@ -1,11 +1,14 @@
+## 单独运行的时候需要添加
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMMathChain
-from server.utils import wrap_done, get_ChatOpenAI
-from configs.model_config import LLM_MODEL, TEMPERATURE
-from langchain.chat_models import ChatOpenAI
-from langchain.callbacks.manager import CallbackManagerForToolRun
+from server.agent import model_container
 
-_PROMPT_TEMPLATE = """将数学问题翻译成可以使用Python的numexpr库执行的表达式。使用运行此代码的输出来回答问题。
+_PROMPT_TEMPLATE = """
+将数学问题翻译成可以使用Python的numexpr库执行的表达式。使用运行此代码的输出来回答问题。
 问题: ${{包含数学问题的问题。}}
 ```text
 ${{解决问题的单行数学表达式}}
@@ -60,11 +63,12 @@ PROMPT = PromptTemplate(
 
 
 def calculate(query: str):
-    model = get_ChatOpenAI(
-        streaming=False,
-        model_name=LLM_MODEL,
-        temperature=TEMPERATURE,
-    )
+    model = model_container.MODEL
     llm_math = LLMMathChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_math.run(query)
     return ans
+
+if __name__ == "__main__":
+    result = calculate("2的三次方")
+    print("答案:",result)
+

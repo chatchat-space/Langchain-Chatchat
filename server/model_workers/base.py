@@ -1,13 +1,13 @@
 from configs.basic_config import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
-from fastchat.serve.model_worker import BaseModelWorker
+from fastchat.serve.base_model_worker import BaseModelWorker
 import uuid
 import json
 import sys
 from pydantic import BaseModel
 import fastchat
-import threading
+import asyncio
 from typing import Dict, List
 
 
@@ -40,12 +40,12 @@ class ApiModelWorker(BaseModelWorker):
                         worker_addr=worker_addr,
                         **kwargs)
         self.context_len = context_len
+        self.semaphore = asyncio.Semaphore(self.limit_worker_concurrency)
         self.init_heart_beat()
 
     def count_token(self, params):
         # TODO：需要完善
-        print("count token")
-        print(params)
+        # print("count token")
         prompt = params["prompt"]
         return {"count": len(str(prompt)), "error_code": 0}
 
@@ -59,16 +59,7 @@ class ApiModelWorker(BaseModelWorker):
 
     def get_embeddings(self, params):
         print("embedding")
-        print(params)
-
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
+        # print(params)
 
     # help methods
     def get_config(self):

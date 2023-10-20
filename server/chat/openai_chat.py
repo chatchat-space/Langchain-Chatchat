@@ -16,7 +16,7 @@ class OpenAiChatMsgIn(BaseModel):
     messages: List[OpenAiMessage]
     temperature: float = 0.7
     n: int = 1
-    max_tokens: int = 1024
+    max_tokens: int = None
     stop: List[str] = []
     stream: bool = False
     presence_penalty: int = 0

@@ -1,6 +1,7 @@
 from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
-from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, 
-                     LLM_MODEL, SEARCH_ENGINE_TOP_K, TEMPERATURE)
+from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, METAPHOR_API_KEY,
+                     LLM_MODEL, SEARCH_ENGINE_TOP_K, TEMPERATURE,
+                     TEXT_SPLITTER_NAME, OVERLAP_SIZE)
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
@@ -11,7 +12,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
-from typing import List, Optional
+from typing import List, Optional, Dict
 from server.chat.utils import History
 from langchain.docstore.document import Document
 import json
@@ -32,8 +33,49 @@ def duckduckgo_search(text, result_len=SEARCH_ENGINE_TOP_K):
     return search.results(text, result_len)
 
 
+def metaphor_search(
+    text: str,
+    result_len: int = SEARCH_ENGINE_TOP_K,
+    splitter_name: str = "SpacyTextSplitter",
+    chunk_size: int = 500,
+    chunk_overlap: int = OVERLAP_SIZE,
+) -> List[Dict]:
+    from metaphor_python import Metaphor
+    from server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
+    from server.knowledge_base.utils import make_text_splitter
+
+    if not METAPHOR_API_KEY:
+        return []
+    
+    client = Metaphor(METAPHOR_API_KEY)
+    search = client.search(text, num_results=result_len, use_autoprompt=True)
+    contents = search.get_contents().contents
+
+    # metaphor 返回的内容都是长文本，需要分词再检索
+    docs = [Document(page_content=x.extract,
+                     metadata={"link": x.url, "title": x.title})
+            for x in contents]
+    text_splitter = make_text_splitter(splitter_name=splitter_name,
+                                       chunk_size=chunk_size,
+                                       chunk_overlap=chunk_overlap)
+    splitted_docs = text_splitter.split_documents(docs)
+    
+    # 将切分好的文档放入临时向量库，重新筛选出TOP_K个文档
+    if len(splitted_docs) > result_len:
+        vs = memo_faiss_pool.new_vector_store()
+        vs.add_documents(splitted_docs)
+        splitted_docs = vs.similarity_search(text, k=result_len, score_threshold=1.0)
+
+    docs = [{"snippet": x.page_content,
+             "link": x.metadata["link"],
+             "title": x.metadata["title"]}
+             for x in splitted_docs]
+    return docs
+
+
 SEARCH_ENGINES = {"bing": bing_search,
                   "duckduckgo": duckduckgo_search,
+                  "metaphor": metaphor_search,
                   }
 
 
@@ -72,7 +114,8 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                             stream: bool = Body(False, description="流式输出"),
                             model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                            prompt_name: str = Body("knowledge_base_chat", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                            max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
+                            prompt_name: str = Body("default",description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -93,13 +136,14 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
+            max_tokens=max_tokens,
             callbacks=[callback],
         )
 
         docs = await lookup_search_engine(query, search_engine_name, top_k)
         context = "\n".join([doc.page_content for doc in docs])
 
-        prompt_template = get_prompt_template(prompt_name)
+        prompt_template = get_prompt_template("search_engine_chat", prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
