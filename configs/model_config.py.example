@@ -256,4 +256,8 @@ VLLM_MODEL_DICT = {
     "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
     "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
 
+    "agentlm-7b":"THUDM/agentlm-7b",
+    "agentlm-13b":"THUDM/agentlm-13b",
+    "agentlm-70b":"THUDM/agentlm-70b",
+
 }

@@ -76,7 +76,7 @@ def dialogue_page(api: ApiRequest):
                                       "搜索引擎问答",
                                       "自定义Agent问答",
                                       ],
-                                     index=0,
+                                     index=3,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
