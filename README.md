@@ -20,7 +20,6 @@
   * [4. 一键启动](README.md#4-一键启动)
   * [5. 启动界面示例](README.md#5-启动界面示例)
 * [联系我们](README.md#联系我们)
-* [合作伙伴名单](README.md#合作伙伴名单)
 
 
 ## 介绍
@@ -148,4 +147,3 @@ $ python startup.py -a
 ### 公众号
 <img src="img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-

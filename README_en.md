@@ -20,7 +20,6 @@ LLM API.
     - [4. One-Click Startup](README.md#4-One-Click-Startup)
     - [5. Startup Interface Examples](README.md#5-Startup-Interface-Examples)
 - [Contact Us](README.md#Contact-Us)
-- [List of Partner Organizations](README.md#List-of-Partner-Organizations)
 
 ## Introduction
 
