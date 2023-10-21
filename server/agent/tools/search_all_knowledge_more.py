@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import re
 import warnings
@@ -265,7 +266,7 @@ class LLMKnowledgeChain(LLMChain):
             llm: BaseLanguageModel,
             prompt: BasePromptTemplate = PROMPT,
             **kwargs: Any,
-    ):
+    ) -> LLMKnowledgeChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
         return cls(llm_chain=llm_chain, **kwargs)
 
