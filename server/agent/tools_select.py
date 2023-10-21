@@ -58,12 +58,12 @@ tools = [
     ),
     Tool.from_function(
         func=knowledge_search_more,
-        name="Knowledge Base Query Tool",
+        name="Knowledge Base Tool",
         description="Prioritize accessing the knowledge base to get answers"
     ),
     Tool.from_function(
         func=search_internet,
-        name="Internet Query Tool",
+        name="Internet Tool",
         description="If you can't access the internet, this tool can help you access Bing to answer questions"
     ),
 ]

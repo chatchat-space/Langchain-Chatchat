@@ -1,8 +1,3 @@
-## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 import json
 from server.chat import search_engine_chat
 from configs import VECTOR_SEARCH_TOP_K

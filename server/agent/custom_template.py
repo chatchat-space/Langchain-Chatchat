@@ -37,7 +37,7 @@ class CustomOutputParser(AgentOutputParser):
 
     def parse(self, llm_output: str) -> AgentFinish | tuple[dict[str, str], str] | AgentAction:
         # Check if agent should finish
-        support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api"]  # 目前支持agent的模型
+        support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api","agentlm"]  # 目前支持agent的模型
         if not any(agent in model_container.MODEL for agent in support_agent) and self.begin:
             self.begin = False
             stop_words = ["Observation:"]

@@ -1,10 +1,3 @@
-## 最简单的版本，只支持固定的知识库
-
-# ## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 from server.chat.knowledge_base_chat import knowledge_base_chat
 from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
 import json
