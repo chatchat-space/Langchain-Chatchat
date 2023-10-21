@@ -35,7 +35,6 @@ from server.agent.tools import *
 # ]
 
 ## 请注意，如果你是为了使用AgentLM，在这里，你应该使用英文版本，下面的内容是英文版本。
-
 tools = [
     Tool.from_function(
         func=calculate,
