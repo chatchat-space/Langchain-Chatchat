@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import warnings
 from typing import Dict
@@ -212,7 +213,7 @@ class LLMKnowledgeChain(LLMChain):
             llm: BaseLanguageModel,
             prompt: BasePromptTemplate = PROMPT,
             **kwargs: Any,
-    ):
+    ) -> LLMKnowledgeChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
         return cls(llm_chain=llm_chain, **kwargs)
 

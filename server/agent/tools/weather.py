@@ -1,4 +1,10 @@
-## 使用和风天气API查询天气,这个模型仅仅对免费的API进行了适配，建议使用GPT4等高级模型进行适配
+from __future__ import annotations
+
+## 单独运行的时候需要添加
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import re
 import warnings
 from typing import Dict
@@ -21,6 +27,8 @@ from server.agent import model_container
 ## 使用和风天气API查询天气
 KEY = "ac880e5a877042809ac7ffdd19d95b0d"
 #key长这样，这里提供了示例的key，这个key没法使用，你需要自己去注册和风天气的账号，然后在这里填入你的key
+
+
 
 _PROMPT_TEMPLATE = """
 用户会提出一个关于天气的问题，你的目标是拆分出用户问题中的区，市 并按照我提供的工具回答。
