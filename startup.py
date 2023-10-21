@@ -423,13 +423,13 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_api_server(started_event: mp.Event = None):
+def run_api_server(started_event: mp.Event = None, run_mode: str = None):
     from server.api import create_app
     import uvicorn
     from server.utils import set_httpx_config
     set_httpx_config()
 
-    app = create_app()
+    app = create_app(run_mode=run_mode)
     _set_app_event(app, started_event)
 
     host = API_SERVER["host"]
@@ -438,21 +438,27 @@ def run_api_server(started_event: mp.Event = None):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_webui(started_event: mp.Event = None):
+def run_webui(started_event: mp.Event = None, run_mode: str = None):
     from server.utils import set_httpx_config
     set_httpx_config()
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
-    p = subprocess.Popen(["streamlit", "run", "webui.py",
-                          "--server.address", host,
-                          "--server.port", str(port),
-                          "--theme.base", "light",
-                          "--theme.primaryColor", "#165dff",
-                          "--theme.secondaryBackgroundColor", "#f5f5f5",
-                          "--theme.textColor", "#000000",
-                        ])
+    cmd = ["streamlit", "run", "webui.py",
+            "--server.address", host,
+            "--server.port", str(port),
+            "--theme.base", "light",
+            "--theme.primaryColor", "#165dff",
+            "--theme.secondaryBackgroundColor", "#f5f5f5",
+            "--theme.textColor", "#000000",
+        ]
+    if run_mode == "lite":
+        cmd += [
+            "--",
+            "lite",
+        ]
+    p = subprocess.Popen(cmd)
     started_event.set()
     p.wait()
 
@@ -535,6 +541,13 @@ def parse_args() -> argparse.ArgumentParser:
         help="减少fastchat服务log信息",
         dest="quiet",
     )
+    parser.add_argument(
+        "-i",
+        "--lite",
+        action="store_true",
+        help="以Lite模式运行：仅支持在线API的LLM对话、搜索引擎对话",
+        dest="lite",
+    )
     args = parser.parse_args()
     return args, parser
 
@@ -596,6 +609,7 @@ async def start_main_server():
 
     mp.set_start_method("spawn")
     manager = mp.Manager()
+    run_mode = None
 
     queue = manager.Queue()
     args, parser = parse_args()
@@ -620,6 +634,10 @@ async def start_main_server():
         args.api_worker = True
         args.api = False
         args.webui = False
+
+    if args.lite:
+        args.model_worker = False
+        run_mode = "lite"
 
     dump_server_info(args=args)
 
@@ -698,7 +716,7 @@ async def start_main_server():
         process = Process(
             target=run_api_server,
             name=f"API Server",
-            kwargs=dict(started_event=api_started),
+            kwargs=dict(started_event=api_started, run_mode=run_mode),
             daemon=True,
         )
         processes["api"] = process
@@ -708,7 +726,7 @@ async def start_main_server():
         process = Process(
             target=run_webui,
             name=f"WEBUI Server",
-            kwargs=dict(started_event=webui_started),
+            kwargs=dict(started_event=webui_started, run_mode=run_mode),
             daemon=True,
         )
         processes["webui"] = process

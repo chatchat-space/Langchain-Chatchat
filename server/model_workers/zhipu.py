@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
@@ -22,16 +23,6 @@ class ChatGLMWorker(ApiModelWorker):
         kwargs.setdefault("context_len", 32768)
         super().__init__(**kwargs)
         self.version = version
-
-        # 这里的是chatglm api的模板，其它API的conv_template需要定制
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
-            messages=[],
-            roles=["Human", "Assistant"],
-            sep="\n###",
-            stop_str="###",
-        )
 
     def generate_stream_gate(self, params):
         # TODO: 维护request_id
@@ -58,6 +49,17 @@ class ChatGLMWorker(ApiModelWorker):
         # TODO: 支持embeddings
         print("embedding")
         # print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # 这里的是chatglm api的模板，其它API的conv_template需要定制
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
+            messages=[],
+            roles=["Human", "Assistant"],
+            sep="\n###",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":
