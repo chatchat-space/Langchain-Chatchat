@@ -20,7 +20,6 @@
   * [4. 一键启动](README.md#4-一键启动)
   * [5. 启动界面示例](README.md#5-启动界面示例)
 * [联系我们](README.md#联系我们)
-* [合作伙伴名单](README.md#合作伙伴名单)
 
 
 ## 介绍
@@ -134,6 +133,10 @@ $ python startup.py -a
 
 
 ---
+## 项目里程碑
+
+
+---
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
@@ -145,4 +148,3 @@ $ python startup.py -a
 ### 公众号
 ![](img/official_wechat_mp_account.png)
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-
