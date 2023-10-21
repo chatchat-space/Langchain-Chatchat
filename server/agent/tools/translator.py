@@ -1,8 +1,3 @@
-## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from server.agent import model_container

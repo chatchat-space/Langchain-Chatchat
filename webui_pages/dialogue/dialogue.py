@@ -224,7 +224,7 @@ def dialogue_page(api: ApiRequest):
             ])
             text = ""
             ans = ""
-            support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api"]  # 目前支持agent的模型
+            support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api","agentlm"]  # 目前支持agent的模型
             if not any(agent in llm_model for agent in support_agent):
                 ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n"
                 chat_box.update_msg(ans, element_index=0, streaming=False)

@@ -5,7 +5,7 @@ from langchain.agents import AgentExecutor, LLMSingleActionAgent
 from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs import LLM_MODEL, TEMPERATURE, HISTORY_LEN
+from configs import LLM_MODEL, TEMPERATURE, HISTORY_LEN,Agent_MODEL
 from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
 from langchain.chains import LLMChain
 from typing import AsyncIterable, Optional, Dict
@@ -49,7 +49,19 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         ## 传入全局变量来实现agent调用
         kb_list = {x["kb_name"]: x for x in get_kb_details()}
         model_container.DATABASE = {name: details['kb_info'] for name, details in kb_list.items()}
-        model_container.MODEL = model
+
+
+        if Agent_MODEL:
+            ## 如果有指定使用Agent模型来完成任务
+            model_agent = get_ChatOpenAI(
+                model_name=Agent_MODEL,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=[callback],
+            )
+            model_container.MODEL = model_agent
+        else:
+            model_container.MODEL = model
 
         prompt_template = get_prompt_template("agent_chat", prompt_name)
         prompt_template_agent = CustomPromptTemplate(

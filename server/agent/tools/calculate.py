@@ -1,8 +1,3 @@
-## 单独运行的时候需要添加
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMMathChain
 from server.agent import model_container
@@ -19,7 +14,7 @@ ${{运行代码的输出}}
 ```
 答案: ${{答案}}
 
-这是两个例子： 
+这是两个例子：
 
 问题: 37593 * 67是多少？
 ```text
@@ -56,6 +51,7 @@ ${{运行代码的输出}}
 现在，这是我的问题：
 问题: {question}
 """
+
 PROMPT = PromptTemplate(
     input_variables=["question"],
     template=_PROMPT_TEMPLATE,
