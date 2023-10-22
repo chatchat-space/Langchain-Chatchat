@@ -19,6 +19,10 @@
 
 PROMPT_TEMPLATES = {}
 
+PROMPT_TEMPLATES["completion"] = {
+    "default": "{input}"
+}
+
 PROMPT_TEMPLATES["llm_chat"] = {
     "default": "{{ input }}",
 

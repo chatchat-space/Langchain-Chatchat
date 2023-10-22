@@ -11,7 +11,7 @@ import argparse
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from server.chat import (chat, knowledge_base_chat, openai_chat,
+from server.chat import (completion,chat, knowledge_base_chat, openai_chat,
                          search_engine_chat, agent_chat)
 from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
 from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
@@ -51,6 +51,10 @@ def create_app():
     app.get("/",
             response_model=BaseResponse,
             summary="swagger 文档")(document)
+
+    app.post("/completion",
+             tags=["Completion"],
+             summary="要求llm模型补全(通过LLMChain)")(completion)
 
     # Tag: Chat
     app.post("/chat/fastchat",

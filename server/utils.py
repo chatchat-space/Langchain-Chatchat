@@ -10,6 +10,7 @@ from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.chat_models import ChatOpenAI, AzureChatOpenAI, ChatAnthropic
+from langchain.llms import OpenAI, AzureOpenAI, Anthropic
 import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
 
@@ -94,6 +95,80 @@ def get_ChatOpenAI(
             temperature=temperature,
             max_tokens=max_tokens,
             openai_proxy=config.get("openai_proxy"),
+            **kwargs
+        )
+
+    return model
+
+
+def get_OpenAI(
+        model_name: str,
+        temperature: float,
+        max_tokens: int = None,
+        streaming: bool = True,
+        echo: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) -> OpenAI:
+    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
+    config_models = list_config_llm_models()
+    if model_name in config_models.get("langchain", {}):
+        config = config_models["langchain"][model_name]
+        if model_name == "Azure-OpenAI":
+            model = AzureOpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                deployment_name=config.get("deployment_name"),
+                model_version=config.get("model_version"),
+                openai_api_type=config.get("openai_api_type"),
+                openai_api_base=config.get("api_base_url"),
+                openai_api_version=config.get("api_version"),
+                openai_api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+                echo=echo,
+            )
+
+        elif model_name == "OpenAI":
+            model = OpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                model_name=config.get("model_name"),
+                openai_api_base=config.get("api_base_url"),
+                openai_api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+                echo=echo,
+            )
+        elif model_name == "Anthropic":
+            model = Anthropic(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                model_name=config.get("model_name"),
+                anthropic_api_key=config.get("api_key"),
+                echo=echo,
+            )
+    ## TODO 支持其他的Langchain原生支持的模型
+    else:
+        ## 非Langchain原生支持的模型，走Fschat封装
+        config = get_model_worker_config(model_name)
+        model = OpenAI(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            openai_api_key=config.get("api_key", "EMPTY"),
+            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            openai_proxy=config.get("openai_proxy"),
+            echo=echo,
             **kwargs
         )
 
