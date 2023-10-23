@@ -94,7 +94,7 @@ def dialogue_page(api: ApiRequest):
             return x
 
         running_models = list(api.list_running_models())
-        running_models += LANGCHAIN_LLM_MODEL.keys()
+        # running_models += LANGCHAIN_LLM_MODEL.keys()
         available_models = []
         config_models = api.list_config_models()
         worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
