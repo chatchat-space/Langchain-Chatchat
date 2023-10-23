@@ -107,6 +107,7 @@ def dialogue_page(api: ApiRequest):
         for k, v in config_models.get("langchain", {}).items():  # 列出LANGCHAIN_LLM_MODEL支持的模型
             available_models.append(k)
         llm_models = running_models + available_models
+        llm_models = list(set(llm_models))
         index = llm_models.index(st.session_state.get("cur_llm_model", get_default_llm_model(api)[0]))
         llm_model = st.selectbox("选择LLM模型：",
                                  llm_models,
