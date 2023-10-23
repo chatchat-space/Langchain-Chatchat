@@ -99,6 +99,8 @@ EMBEDDING_DEVICE = "auto"
 
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
+# AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODEL)
+Agent_MODEL = None
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"

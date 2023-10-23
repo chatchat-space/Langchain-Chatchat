@@ -5,7 +5,7 @@ from server.agent.tools import *
 #     Tool.from_function(
 #         func=calculate,
 #         name="计算器工具",
-#         description="进行简单的数学运算"
+#         description="进行简单的数学运算, 只是简单的, 使用Wolfram数学工具进行更复杂的运算",
 #     ),
 #     Tool.from_function(
 #         func=translate,
@@ -32,14 +32,23 @@ from server.agent.tools import *
 #         name="互联网查询工具",
 #         description="如果你无法访问互联网，这个工具可以帮助你访问Bing互联网来解答问题",
 #     ),
+#     Tool.from_function(
+#         func=wolfram,
+#         name="Wolfram数学工具",
+#         description="高级的数学运算工具，能够完成非常复杂的数学问题"
+#     ),
+#     Tool.from_function(
+#         func=youtube_search,
+#         name="Youtube搜索工具",
+#         description="使用这个工具在Youtube上搜索视频"
 # ]
 
 ## 请注意，如果你是为了使用AgentLM，在这里，你应该使用英文版本，下面的内容是英文版本。
 tools = [
     Tool.from_function(
         func=calculate,
-        name="Calculator Tool",
-        description="Perform simple mathematical operations"
+        name="Simple Calculator Tool",
+        description="Perform simple mathematical operations, Just simple, Use Wolfram Math Tool for more complex operations"
     ),
     Tool.from_function(
         func=translate,
@@ -66,6 +75,16 @@ tools = [
         name="Internet Tool",
         description="If you can't access the internet, this tool can help you access Bing to answer questions"
     ),
+    Tool.from_function(
+        func=wolfram,
+        name="Wolfram Math Tool",
+        description="Use this tool to perform more complex mathematical operations"
+    ),
+    Tool.from_function(
+        func=youtube_search,
+        name="Youtube Search Tool",
+        description="Use this tool to search for videos on Youtube"
+    )
 ]
 
 tool_names = [tool.name for tool in tools]
