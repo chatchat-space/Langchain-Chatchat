@@ -596,7 +596,7 @@ def get_httpx_client(
     })
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
-            default_proxies.update({host: None})
+            default_proxies.update({'all://' + host: None})
 
     # merge default proxies with user provided proxies
     if isinstance(proxies, str):
