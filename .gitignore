@@ -2,6 +2,7 @@
 *.log.*
 *.bak
 logs
+/knowledge_base/
 /configs/*.py
 .vscode/
 
