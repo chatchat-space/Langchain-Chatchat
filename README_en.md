@@ -53,7 +53,7 @@ The main process analysis from the aspect of document process:
 
 ![实现原理图2](img/langchain+chatglm2.png)
 
-🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do
+🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
 🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update
