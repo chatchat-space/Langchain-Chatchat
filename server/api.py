@@ -15,6 +15,7 @@ from starlette.responses import RedirectResponse
 from server.chat.chat import chat
 from server.chat.openai_chat import openai_chat
 from server.chat.search_engine_chat import search_engine_chat
+from server.chat.completion import completion
 from server.llm_api import (list_running_models, list_config_models,
                             change_llm_model, stop_llm_model,
                             get_model_config, list_search_engines)
