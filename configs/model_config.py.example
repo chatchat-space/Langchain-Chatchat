@@ -205,6 +205,16 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "BaiChuanWorker",
     },
+# 微软Azure OpenAI
+    "azure-api": {
+        "api_base_url": "",
+        "api_proxy": "",
+        "version": "gpt-35-turbo", # or gpt-4
+        "deployment_name": "", # version 和 deployment_name提供一个即可
+        "api_key": "",
+        "api_version": "",
+        "provider": "AzureWorker",
+    }
 }
 
 
