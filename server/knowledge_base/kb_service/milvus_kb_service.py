@@ -1,13 +1,10 @@
 from typing import List, Dict, Optional
 
-import numpy as np
-from faiss import normalize_L2
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Milvus
-from sklearn.preprocessing import normalize
 
-from configs import SCORE_THRESHOLD, kbs_config
+from configs import kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process
