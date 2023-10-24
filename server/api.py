@@ -57,6 +57,10 @@ def mount_basic_routes(app: FastAPI):
             response_model=BaseResponse,
             summary="swagger 文档")(document)
 
+    app.post("/completion",
+             tags=["Completion"],
+             summary="要求llm模型补全(通过LLMChain)")(completion)
+
     # Tag: Chat
     app.post("/chat/fastchat",
              tags=["Chat"],
