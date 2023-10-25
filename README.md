@@ -43,9 +43,15 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v9` 版本所使用代码已更新至本项目 `v0.2.5` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v10` 版本所使用代码已更新至本项目 `v0.2.6` 版本。
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.3) 已经更新到 ```0.2.3``` 版本, 如果想体验最新内容请源码安装。
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6) 已经更新到 ```0.2.6``` 版本。
+
+🌲 一行命令运行 Docker ：
+
+```shell
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6
+```
 
 🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，__仅仅是入门教程，能够基础运行__。 如果你想要更深入的了解本项目，或者对相对本项目做出共享。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)  界面
 
@@ -139,7 +145,7 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_67.jpg" alt="二维码" width="300" />
+<img src="img/qr_code_68.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 ### 公众号
