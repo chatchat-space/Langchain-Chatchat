@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from configs.model_config import TEMPERATURE
 from fastchat import conversation as conv
@@ -120,16 +121,6 @@ class QianFanWorker(ApiModelWorker):
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
 
-        # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="",
-            messages=[],
-            roles=["user", "assistant"],
-            sep="\n### ",
-            stop_str="###",
-        )
-
         config = self.get_config()
         self.version = version
         self.api_key = config.get("api_key")
@@ -161,6 +152,17 @@ class QianFanWorker(ApiModelWorker):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # TODO: 确认模板是否需要修改
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="",
+            messages=[],
+            roles=["user", "assistant"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":

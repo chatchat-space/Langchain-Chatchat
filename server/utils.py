@@ -477,7 +477,7 @@ def fschat_controller_address() -> str:
 
 
 def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
-    if model := get_model_worker_config(model_name):
+    if model := get_model_worker_config(model_name): # TODO: depends fastchat
         host = model["host"]
         if host == "0.0.0.0":
             host = "127.0.0.1"

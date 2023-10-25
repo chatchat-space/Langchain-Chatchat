@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from configs.basic_config import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
@@ -60,6 +61,9 @@ class ApiModelWorker(BaseModelWorker):
     def get_embeddings(self, params):
         print("embedding")
         # print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        raise NotImplementedError
 
     # help methods
     def get_config(self):

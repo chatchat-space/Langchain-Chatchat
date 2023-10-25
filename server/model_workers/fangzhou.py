@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from configs.model_config import TEMPERATURE
 from fastchat import conversation as conv
@@ -74,15 +75,6 @@ class FangZhouWorker(ApiModelWorker):
         self.api_key = config.get("api_key")
         self.secret_key = config.get("secret_key")
 
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
-            messages=[],
-            roles=["user", "assistant", "system"],
-            sep="\n### ",
-            stop_str="###",
-        )
-
     def generate_stream_gate(self, params):
         super().generate_stream_gate(params)
 
@@ -106,6 +98,16 @@ class FangZhouWorker(ApiModelWorker):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
+            messages=[],
+            roles=["user", "assistant", "system"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":

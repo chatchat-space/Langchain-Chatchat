@@ -1,5 +1,7 @@
 import json
 import sys
+
+from fastchat.conversation import Conversation
 from configs import TEMPERATURE
 from http import HTTPStatus
 from typing import List, Literal, Dict
@@ -68,15 +70,6 @@ class QwenWorker(ApiModelWorker):
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
 
-        # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
-            messages=[],
-            roles=["user", "assistant", "system"],
-            sep="\n### ",
-            stop_str="###",
-        )
         config = self.get_config()
         self.api_key = config.get("api_key")
         self.version = version
@@ -107,6 +100,17 @@ class QwenWorker(ApiModelWorker):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # TODO: 确认模板是否需要修改
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
+            messages=[],
+            roles=["user", "assistant", "system"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":

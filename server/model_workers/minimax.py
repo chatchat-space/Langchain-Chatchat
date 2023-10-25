@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from fastchat import conversation as conv
 import sys
@@ -21,16 +22,6 @@ class MiniMaxWorker(ApiModelWorker):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
-
-        # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="",
-            messages=[],
-            roles=["USER", "BOT"],
-            sep="\n### ",
-            stop_str="###",
-        )
 
     def prompt_to_messages(self, prompt: str) -> List[Dict]:
         result = super().prompt_to_messages(prompt)
@@ -85,6 +76,17 @@ class MiniMaxWorker(ApiModelWorker):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # TODO: 确认模板是否需要修改
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="",
+            messages=[],
+            roles=["USER", "BOT"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":
