@@ -1,16 +1,16 @@
+import sys
 from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from configs.model_config import TEMPERATURE
 from fastchat import conversation as conv
-import sys
 import json
-import httpx
 from cachetools import cached, TTLCache
 from server.utils import get_model_worker_config, get_httpx_client
 from typing import List, Literal, Dict
 
 MODEL_VERSIONS = {
     "ernie-bot": "completions",
+    "ernie-bot-4": "completions_pro",
     "ernie-bot-turbo": "eb-instant",
     "bloomz-7b": "bloomz_7b1",
     "qianfan-bloomz-7b-c": "qianfan_bloomz_7b_compressed",
@@ -82,6 +82,7 @@ def request_qianfan_api(
         model_version=version_url or MODEL_VERSIONS[version],
         access_token=access_token,
     )
+
     payload = {
         "messages": messages,
         "temperature": temperature,
@@ -100,6 +101,7 @@ def request_qianfan_api(
                 if line.startswith("data: "):
                     line = line[6:]
                 resp = json.loads(line)
+                breakpoint()
                 yield resp
 
 

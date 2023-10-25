@@ -1,5 +1,5 @@
 from fastapi import Body
-from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT,LANGCHAIN_LLM_MODEL
+from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 

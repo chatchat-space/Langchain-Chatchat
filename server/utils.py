@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pathlib import Path
 import asyncio
 from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
-                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, LANGCHAIN_LLM_MODEL, logger, log_verbose,
+                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -388,7 +388,6 @@ def list_config_llm_models() -> Dict[str, Dict]:
         workers.insert(0, LLM_MODEL)
     return {
         "local": MODEL_PATH["llm_model"],
-        "langchain": LANGCHAIN_LLM_MODEL,
         "online": ONLINE_LLM_MODEL,
         "worker": workers,
     }
@@ -436,10 +435,6 @@ def get_model_worker_config(model_name: str = None) -> dict:
     config.update(ONLINE_LLM_MODEL.get(model_name, {}))
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}))
 
-    # 在线模型API
-    if model_name in LANGCHAIN_LLM_MODEL:
-        config["langchain_model"] = True
-        config["worker_class"] = ""
 
     if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True

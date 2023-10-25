@@ -112,46 +112,6 @@ HISTORY_LEN = 3
 TEMPERATURE = 0.7
 # TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
-
-LANGCHAIN_LLM_MODEL = {
-    # 不需要走Fschat封装的，Langchain直接支持的模型。
-    # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
-    #  Max retries exceeded with url: /v1/chat/completions
-    # 则需要将urllib3版本修改为1.25.11
-    # 如果依然报urllib3.exceptions.MaxRetryError: HTTPSConnectionPool，则将https改为http
-    # 参考https://zhuanlan.zhihu.com/p/350015032
-
-    # 如果报出：raise NewConnectionError(
-    # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
-    # Failed to establish a new connection: [WinError 10060]
-    # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
-
-    # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
-    # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
-    # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
-    # 比如: "openai_proxy": 'http://127.0.0.1:4780'
-
-    # 这些配置文件的名字不能改动
-    "Azure-OpenAI": {
-        "deployment_name": "your Azure deployment name",
-        "model_version": "0701",
-        "openai_api_type": "azure",
-        "api_base_url": "https://your Azure point.azure.com",
-        "api_version": "2023-07-01-preview",
-        "api_key": "your Azure api key",
-        "openai_proxy": "",
-    },
-    "OpenAI": {
-        "model_name": "your openai model name(such as gpt-4)",
-        "api_base_url": "https://api.openai.com/v1",
-        "api_key": "your OPENAI_API_KEY",
-        "openai_proxy": "",
-    },
-    "Anthropic": {
-        "model_name": "your claude model name(such as claude2-100k)",
-        "api_key":"your ANTHROPIC_API_KEY",
-    }
-}
 ONLINE_LLM_MODEL = {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
@@ -204,6 +164,15 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "secret_key": "",
         "provider": "BaiChuanWorker",
+    },
+
+    # Azure API
+    "azure-api": {
+        "deployment_name": "", # 部署容器的名字
+        "resource_name": "", # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
+        "api_version": "", # API的版本，不是模型版本
+        "api_key": "",
+        "provider": "AzureWorker",
     },
 }
 
