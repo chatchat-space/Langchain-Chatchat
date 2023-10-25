@@ -138,9 +138,9 @@ if __name__ == "__main__":
 
     worker = BaiChuanWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:21001",
+        worker_addr="http://127.0.0.1:21007",
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=21001)
+    uvicorn.run(app, port=21007)
     # do_request()

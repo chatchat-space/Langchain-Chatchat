@@ -4,7 +4,7 @@ from streamlit_chatbox import *
 from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE,LANGCHAIN_LLM_MODEL)
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE)
 from typing import List, Dict
 
 
@@ -83,7 +83,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             return x
 
         running_models = list(api.list_running_models())
-        # running_models += LANGCHAIN_LLM_MODEL.keys()
         available_models = []
         config_models = api.list_config_models()
         worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
@@ -93,8 +92,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
                 available_models.append(k)
-        for k, v in config_models.get("langchain", {}).items():  # 列出LANGCHAIN_LLM_MODEL支持的模型
-            available_models.append(k)
         llm_models = running_models + available_models
         index = llm_models.index(st.session_state.get("cur_llm_model", api.get_default_llm_model()[0]))
         llm_model = st.selectbox("选择LLM模型：",

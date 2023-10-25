@@ -1,17 +1,16 @@
+import sys
 from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from configs.model_config import TEMPERATURE
 from fastchat import conversation as conv
-import sys
 import json
-import httpx
 from cachetools import cached, TTLCache
 from server.utils import get_model_worker_config, get_httpx_client
 from typing import List, Literal, Dict
 
-
 MODEL_VERSIONS = {
     "ernie-bot": "completions",
+    "ernie-bot-4": "completions_pro",
     "ernie-bot-turbo": "eb-instant",
     "bloomz-7b": "bloomz_7b1",
     "qianfan-bloomz-7b-c": "qianfan_bloomz_7b_compressed",
@@ -46,7 +45,7 @@ MODEL_VERSIONS = {
 }
 
 
-@cached(TTLCache(1, 1800)) # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
+@cached(TTLCache(1, 1800))  # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
 def get_baidu_access_token(api_key: str, secret_key: str) -> str:
     """
     使用 AK，SK 生成鉴权签名（Access Token）
@@ -62,12 +61,12 @@ def get_baidu_access_token(api_key: str, secret_key: str) -> str:
 
 
 def request_qianfan_api(
-    messages: List[Dict[str, str]],
-    temperature: float = TEMPERATURE,
-    model_name: str = "qianfan-api",
-    version: str = None,
+        messages: List[Dict[str, str]],
+        temperature: float = TEMPERATURE,
+        model_name: str = "qianfan-api",
+        version: str = None,
 ) -> Dict:
-    BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat'\
+    BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' \
                '/{model_version}?access_token={access_token}'
     config = get_model_worker_config(model_name)
     version = version or config.get("version")
@@ -83,6 +82,7 @@ def request_qianfan_api(
         model_version=version_url or MODEL_VERSIONS[version],
         access_token=access_token,
     )
+
     payload = {
         "messages": messages,
         "temperature": temperature,
@@ -101,6 +101,7 @@ def request_qianfan_api(
                 if line.startswith("data: "):
                     line = line[6:]
                 resp = json.loads(line)
+                breakpoint()
                 yield resp
 
 
@@ -108,6 +109,7 @@ class QianFanWorker(ApiModelWorker):
     """
     百度千帆
     """
+
     def __init__(
             self,
             *,
@@ -128,7 +130,7 @@ class QianFanWorker(ApiModelWorker):
 
     def generate_stream_gate(self, params):
         messages = self.prompt_to_messages(params["prompt"])
-        text=""
+        text = ""
         for resp in request_qianfan_api(messages,
                                         temperature=params.get("temperature"),
                                         model_name=self.model_names[0]):
@@ -147,7 +149,7 @@ class QianFanWorker(ApiModelWorker):
                 },
                     ensure_ascii=False
                 ).encode() + b"\0"
-    
+
     def get_embeddings(self, params):
         # TODO: 支持embeddings
         print("embedding")
