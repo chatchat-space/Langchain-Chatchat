@@ -50,7 +50,7 @@ def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
     return "", ""
 
 
-def knowledge_base_page(api: ApiRequest):
+def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
     try:
         kb_list = {x["kb_name"]: x for x in get_kb_details()}
     except Exception as e:
