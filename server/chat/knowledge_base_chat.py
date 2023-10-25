@@ -20,6 +20,9 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
                             top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                             score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
+                            qa_score_threshold: float = Body(QA_SCORE_THRESHOLD,
+                                                            description="问题对匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置高于SCORE_THRESHOLD。如果满足需求，直接透出QA对答案，不进行LLM生成",
+                                                            ge=0, le=1),
                             history: List[History] = Body([],
                                                       description="历史对话",
                                                       examples=[[
@@ -54,21 +57,6 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             callbacks=[callback],
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
-        context = "\n".join([doc.page_content for doc in docs])
-
-        prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
-        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg])
-
-        chain = LLMChain(prompt=chat_prompt, llm=model)
-
-        # Begin a task that runs in the background.
-        task = asyncio.create_task(wrap_done(
-            chain.acall({"context": context, "question": query}),
-            callback.done),
-        )
-
         source_documents = []
         for inum, doc in enumerate(docs):
             filename = os.path.split(doc.metadata["source"])[-1]
@@ -76,20 +64,49 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             url = f"/knowledge_base/download_doc?" + parameters
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
-        if stream:
-            async for token in callback.aiter():
-                # Use server-sent-events to stream the response
-                yield json.dumps({"answer": token}, ensure_ascii=False)
-            yield json.dumps({"docs": source_documents}, ensure_ascii=False)
-        else:
-            answer = ""
-            async for token in callback.aiter():
-                answer += token
+
+        qa_catched_flag = False
+        catched_qa = None
+        for doc in docs:
+            if doc.metadata["is_qa"] and doc.score <= qa_score_threshold:
+                qa_catched_flag = True
+                catched_qa = doc
+                break
+        if qa_catched_flag:
+            answer = catched_qa.metadata["answer"]
             yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
+        else:
+            context = "\n".join([doc.page_content for doc in docs])
 
-        await task
+            prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
+            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            chat_prompt = ChatPromptTemplate.from_messages(
+                [i.to_msg_template() for i in history] + [input_msg])
+
+            chain = LLMChain(prompt=chat_prompt, llm=model)
+
+            # Begin a task that runs in the background.
+            task = asyncio.create_task(wrap_done(
+                chain.acall({"context": context, "question": query}),
+                callback.done),
+            )
+
+            if stream:
+                async for token in callback.aiter():
+                    # Use server-sent-events to stream the response
+                    yield json.dumps({"answer": token}, ensure_ascii=False)
+                yield json.dumps({"docs": source_documents}, ensure_ascii=False)
+            else:
+                answer = ""
+                async for token in callback.aiter():
+                    answer += token
+                yield json.dumps({"answer": answer,
+                                  "docs": source_documents},
+                                 ensure_ascii=False)
+
+            await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query=query,
                                                           top_k=top_k,
