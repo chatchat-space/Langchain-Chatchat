@@ -1,3 +1,4 @@
+from fastchat.conversation import Conversation
 from server.model_workers.base import ApiModelWorker
 from configs.model_config import TEMPERATURE
 from fastchat import conversation as conv
@@ -7,7 +8,6 @@ import httpx
 from cachetools import cached, TTLCache
 from server.utils import get_model_worker_config, get_httpx_client
 from typing import List, Literal, Dict
-
 
 MODEL_VERSIONS = {
     "ernie-bot": "completions",
@@ -45,7 +45,7 @@ MODEL_VERSIONS = {
 }
 
 
-@cached(TTLCache(1, 1800)) # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
+@cached(TTLCache(1, 1800))  # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
 def get_baidu_access_token(api_key: str, secret_key: str) -> str:
     """
     使用 AK，SK 生成鉴权签名（Access Token）
@@ -61,12 +61,12 @@ def get_baidu_access_token(api_key: str, secret_key: str) -> str:
 
 
 def request_qianfan_api(
-    messages: List[Dict[str, str]],
-    temperature: float = TEMPERATURE,
-    model_name: str = "qianfan-api",
-    version: str = None,
+        messages: List[Dict[str, str]],
+        temperature: float = TEMPERATURE,
+        model_name: str = "qianfan-api",
+        version: str = None,
 ) -> Dict:
-    BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat'\
+    BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' \
                '/{model_version}?access_token={access_token}'
     config = get_model_worker_config(model_name)
     version = version or config.get("version")
@@ -107,6 +107,7 @@ class QianFanWorker(ApiModelWorker):
     """
     百度千帆
     """
+
     def __init__(
             self,
             *,
@@ -120,16 +121,6 @@ class QianFanWorker(ApiModelWorker):
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
 
-        # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="",
-            messages=[],
-            roles=["user", "assistant"],
-            sep="\n### ",
-            stop_str="###",
-        )
-
         config = self.get_config()
         self.version = version
         self.api_key = config.get("api_key")
@@ -137,7 +128,7 @@ class QianFanWorker(ApiModelWorker):
 
     def generate_stream_gate(self, params):
         messages = self.prompt_to_messages(params["prompt"])
-        text=""
+        text = ""
         for resp in request_qianfan_api(messages,
                                         temperature=params.get("temperature"),
                                         model_name=self.model_names[0]):
@@ -156,11 +147,22 @@ class QianFanWorker(ApiModelWorker):
                 },
                     ensure_ascii=False
                 ).encode() + b"\0"
-    
+
     def get_embeddings(self, params):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # TODO: 确认模板是否需要修改
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="",
+            messages=[],
+            roles=["user", "assistant"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":
