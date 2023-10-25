@@ -1,8 +1,9 @@
 import streamlit as st
 from webui_pages.utils import *
 from streamlit_option_menu import option_menu
-from webui_pages import *
+from webui_pages.dialogue.dialogue import dialogue_page, chat_box
 import os
+import sys
 from configs import VERSION
 from server.utils import api_address
 
@@ -10,6 +11,8 @@ from server.utils import api_address
 api = ApiRequest(base_url=api_address())
 
 if __name__ == "__main__":
+    is_lite = "lite" in sys.argv
+
     st.set_page_config(
         "Langchain-Chatchat WebUI",
         os.path.join("img", "chatchat_icon_blue_square_v2.png"),
@@ -26,11 +29,15 @@ if __name__ == "__main__":
             "icon": "chat",
             "func": dialogue_page,
         },
-        "知识库管理": {
-            "icon": "hdd-stack",
-            "func": knowledge_base_page,
-        },
     }
+    if not is_lite:
+        from webui_pages.knowledge_base.knowledge_base import knowledge_base_page
+        pages.update({
+            "知识库管理": {
+                "icon": "hdd-stack",
+                "func": knowledge_base_page,
+            },
+        })
 
     with st.sidebar:
         st.image(
@@ -57,4 +64,4 @@ if __name__ == "__main__":
         )
 
     if selected_page in pages:
-        pages[selected_page]["func"](api)
+        pages[selected_page]["func"](api=api, is_lite=is_lite)

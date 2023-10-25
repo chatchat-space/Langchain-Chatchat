@@ -26,6 +26,8 @@ pathlib
 pytest
 scikit-learn
 numexpr
+strsimpy
+markdownify
 
 vllm>=0.2.0; sys_platform == "linux"
 

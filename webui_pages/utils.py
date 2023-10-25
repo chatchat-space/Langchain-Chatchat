@@ -20,12 +20,11 @@ from configs import (
     logger, log_verbose,
 )
 import httpx
-from server.chat.openai_chat import OpenAiChatMsgIn
 import contextlib
 import json
 import os
 from io import BytesIO
-from server.utils import run_async, set_httpx_config, api_address, get_httpx_client
+from server.utils import set_httpx_config, api_address, get_httpx_client
 
 from pprint import pprint
 
@@ -213,7 +212,7 @@ class ApiRequest:
                 if log_verbose:
                     logger.error(f'{e.__class__.__name__}: {msg}',
                                 exc_info=e if log_verbose else None)
-                return {"code": 500, "msg": msg}
+                return {"code": 500, "msg": msg, "data": None}
 
         if value_func is None:
             value_func = (lambda r: r)
@@ -233,9 +232,26 @@ class ApiRequest:
                 return value_func(response)
 
     # 服务器信息
-    def get_server_configs(self, **kwargs):
+    def get_server_configs(self, **kwargs) -> Dict:
         response = self.post("/server/configs", **kwargs)
-        return self._get_response_value(response, lambda r: r.json())
+        return self._get_response_value(response, as_json=True)
+
+    def list_search_engines(self, **kwargs) -> List:
+        response = self.post("/server/list_search_engines", **kwargs)
+        return self._get_response_value(response, as_json=True, value_func=lambda r: r["data"])
+
+    def get_prompt_template(
+        self,
+        type: str = "llm_chat",
+        name: str = "default",
+        **kwargs,
+    ) -> str:
+        data = {
+            "type": type,
+            "name": name,
+        }
+        response = self.post("/server/get_prompt_template", json=data, **kwargs)
+        return self._get_response_value(response, value_func=lambda r: r.text)
 
     # 对话相关操作
 
@@ -251,16 +267,14 @@ class ApiRequest:
         '''
         对应api.py/chat/fastchat接口
         '''
-        msg = OpenAiChatMsgIn(**{
+        data = {
             "messages": messages,
             "stream": stream,
             "model": model,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            **kwargs,
-        })
+        }
 
-        data = msg.dict(exclude_unset=True, exclude_none=True)
         print(f"received input message:")
         pprint(data)
 
@@ -268,6 +282,7 @@ class ApiRequest:
             "/chat/fastchat",
             json=data,
             stream=True,
+            **kwargs,
         )
         return self._httpx_stream2generator(response)
 
@@ -380,6 +395,7 @@ class ApiRequest:
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
+        split_result: bool = False,
     ):
         '''
         对应api.py/chat/search_engine_chat接口
@@ -394,6 +410,7 @@ class ApiRequest:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "prompt_name": prompt_name,
+            "split_result": split_result,
         }
 
         print(f"received input message:")
@@ -658,6 +675,43 @@ class ApiRequest:
             json=data,
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", []))
+
+
+    def get_default_llm_model(self) -> (str, bool):
+        '''
+        从服务器上获取当前运行的LLM模型，如果本机配置的LLM_MODEL属于本地模型且在其中，则优先返回
+        返回类型为（model_name, is_local_model）
+        '''
+        def ret_sync():
+            running_models = self.list_running_models()
+            if not running_models:
+                return "", False
+
+            if LLM_MODEL in running_models:
+                return LLM_MODEL, True
+
+            local_models = [k for k, v in running_models.items() if not v.get("online_api")]
+            if local_models:
+                return local_models[0], True
+            return list(running_models)[0], False
+
+        async def ret_async():
+            running_models = await self.list_running_models()
+            if not running_models:
+                return "", False
+
+            if LLM_MODEL in running_models:
+                return LLM_MODEL, True
+
+            local_models = [k for k, v in running_models.items() if not v.get("online_api")]
+            if local_models:
+                return local_models[0], True
+            return list(running_models)[0], False
+
+        if self._use_async:
+            return ret_async()
+        else:
+            return ret_sync()
 
     def list_config_models(self) -> Dict[str, List[str]]:
         '''

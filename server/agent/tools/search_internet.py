@@ -1,5 +1,5 @@
 import json
-from server.chat import search_engine_chat
+from server.chat.search_engine_chat import search_engine_chat
 from configs import VECTOR_SEARCH_TOP_K
 import asyncio
 from server.agent import model_container
