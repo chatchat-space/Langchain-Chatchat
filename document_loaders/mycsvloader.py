@@ -1,22 +1,23 @@
 from typing import List
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
+from langchain.docstore.document import Document
 
+# https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/document_loaders/csv_loader.py
 
 class RapidCSVLoader(UnstructuredFileLoader):
     def _get_elements(self) -> List:
         def csv2text(filepath):
             import csv
-            resp = ""
             with open(filepath, 'r') as file:
                 csv_reader = csv.reader(file)
+                documents = []
                 for row in csv_reader:
                     if row:
-                        resp += row[0] + "\n"
-            return resp
+                        doc = Document(page_content=row[0], metadata={"answer": row[1], "source": self.file_path})
+                        documents.append(doc)
+            return documents
 
-        text = csv2text(self.file_path)
-        from unstructured.partition.text import partition_text
-        return partition_text(text=text, **self.unstructured_kwargs)
+        return csv2text(self.file_path)
   
         
 
@@ -24,3 +25,5 @@ if __name__ == "__main__":
     loader = RapidCSVLoader(file_path="../tests/samples/ocr_test.csv")
     docs = loader.load()
     print(docs)
+    for doc in docs:
+        print(doc)
