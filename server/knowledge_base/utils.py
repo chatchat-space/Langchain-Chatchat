@@ -71,9 +71,10 @@ def load_embeddings(model: str = EMBEDDING_MODEL, device: str = embedding_device
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
                "CustomJSONLoader": [".json"],
-               "CSVLoader": [".csv"],
+            #    "CSVLoader": [".csv"],
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
+               "RapidCSVLoader": [".csv", ".xlsx", ".xls"],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
                                           '.docx', '.epub', '.odt',
@@ -150,7 +151,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "RapidCSVLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')

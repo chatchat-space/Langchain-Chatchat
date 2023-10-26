@@ -13,7 +13,7 @@ class RapidCSVLoader(UnstructuredFileLoader):
                 documents = []
                 for row in csv_reader:
                     if row:
-                        doc = Document(page_content=row[0], metadata={"answer": row[1], "source": self.file_path})
+                        doc = Document(page_content=row[0], metadata={"source": self.file_path, "is_qa": True, "answer": row[1]})
                         documents.append(doc)
             return documents
 
