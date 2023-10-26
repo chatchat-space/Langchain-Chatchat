@@ -2,9 +2,8 @@ from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.embeddings.base import Embeddings
-from langchain.schema import Document
 import threading
-from configs import (EMBEDDING_MODEL, CHUNK_SIZE, CACHED_VS_NUM,
+from configs import (EMBEDDING_MODEL, CHUNK_SIZE,
                     logger, log_verbose)
 from server.utils import embedding_device, get_model_path
 from contextlib import contextmanager
@@ -122,7 +121,9 @@ class EmbeddingsPool(CachePool):
             with item.acquire(msg="初始化"):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-                    embeddings = OpenAIEmbeddings(openai_api_key=get_model_path(model), chunk_size=CHUNK_SIZE)
+                    embeddings = OpenAIEmbeddings(model_name=model, # TODO: 支持Azure
+                                                  openai_api_key=get_model_path(model),
+                                                  chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:
                     if 'zh' in model:
                         # for chinese model

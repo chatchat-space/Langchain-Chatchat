@@ -1,22 +1,20 @@
 from fastchat.conversation import Conversation
-from server.model_workers.base import ApiModelWorker
+from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
-import json
-from typing import List, Literal
+from typing import List, Dict, Iterator, Literal
 
 
 class ChatGLMWorker(ApiModelWorker):
-    BASE_URL = "https://open.bigmodel.cn/api/paas/v3/model-api"
-    SUPPORT_MODELS = ["chatglm_pro", "chatglm_std", "chatglm_lite"]
+    DEFAULT_EMBED_MODEL = "text_embedding"
 
     def __init__(
         self,
         *,
         model_names: List[str] = ["zhipu-api"],
+        controller_addr: str = None,
+        worker_addr: str = None,
         version: Literal["chatglm_pro", "chatglm_std", "chatglm_lite"] = "chatglm_std",
-        controller_addr: str,
-        worker_addr: str,
         **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
@@ -24,27 +22,45 @@ class ChatGLMWorker(ApiModelWorker):
         super().__init__(**kwargs)
         self.version = version
 
-    def generate_stream_gate(self, params):
+    def do_chat(self, params: ApiChatParams) -> Iterator[Dict]:
         # TODO: 维护request_id
         import zhipuai
 
-        super().generate_stream_gate(params)
-        zhipuai.api_key = self.get_config().get("api_key")
+        params.load_config(self.model_names[0])
+        zhipuai.api_key = params.api_key
 
         response = zhipuai.model_api.sse_invoke(
-            model=self.version,
-            prompt=[{"role": "user", "content": params["prompt"]}],
-            temperature=params.get("temperature"),
-            top_p=params.get("top_p"),
+            model=params.version,
+            prompt=params.messages,
+            temperature=params.temperature,
+            top_p=params.top_p,
             incremental=False,
         )
         for e in response.events():
             if e.event == "add":
-                yield json.dumps({"error_code": 0, "text": e.data}, ensure_ascii=False).encode() + b"\0"
-            # TODO: 更健壮的消息处理
-            # elif e.event == "finish":
-            #     ...
-    
+                yield {"error_code": 0, "text": e.data}
+            elif e.event in ["error", "interrupted"]:
+                yield {"error_code": 500, "text": str(e)}
+
+    def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
+        import zhipuai
+
+        params.load_config(self.model_names[0])
+        zhipuai.api_key = params.api_key
+
+        embeddings = []
+        try:
+            for t in params.texts:
+                response = zhipuai.model_api.invoke(model=params.embed_model or self.DEFAULT_EMBED_MODEL, prompt=t)
+                if response["code"] == 200:
+                    embeddings.append(response["data"]["embedding"])
+                else:
+                    return response # dict with code & msg
+        except Exception as e:
+            return {"code": 500, "msg": f"对文本向量化时出错：{e}"}
+
+        return {"code": 200, "embeddings": embeddings}
+
     def get_embeddings(self, params):
         # TODO: 支持embeddings
         print("embedding")
@@ -56,7 +72,7 @@ class ChatGLMWorker(ApiModelWorker):
             name=self.model_names[0],
             system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
             messages=[],
-            roles=["Human", "Assistant"],
+            roles=["Human", "Assistant", "System"],
             sep="\n###",
             stop_str="###",
         )
