@@ -7,94 +7,68 @@ from http import HTTPStatus
 from typing import List, Literal, Dict
 
 from fastchat import conversation as conv
-
-from server.model_workers.base import ApiModelWorker
-from server.utils import get_model_worker_config
-
-
-def request_qwen_api(
-    messages: List[Dict[str, str]],
-    api_key: str = None,
-    version: str = "qwen-turbo",
-    temperature: float = TEMPERATURE,
-    model_name: str = "qwen-api",
-):
-    import dashscope
-
-    config = get_model_worker_config(model_name)
-    api_key = api_key or config.get("api_key")
-    version = version or config.get("version")
-
-    gen = dashscope.Generation()
-    responses = gen.call(
-        model=version,
-        temperature=temperature,
-        api_key=api_key,
-        messages=messages,
-        result_format='message',  # set the result is message format.
-        stream=True,
-    )
-
-    text = ""
-    for resp in responses:
-        if resp.status_code != HTTPStatus.OK:
-            yield {
-                "code": resp.status_code,
-                "text": "api not response correctly",
-            }
-
-        if resp["status_code"] == 200:
-            if choices := resp["output"]["choices"]:
-                yield {
-                    "code": 200,
-                    "text": choices[0]["message"]["content"],
-                }
-        else:
-            yield {
-                "code": resp["status_code"],
-                "text": resp["message"],
-            }
+from server.model_workers.base import *
+from server.model_workers.base import ApiEmbeddingsParams
 
 
 class QwenWorker(ApiModelWorker):
+    DEFAULT_EMBED_MODEL = "text-embedding-v1"
+
     def __init__(
-            self,
-            *,
-            version: Literal["qwen-turbo", "qwen-plus"] = "qwen-turbo",
-            model_names: List[str] = ["qwen-api"],
-            controller_addr: str,
-            worker_addr: str,
-            **kwargs,
+        self,
+        *,
+        version: Literal["qwen-turbo", "qwen-plus"] = "qwen-turbo",
+        model_names: List[str] = ["qwen-api"],
+        controller_addr: str = None,
+        worker_addr: str = None,
+        **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
-
-        config = self.get_config()
-        self.api_key = config.get("api_key")
         self.version = version
 
-    def generate_stream_gate(self, params):
-        messages = self.prompt_to_messages(params["prompt"])
+    def do_chat(self, params: ApiChatParams) -> Dict:
+        import dashscope
+        params.load_config(self.model_names[0])
 
-        for resp in request_qwen_api(messages=messages,
-                                     api_key=self.api_key,
-                                     version=self.version,
-                                     temperature=params.get("temperature")):
-            if resp["code"] == 200:
-                yield json.dumps({
-                    "error_code": 0,
-                    "text": resp["text"]
-                },
-                    ensure_ascii=False
-                ).encode() + b"\0"
+        gen = dashscope.Generation()
+        responses = gen.call(
+            model=params.version,
+            temperature=params.temperature,
+            api_key=params.api_key,
+            messages=params.messages,
+            result_format='message',  # set the result is message format.
+            stream=True,
+        )
+
+        for resp in responses:
+            if resp["status_code"] == 200:
+                if choices := resp["output"]["choices"]:
+                    yield {
+                        "error_code": 0,
+                        "text": choices[0]["message"]["content"],
+                    }
             else:
-                yield json.dumps({
-                    "error_code": resp["code"],
-                    "text": resp["text"]
-                },
-                    ensure_ascii=False
-                ).encode() + b"\0"
+                yield {
+                    "error_code": resp["status_code"],
+                    "text": resp["message"],
+                }
+
+    def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
+        import dashscope
+        params.load_config(self.model_names[0])
+
+        resp = dashscope.TextEmbedding.call(
+            model=params.embed_model or self.DEFAULT_EMBED_MODEL,
+            input=params.texts, # 最大25行
+            api_key=params.api_key,
+        )
+        if resp["status_code"] != 200:
+            return {"code": resp["status_code"], "msg": resp.message}
+        else:
+            embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
+            return {"code": 200, "embeddings": embeddings}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

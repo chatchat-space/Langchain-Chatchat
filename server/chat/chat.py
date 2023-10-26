@@ -7,7 +7,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
-from typing import List
+from typing import List, Optional
 from server.chat.utils import History
 from server.utils import get_prompt_template
 
@@ -22,7 +22,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                 stream: bool = Body(False, description="流式输出"),
                 model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
                 temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
+                max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                 # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
                 prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
          ):

@@ -1,5 +1,5 @@
 from fastapi.responses import StreamingResponse
-from typing import List
+from typing import List, Optional
 import openai
 from configs import LLM_MODEL, logger, log_verbose
 from server.utils import get_model_worker_config, fschat_openai_api_address
@@ -16,7 +16,7 @@ class OpenAiChatMsgIn(BaseModel):
     messages: List[OpenAiMessage]
     temperature: float = 0.7
     n: int = 1
-    max_tokens: int = None
+    max_tokens: Optional[int] = None
     stop: List[str] = []
     stream: bool = False
     presence_penalty: int = 0
