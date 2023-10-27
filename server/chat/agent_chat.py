@@ -1,7 +1,7 @@
 from langchain.memory import ConversationBufferWindowMemory
 from server.agent.tools_select import tools, tool_names
 from server.agent.callbacks import CustomAsyncIteratorCallbackHandler, Status
-from langchain.agents import AgentExecutor, LLMSingleActionAgent
+from langchain.agents import AgentExecutor, LLMSingleActionAgent, initialize_agent, BaseMultiActionAgent
 from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 from fastapi import Body
 from fastapi.responses import StreamingResponse

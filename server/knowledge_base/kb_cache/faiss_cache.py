@@ -1,8 +1,9 @@
+from configs import CACHED_VS_NUM
 from server.knowledge_base.kb_cache.base import *
 from server.knowledge_base.utils import get_vs_path
 from langchain.vectorstores import FAISS
 import os
-
+from langchain.schema import Document
 
 class ThreadSafeFaiss(ThreadSafeObject):
     def __repr__(self) -> str:

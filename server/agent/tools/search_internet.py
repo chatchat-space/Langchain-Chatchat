@@ -3,6 +3,7 @@ from server.chat.search_engine_chat import search_engine_chat
 from configs import VECTOR_SEARCH_TOP_K, MAX_TOKENS
 import asyncio
 from server.agent import model_container
+from pydantic import BaseModel, Field
 
 async def search_engine_iter(query: str):
     response = await search_engine_chat(query=query,
@@ -25,8 +26,10 @@ async def search_engine_iter(query: str):
     return contents
 
 def search_internet(query: str):
-
     return asyncio.run(search_engine_iter(query))
+
+class SearchInternetInput(BaseModel):
+    location: str = Field(description="需要查询的内容")
 
 
 if __name__ == "__main__":
