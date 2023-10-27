@@ -127,9 +127,11 @@ PROMPT_TEMPLATES["agent_chat"] = {
         """,
     "中文版本":
         """
-        请请严格按照提供的思维方式来思考。你的知识不一定正确，所以你一定要用提供的工具来思考，并给出用户答案。
+        你的知识不一定正确，所以你一定要用提供的工具来思考，并给出用户答案。
         你有以下工具可以使用:
         {tools}
+
+        请请严格按照提供的思维方式来思考，所有的关键词都要输出，例如Action，Action Input，Observation等
         ```
         Question: 用户的提问或者观察到的信息，
         Thought: 你应该思考该做什么，是根据工具的结果来回答问题，还是决定使用什么工具。
@@ -148,6 +150,5 @@ PROMPT_TEMPLATES["agent_chat"] = {
         用户开始以提问：
         Question: {input}
         Thought: {agent_scratchpad}
-
         """,
 }

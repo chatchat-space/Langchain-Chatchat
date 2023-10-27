@@ -48,7 +48,7 @@ class CustomOutputParser(AgentOutputParser):
         parts = llm_output.split("Action:")
         if len(parts) < 2:
             return AgentFinish(
-                return_values={"output": f"调用agent失败: `{llm_output}`"},
+                return_values={"output": f"调用agent工具失败，该回答为大模型自身能力的回答:\n\n `{llm_output}`"},
                 log=llm_output,
             )
 
