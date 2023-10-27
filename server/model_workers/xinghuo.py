@@ -1,12 +1,12 @@
 from fastchat.conversation import Conversation
-from server.model_workers.base import ApiModelWorker
+from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
 import json
 from server.model_workers import SparkApi
 import websockets
 from server.utils import iter_over_async, asyncio
-from typing import List
+from typing import List, Dict
 
 
 async def request(appid, api_key, api_secret, Spark_url,domain, question, temperature):
@@ -31,46 +31,40 @@ class XingHuoWorker(ApiModelWorker):
         self,
         *,
         model_names: List[str] = ["xinghuo-api"],
-        controller_addr: str,
-        worker_addr: str,
+        controller_addr: str = None,
+        worker_addr: str = None,
+        version: str = None,
         **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 8192)
         super().__init__(**kwargs)
+        self.version = version
 
-    def generate_stream_gate(self, params):
+    def do_chat(self, params: ApiChatParams) -> Dict:
         # TODO: 当前每次对话都要重新连接websocket，确认是否可以保持连接
+        params.load_config(self.model_names[0])
 
-        super().generate_stream_gate(params)
-        config = self.get_config()
-        appid = config.get("APPID")
-        api_secret = config.get("APISecret")
-        api_key = config.get("api_key")
-
-        if config.get("is_v2"):
+        if params.is_v2:
             domain = "generalv2"    # v2.0版本
             Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"  # v2.0环境的地址
         else:
             domain = "general"   # v1.5版本
             Spark_url = "ws://spark-api.xf-yun.com/v1.1/chat"  # v1.5环境的地址
 
-        question = self.prompt_to_messages(params["prompt"])
         text = ""
-
         try:
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
 
         for chunk in iter_over_async(
-             request(appid, api_key, api_secret, Spark_url, domain, question, params.get("temperature")),
+             request(params.APPID, params.api_key, params.APISecret, Spark_url, domain, params.messages, params.temperature),
              loop=loop,
         ):
             if chunk:
-                print(chunk)
                 text += chunk
-                yield json.dumps({"error_code": 0, "text": text}, ensure_ascii=False).encode() + b"\0"
+                yield {"error_code": 0, "text": text}
     
     def get_embeddings(self, params):
         # TODO: 支持embeddings
@@ -81,7 +75,7 @@ class XingHuoWorker(ApiModelWorker):
         # TODO: 确认模板是否需要修改
         return conv.Conversation(
             name=self.model_names[0],
-            system_message="",
+            system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
             messages=[],
             roles=["user", "assistant"],
             sep="\n### ",
