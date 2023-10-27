@@ -9,7 +9,6 @@ import sys
 from server.model_workers.base import ApiEmbeddingsParams
 from typing import List, Literal, Dict
 
-
 MODEL_VERSIONS = {
     "ernie-bot-4": "completions_pro",
     "ernie-bot": "completions",
@@ -47,7 +46,7 @@ MODEL_VERSIONS = {
 }
 
 
-@cached(TTLCache(1, 1800)) # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
+@cached(TTLCache(1, 1800))  # 经过测试，缓存的token可以使用，目前每30分钟刷新一次
 def get_baidu_access_token(api_key: str, secret_key: str) -> str:
     """
     使用 AK，SK 生成鉴权签名（Access Token）
@@ -69,13 +68,13 @@ class QianFanWorker(ApiModelWorker):
     DEFAULT_EMBED_MODEL = "embedding-v1"
 
     def __init__(
-        self,
-        *,
-        version: Literal["ernie-bot", "ernie-bot-turbo"] = "ernie-bot",
-        model_names: List[str] = ["qianfan-api"],
-        controller_addr: str = None,
-        worker_addr: str = None,
-        **kwargs,
+            self,
+            *,
+            version: Literal["ernie-bot", "ernie-bot-turbo"] = "ernie-bot",
+            model_names: List[str] = ["qianfan-api"],
+            controller_addr: str = None,
+            worker_addr: str = None,
+            **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384)
@@ -108,8 +107,8 @@ class QianFanWorker(ApiModelWorker):
         #             "text": str(resp.body),
         #         }
 
-        BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat'\
-                '/{model_version}?access_token={access_token}'
+        BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' \
+                   '/{model_version}?access_token={access_token}'
 
         access_token = get_baidu_access_token(params.api_key, params.secret_key)
         if not access_token:
@@ -131,7 +130,7 @@ class QianFanWorker(ApiModelWorker):
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
-        
+
         text = ""
         with get_httpx_client() as client:
             with client.stream("POST", url, headers=headers, json=payload) as response:
@@ -176,7 +175,6 @@ class QianFanWorker(ApiModelWorker):
                 return {"code": 200, "embeddings": embeddings}
             else:
                 return {"code": resp["error_code"], "msg": resp["error_msg"]}
-
 
     # TODO: qianfan支持续写模型
     def get_embeddings(self, params):

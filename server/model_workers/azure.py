@@ -18,7 +18,7 @@ class AzureWorker(ApiModelWorker):
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 8192)
+        kwargs.setdefault("context_len", 8000) #TODO 16K模型需要改成16384
         super().__init__(**kwargs)
         self.version = version
 
