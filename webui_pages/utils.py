@@ -677,7 +677,7 @@ class ApiRequest:
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", []))
 
 
-    def get_default_llm_model(self) -> (str, bool):
+    def get_default_llm_model(self) -> Tuple[str, bool]:
         '''
         从服务器上获取当前运行的LLM模型，如果本机配置的LLM_MODEL属于本地模型且在其中，则优先返回
         返回类型为（model_name, is_local_model）
