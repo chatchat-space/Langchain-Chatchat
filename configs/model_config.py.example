@@ -39,10 +39,10 @@ MODEL_PATH = {
     # TODO: add all supported llm models
     "llm_model": {
         # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
-        "chatglm-6b": "THUDM/chatglm-6b",
         "chatglm2-6b": "THUDM/chatglm2-6b",
-        "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+        "chatglm3-6b": "THUDM/chatglm3-6b-32k",
+        "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
 
         "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
         "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
@@ -122,6 +122,13 @@ TEMPERATURE = 0.7
 
 ONLINE_LLM_MODEL = {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
+
+    "openai-api": {
+        "model_name": "gpt-35-turbo",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "",
+        "openai_proxy": "",
+    },
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
@@ -243,11 +250,13 @@ VLLM_MODEL_DICT = {
 
 ## 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
 SUPPORT_AGENT_MODEL = [
-    "Azure-OpenAI",
-    "OpenAI",
-    "Anthropic",
+    "azure-api",
+    "openai-api",
+    "claude-api",
     "Qwen",
     "qwen-api",
     "baichuan-api",
     "agentlm"
+    "chatglm3-6b"
+    "xinghuo-api"
 ]
