@@ -1,4 +1,6 @@
 import os
+import re
+
 from transformers import AutoTokenizer
 from configs import (
     EMBEDDING_MODEL,
@@ -11,6 +13,7 @@ from configs import (
     text_splitter_dict,
     LLM_MODEL,
     TEXT_SPLITTER_NAME,
+    kb_config,
 )
 import importlib
 from text_splitter import zh_title_enhance as func_zh_title_enhance
@@ -262,6 +265,44 @@ def make_text_splitter(
         text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
     return text_splitter
 
+
+def get_customized_index_dict(docs: list) -> list:
+    use_kb_index = getattr(kb_config, 'USE_KB_INDEX', False)
+    if not use_kb_index:
+        return docs
+
+    kb_index_pattern = getattr(kb_config, 'KB_INDEX_PATTERN', '{}')
+    normalized_splitter = "$$splitter$$"
+    placeholders = re.findall(r'\{([^}]+)\}', kb_index_pattern)
+    splitters = re.findall(r'\}([^}]+)\{', kb_index_pattern)
+
+    for doc in docs:
+        # 文件全路径
+        full_file_path = doc.metadata["source"]
+        # 取出文件名
+        file_name = os.path.basename(full_file_path)
+        # 取出文件名中无后缀的部分
+        file_name = os.path.splitext(file_name)[0]
+
+        # 统一化分隔符
+        formatted_txt = file_name
+        if splitters:
+            for splitter in splitters:
+                formatted_txt = formatted_txt.replace(splitter, normalized_splitter)
+
+        # 分割文本并对应装载
+        doc_index_dict = {}
+        try:
+            for i in range(len(formatted_txt.split(normalized_splitter))):
+                doc_index_dict[placeholders[i]] = formatted_txt.split(normalized_splitter)[i]
+        except Exception as e:
+            msg = f"从文件名 {file_name} 获取自定义索引时出错！：{e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
+        doc.metadata.update(doc_index_dict)
+    return docs
+
+
 class KnowledgeFile:
     def __init__(
             self,
@@ -313,7 +354,10 @@ class KnowledgeFile:
             else:
                 docs = text_splitter.split_documents(docs)
 
-        print(f"文档切分示例：{docs[0]}")
+        # 装载自定义索引
+        docs = get_customized_index_dict(docs)
+        # 打印示例
+        print(f"文档切分示例：{docs[0]}\n索引示例：{docs[0].metadata}")
         if zh_title_enhance:
             docs = func_zh_title_enhance(docs)
         self.splited_docs = docs

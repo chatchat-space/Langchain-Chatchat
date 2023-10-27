@@ -5,7 +5,7 @@ from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
-from typing import AsyncIterable, List, Optional
+from typing import AsyncIterable, List, Optional, Dict
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
 from server.chat.utils import History
@@ -33,6 +33,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                             max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                             prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                            kb_index: Dict = None,
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -53,7 +54,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             max_tokens=max_tokens,
             callbacks=[callback],
         )
-        docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
+        docs = search_docs(query, knowledge_base_name, top_k, score_threshold, kb_index)
         context = "\n".join([doc.page_content for doc in docs])
 
         prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)

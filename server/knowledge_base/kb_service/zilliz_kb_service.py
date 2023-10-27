@@ -59,9 +59,13 @@ class ZillizKBService(KBService):
             self.zilliz.col.release()
             self.zilliz.col.drop()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
+    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings, kb_index=None):
         self._load_zilliz(embeddings=EmbeddingsFunAdapter(embeddings))
-        return score_threshold_process(score_threshold, top_k, self.zilliz.similarity_search_with_score(query, top_k))
+        if kb_index:
+            # todo zilliz实现的相关处理
+            return score_threshold_process(score_threshold, top_k, self.zilliz.similarity_search_with_score(query, top_k, expr=None))
+        else:
+            return score_threshold_process(score_threshold, top_k, self.zilliz.similarity_search_with_score(query, top_k))
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         for doc in docs:

@@ -1,6 +1,8 @@
 import os
 import shutil
 
+from fastapi import Body
+
 from configs import (
     KB_ROOT_PATH,
     SCORE_THRESHOLD,
@@ -59,9 +61,13 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   embeddings: Embeddings = None,
+                  kb_index=None
                   ) -> List[Document]:
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
+            if kb_index:
+                docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold, filter=kb_index)
+            else:
+                docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
         return docs
 
     def do_add_doc(self,

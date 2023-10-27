@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import os
 
 import numpy as np
+from fastapi import Body
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from sklearn.preprocessing import normalize
@@ -147,9 +148,10 @@ class KBService(ABC):
                     query: str,
                     top_k: int = VECTOR_SEARCH_TOP_K,
                     score_threshold: float = SCORE_THRESHOLD,
+                    kb_index: Dict = None,
                     ):
         embeddings = self._load_embeddings()
-        docs = self.do_search(query, top_k, score_threshold, embeddings)
+        docs = self.do_search(query, top_k, score_threshold, embeddings, kb_index)
         return docs
 
     def get_doc_by_id(self, id: str) -> Optional[Document]:
@@ -203,9 +205,11 @@ class KBService(ABC):
                   top_k: int,
                   score_threshold: float,
                   embeddings: Embeddings,
+                  kb_index: Dict = None,
                   ) -> List[Document]:
         """
         搜索知识库子类实自己逻辑
+        @param kb_index:
         """
         pass
 
