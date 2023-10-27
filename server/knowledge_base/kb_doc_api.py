@@ -31,7 +31,6 @@ def search_docs(query: str = Body(..., description="用户输入", examples=["�
         return []
     docs = kb.search_docs(query, top_k, score_threshold)
     data = [DocumentWithScore(**x[0].dict(), score=x[1]) for x in docs]
-
     return data
 
 

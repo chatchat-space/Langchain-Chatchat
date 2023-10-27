@@ -1,4 +1,4 @@
-langchain>=0.0.319
+langchain>=0.0.324
 langchain-experimental>=0.0.30
 fschat[model_worker]==0.2.31
 xformers>=0.0.22.post4

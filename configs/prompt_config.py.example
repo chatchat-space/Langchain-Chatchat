@@ -47,6 +47,11 @@ PROMPT_TEMPLATES["knowledge_base_chat"] = {
         <已知信息>{{ context }}</已知信息>、
         <问题>{{ question }}</问题>
         """,
+    "Empty":  # 搜不到内容的时候调用，此时没有已知信息，这个Empty可以更改，但不能删除，会影响程序使用
+        """
+        <指令>请根据用户的问题，进行简洁明了的回答</指令>
+        <问题>{{ question }}</问题>
+        """,
 }
 PROMPT_TEMPLATES["search_engine_chat"] = {
     "default":
@@ -55,11 +60,15 @@ PROMPT_TEMPLATES["search_engine_chat"] = {
             <已知信息>{{ context }}</已知信息>、
             <问题>{{ question }}</问题>
             """,
-
     "search":
         """
         <指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>
         <已知信息>{{ context }}</已知信息>、
+        <问题>{{ question }}</问题>
+        """,
+    "Empty":  # 搜不到内容的时候调用，此时没有已知信息，这个Empty可以更改，但不能删除，会影响程序使用
+        """
+        <指令>请根据用户的问题，进行简洁明了的回答</指令>
         <问题>{{ question }}</问题>
         """,
 }

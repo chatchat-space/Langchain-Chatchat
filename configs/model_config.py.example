@@ -232,3 +232,14 @@ VLLM_MODEL_DICT = {
     "agentlm-70b":"THUDM/agentlm-70b",
 
 }
+
+## 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
+SUPPORT_AGENT_MODEL = [
+    "Azure-OpenAI",
+    "OpenAI",
+    "Anthropic",
+    "Qwen",
+    "qwen-api",
+    "baichuan-api",
+    "agentlm"
+]

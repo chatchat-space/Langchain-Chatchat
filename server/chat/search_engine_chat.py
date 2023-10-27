@@ -176,6 +176,9 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
             for inum, doc in enumerate(docs)
         ]
 
+        if len(source_documents) == 0:  # 没有找到相关资料（不太可能）
+            source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
+
         if stream:
             async for token in callback.aiter():
                 # Use server-sent-events to stream the response

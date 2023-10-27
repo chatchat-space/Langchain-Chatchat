@@ -1,4 +1,7 @@
 import os
+import sys
+
+sys.path.append("/home/congyin/Code/Project_Langchain_0814/Langchain-Chatchat")
 from transformers import AutoTokenizer
 from configs import (
     EMBEDDING_MODEL,
@@ -24,7 +27,6 @@ from server.utils import run_in_thread_pool, embedding_device, get_model_worker_
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
 import chardet
-
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
     # 检查是否包含预期外的字符或路径攻击关键字
@@ -72,6 +74,7 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
                "CustomJSONLoader": [".json"],
                "CSVLoader": [".csv"],
+               # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
@@ -88,12 +91,12 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
     '''
 
     def __init__(
-        self,
-        file_path: Union[str, Path],
-        content_key: Optional[str] = None,
-        metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-        text_content: bool = True,
-        json_lines: bool = False,
+            self,
+            file_path: Union[str, Path],
+            content_key: Optional[str] = None,
+            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
+            text_content: bool = True,
+            json_lines: bool = False,
     ):
         """Initialize the JSONLoader.
 
@@ -150,7 +153,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader","FilteredCSVLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
@@ -168,10 +171,11 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
         # 自动识别文件编码类型，避免langchain loader 加载文件报编码错误
         with open(file_path_or_content, 'rb') as struct_file:
             encode_detect = chardet.detect(struct_file.read())
-        if encode_detect:
-            loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
-        else:
-            loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+        if encode_detect is None:
+            encode_detect = {"encoding": "utf-8"}
+
+        loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+        ## TODO：支持更多的自定义CSV读取逻辑
 
     elif loader_name == "JSONLoader":
         loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
@@ -187,10 +191,10 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = TEXT_SPLITTER_NAME,
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = OVERLAP_SIZE,
-    llm_model: str = LLM_MODEL,
+        splitter_name: str = TEXT_SPLITTER_NAME,
+        chunk_size: int = CHUNK_SIZE,
+        chunk_overlap: int = OVERLAP_SIZE,
+        llm_model: str = LLM_MODEL,
 ):
     """
     根据参数获取特定的分词器
@@ -262,6 +266,7 @@ def make_text_splitter(
         text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
     return text_splitter
 
+
 class KnowledgeFile:
     def __init__(
             self,
@@ -282,7 +287,7 @@ class KnowledgeFile:
         self.document_loader_name = get_LoaderClass(self.ext)
         self.text_splitter_name = TEXT_SPLITTER_NAME
 
-    def file2docs(self, refresh: bool=False):
+    def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
             logger.info(f"{self.document_loader_name} used for {self.filepath}")
             loader = get_loader(self.document_loader_name, self.filepath)
@@ -290,20 +295,21 @@ class KnowledgeFile:
         return self.docs
 
     def docs2texts(
-        self,
-        docs: List[Document] = None,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        text_splitter: TextSplitter = None,
+            self,
+            docs: List[Document] = None,
+            zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+            refresh: bool = False,
+            chunk_size: int = CHUNK_SIZE,
+            chunk_overlap: int = OVERLAP_SIZE,
+            text_splitter: TextSplitter = None,
     ):
         docs = docs or self.file2docs(refresh=refresh)
         if not docs:
             return []
         if self.ext not in [".csv"]:
             if text_splitter is None:
-                text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+                text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size,
+                                                   chunk_overlap=chunk_overlap)
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
                 for doc in docs:
@@ -320,12 +326,12 @@ class KnowledgeFile:
         return self.splited_docs
 
     def file2text(
-        self,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        text_splitter: TextSplitter = None,
+            self,
+            zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+            refresh: bool = False,
+            chunk_size: int = CHUNK_SIZE,
+            chunk_overlap: int = OVERLAP_SIZE,
+            text_splitter: TextSplitter = None,
     ):
         if self.splited_docs is None or refresh:
             docs = self.file2docs()
@@ -359,6 +365,7 @@ def files2docs_in_thread(
     如果传入参数是Tuple，形式为(filename, kb_name)
     生成器返回值为 status, (kb_name, file_name, docs | error)
     '''
+
     def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
         try:
             return True, (file.kb_name, file.filename, file.file2text(**kwargs))
@@ -373,8 +380,8 @@ def files2docs_in_thread(
         kwargs = {}
         try:
             if isinstance(file, tuple) and len(file) >= 2:
-                filename=file[0]
-                kb_name=file[1]
+                filename = file[0]
+                kb_name = file[1]
                 file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
             elif isinstance(file, dict):
                 filename = file.pop("filename")
@@ -396,10 +403,9 @@ def files2docs_in_thread(
 if __name__ == "__main__":
     from pprint import pprint
 
-    kb_file = KnowledgeFile(filename="test.txt", knowledge_base_name="samples")
+    kb_file = KnowledgeFile(
+        filename="/home/congyin/Code/Project_Langchain_0814/Langchain-Chatchat/knowledge_base/csv1/content/gm.csv",
+        knowledge_base_name="samples")
     # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
     docs = kb_file.file2docs()
-    pprint(docs[-1])
-
-    docs = kb_file.file2text()
-    pprint(docs[-1])
+    # pprint(docs[-1])
