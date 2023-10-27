@@ -4,9 +4,8 @@ from streamlit_chatbox import *
 from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE)
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -14,6 +13,8 @@ chat_box = ChatBox(
         "chatchat_icon_blue_square_v2.png"
     )
 )
+
+
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
     '''
     返回消息历史。
@@ -55,14 +56,14 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
         if is_lite:
             dialogue_modes = ["LLM 对话",
-                            "搜索引擎问答",
-                            ]
+                              "搜索引擎问答",
+                              ]
         else:
             dialogue_modes = ["LLM 对话",
-                            "知识库问答",
-                            "搜索引擎问答",
-                            "自定义Agent问答",
-                            ]
+                              "知识库问答",
+                              "搜索引擎问答",
+                              "自定义Agent问答",
+                              ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=0,
@@ -102,10 +103,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                  key="llm_model",
                                  )
         if (st.session_state.get("prev_llm_model") != llm_model
-            and not is_lite
-            and not llm_model in config_models.get("online", {})
-            and not llm_model in config_models.get("langchain", {})
-            and llm_model not in running_models):
+                and not is_lite
+                and not llm_model in config_models.get("online", {})
+                and not llm_model in config_models.get("langchain", {})
+                and llm_model not in running_models):
             with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
                 prev_model = st.session_state.get("prev_llm_model")
                 r = api.change_llm_model(prev_model, llm_model)
@@ -210,17 +211,20 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
 
         elif dialogue_mode == "自定义Agent问答":
-            chat_box.ai_say([
-                f"正在思考...",
-                Markdown("...", in_expander=True, title="思考过程", state="complete"),
+            if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
+                chat_box.ai_say([
+                    f"正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n",
+                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
 
-            ])
+                ])
+            else:
+                chat_box.ai_say([
+                    f"正在思考...",
+                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
+
+                ])
             text = ""
             ans = ""
-            support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api","agentlm"]  # 目前支持agent的模型
-            if not any(agent in llm_model for agent in support_agent):
-                ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n"
-                chat_box.update_msg(ans, element_index=0, streaming=False)
             for d in api.agent_chat(prompt,
                                     history=history,
                                     model=llm_model,
@@ -278,7 +282,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                             model=llm_model,
                                             prompt_name=prompt_template_name,
                                             temperature=temperature,
-                                            split_result=se_top_k>1):
+                                            split_result=se_top_k > 1):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):

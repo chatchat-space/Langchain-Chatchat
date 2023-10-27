@@ -55,8 +55,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         )
         docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
-
-        prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
+        if len(docs) == 0: ## 如果没有找到相关文档，使用Empty模板
+            prompt_template = get_prompt_template("knowledge_base_chat", "Empty")
+        else:
+            prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
@@ -76,6 +78,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             url = f"/knowledge_base/download_doc?" + parameters
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
+
+        if len(source_documents) == 0: # 没有找到相关文档
+            source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
+
         if stream:
             async for token in callback.aiter():
                 # Use server-sent-events to stream the response
@@ -88,7 +94,6 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
-
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query=query,
