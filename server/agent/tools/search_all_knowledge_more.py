@@ -14,7 +14,7 @@ from server.chat.knowledge_base_chat import knowledge_base_chat
 from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 import asyncio
 from server.agent import model_container
-
+from pydantic import BaseModel, Field
 
 async def search_knowledge_base_iter(database: str, query: str) -> str:
     response = await knowledge_base_chat(query=query,
@@ -264,6 +264,8 @@ def knowledge_search_more(query: str):
     ans = llm_knowledge.run(query)
     return ans
 
+class KnowledgeSearchInput(BaseModel):
+    location: str = Field(description="知识库查询的内容")
 
 if __name__ == "__main__":
     result = knowledge_search_more("机器人和大数据在代码教学上有什么区别")
