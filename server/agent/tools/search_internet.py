@@ -1,6 +1,6 @@
 import json
 from server.chat.search_engine_chat import search_engine_chat
-from configs import VECTOR_SEARCH_TOP_K
+from configs import VECTOR_SEARCH_TOP_K, MAX_TOKENS
 import asyncio
 from server.agent import model_container
 
@@ -11,7 +11,7 @@ async def search_engine_iter(query: str):
                                          temperature=0.01, # Agent 搜索互联网的时候，温度设置为0.01
                                          history=[],
                                          top_k = VECTOR_SEARCH_TOP_K,
-                                         max_tokens= None, # Agent 搜索互联网的时候，max_tokens设置为None
+                                         max_tokens= MAX_TOKENS,
                                          prompt_name = "default",
                                          stream=False)
 

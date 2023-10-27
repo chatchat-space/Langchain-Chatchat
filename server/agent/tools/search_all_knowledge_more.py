@@ -11,7 +11,7 @@ from langchain.schema.language_model import BaseLanguageModel
 from typing import List, Any, Optional
 from langchain.prompts import PromptTemplate
 from server.chat.knowledge_base_chat import knowledge_base_chat
-from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
+from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 import asyncio
 from server.agent import model_container
 
@@ -23,7 +23,7 @@ async def search_knowledge_base_iter(database: str, query: str) -> str:
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
-                                         max_tokens=None,
+                                         max_tokens=MAX_TOKENS,
                                          prompt_name="default",
                                          score_threshold=SCORE_THRESHOLD,
                                          stream=False)
