@@ -15,6 +15,7 @@ import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
 
 
+
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
     try:
@@ -699,7 +700,6 @@ def get_server_configs() -> Dict:
     )
     from configs.model_config import (
         LLM_MODEL,
-        EMBEDDING_MODEL,
         HISTORY_LEN,
         TEMPERATURE,
     )
