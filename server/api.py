@@ -16,6 +16,7 @@ from server.chat.chat import chat
 from server.chat.openai_chat import openai_chat
 from server.chat.search_engine_chat import search_engine_chat
 from server.chat.completion import completion
+from server.embeddings_api import embed_texts_endpoint
 from server.llm_api import (list_running_models, list_config_models,
                             change_llm_model, stop_llm_model,
                             get_model_config, list_search_engines)
@@ -47,33 +48,34 @@ def create_app(run_mode: str = None):
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    mount_basic_routes(app)
-    if run_mode != "lite":
-        mount_knowledge_routes(app)
+    mount_app_routes(app, run_mode=run_mode)
     return app
 
 
-def mount_basic_routes(app: FastAPI):
+def mount_app_routes(app: FastAPI, run_mode: str = None):
     app.get("/",
             response_model=BaseResponse,
             summary="swagger 文档")(document)
 
-    app.post("/completion",
-             tags=["Completion"],
-             summary="要求llm模型补全(通过LLMChain)")(completion)
-
     # Tag: Chat
     app.post("/chat/fastchat",
              tags=["Chat"],
-             summary="与llm模型对话(直接与fastchat api对话)")(openai_chat)
+             summary="与llm模型对话(直接与fastchat api对话)",
+             )(openai_chat)
 
     app.post("/chat/chat",
              tags=["Chat"],
-             summary="与llm模型对话(通过LLMChain)")(chat)
+             summary="与llm模型对话(通过LLMChain)",
+             )(chat)
 
     app.post("/chat/search_engine_chat",
              tags=["Chat"],
-             summary="与搜索引擎对话")(search_engine_chat)
+             summary="与搜索引擎对话",
+             )(search_engine_chat)
+
+    # 知识库相关接口
+    if run_mode != "lite":
+        mount_knowledge_routes(app)
 
     # LLM模型相关接口
     app.post("/llm_model/list_running_models",
@@ -120,6 +122,17 @@ def mount_basic_routes(app: FastAPI):
         name: str = Body("default", description="模板名称"),
     ) -> str:
         return get_prompt_template(type=type, name=name)
+
+    # 其它接口
+    app.post("/other/completion",
+             tags=["Other"],
+             summary="要求llm模型补全(通过LLMChain)",
+             )(completion)
+
+    app.post("/other/embed_texts",
+            tags=["Other"],
+            summary="将文本向量化，支持本地模型和在线模型",
+            )(embed_texts_endpoint)
 
 
 def mount_knowledge_routes(app: FastAPI):

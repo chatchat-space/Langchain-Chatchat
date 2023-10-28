@@ -1,7 +1,10 @@
 from configs import CACHED_VS_NUM
 from server.knowledge_base.kb_cache.base import *
+from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
+from server.utils import load_local_embeddings
 from server.knowledge_base.utils import get_vs_path
-from langchain.vectorstores import FAISS
+from langchain.vectorstores.faiss import FAISS
+from langchain.schema import Document
 import os
 from langchain.schema import Document
 
@@ -38,9 +41,9 @@ class _FaissPool(CachePool):
         embed_model: str = EMBEDDING_MODEL,
         embed_device: str = embedding_device(),
     ) -> FAISS:
-        embeddings = embeddings_pool.load_embeddings(embed_model, embed_device)
-
+        # TODO: 整个Embeddings加载逻辑有些混乱，待清理
         # create an empty vector store
+        embeddings = EmbeddingsFunAdapter(embed_model)
         doc = Document(page_content="init", metadata={})
         vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True)
         ids = list(vector_store.docstore._dict.keys())
@@ -133,7 +136,7 @@ if __name__ == "__main__":
     def worker(vs_name: str, name: str):
         vs_name = "samples"
         time.sleep(random.randint(1, 5))
-        embeddings = embeddings_pool.load_embeddings()
+        embeddings = load_local_embeddings()
         r = random.randint(1, 3)
 
         with kb_faiss_pool.load_vector_store(vs_name).acquire(name) as vs:

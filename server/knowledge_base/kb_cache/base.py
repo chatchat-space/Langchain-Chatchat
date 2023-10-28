@@ -110,7 +110,7 @@ class CachePool:
 
 
 class EmbeddingsPool(CachePool):
-    def load_embeddings(self, model: str, device: str) -> Embeddings:
+    def load_embeddings(self, model: str = None, device: str = None) -> Embeddings:
         self.atomic.acquire()
         model = model or EMBEDDING_MODEL
         device = device or embedding_device()
@@ -121,7 +121,7 @@ class EmbeddingsPool(CachePool):
             with item.acquire(msg="初始化"):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-                    embeddings = OpenAIEmbeddings(model_name=model, # TODO: 支持Azure
+                    embeddings = OpenAIEmbeddings(model_name=model,
                                                   openai_api_key=get_model_path(model),
                                                   chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:

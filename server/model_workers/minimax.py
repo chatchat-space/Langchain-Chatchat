@@ -99,7 +99,7 @@ class MiniMaxWorker(ApiModelWorker):
         with get_httpx_client() as client:
             r = client.post(url, headers=headers, json=data).json()
             if embeddings := r.get("vectors"):
-                return {"code": 200, "embeddings": embeddings}
+                return {"code": 200, "data": embeddings}
             elif error := r.get("base_resp"):
                 return {"code": error["status_code"], "msg": error["status_msg"]}
 
