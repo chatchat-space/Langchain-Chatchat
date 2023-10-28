@@ -21,11 +21,14 @@ from server.db.repository.knowledge_file_repository import (
 from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
                      EMBEDDING_MODEL, KB_INFO)
 from server.knowledge_base.utils import (
-    get_kb_path, get_doc_path, load_embeddings, KnowledgeFile,
+    get_kb_path, get_doc_path, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
-from server.utils import embedding_device
+
 from typing import List, Union, Dict, Optional
+
+from server.embeddings_api import embed_texts
+from server.embeddings_api import embed_documents
 
 
 class SupportedVSType:
@@ -48,8 +51,6 @@ class KBService(ABC):
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
-    def _load_embeddings(self, embed_device: str = embedding_device()) -> Embeddings:
-        return load_embeddings(self.embed_model, embed_device)
 
     def save_vector_store(self):
         '''
@@ -82,6 +83,12 @@ class KBService(ABC):
         self.do_drop_kb()
         status = delete_kb_from_db(self.kb_name)
         return status
+
+    def _docs_to_embeddings(self, docs: List[Document]) -> Dict:
+        '''
+        将 List[Document] 转化为 VectorStore.add_embeddings 可以接受的参数
+        '''
+        return embed_documents(docs=docs, embed_model=self.embed_model, to_query=False)
 
     def add_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
@@ -149,8 +156,7 @@ class KBService(ABC):
                     top_k: int = VECTOR_SEARCH_TOP_K,
                     score_threshold: float = SCORE_THRESHOLD,
                     ):
-        embeddings = self._load_embeddings()
-        docs = self.do_search(query, top_k, score_threshold, embeddings)
+        docs = self.do_search(query, top_k, score_threshold)
         return docs
 
     def get_doc_by_id(self, id: str) -> Optional[Document]:
@@ -346,24 +352,26 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
 
 
 class EmbeddingsFunAdapter(Embeddings):
-
-    def __init__(self, embeddings: Embeddings):
-        self.embeddings = embeddings
+    def __init__(self, embed_model: str = EMBEDDING_MODEL):
+        self.embed_model = embed_model
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return normalize(self.embeddings.embed_documents(texts))
+        embeddings = embed_texts(texts=texts, embed_model=self.embed_model, to_query=False).data
+        return normalize(embeddings)
 
     def embed_query(self, text: str) -> List[float]:
-        query_embed = self.embeddings.embed_query(text)
+        embeddings = embed_texts(texts=[text], embed_model=self.embed_model, to_query=True).data
+        query_embed = embeddings[0]
         query_embed_2d = np.reshape(query_embed, (1, -1))  # 将一维数组转换为二维数组
         normalized_query_embed = normalize(query_embed_2d)
         return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
-    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
-        return await normalize(self.embeddings.aembed_documents(texts))
+    # TODO: 暂不支持异步
+    # async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+    #     return normalize(await self.embeddings.aembed_documents(texts))
 
-    async def aembed_query(self, text: str) -> List[float]:
-        return await normalize(self.embeddings.aembed_query(text))
+    # async def aembed_query(self, text: str) -> List[float]:
+    #     return normalize(await self.embeddings.aembed_query(text))
 
 
 def score_threshold_process(score_threshold, k, docs):

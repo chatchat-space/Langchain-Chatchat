@@ -172,7 +172,7 @@ class QianFanWorker(ApiModelWorker):
             resp = client.post(url, json={"input": params.texts}).json()
             if "error_cdoe" not in resp:
                 embeddings = [x["embedding"] for x in resp.get("data", [])]
-                return {"code": 200, "embeddings": embeddings}
+                return {"code": 200, "data": embeddings}
             else:
                 return {"code": resp["error_code"], "msg": resp["error_msg"]}
 

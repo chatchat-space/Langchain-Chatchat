@@ -68,7 +68,7 @@ class QwenWorker(ApiModelWorker):
             return {"code": resp["status_code"], "msg": resp.message}
         else:
             embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
-            return {"code": 200, "embeddings": embeddings}
+            return {"code": 200, "data": embeddings}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

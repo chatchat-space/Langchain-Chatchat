@@ -9,10 +9,9 @@ from configs import (
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 from server.knowledge_base.utils import KnowledgeFile
-from langchain.embeddings.base import Embeddings
-from typing import List, Dict, Optional
-from langchain.docstore.document import Document
 from server.utils import torch_gc
+from langchain.docstore.document import Document
+from typing import List, Dict, Optional
 
 
 class FaissKBService(KBService):
@@ -58,7 +57,6 @@ class FaissKBService(KBService):
                   query: str,
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
-                  embeddings: Embeddings = None,
                   ) -> List[Document]:
         with self.load_vector_store().acquire() as vs:
             docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
@@ -68,8 +66,11 @@ class FaissKBService(KBService):
                    docs: List[Document],
                    **kwargs,
                    ) -> List[Dict]:
+        data = self._docs_to_embeddings(docs) # 将向量化单独出来可以减少向量库的锁定时间
+
         with self.load_vector_store().acquire() as vs:
-            ids = vs.add_documents(docs)
+            ids = vs.add_embeddings(text_embeddings=zip(data["texts"], data["embeddings"]),
+                                    metadatas=data["metadatas"])
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]

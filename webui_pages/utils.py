@@ -853,6 +853,26 @@ class ApiRequest:
         else:
             return ret_sync()
 
+    def embed_texts(
+        self,
+        texts: List[str],
+        embed_model: str = EMBEDDING_MODEL,
+        to_query: bool = False,
+    ) -> List[List[float]]:
+        '''
+        对文本进行向量化，可选模型包括本地 embed_models 和支持 embeddings 的在线模型
+        '''
+        data = {
+            "texts": texts,
+            "embed_model": embed_model,
+            "to_query": to_query,
+        }
+        resp = self.post(
+            "/other/embed_texts",
+            json=data,
+        )
+        return self._get_response_value(resp, as_json=True, value_func=lambda r: r.get("data"))
+
 
 class AsyncApiRequest(ApiRequest):
     def __init__(self, base_url: str = api_address(), timeout: float = HTTPX_DEFAULT_TIMEOUT):

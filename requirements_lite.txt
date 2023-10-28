@@ -30,7 +30,7 @@ pytest
 # online api libs
 zhipuai
 dashscope>=1.10.0 # qwen
-qianfan
+# qianfan
 # volcengine>=1.0.106 # fangzhou
 
 # uncomment libs if you want to use corresponding vector store

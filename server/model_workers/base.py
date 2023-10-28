@@ -180,7 +180,7 @@ class ApiModelWorker(BaseModelWorker):
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         '''
         执行Embeddings的方法，默认使用模块里面的embed_documents函数。
-        要求返回形式：{"code": int, "embeddings": List[List[float]], "msg": str}
+        要求返回形式：{"code": int, "data": List[List[float]], "msg": str}
         '''
         return {"code": 500, "msg": f"{self.model_names[0]}未实现embeddings功能"}
 

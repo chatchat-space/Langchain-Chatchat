@@ -16,6 +16,8 @@ for x in list_config_llm_models()["online"]:
         workers.append(x)
 print(f"all workers to test: {workers}")
 
+# workers = ["qianfan-api"]
+
 
 @pytest.mark.parametrize("worker", workers)
 def test_chat(worker):
@@ -49,8 +51,8 @@ def test_embeddings(worker):
 
         pprint(resp, depth=2)
         assert resp["code"] == 200
-        assert "embeddings" in resp
-        embeddings = resp["embeddings"]
+        assert "data" in resp
+        embeddings = resp["data"]
         assert isinstance(embeddings, list) and len(embeddings) > 0
         assert isinstance(embeddings[0], list) and len(embeddings[0]) > 0
         assert isinstance(embeddings[0][0], float)
