@@ -2,6 +2,7 @@ import streamlit as st
 from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages.dialogue.dialogue import dialogue_page, chat_box
+from webui_pages.knowledge_base.knowledge_base import knowledge_base_page
 import os
 import sys
 from configs import VERSION
@@ -29,15 +30,11 @@ if __name__ == "__main__":
             "icon": "chat",
             "func": dialogue_page,
         },
+        "知识库管理": {
+            "icon": "hdd-stack",
+            "func": knowledge_base_page,
+        },
     }
-    if not is_lite:
-        from webui_pages.knowledge_base.knowledge_base import knowledge_base_page
-        pages.update({
-            "知识库管理": {
-                "icon": "hdd-stack",
-                "func": knowledge_base_page,
-            },
-        })
 
     with st.sidebar:
         st.image(

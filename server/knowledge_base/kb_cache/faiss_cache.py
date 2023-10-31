@@ -64,23 +64,24 @@ class KBFaissPool(_FaissPool):
     def load_vector_store(
             self,
             kb_name: str,
-            vector_name: str = "vector_store",
+            vector_name: str = None,
             create: bool = True,
             embed_model: str = EMBEDDING_MODEL,
             embed_device: str = embedding_device(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
+        vector_name = vector_name or embed_model
         cache = self.get((kb_name, vector_name)) # 用元组比拼接字符串好一些
         if cache is None:
             item = ThreadSafeFaiss((kb_name, vector_name), pool=self)
             self.set((kb_name, vector_name), item)
             with item.acquire(msg="初始化"):
                 self.atomic.release()
-                logger.info(f"loading vector store in '{kb_name}/{vector_name}' from disk.")
+                logger.info(f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk.")
                 vs_path = get_vs_path(kb_name, vector_name)
 
                 if os.path.isfile(os.path.join(vs_path, "index.faiss")):
-                    embeddings = self.load_kb_embeddings(kb_name=kb_name, embed_device=embed_device)
+                    embeddings = self.load_kb_embeddings(kb_name=kb_name, embed_device=embed_device, default_embed_model=embed_model)
                     vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True)
                 elif create:
                     # create an empty vector store

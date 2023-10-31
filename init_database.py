@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "--embed-model",
         type=str,
         default=EMBEDDING_MODEL,
-        help=("specify knowledge base names to operate on. default is all folders exist in KB_ROOT_PATH.")
+        help=("specify embeddings model.")
     )
 
     if len(sys.argv) <= 1:

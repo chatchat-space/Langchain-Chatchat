@@ -52,6 +52,9 @@ class KBService(ABC):
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
 
+    def __repr__(self) -> str:
+        return f"{self.kb_name} @ {self.embed_model}"
+
     def save_vector_store(self):
         '''
         保存向量库:FAISS保存到磁盘，milvus保存到数据库。PGVector暂未支持
@@ -267,11 +270,15 @@ class KBServiceFactory:
             return DefaultKBService(kb_name)
 
     @staticmethod
-    def get_service_by_name(kb_name: str
+    def get_service_by_name(kb_name: str,
+                            default_vs_type: SupportedVSType = SupportedVSType.FAISS,
+                            default_embed_model: str = EMBEDDING_MODEL,
                             ) -> KBService:
         _, vs_type, embed_model = load_kb_from_db(kb_name)
-        if vs_type is None and os.path.isdir(get_kb_path(kb_name)):  # faiss knowledge base not in db
-            vs_type = "faiss"
+        if vs_type is None:  # faiss knowledge base not in db
+            vs_type = default_vs_type
+        if embed_model is None:
+            embed_model = default_embed_model
         return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
 
     @staticmethod
