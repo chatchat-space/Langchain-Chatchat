@@ -9,9 +9,10 @@ from typing import AsyncIterable, List, Optional
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
 from server.chat.utils import History
-from server.knowledge_base.kb_service.base import KBService, KBServiceFactory
+from server.knowledge_base.kb_service.base import KBServiceFactory
+from server.knowledge_base.utils import get_doc_path
 import json
-import os
+from pathlib import Path
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
 
@@ -33,6 +34,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                             max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                             prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                            request: Request = None,
                         ):
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
@@ -72,10 +74,12 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         )
 
         source_documents = []
+        doc_path = get_doc_path(knowledge_base_name)
         for inum, doc in enumerate(docs):
-            filename = os.path.split(doc.metadata["source"])[-1]
+            filename = Path(doc.metadata["source"]).resolve().relative_to(doc_path)
             parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
-            url = f"/knowledge_base/download_doc?" + parameters
+            base_url = request.base_url
+            url = f"{base_url}knowledge_base/download_doc?" + parameters
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
 
