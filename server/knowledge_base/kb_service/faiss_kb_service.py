@@ -1,13 +1,8 @@
 import os
 import shutil
 
-from configs import (
-    EMBEDDING_MODEL,
-    KB_ROOT_PATH,
-    SCORE_THRESHOLD,
-    logger, log_verbose,
-)
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from configs import SCORE_THRESHOLD
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 from server.utils import torch_gc
@@ -60,8 +55,10 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   ) -> List[Document]:
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
+            docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
     def do_add_doc(self,

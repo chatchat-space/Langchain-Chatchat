@@ -59,7 +59,10 @@ class MilvusKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         self._load_milvus()
-        return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
+        docs = self.milvus.similarity_search_with_score_by_vector(embeddings, top_k)
+        return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         # TODO: workaround for bug #10492 in langchain

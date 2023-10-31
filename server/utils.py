@@ -722,10 +722,10 @@ def list_online_embed_models() -> List[str]:
 
     ret = []
     for k, v in list_config_llm_models()["online"].items():
-        provider = v.get("provider")
-        worker_class = getattr(model_workers, provider, None)
-        if worker_class is not None and worker_class.can_embedding():
-            ret.append(k)
+        if provider := v.get("provider"):
+            worker_class = getattr(model_workers, provider, None)
+            if worker_class is not None and worker_class.can_embedding():
+                ret.append(k)
     return ret
 
 

@@ -6,7 +6,6 @@ import os
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
-from sklearn.preprocessing import normalize
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
@@ -29,6 +28,16 @@ from typing import List, Union, Dict, Optional
 
 from server.embeddings_api import embed_texts
 from server.embeddings_api import embed_documents
+
+
+def normalize(embeddings: List[List[float]]) -> np.ndarray:
+    '''
+    sklearn.preprocessing.normalize 的替代（使用 L2），避免安装 scipy, scikit-learn
+    '''
+    norm = np.linalg.norm(embeddings, axis=1)
+    norm = np.reshape(norm, (norm.shape[0], 1))
+    norm = np.tile(norm, (1, len(embeddings[0])))
+    return np.divide(embeddings, norm)
 
 
 class SupportedVSType:
@@ -212,7 +221,6 @@ class KBService(ABC):
                   query: str,
                   top_k: int,
                   score_threshold: float,
-                  embeddings: Embeddings,
                   ) -> List[Document]:
         """
         搜索知识库子类实自己逻辑
@@ -364,7 +372,7 @@ class EmbeddingsFunAdapter(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         embeddings = embed_texts(texts=texts, embed_model=self.embed_model, to_query=False).data
-        return normalize(embeddings)
+        return normalize(embeddings).tolist()
 
     def embed_query(self, text: str) -> List[float]:
         embeddings = embed_texts(texts=[text], embed_model=self.embed_model, to_query=True).data
