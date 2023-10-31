@@ -103,7 +103,10 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 key="vs_type",
             )
 
-            embed_models = list_embed_models() + list_online_embed_models()
+            if is_lite:
+                embed_models = list_online_embed_models()
+            else:
+                embed_models = list_embed_models() + list_online_embed_models()
 
             embed_model = cols[1].selectbox(
                 "Embedding 模型",

@@ -7,18 +7,19 @@ openai
 # torchvision
 # torchaudio
 fastapi>=0.103.1
+python-multipart
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
 pydantic~=1.10.11
-# unstructured[all-docs]>=0.10.4
-# python-magic-bin; sys_platform == 'win32'
+unstructured[docx,csv]>=0.10.4 # add pdf if need
+python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
-# faiss-cpu
+faiss-cpu
 # accelerate
 # spacy
-# PyMuPDF==1.22.5
-# rapidocr_onnxruntime>=1.3.2
+# PyMuPDF==1.22.5 # install if need pdf
+# rapidocr_onnxruntime>=1.3.2 # install if need pdf
 
 requests
 pathlib

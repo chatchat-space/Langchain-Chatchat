@@ -74,8 +74,7 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
              )(search_engine_chat)
 
     # 知识库相关接口
-    if run_mode != "lite":
-        mount_knowledge_routes(app)
+    mount_knowledge_routes(app)
 
     # LLM模型相关接口
     app.post("/llm_model/list_running_models",

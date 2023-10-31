@@ -24,6 +24,11 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
+        "--clear-tables",
+        action="store_true",
+        help=("drop the database tables before recreate vector stores")
+    )
+    parser.add_argument(
         "-u",
         "--update-in-db",
         action="store_true",
@@ -74,7 +79,7 @@ if __name__ == "__main__":
         "--embed-model",
         type=str,
         default=EMBEDDING_MODEL,
-        help=("specify knowledge base names to operate on. default is all folders exist in KB_ROOT_PATH.")
+        help=("specify embeddings model.")
     )
 
     if len(sys.argv) <= 1:
@@ -84,9 +89,12 @@ if __name__ == "__main__":
         start_time = datetime.now()
 
         create_tables() # confirm tables exist
-        if args.recreate_vs:
+
+        if args.clear_tables:
             reset_tables()
             print("database talbes reseted")
+
+        if args.recreate_vs:
             print("recreating all vector stores")
             folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
         elif args.update_in_db:

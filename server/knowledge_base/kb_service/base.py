@@ -6,7 +6,6 @@ import os
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
-from sklearn.preprocessing import normalize
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
@@ -31,6 +30,16 @@ from server.embeddings_api import embed_texts
 from server.embeddings_api import embed_documents
 
 
+def normalize(embeddings: List[List[float]]) -> np.ndarray:
+    '''
+    sklearn.preprocessing.normalize 的替代（使用 L2），避免安装 scipy, scikit-learn
+    '''
+    norm = np.linalg.norm(embeddings, axis=1)
+    norm = np.reshape(norm, (norm.shape[0], 1))
+    norm = np.tile(norm, (1, len(embeddings[0])))
+    return np.divide(embeddings, norm)
+
+
 class SupportedVSType:
     FAISS = 'faiss'
     MILVUS = 'milvus'
@@ -51,6 +60,9 @@ class KBService(ABC):
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
         self.do_init()
+
+    def __repr__(self) -> str:
+        return f"{self.kb_name} @ {self.embed_model}"
 
     def save_vector_store(self):
         '''
@@ -209,7 +221,6 @@ class KBService(ABC):
                   query: str,
                   top_k: int,
                   score_threshold: float,
-                  embeddings: Embeddings,
                   ) -> List[Document]:
         """
         搜索知识库子类实自己逻辑
@@ -267,11 +278,15 @@ class KBServiceFactory:
             return DefaultKBService(kb_name)
 
     @staticmethod
-    def get_service_by_name(kb_name: str
+    def get_service_by_name(kb_name: str,
+                            default_vs_type: SupportedVSType = SupportedVSType.FAISS,
+                            default_embed_model: str = EMBEDDING_MODEL,
                             ) -> KBService:
         _, vs_type, embed_model = load_kb_from_db(kb_name)
-        if vs_type is None and os.path.isdir(get_kb_path(kb_name)):  # faiss knowledge base not in db
-            vs_type = "faiss"
+        if vs_type is None:  # faiss knowledge base not in db
+            vs_type = default_vs_type
+        if embed_model is None:
+            embed_model = default_embed_model
         return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
 
     @staticmethod
@@ -357,7 +372,7 @@ class EmbeddingsFunAdapter(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         embeddings = embed_texts(texts=texts, embed_model=self.embed_model, to_query=False).data
-        return normalize(embeddings)
+        return normalize(embeddings).tolist()
 
     def embed_query(self, text: str) -> List[float]:
         embeddings = embed_texts(texts=[text], embed_model=self.embed_model, to_query=True).data

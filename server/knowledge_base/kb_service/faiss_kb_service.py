@@ -1,14 +1,10 @@
 import os
 import shutil
 
-from configs import (
-    KB_ROOT_PATH,
-    SCORE_THRESHOLD,
-    logger, log_verbose,
-)
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from configs import SCORE_THRESHOLD
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
-from server.knowledge_base.utils import KnowledgeFile
+from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 from server.utils import torch_gc
 from langchain.docstore.document import Document
 from typing import List, Dict, Optional
@@ -17,16 +13,16 @@ from typing import List, Dict, Optional
 class FaissKBService(KBService):
     vs_path: str
     kb_path: str
-    vector_name: str = "vector_store"
-
+    vector_name: str = None
+ 
     def vs_type(self) -> str:
         return SupportedVSType.FAISS
 
     def get_vs_path(self):
-        return os.path.join(self.get_kb_path(), self.vector_name)
+        return get_vs_path(self.kb_name, self.vector_name)
 
     def get_kb_path(self):
-        return os.path.join(KB_ROOT_PATH, self.kb_name)
+        return get_kb_path(self.kb_name)
 
     def load_vector_store(self) -> ThreadSafeFaiss:
         return kb_faiss_pool.load_vector_store(kb_name=self.kb_name,
@@ -41,6 +37,7 @@ class FaissKBService(KBService):
             return vs.docstore._dict.get(id)
 
     def do_init(self):
+        self.vector_name = self.vector_name or self.embed_model
         self.kb_path = self.get_kb_path()
         self.vs_path = self.get_vs_path()
 
@@ -58,8 +55,10 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   ) -> List[Document]:
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
+            docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
     def do_add_doc(self,

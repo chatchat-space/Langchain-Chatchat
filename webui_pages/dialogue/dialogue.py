@@ -54,16 +54,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     text = f"{text} 当前知识库： `{cur_kb}`。"
             st.toast(text)
 
-        if is_lite:
-            dialogue_modes = ["LLM 对话",
-                              "搜索引擎问答",
-                              ]
-        else:
-            dialogue_modes = ["LLM 对话",
-                              "知识库问答",
-                              "搜索引擎问答",
-                              "自定义Agent问答",
-                              ]
+        dialogue_modes = ["LLM 对话",
+                            "知识库问答",
+                            "搜索引擎问答",
+                            "自定义Agent问答",
+                            ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=0,
@@ -116,18 +111,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     st.success(msg)
                     st.session_state["prev_llm_model"] = llm_model
 
-        if is_lite:
-            index_prompt = {
-                "LLM 对话": "llm_chat",
-                "搜索引擎问答": "search_engine_chat",
-            }
-        else:
-            index_prompt = {
-                "LLM 对话": "llm_chat",
-                "自定义Agent问答": "agent_chat",
-                "搜索引擎问答": "search_engine_chat",
-                "知识库问答": "knowledge_base_chat",
-            }
+        index_prompt = {
+            "LLM 对话": "llm_chat",
+            "自定义Agent问答": "agent_chat",
+            "搜索引擎问答": "search_engine_chat",
+            "知识库问答": "knowledge_base_chat",
+        }
         prompt_templates_kb_list = list(PROMPT_TEMPLATES[index_prompt[dialogue_mode]].keys())
         prompt_template_name = prompt_templates_kb_list[0]
         if "prompt_template_select" not in st.session_state:
@@ -167,7 +156,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
                 ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
 
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
