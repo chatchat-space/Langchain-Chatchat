@@ -6,7 +6,7 @@ import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from datetime import datetime
 import sys
-
+from server.db.models.chat_history_model import ChatHistoryModel
 
 if __name__ == "__main__":
     import argparse

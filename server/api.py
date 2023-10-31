@@ -12,11 +12,13 @@ import uvicorn
 from fastapi import Body
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from server.chat.chat import chat
-from server.chat.openai_chat import openai_chat
-from server.chat.search_engine_chat import search_engine_chat
-from server.chat.completion import completion
 from server.embeddings_api import embed_texts_endpoint
+from server.chat import (completion, chat, knowledge_base_chat, openai_chat,
+                         search_engine_chat, agent_chat, feedback)
+from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
+from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
+                                              update_docs, download_doc, recreate_vector_store,
+                                              search_docs, DocumentWithScore, update_info)
 from server.llm_api import (list_running_models, list_config_models,
                             change_llm_model, stop_llm_model,
                             get_model_config, list_search_engines)
@@ -57,6 +59,9 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
             response_model=BaseResponse,
             summary="swagger 文档")(document)
 
+    app.post("/feedback",
+             tags=["Chat"],
+             summary="返回llm模型对话评分")(feedback)
     # Tag: Chat
     app.post("/chat/fastchat",
              tags=["Chat"],
