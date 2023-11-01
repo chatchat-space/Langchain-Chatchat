@@ -57,11 +57,16 @@ class ZillizKBService(KBService):
             self.zilliz.col.release()
             self.zilliz.col.drop()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float):
+    def do_search(self, query: str, top_k: int, score_threshold: float, kb_index=None):
         self._load_zilliz()
         embed_func = EmbeddingsFunAdapter(self.embed_model)
         embeddings = embed_func.embed_query(query)
-        docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
+        if kb_index:
+            # TODO cloud版zilliz与阿里云版配置不一样，加载失败，无法测试，仅将kb_index字典赋值给filter
+            # docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k, filter=kb_index)
+            docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
+        else:
+            docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
         return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:

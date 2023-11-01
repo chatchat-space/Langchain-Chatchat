@@ -51,11 +51,16 @@ class PGKBService(KBService):
             '''))
             connect.commit()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float):
+    def do_search(self, query: str, top_k: int, score_threshold: float, kb_index=None):
         self._load_pg_vector()
         embed_func = EmbeddingsFunAdapter(self.embed_model)
         embeddings = embed_func.embed_query(query)
-        docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
+        if kb_index:
+            # TODO 仅对filter传入dict参数，暂未测试
+            # docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k, filter=kb_index)
+            docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
+        else:
+            docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
         return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:

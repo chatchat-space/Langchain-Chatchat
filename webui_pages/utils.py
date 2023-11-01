@@ -357,6 +357,7 @@ class ApiRequest:
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
+        kb_index: Dict = None,
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
@@ -372,6 +373,7 @@ class ApiRequest:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "prompt_name": prompt_name,
+            "kb_index": kb_index,
         }
 
         print(f"received input message:")

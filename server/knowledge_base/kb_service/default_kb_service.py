@@ -25,7 +25,7 @@ class DefaultKBService(KBService):
     def do_init(self):
         pass
 
-    def do_search(self):
+    def do_search(self, kb_index=None):
         pass
 
     def do_insert_multi_knowledge(self):

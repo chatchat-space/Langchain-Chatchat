@@ -50,15 +50,14 @@ class FaissKBService(KBService):
         self.clear_vs()
         shutil.rmtree(self.kb_path)
 
-    def do_search(self,
-                  query: str,
-                  top_k: int,
-                  score_threshold: float = SCORE_THRESHOLD,
-                  ) -> List[Document]:
+    def do_search(self, query: str, top_k: int, score_threshold: float, kb_index=None) -> List[Document]:
         embed_func = EmbeddingsFunAdapter(self.embed_model)
         embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
+            if kb_index:
+                docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold, filter=kb_index)
+            else:
+                docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
     def do_add_doc(self,

@@ -25,11 +25,12 @@ def search_docs(query: str = Body(..., description="用户输入", examples=["�
                 knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
                 top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                 score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
+                kb_index: Dict = None,
                 ) -> List[DocumentWithScore]:
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
         return []
-    docs = kb.search_docs(query, top_k, score_threshold)
+    docs = kb.search_docs(query, top_k, score_threshold, kb_index=kb_index)
     data = [DocumentWithScore(**x[0].dict(), score=x[1]) for x in docs]
     return data
 

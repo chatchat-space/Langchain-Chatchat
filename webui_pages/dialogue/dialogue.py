@@ -1,10 +1,12 @@
+import re
+
 import streamlit as st
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL, kb_config)
 from typing import List, Dict
 
 chat_box = ChatBox(
@@ -33,6 +35,24 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
         }
 
     return chat_box.filter_history(history_len=history_len, filter=filter)
+
+
+def generate_empty_index_json():
+    """
+    尝试从配置文件中加载知识库索引的模板，如果配置文件中没有定义，则返回一个空的json字符串
+    当且仅当USE_KB_INDEX为True时才会执行此方法
+    @return:
+    """
+    kb_index_pattern = getattr(kb_config, 'KB_INDEX_PATTERN', '{}')
+
+    # 使用正则表达式匹配花括号内容
+    pattern = r'\{([^}]+)\}'
+    matches = re.findall(pattern, kb_index_pattern)
+
+    # 创建一个字典并将匹配的内容加入其中
+    example_dict = {match: "" for match in matches}
+    json_str = json.dumps(example_dict, indent=4)
+    return json_str
 
 
 def dialogue_page(api: ApiRequest, is_lite: bool = False):
@@ -153,6 +173,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     on_change=on_kb_change,
                     key="selected_kb",
                 )
+                use_kb_index = getattr(kb_config, 'USE_KB_INDEX', False)
+                if use_kb_index:
+                    # 使用知识库索引，使用JSON格式，如：{"index1":"value1", "index2":"value2"}
+                    kb_index = st.text_area("索引值：", generate_empty_index_json())
+                else:
+                    kb_index = None
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
                 ## Bge 模型会超过1
@@ -243,6 +269,15 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
             ])
             text = ""
+            kb_index_dict = None
+            if use_kb_index:
+                try:
+                    # 尝试将kb_index转为Dict
+                    kb_index_dict = json.loads(kb_index)
+                except:
+                    kb_index_dict = {}
+                    # 提示用户输入错误，需要为json格式
+                    st.error("索引值必须为json格式")
             for d in api.knowledge_base_chat(prompt,
                                              knowledge_base_name=selected_kb,
                                              top_k=kb_top_k,
@@ -250,7 +285,8 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                              history=history,
                                              model=llm_model,
                                              prompt_name=prompt_template_name,
-                                             temperature=temperature):
+                                             temperature=temperature,
+                                             kb_index=kb_index_dict,):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
