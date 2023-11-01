@@ -3,8 +3,8 @@ from webui_pages.utils import *
 from streamlit_chatbox import *
 from datetime import datetime
 import os
-from configs import (LLM_MODEL, TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE,LANGCHAIN_LLM_MODEL)
+from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from typing import List, Dict
 
 chat_box = ChatBox(
@@ -13,6 +13,8 @@ chat_box = ChatBox(
         "chatchat_icon_blue_square_v2.png"
     )
 )
+
+
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
     '''
     返回消息历史。
@@ -33,27 +35,9 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
-def get_default_llm_model(api: ApiRequest) -> (str, bool):
-    '''
-    从服务器上获取当前运行的LLM模型，如果本机配置的LLM_MODEL属于本地模型且在其中，则优先返回
-    返回类型为（model_name, is_local_model）
-    '''
-    running_models = api.list_running_models()
-    if not running_models:
-        return "", False
-
-    if LLM_MODEL in running_models:
-        return LLM_MODEL, True
-
-    local_models = [k for k, v in running_models.items() if not v.get("online_api")]
-    if local_models:
-        return local_models[0], True
-    return list(running_models)[0], False
-
-
-def dialogue_page(api: ApiRequest):
+def dialogue_page(api: ApiRequest, is_lite: bool = False):
     if not chat_box.chat_inited:
-        default_model = get_default_llm_model(api)[0]
+        default_model = api.get_default_llm_model()[0]
         st.toast(
             f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
@@ -70,12 +54,13 @@ def dialogue_page(api: ApiRequest):
                     text = f"{text} 当前知识库： `{cur_kb}`。"
             st.toast(text)
 
+        dialogue_modes = ["LLM 对话",
+                            "知识库问答",
+                            "搜索引擎问答",
+                            "自定义Agent问答",
+                            ]
         dialogue_mode = st.selectbox("请选择对话模式：",
-                                     ["LLM 对话",
-                                      "知识库问答",
-                                      "搜索引擎问答",
-                                      "自定义Agent问答",
-                                      ],
+                                     dialogue_modes,
                                      index=0,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
@@ -94,7 +79,6 @@ def dialogue_page(api: ApiRequest):
             return x
 
         running_models = list(api.list_running_models())
-        running_models += LANGCHAIN_LLM_MODEL.keys()
         available_models = []
         config_models = api.list_config_models()
         worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
@@ -104,10 +88,8 @@ def dialogue_page(api: ApiRequest):
         for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
                 available_models.append(k)
-        for k, v in config_models.get("langchain", {}).items():  # 列出LANGCHAIN_LLM_MODEL支持的模型
-            available_models.append(k)
         llm_models = running_models + available_models
-        index = llm_models.index(st.session_state.get("cur_llm_model", get_default_llm_model(api)[0]))
+        index = llm_models.index(st.session_state.get("cur_llm_model", api.get_default_llm_model()[0]))
         llm_model = st.selectbox("选择LLM模型：",
                                  llm_models,
                                  index,
@@ -116,6 +98,7 @@ def dialogue_page(api: ApiRequest):
                                  key="llm_model",
                                  )
         if (st.session_state.get("prev_llm_model") != llm_model
+                and not is_lite
                 and not llm_model in config_models.get("online", {})
                 and not llm_model in config_models.get("langchain", {})
                 and llm_model not in running_models):
@@ -173,7 +156,7 @@ def dialogue_page(api: ApiRequest):
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
                 ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
 
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
@@ -217,17 +200,20 @@ def dialogue_page(api: ApiRequest):
 
 
         elif dialogue_mode == "自定义Agent问答":
-            chat_box.ai_say([
-                f"正在思考...",
-                Markdown("...", in_expander=True, title="思考过程", state="complete"),
+            if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
+                chat_box.ai_say([
+                    f"正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n",
+                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
 
-            ])
+                ])
+            else:
+                chat_box.ai_say([
+                    f"正在思考...",
+                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
+
+                ])
             text = ""
             ans = ""
-            support_agent = ["Azure-OpenAI", "OpenAI", "Anthropic", "Qwen", "qwen-api", "baichuan-api"]  # 目前支持agent的模型
-            if not any(agent in llm_model for agent in support_agent):
-                ans += "正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n"
-                chat_box.update_msg(ans, element_index=0, streaming=False)
             for d in api.agent_chat(prompt,
                                     history=history,
                                     model=llm_model,
@@ -284,7 +270,8 @@ def dialogue_page(api: ApiRequest):
                                             history=history,
                                             model=llm_model,
                                             prompt_name=prompt_template_name,
-                                            temperature=temperature):
+                                            temperature=temperature,
+                                            split_result=se_top_k > 1):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):

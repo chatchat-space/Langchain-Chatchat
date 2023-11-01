@@ -117,6 +117,9 @@ FSCHAT_MODEL_WORKERS = {
     # "baichuan-api": {
     #     "port": 21007,
     # },
+    # "azure-api": {
+    #    "port": 21008,
+    # },
 }
 
 # fastchat multi model worker server

@@ -1,9 +1,4 @@
-## 单独运行的时候需要添加
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
+from __future__ import annotations
 import json
 import re
 import warnings
@@ -16,10 +11,10 @@ from langchain.schema.language_model import BaseLanguageModel
 from typing import List, Any, Optional
 from langchain.prompts import PromptTemplate
 from server.chat.knowledge_base_chat import knowledge_base_chat
-from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
+from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 import asyncio
 from server.agent import model_container
-
+from pydantic import BaseModel, Field
 
 async def search_knowledge_base_iter(database: str, query: str) -> str:
     response = await knowledge_base_chat(query=query,
@@ -28,7 +23,7 @@ async def search_knowledge_base_iter(database: str, query: str) -> str:
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
-                                         max_tokens=None,
+                                         max_tokens=MAX_TOKENS,
                                          prompt_name="default",
                                          score_threshold=SCORE_THRESHOLD,
                                          stream=False)
@@ -88,19 +83,6 @@ ${{知识库名称,查询问题,不要带有任何除了,之外的符号}}
 
 ```output
 数据库查询的结果
-
-
-
-这是一个完整的问题拆分和提问的例子： 
-
-
-问题: 分别对比机器人和大数据专业的就业情况并告诉我哪儿专业的就业情况更好？
-
-```text
-robotic,机器人专业的就业情况
-bigdata,大数据专业的就业情况
-
-
 
 现在，我们开始作答
 问题: {question}
@@ -271,7 +253,7 @@ class LLMKnowledgeChain(LLMChain):
             llm: BaseLanguageModel,
             prompt: BasePromptTemplate = PROMPT,
             **kwargs: Any,
-    ):
+    ) -> LLMKnowledgeChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
         return cls(llm_chain=llm_chain, **kwargs)
 
@@ -282,6 +264,8 @@ def knowledge_search_more(query: str):
     ans = llm_knowledge.run(query)
     return ans
 
+class KnowledgeSearchInput(BaseModel):
+    location: str = Field(description="知识库查询的内容")
 
 if __name__ == "__main__":
     result = knowledge_search_more("机器人和大数据在代码教学上有什么区别")

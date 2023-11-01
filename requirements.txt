@@ -1,4 +1,4 @@
-langchain>=0.0.319
+langchain>=0.0.324
 langchain-experimental>=0.0.30
 fschat[model_worker]==0.2.31
 xformers>=0.0.22.post4
@@ -27,7 +27,11 @@ pathlib
 pytest
 scikit-learn
 numexpr
+strsimpy
+markdownify
+
 vllm>=0.2.0; sys_platform == "linux"
+
 # online api libs
 # zhipuai
 # dashscope>=1.10.0 # qwen
@@ -46,7 +50,7 @@ streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox==1.1.10
 streamlit-aggrid>=0.3.4.post3
-httpx~=0.24.1
+httpx[brotli,http2,socks]>=0.25.0
 watchdog
 tqdm
 websockets

@@ -7,7 +7,7 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
-from typing import List
+from typing import List, Optional
 from server.chat.utils import History
 from server.utils import get_prompt_template
 from server.db.repository.chat_history_repository import add_chat_history_to_db
@@ -66,6 +66,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             async for token in callback.aiter():
                 answer += token
             yield answer
+
         if SAVE_CHAT_HISTORY and len(chat_history_id) > 0:
             # 后续可以加入一些其他信息，比如真实的prompt等
             add_chat_history_to_db(chat_history_id, "chat", query, answer)

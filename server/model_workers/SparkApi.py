@@ -52,7 +52,7 @@ class Ws_Param(object):
         return url
 
 
-def gen_params(appid, domain,question, temperature):
+def gen_params(appid, domain, question, temperature, max_token):
     """
     通过appid和用户的提问来生成请参数
     """
@@ -65,7 +65,7 @@ def gen_params(appid, domain,question, temperature):
             "chat": {
                 "domain": domain,
                 "random_threshold": 0.5,
-                "max_tokens": None,
+                "max_tokens": max_token,
                 "auditing": "default",
                 "temperature": temperature,
             }

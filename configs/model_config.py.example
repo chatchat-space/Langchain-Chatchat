@@ -39,10 +39,10 @@ MODEL_PATH = {
     # TODO: add all supported llm models
     "llm_model": {
         # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
-        "chatglm-6b": "THUDM/chatglm-6b",
         "chatglm2-6b": "THUDM/chatglm2-6b",
-        "chatglm2-6b-int4": "THUDM/chatglm2-6b-int4",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+        "chatglm3-6b": "THUDM/chatglm3-6b-32k",
+        "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
 
         "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
         "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
@@ -97,8 +97,14 @@ EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：bge-la
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
 
+# 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
+EMBEDDING_KEYWORD_FILE = "keywords.txt"
+EMBEDDING_MODEL_OUTPUT_PATH = "output"
+
 # LLM 名称
 LLM_MODEL = "chatglm2-6b"
+# AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODEL)
+Agent_MODEL = None
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
@@ -106,52 +112,23 @@ LLM_DEVICE = "auto"
 # 历史对话轮数
 HISTORY_LEN = 3
 
+# 大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度
+
+MAX_TOKENS = None
+
 # LLM通用对话参数
 TEMPERATURE = 0.7
 # TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
-
-LANGCHAIN_LLM_MODEL = {
-    # 不需要走Fschat封装的，Langchain直接支持的模型。
-    # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
-    #  Max retries exceeded with url: /v1/chat/completions
-    # 则需要将urllib3版本修改为1.25.11
-    # 如果依然报urllib3.exceptions.MaxRetryError: HTTPSConnectionPool，则将https改为http
-    # 参考https://zhuanlan.zhihu.com/p/350015032
-
-    # 如果报出：raise NewConnectionError(
-    # urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000001FE4BDB85E0>:
-    # Failed to establish a new connection: [WinError 10060]
-    # 则是因为内地和香港的IP都被OPENAI封了，需要切换为日本、新加坡等地
-
-    # 如果出现WARNING: Retrying langchain.chat_models.openai.acompletion_with_retry.<locals>._completion_with_retry in
-    # 4.0 seconds as it raised APIConnectionError: Error communicating with OpenAI.
-    # 需要添加代理访问(正常开的代理软件可能会拦截不上)需要设置配置openai_proxy 或者 使用环境遍历OPENAI_PROXY 进行设置
-    # 比如: "openai_proxy": 'http://127.0.0.1:4780'
-
-    # 这些配置文件的名字不能改动
-    "Azure-OpenAI": {
-        "deployment_name": "your Azure deployment name",
-        "model_version": "0701",
-        "openai_api_type": "azure",
-        "api_base_url": "https://your Azure point.azure.com",
-        "api_version": "2023-07-01-preview",
-        "api_key": "your Azure api key",
-        "openai_proxy": "",
-    },
-    "OpenAI": {
-        "model_name": "your openai model name(such as gpt-4)",
-        "api_base_url": "https://api.openai.com/v1",
-        "api_key": "your OPENAI_API_KEY",
-        "openai_proxy": "",
-    },
-    "Anthropic": {
-        "model_name": "your claude model name(such as claude2-100k)",
-        "api_key":"your ANTHROPIC_API_KEY",
-    }
-}
 ONLINE_LLM_MODEL = {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
+
+    "openai-api": {
+        "model_name": "gpt-35-turbo",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "",
+        "openai_proxy": "",
+    },
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
@@ -170,12 +147,12 @@ ONLINE_LLM_MODEL = {
         "APPID": "",
         "APISecret": "",
         "api_key": "",
-        "is_v2": False,
+        "version": "v1.5", # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
         "provider": "XingHuoWorker",
     },
     # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
     "qianfan-api": {
-        "version": "ernie-bot-turbo",  # 当前支持 "ernie-bot" 或 "ernie-bot-turbo"， 更多的见官方文档。
+        "version": "ERNIE-Bot",  # 注意大小写。当前支持 "ERNIE-Bot" 或 "ERNIE-Bot-turbo"， 更多的见官方文档。
         "version_url": "", # 也可以不填写version，直接填写在千帆申请模型发布的API地址
         "api_key": "",
         "secret_key": "",
@@ -202,6 +179,15 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "secret_key": "",
         "provider": "BaiChuanWorker",
+    },
+
+    # Azure API
+    "azure-api": {
+        "deployment_name": "", # 部署容器的名字
+        "resource_name": "", # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
+        "api_version": "", # API的版本，不是模型版本
+        "api_key": "",
+        "provider": "AzureWorker",
     },
 }
 
@@ -256,4 +242,21 @@ VLLM_MODEL_DICT = {
     "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
     "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
 
+    "agentlm-7b":"THUDM/agentlm-7b",
+    "agentlm-13b":"THUDM/agentlm-13b",
+    "agentlm-70b":"THUDM/agentlm-70b",
+
 }
+
+## 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
+SUPPORT_AGENT_MODEL = [
+    "azure-api",
+    "openai-api",
+    "claude-api",
+    "Qwen",
+    "qwen-api",
+    "baichuan-api",
+    "agentlm"
+    "chatglm3-6b"
+    "xinghuo-api"
+]
