@@ -6,6 +6,7 @@ from server.knowledge_base.utils import (get_file_path, list_kbs_from_folder,
                                         KnowledgeFile,)
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import add_file_to_db
+from server.db.models.chat_history_model import ChatHistoryModel
 from server.db.base import Base, engine
 import os
 from typing import Literal, Any, List

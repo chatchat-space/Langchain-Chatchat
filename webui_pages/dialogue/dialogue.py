@@ -7,6 +7,7 @@ from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from typing import List, Dict
 
+
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
@@ -43,6 +44,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
         )
         chat_box.init_session()
+
     with st.sidebar:
         # TODO: 对话模型与会话绑定
         def on_mode_change():
@@ -178,12 +180,30 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
+    def on_feedback(
+        feedback,
+        chat_history_id: str = "",
+        history_index: int = -1,
+    ):
+        reason = feedback["text"]
+        score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
+        api.chat_feedback(chat_history_id=chat_history_id,
+                          score=score_int,
+                          reason=reason)
+        st.session_state["need_rerun"] = True
+
+    feedback_kwargs = {
+        "feedback_type": "thumbs",
+        "optional_text_label": "欢迎反馈您打分的理由",
+    }
+
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
         chat_box.user_say(prompt)
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
+            chat_history_id = ""
             r = api.chat_chat(prompt,
                               history=history,
                               model=llm_model,
@@ -193,11 +213,21 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
                     break
-                text += t
+                text += t.get("text", "")
                 chat_box.update_msg(text)
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
+                chat_history_id = t.get("chat_history_id", "")
 
-
+            metadata = {
+                "chat_history_id": chat_history_id,
+                }
+            chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
+            chat_box.show_feedback(**feedback_kwargs,
+                                   key=chat_history_id,
+                                   on_submit=on_feedback,
+                                   kwargs={"chat_history_id": chat_history_id, "history_index": len(chat_box.history) - 1})
+            if st.session_state.get("need_rerun"):
+                st.session_state["need_rerun"] = False
+                st.rerun()
 
         elif dialogue_mode == "自定义Agent问答":
             if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
@@ -290,7 +320,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 use_container_width=True,
         ):
             chat_box.reset_history()
-            st.experimental_rerun()
+            st.rerun()
 
     export_btn.download_button(
         "导出记录",
