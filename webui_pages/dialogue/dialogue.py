@@ -175,7 +175,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
 
     # Display chat messages from history on app rerun
-
     chat_box.output_messages()
 
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
@@ -225,9 +224,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                    key=chat_history_id,
                                    on_submit=on_feedback,
                                    kwargs={"chat_history_id": chat_history_id, "history_index": len(chat_box.history) - 1})
-            if st.session_state.get("need_rerun"):
-                st.session_state["need_rerun"] = False
-                st.rerun()
 
         elif dialogue_mode == "自定义Agent问答":
             if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
@@ -309,6 +305,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     chat_box.update_msg(text, element_index=0)
             chat_box.update_msg(text, element_index=0, streaming=False)
             chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+
+    if st.session_state.get("need_rerun"):
+        st.session_state["need_rerun"] = False
+        st.rerun()
 
     now = datetime.now()
     with st.sidebar:
