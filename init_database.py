@@ -25,9 +25,14 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
+        "--create-tables",
+        action="store_true",
+        help=("create empty tables if not existed")
+    )
+    parser.add_argument(
         "--clear-tables",
         action="store_true",
-        help=("drop the database tables before recreate vector stores")
+        help=("create empty tables, or drop the database tables before recreate vector stores")
     )
     parser.add_argument(
         "--import-db",
@@ -87,31 +92,29 @@ if __name__ == "__main__":
         help=("specify embeddings model.")
     )
 
-    if len(sys.argv) <= 1:
-        parser.print_help()
-    else:
-        args = parser.parse_args()
-        start_time = datetime.now()
+    args = parser.parse_args()
+    start_time = datetime.now()
 
+    if args.create_tables:
         create_tables() # confirm tables exist
 
-        if args.clear_tables:
-            reset_tables()
-            print("database talbes reseted")
+    if args.clear_tables:
+        reset_tables()
+        print("database talbes reseted")
 
-        if args.recreate_vs:
-            print("recreating all vector stores")
-            folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
-        elif args.import_db:
-            import_from_db(args.import_db)
-        elif args.update_in_db:
-            folder2db(kb_names=args.kb_name, mode="update_in_db", embed_model=args.embed_model)
-        elif args.increament:
-            folder2db(kb_names=args.kb_name, mode="increament", embed_model=args.embed_model)
-        elif args.prune_db:
-            prune_db_docs(args.kb_name)
-        elif args.prune_folder:
-            prune_folder_files(args.kb_name)
+    if args.recreate_vs:
+        print("recreating all vector stores")
+        folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
+    elif args.import_db:
+        import_from_db(args.import_db)
+    elif args.update_in_db:
+        folder2db(kb_names=args.kb_name, mode="update_in_db", embed_model=args.embed_model)
+    elif args.increament:
+        folder2db(kb_names=args.kb_name, mode="increament", embed_model=args.embed_model)
+    elif args.prune_db:
+        prune_db_docs(args.kb_name)
+    elif args.prune_folder:
+        prune_folder_files(args.kb_name)
 
-        end_time = datetime.now()
-        print(f"总计用时： {end_time-start_time}")
+    end_time = datetime.now()
+    print(f"总计用时： {end_time-start_time}")
