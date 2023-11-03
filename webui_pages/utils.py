@@ -314,7 +314,7 @@ class ApiRequest:
         pprint(data)
 
         response = self.post("/chat/chat", json=data, stream=True, **kwargs)
-        return self._httpx_stream2generator(response)
+        return self._httpx_stream2generator(response, as_json=True)
 
     def agent_chat(
         self,
@@ -852,6 +852,43 @@ class ApiRequest:
             return ret_async()
         else:
             return ret_sync()
+
+    def embed_texts(
+        self,
+        texts: List[str],
+        embed_model: str = EMBEDDING_MODEL,
+        to_query: bool = False,
+    ) -> List[List[float]]:
+        '''
+        对文本进行向量化，可选模型包括本地 embed_models 和支持 embeddings 的在线模型
+        '''
+        data = {
+            "texts": texts,
+            "embed_model": embed_model,
+            "to_query": to_query,
+        }
+        resp = self.post(
+            "/other/embed_texts",
+            json=data,
+        )
+        return self._get_response_value(resp, as_json=True, value_func=lambda r: r.get("data"))
+
+    def chat_feedback(
+        self,
+        chat_history_id: str,
+        score: int,
+        reason: str = "",
+    ) -> int:
+        '''
+        反馈对话评价
+        '''
+        data = {
+            "chat_history_id": chat_history_id,
+            "score": score,
+            "reason": reason,
+        }
+        resp = self.post("/chat/feedback", json=data)
+        return self._get_response_value(resp)
 
 
 class AsyncApiRequest(ApiRequest):

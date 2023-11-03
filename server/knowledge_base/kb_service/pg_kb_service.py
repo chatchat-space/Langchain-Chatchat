@@ -1,28 +1,22 @@
 import json
 from typing import List, Dict, Optional
 
-from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
-from langchain.vectorstores import PGVector
-from langchain.vectorstores.pgvector import DistanceStrategy
+from langchain.vectorstores.pgvector import PGVector, DistanceStrategy
 from sqlalchemy import text
 
 from configs import kbs_config
 
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
-from server.knowledge_base.utils import load_embeddings, KnowledgeFile
-from server.utils import embedding_device as get_embedding_device
+from server.knowledge_base.utils import KnowledgeFile
 
 
 class PGKBService(KBService):
     pg_vector: PGVector
 
-    def _load_pg_vector(self, embedding_device: str = get_embedding_device(), embeddings: Embeddings = None):
-        _embeddings = embeddings
-        if _embeddings is None:
-            _embeddings = load_embeddings(self.embed_model, embedding_device)
-        self.pg_vector = PGVector(embedding_function=EmbeddingsFunAdapter(_embeddings),
+    def _load_pg_vector(self):
+        self.pg_vector = PGVector(embedding_function=EmbeddingsFunAdapter(self.embed_model),
                                   collection_name=self.kb_name,
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
@@ -57,10 +51,12 @@ class PGKBService(KBService):
             '''))
             connect.commit()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
-        self._load_pg_vector(embeddings=embeddings)
-        return score_threshold_process(score_threshold, top_k,
-                                       self.pg_vector.similarity_search_with_score(query, top_k))
+    def do_search(self, query: str, top_k: int, score_threshold: float):
+        self._load_pg_vector()
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
+        docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
+        return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         ids = self.pg_vector.add_documents(docs)

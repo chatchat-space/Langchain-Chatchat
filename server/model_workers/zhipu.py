@@ -59,7 +59,7 @@ class ChatGLMWorker(ApiModelWorker):
         except Exception as e:
             return {"code": 500, "msg": f"对文本向量化时出错：{e}"}
 
-        return {"code": 200, "embeddings": embeddings}
+        return {"code": 200, "data": embeddings}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

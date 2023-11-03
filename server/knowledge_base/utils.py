@@ -1,10 +1,5 @@
 import os
-import sys
-
-sys.path.append("/home/congyin/Code/Project_Langchain_0814/Langchain-Chatchat")
-from transformers import AutoTokenizer
 from configs import (
-    EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
@@ -22,11 +17,11 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
 import json
-from concurrent.futures import ThreadPoolExecutor
-from server.utils import run_in_thread_pool, embedding_device, get_model_worker_config
+from server.utils import run_in_thread_pool, get_model_worker_config
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
 import chardet
+
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
     # 检查是否包含预期外的字符或路径攻击关键字
@@ -44,7 +39,7 @@ def get_doc_path(knowledge_base_name: str):
 
 
 def get_vs_path(knowledge_base_name: str, vector_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), vector_name)
+    return os.path.join(get_kb_path(knowledge_base_name), "vector_store", vector_name)
 
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
@@ -58,16 +53,19 @@ def list_kbs_from_folder():
 
 def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
-    return [file for file in os.listdir(doc_path)
-            if os.path.isfile(os.path.join(doc_path, file))]
+    result = []
+    for root, _, files in os.walk(doc_path):
+        tail = os.path.basename(root).lower()
+        if (tail.startswith("temp")
+            or tail.startswith("tmp")): # 跳过 temp 或 tmp 开头的文件夹
+            continue
+        for file in files:
+            if file.startswith("~$"): # 跳过 ~$ 开头的文件
+                continue
+            path = Path(doc_path) / root / file
+            result.append(path.resolve().relative_to(doc_path).as_posix())
 
-
-def load_embeddings(model: str = EMBEDDING_MODEL, device: str = embedding_device()):
-    '''
-    从缓存中加载embeddings，可以避免多线程时竞争加载。
-    '''
-    from server.knowledge_base.kb_cache.base import embeddings_pool
-    return embeddings_pool.load_embeddings(model=model, device=device)
+    return result
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
@@ -239,6 +237,7 @@ def make_text_splitter(
                     from langchain.text_splitter import CharacterTextSplitter
                     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
                 else:  ## 字符长度加载
+                    from transformers import AutoTokenizer
                     tokenizer = AutoTokenizer.from_pretrained(
                         text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
                         trust_remote_code=True)
@@ -358,7 +357,6 @@ def files2docs_in_thread(
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
         zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     利用多线程批量将磁盘文件转化成langchain Document.
@@ -396,7 +394,7 @@ def files2docs_in_thread(
         except Exception as e:
             yield False, (kb_name, filename, str(e))
 
-    for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
+    for result in run_in_thread_pool(func=file2docs, params=kwargs_list):
         yield result
 
 

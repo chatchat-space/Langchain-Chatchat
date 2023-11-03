@@ -43,11 +43,9 @@ class ZillizKBService(KBService):
     def vs_type(self) -> str:
         return SupportedVSType.ZILLIZ
 
-    def _load_zilliz(self, embeddings: Embeddings = None):
-        if embeddings is None:
-            embeddings = self._load_embeddings()
+    def _load_zilliz(self):
         zilliz_args = kbs_config.get("zilliz")
-        self.zilliz = Zilliz(embedding_function=EmbeddingsFunAdapter(embeddings),
+        self.zilliz = Zilliz(embedding_function=EmbeddingsFunAdapter(self.embed_model),
                             collection_name=self.kb_name, connection_args=zilliz_args)
 
 
@@ -59,9 +57,12 @@ class ZillizKBService(KBService):
             self.zilliz.col.release()
             self.zilliz.col.drop()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
-        self._load_zilliz(embeddings=EmbeddingsFunAdapter(embeddings))
-        return score_threshold_process(score_threshold, top_k, self.zilliz.similarity_search_with_score(query, top_k))
+    def do_search(self, query: str, top_k: int, score_threshold: float):
+        self._load_zilliz()
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
+        docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
+        return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         for doc in docs:
