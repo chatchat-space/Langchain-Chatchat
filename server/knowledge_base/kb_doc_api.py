@@ -368,7 +368,7 @@ def recreate_vector_store(
                         "code": 200,
                         "msg": f"({i + 1} / {len(files)}): {file_name}",
                         "total": len(files),
-                        "finished": i,
+                        "finished": i + 1,
                         "doc": file_name,
                     }, ensure_ascii=False)
                     kb.add_doc(kb_file, not_refresh_vs_cache=True)

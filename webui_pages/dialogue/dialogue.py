@@ -62,11 +62,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             dialogue_modes = ["LLM 对话",
                               "知识库问答",
                               "搜索引擎问答",
-                              "自定义Agent问答",
+                              "智能Agent回答",
                               ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
-                                     index=0,
+                                     index=1,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
@@ -124,7 +124,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         else:
             index_prompt = {
                 "LLM 对话": "llm_chat",
-                "自定义Agent问答": "agent_chat",
+                "智能Agent回答": "agent_chat",
                 "搜索引擎问答": "search_engine_chat",
                 "知识库问答": "knowledge_base_chat",
             }
@@ -210,7 +210,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
 
 
-        elif dialogue_mode == "自定义Agent问答":
+        elif dialogue_mode == "智能Agent回答":
             if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
                 chat_box.ai_say([
                     f"正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n",
