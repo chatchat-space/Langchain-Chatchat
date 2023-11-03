@@ -1,6 +1,7 @@
 import sys
 sys.path.append(".")
-from server.knowledge_base.migrate import create_tables, reset_tables, folder2db, prune_db_docs, prune_folder_files
+from server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
+                                           folder2db, prune_db_docs, prune_folder_files)
 from configs.model_config import NLTK_DATA_PATH, EMBEDDING_MODEL
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
@@ -32,6 +33,10 @@ if __name__ == "__main__":
         "--clear-tables",
         action="store_true",
         help=("create empty tables, or drop the database tables before recreate vector stores")
+    )
+    parser.add_argument(
+        "--import-db",
+        help="import tables from specified sqlite database"
     )
     parser.add_argument(
         "-u",
@@ -100,6 +105,8 @@ if __name__ == "__main__":
     if args.recreate_vs:
         print("recreating all vector stores")
         folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
+    elif args.import_db:
+        import_from_db(args.import_db)
     elif args.update_in_db:
         folder2db(kb_names=args.kb_name, mode="update_in_db", embed_model=args.embed_model)
     elif args.increament:
