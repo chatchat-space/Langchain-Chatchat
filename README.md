@@ -148,3 +148,5 @@ $ python startup.py -a
 ### 公众号
 ![](img/official_wechat_mp_account.png)
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+
+<u>[Langchain-Chatchat](https://github.com/chatchat-space/Langchain-Chatchat)</u>:基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目

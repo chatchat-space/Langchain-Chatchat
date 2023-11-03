@@ -11,7 +11,7 @@ from langchain.prompts.chat import ChatPromptTemplate
 from typing import List, Optional
 from server.chat.utils import History
 from server.utils import get_prompt_template
-from server.db.repository.chat_history_repository import add_chat_history_to_db, update_chat_history
+from server.db.repository import add_chat_history_to_db, update_chat_history
 
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
