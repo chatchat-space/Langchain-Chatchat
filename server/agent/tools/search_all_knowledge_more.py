@@ -71,15 +71,16 @@ bigdata,大数据的就业情况如何
 
 这些数据库是你能访问的，冒号之前是他们的名字，冒号之后是他们的功能，你应该参考他们的功能来帮助你思考
 
+
 {database_names}
 
 你的回答格式应该按照下面的内容，请注意```text 等标记都必须输出，这是我用来提取答案的标记。
-
+不要输出中文的逗号，不要输出引号。
 
 Question: ${{用户的问题}}
 
 ```text
-${{知识库名称,查询问题,不要带有任何除了,之外的符号}}
+${{知识库名称,查询问题,不要带有任何除了,之外的符号,比如不要输出中文的逗号，不要输出引号}}
 
 ```output
 数据库查询的结果
@@ -165,7 +166,11 @@ class LLMKnowledgeChain(LLMChain):
             lines = cleaned_input_str.split("\n")
             # 使用逗号分割每一行，然后形成一个（数据库，查询）元组的列表
 
-            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            try:
+                queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            except:
+                queries = [(line.split("，")[0].strip(), line.split("，")[1].strip()) for line in lines]
+            print(queries)
             run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue", verbose=self.verbose)
             output = self._evaluate_expression(queries)
             run_manager.on_text("\nAnswer: ", verbose=self.verbose)
@@ -193,7 +198,10 @@ class LLMKnowledgeChain(LLMChain):
             cleaned_input_str = (
                 expression.replace("\"", "").replace("“", "").replace("”", "").replace("```", "").strip())
             lines = cleaned_input_str.split("\n")
-            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            try:
+                queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            except:
+                queries = [(line.split("，")[0].strip(), line.split("，")[1].strip()) for line in lines]
             await run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue",
                                       verbose=self.verbose)
 

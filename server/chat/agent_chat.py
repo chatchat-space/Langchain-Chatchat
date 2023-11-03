@@ -76,7 +76,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         agent = LLMSingleActionAgent(
             llm_chain=llm_chain,
             output_parser=output_parser,
-            stop=["\nObservation:", "Observation:", "<|im_end|>", "<|observation|>"],
+            stop=["\nObservation:", "Observation:", "<|im_end|>", "<|observation|>"],  # Qwen模型中使用这个
             allowed_tools=tool_names,
         )
         # 把history转成agent的memory

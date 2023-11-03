@@ -15,7 +15,6 @@ import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
 
 
-
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
     try:
@@ -41,61 +40,21 @@ def get_ChatOpenAI(
 ) -> ChatOpenAI:
     ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
     config_models = list_config_llm_models()
-    if model_name in config_models.get("langchain", {}):
-        config = config_models["langchain"][model_name]
-        if model_name == "Azure-OpenAI":
-            model = AzureChatOpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                deployment_name=config.get("deployment_name"),
-                model_version=config.get("model_version"),
-                openai_api_type=config.get("openai_api_type"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_version=config.get("api_version"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
 
-        elif model_name == "OpenAI":
-            model = ChatOpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-        elif model_name == "Anthropic":
-            model = ChatAnthropic(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                anthropic_api_key=config.get("api_key"),
-
-            )
-    ## TODO 支持其他的Langchain原生支持的模型
-    else:
-        ## 非Langchain原生支持的模型，走Fschat封装
-        config = get_model_worker_config(model_name)
-        model = ChatOpenAI(
-            streaming=streaming,
-            verbose=verbose,
-            callbacks=callbacks,
-            openai_api_key=config.get("api_key", "EMPTY"),
-            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            openai_proxy=config.get("openai_proxy"),
-            **kwargs
-        )
+    ## 非Langchain原生支持的模型，走Fschat封装
+    config = get_model_worker_config(model_name)
+    model = ChatOpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        openai_proxy=config.get("openai_proxy"),
+        **kwargs
+    )
 
     return model
 
@@ -249,9 +208,9 @@ def torch_gc():
                 empty_cache()
             except Exception as e:
                 msg = ("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，"
-                    "以支持及时清理 torch 产生的内存占用。")
+                       "以支持及时清理 torch 产生的内存占用。")
                 logger.error(f'{e.__class__.__name__}: {msg}',
-                            exc_info=e if log_verbose else None)
+                             exc_info=e if log_verbose else None)
     except Exception:
         ...
 
@@ -437,7 +396,6 @@ def get_model_worker_config(model_name: str = None) -> dict:
     config.update(ONLINE_LLM_MODEL.get(model_name, {}).copy())
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}).copy())
 
-
     if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True
         if provider := config.get("provider"):
@@ -474,7 +432,7 @@ def fschat_controller_address() -> str:
 
 
 def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
-    if model := get_model_worker_config(model_name): # TODO: depends fastchat
+    if model := get_model_worker_config(model_name):  # TODO: depends fastchat
         host = model["host"]
         if host == "0.0.0.0":
             host = "127.0.0.1"
@@ -624,7 +582,7 @@ def run_in_thread_pool(
             thread = pool.submit(func, **kwargs)
             tasks.append(thread)
 
-        for obj in as_completed(tasks): # TODO: Ctrl+c无法停止
+        for obj in as_completed(tasks):  # TODO: Ctrl+c无法停止
             yield obj.result()
 
 

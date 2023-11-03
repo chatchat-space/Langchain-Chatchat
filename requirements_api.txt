@@ -1,10 +1,10 @@
-langchain>=0.0.324
+langchain>=0.0.326
 langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.31
+fschat[model_worker]==0.2.32
 xformers>=0.0.22.post4
 openai>=0.28.1
 sentence_transformers>=2.2.2
-transformers>=4.34
+transformers>=4.35
 torch>=2.1
 torchvision
 torchaudio
