@@ -1,6 +1,5 @@
 import os
 
-
 # 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
 # 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录
 MODEL_ROOT_PATH = ""
@@ -45,54 +44,53 @@ MODEL_PATH = {
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
 
         "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
-        "baichuan2-7b":"baichuan-inc/Baichuan2-7B-Chat",
+        "baichuan2-7b": "baichuan-inc/Baichuan2-7B-Chat",
 
         "baichuan-7b": "baichuan-inc/Baichuan-7B",
         "baichuan-13b": "baichuan-inc/Baichuan-13B",
-        'baichuan-13b-chat':'baichuan-inc/Baichuan-13B-Chat',
+        'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
 
-        "aquila-7b":"BAAI/Aquila-7B",
-        "aquilachat-7b":"BAAI/AquilaChat-7B",
+        "aquila-7b": "BAAI/Aquila-7B",
+        "aquilachat-7b": "BAAI/AquilaChat-7B",
 
-        "internlm-7b":"internlm/internlm-7b",
-        "internlm-chat-7b":"internlm/internlm-chat-7b",
+        "internlm-7b": "internlm/internlm-7b",
+        "internlm-chat-7b": "internlm/internlm-chat-7b",
 
-        "falcon-7b":"tiiuae/falcon-7b",
-        "falcon-40b":"tiiuae/falcon-40b",
-        "falcon-rw-7b":"tiiuae/falcon-rw-7b",
+        "falcon-7b": "tiiuae/falcon-7b",
+        "falcon-40b": "tiiuae/falcon-40b",
+        "falcon-rw-7b": "tiiuae/falcon-rw-7b",
 
-        "gpt2":"gpt2",
-        "gpt2-xl":"gpt2-xl",
-        
-        "gpt-j-6b":"EleutherAI/gpt-j-6b",
-        "gpt4all-j":"nomic-ai/gpt4all-j",
-        "gpt-neox-20b":"EleutherAI/gpt-neox-20b",
-        "pythia-12b":"EleutherAI/pythia-12b",
-        "oasst-sft-4-pythia-12b-epoch-3.5":"OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
-        "dolly-v2-12b":"databricks/dolly-v2-12b",    
-        "stablelm-tuned-alpha-7b":"stabilityai/stablelm-tuned-alpha-7b",
+        "gpt2": "gpt2",
+        "gpt2-xl": "gpt2-xl",
 
-        "Llama-2-13b-hf":"meta-llama/Llama-2-13b-hf",    
-        "Llama-2-70b-hf":"meta-llama/Llama-2-70b-hf",
-        "open_llama_13b":"openlm-research/open_llama_13b",    
-        "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
-        "koala":"young-geng/koala",  
-          
-        "mpt-7b":"mosaicml/mpt-7b",
-        "mpt-7b-storywriter":"mosaicml/mpt-7b-storywriter",    
-        "mpt-30b":"mosaicml/mpt-30b",
-        "opt-66b":"facebook/opt-66b",    
-        "opt-iml-max-30b":"facebook/opt-iml-max-30b",
+        "gpt-j-6b": "EleutherAI/gpt-j-6b",
+        "gpt4all-j": "nomic-ai/gpt4all-j",
+        "gpt-neox-20b": "EleutherAI/gpt-neox-20b",
+        "pythia-12b": "EleutherAI/pythia-12b",
+        "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
+        "dolly-v2-12b": "databricks/dolly-v2-12b",
+        "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b",
 
-        "Qwen-7B":"Qwen/Qwen-7B",
-        "Qwen-14B":"Qwen/Qwen-14B",
-        "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
-        "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+        "Llama-2-13b-hf": "meta-llama/Llama-2-13b-hf",
+        "Llama-2-70b-hf": "meta-llama/Llama-2-70b-hf",
+        "open_llama_13b": "openlm-research/open_llama_13b",
+        "vicuna-13b-v1.3": "lmsys/vicuna-13b-v1.3",
+        "koala": "young-geng/koala",
+
+        "mpt-7b": "mosaicml/mpt-7b",
+        "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter",
+        "mpt-30b": "mosaicml/mpt-30b",
+        "opt-66b": "facebook/opt-66b",
+        "opt-iml-max-30b": "facebook/opt-iml-max-30b",
+
+        "Qwen-7B": "Qwen/Qwen-7B",
+        "Qwen-14B": "Qwen/Qwen-14B",
+        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
+        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
     },
 }
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "m3e-base" # 可以尝试最新的嵌入式sota模型：bge-large-zh-v1.5
-
+EMBEDDING_MODEL = "m3e-base"  # 可以尝试最新的嵌入式sota模型：bge-large-zh-v1.5
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
@@ -147,13 +145,13 @@ ONLINE_LLM_MODEL = {
         "APPID": "",
         "APISecret": "",
         "api_key": "",
-        "version": "v1.5", # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
+        "version": "v1.5",  # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
         "provider": "XingHuoWorker",
     },
     # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
     "qianfan-api": {
         "version": "ERNIE-Bot",  # 注意大小写。当前支持 "ERNIE-Bot" 或 "ERNIE-Bot-turbo"， 更多的见官方文档。
-        "version_url": "", # 也可以不填写version，直接填写在千帆申请模型发布的API地址
+        "version_url": "",  # 也可以不填写version，直接填写在千帆申请模型发布的API地址
         "api_key": "",
         "secret_key": "",
         "provider": "QianFanWorker",
@@ -183,28 +181,26 @@ ONLINE_LLM_MODEL = {
 
     # Azure API
     "azure-api": {
-        "deployment_name": "", # 部署容器的名字
-        "resource_name": "", # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
-        "api_version": "", # API的版本，不是模型版本
+        "deployment_name": "",  # 部署容器的名字
+        "resource_name": "",  # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
+        "api_version": "",  # API的版本，不是模型版本
         "api_key": "",
         "provider": "AzureWorker",
     },
 }
-
 
 # 通常情况下不需要更改以下内容
 
 # nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
-
 VLLM_MODEL_DICT = {
-    "aquila-7b":"BAAI/Aquila-7B",
-    "aquilachat-7b":"BAAI/AquilaChat-7B",
+    "aquila-7b": "BAAI/Aquila-7B",
+    "aquilachat-7b": "BAAI/AquilaChat-7B",
 
     "baichuan-7b": "baichuan-inc/Baichuan-7B",
     "baichuan-13b": "baichuan-inc/Baichuan-13B",
-    'baichuan-13b-chat':'baichuan-inc/Baichuan-13B-Chat',
+    'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
     # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
     # "bloom":"bigscience/bloom",
     # "bloomz":"bigscience/bloomz",
@@ -212,43 +208,43 @@ VLLM_MODEL_DICT = {
     # "bloomz-7b1":"bigscience/bloomz-7b1",
     # "bloomz-1b7":"bigscience/bloomz-1b7",
 
-    "internlm-7b":"internlm/internlm-7b",
-    "internlm-chat-7b":"internlm/internlm-chat-7b",
-    "falcon-7b":"tiiuae/falcon-7b",
-    "falcon-40b":"tiiuae/falcon-40b",
-    "falcon-rw-7b":"tiiuae/falcon-rw-7b",
-    "gpt2":"gpt2",
-    "gpt2-xl":"gpt2-xl",
-    "gpt-j-6b":"EleutherAI/gpt-j-6b",
-    "gpt4all-j":"nomic-ai/gpt4all-j",
-    "gpt-neox-20b":"EleutherAI/gpt-neox-20b",
-    "pythia-12b":"EleutherAI/pythia-12b",
-    "oasst-sft-4-pythia-12b-epoch-3.5":"OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
-    "dolly-v2-12b":"databricks/dolly-v2-12b",    
-    "stablelm-tuned-alpha-7b":"stabilityai/stablelm-tuned-alpha-7b",
-    "Llama-2-13b-hf":"meta-llama/Llama-2-13b-hf",    
-    "Llama-2-70b-hf":"meta-llama/Llama-2-70b-hf",
-    "open_llama_13b":"openlm-research/open_llama_13b",    
-    "vicuna-13b-v1.3":"lmsys/vicuna-13b-v1.3",
-    "koala":"young-geng/koala",    
-    "mpt-7b":"mosaicml/mpt-7b",
-    "mpt-7b-storywriter":"mosaicml/mpt-7b-storywriter",    
-    "mpt-30b":"mosaicml/mpt-30b",
-    "opt-66b":"facebook/opt-66b",    
-    "opt-iml-max-30b":"facebook/opt-iml-max-30b",
+    "internlm-7b": "internlm/internlm-7b",
+    "internlm-chat-7b": "internlm/internlm-chat-7b",
+    "falcon-7b": "tiiuae/falcon-7b",
+    "falcon-40b": "tiiuae/falcon-40b",
+    "falcon-rw-7b": "tiiuae/falcon-rw-7b",
+    "gpt2": "gpt2",
+    "gpt2-xl": "gpt2-xl",
+    "gpt-j-6b": "EleutherAI/gpt-j-6b",
+    "gpt4all-j": "nomic-ai/gpt4all-j",
+    "gpt-neox-20b": "EleutherAI/gpt-neox-20b",
+    "pythia-12b": "EleutherAI/pythia-12b",
+    "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
+    "dolly-v2-12b": "databricks/dolly-v2-12b",
+    "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b",
+    "Llama-2-13b-hf": "meta-llama/Llama-2-13b-hf",
+    "Llama-2-70b-hf": "meta-llama/Llama-2-70b-hf",
+    "open_llama_13b": "openlm-research/open_llama_13b",
+    "vicuna-13b-v1.3": "lmsys/vicuna-13b-v1.3",
+    "koala": "young-geng/koala",
+    "mpt-7b": "mosaicml/mpt-7b",
+    "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter",
+    "mpt-30b": "mosaicml/mpt-30b",
+    "opt-66b": "facebook/opt-66b",
+    "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
-    "Qwen-7B":"Qwen/Qwen-7B",
-    "Qwen-14B":"Qwen/Qwen-14B",
-    "Qwen-7B-Chat":"Qwen/Qwen-7B-Chat",
-    "Qwen-14B-Chat":"Qwen/Qwen-14B-Chat",
+    "Qwen-7B": "Qwen/Qwen-7B",
+    "Qwen-14B": "Qwen/Qwen-14B",
+    "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
+    "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
 
-    "agentlm-7b":"THUDM/agentlm-7b",
-    "agentlm-13b":"THUDM/agentlm-13b",
-    "agentlm-70b":"THUDM/agentlm-70b",
+    "agentlm-7b": "THUDM/agentlm-7b",
+    "agentlm-13b": "THUDM/agentlm-13b",
+    "agentlm-70b": "THUDM/agentlm-70b",
 
 }
 
-## 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
+# 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
 SUPPORT_AGENT_MODEL = [
     "azure-api",
     "openai-api",
