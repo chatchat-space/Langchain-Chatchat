@@ -495,7 +495,8 @@ def parse_args() -> argparse.ArgumentParser:
         "-m",
         "--model-worker",
         action="store_true",
-        help="run fastchat's model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
+        help="run fastchat's model_worker server with specified model name. "
+             "specify --model-name if not using default LLM_MODEL",
         dest="model_worker",
     )
     parser.add_argument(
@@ -504,7 +505,8 @@ def parse_args() -> argparse.ArgumentParser:
         type=str,
         nargs="+",
         default=[LLM_MODEL],
-        help="specify model name for model worker. add addition names with space seperated to start multiple model workers.",
+        help="specify model name for model worker. "
+             "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
     )
     parser.add_argument(
