@@ -127,12 +127,15 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "openai_proxy": "",
     },
+
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
-        "version": "chatglm_pro",  # 可选包括 "chatglm_lite", "chatglm_std", "chatglm_pro"
+        "version": "chatglm_turbo",  # 可选包括 "chatglm_turbo"
         "provider": "ChatGLMWorker",
     },
+
+
     # 具体注册及api key获取请前往 https://api.minimax.chat/
     "minimax-api": {
         "group_id": "",
@@ -140,6 +143,8 @@ ONLINE_LLM_MODEL = {
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
+
+
     # 具体注册及api key获取请前往 https://xinghuo.xfyun.cn/
     "xinghuo-api": {
         "APPID": "",
@@ -148,6 +153,7 @@ ONLINE_LLM_MODEL = {
         "version": "v1.5",  # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
         "provider": "XingHuoWorker",
     },
+
     # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
     "qianfan-api": {
         "version": "ERNIE-Bot",  # 注意大小写。当前支持 "ERNIE-Bot" 或 "ERNIE-Bot-turbo"， 更多的见官方文档。
@@ -156,6 +162,7 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "QianFanWorker",
     },
+
     # 火山方舟 API，文档参考 https://www.volcengine.com/docs/82379
     "fangzhou-api": {
         "version": "chatglm-6b-model",  # 当前支持 "chatglm-6b-model"， 更多的见文档模型支持列表中方舟部分。
@@ -164,6 +171,7 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "FangZhouWorker",
     },
+
     # 阿里云通义千问 API，文档参考 https://help.aliyun.com/zh/dashscope/developer-reference/api-details
     "qwen-api": {
         "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"

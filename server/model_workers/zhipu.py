@@ -14,7 +14,7 @@ class ChatGLMWorker(ApiModelWorker):
         model_names: List[str] = ["zhipu-api"],
         controller_addr: str = None,
         worker_addr: str = None,
-        version: Literal["chatglm_pro", "chatglm_std", "chatglm_lite"] = "chatglm_std",
+        version: Literal["chatglm_turbo"] = "chatglm_turbo",
         **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
