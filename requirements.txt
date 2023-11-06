@@ -1,3 +1,5 @@
+# API requirements
+
 langchain>=0.0.326
 langchain-experimental>=0.0.30
 fschat[model_worker]==0.2.32
@@ -25,10 +27,16 @@ rapidocr_onnxruntime
 requests
 pathlib
 pytest
-scikit-learn
 numexpr
 strsimpy
 markdownify
+tiktoken
+tqdm
+websockets
+numpy~=1.24.4
+pandas~=2.0.3
+einops
+transformers_stream_generator==0.0.4
 
 vllm>=0.2.0; sys_platform == "linux"
 
@@ -43,8 +51,8 @@ vllm>=0.2.0; sys_platform == "linux"
 # psycopg2
 # pgvector
 
-numpy~=1.24.4
-pandas~=2.0.3
+# WebUI requirements
+
 streamlit>=1.26.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
@@ -52,9 +60,3 @@ streamlit-chatbox>=1.1.11
 streamlit-aggrid>=0.3.4.post3
 httpx[brotli,http2,socks]>=0.25.0
 watchdog
-tqdm
-websockets
-tiktoken
-einops
-scipy
-transformers_stream_generator==0.0.4
