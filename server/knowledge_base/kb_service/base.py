@@ -283,6 +283,8 @@ class KBServiceFactory:
                             default_embed_model: str = EMBEDDING_MODEL,
                             ) -> KBService:
         _, vs_type, embed_model = load_kb_from_db(kb_name)
+        if _ is None:  # kb not in db, just return None
+            return None
         if vs_type is None:  # faiss knowledge base not in db
             vs_type = default_vs_type
         if embed_model is None:
