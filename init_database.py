@@ -95,7 +95,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start_time = datetime.now()
 
-    if args.create_tables:
+    if args.create_tables or args.recraete_vs:
         create_tables() # confirm tables exist
 
     if args.clear_tables:
