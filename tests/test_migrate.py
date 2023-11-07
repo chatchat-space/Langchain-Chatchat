@@ -33,7 +33,7 @@ def test_recreate_vs():
     folder2db([kb_name], "recreate_vs")
 
     kb = KBServiceFactory.get_service_by_name(kb_name)
-    assert kb.exists()
+    assert kb and kb.exists()
 
     files = kb.list_files()
     print(files)
