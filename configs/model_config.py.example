@@ -257,10 +257,11 @@ SUPPORT_AGENT_MODEL = [
     "azure-api",
     "openai-api",
     "claude-api",
-    "Qwen",
+    "zhipu-api",
     "qwen-api",
+    "Qwen",
     "baichuan-api",
-    "agentlm"
-    "chatglm3-6b"
-    "xinghuo-api"
+    "agentlm",
+    "chatglm3",
+    "xinghuo-api",
 ]

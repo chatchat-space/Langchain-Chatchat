@@ -1,4 +1,4 @@
-langchain>=0.0.326
+langchain>=0.0.329 # 推荐使用最新的Langchain
 fschat>=0.2.32
 openai
 # sentence_transformers
