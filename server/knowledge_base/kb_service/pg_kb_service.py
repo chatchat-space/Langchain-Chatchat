@@ -1,4 +1,5 @@
 import json
+import shutil
 from typing import List, Dict, Optional
 
 from langchain.embeddings.base import Embeddings
@@ -56,6 +57,7 @@ class PGKBService(KBService):
                     DELETE FROM langchain_pg_collection WHERE name = '{self.kb_name}';
             '''))
             connect.commit()
+        shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
         self._load_pg_vector(embeddings=embeddings)
