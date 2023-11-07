@@ -1,6 +1,6 @@
 # API requirements
 
-langchain>=0.0.326
+langchain>=0.0.329 # 推荐使用最新的Langchain
 langchain-experimental>=0.0.30
 fschat[model_worker]==0.2.32
 xformers>=0.0.22.post4
@@ -41,9 +41,9 @@ transformers_stream_generator==0.0.4
 vllm>=0.2.0; sys_platform == "linux"
 
 # online api libs
-# zhipuai
-# dashscope>=1.10.0 # qwen
-# qianfan
+zhipuai
+dashscope>=1.10.0 # qwen
+qianfan
 # volcengine>=1.0.106 # fangzhou
 
 # uncomment libs if you want to use corresponding vector store
