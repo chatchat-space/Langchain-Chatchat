@@ -13,7 +13,7 @@ from server.utils import get_model_worker_config
 def request_qwen_api(
     messages: List[Dict[str, str]],
     api_key: str = None,
-    version: str = "qwen-turbo",
+    version: str = None,
     temperature: float = TEMPERATURE,
     model_name: str = "qwen-api",
 ):
