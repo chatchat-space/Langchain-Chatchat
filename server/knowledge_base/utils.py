@@ -7,7 +7,7 @@ from configs import (
     logger,
     log_verbose,
     text_splitter_dict,
-    LLM_MODEL,
+    LLM_MODELS,
     TEXT_SPLITTER_NAME,
 )
 import importlib
@@ -192,7 +192,7 @@ def make_text_splitter(
         splitter_name: str = TEXT_SPLITTER_NAME,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
-        llm_model: str = LLM_MODEL,
+        llm_model: str = LLM_MODELS[0],
 ):
     """
     根据参数获取特定的分词器

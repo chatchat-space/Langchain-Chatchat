@@ -8,7 +8,7 @@ from pathlib import Path
 from configs import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
-    LLM_MODEL,
+    LLM_MODELS,
     TEMPERATURE,
     SCORE_THRESHOLD,
     CHUNK_SIZE,
@@ -259,7 +259,7 @@ class ApiRequest:
         self,
         messages: List[Dict],
         stream: bool = True,
-        model: str = LLM_MODEL,
+        model: str = LLM_MODELS[0],
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         **kwargs: Any,
@@ -291,7 +291,7 @@ class ApiRequest:
         query: str,
         history: List[Dict] = [],
         stream: bool = True,
-        model: str = LLM_MODEL,
+        model: str = LLM_MODELS[0],
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
@@ -321,7 +321,7 @@ class ApiRequest:
         query: str,
         history: List[Dict] = [],
         stream: bool = True,
-        model: str = LLM_MODEL,
+        model: str = LLM_MODELS[0],
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
@@ -353,7 +353,7 @@ class ApiRequest:
         score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
-        model: str = LLM_MODEL,
+        model: str = LLM_MODELS[0],
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
@@ -391,7 +391,7 @@ class ApiRequest:
         top_k: int = SEARCH_ENGINE_TOP_K,
         history: List[Dict] = [],
         stream: bool = True,
-        model: str = LLM_MODEL,
+        model: str = LLM_MODELS[0],
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         prompt_name: str = "default",
@@ -677,9 +677,10 @@ class ApiRequest:
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", []))
 
 
-    def get_default_llm_model(self) -> Tuple[str, bool]:
+    def get_default_llm_model(self, local_first: bool = True) -> Tuple[str, bool]:
         '''
-        从服务器上获取当前运行的LLM模型，如果本机配置的LLM_MODEL属于本地模型且在其中，则优先返回
+        从服务器上获取当前运行的LLM模型。
+        当 local_first=True 时，优先返回运行中的本地模型，否则优先按LLM_MODELS配置顺序返回。
         返回类型为（model_name, is_local_model）
         '''
         def ret_sync():
@@ -687,26 +688,42 @@ class ApiRequest:
             if not running_models:
                 return "", False
 
-            if LLM_MODEL in running_models:
-                return LLM_MODEL, True
+            model = ""
+            for m in LLM_MODELS:
+                if m not in running_models:
+                    continue
+                is_local = not running_models[m].get("online_api")
+                if local_first and not is_local:
+                    continue
+                else:
+                    model = m
+                    break
 
-            local_models = [k for k, v in running_models.items() if not v.get("online_api")]
-            if local_models:
-                return local_models[0], True
-            return list(running_models)[0], False
+            if not model: # LLM_MODELS中配置的模型都不在running_models里
+                model = list(running_models)[0]
+            is_local = not running_models[model].get("online_api")
+            return model, is_local
 
         async def ret_async():
             running_models = await self.list_running_models()
             if not running_models:
                 return "", False
 
-            if LLM_MODEL in running_models:
-                return LLM_MODEL, True
+            model = ""
+            for m in LLM_MODELS:
+                if m not in running_models:
+                    continue
+                is_local = not running_models[m].get("online_api")
+                if local_first and not is_local:
+                    continue
+                else:
+                    model = m
+                    break
 
-            local_models = [k for k, v in running_models.items() if not v.get("online_api")]
-            if local_models:
-                return local_models[0], True
-            return list(running_models)[0], False
+            if not model: # LLM_MODELS中配置的模型都不在running_models里
+                model = list(running_models)[0]
+            is_local = not running_models[model].get("online_api")
+            return model, is_local
 
         if self._use_async:
             return ret_async()
