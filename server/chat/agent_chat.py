@@ -5,7 +5,7 @@ from langchain.agents import AgentExecutor, LLMSingleActionAgent, initialize_age
 from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs import LLM_MODEL, TEMPERATURE, HISTORY_LEN, Agent_MODEL
+from configs import LLM_MODELS, TEMPERATURE, HISTORY_LEN, Agent_MODEL
 from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
 from langchain.chains import LLMChain
 from typing import AsyncIterable, Optional, Dict
@@ -26,7 +26,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                                                         "content": "使用天气查询工具查询到今天北京多云，10-14摄氏度，东北风2级，易感冒"}]]
                                                    ),
                      stream: bool = Body(False, description="流式输出"),
-                     model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                     model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                      temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                      max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                      prompt_name: str = Body("default",
@@ -38,7 +38,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
     async def agent_chat_iterator(
             query: str,
             history: Optional[List[History]],
-            model_name: str = LLM_MODEL,
+            model_name: str = LLM_MODELS[0],
             prompt_name: str = prompt_name,
     ) -> AsyncIterable[str]:
         callback = CustomAsyncIteratorCallbackHandler()

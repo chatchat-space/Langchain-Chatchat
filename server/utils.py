@@ -4,7 +4,7 @@ from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs import (LLM_MODEL, LLM_DEVICE, EMBEDDING_DEVICE,
+from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
                      MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
@@ -345,8 +345,7 @@ def list_config_llm_models() -> Dict[str, Dict]:
     return [(model_name, config_type), ...]
     '''
     workers = list(FSCHAT_MODEL_WORKERS)
-    if LLM_MODEL not in workers:
-        workers.insert(0, LLM_MODEL)
+
     return {
         "local": MODEL_PATH["llm_model"],
         "online": ONLINE_LLM_MODEL,
@@ -431,7 +430,7 @@ def fschat_controller_address() -> str:
     return f"http://{host}:{port}"
 
 
-def fschat_model_worker_address(model_name: str = LLM_MODEL) -> str:
+def fschat_model_worker_address(model_name: str = LLM_MODELS[0]) -> str:
     if model := get_model_worker_config(model_name):  # TODO: depends fastchat
         host = model["host"]
         if host == "0.0.0.0":
@@ -660,7 +659,7 @@ def get_server_configs() -> Dict:
         TEXT_SPLITTER_NAME,
     )
     from configs.model_config import (
-        LLM_MODEL,
+        LLM_MODELS,
         HISTORY_LEN,
         TEMPERATURE,
     )
