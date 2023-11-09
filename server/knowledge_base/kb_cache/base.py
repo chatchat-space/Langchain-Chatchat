@@ -6,6 +6,7 @@ from langchain.schema import Document
 import threading
 from configs import (EMBEDDING_MODEL, CHUNK_SIZE, CACHED_VS_NUM,
                     logger, log_verbose)
+from server.knowledge_base.embeddings.qwen import QwenEmbeddings
 from server.utils import embedding_device, get_model_path
 from contextlib import contextmanager
 from collections import OrderedDict
@@ -123,6 +124,8 @@ class EmbeddingsPool(CachePool):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
                     embeddings = OpenAIEmbeddings(openai_api_key=get_model_path(model), chunk_size=CHUNK_SIZE)
+                elif model == "text_embedding_v1":
+                    embeddings = QwenEmbeddings(api_key=get_model_path(model))
                 elif 'bge-' in model:
                     if 'zh' in model:
                         # for chinese model

@@ -35,6 +35,7 @@ MODEL_PATH = {
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "text-embedding-ada-002": "your OPENAI_API_KEY",
+        "text_embedding_v1": "your API_KEY",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建，文档参考 https://help.aliyun.com/zh/dashscope/developer-reference/text-embedding-quick-start
     },
     # TODO: add all supported llm models
     "llm_model": {
