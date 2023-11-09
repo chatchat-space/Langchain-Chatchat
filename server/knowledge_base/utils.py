@@ -57,7 +57,8 @@ def list_files_from_folder(kb_name: str):
     for root, _, files in os.walk(doc_path):
         tail = os.path.basename(root).lower()
         if (tail.startswith("temp")
-            or tail.startswith("tmp")): # 跳过 temp 或 tmp 开头的文件夹
+            or tail.startswith("tmp")
+            or tail.startswith(".")): # 跳过 [temp, tmp, .] 开头的文件夹
             continue
         for file in files:
             if file.startswith("~$"): # 跳过 ~$ 开头的文件
