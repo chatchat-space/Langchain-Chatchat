@@ -157,7 +157,7 @@ def prune_db_docs(kb_names: List[str]):
     """
     for kb_name in kb_names:
         kb = KBServiceFactory.get_service_by_name(kb_name)
-        if kb and kb.exists():
+        if kb is not None:
             files_in_db = kb.list_files()
             files_in_folder = list_files_from_folder(kb_name)
             files = list(set(files_in_db) - set(files_in_folder))
@@ -175,7 +175,7 @@ def prune_folder_files(kb_names: List[str]):
     """
     for kb_name in kb_names:
         kb = KBServiceFactory.get_service_by_name(kb_name)
-        if kb and kb.exists():
+        if kb is not None:
             files_in_db = kb.list_files()
             files_in_folder = list_files_from_folder(kb_name)
             files = list(set(files_in_folder) - set(files_in_db))
