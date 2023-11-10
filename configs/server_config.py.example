@@ -31,8 +31,7 @@ FSCHAT_OPENAI_API = {
 
 # fastchat model_worker server
 # 这些模型必须是在model_config.MODEL_PATH或ONLINE_MODEL中正确配置的。
-# 在启动startup.py时，可用通过`--model-worker --model-name xxxx`指定模型，不指定则为LLM_MODEL
-# 必须在这里添加的模型才会出现在WEBUI中可选模型列表里（LLM_MODEL会自动添加）
+# 在启动startup.py时，可用通过`--model-name xxxx yyyy`指定模型，不指定则为LLM_MODELS
 FSCHAT_MODEL_WORKERS = {
     # 所有模型共用的默认配置，可在模型专项配置中进行覆盖。
     "default": {
@@ -58,7 +57,7 @@ FSCHAT_MODEL_WORKERS = {
         # "awq_ckpt": None,
         # "awq_wbits": 16,
         # "awq_groupsize": -1,
-        # "model_names": [LLM_MODEL],
+        # "model_names": LLM_MODELS,
         # "conv_template": None,
         # "limit_worker_concurrency": 5,
         # "stream_interval": 2,
@@ -96,27 +95,31 @@ FSCHAT_MODEL_WORKERS = {
     #    "device": "cpu",
     # },
 
-    "zhipu-api": { # 请为每个要运行的在线API设置不同的端口
+    #以下配置可以不用修改，在model_config中设置启动的模型
+    "zhipu-api": {
         "port": 21001,
     },
-    # "minimax-api": {
-    #     "port": 21002,
-    # },
-    # "xinghuo-api": {
-    #     "port": 21003,
-    # },
-    # "qianfan-api": {
-    #     "port": 21004,
-    # },
-    # "fangzhou-api": {
-    #     "port": 21005,
-    # },
-    # "qwen-api": {
-    #     "port": 21006,
-    # },
-    # "baichuan-api": {
-    #     "port": 21007,
-    # },
+    "minimax-api": {
+        "port": 21002,
+    },
+    "xinghuo-api": {
+        "port": 21003,
+    },
+    "qianfan-api": {
+        "port": 21004,
+    },
+    "fangzhou-api": {
+        "port": 21005,
+    },
+    "qwen-api": {
+        "port": 21006,
+    },
+    "baichuan-api": {
+        "port": 21007,
+    },
+    "azure-api": {
+        "port": 21008,
+    },
 }
 
 # fastchat multi model worker server

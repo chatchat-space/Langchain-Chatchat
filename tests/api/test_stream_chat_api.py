@@ -93,8 +93,8 @@ def test_knowledge_chat(api="/chat/knowledge_base_chat"):
         data = json.loads(line)
         if "answer" in data:
             print(data["answer"], end="", flush=True)
+    pprint(data)
     assert "docs" in data and len(data["docs"]) > 0
-    pprint(data["docs"])
     assert response.status_code == 200
 
 

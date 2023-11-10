@@ -22,7 +22,7 @@ from configs import (
     LOG_PATH,
     log_verbose,
     logger,
-    LLM_MODEL,
+    LLM_MODELS,
     EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     FSCHAT_CONTROLLER,
@@ -121,21 +121,22 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.block_size = 16
             args.swap_space = 4  # GiB
             args.gpu_memory_utilization = 0.90
-            args.max_num_batched_tokens = 16384 # 一个批次中的最大令牌（tokens）数量，这个取决于你的显卡和大模型设置，设置太大显存会不够
+            args.max_num_batched_tokens = None # 一个批次中的最大令牌（tokens）数量，这个取决于你的显卡和大模型设置，设置太大显存会不够
             args.max_num_seqs = 256
             args.disable_log_stats = False
             args.conv_template = None
             args.limit_worker_concurrency = 5
             args.no_register = False
-            args.num_gpus = 1 # vllm worker的切分是tensor并行，这里填写显卡的数量
+            args.num_gpus = 4 # vllm worker的切分是tensor并行，这里填写显卡的数量
             args.engine_use_ray = False
             args.disable_log_requests = False
 
-            # 0.2.0 vllm后要加的参数, 但是这里不需要
+            # 0.2.1 vllm后要加的参数, 但是这里不需要
             args.max_model_len = None
             args.revision = None
             args.quantization = None
             args.max_log_len = None
+            args.tokenizer_revision = None
 
             if args.model_path:
                 args.model = args.model_path
@@ -358,7 +359,7 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
 
 
 def run_model_worker(
-        model_name: str = LLM_MODEL,
+        model_name: str = LLM_MODELS[0],
         controller_address: str = "",
         log_level: str = "INFO",
         q: mp.Queue = None,
@@ -422,13 +423,13 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_api_server(started_event: mp.Event = None):
+def run_api_server(started_event: mp.Event = None, run_mode: str = None):
     from server.api import create_app
     import uvicorn
     from server.utils import set_httpx_config
     set_httpx_config()
 
-    app = create_app()
+    app = create_app(run_mode=run_mode)
     _set_app_event(app, started_event)
 
     host = API_SERVER["host"]
@@ -437,21 +438,27 @@ def run_api_server(started_event: mp.Event = None):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_webui(started_event: mp.Event = None):
+def run_webui(started_event: mp.Event = None, run_mode: str = None):
     from server.utils import set_httpx_config
     set_httpx_config()
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
-    p = subprocess.Popen(["streamlit", "run", "webui.py",
-                          "--server.address", host,
-                          "--server.port", str(port),
-                          "--theme.base", "light",
-                          "--theme.primaryColor", "#165dff",
-                          "--theme.secondaryBackgroundColor", "#f5f5f5",
-                          "--theme.textColor", "#000000",
-                        ])
+    cmd = ["streamlit", "run", "webui.py",
+            "--server.address", host,
+            "--server.port", str(port),
+            "--theme.base", "light",
+            "--theme.primaryColor", "#165dff",
+            "--theme.secondaryBackgroundColor", "#f5f5f5",
+            "--theme.textColor", "#000000",
+        ]
+    if run_mode == "lite":
+        cmd += [
+            "--",
+            "lite",
+        ]
+    p = subprocess.Popen(cmd)
     started_event.set()
     p.wait()
 
@@ -488,7 +495,8 @@ def parse_args() -> argparse.ArgumentParser:
         "-m",
         "--model-worker",
         action="store_true",
-        help="run fastchat's model_worker server with specified model name. specify --model-name if not using default LLM_MODEL",
+        help="run fastchat's model_worker server with specified model name. "
+             "specify --model-name if not using default LLM_MODELS",
         dest="model_worker",
     )
     parser.add_argument(
@@ -496,8 +504,9 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-name",
         type=str,
         nargs="+",
-        default=[LLM_MODEL],
-        help="specify model name for model worker. add addition names with space seperated to start multiple model workers.",
+        default=LLM_MODELS,
+        help="specify model name for model worker. "
+             "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
     )
     parser.add_argument(
@@ -534,6 +543,13 @@ def parse_args() -> argparse.ArgumentParser:
         help="减少fastchat服务log信息",
         dest="quiet",
     )
+    parser.add_argument(
+        "-i",
+        "--lite",
+        action="store_true",
+        help="以Lite模式运行：仅支持在线API的LLM对话、搜索引擎对话",
+        dest="lite",
+    )
     args = parser.parse_args()
     return args, parser
 
@@ -552,7 +568,7 @@ def dump_server_info(after_start=False, args=None):
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
 
-    models = [LLM_MODEL]
+    models = LLM_MODELS
     if args and args.model_name:
         models = args.model_name
 
@@ -595,6 +611,7 @@ async def start_main_server():
 
     mp.set_start_method("spawn")
     manager = mp.Manager()
+    run_mode = None
 
     queue = manager.Queue()
     args, parser = parse_args()
@@ -619,6 +636,10 @@ async def start_main_server():
         args.api_worker = True
         args.api = False
         args.webui = False
+
+    if args.lite:
+        args.model_worker = False
+        run_mode = "lite"
 
     dump_server_info(args=args)
 
@@ -673,8 +694,8 @@ async def start_main_server():
                 processes["model_worker"][model_name] = process
 
     if args.api_worker:
-        configs = get_all_model_worker_configs()
-        for model_name, config in configs.items():
+        for model_name in args.model_name:
+            config = get_model_worker_config(model_name)
             if (config.get("online_api")
                 and config.get("worker_class")
                 and model_name in FSCHAT_MODEL_WORKERS):
@@ -697,7 +718,7 @@ async def start_main_server():
         process = Process(
             target=run_api_server,
             name=f"API Server",
-            kwargs=dict(started_event=api_started),
+            kwargs=dict(started_event=api_started, run_mode=run_mode),
             daemon=True,
         )
         processes["api"] = process
@@ -707,7 +728,7 @@ async def start_main_server():
         process = Process(
             target=run_webui,
             name=f"WEBUI Server",
-            kwargs=dict(started_event=webui_started),
+            kwargs=dict(started_event=webui_started, run_mode=run_mode),
             daemon=True,
         )
         processes["webui"] = process

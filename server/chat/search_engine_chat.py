@@ -1,6 +1,7 @@
-from langchain.utilities import BingSearchAPIWrapper, DuckDuckGoSearchAPIWrapper
+from langchain.utilities.bing_search import BingSearchAPIWrapper
+from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
 from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, METAPHOR_API_KEY,
-                     LLM_MODEL, SEARCH_ENGINE_TOP_K, TEMPERATURE,
+                     LLM_MODELS, SEARCH_ENGINE_TOP_K, TEMPERATURE,
                      TEXT_SPLITTER_NAME, OVERLAP_SIZE)
 from fastapi import Body
 from fastapi.responses import StreamingResponse
@@ -12,13 +13,16 @@ from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List, Optional, Dict
 from server.chat.utils import History
 from langchain.docstore.document import Document
 import json
+from strsimpy.normalized_levenshtein import NormalizedLevenshtein
+from markdownify import markdownify
 
 
-def bing_search(text, result_len=SEARCH_ENGINE_TOP_K):
+def bing_search(text, result_len=SEARCH_ENGINE_TOP_K, **kwargs):
     if not (BING_SEARCH_URL and BING_SUBSCRIPTION_KEY):
         return [{"snippet": "please set BING_SUBSCRIPTION_KEY and BING_SEARCH_URL in os ENV",
                  "title": "env info is not found",
@@ -28,7 +32,7 @@ def bing_search(text, result_len=SEARCH_ENGINE_TOP_K):
     return search.results(text, result_len)
 
 
-def duckduckgo_search(text, result_len=SEARCH_ENGINE_TOP_K):
+def duckduckgo_search(text, result_len=SEARCH_ENGINE_TOP_K, **kwargs):
     search = DuckDuckGoSearchAPIWrapper()
     return search.results(text, result_len)
 
@@ -36,40 +40,49 @@ def duckduckgo_search(text, result_len=SEARCH_ENGINE_TOP_K):
 def metaphor_search(
     text: str,
     result_len: int = SEARCH_ENGINE_TOP_K,
-    splitter_name: str = "SpacyTextSplitter",
+    split_result: bool = False,
     chunk_size: int = 500,
     chunk_overlap: int = OVERLAP_SIZE,
 ) -> List[Dict]:
     from metaphor_python import Metaphor
-    from server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
-    from server.knowledge_base.utils import make_text_splitter
 
     if not METAPHOR_API_KEY:
         return []
-    
+
     client = Metaphor(METAPHOR_API_KEY)
     search = client.search(text, num_results=result_len, use_autoprompt=True)
     contents = search.get_contents().contents
+    for x in contents:
+        x.extract = markdownify(x.extract)
 
     # metaphor 返回的内容都是长文本，需要分词再检索
-    docs = [Document(page_content=x.extract,
-                     metadata={"link": x.url, "title": x.title})
-            for x in contents]
-    text_splitter = make_text_splitter(splitter_name=splitter_name,
-                                       chunk_size=chunk_size,
-                                       chunk_overlap=chunk_overlap)
-    splitted_docs = text_splitter.split_documents(docs)
-    
-    # 将切分好的文档放入临时向量库，重新筛选出TOP_K个文档
-    if len(splitted_docs) > result_len:
-        vs = memo_faiss_pool.new_vector_store()
-        vs.add_documents(splitted_docs)
-        splitted_docs = vs.similarity_search(text, k=result_len, score_threshold=1.0)
+    if split_result:
+        docs = [Document(page_content=x.extract,
+                        metadata={"link": x.url, "title": x.title})
+                for x in contents]
+        text_splitter = RecursiveCharacterTextSplitter(["\n\n", "\n", ".", " "],
+                                                       chunk_size=chunk_size,
+                                                       chunk_overlap=chunk_overlap)
+        splitted_docs = text_splitter.split_documents(docs)
+        
+        # 将切分好的文档放入临时向量库，重新筛选出TOP_K个文档
+        if len(splitted_docs) > result_len:
+            normal = NormalizedLevenshtein()
+            for x in splitted_docs:
+                x.metadata["score"] = normal.similarity(text, x.page_content)
+            splitted_docs.sort(key=lambda x: x.metadata["score"], reverse=True)
+            splitted_docs = splitted_docs[:result_len]
 
-    docs = [{"snippet": x.page_content,
-             "link": x.metadata["link"],
-             "title": x.metadata["title"]}
-             for x in splitted_docs]
+        docs = [{"snippet": x.page_content,
+                "link": x.metadata["link"],
+                "title": x.metadata["title"]}
+                for x in splitted_docs]
+    else:
+        docs = [{"snippet": x.extract,
+                "link": x.url,
+                "title": x.title}
+                for x in contents]
+
     return docs
 
 
@@ -93,9 +106,10 @@ async def lookup_search_engine(
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
+        split_result: bool = False,
 ):
     search_engine = SEARCH_ENGINES[search_engine_name]
-    results = await run_in_threadpool(search_engine, query, result_len=top_k)
+    results = await run_in_threadpool(search_engine, query, result_len=top_k, split_result=split_result)
     docs = search_result2docs(results)
     return docs
 
@@ -112,10 +126,11 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                                                 "content": "虎头虎脑"}]]
                                                             ),
                             stream: bool = Body(False, description="流式输出"),
-                            model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+                            model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                             temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-                            max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
+                            max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                             prompt_name: str = Body("default",description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                            split_result: bool = Body(False, description="是否对搜索结果进行拆分（主要用于metaphor搜索引擎）")
                        ):
     if search_engine_name not in SEARCH_ENGINES.keys():
         return BaseResponse(code=404, msg=f"未支持搜索引擎 {search_engine_name}")
@@ -129,7 +144,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                                           search_engine_name: str,
                                           top_k: int,
                                           history: Optional[List[History]],
-                                          model_name: str = LLM_MODEL,
+                                          model_name: str = LLM_MODELS[0],
                                           prompt_name: str = prompt_name,
                                           ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
@@ -140,7 +155,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
             callbacks=[callback],
         )
 
-        docs = await lookup_search_engine(query, search_engine_name, top_k)
+        docs = await lookup_search_engine(query, search_engine_name, top_k, split_result=split_result)
         context = "\n".join([doc.page_content for doc in docs])
 
         prompt_template = get_prompt_template("search_engine_chat", prompt_name)
@@ -160,6 +175,9 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
             f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
             for inum, doc in enumerate(docs)
         ]
+
+        if len(source_documents) == 0:  # 没有找到相关资料（不太可能）
+            source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
 
         if stream:
             async for token in callback.aiter():

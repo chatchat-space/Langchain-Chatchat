@@ -1,8 +1,12 @@
+from configs import CACHED_VS_NUM
 from server.knowledge_base.kb_cache.base import *
+from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
+from server.utils import load_local_embeddings
 from server.knowledge_base.utils import get_vs_path
-from langchain.vectorstores import FAISS
+from langchain.vectorstores.faiss import FAISS
+from langchain.schema import Document
 import os
-
+from langchain.schema import Document
 
 class ThreadSafeFaiss(ThreadSafeObject):
     def __repr__(self) -> str:
@@ -37,9 +41,9 @@ class _FaissPool(CachePool):
         embed_model: str = EMBEDDING_MODEL,
         embed_device: str = embedding_device(),
     ) -> FAISS:
-        embeddings = embeddings_pool.load_embeddings(embed_model, embed_device)
-
+        # TODO: 整个Embeddings加载逻辑有些混乱，待清理
         # create an empty vector store
+        embeddings = EmbeddingsFunAdapter(embed_model)
         doc = Document(page_content="init", metadata={})
         vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True)
         ids = list(vector_store.docstore._dict.keys())
@@ -60,23 +64,24 @@ class KBFaissPool(_FaissPool):
     def load_vector_store(
             self,
             kb_name: str,
-            vector_name: str = "vector_store",
+            vector_name: str = None,
             create: bool = True,
             embed_model: str = EMBEDDING_MODEL,
             embed_device: str = embedding_device(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
+        vector_name = vector_name or embed_model
         cache = self.get((kb_name, vector_name)) # 用元组比拼接字符串好一些
         if cache is None:
             item = ThreadSafeFaiss((kb_name, vector_name), pool=self)
             self.set((kb_name, vector_name), item)
             with item.acquire(msg="初始化"):
                 self.atomic.release()
-                logger.info(f"loading vector store in '{kb_name}/{vector_name}' from disk.")
+                logger.info(f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk.")
                 vs_path = get_vs_path(kb_name, vector_name)
 
                 if os.path.isfile(os.path.join(vs_path, "index.faiss")):
-                    embeddings = self.load_kb_embeddings(kb_name=kb_name, embed_device=embed_device)
+                    embeddings = self.load_kb_embeddings(kb_name=kb_name, embed_device=embed_device, default_embed_model=embed_model)
                     vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True)
                 elif create:
                     # create an empty vector store
@@ -132,7 +137,7 @@ if __name__ == "__main__":
     def worker(vs_name: str, name: str):
         vs_name = "samples"
         time.sleep(random.randint(1, 5))
-        embeddings = embeddings_pool.load_embeddings()
+        embeddings = load_local_embeddings()
         r = random.randint(1, 3)
 
         with kb_faiss_pool.load_vector_store(vs_name).acquire(name) as vs:

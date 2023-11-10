@@ -1,12 +1,5 @@
-## 最简单的版本，只支持固定的知识库
-
-# ## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 from server.chat.knowledge_base_chat import knowledge_base_chat
-from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
+from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 import json
 import asyncio
 from server.agent import model_container
@@ -18,6 +11,7 @@ async def search_knowledge_base_iter(database: str, query: str) -> str:
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
+                                         max_tokens=MAX_TOKENS,
                                          prompt_name="knowledge_base_chat",
                                          score_threshold=SCORE_THRESHOLD,
                                          stream=False)

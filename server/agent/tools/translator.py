@@ -1,11 +1,7 @@
-## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from server.agent import model_container
+from pydantic import BaseModel, Field
 
 _PROMPT_TEMPLATE = '''
 # 指令
@@ -33,6 +29,9 @@ def translate(query: str):
     llm_translate = LLMChain(llm=model, prompt=PROMPT)
     ans = llm_translate.run(query)
     return ans
+
+class TranslateInput(BaseModel):
+    location: str = Field(description="需要被翻译的内容")
 
 if __name__ == "__main__":
     result = translate("Can Love remember the question and the answer? 这句话如何诗意的翻译成中文")

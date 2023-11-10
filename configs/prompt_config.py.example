@@ -17,51 +17,65 @@
 #   - input: 用户输入内容
 #   - agent_scratchpad: Agent的思维记录
 
-PROMPT_TEMPLATES = {}
+PROMPT_TEMPLATES = {
+    "completion": {
+        "default": "{input}"
+    },
 
-PROMPT_TEMPLATES["llm_chat"] = {
-    "default": "{{ input }}",
+    "llm_chat": {
+        "default": "{{ input }}",
 
-    "py":
-    """
-    你是一个聪明的代码助手，请你给我写出简单的py代码。 \n
-    {{ input }}
-    """
-    ,
-}
-
-PROMPT_TEMPLATES["knowledge_base_chat"] = {
-    "default":
+        "py":
+            """
+        你是一个聪明的代码助手，请你给我写出简单的py代码。 \n
+        {{ input }}
         """
+        ,
+    },
+
+    "knowledge_base_chat": {
+        "default":
+            """
         <指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 </指令>
         <已知信息>{{ context }}</已知信息>、
         <问题>{{ question }}</问题>
         """,
-    "text":
-        """
+        "text":
+            """
         <指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>
         <已知信息>{{ context }}</已知信息>、
         <问题>{{ question }}</问题>
         """,
-}
-PROMPT_TEMPLATES["search_engine_chat"] = {
-    "default":
-        """
+        "Empty":  # 搜不到内容的时候调用，此时没有已知信息，这个Empty可以更改，但不能删除，会影响程序使用
+            """
+        <指令>请根据用户的问题，进行简洁明了的回答</指令>
+        <问题>{{ question }}</问题>
+        """,
+    },
+
+    "search_engine_chat": {
+        "default":
+            """
             <指令>这是我搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 </指令>
             <已知信息>{{ context }}</已知信息>、
             <问题>{{ question }}</问题>
             """,
-
-    "search":
-        """
+        "search":
+            """
         <指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>
         <已知信息>{{ context }}</已知信息>、
         <问题>{{ question }}</问题>
         """,
-}
-PROMPT_TEMPLATES["agent_chat"] = {
-    "default":
-        """
+        "Empty":  # 搜不到内容的时候调用，此时没有已知信息，这个Empty可以更改，但不能删除，会影响程序使用
+            """
+        <指令>请根据用户的问题，进行简洁明了的回答</指令>
+        <问题>{{ question }}</问题>
+        """,
+    },
+
+    "agent_chat": {
+        "default":
+            """
         Answer the following questions as best you can. If it is in order, you can use some tools appropriately.You have access to the following tools:
 
         {tools}
@@ -86,11 +100,41 @@ PROMPT_TEMPLATES["agent_chat"] = {
         Question: {input}
         Thought: {agent_scratchpad}
         """,
-    "ChatGLM":
-        """
-        请请严格按照提供的思维方式来思考。你的知识不一定正确，所以你一定要用提供的工具来思考，并给出用户答案。
+
+        "AgentLM":
+            """
+        <SYS>>\n
+        You are a helpful, respectful and honest assistant.
+        </SYS>>\n
+        Answer the following questions as best you can. If it is in order, you can use some tools appropriately.You have access to the following tools:
+
+        {tools}.
+
+        Use the following steps and think step by step!:
+        Question: the input question you must answer1
+        Thought: you should always think about what to do and what tools to use.
+        Action: the action to take, should be one of [{tool_names}]
+        Action Input: the input to the action
+        Observation: the result of the action
+        ... (this Thought/Action/Action Input/Observation can be repeated zero or more times)
+        Thought: I now know the final answer
+        Final Answer: the final answer to the original input question
+
+        Begin! let's think step by step!
+        history:
+        {history}
+        Question: {input}
+        Thought: {agent_scratchpad}
+
+        """,
+
+        "中文版本":
+            """
+        你的知识不一定正确，所以你一定要用提供的工具来思考，并给出用户答案。
         你有以下工具可以使用:
         {tools}
+
+        请请严格按照提供的思维方式来思考，所有的关键词都要输出，例如Action，Action Input，Observation等
         ```
         Question: 用户的提问或者观察到的信息，
         Thought: 你应该思考该做什么，是根据工具的结果来回答问题，还是决定使用什么工具。
@@ -109,6 +153,6 @@ PROMPT_TEMPLATES["agent_chat"] = {
         用户开始以提问：
         Question: {input}
         Thought: {agent_scratchpad}
-
         """,
+    },
 }
