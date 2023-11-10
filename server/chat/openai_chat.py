@@ -1,7 +1,8 @@
 from fastapi.responses import StreamingResponse
 from typing import List
 import openai
-from configs.model_config import llm_model_dict, LLM_MODEL, logger
+from configs import LLM_MODEL, logger, log_verbose
+from server.utils import get_model_worker_config, fschat_openai_api_address
 from pydantic import BaseModel
 
 
@@ -15,7 +16,7 @@ class OpenAiChatMsgIn(BaseModel):
     messages: List[OpenAiMessage]
     temperature: float = 0.7
     n: int = 1
-    max_tokens: int = 1024
+    max_tokens: int = None
     stop: List[str] = []
     stream: bool = False
     presence_penalty: int = 0
@@ -23,19 +24,20 @@ class OpenAiChatMsgIn(BaseModel):
 
 
 async def openai_chat(msg: OpenAiChatMsgIn):
-    openai.api_key = llm_model_dict[LLM_MODEL]["api_key"]
+    config = get_model_worker_config(msg.model)
+    openai.api_key = config.get("api_key", "EMPTY")
     print(f"{openai.api_key=}")
-    openai.api_base = llm_model_dict[LLM_MODEL]["api_base_url"]
+    openai.api_base = config.get("api_base_url", fschat_openai_api_address())
     print(f"{openai.api_base=}")
     print(msg)
 
-    def get_response(msg):
+    async def get_response(msg):
         data = msg.dict()
 
         try:
-            response = openai.ChatCompletion.create(**data)
+            response = await openai.ChatCompletion.acreate(**data)
             if msg.stream:
-                for data in response:
+                async for data in response:
                     if choices := data.choices:
                         if chunk := choices[0].get("delta", {}).get("content"):
                             print(chunk, end="", flush=True)
@@ -46,8 +48,9 @@ async def openai_chat(msg: OpenAiChatMsgIn):
                     print(answer)
                     yield(answer)
         except Exception as e:
-            print(type(e))
-            logger.error(e)
+            msg = f"获取ChatCompletion时出错：{e}"
+            logger.error(f'{e.__class__.__name__}: {msg}',
+                         exc_info=e if log_verbose else None)
 
     return StreamingResponse(
         get_response(msg),

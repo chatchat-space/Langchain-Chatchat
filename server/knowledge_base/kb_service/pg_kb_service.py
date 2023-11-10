@@ -7,7 +7,7 @@ from langchain.vectorstores import PGVector
 from langchain.vectorstores.pgvector import DistanceStrategy
 from sqlalchemy import text
 
-from configs.model_config import EMBEDDING_DEVICE, kbs_config
+from configs import kbs_config
 
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
@@ -26,6 +26,7 @@ class PGKBService(KBService):
                                   collection_name=self.kb_name,
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
+
     def get_doc_by_id(self, id: str) -> Optional[Document]:
         with self.pg_vector.connect() as connect:
             stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id=:id")
@@ -77,6 +78,7 @@ class PGKBService(KBService):
 
     def do_clear_vs(self):
         self.pg_vector.delete_collection()
+        self.pg_vector.create_collection()
 
 
 if __name__ == '__main__':

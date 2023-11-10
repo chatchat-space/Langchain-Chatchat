@@ -26,7 +26,7 @@ parser.add_argument('--model-path-address',
                     default="THUDM/chatglm2-6b@localhost@20002",
                     nargs="+",
                     type=str,
-                    help="model path, host, and port, formatted as model-path@host@path")
+                    help="model path, host, and port, formatted as model-path@host@port")
 # ---------------controller-------------------------
 
 parser.add_argument("--controller-host", type=str, default="localhost")

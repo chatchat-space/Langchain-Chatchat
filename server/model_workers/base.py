@@ -1,13 +1,13 @@
-from configs.model_config import LOG_PATH
+from configs.basic_config import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
-from fastchat.serve.model_worker import BaseModelWorker
+from fastchat.serve.base_model_worker import BaseModelWorker
 import uuid
 import json
 import sys
 from pydantic import BaseModel
 import fastchat
-import threading
+import asyncio
 from typing import Dict, List
 
 
@@ -40,12 +40,12 @@ class ApiModelWorker(BaseModelWorker):
                         worker_addr=worker_addr,
                         **kwargs)
         self.context_len = context_len
+        self.semaphore = asyncio.Semaphore(self.limit_worker_concurrency)
         self.init_heart_beat()
 
     def count_token(self, params):
         # TODO：需要完善
-        print("count token")
-        print(params)
+        # print("count token")
         prompt = params["prompt"]
         return {"count": len(str(prompt)), "error_code": 0}
 
@@ -59,13 +59,29 @@ class ApiModelWorker(BaseModelWorker):
 
     def get_embeddings(self, params):
         print("embedding")
-        print(params)
+        # print(params)
 
-    # workaround to make program exit with Ctrl+c
-    # it should be deleted after pr is merged by fastchat
-    def init_heart_beat(self):
-        self.register_to_controller()
-        self.heart_beat_thread = threading.Thread(
-            target=fastchat.serve.model_worker.heart_beat_worker, args=(self,), daemon=True,
-        )
-        self.heart_beat_thread.start()
+    # help methods
+    def get_config(self):
+        from server.utils import get_model_worker_config
+        return get_model_worker_config(self.model_names[0])
+
+    def prompt_to_messages(self, prompt: str) -> List[Dict]:
+        '''
+        将prompt字符串拆分成messages.
+        '''
+        result = []
+        user_role = self.conv.roles[0]
+        ai_role = self.conv.roles[1]
+        user_start = user_role + ":"
+        ai_start = ai_role + ":"
+        for msg in prompt.split(self.conv.sep)[1:-1]:
+            if msg.startswith(user_start):
+                if content := msg[len(user_start):].strip():
+                    result.append({"role": user_role, "content": content})
+            elif msg.startswith(ai_start):
+                if content := msg[len(ai_start):].strip():
+                    result.append({"role": ai_role, "content": content})
+            else:
+                raise RuntimeError(f"unknown role in msg: {msg}")
+        return result
