@@ -34,7 +34,7 @@ class RapidOCRDocLoader(UnstructuredFileLoader):
                     elif isinstance(child, CT_Tbl):
                         yield Table(child, parent)
 
-            b_unit = tqdm.tqdm(total=len(doc.paragraphs),
+            b_unit = tqdm.tqdm(total=len(doc.paragraphs)+len(doc.tables),
                                desc="RapidOCRDocLoader block index: 0")
             for i, block in enumerate(iter_block_items(doc)):
                 b_unit.set_description(
