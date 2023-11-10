@@ -113,6 +113,7 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "provider": "AzureWorker",
     },
+
 }
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置。支持3种设置方法：
@@ -151,7 +152,7 @@ MODEL_PATH = {
         # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
         "chatglm2-6b": "THUDM/chatglm2-6b",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
-        "chatglm3-6b": "THUDM/chatglm3-6b-32k",
+        "chatglm3-6b": "THUDM/chatglm3-6b",
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
 
         "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
@@ -198,6 +199,8 @@ MODEL_PATH = {
         "Qwen-14B": "Qwen/Qwen-14B",
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",  # 确保已经安装了auto-gptq optimum flash-attn
+        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",  # 确保已经安装了auto-gptq optimum flash-attn
     },
 }
 

@@ -119,7 +119,7 @@ class EmbeddingsPool(CachePool):
     def load_embeddings(self, model: str = None, device: str = None) -> Embeddings:
         self.atomic.acquire()
         model = model or EMBEDDING_MODEL
-        device = device or embedding_device()
+        device = embedding_device()
         key = (model, device)
         if not self.get(key):
             item = ThreadSafeObject(key, pool=self)
