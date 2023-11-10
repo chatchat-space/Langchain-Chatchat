@@ -75,11 +75,12 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "CSVLoader": [".csv"],
                # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
                "RapidOCRPDFLoader": [".pdf"],
+               "RapidOCRDocLoader": ['.docx', '.doc'],
+               "RapidOCRPPTLoader": ['.ppt', '.pptx', ],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
-                                          '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],
+                                          '.epub', '.odt','.tsv'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
@@ -152,7 +153,8 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader","FilteredCSVLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
+                           "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
