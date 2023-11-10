@@ -151,8 +151,11 @@ $ python startup.py -a
 <img src="img/qr_code_71.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+
 ### 公众号
-![](img/official_wechat_mp_account.png)
+
+<img src="img/official_wechat_mp_account.png" alt="二维码" width="300" />
+
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
 <u>[Langchain-Chatchat](https://github.com/chatchat-space/Langchain-Chatchat)</u>:基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目
