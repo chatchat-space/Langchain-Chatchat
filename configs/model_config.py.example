@@ -113,6 +113,7 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "provider": "AzureWorker",
     },
+
 }
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置。支持3种设置方法：
@@ -198,6 +199,8 @@ MODEL_PATH = {
         "Qwen-14B": "Qwen/Qwen-14B",
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8"  # 确保已经安装了auto-gptq optimum flash-atten
+        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4" # 确保已经安装了auto-gptq optimum flash-atten
     },
 }
 
