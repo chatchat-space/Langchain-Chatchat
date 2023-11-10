@@ -51,6 +51,10 @@ def add_docs_to_db(session,
     将某知识库某文件对应的所有Document信息添加到数据库。
     doc_infos形式：[{"id": str, "metadata": dict}, ...]
     '''
+    #! 这里会出现doc_infos为None的情况，需要进一步排查
+    if doc_infos is None:
+        print("输入的server.db.repository.knowledge_file_repository.add_docs_to_db的doc_infos参数为None")
+        return False
     for d in doc_infos:
         obj = FileDocModel(
             kb_name=kb_name,
