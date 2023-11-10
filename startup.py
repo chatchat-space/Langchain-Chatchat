@@ -22,7 +22,7 @@ from configs import (
     LOG_PATH,
     log_verbose,
     logger,
-    LLM_MODEL,
+    LLM_MODELS,
     EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     FSCHAT_CONTROLLER,
@@ -359,7 +359,7 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
 
 
 def run_model_worker(
-        model_name: str = LLM_MODEL,
+        model_name: str = LLM_MODELS[0],
         controller_address: str = "",
         log_level: str = "INFO",
         q: mp.Queue = None,
@@ -496,7 +496,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-worker",
         action="store_true",
         help="run fastchat's model_worker server with specified model name. "
-             "specify --model-name if not using default LLM_MODEL",
+             "specify --model-name if not using default LLM_MODELS",
         dest="model_worker",
     )
     parser.add_argument(
@@ -504,7 +504,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-name",
         type=str,
         nargs="+",
-        default=[LLM_MODEL],
+        default=LLM_MODELS,
         help="specify model name for model worker. "
              "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
@@ -568,7 +568,7 @@ def dump_server_info(after_start=False, args=None):
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
 
-    models = [LLM_MODEL]
+    models = LLM_MODELS
     if args and args.model_name:
         models = args.model_name
 
@@ -694,8 +694,8 @@ async def start_main_server():
                 processes["model_worker"][model_name] = process
 
     if args.api_worker:
-        configs = get_all_model_worker_configs()
-        for model_name, config in configs.items():
+        for model_name in args.model_name:
+            config = get_model_worker_config(model_name)
             if (config.get("online_api")
                 and config.get("worker_class")
                 and model_name in FSCHAT_MODEL_WORKERS):

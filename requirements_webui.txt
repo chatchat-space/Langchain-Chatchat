@@ -1,6 +1,6 @@
 # WebUI requirements
 
-streamlit>=1.26.0
+streamlit~=1.27.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.11

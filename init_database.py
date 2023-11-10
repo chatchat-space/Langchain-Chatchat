@@ -103,6 +103,7 @@ if __name__ == "__main__":
         print("database talbes reseted")
 
     if args.recreate_vs:
+        create_tables()
         print("recreating all vector stores")
         folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
     elif args.import_db:

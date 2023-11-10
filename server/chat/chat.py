@@ -1,6 +1,6 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-from configs import LLM_MODEL, TEMPERATURE, SAVE_CHAT_HISTORY
+from configs import LLM_MODELS, TEMPERATURE, SAVE_CHAT_HISTORY
 from server.utils import wrap_done, get_ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -22,7 +22,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                                  {"role": "assistant", "content": "虎头虎脑"}]]
                                              ),
                stream: bool = Body(False, description="流式输出"),
-               model_name: str = Body(LLM_MODEL, description="LLM 模型名称。"),
+               model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
@@ -32,7 +32,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
     async def chat_iterator(query: str,
                             history: List[History] = [],
-                            model_name: str = LLM_MODEL,
+                            model_name: str = LLM_MODELS[0],
                             prompt_name: str = prompt_name,
                             ) -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()

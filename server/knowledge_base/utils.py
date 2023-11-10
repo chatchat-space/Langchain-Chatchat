@@ -7,7 +7,7 @@ from configs import (
     logger,
     log_verbose,
     text_splitter_dict,
-    LLM_MODEL,
+    LLM_MODELS,
     TEXT_SPLITTER_NAME,
 )
 import importlib
@@ -57,7 +57,8 @@ def list_files_from_folder(kb_name: str):
     for root, _, files in os.walk(doc_path):
         tail = os.path.basename(root).lower()
         if (tail.startswith("temp")
-            or tail.startswith("tmp")): # 跳过 temp 或 tmp 开头的文件夹
+            or tail.startswith("tmp")
+            or tail.startswith(".")): # 跳过 [temp, tmp, .] 开头的文件夹
             continue
         for file in files:
             if file.startswith("~$"): # 跳过 ~$ 开头的文件
@@ -192,7 +193,7 @@ def make_text_splitter(
         splitter_name: str = TEXT_SPLITTER_NAME,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
-        llm_model: str = LLM_MODEL,
+        llm_model: str = LLM_MODELS[0],
 ):
     """
     根据参数获取特定的分词器

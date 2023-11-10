@@ -59,16 +59,22 @@ class QwenWorker(ApiModelWorker):
         import dashscope
         params.load_config(self.model_names[0])
 
-        resp = dashscope.TextEmbedding.call(
-            model=params.embed_model or self.DEFAULT_EMBED_MODEL,
-            input=params.texts, # 最大25行
-            api_key=params.api_key,
-        )
-        if resp["status_code"] != 200:
-            return {"code": resp["status_code"], "msg": resp.message}
-        else:
-            embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
-            return {"code": 200, "data": embeddings}
+        result = []
+        i = 0
+        while i < len(params.texts):
+            texts = params.texts[i:i+25]
+            resp = dashscope.TextEmbedding.call(
+                model=params.embed_model or self.DEFAULT_EMBED_MODEL,
+                input=texts, # 最大25行
+                api_key=params.api_key,
+            )
+            if resp["status_code"] != 200:
+                return {"code": resp["status_code"], "msg": resp.message}
+            else:
+                embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
+                result += embeddings
+            i += 25
+        return {"code": 200, "data": result}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

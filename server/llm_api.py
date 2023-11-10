@@ -1,5 +1,5 @@
 from fastapi import Body
-from configs import logger, log_verbose, LLM_MODEL, HTTPX_DEFAULT_TIMEOUT
+from configs import logger, log_verbose, LLM_MODELS, HTTPX_DEFAULT_TIMEOUT
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 from copy import deepcopy
@@ -65,7 +65,7 @@ def get_model_config(
 
 
 def stop_llm_model(
-    model_name: str = Body(..., description="要停止的LLM模型名称", examples=[LLM_MODEL]),
+    model_name: str = Body(..., description="要停止的LLM模型名称", examples=[LLM_MODELS[0]]),
     controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
 ) -> BaseResponse:
     '''
@@ -89,8 +89,8 @@ def stop_llm_model(
 
 
 def change_llm_model(
-    model_name: str = Body(..., description="当前运行模型", examples=[LLM_MODEL]),
-    new_model_name: str = Body(..., description="要切换的新模型", examples=[LLM_MODEL]),
+    model_name: str = Body(..., description="当前运行模型", examples=[LLM_MODELS[0]]),
+    new_model_name: str = Body(..., description="要切换的新模型", examples=[LLM_MODELS[0]]),
     controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
 ):
     '''

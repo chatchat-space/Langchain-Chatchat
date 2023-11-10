@@ -48,7 +48,10 @@ class FaissKBService(KBService):
 
     def do_drop_kb(self):
         self.clear_vs()
-        shutil.rmtree(self.kb_path)
+        try:
+            shutil.rmtree(self.kb_path)
+        except Exception:
+            ...
 
     def do_search(self,
                   query: str,
@@ -90,8 +93,11 @@ class FaissKBService(KBService):
     def do_clear_vs(self):
         with kb_faiss_pool.atomic:
             kb_faiss_pool.pop((self.kb_name, self.vector_name))
-        shutil.rmtree(self.vs_path)
-        os.makedirs(self.vs_path)
+        try:
+            shutil.rmtree(self.vs_path)
+        except Exception:
+            ...
+        os.makedirs(self.vs_path, exist_ok=True)
 
     def exist_doc(self, file_name: str):
         if super().exist_doc(file_name):

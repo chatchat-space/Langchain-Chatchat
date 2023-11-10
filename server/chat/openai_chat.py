@@ -1,7 +1,7 @@
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 import openai
-from configs import LLM_MODEL, logger, log_verbose
+from configs import LLM_MODELS, logger, log_verbose
 from server.utils import get_model_worker_config, fschat_openai_api_address
 from pydantic import BaseModel
 
@@ -12,7 +12,7 @@ class OpenAiMessage(BaseModel):
 
 
 class OpenAiChatMsgIn(BaseModel):
-    model: str = LLM_MODEL
+    model: str = LLM_MODELS[0]
     messages: List[OpenAiMessage]
     temperature: float = 0.7
     n: int = 1

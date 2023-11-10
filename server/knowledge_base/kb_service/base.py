@@ -46,6 +46,7 @@ class SupportedVSType:
     DEFAULT = 'default'
     ZILLIZ = 'zilliz'
     PG = 'pg'
+    ES = 'es'
 
 
 class KBService(ABC):
@@ -274,19 +275,20 @@ class KBServiceFactory:
             from server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
             return ZillizKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.DEFAULT == vector_store_type:
+            return MilvusKBService(kb_name,
+                                   embed_model=embed_model)  # other milvus parameters are set in model_config.kbs_config
+        elif SupportedVSType.ES == vector_store_type:
+            from server.knowledge_base.kb_service.es_kb_service import ESKBService
+            return ESKBService(kb_name, embed_model=embed_model)
+        elif SupportedVSType.DEFAULT == vector_store_type:  # kb_exists of default kbservice is False, to make validation easier.
             from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
             return DefaultKBService(kb_name)
 
     @staticmethod
-    def get_service_by_name(kb_name: str,
-                            default_vs_type: SupportedVSType = SupportedVSType.FAISS,
-                            default_embed_model: str = EMBEDDING_MODEL,
-                            ) -> KBService:
+    def get_service_by_name(kb_name: str) -> KBService:
         _, vs_type, embed_model = load_kb_from_db(kb_name)
-        if vs_type is None:  # faiss knowledge base not in db
-            vs_type = default_vs_type
-        if embed_model is None:
-            embed_model = default_embed_model
+        if _ is None:  # kb not in db, just return None
+            return None
         return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
 
     @staticmethod
@@ -331,6 +333,9 @@ def get_kb_details() -> List[Dict]:
 
 def get_kb_file_details(kb_name: str) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(kb_name)
+    if kb is None:
+        return []
+
     files_in_folder = list_files_from_folder(kb_name)
     files_in_db = kb.list_files()
     result = {}
