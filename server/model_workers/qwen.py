@@ -1,75 +1,89 @@
 import json
 import sys
+
+from fastchat.conversation import Conversation
 from configs import TEMPERATURE
 from http import HTTPStatus
 from typing import List, Literal, Dict
 
 from fastchat import conversation as conv
-
-from server.model_workers.base import ApiModelWorker
-from server.utils import get_model_worker_config
-
-
-def request_qwen_api(
-    messages: List[Dict[str, str]],
-    api_key: str = None,
-    version: str = "qwen-turbo",
-    temperature: float = TEMPERATURE,
-    model_name: str = "qwen-api",
-):
-    import dashscope
-
-    config = get_model_worker_config(model_name)
-    api_key = api_key or config.get("api_key")
-    version = version or config.get("version")
-
-    gen = dashscope.Generation()
-    responses = gen.call(
-        model=version,
-        temperature=temperature,
-        api_key=api_key,
-        messages=messages,
-        result_format='message',  # set the result is message format.
-        stream=True,
-    )
-
-    text = ""
-    for resp in responses:
-        if resp.status_code != HTTPStatus.OK:
-            yield {
-                "code": resp.status_code,
-                "text": "api not response correctly",
-            }
-
-        if resp["status_code"] == 200:
-            if choices := resp["output"]["choices"]:
-                yield {
-                    "code": 200,
-                    "text": choices[0]["message"]["content"],
-                }
-        else:
-            yield {
-                "code": resp["status_code"],
-                "text": resp["message"],
-            }
+from server.model_workers.base import *
+from server.model_workers.base import ApiEmbeddingsParams
 
 
 class QwenWorker(ApiModelWorker):
+    DEFAULT_EMBED_MODEL = "text-embedding-v1"
+
     def __init__(
-            self,
-            *,
-            version: Literal["qwen-turbo", "qwen-plus"] = "qwen-turbo",
-            model_names: List[str] = ["qwen-api"],
-            controller_addr: str,
-            worker_addr: str,
-            **kwargs,
+        self,
+        *,
+        version: Literal["qwen-turbo", "qwen-plus"] = "qwen-turbo",
+        model_names: List[str] = ["qwen-api"],
+        controller_addr: str = None,
+        worker_addr: str = None,
+        **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
+        self.version = version
 
+    def do_chat(self, params: ApiChatParams) -> Dict:
+        import dashscope
+        params.load_config(self.model_names[0])
+
+        gen = dashscope.Generation()
+        responses = gen.call(
+            model=params.version,
+            temperature=params.temperature,
+            api_key=params.api_key,
+            messages=params.messages,
+            result_format='message',  # set the result is message format.
+            stream=True,
+        )
+
+        for resp in responses:
+            if resp["status_code"] == 200:
+                if choices := resp["output"]["choices"]:
+                    yield {
+                        "error_code": 0,
+                        "text": choices[0]["message"]["content"],
+                    }
+            else:
+                yield {
+                    "error_code": resp["status_code"],
+                    "text": resp["message"],
+                }
+
+    def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
+        import dashscope
+        params.load_config(self.model_names[0])
+
+        result = []
+        i = 0
+        while i < len(params.texts):
+            texts = params.texts[i:i+25]
+            resp = dashscope.TextEmbedding.call(
+                model=params.embed_model or self.DEFAULT_EMBED_MODEL,
+                input=texts, # 最大25行
+                api_key=params.api_key,
+            )
+            if resp["status_code"] != 200:
+                return {"code": resp["status_code"], "msg": resp.message}
+            else:
+                embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
+                result += embeddings
+            i += 25
+        return {"code": 200, "data": result}
+
+    def get_embeddings(self, params):
+        # TODO: 支持embeddings
+        print("embedding")
+        print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
         # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
+        return conv.Conversation(
             name=self.model_names[0],
             system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
             messages=[],
@@ -77,36 +91,6 @@ class QwenWorker(ApiModelWorker):
             sep="\n### ",
             stop_str="###",
         )
-        config = self.get_config()
-        self.api_key = config.get("api_key")
-        self.version = version
-
-    def generate_stream_gate(self, params):
-        messages = self.prompt_to_messages(params["prompt"])
-
-        for resp in request_qwen_api(messages=messages,
-                                     api_key=self.api_key,
-                                     version=self.version,
-                                     temperature=params.get("temperature")):
-            if resp["code"] == 200:
-                yield json.dumps({
-                    "error_code": 0,
-                    "text": resp["text"]
-                },
-                    ensure_ascii=False
-                ).encode() + b"\0"
-            else:
-                yield json.dumps({
-                    "error_code": resp["code"],
-                    "text": resp["text"]
-                },
-                    ensure_ascii=False
-                ).encode() + b"\0"
-
-    def get_embeddings(self, params):
-        # TODO: 支持embeddings
-        print("embedding")
-        print(params)
 
 
 if __name__ == "__main__":

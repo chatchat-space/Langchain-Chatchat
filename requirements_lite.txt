@@ -1,0 +1,62 @@
+langchain>=0.0.329 # 推荐使用最新的Langchain
+fschat>=0.2.32
+openai
+# sentence_transformers
+# transformers>=4.35.0
+# torch>=2.0.1
+# torchvision
+# torchaudio
+fastapi>=0.104.1
+python-multipart
+nltk~=3.8.1
+uvicorn~=0.23.1
+starlette~=0.27.0
+pydantic~=1.10.11
+unstructured[docx,csv]>=0.10.4 # add pdf if need
+python-magic-bin; sys_platform == 'win32'
+SQLAlchemy==2.0.19
+faiss-cpu
+# accelerate
+# spacy
+# PyMuPDF==1.22.5 # install if need pdf
+# rapidocr_onnxruntime>=1.3.2 # install if need pdf
+
+requests
+pathlib
+pytest
+# scikit-learn
+# numexpr
+# vllm==0.1.7; sys_platform == "linux"
+
+# online api libs
+zhipuai
+dashscope>=1.10.0 # qwen
+# qianfan
+# volcengine>=1.0.106 # fangzhou
+
+# uncomment libs if you want to use corresponding vector store
+# pymilvus==2.1.3 # requires milvus==2.1.3
+# psycopg2
+# pgvector
+
+numpy~=1.24.4
+pandas~=2.0.3
+streamlit~=1.27.0
+streamlit-option-menu>=0.3.6
+streamlit-antd-components>=0.1.11
+streamlit-chatbox==1.1.11
+streamlit-aggrid>=0.3.4.post3
+httpx~=0.24.1
+watchdog
+tqdm
+websockets
+# tiktoken
+einops
+# scipy
+# transformers_stream_generator==0.0.4
+
+# search engine libs
+duckduckgo-search
+metaphor-python
+strsimpy
+markdownify

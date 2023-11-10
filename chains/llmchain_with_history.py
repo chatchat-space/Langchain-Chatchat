@@ -1,12 +1,12 @@
 from server.utils import get_ChatOpenAI
-from configs.model_config import LLM_MODEL, TEMPERATURE
+from configs.model_config import LLM_MODELS, TEMPERATURE
 from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
 )
 
-model = get_ChatOpenAI(model_name=LLM_MODEL, temperature=TEMPERATURE)
+model = get_ChatOpenAI(model_name=LLM_MODELS[0], temperature=TEMPERATURE)
 
 
 human_prompt = "{input}"

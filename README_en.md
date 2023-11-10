@@ -20,7 +20,6 @@ LLM API.
     - [4. One-Click Startup](README.md#4-One-Click-Startup)
     - [5. Startup Interface Examples](README.md#5-Startup-Interface-Examples)
 - [Contact Us](README.md#Contact-Us)
-- [List of Partner Organizations](README.md#List-of-Partner-Organizations)
 
 ## Introduction
 
@@ -28,7 +27,7 @@ LLM API.
 of [langchain](https://github.com/hwchase17/langchain). The goal is to build a KBQA(Knowledge based Q&A) solution that
 is friendly to Chinese scenarios and open source models and can run both offline and online.
 
-💡 Inspried by [document.ai](https://github.com/GanymedeNil/document.ai)
+💡 Inspired by [document.ai](https://github.com/GanymedeNil/document.ai)
 and [ChatGLM-6B Pull Request](https://github.com/THUDM/ChatGLM-6B/pull/216) , we build a local knowledge base question
 answering application that can be implemented using an open source model or remote LLM api throughout the process. In
 the latest version of this project, [FastChat](https://github.com/lm-sys/FastChat) is used to access Vicuna, Alpaca,
@@ -42,10 +41,10 @@ to expand the access to various models and remote APIs in the future.
 
 ⛓️ The implementation principle of this project is shown in the graph below. The main process includes: loading files ->
 reading text -> text segmentation -> text vectorization -> question vectorization -> matching the `top-k` most similar
-to the question vector in the text vector -> The matched text is added to `prompt `as context and question -> submitted
+to the question vector in the text vector -> The matched text is added to `prompt `as context and question -> submitte
 to `LLM` to generate an answer.
 
-📺[video introdution](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
+📺[video introduction](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
 ![实现原理图](img/langchain+chatglm.png)
 
@@ -53,7 +52,7 @@ The main process analysis from the aspect of document process:
 
 ![实现原理图2](img/langchain+chatglm2.png)
 
-🚩 The training or fined-tuning are not involved in the project, but still, one always can improve performance by do
+🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
 🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update

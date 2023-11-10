@@ -1,8 +1,4 @@
-## 单独运行的时候需要添加
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
+from __future__ import annotations
 import re
 import warnings
 from typing import Dict
@@ -23,11 +19,11 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from server.chat.knowledge_base_chat import knowledge_base_chat
-from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
+from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 
 import asyncio
 from server.agent import model_container
-
+from pydantic import BaseModel, Field
 
 async def search_knowledge_base_iter(database: str, query: str):
     response = await knowledge_base_chat(query=query,
@@ -36,7 +32,7 @@ async def search_knowledge_base_iter(database: str, query: str):
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
-                                         max_tokens=None,
+                                         max_tokens=MAX_TOKENS,
                                          prompt_name="knowledge_base_chat",
                                          score_threshold=SCORE_THRESHOLD,
                                          stream=False)
@@ -217,7 +213,7 @@ class LLMKnowledgeChain(LLMChain):
             llm: BaseLanguageModel,
             prompt: BasePromptTemplate = PROMPT,
             **kwargs: Any,
-    ):
+    ) -> LLMKnowledgeChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
         return cls(llm_chain=llm_chain, **kwargs)
 
@@ -227,6 +223,10 @@ def knowledge_search_once(query: str):
     llm_knowledge = LLMKnowledgeChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_knowledge.run(query)
     return ans
+
+
+class KnowledgeSearchInput(BaseModel):
+    location: str = Field(description="知识库查询的内容")
 
 
 if __name__ == "__main__":

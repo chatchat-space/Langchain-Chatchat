@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from configs import LLM_MODEL, TEMPERATURE
+from configs import LLM_MODELS, TEMPERATURE
 from server.utils import get_ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.agents import LLMSingleActionAgent, AgentExecutor
@@ -10,7 +10,7 @@ from langchain.memory import ConversationBufferWindowMemory
 
 memory = ConversationBufferWindowMemory(k=5)
 model = get_ChatOpenAI(
-        model_name=LLM_MODEL,
+        model_name=LLM_MODELS[0],
         temperature=TEMPERATURE,
     )
 from server.agent.custom_template import CustomOutputParser, prompt

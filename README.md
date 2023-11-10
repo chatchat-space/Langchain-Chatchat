@@ -20,7 +20,6 @@
   * [4. 一键启动](README.md#4-一键启动)
   * [5. 启动界面示例](README.md#5-启动界面示例)
 * [联系我们](README.md#联系我们)
-* [合作伙伴名单](README.md#合作伙伴名单)
 
 
 ## 介绍
@@ -140,6 +139,10 @@ $ python startup.py -a
 
 
 ---
+## 项目里程碑
+
+
+---
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
@@ -152,3 +155,4 @@ $ python startup.py -a
 ![](img/official_wechat_mp_account.png)
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
+<u>[Langchain-Chatchat](https://github.com/chatchat-space/Langchain-Chatchat)</u>:基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目

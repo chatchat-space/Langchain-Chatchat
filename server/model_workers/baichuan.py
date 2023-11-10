@@ -1,16 +1,14 @@
-# import os
-# import sys
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import json
 import time
 import hashlib
-from server.model_workers.base import ApiModelWorker
-from server.utils import get_model_worker_config, get_httpx_client
+
+from fastchat.conversation import Conversation
+from server.model_workers.base import *
+from server.utils import get_httpx_client
 from fastchat import conversation as conv
 import sys
 import json
 from typing import List, Literal, Dict
-from configs import TEMPERATURE
 
 
 def calculate_md5(input_string):
@@ -20,56 +18,12 @@ def calculate_md5(input_string):
     return encrypted
 
 
-def request_baichuan_api(
-    messages: List[Dict[str, str]],
-    api_key: str = None,
-    secret_key: str = None,
-    version: str = "Baichuan2-53B",
-    temperature: float = TEMPERATURE,
-    model_name: str = "baichuan-api",
-):
-    config = get_model_worker_config(model_name)
-    api_key = api_key or config.get("api_key")
-    secret_key = secret_key or config.get("secret_key")
-    version = version or config.get("version")
-
-    url = "https://api.baichuan-ai.com/v1/stream/chat"
-    data = {
-        "model": version,
-        "messages": messages,
-        "parameters": {"temperature": temperature}
-    }
-
-    json_data = json.dumps(data)
-    time_stamp = int(time.time())
-    signature = calculate_md5(secret_key + json_data + str(time_stamp))
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + api_key,
-        "X-BC-Request-Id": "your requestId",
-        "X-BC-Timestamp": str(time_stamp),
-        "X-BC-Signature": signature,
-        "X-BC-Sign-Algo": "MD5",
-    }
-
-    with get_httpx_client() as client:
-        with client.stream("POST", url, headers=headers, json=data) as response:
-            for line in response.iter_lines():
-                if not line.strip():
-                    continue
-                resp = json.loads(line)
-                yield resp
-
-
 class BaiChuanWorker(ApiModelWorker):
-    BASE_URL = "https://api.baichuan-ai.com/v1/stream/chat"
-    SUPPORT_MODELS = ["Baichuan2-53B"]
-
     def __init__(
         self,
         *,
-        controller_addr: str,
-        worker_addr: str,
+        controller_addr: str = None,
+        worker_addr: str = None,
         model_names: List[str] = ["baichuan-api"],
         version: Literal["Baichuan2-53B"] = "Baichuan2-53B",
         **kwargs,
@@ -77,9 +31,57 @@ class BaiChuanWorker(ApiModelWorker):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 32768)
         super().__init__(**kwargs)
+        self.version = version
 
+    def do_chat(self, params: ApiChatParams) -> Dict:
+        params.load_config(self.model_names[0])
+
+        url = "https://api.baichuan-ai.com/v1/stream/chat"
+        data = {
+            "model": params.version,
+            "messages": params.messages,
+            "parameters": {"temperature": params.temperature}
+        }
+
+        json_data = json.dumps(data)
+        time_stamp = int(time.time())
+        signature = calculate_md5(params.secret_key + json_data + str(time_stamp))
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + params.api_key,
+            "X-BC-Request-Id": "your requestId",
+            "X-BC-Timestamp": str(time_stamp),
+            "X-BC-Signature": signature,
+            "X-BC-Sign-Algo": "MD5",
+        }
+
+        text = ""
+        with get_httpx_client() as client:
+            with client.stream("POST", url, headers=headers, json=data) as response:
+                for line in response.iter_lines():
+                    if not line.strip():
+                        continue
+                    resp = json.loads(line)
+                    if resp["code"] == 0:
+                        text += resp["data"]["messages"][-1]["content"]
+                        yield {
+                            "error_code": resp["code"],
+                            "text": text
+                            }
+                    else:
+                        yield {
+                            "error_code": resp["code"],
+                            "text": resp["msg"]
+                            }
+
+    def get_embeddings(self, params):
+        # TODO: 支持embeddings
+        print("embedding")
+        print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
         # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
+        return conv.Conversation(
             name=self.model_names[0],
             system_message="",
             messages=[],
@@ -88,44 +90,6 @@ class BaiChuanWorker(ApiModelWorker):
             stop_str="###",
         )
 
-        config = self.get_config()
-        self.version = config.get("version",version)
-        self.api_key = config.get("api_key")
-        self.secret_key = config.get("secret_key")
-
-    def generate_stream_gate(self, params):
-        super().generate_stream_gate(params)
-
-        messages = self.prompt_to_messages(params["prompt"])
-
-        text = ""
-        for resp in request_baichuan_api(messages=messages,
-                                          api_key=self.api_key,
-                                          secret_key=self.secret_key,
-                                          version=self.version,
-                                          temperature=params.get("temperature")):
-            if resp["code"] == 0:
-                text += resp["data"]["messages"][-1]["content"]
-                yield json.dumps(
-                    {
-                    "error_code": resp["code"],
-                    "text": text
-                    },
-                    ensure_ascii=False
-                ).encode() + b"\0"
-            else:
-                yield json.dumps(
-                    {
-                    "error_code": resp["code"],
-                    "text": resp["msg"]
-                    },
-                    ensure_ascii=False
-                ).encode() + b"\0"
-
-    def get_embeddings(self, params):
-        # TODO: 支持embeddings
-        print("embedding")
-        print(params)
 
 if __name__ == "__main__":
     import uvicorn
@@ -134,9 +98,9 @@ if __name__ == "__main__":
 
     worker = BaiChuanWorker(
         controller_addr="http://127.0.0.1:20001",
-        worker_addr="http://127.0.0.1:21001",
+        worker_addr="http://127.0.0.1:21007",
     )
     sys.modules["fastchat.serve.model_worker"].worker = worker
     MakeFastAPIOffline(app)
-    uvicorn.run(app, port=21001)
+    uvicorn.run(app, port=21007)
     # do_request()

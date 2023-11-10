@@ -1,7 +1,8 @@
 import sys
 sys.path.append(".")
-from server.knowledge_base.migrate import create_tables, reset_tables, folder2db, prune_db_docs, prune_folder_files
-from configs.model_config import NLTK_DATA_PATH
+from server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
+                                           folder2db, prune_db_docs, prune_folder_files)
+from configs.model_config import NLTK_DATA_PATH, EMBEDDING_MODEL
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from datetime import datetime
@@ -22,6 +23,20 @@ if __name__ == "__main__":
             use this option if you have copied document files to the content folder, but vector store has not been populated or DEFAUL_VS_TYPE/EMBEDDING_MODEL changed.
             '''
         )
+    )
+    parser.add_argument(
+        "--create-tables",
+        action="store_true",
+        help=("create empty tables if not existed")
+    )
+    parser.add_argument(
+        "--clear-tables",
+        action="store_true",
+        help=("create empty tables, or drop the database tables before recreate vector stores")
+    )
+    parser.add_argument(
+        "--import-db",
+        help="import tables from specified sqlite database"
     )
     parser.add_argument(
         "-u",
@@ -62,33 +77,45 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
+        "-n",
         "--kb-name",
         type=str,
         nargs="+",
         default=[],
         help=("specify knowledge base names to operate on. default is all folders exist in KB_ROOT_PATH.")
     )
+    parser.add_argument(
+        "-e",
+        "--embed-model",
+        type=str,
+        default=EMBEDDING_MODEL,
+        help=("specify embeddings model.")
+    )
 
-    if len(sys.argv) <= 1:
-        parser.print_help()
-    else:
-        args = parser.parse_args()
-        start_time = datetime.now()
+    args = parser.parse_args()
+    start_time = datetime.now()
 
+    if args.create_tables:
         create_tables() # confirm tables exist
-        if args.recreate_vs:
-            reset_tables()
-            print("database talbes reseted")
-            print("recreating all vector stores")
-            folder2db(kb_names=args.kb_name, mode="recreate_vs")
-        elif args.update_in_db:
-            folder2db(kb_names=args.kb_name, mode="update_in_db")
-        elif args.increament:
-            folder2db(kb_names=args.kb_name, mode="increament")
-        elif args.prune_db:
-            prune_db_docs(args.kb_name)
-        elif args.prune_folder:
-            prune_folder_files(args.kb_name)
 
-        end_time = datetime.now()
-        print(f"总计用时： {end_time-start_time}")
+    if args.clear_tables:
+        reset_tables()
+        print("database talbes reseted")
+
+    if args.recreate_vs:
+        create_tables()
+        print("recreating all vector stores")
+        folder2db(kb_names=args.kb_name, mode="recreate_vs", embed_model=args.embed_model)
+    elif args.import_db:
+        import_from_db(args.import_db)
+    elif args.update_in_db:
+        folder2db(kb_names=args.kb_name, mode="update_in_db", embed_model=args.embed_model)
+    elif args.increament:
+        folder2db(kb_names=args.kb_name, mode="increament", embed_model=args.embed_model)
+    elif args.prune_db:
+        prune_db_docs(args.kb_name)
+    elif args.prune_folder:
+        prune_folder_files(args.kb_name)
+
+    end_time = datetime.now()
+    print(f"总计用时： {end_time-start_time}")

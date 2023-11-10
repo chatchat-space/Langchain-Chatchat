@@ -1,90 +1,92 @@
-from server.model_workers.base import ApiModelWorker
+from fastchat.conversation import Conversation
+from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
 import json
 from server.model_workers import SparkApi
 import websockets
 from server.utils import iter_over_async, asyncio
-from typing import List
+from typing import List, Dict
 
 
-async def request(appid, api_key, api_secret, Spark_url,domain, question, temperature):
-    # print("星火:")
+async def request(appid, api_key, api_secret, Spark_url, domain, question, temperature, max_token):
     wsParam = SparkApi.Ws_Param(appid, api_key, api_secret, Spark_url)
     wsUrl = wsParam.create_url()
-    data = SparkApi.gen_params(appid, domain, question, temperature)
+    data = SparkApi.gen_params(appid, domain, question, temperature, max_token)
+    print(data)
     async with websockets.connect(wsUrl) as ws:
         await ws.send(json.dumps(data, ensure_ascii=False))
         finish = False
         while not finish:
-             chunk = await ws.recv()
-             response = json.loads(chunk)
-             if response.get("header", {}).get("status") == 2:
-                 finish = True
-             if text := response.get("payload", {}).get("choices", {}).get("text"):
+            chunk = await ws.recv()
+            response = json.loads(chunk)
+            if response.get("header", {}).get("status") == 2:
+                finish = True
+            if text := response.get("payload", {}).get("choices", {}).get("text"):
                 yield text[0]["content"]
 
 
 class XingHuoWorker(ApiModelWorker):
     def __init__(
-        self,
-        *,
-        model_names: List[str] = ["xinghuo-api"],
-        controller_addr: str,
-        worker_addr: str,
-        **kwargs,
+            self,
+            *,
+            model_names: List[str] = ["xinghuo-api"],
+            controller_addr: str = None,
+            worker_addr: str = None,
+            version: str = None,
+            **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 8192)
+        kwargs.setdefault("context_len", 8000) # TODO: V1模型的最大长度为4000，需要自行修改
         super().__init__(**kwargs)
+        self.version = version
 
+    def do_chat(self, params: ApiChatParams) -> Dict:
+        # TODO: 当前每次对话都要重新连接websocket，确认是否可以保持连接
+        params.load_config(self.model_names[0])
+
+        version_mapping = {
+            "v1.5": {"domain": "general", "url": "ws://spark-api.xf-yun.com/v1.1/chat","max_tokens": 4000},
+            "v2.0": {"domain": "generalv2", "url": "ws://spark-api.xf-yun.com/v2.1/chat","max_tokens": 8000},
+            "v3.0": {"domain": "generalv3", "url": "ws://spark-api.xf-yun.com/v3.1/chat","max_tokens": 8000},
+        }
+
+        def get_version_details(version_key):
+            return version_mapping.get(version_key, {"domain": None, "url": None})
+
+        details = get_version_details(params.version)
+        domain = details["domain"]
+        Spark_url = details["url"]
+        text = ""
+        try:
+            loop = asyncio.get_event_loop()
+        except:
+            loop = asyncio.new_event_loop()
+        params.max_tokens = min(details["max_tokens"], params.max_tokens)
+        for chunk in iter_over_async(
+                request(params.APPID, params.api_key, params.APISecret, Spark_url, domain, params.messages,
+                        params.temperature, params.max_tokens),
+                loop=loop,
+        ):
+            if chunk:
+                text += chunk
+                yield {"error_code": 0, "text": text}
+
+    def get_embeddings(self, params):
+        # TODO: 支持embeddings
+        print("embedding")
+        print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
         # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
+        return conv.Conversation(
             name=self.model_names[0],
-            system_message="",
+            system_message="你是一个聪明的助手，请根据用户的提示来完成任务",
             messages=[],
             roles=["user", "assistant"],
             sep="\n### ",
             stop_str="###",
         )
-
-    def generate_stream_gate(self, params):
-        # TODO: 当前每次对话都要重新连接websocket，确认是否可以保持连接
-
-        super().generate_stream_gate(params)
-        config = self.get_config()
-        appid = config.get("APPID")
-        api_secret = config.get("APISecret")
-        api_key = config.get("api_key")
-
-        if config.get("is_v2"):
-            domain = "generalv2"    # v2.0版本
-            Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"  # v2.0环境的地址
-        else:
-            domain = "general"   # v1.5版本
-            Spark_url = "ws://spark-api.xf-yun.com/v1.1/chat"  # v1.5环境的地址
-
-        question = self.prompt_to_messages(params["prompt"])
-        text = ""
-
-        try:
-            loop = asyncio.get_event_loop()
-        except:
-            loop = asyncio.new_event_loop()
-
-        for chunk in iter_over_async(
-             request(appid, api_key, api_secret, Spark_url, domain, question, params.get("temperature")),
-             loop=loop,
-        ):
-            if chunk:
-                print(chunk)
-                text += chunk
-                yield json.dumps({"error_code": 0, "text": text}, ensure_ascii=False).encode() + b"\0"
-    
-    def get_embeddings(self, params):
-        # TODO: 支持embeddings
-        print("embedding")
-        print(params)
 
 
 if __name__ == "__main__":

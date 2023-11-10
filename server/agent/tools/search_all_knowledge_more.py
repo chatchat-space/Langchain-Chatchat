@@ -1,9 +1,4 @@
-## 单独运行的时候需要添加
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
+from __future__ import annotations
 import json
 import re
 import warnings
@@ -16,10 +11,10 @@ from langchain.schema.language_model import BaseLanguageModel
 from typing import List, Any, Optional
 from langchain.prompts import PromptTemplate
 from server.chat.knowledge_base_chat import knowledge_base_chat
-from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD
+from configs import VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, MAX_TOKENS
 import asyncio
 from server.agent import model_container
-
+from pydantic import BaseModel, Field
 
 async def search_knowledge_base_iter(database: str, query: str) -> str:
     response = await knowledge_base_chat(query=query,
@@ -28,7 +23,7 @@ async def search_knowledge_base_iter(database: str, query: str) -> str:
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
-                                         max_tokens=None,
+                                         max_tokens=MAX_TOKENS,
                                          prompt_name="default",
                                          score_threshold=SCORE_THRESHOLD,
                                          stream=False)
@@ -76,31 +71,19 @@ bigdata,大数据的就业情况如何
 
 这些数据库是你能访问的，冒号之前是他们的名字，冒号之后是他们的功能，你应该参考他们的功能来帮助你思考
 
+
 {database_names}
 
 你的回答格式应该按照下面的内容，请注意```text 等标记都必须输出，这是我用来提取答案的标记。
-
+不要输出中文的逗号，不要输出引号。
 
 Question: ${{用户的问题}}
 
 ```text
-${{知识库名称,查询问题,不要带有任何除了,之外的符号}}
+${{知识库名称,查询问题,不要带有任何除了,之外的符号,比如不要输出中文的逗号，不要输出引号}}
 
 ```output
 数据库查询的结果
-
-
-
-这是一个完整的问题拆分和提问的例子： 
-
-
-问题: 分别对比机器人和大数据专业的就业情况并告诉我哪儿专业的就业情况更好？
-
-```text
-robotic,机器人专业的就业情况
-bigdata,大数据专业的就业情况
-
-
 
 现在，我们开始作答
 问题: {question}
@@ -183,7 +166,11 @@ class LLMKnowledgeChain(LLMChain):
             lines = cleaned_input_str.split("\n")
             # 使用逗号分割每一行，然后形成一个（数据库，查询）元组的列表
 
-            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            try:
+                queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            except:
+                queries = [(line.split("，")[0].strip(), line.split("，")[1].strip()) for line in lines]
+            print(queries)
             run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue", verbose=self.verbose)
             output = self._evaluate_expression(queries)
             run_manager.on_text("\nAnswer: ", verbose=self.verbose)
@@ -211,7 +198,10 @@ class LLMKnowledgeChain(LLMChain):
             cleaned_input_str = (
                 expression.replace("\"", "").replace("“", "").replace("”", "").replace("```", "").strip())
             lines = cleaned_input_str.split("\n")
-            queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            try:
+                queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
+            except:
+                queries = [(line.split("，")[0].strip(), line.split("，")[1].strip()) for line in lines]
             await run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue",
                                       verbose=self.verbose)
 
@@ -271,7 +261,7 @@ class LLMKnowledgeChain(LLMChain):
             llm: BaseLanguageModel,
             prompt: BasePromptTemplate = PROMPT,
             **kwargs: Any,
-    ):
+    ) -> LLMKnowledgeChain:
         llm_chain = LLMChain(llm=llm, prompt=prompt)
         return cls(llm_chain=llm_chain, **kwargs)
 
@@ -282,6 +272,8 @@ def knowledge_search_more(query: str):
     ans = llm_knowledge.run(query)
     return ans
 
+class KnowledgeSearchInput(BaseModel):
+    location: str = Field(description="知识库查询的内容")
 
 if __name__ == "__main__":
     result = knowledge_search_more("机器人和大数据在代码教学上有什么区别")

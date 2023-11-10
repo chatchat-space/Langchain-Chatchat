@@ -1,6 +1,8 @@
-langchain>=0.0.319
+# API requirements
+
+langchain>=0.0.329 # 推荐使用最新的Langchain
 langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.31
+fschat[model_worker]==0.2.32
 xformers>=0.0.22.post4
 openai>=0.28.1
 sentence_transformers
@@ -25,9 +27,19 @@ rapidocr_onnxruntime
 requests
 pathlib
 pytest
-scikit-learn
 numexpr
+strsimpy
+markdownify
+tiktoken
+tqdm
+websockets
+numpy~=1.24.4
+pandas~=2.0.3
+einops
+transformers_stream_generator==0.0.4
+
 vllm>=0.2.0; sys_platform == "linux"
+
 # online api libs
 # zhipuai
 # dashscope>=1.10.0 # qwen
@@ -39,18 +51,12 @@ vllm>=0.2.0; sys_platform == "linux"
 # psycopg2
 # pgvector
 
-numpy~=1.24.4
-pandas~=2.0.3
-streamlit>=1.26.0
+# WebUI requirements
+
+streamlit~=1.27.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
-streamlit-chatbox==1.1.10
+streamlit-chatbox>=1.1.11
 streamlit-aggrid>=0.3.4.post3
-httpx~=0.24.1
+httpx[brotli,http2,socks]>=0.25.0
 watchdog
-tqdm
-websockets
-tiktoken
-einops
-scipy
-transformers_stream_generator==0.0.4
