@@ -74,10 +74,11 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "CSVLoader": [".csv"],
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
+               "RapidOCRDocLoader": ['.docx', '.doc'],
+               "RapidOCRPPTLoader": ['.ppt', '.pptx', ],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
-                                          '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],
+                                          '.epub', '.odt', '.tsv'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
@@ -145,15 +146,18 @@ def get_LoaderClass(file_extension):
 
 
 # 把一些向量化共用逻辑从KnowledgeFile抽取出来，等langchain支持内存文件的时候，可以将非磁盘文件向量化
-def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.StringIO, io.BytesIO]):
+def get_loader(loader_name: str,
+               file_path_or_content: Union[str, bytes, io.StringIO, io.BytesIO]):
     '''
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "RapidOCRDocLoader",
+                           "RapidOCRPPTLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
-            document_loaders_module = importlib.import_module('langchain.document_loaders')
+            document_loaders_module = importlib.import_module(
+                'langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
         msg = f"为文件{file_path_or_content}查找加载器{loader_name}时出错：{e}"
@@ -169,7 +173,8 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
         with open(file_path_or_content, 'rb') as struct_file:
             encode_detect = chardet.detect(struct_file.read())
         if encode_detect:
-            loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+            loader = DocumentLoader(file_path_or_content,
+                                    encoding=encode_detect["encoding"])
         else:
             loader = DocumentLoader(file_path_or_content, encoding="utf-8")
 
@@ -198,7 +203,8 @@ def make_text_splitter(
     splitter_name = splitter_name or "SpacyTextSplitter"
     try:
         if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
-            headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
+            headers_to_split_on = text_splitter_dict[splitter_name][
+                'headers_to_split_on']
             text_splitter = langchain.text_splitter.MarkdownHeaderTextSplitter(
                 headers_to_split_on=headers_to_split_on)
         else:
@@ -207,30 +213,36 @@ def make_text_splitter(
                 text_splitter_module = importlib.import_module('text_splitter')
                 TextSplitter = getattr(text_splitter_module, splitter_name)
             except:  ## 否则使用langchain的text_splitter
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
+                text_splitter_module = importlib.import_module(
+                    'langchain.text_splitter')
                 TextSplitter = getattr(text_splitter_module, splitter_name)
 
-            if text_splitter_dict[splitter_name]["source"] == "tiktoken":  ## 从tiktoken加载
+            if text_splitter_dict[splitter_name][
+                "source"] == "tiktoken":  ## 从tiktoken加载
                 try:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
-                        encoding_name=text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        encoding_name=text_splitter_dict[splitter_name][
+                            "tokenizer_name_or_path"],
                         pipeline="zh_core_web_sm",
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap
                     )
                 except:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
-                        encoding_name=text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        encoding_name=text_splitter_dict[splitter_name][
+                            "tokenizer_name_or_path"],
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap
                     )
-            elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
+            elif text_splitter_dict[splitter_name][
+                "source"] == "huggingface":  ## 从huggingface加载
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
                     config = get_model_worker_config(llm_model)
                     text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
                         config.get("model_path")
 
-                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
+                if text_splitter_dict[splitter_name][
+                    "tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast
                     from langchain.text_splitter import CharacterTextSplitter
                     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
@@ -262,11 +274,12 @@ def make_text_splitter(
         text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
     return text_splitter
 
+
 class KnowledgeFile:
     def __init__(
-            self,
-            filename: str,
-            knowledge_base_name: str
+        self,
+        filename: str,
+        knowledge_base_name: str
     ):
         '''
         对应知识库目录中的文件，必须是磁盘上存在的才能进行向量化等操作。
@@ -282,7 +295,7 @@ class KnowledgeFile:
         self.document_loader_name = get_LoaderClass(self.ext)
         self.text_splitter_name = TEXT_SPLITTER_NAME
 
-    def file2docs(self, refresh: bool=False):
+    def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
             logger.info(f"{self.document_loader_name} used for {self.filepath}")
             loader = get_loader(self.document_loader_name, self.filepath)
@@ -303,7 +316,9 @@ class KnowledgeFile:
             return []
         if self.ext not in [".csv"]:
             if text_splitter is None:
-                text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+                text_splitter = make_text_splitter(
+                    splitter_name=self.text_splitter_name, chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap)
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
                 for doc in docs:
@@ -348,18 +363,20 @@ class KnowledgeFile:
 
 
 def files2docs_in_thread(
-        files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        pool: ThreadPoolExecutor = None,
+    files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = OVERLAP_SIZE,
+    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+    pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     利用多线程批量将磁盘文件转化成langchain Document.
     如果传入参数是Tuple，形式为(filename, kb_name)
     生成器返回值为 status, (kb_name, file_name, docs | error)
     '''
-    def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
+
+    def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[
+        bool, Tuple[str, str, List[Document]]]:
         try:
             return True, (file.kb_name, file.filename, file.file2text(**kwargs))
         except Exception as e:
@@ -373,8 +390,8 @@ def files2docs_in_thread(
         kwargs = {}
         try:
             if isinstance(file, tuple) and len(file) >= 2:
-                filename=file[0]
-                kb_name=file[1]
+                filename = file[0]
+                kb_name = file[1]
                 file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
             elif isinstance(file, dict):
                 filename = file.pop("filename")
