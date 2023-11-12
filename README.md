@@ -67,7 +67,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ### 1. 环境配置
 
-+ 首先，确保你的机器安装了 Python 3.10
++ 首先，确保你的机器安装了 Python 3.8 - 3.10
 ```
 $ python --version
 Python 3.10.12
