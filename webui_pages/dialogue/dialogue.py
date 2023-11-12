@@ -54,21 +54,21 @@ def get_default_llm_model(api: ApiRequest) -> (str, bool):
 def dialogue_page(api: ApiRequest):
     if not chat_box.chat_inited:
         default_model = get_default_llm_model(api)[0]
-        st.toast(
-            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
-            f"当前运行的模型`{default_model}`, 您可以开始提问了."
-        )
+        # st.toast(
+        #     f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
+        #     f"当前运行的模型`{default_model}`, 您可以开始提问了."
+        # )
         chat_box.init_session()
     with st.sidebar:
         # TODO: 对话模型与会话绑定
         def on_mode_change():
             mode = st.session_state.dialogue_mode
-            text = f"已切换到 {mode} 模式。"
-            if mode == "知识库问答":
-                cur_kb = st.session_state.get("selected_kb")
-                if cur_kb:
-                    text = f"{text} 当前知识库： `{cur_kb}`。"
-            st.toast(text)
+            # text = f"已切换到 {mode} 模式。"
+            # if mode == "知识库问答":
+            #     cur_kb = st.session_state.get("selected_kb")
+            #     if cur_kb:
+            #         text = f"{text} 当前知识库： `{cur_kb}`。"
+            # st.toast(text)
 
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      ["LLM 对话",
@@ -80,6 +80,7 @@ def dialogue_page(api: ApiRequest):
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
+        # dialogue_mode = "知识库问答"
 
         def on_llm_change():
             if llm_model:
@@ -115,6 +116,7 @@ def dialogue_page(api: ApiRequest):
                                  on_change=on_llm_change,
                                  key="llm_model",
                                  )
+        # llm_model = "OpenAI"
         if (st.session_state.get("prev_llm_model") != llm_model
                 and not llm_model in config_models.get("online", {})
                 and not llm_model in config_models.get("langchain", {})
@@ -151,8 +153,11 @@ def dialogue_page(api: ApiRequest):
             key="prompt_template_select",
         )
         prompt_template_name = st.session_state.prompt_template_select
+        # prompt_template_name = "default"
         temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
+        # temperature = TEMPERATURE
         history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
+        # history_len = HISTORY_LEN
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -163,17 +168,27 @@ def dialogue_page(api: ApiRequest):
                 index = 0
                 if DEFAULT_KNOWLEDGE_BASE in kb_list:
                     index = kb_list.index(DEFAULT_KNOWLEDGE_BASE)
-                selected_kb = st.selectbox(
+                # selected_kb = st.selectbox(
+                #     "请选择知识库：",
+                #     kb_list,
+                #     index=index,
+                #     on_change=on_kb_change,
+                #     key="selected_kb",
+                # )
+                selected_kb = st.multiselect(
                     "请选择知识库：",
                     kb_list,
-                    index=index,
                     on_change=on_kb_change,
+                    placeholder='请选择',
                     key="selected_kb",
                 )
+                print(f"""选择知识库:{selected_kb}""")
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
+                # kb_top_k = VECTOR_SEARCH_TOP_K
 
                 ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                # score_threshold = st.slider("知识匹配分数阈值：", 0.0, 1.0, float(SCORE_THRESHOLD), 0.01)
+                score_threshold = float(SCORE_THRESHOLD)
 
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
@@ -252,13 +267,14 @@ def dialogue_page(api: ApiRequest):
             chat_box.update_msg(ans, element_index=0, streaming=False)
             chat_box.update_msg(text, element_index=1, streaming=False)
         elif dialogue_mode == "知识库问答":
+            multi_selected_kb = ','.join(selected_kb)
             chat_box.ai_say([
                 f"正在查询知识库 `{selected_kb}` ...",
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
             ])
             text = ""
             for d in api.knowledge_base_chat(prompt,
-                                             knowledge_base_name=selected_kb,
+                                             knowledge_base_name=multi_selected_kb,
                                              top_k=kb_top_k,
                                              score_threshold=score_threshold,
                                              history=history,

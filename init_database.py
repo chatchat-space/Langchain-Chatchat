@@ -7,6 +7,7 @@ nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from datetime import datetime
 import sys
 
+from configs.basic_config import logger
 
 if __name__ == "__main__":
     import argparse
@@ -91,4 +92,4 @@ if __name__ == "__main__":
             prune_folder_files(args.kb_name)
 
         end_time = datetime.now()
-        print(f"总计用时： {end_time-start_time}")
+        logger.info(f"总计用时： {end_time-start_time}")

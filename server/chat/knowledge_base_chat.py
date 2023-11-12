@@ -34,9 +34,15 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                             max_tokens: int = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                             prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                         ):
-    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
-    if kb is None:
-        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    if knowledge_base_name.find(',') != -1:
+        for item_knowledge_base_name in knowledge_base_name.split(','):
+            kb = KBServiceFactory.get_service_by_name(item_knowledge_base_name)
+            if kb is None:
+                return BaseResponse(code=404, msg=f"未找到知识库 {item_knowledge_base_name}")
+    else:
+        kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+        if kb is None:
+            return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
     history = [History.from_data(h) for h in history]
 
@@ -53,8 +59,15 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             max_tokens=max_tokens,
             callbacks=[callback],
         )
-        docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
-        context = "\n".join([doc.page_content for doc in docs])
+        if knowledge_base_name.find(',') != -1:
+            docs = []
+            for item_knowledge_base_name in knowledge_base_name.split(','):
+                docs += search_docs(query, item_knowledge_base_name, top_k, score_threshold)
+            context = "\n".join([doc.page_content for doc in docs])
+        else:
+            docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
+            context = "\n".join([doc.page_content for doc in docs])
+        print(f"""[{context}]\n\n""")
 
         prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
@@ -71,10 +84,12 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
 
         source_documents = []
         for inum, doc in enumerate(docs):
-            filename = os.path.split(doc.metadata["source"])[-1]
-            parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
-            url = f"/knowledge_base/download_doc?" + parameters
-            text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+            filename = doc.metadata["source"]
+            # parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
+            # url = f"/knowledge_base/download_doc?" + parameters
+            print(f"""[{filename}]\n\n""")
+            # text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+            text = f"""出处 [{inum + 1}] \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
         if stream:
             async for token in callback.aiter():

@@ -1,1 +1,1 @@
-from .knowledge_base import knowledge_base_page
+from .knowledge_base import knowledge_base_page, paragraph_page
