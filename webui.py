@@ -10,16 +10,16 @@ from server.utils import api_address
 api = ApiRequest(base_url=api_address())
 
 if __name__ == "__main__":
-    st.set_page_config(
-        "Langchain-Chatchat WebUI",
-        os.path.join("img", "chatchat_icon_blue_square_v2.png"),
-        initial_sidebar_state="expanded",
-        menu_items={
-            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
-            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
-        }
-    )
+    # st.set_page_config(
+    #     "Langchain-Chatchat WebUI",
+    #     os.path.join("img", "chatchat_icon_blue_square_v2.png"),
+    #     initial_sidebar_state="expanded",
+    #     menu_items={
+    #         'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
+    #         'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
+    #         'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
+    #     }
+    # )
 
     pages = {
         "对话": {
@@ -30,20 +30,24 @@ if __name__ == "__main__":
             "icon": "hdd-stack",
             "func": knowledge_base_page,
         },
+        "段落结构": {
+            "icon": "paragraph",
+            "func": paragraph_page,
+        },
     }
 
     with st.sidebar:
-        st.image(
-            os.path.join(
-                "img",
-                "logo-long-chatchat-trans-v2.png"
-            ),
-            use_column_width=True
-        )
-        st.caption(
-            f"""<p align="right">当前版本：{VERSION}</p>""",
-            unsafe_allow_html=True,
-        )
+        # st.image(
+        #     os.path.join(
+        #         "img",
+        #         "logo-long-chatchat-trans-v2.png"
+        #     ),
+        #     use_column_width=True
+        # )
+        # st.caption(
+        #     f"""<p align="right">当前版本：{VERSION}</p>""",
+        #     unsafe_allow_html=True,
+        # )
         options = list(pages)
         icons = [x["icon"] for x in pages.values()]
 
