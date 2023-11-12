@@ -1,6 +1,6 @@
 # API requirements
 
-langchain>=0.0.329 # 推荐使用最新的Langchain
+langchain>=0.0.334 # 推荐使用最新的Langchain
 langchain-experimental>=0.0.30
 fschat[model_worker]==0.2.32
 xformers>=0.0.22.post4
@@ -53,7 +53,7 @@ vllm>=0.2.0; sys_platform == "linux"
 
 # WebUI requirements
 
-streamlit~=1.27.0
+streamlit~=1.28.1
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.11

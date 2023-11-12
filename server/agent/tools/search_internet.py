@@ -29,7 +29,7 @@ def search_internet(query: str):
     return asyncio.run(search_engine_iter(query))
 
 class SearchInternetInput(BaseModel):
-    location: str = Field(description="需要查询的内容")
+    location: str = Field(description="Query for Internet search")
 
 
 if __name__ == "__main__":

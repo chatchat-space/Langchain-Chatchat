@@ -266,17 +266,17 @@ class LLMKnowledgeChain(LLMChain):
         return cls(llm_chain=llm_chain, **kwargs)
 
 
-def knowledge_search_more(query: str):
+def search_knowledgebase_complex(query: str):
     model = model_container.MODEL
     llm_knowledge = LLMKnowledgeChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_knowledge.run(query)
     return ans
 
 class KnowledgeSearchInput(BaseModel):
-    location: str = Field(description="知识库查询的内容")
+    location: str = Field(description="The query to be searched")
 
 if __name__ == "__main__":
-    result = knowledge_search_more("机器人和大数据在代码教学上有什么区别")
+    result = search_knowledgebase_complex("机器人和大数据在代码教学上有什么区别")
     print(result)
 
 # 这是一个正常的切割

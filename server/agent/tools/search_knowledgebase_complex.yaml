@@ -1,0 +1,10 @@
+name: search_knowledgebase_complex
+description: Use this tool to search local knowledgebase and get information
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: The query to be searched
+required:
+  - query

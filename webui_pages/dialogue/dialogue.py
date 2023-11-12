@@ -63,7 +63,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                             ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
-                                     index=0,
+                                     index=3,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )

@@ -100,57 +100,11 @@ PROMPT_TEMPLATES = {
         Question: {input}
         Thought: {agent_scratchpad}
         """,
-
-        "AgentLM":
-            """
-        <SYS>>\n
-        You are a helpful, respectful and honest assistant.
-        </SYS>>\n
-        Answer the following questions as best you can. If it is in order, you can use some tools appropriately.You have access to the following tools:
-
-        {tools}.
-
-        Use the following steps and think step by step!:
-        Question: the input question you must answer1
-        Thought: you should always think about what to do and what tools to use.
-        Action: the action to take, should be one of [{tool_names}]
-        Action Input: the input to the action
-        Observation: the result of the action
-        ... (this Thought/Action/Action Input/Observation can be repeated zero or more times)
-        Thought: I now know the final answer
-        Final Answer: the final answer to the original input question
-
-        Begin! let's think step by step!
+    # ChatGLM3必须用官方的提示词，没有修改空间，参数都不会传入进去
+        "ChatGLM3":
+        """
         history:
         {history}
-        Question: {input}
-        Thought: {agent_scratchpad}
-
-        """,
-
-        "中文版本":
-            """
-        你的知识不一定正确，所以你一定要用提供的工具来思考，并给出用户答案。
-        你有以下工具可以使用:
-        {tools}
-
-        请请严格按照提供的思维方式来思考，所有的关键词都要输出，例如Action，Action Input，Observation等
-        ```
-        Question: 用户的提问或者观察到的信息，
-        Thought: 你应该思考该做什么，是根据工具的结果来回答问题，还是决定使用什么工具。
-        Action: 需要使用的工具，应该是在[{tool_names}]中的一个。
-        Action Input: 传入工具的内容
-        Observation: 工具给出的答案（不是你生成的）
-        ... (this Thought/Action/Action Input/Observation can be repeated zero or more times)
-        Thought: 通过工具给出的答案，你是否能回答Question。
-        Final Answer是你的答案
-
-        现在，我们开始！
-        你和用户的历史记录:
-        History:
-        {history}
-
-        用户开始以提问：
         Question: {input}
         Thought: {agent_scratchpad}
         """,
