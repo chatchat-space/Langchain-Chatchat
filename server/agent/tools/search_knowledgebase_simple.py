@@ -23,10 +23,10 @@ async def search_knowledge_base_iter(database: str, query: str) -> str:
         docs = data["docs"]
     return contents
 
-def knowledge_search_simple(query: str):
+def search_knowledgebase_simple(query: str):
     return asyncio.run(search_knowledge_base_iter(query))
 
 
 if __name__ == "__main__":
-    result = knowledge_search_simple("大数据男女比例")
+    result = search_knowledgebase_simple("大数据男女比例")
     print("答案:",result)

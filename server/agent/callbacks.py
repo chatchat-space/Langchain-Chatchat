@@ -73,21 +73,40 @@ class CustomAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         )
         self.queue.put_nowait(dumps(self.cur_tool))
 
+    # async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+    #     if "Action" in token: ## 减少重复输出
+    #         before_action = token.split("Action")[0]
+    #         self.cur_tool.update(
+    #             status=Status.running,
+    #             llm_token=before_action + "\n",
+    #         )
+    #         self.queue.put_nowait(dumps(self.cur_tool))
+    #
+    #         self.out = False
+    #
+    #     if token and self.out:
+    #         self.cur_tool.update(
+    #                 status=Status.running,
+    #                 llm_token=token,
+    #         )
+    #         self.queue.put_nowait(dumps(self.cur_tool))
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        if "Action" in token: ## 减少重复输出
-            before_action = token.split("Action")[0]
-            self.cur_tool.update(
-                status=Status.running,
-                llm_token=before_action + "\n",
-            )
-            self.queue.put_nowait(dumps(self.cur_tool))
-
-            self.out = False
+        special_tokens = ["Action", "<|observation|>"]
+        for stoken in special_tokens:
+            if stoken in token:
+                before_action = token.split(stoken)[0]
+                self.cur_tool.update(
+                    status=Status.running,
+                    llm_token=before_action + "\n",
+                )
+                self.queue.put_nowait(dumps(self.cur_tool))
+                self.out = False
+                break
 
         if token and self.out:
             self.cur_tool.update(
-                    status=Status.running,
-                    llm_token=token,
+                status=Status.running,
+                llm_token=token,
             )
             self.queue.put_nowait(dumps(self.cur_tool))
 
