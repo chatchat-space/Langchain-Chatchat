@@ -244,7 +244,6 @@ if __name__ == "__main__":
     args_dict = vars(args)
 
     app = create_app()
-    mount_knowledge_routes(app)
 
     run_api(host=args.host,
             port=args.port,
