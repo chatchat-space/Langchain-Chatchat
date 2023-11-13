@@ -10,6 +10,7 @@ from configs import kbs_config
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
+import shutil
 
 
 class PGKBService(KBService):
@@ -50,6 +51,7 @@ class PGKBService(KBService):
                     DELETE FROM langchain_pg_collection WHERE name = '{self.kb_name}';
             '''))
             connect.commit()
+            shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         self._load_pg_vector()

@@ -100,8 +100,8 @@ PROMPT_TEMPLATES = {
         Question: {input}
         Thought: {agent_scratchpad}
         """,
-    # ChatGLM3必须用官方的提示词，没有修改空间，参数都不会传入进去
-        "ChatGLM3":
+
+        "ChatGLM3":   # ChatGLM3必须用官方的提示词，没有修改空间，目前参数都不会传入进去
         """
         history:
         {history}
