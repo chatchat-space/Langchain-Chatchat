@@ -9,7 +9,8 @@ from server.knowledge_base.utils import (
     KnowledgeFile
 )
 from server.knowledge_base.kb_service.base import KBServiceFactory
-from server.db.models.chat_history_model import ChatHistoryModel
+from server.db.models.conversation_model import ConversationModel
+from server.db.models.message_model import MessageModel
 from server.db.repository.knowledge_file_repository import add_file_to_db # ensure Models are imported
 from server.db.base import Base, engine
 from server.db.session import session_scope

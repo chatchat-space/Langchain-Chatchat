@@ -13,6 +13,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI, AzureOpenAI, Anthropic
 import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
+import logging
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -20,6 +21,7 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     try:
         await fn
     except Exception as e:
+        logging.exception(e)
         # TODO: handle exception
         msg = f"Caught exception: {e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
