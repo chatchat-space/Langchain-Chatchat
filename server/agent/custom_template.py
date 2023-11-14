@@ -21,7 +21,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
 
-
 class CustomOutputParser(AgentOutputParser):
     begin: bool = False
     def __init__(self):
