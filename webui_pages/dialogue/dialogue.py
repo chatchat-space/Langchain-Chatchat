@@ -37,8 +37,8 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
 
 
 def dialogue_page(api: ApiRequest, is_lite: bool = False):
+    default_model = api.get_default_llm_model()[0]
     if not chat_box.chat_inited:
-        default_model = api.get_default_llm_model()[0]
         st.toast(
             f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
@@ -83,15 +83,19 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         running_models = list(api.list_running_models())
         available_models = []
         config_models = api.list_config_models()
-        worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
-        for m in worker_models:
-            if m not in running_models and m != "default":
-                available_models.append(m)
+        for k, v in config_models.get("local", {}).items(): # 列出配置了有效本地路径的模型
+            if (v.get("model_path_exists")
+                and k not in running_models):
+                available_models.append(k)
         for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
                 available_models.append(k)
         llm_models = running_models + available_models
-        index = llm_models.index(st.session_state.get("cur_llm_model", api.get_default_llm_model()[0]))
+        cur_llm_model = st.session_state.get("cur_llm_model", default_model)
+        if cur_llm_model in llm_models:
+            index = llm_models.index(cur_llm_model)
+        else:
+            index = 0
         llm_model = st.selectbox("选择LLM模型：",
                                  llm_models,
                                  index,

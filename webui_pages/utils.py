@@ -730,12 +730,19 @@ class ApiRequest:
         else:
             return ret_sync()
 
-    def list_config_models(self) -> Dict[str, List[str]]:
+    def list_config_models(
+        self,
+        types: List[str] = ["local", "online"],
+    ) -> Dict[str, Dict]:
         '''
-        获取服务器configs中配置的模型列表，返回形式为{"type": [model_name1, model_name2, ...], ...}。
+        获取服务器configs中配置的模型列表，返回形式为{"type": {model_name: config}, ...}。
         '''
+        data = {
+            "types": types,
+        }
         response = self.post(
             "/llm_model/list_config_models",
+            json=data,
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
 
