@@ -91,8 +91,11 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                 llm=model,
                 tools=tools,
                 callback_manager=None,
-                verbose=True,
+                # Langchain Prompt is not constructed directly here, it is constructed inside the GLM3 agent.
+                prompt=prompt_template,
+                input_variables=["input", "intermediate_steps", "history"],
                 memory=memory,
+                verbose=True,
             )
         else:
             agent = LLMSingleActionAgent(
