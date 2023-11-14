@@ -342,13 +342,14 @@ def list_embed_models() -> List[str]:
 def list_config_llm_models() -> Dict[str, Dict]:
     '''
     get configured llm models with different types.
-    return [(model_name, config_type), ...]
+    return {config_type: {model_name: config}, ...}
     '''
-    workers = list(FSCHAT_MODEL_WORKERS)
+    workers = FSCHAT_MODEL_WORKERS.copy()
+    workers.pop("default", None)
 
     return {
-        "local": MODEL_PATH["llm_model"],
-        "online": ONLINE_LLM_MODEL,
+        "local": MODEL_PATH["llm_model"].copy(),
+        "online": ONLINE_LLM_MODEL.copy(),
         "worker": workers,
     }
 
@@ -406,7 +407,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
                              exc_info=e if log_verbose else None)
     # 本地模型
     if model_name in MODEL_PATH["llm_model"]:
-        config["model_path"] = get_model_path(model_name)
+        path = get_model_path(model_name)
+        config["model_path"] = path
+        if path and os.path.isdir(path):
+            config["model_path_exists"] = True
         config["device"] = llm_device(config.get("device"))
     return config
 
