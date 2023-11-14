@@ -1,90 +1,123 @@
-from server.model_workers.base import ApiModelWorker
+from fastchat.conversation import Conversation
+from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
 import json
+from server.model_workers.base import ApiEmbeddingsParams
 from server.utils import get_httpx_client
-from pprint import pprint
 from typing import List, Dict
 
 
 class MiniMaxWorker(ApiModelWorker):
-    BASE_URL = 'https://api.minimax.chat/v1/text/chatcompletion{pro}?GroupId={group_id}'
+    DEFAULT_EMBED_MODEL = "embo-01"
 
     def __init__(
         self,
         *,
         model_names: List[str] = ["minimax-api"],
-        controller_addr: str,
-        worker_addr: str,
+        controller_addr: str = None,
+        worker_addr: str = None,
+        version: str = "abab5.5-chat",
         **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
+        self.version = version
 
-        # TODO: 确认模板是否需要修改
-        self.conv = conv.Conversation(
-            name=self.model_names[0],
-            system_message="",
-            messages=[],
-            roles=["USER", "BOT"],
-            sep="\n### ",
-            stop_str="###",
-        )
-
-    def prompt_to_messages(self, prompt: str) -> List[Dict]:
-        result = super().prompt_to_messages(prompt)
-        messages = [{"sender_type": x["role"], "text": x["content"]} for x in result]
+    def validate_messages(self, messages: List[Dict]) -> List[Dict]:
+        role_maps = {
+            "user": self.user_role,
+            "assistant": self.ai_role,
+            "system": "system",
+        }
+        messages = [{"sender_type": role_maps[x["role"]], "text": x["content"]} for x in messages]
         return messages
 
-    def generate_stream_gate(self, params):
+    def do_chat(self, params: ApiChatParams) -> Dict:
         # 按照官网推荐，直接调用abab 5.5模型
         # TODO: 支持指定回复要求，支持指定用户名称、AI名称
+        params.load_config(self.model_names[0])
 
-        super().generate_stream_gate(params)
-        config = self.get_config()
-        group_id = config.get("group_id")
-        api_key = config.get("api_key")
-
-        pro = "_pro" if config.get("is_pro") else ""
+        url = 'https://api.minimax.chat/v1/text/chatcompletion{pro}?GroupId={group_id}'
+        pro = "_pro" if params.is_pro else ""
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {params.api_key}",
             "Content-Type": "application/json",
         }
+        messages = self.validate_messages(params.messages)
         data = {
-            "model": "abab5.5-chat",
+            "model": params.version,
             "stream": True,
-            "tokens_to_generate": 1024, # TODO: 1024为官网默认值
             "mask_sensitive_info": True,
-            "messages": self.prompt_to_messages(params["prompt"]),
-            "temperature": params.get("temperature"),
-            "top_p": params.get("top_p"),
-            "bot_setting": [],
+            "messages": messages,
+            "temperature": params.temperature,
+            "top_p": params.top_p,
+            "tokens_to_generate": params.max_tokens or 1024,
+            # TODO: 以下参数为minimax特有，传入空值会出错。
+            # "prompt": params.system_message or self.conv.system_message,
+            # "bot_setting": [],
+            # "role_meta": params.role_meta,
         }
-        print("request data sent to minimax:")
-        pprint(data)
+
         with get_httpx_client() as client:
             response = client.stream("POST",
-                                    self.BASE_URL.format(pro=pro, group_id=group_id),
+                                    url.format(pro=pro, group_id=params.group_id),
                                     headers=headers,
                                     json=data)
             with response as r:
                 text = ""
                 for e in r.iter_text():
-                    if e.startswith("data: "): # 真是优秀的返回
-                        data = json.loads(e[6:])
-                        if not data.get("usage"):
-                            if choices := data.get("choices"):
-                                chunk = choices[0].get("delta", "").strip()
-                                if chunk:
-                                    print(chunk)
-                                    text += chunk
-                                    yield json.dumps({"error_code": 0, "text": text}, ensure_ascii=False).encode() + b"\0"
-    
+                    if not e.startswith("data: "): # 真是优秀的返回
+                        yield {"error_code": 500, "text": f"minimax返回错误的结果：{e}"}
+                        continue
+
+                    data = json.loads(e[6:])
+                    if data.get("usage"):
+                        break
+
+                    if choices := data.get("choices"):
+                        if chunk := choices[0].get("delta", ""):
+                            text += chunk
+                            yield {"error_code": 0, "text": text}
+
+    def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
+        params.load_config(self.model_names[0])
+        url = f"https://api.minimax.chat/v1/embeddings?GroupId={params.group_id}"
+
+        headers = {
+            "Authorization": f"Bearer {params.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        data = {
+            "model": params.embed_model or self.DEFAULT_EMBED_MODEL,
+            "texts": params.texts,
+            "type": "query" if params.to_query else "db",
+        }
+        
+        with get_httpx_client() as client:
+            r = client.post(url, headers=headers, json=data).json()
+            if embeddings := r.get("vectors"):
+                return {"code": 200, "data": embeddings}
+            elif error := r.get("base_resp"):
+                return {"code": error["status_code"], "msg": error["status_msg"]}
+
     def get_embeddings(self, params):
         # TODO: 支持embeddings
         print("embedding")
         print(params)
+
+    def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
+        # TODO: 确认模板是否需要修改
+        return conv.Conversation(
+            name=self.model_names[0],
+            system_message="你是MiniMax自主研发的大型语言模型，回答问题简洁有条理。",
+            messages=[],
+            roles=["USER", "BOT"],
+            sep="\n### ",
+            stop_str="###",
+        )
 
 
 if __name__ == "__main__":

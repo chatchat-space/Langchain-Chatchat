@@ -1,13 +1,9 @@
 from typing import List, Dict, Optional
 
-import numpy as np
-from faiss import normalize_L2
-from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
-from langchain.vectorstores import Milvus
-from sklearn.preprocessing import normalize
+from langchain.vectorstores.milvus import Milvus
 
-from configs import SCORE_THRESHOLD, kbs_config
+from configs import kbs_config
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process
@@ -49,10 +45,8 @@ class MilvusKBService(KBService):
     def vs_type(self) -> str:
         return SupportedVSType.MILVUS
 
-    def _load_milvus(self, embeddings: Embeddings = None):
-        if embeddings is None:
-            embeddings = self._load_embeddings()
-        self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(embeddings),
+    def _load_milvus(self):
+        self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(self.embed_model),
                              collection_name=self.kb_name, connection_args=kbs_config.get("milvus"))
 
     def do_init(self):
@@ -63,9 +57,12 @@ class MilvusKBService(KBService):
             self.milvus.col.release()
             self.milvus.col.drop()
 
-    def do_search(self, query: str, top_k: int, score_threshold: float, embeddings: Embeddings):
-        self._load_milvus(embeddings=EmbeddingsFunAdapter(embeddings))
-        return score_threshold_process(score_threshold, top_k, self.milvus.similarity_search_with_score(query, top_k))
+    def do_search(self, query: str, top_k: int, score_threshold: float):
+        self._load_milvus()
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embeddings = embed_func.embed_query(query)
+        docs = self.milvus.similarity_search_with_score_by_vector(embeddings, top_k)
+        return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         # TODO: workaround for bug #10492 in langchain

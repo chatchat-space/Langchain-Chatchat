@@ -1,12 +1,8 @@
-from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.embeddings.base import Embeddings
-from langchain.schema import Document
 import threading
-from configs import (EMBEDDING_MODEL, CHUNK_SIZE, CACHED_VS_NUM,
+from configs import (EMBEDDING_MODEL, CHUNK_SIZE,
                     logger, log_verbose)
-from server.utils import embedding_device, get_model_path
+from server.utils import embedding_device, get_model_path, list_online_embed_models
 from contextlib import contextmanager
 from collections import OrderedDict
 from typing import List, Any, Union, Tuple
@@ -101,20 +97,29 @@ class CachePool:
         else:
             return cache
 
-    def load_kb_embeddings(self, kb_name: str=None, embed_device: str = embedding_device()) -> Embeddings:
+    def load_kb_embeddings(
+        self,
+        kb_name: str,
+        embed_device: str = embedding_device(),
+        default_embed_model: str = EMBEDDING_MODEL,
+    ) -> Embeddings:
         from server.db.repository.knowledge_base_repository import get_kb_detail
+        from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 
-        kb_detail = get_kb_detail(kb_name=kb_name)
-        print(kb_detail)
-        embed_model = kb_detail.get("embed_model", EMBEDDING_MODEL)
-        return embeddings_pool.load_embeddings(model=embed_model, device=embed_device)
+        kb_detail = get_kb_detail(kb_name)
+        embed_model = kb_detail.get("embed_model", default_embed_model)
+
+        if embed_model in list_online_embed_models():
+            return EmbeddingsFunAdapter(embed_model)
+        else:
+            return embeddings_pool.load_embeddings(model=embed_model, device=embed_device)
 
 
 class EmbeddingsPool(CachePool):
-    def load_embeddings(self, model: str, device: str) -> Embeddings:
+    def load_embeddings(self, model: str = None, device: str = None) -> Embeddings:
         self.atomic.acquire()
         model = model or EMBEDDING_MODEL
-        device = device or embedding_device()
+        device = embedding_device()
         key = (model, device)
         if not self.get(key):
             item = ThreadSafeObject(key, pool=self)
@@ -122,8 +127,12 @@ class EmbeddingsPool(CachePool):
             with item.acquire(msg="初始化"):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-                    embeddings = OpenAIEmbeddings(openai_api_key=get_model_path(model), chunk_size=CHUNK_SIZE)
+                    from langchain.embeddings.openai import OpenAIEmbeddings
+                    embeddings = OpenAIEmbeddings(model_name=model,
+                                                  openai_api_key=get_model_path(model),
+                                                  chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:
+                    from langchain.embeddings import HuggingFaceBgeEmbeddings
                     if 'zh' in model:
                         # for chinese model
                         query_instruction = "为这个句子生成表示以用于检索相关文章："
@@ -139,6 +148,7 @@ class EmbeddingsPool(CachePool):
                     if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
                         embeddings.query_instruction = ""
                 else:
+                    from langchain.embeddings.huggingface import HuggingFaceEmbeddings
                     embeddings = HuggingFaceEmbeddings(model_name=get_model_path(model), model_kwargs={'device': device})
                 item.obj = embeddings
                 item.finish_loading()

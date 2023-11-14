@@ -2,7 +2,10 @@
 *.log.*
 *.bak
 logs
-/knowledge_base/
+/knowledge_base/*
+!/knowledge_base/samples
+/knowledge_base/samples/vector_store
+
 /configs/*.py
 .vscode/
 
@@ -167,3 +170,7 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
+.pytest_cache
+.DS_Store
+
+

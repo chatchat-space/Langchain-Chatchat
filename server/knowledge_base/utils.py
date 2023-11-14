@@ -1,7 +1,5 @@
 import os
-from transformers import AutoTokenizer
 from configs import (
-    EMBEDDING_MODEL,
     KB_ROOT_PATH,
     CHUNK_SIZE,
     OVERLAP_SIZE,
@@ -9,7 +7,7 @@ from configs import (
     logger,
     log_verbose,
     text_splitter_dict,
-    LLM_MODEL,
+    LLM_MODELS,
     TEXT_SPLITTER_NAME,
 )
 import importlib
@@ -19,8 +17,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
 import json
-from concurrent.futures import ThreadPoolExecutor
-from server.utils import run_in_thread_pool, embedding_device, get_model_worker_config
+from server.utils import run_in_thread_pool, get_model_worker_config
 import io
 from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
 import chardet
@@ -42,7 +39,7 @@ def get_doc_path(knowledge_base_name: str):
 
 
 def get_vs_path(knowledge_base_name: str, vector_name: str):
-    return os.path.join(get_kb_path(knowledge_base_name), vector_name)
+    return os.path.join(get_kb_path(knowledge_base_name), "vector_store", vector_name)
 
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
@@ -56,22 +53,27 @@ def list_kbs_from_folder():
 
 def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
-    return [file for file in os.listdir(doc_path)
-            if os.path.isfile(os.path.join(doc_path, file))]
+    result = []
+    for root, _, files in os.walk(doc_path):
+        tail = os.path.basename(root).lower()
+        if (tail.startswith("temp")
+            or tail.startswith("tmp")
+            or tail.startswith(".")): # 跳过 [temp, tmp, .] 开头的文件夹
+            continue
+        for file in files:
+            if file.startswith("~$"): # 跳过 ~$ 开头的文件
+                continue
+            path = Path(doc_path) / root / file
+            result.append(path.resolve().relative_to(doc_path).as_posix())
 
-
-def load_embeddings(model: str = EMBEDDING_MODEL, device: str = embedding_device()):
-    '''
-    从缓存中加载embeddings，可以避免多线程时竞争加载。
-    '''
-    from server.knowledge_base.kb_cache.base import embeddings_pool
-    return embeddings_pool.load_embeddings(model=model, device=device)
+    return result
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
                "CustomJSONLoader": [".json"],
                "CSVLoader": [".csv"],
+               # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
@@ -88,12 +90,12 @@ class CustomJSONLoader(langchain.document_loaders.JSONLoader):
     '''
 
     def __init__(
-        self,
-        file_path: Union[str, Path],
-        content_key: Optional[str] = None,
-        metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-        text_content: bool = True,
-        json_lines: bool = False,
+            self,
+            file_path: Union[str, Path],
+            content_key: Optional[str] = None,
+            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
+            text_content: bool = True,
+            json_lines: bool = False,
     ):
         """Initialize the JSONLoader.
 
@@ -150,7 +152,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader","FilteredCSVLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
@@ -168,10 +170,11 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
         # 自动识别文件编码类型，避免langchain loader 加载文件报编码错误
         with open(file_path_or_content, 'rb') as struct_file:
             encode_detect = chardet.detect(struct_file.read())
-        if encode_detect:
-            loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
-        else:
-            loader = DocumentLoader(file_path_or_content, encoding="utf-8")
+        if encode_detect is None:
+            encode_detect = {"encoding": "utf-8"}
+
+        loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+        ## TODO：支持更多的自定义CSV读取逻辑
 
     elif loader_name == "JSONLoader":
         loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
@@ -187,10 +190,10 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
 
 def make_text_splitter(
-    splitter_name: str = TEXT_SPLITTER_NAME,
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = OVERLAP_SIZE,
-    llm_model: str = LLM_MODEL,
+        splitter_name: str = TEXT_SPLITTER_NAME,
+        chunk_size: int = CHUNK_SIZE,
+        chunk_overlap: int = OVERLAP_SIZE,
+        llm_model: str = LLM_MODELS[0],
 ):
     """
     根据参数获取特定的分词器
@@ -235,6 +238,7 @@ def make_text_splitter(
                     from langchain.text_splitter import CharacterTextSplitter
                     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
                 else:  ## 字符长度加载
+                    from transformers import AutoTokenizer
                     tokenizer = AutoTokenizer.from_pretrained(
                         text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
                         trust_remote_code=True)
@@ -262,6 +266,7 @@ def make_text_splitter(
         text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
     return text_splitter
 
+
 class KnowledgeFile:
     def __init__(
             self,
@@ -282,7 +287,7 @@ class KnowledgeFile:
         self.document_loader_name = get_LoaderClass(self.ext)
         self.text_splitter_name = TEXT_SPLITTER_NAME
 
-    def file2docs(self, refresh: bool=False):
+    def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
             logger.info(f"{self.document_loader_name} used for {self.filepath}")
             loader = get_loader(self.document_loader_name, self.filepath)
@@ -290,20 +295,21 @@ class KnowledgeFile:
         return self.docs
 
     def docs2texts(
-        self,
-        docs: List[Document] = None,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        text_splitter: TextSplitter = None,
+            self,
+            docs: List[Document] = None,
+            zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+            refresh: bool = False,
+            chunk_size: int = CHUNK_SIZE,
+            chunk_overlap: int = OVERLAP_SIZE,
+            text_splitter: TextSplitter = None,
     ):
         docs = docs or self.file2docs(refresh=refresh)
         if not docs:
             return []
         if self.ext not in [".csv"]:
             if text_splitter is None:
-                text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+                text_splitter = make_text_splitter(splitter_name=self.text_splitter_name, chunk_size=chunk_size,
+                                                   chunk_overlap=chunk_overlap)
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
                 for doc in docs:
@@ -320,12 +326,12 @@ class KnowledgeFile:
         return self.splited_docs
 
     def file2text(
-        self,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        text_splitter: TextSplitter = None,
+            self,
+            zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+            refresh: bool = False,
+            chunk_size: int = CHUNK_SIZE,
+            chunk_overlap: int = OVERLAP_SIZE,
+            text_splitter: TextSplitter = None,
     ):
         if self.splited_docs is None or refresh:
             docs = self.file2docs()
@@ -352,13 +358,13 @@ def files2docs_in_thread(
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
         zh_title_enhance: bool = ZH_TITLE_ENHANCE,
-        pool: ThreadPoolExecutor = None,
 ) -> Generator:
     '''
     利用多线程批量将磁盘文件转化成langchain Document.
     如果传入参数是Tuple，形式为(filename, kb_name)
     生成器返回值为 status, (kb_name, file_name, docs | error)
     '''
+
     def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
         try:
             return True, (file.kb_name, file.filename, file.file2text(**kwargs))
@@ -373,8 +379,8 @@ def files2docs_in_thread(
         kwargs = {}
         try:
             if isinstance(file, tuple) and len(file) >= 2:
-                filename=file[0]
-                kb_name=file[1]
+                filename = file[0]
+                kb_name = file[1]
                 file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
             elif isinstance(file, dict):
                 filename = file.pop("filename")
@@ -389,17 +395,16 @@ def files2docs_in_thread(
         except Exception as e:
             yield False, (kb_name, filename, str(e))
 
-    for result in run_in_thread_pool(func=file2docs, params=kwargs_list, pool=pool):
+    for result in run_in_thread_pool(func=file2docs, params=kwargs_list):
         yield result
 
 
 if __name__ == "__main__":
     from pprint import pprint
 
-    kb_file = KnowledgeFile(filename="test.txt", knowledge_base_name="samples")
+    kb_file = KnowledgeFile(
+        filename="/home/congyin/Code/Project_Langchain_0814/Langchain-Chatchat/knowledge_base/csv1/content/gm.csv",
+        knowledge_base_name="samples")
     # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
     docs = kb_file.file2docs()
-    pprint(docs[-1])
-
-    docs = kb_file.file2text()
-    pprint(docs[-1])
+    # pprint(docs[-1])

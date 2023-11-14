@@ -1,10 +1,9 @@
-## 使用和风天气API查询天气,这个模型仅仅对免费的API进行了适配
-## 这个模型的提示词非常复杂，我们推荐使用GPT4模型进行运行
 from __future__ import annotations
 
 ## 单独运行的时候需要添加
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import re
@@ -25,11 +24,11 @@ from typing import List, Any, Optional
 from datetime import datetime
 from langchain.prompts import PromptTemplate
 from server.agent import model_container
+from pydantic import BaseModel, Field
 
 ## 使用和风天气API查询天气
 KEY = "ac880e5a877042809ac7ffdd19d95b0d"
-#key长这样，这里提供了示例的key，这个key没法使用，你需要自己去注册和风天气的账号，然后在这里填入你的key
-
+# key长这样，这里提供了示例的key，这个key没法使用，你需要自己去注册和风天气的账号，然后在这里填入你的key
 
 
 _PROMPT_TEMPLATE = """
@@ -97,7 +96,7 @@ def get_city_info(location, adm, key):
     return data
 
 
-def format_weather_data(data,place):
+def format_weather_data(data, place):
     hourly_forecast = data['hourly']
     formatted_data = f"\n 这是查询到的关于{place}未来24小时的天气信息: \n"
     for forecast in hourly_forecast:
@@ -143,7 +142,7 @@ def format_weather_data(data,place):
     return formatted_data
 
 
-def get_weather(key, location_id,place):
+def get_weather(key, location_id, place):
     url = "https://devapi.qweather.com/v7/weather/24h?"
     params = {
         'location': location_id,
@@ -151,18 +150,20 @@ def get_weather(key, location_id,place):
     }
     response = requests.get(url, params=params)
     data = response.json()
-    return format_weather_data(data,place)
+    return format_weather_data(data, place)
 
 
 def split_query(query):
     parts = query.split()
     adm = parts[0]
+    if len(parts) == 1:
+        return adm, adm
     location = parts[1] if parts[1] != 'None' else adm
     return location, adm
 
 
 def weather(query):
-    location, adm= split_query(query)
+    location, adm = split_query(query)
     key = KEY
     if key == "":
         return "请先在代码中填入和风天气API Key"
@@ -171,17 +172,19 @@ def weather(query):
         location_id = city_info['location'][0]['id']
         place = adm + "市" + location + "区"
 
-        weather_data = get_weather(key=key, location_id=location_id,place=place)
-        return weather_data  + "以上是查询到的天气信息，请你查收\n"
+        weather_data = get_weather(key=key, location_id=location_id, place=place)
+        return weather_data + "以上是查询到的天气信息，请你查收\n"
     except KeyError:
         try:
             city_info = get_city_info(location=adm, adm=adm, key=key)
             location_id = city_info['location'][0]['id']
             place = adm + "市"
-            weather_data = get_weather(key=key, location_id=location_id,place=place)
+            weather_data = get_weather(key=key, location_id=location_id, place=place)
             return weather_data + "重要提醒：用户提供的市和区中，区的信息不存在，或者出现错别字，因此该信息是关于市的天气，请你查收\n"
         except KeyError:
             return "输入的地区不存在，无法提供天气预报"
+
+
 class LLMWeatherChain(Chain):
     llm_chain: LLMChain
     llm: Optional[BaseLanguageModel] = None
@@ -321,12 +324,15 @@ class LLMWeatherChain(Chain):
         return cls(llm_chain=llm_chain, **kwargs)
 
 
-
 def weathercheck(query: str):
     model = model_container.MODEL
     llm_weather = LLMWeatherChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_weather.run(query)
     return ans
+
+
+class WhetherSchema(BaseModel):
+    location: str = Field(description="应该是一个地区的名称，用空格隔开，例如：上海 浦东，如果没有区的信息，可以只输入上海")
 
 if __name__ == '__main__':
     result = weathercheck("苏州姑苏区今晚热不热？")
