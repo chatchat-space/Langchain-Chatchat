@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI, AzureOpenAI, Anthropic
 import httpx
-from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
+from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -700,3 +700,19 @@ def load_local_embeddings(model: str = None, device: str = embedding_device()):
 
     model = model or EMBEDDING_MODEL
     return embeddings_pool.load_embeddings(model=model, device=device)
+
+
+def get_temp_dir(id: str = None) -> Tuple[str, str]:
+    '''
+    创建一个临时目录，返回（路径，文件夹名称）
+    '''
+    from configs.basic_config import BASE_TEMP_DIR
+    import tempfile
+
+    if id is not None: # 如果指定的临时目录已存在，直接返回
+        path = os.path.join(BASE_TEMP_DIR, id)
+        if os.path.isdir(path):
+            return path, id
+
+    path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
+    return path, os.path.basename(path)

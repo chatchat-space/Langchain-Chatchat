@@ -13,8 +13,8 @@ from pydantic import Json
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import get_file_detail
-from typing import List
 from langchain.docstore.document import Document
+from typing import List
 
 
 class DocumentWithScore(Document):

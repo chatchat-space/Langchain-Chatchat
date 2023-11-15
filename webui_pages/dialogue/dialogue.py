@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
+from server.knowledge_base.utils import LOADER_DICT
 from typing import List, Dict
 
 
@@ -36,7 +37,17 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
+@st.cache_data
+def upload_temp_docs(files, _api: ApiRequest) -> str:
+    '''
+    将文件上传到临时目录，用于文件对话
+    返回临时向量库ID
+    '''
+    return _api.upload_temp_docs(files).get("data", {}).get("id")
+
+
 def dialogue_page(api: ApiRequest, is_lite: bool = False):
+    st.session_state.setdefault("file_chat_id", None)
     default_model = api.get_default_llm_model()[0]
     if not chat_box.chat_inited:
         st.toast(
@@ -57,10 +68,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.toast(text)
 
         dialogue_modes = ["LLM 对话",
-                            "知识库问答",
-                            "搜索引擎问答",
-                            "自定义Agent问答",
-                            ]
+                        "知识库问答",
+                        "文件对话",
+                        "搜索引擎问答",
+                        "自定义Agent问答",
+                        ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=3,
@@ -122,6 +134,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             "自定义Agent问答": "agent_chat",
             "搜索引擎问答": "search_engine_chat",
             "知识库问答": "knowledge_base_chat",
+            "文件对话": "knowledge_base_chat",
         }
         prompt_templates_kb_list = list(PROMPT_TEMPLATES[index_prompt[dialogue_mode]].keys())
         prompt_template_name = prompt_templates_kb_list[0]
@@ -163,7 +176,18 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
                 ## Bge 模型会超过1
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+        elif dialogue_mode == "文件对话":
+            with st.expander("文件对话配置", True):
+                files = st.file_uploader("上传知识文件：",
+                                        [i for ls in LOADER_DICT.values() for i in ls],
+                                        accept_multiple_files=True,
+                                        )
+                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
+                ## Bge 模型会超过1
+                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+                if st.button("开始上传", disabled=len(files)==0):
+                    st.session_state["file_chat_id"] = upload_temp_docs(files, api)
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
             if DEFAULT_SEARCH_ENGINE in search_engine_list:
@@ -281,6 +305,30 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                              model=llm_model,
                                              prompt_name=prompt_template_name,
                                              temperature=temperature):
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+        elif dialogue_mode == "文件对话":
+            if st.session_state["file_chat_id"] is None:
+                st.error("请先上传文件再进行对话")
+                st.stop()
+            chat_box.ai_say([
+                f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
+                Markdown("...", in_expander=True, title="文件匹配结果", state="complete"),
+            ])
+            text = ""
+            for d in api.file_chat(prompt,
+                                    knowledge_id=st.session_state["file_chat_id"],
+                                    top_k=kb_top_k,
+                                    score_threshold=score_threshold,
+                                    history=history,
+                                    model=llm_model,
+                                    prompt_name=prompt_template_name,
+                                    temperature=temperature):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
