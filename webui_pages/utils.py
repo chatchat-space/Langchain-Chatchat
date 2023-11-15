@@ -384,6 +384,81 @@ class ApiRequest:
         )
         return self._httpx_stream2generator(response, as_json=True)
 
+    def upload_temp_docs(
+        self,
+        files: List[Union[str, Path, bytes]],
+        knowledge_id: str = None,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
+    ):
+        '''
+        对应api.py/knowledge_base/upload_tmep_docs接口
+        '''
+        def convert_file(file, filename=None):
+            if isinstance(file, bytes): # raw bytes
+                file = BytesIO(file)
+            elif hasattr(file, "read"): # a file io like object
+                filename = filename or file.name
+            else: # a local path
+                file = Path(file).absolute().open("rb")
+                filename = filename or os.path.split(file.name)[-1]
+            return filename, file
+
+        files = [convert_file(file) for file in files]
+        data={
+            "knowledge_id": knowledge_id,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
+        }
+
+        response = self.post(
+            "/knowledge_base/upload_temp_docs",
+            data=data,
+            files=[("files", (filename, file)) for filename, file in files],
+        )
+        return self._get_response_value(response, as_json=True)
+
+    def file_chat(
+        self,
+        query: str,
+        knowledge_id: str,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: float = SCORE_THRESHOLD,
+        history: List[Dict] = [],
+        stream: bool = True,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
+        prompt_name: str = "default",
+    ):
+        '''
+        对应api.py/chat/file_chat接口
+        '''
+        data = {
+            "query": query,
+            "knowledge_id": knowledge_id,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+            "history": history,
+            "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
+        }
+
+        print(f"received input message:")
+        pprint(data)
+
+        response = self.post(
+            "/chat/file_chat",
+            json=data,
+            stream=True,
+        )
+        return self._httpx_stream2generator(response, as_json=True)
+
     def search_engine_chat(
         self,
         query: str,
