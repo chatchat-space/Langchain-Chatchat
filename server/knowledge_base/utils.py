@@ -16,10 +16,9 @@ import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
-import json
 from server.utils import run_in_thread_pool, get_model_worker_config
 import io
-from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
+from typing import List, Union,Dict, Tuple, Generator
 import chardet
 
 
@@ -71,73 +70,41 @@ def list_files_from_folder(kb_name: str):
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredMarkdownLoader": ['.md'],
-               "CustomJSONLoader": [".json"],
+               "JSONLoader": [".json"],
+               "JSONLinesLoader": [".jsonl"],
                "CSVLoader": [".csv"],
                # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
-               "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
-                                          '.rtf', '.txt', '.xml',
-                                          '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],
+               "UnstructuredEmailLoader": ['.eml', '.msg'],
+               "UnstructuredEPubLoader": ['.epub'],
+               "UnstructuredExcelLoader": ['.xlsx', '.xlsd'],
+               "NotebookLoader": ['.ipynb'],
+               "UnstructuredODTLoader": ['.odt'],
+               "PythonLoader": ['.py'],
+               "UnstructuredRSTLoader": ['.rst'],
+               "UnstructuredRTFLoader": ['.rtf'],
+               "SRTLoader": ['.srt'],
+               "TomlLoader": ['.toml'],
+               "UnstructuredTSVLoader": ['.tsv'],
+               "UnstructuredWordDocumentLoader": ['.docx', 'doc'],
+               "UnstructuredXMLLoader": ['.xml'],
+               "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
+               "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
 
-class CustomJSONLoader(langchain.document_loaders.JSONLoader):
+class JSONLinesLoader(langchain.document_loaders.JSONLoader):
     '''
-    langchain的JSONLoader需要jq，在win上使用不便，进行替代。针对langchain==0.0.286
+    行式 Json 加载器，要求文件扩展名为 .jsonl
     '''
-
-    def __init__(
-            self,
-            file_path: Union[str, Path],
-            content_key: Optional[str] = None,
-            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-            text_content: bool = True,
-            json_lines: bool = False,
-    ):
-        """Initialize the JSONLoader.
-
-        Args:
-            file_path (Union[str, Path]): The path to the JSON or JSON Lines file.
-            content_key (str): The key to use to extract the content from the JSON if
-                results to a list of objects (dict).
-            metadata_func (Callable[Dict, Dict]): A function that takes in the JSON
-                object extracted by the jq_schema and the default metadata and returns
-                a dict of the updated metadata.
-            text_content (bool): Boolean flag to indicate whether the content is in
-                string format, default to True.
-            json_lines (bool): Boolean flag to indicate whether the input is in
-                JSON Lines format.
-        """
-        self.file_path = Path(file_path).resolve()
-        self._content_key = content_key
-        self._metadata_func = metadata_func
-        self._text_content = text_content
-        self._json_lines = json_lines
-
-    def _parse(self, content: str, docs: List[Document]) -> None:
-        """Convert given content to documents."""
-        data = json.loads(content)
-
-        # Perform some validation
-        # This is not a perfect validation, but it should catch most cases
-        # and prevent the user from getting a cryptic error later on.
-        if self._content_key is not None:
-            self._validate_content_key(data)
-        if self._metadata_func is not None:
-            self._validate_metadata_func(data)
-
-        for i, sample in enumerate(data, len(docs) + 1):
-            text = self._get_text(sample=sample)
-            metadata = self._get_metadata(
-                sample=sample, source=str(self.file_path), seq_num=i
-            )
-            docs.append(Document(page_content=text, metadata=metadata))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._json_lines = True
 
 
-langchain.document_loaders.CustomJSONLoader = CustomJSONLoader
+langchain.document_loaders.JSONLinesLoader = JSONLinesLoader
 
 
 def get_LoaderClass(file_extension):
@@ -178,11 +145,21 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
 
     elif loader_name == "JSONLoader":
         loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
-    elif loader_name == "CustomJSONLoader":
-        loader = DocumentLoader(file_path_or_content, text_content=False)
+    elif loader_name == "JSONLinesLoader":
+        loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False, json_lines=True)
     elif loader_name == "UnstructuredMarkdownLoader":
         loader = DocumentLoader(file_path_or_content, mode="elements")
     elif loader_name == "UnstructuredHTMLLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredXMLLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredRSTLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredExcelLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredWordDocumentLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredPowerPointLoader":
         loader = DocumentLoader(file_path_or_content, mode="elements")
     else:
         loader = DocumentLoader(file_path_or_content)
