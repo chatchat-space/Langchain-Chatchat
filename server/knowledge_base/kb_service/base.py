@@ -172,15 +172,15 @@ class KBService(ABC):
         docs = self.do_search(query, top_k, score_threshold)
         return docs
 
-    def get_doc_by_id(self, id: str) -> Optional[Document]:
-        return None
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        return []
 
     def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[Document]:
         '''
         通过file_name或metadata检索Document
         '''
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
-        docs = [self.get_doc_by_id(x["id"]) for x in doc_infos]
+        docs = self.get_doc_by_ids([x["id"] for x in doc_infos])
         return docs
 
     @abstractmethod
