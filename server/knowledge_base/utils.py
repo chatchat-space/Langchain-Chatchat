@@ -76,10 +76,21 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
-               "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
-                                          '.rtf', '.txt', '.xml',
-                                          '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],
+               "UnstructuredEmailLoader": ['.eml', '.msg'],
+               "UnstructuredEPubLoader": ['.epub'],
+               "UnstructuredExcelLoader": ['.xlsx', '.xlsd'],
+               "NotebookLoader": ['.ipynb'],
+               "UnstructuredODTLoader": ['.odt'],
+               "PythonLoader": ['.py'],
+               "UnstructuredRSTLoader": ['.rst'],
+               "UnstructuredRTFLoader": ['.rtf'],
+               "SRTLoader": ['.srt'],
+               "TomlLoader": ['.toml'],
+               "UnstructuredTSVLoader": ['.tsv'],
+               "UnstructuredWordDocumentLoader": ['.docx', 'doc'],
+               "UnstructuredXMLLoader": ['.xml'],
+               "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
+               "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
@@ -139,6 +150,16 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     elif loader_name == "UnstructuredMarkdownLoader":
         loader = DocumentLoader(file_path_or_content, mode="elements")
     elif loader_name == "UnstructuredHTMLLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredXMLLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredRSTLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredExcelLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredWordDocumentLoader":
+        loader = DocumentLoader(file_path_or_content, mode="elements")
+    elif loader_name == "UnstructuredPowerPointLoader":
         loader = DocumentLoader(file_path_or_content, mode="elements")
     else:
         loader = DocumentLoader(file_path_or_content)
