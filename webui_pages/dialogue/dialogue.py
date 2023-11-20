@@ -75,7 +75,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                         ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
-                                     index=3,
+                                     index=0,
                                      on_change=on_mode_change,
                                      key="dialogue_mode",
                                      )
@@ -95,10 +95,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         running_models = list(api.list_running_models())
         available_models = []
         config_models = api.list_config_models()
-        for k, v in config_models.get("local", {}).items(): # 列出配置了有效本地路径的模型
-            if (v.get("model_path_exists")
-                and k not in running_models):
-                available_models.append(k)
+        if not is_lite:
+            for k, v in config_models.get("local", {}).items(): # 列出配置了有效本地路径的模型
+                if (v.get("model_path_exists")
+                    and k not in running_models):
+                    available_models.append(k)
         for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
                 available_models.append(k)
