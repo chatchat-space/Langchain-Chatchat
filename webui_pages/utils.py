@@ -85,6 +85,7 @@ class ApiRequest:
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
         while retry > 0:
             try:
+                print(kwargs)
                 if stream:
                     return self.client.stream("POST", url, data=data, json=json, **kwargs)
                 else:
@@ -744,6 +745,9 @@ class ApiRequest:
         data = {
             "controller_address": controller_address,
         }
+
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:data: {data}')
 
         response = self.post(
             "/llm_model/list_running_models",
