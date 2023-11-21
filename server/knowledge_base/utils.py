@@ -17,7 +17,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
 from server.utils import run_in_thread_pool, get_model_worker_config
-import io
+import json
 from typing import List, Union,Dict, Tuple, Generator
 import chardet
 
@@ -99,6 +99,16 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
+
+
+# patch json.dumps to disable ensure_ascii
+def _new_json_dumps(obj, **kwargs):
+    kwargs["ensure_ascii"] = False
+    return _origin_json_dumps(obj, **kwargs)
+
+if json.dumps is not _new_json_dumps:
+    _origin_json_dumps = json.dumps
+    json.dumps = _new_json_dumps
 
 
 class JSONLinesLoader(langchain.document_loaders.JSONLoader):
