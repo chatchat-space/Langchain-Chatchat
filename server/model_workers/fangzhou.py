@@ -3,6 +3,7 @@ from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
 from typing import List, Literal, Dict
+from configs import logger, log_verbose
 
 
 class FangZhouWorker(ApiModelWorker):
@@ -46,10 +47,21 @@ class FangZhouWorker(ApiModelWorker):
         }
 
         text = ""
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:maas: {maas}')
         for resp in maas.stream_chat(req):
             error = resp.error
             if error.code_n > 0:
-                yield {"error_code": error.code_n, "text": error.message}
+                yield {
+                        "error_code": error.code_n,
+                        "text": error.message,
+                        "error": {
+                               "message": error.message,
+                               "type": "invalid_request_error",
+                               "param": None,
+                               "code": None,
+                           }
+                       }
             elif chunk := resp.choice.message.content:
                 text += chunk
                 yield {"error_code": 0, "text": text}

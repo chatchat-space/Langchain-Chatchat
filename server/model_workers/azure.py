@@ -5,6 +5,7 @@ from server.utils import get_httpx_client
 from fastchat import conversation as conv
 import json
 from typing import List, Dict
+from configs import logger, log_verbose
 
 
 class AzureWorker(ApiModelWorker):
@@ -39,6 +40,11 @@ class AzureWorker(ApiModelWorker):
         }
 
         text = ""
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:url: {url}')
+            logger.info(f'{self.__class__.__name__}:headers: {headers}')
+            logger.info(f'{self.__class__.__name__}:data: {data}')
+
         with get_httpx_client() as client:
             with client.stream("POST", url, headers=headers, json=data) as response:
                 for line in response.iter_lines():
