@@ -88,7 +88,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
 
         answer = ""
-        chat_history_id = add_chat_history_to_db(chat_type="knowledge_base_chat",model_name=model_name,query=query)
+        chat_history_id = add_chat_history_to_db(chat_type="knowledge_base_chat", query=query)
 
         if stream:
             async for token in callback.aiter():
