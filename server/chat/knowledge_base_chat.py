@@ -1,6 +1,6 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
-from configs import (LLM_MODELS, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
+from configs import (LLM_MODELS, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE, SAVE_CHAT_HISTORY)
 from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
 from langchain.chains import LLMChain
@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
+from server.db.repository import add_chat_history_to_db, update_chat_history
 
 
 async def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
@@ -86,18 +87,24 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         if len(source_documents) == 0: # 没有找到相关文档
             source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
 
+        answer = ""
+        chat_history_id = add_chat_history_to_db(chat_type="knowledge_base_chat",model_name=model_name,query=query)
+
         if stream:
             async for token in callback.aiter():
+                answer += token
                 # Use server-sent-events to stream the response
                 yield json.dumps({"answer": token}, ensure_ascii=False)
             yield json.dumps({"docs": source_documents}, ensure_ascii=False)
         else:
-            answer = ""
             async for token in callback.aiter():
                 answer += token
             yield json.dumps({"answer": answer,
                               "docs": source_documents},
                              ensure_ascii=False)
+            
+        if SAVE_CHAT_HISTORY and len(chat_history_id) > 0:
+            update_chat_history(chat_history_id, response=answer,metadata={"docs":source_documents})
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query=query,
