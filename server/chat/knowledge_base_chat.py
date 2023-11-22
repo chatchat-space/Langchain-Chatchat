@@ -84,7 +84,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
 
+        # 标记是否找到了相关文档
+        is_find_docs = True
         if len(source_documents) == 0: # 没有找到相关文档
+            is_find_docs = False
             source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
 
         answer = ""
@@ -104,7 +107,11 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                              ensure_ascii=False)
             
         if SAVE_CHAT_HISTORY and len(chat_history_id) > 0:
-            update_chat_history(chat_history_id, response=answer,metadata={"docs":source_documents})
+            update_chat_history(chat_history_id, response=answer,metadata={
+                "prompt_name": prompt_name,
+                "knowledge_base_name": knowledge_base_name,
+                "docs": is_find_docs and source_documents or []
+                })
         await task
 
     return StreamingResponse(knowledge_base_chat_iterator(query=query,
