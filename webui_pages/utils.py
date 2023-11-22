@@ -290,6 +290,7 @@ class ApiRequest:
     def chat_chat(
         self,
         query: str,
+        conversation_id: str = None,
         history: List[Dict] = [],
         stream: bool = True,
         model: str = LLM_MODELS[0],
@@ -303,6 +304,7 @@ class ApiRequest:
         '''
         data = {
             "query": query,
+            "conversation_id": conversation_id,
             "history": history,
             "stream": stream,
             "model_name": model,
@@ -978,7 +980,7 @@ class ApiRequest:
 
     def chat_feedback(
         self,
-        chat_history_id: str,
+        message_id: str,
         score: int,
         reason: str = "",
     ) -> int:
@@ -986,7 +988,7 @@ class ApiRequest:
         反馈对话评价
         '''
         data = {
-            "chat_history_id": chat_history_id,
+            "message_id": message_id,
             "score": score,
             "reason": reason,
         }
