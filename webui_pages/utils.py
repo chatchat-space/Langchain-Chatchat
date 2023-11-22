@@ -976,7 +976,7 @@ class ApiRequest:
 
     def chat_feedback(
         self,
-        chat_history_id: str,
+        message_id: str,
         score: int,
         reason: str = "",
     ) -> int:
@@ -984,7 +984,7 @@ class ApiRequest:
         反馈对话评价
         '''
         data = {
-            "chat_history_id": chat_history_id,
+            "message_id": message_id,
             "score": score,
             "reason": reason,
         }

@@ -19,32 +19,33 @@ from server.callback_handler.conversation_callback_handler import ConversationCa
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
                conversation_id: str = Body(None, description="对话框ID"),
-               history: Union[int, List[History]] = Body(None,
-                                                    description="历史对话，设为一个整数可以从数据库中读取历史消息",
-                                                    examples=[[
-                                                        {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                        {"role": "assistant", "content": "虎头虎脑"}]]
-                                                    ),
+               history: Union[int, List[History]] = Body([],
+                                                         description="历史对话，设为一个整数可以从数据库中读取历史消息",
+                                                         examples=[[
+                                                             {"role": "user",
+                                                              "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                             {"role": "assistant", "content": "虎头虎脑"}]]
+                                                         ),
                stream: bool = Body(False, description="流式输出"),
                model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
-               prompt_name: str = Body("defalut", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+               prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                ):
-
     async def chat_iterator() -> AsyncIterable[str]:
         nonlocal history
         callback = AsyncIteratorCallbackHandler()
         callbacks = [callback]
         memory = None
 
-        if conversation_id is not None:
-            message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
-            conversation_callback = ConversationCallbackHandler(conversation_id=conversation_id, message_id=message_id,
-                                                                chat_type="llm_chat",
-                                                                query=query)
-            callbacks.append(conversation_callback)
+        message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
+        # 负责保存llm response到message db
+        conversation_callback = ConversationCallbackHandler(conversation_id=conversation_id, message_id=message_id,
+                                                            chat_type="llm_chat",
+                                                            query=query)
+        callbacks.append(conversation_callback)
+
 
         model = get_ChatOpenAI(
             model_name=model_name,
@@ -60,8 +61,10 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
         else:
-            prompt = get_prompt_template("llm_chat", prompt_name)
+            # 使用memory 时必须 prompt 必须含有memory.memory_key 对应的变量
+            prompt = get_prompt_template("llm_chat", "with_history")
             chat_prompt = PromptTemplate.from_template(prompt)
+            # 根据conversation_id 获取message 列表进而拼凑 memory
             memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=model)
 
         chain = LLMChain(prompt=chat_prompt, llm=model, memory=memory)

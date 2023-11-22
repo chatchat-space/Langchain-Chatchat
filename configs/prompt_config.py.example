@@ -19,7 +19,6 @@
 
 PROMPT_TEMPLATES = {}
 
-
 PROMPT_TEMPLATES["llm_chat"] = {
 "default": "{{ input }}",
 "py":
@@ -132,3 +131,4 @@ Question: {input}
 
 Thought: {agent_scratchpad}
 """,
+}
