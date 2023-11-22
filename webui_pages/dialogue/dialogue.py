@@ -6,6 +6,7 @@ import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from server.knowledge_base.utils import LOADER_DICT
+import uuid
 from typing import List, Dict
 
 
@@ -47,8 +48,11 @@ def upload_temp_docs(files, _api: ApiRequest) -> str:
 
 
 def dialogue_page(api: ApiRequest, is_lite: bool = False):
+    st.session_state.setdefault("conversation_ids", {})
+    st.session_state["conversation_ids"].setdefault(chat_box.cur_chat_name, uuid.uuid4().hex)
     st.session_state.setdefault("file_chat_id", None)
     default_model = api.get_default_llm_model()[0]
+
     if not chat_box.chat_inited:
         st.toast(
             f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
@@ -57,6 +61,32 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.init_session()
 
     with st.sidebar:
+        # 多会话
+        cols = st.columns([3, 1])
+        conv_name = cols[0].text_input("会话名称")
+        with cols[1]:
+            if st.button("添加"):
+                if not conv_name or conv_name in st.session_state["conversation_ids"]:
+                    st.error("请指定有效的会话名称")
+                else:
+                    st.session_state["conversation_ids"][conv_name] = uuid.uuid4().hex
+                    st.session_state["cur_conv_name"] = conv_name
+                    st.session_state["conv_name"] = ""
+            if st.button("删除"):
+                if not conv_name or conv_name not in st.session_state["conversation_ids"]:
+                    st.error("请指定有效的会话名称")
+                else:
+                    st.session_state["conversation_ids"].pop(conv_name, None)
+                    st.session_state["cur_conv_name"] = ""
+                
+        conv_names = list(st.session_state["conversation_ids"].keys())
+        index = 0
+        if st.session_state.get("cur_conv_name") in conv_names:
+            index = conv_names.index(st.session_state.get("cur_conv_name"))
+        conversation_name = st.selectbox("当前会话：", conv_names, index=index)
+        chat_box.use_chat_name(conversation_name)
+        conversation_id = st.session_state["conversation_ids"][conversation_name]
+
         # TODO: 对话模型与会话绑定
         def on_mode_change():
             mode = st.session_state.dialogue_mode
@@ -210,12 +240,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
     def on_feedback(
         feedback,
-        chat_history_id: str = "",
+        message_id: str = "",
         history_index: int = -1,
     ):
         reason = feedback["text"]
         score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
-        api.chat_feedback(chat_history_id=chat_history_id,
+        api.chat_feedback(message_id=message_id,
                           score=score_int,
                           reason=reason)
         st.session_state["need_rerun"] = True
@@ -231,9 +261,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            chat_history_id = ""
+            message_id = ""
             r = api.chat_chat(prompt,
                               history=history,
+                              conversation_id=conversation_id,
                               model=llm_model,
                               prompt_name=prompt_template_name,
                               temperature=temperature)
@@ -243,16 +274,16 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     break
                 text += t.get("text", "")
                 chat_box.update_msg(text)
-                chat_history_id = t.get("chat_history_id", "")
+                message_id = t.get("message_id", "")
 
             metadata = {
-                "chat_history_id": chat_history_id,
+                "message_id": message_id,
                 }
             chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
             chat_box.show_feedback(**feedback_kwargs,
-                                   key=chat_history_id,
+                                   key=message_id,
                                    on_submit=on_feedback,
-                                   kwargs={"chat_history_id": chat_history_id, "history_index": len(chat_box.history) - 1})
+                                   kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
         elif dialogue_mode == "自定义Agent问答":
             if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
