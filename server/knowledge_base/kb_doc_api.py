@@ -81,6 +81,8 @@ def _save_files_in_thread(files: List[UploadFile],
                 logger.warn(file_status)
                 return dict(code=404, msg=file_status, data=data)
 
+            if not os.path.isdir(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
             with open(file_path, "wb") as f:
                 f.write(file_content)
             return dict(code=200, msg=f"成功上传文件 {filename}", data=data)

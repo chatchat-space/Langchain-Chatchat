@@ -83,7 +83,7 @@ class FaissKBService(KBService):
                       kb_file: KnowledgeFile,
                       **kwargs):
         with self.load_vector_store().acquire() as vs:
-            ids = [k for k, v in vs.docstore._dict.items() if v.metadata.get("source") == kb_file.filepath]
+            ids = [k for k, v in vs.docstore._dict.items() if v.metadata.get("source") == kb_file.filename]
             if len(ids) > 0:
                 vs.delete(ids)
             if not kwargs.get("not_refresh_vs_cache"):

@@ -74,9 +74,8 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         )
 
         source_documents = []
-        doc_path = get_doc_path(knowledge_base_name)
         for inum, doc in enumerate(docs):
-            filename = Path(doc.metadata["source"]).resolve().relative_to(doc_path)
+            filename = doc.metadata.get("source")
             parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
             base_url = request.base_url
             url = f"{base_url}knowledge_base/download_doc?" + parameters

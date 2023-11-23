@@ -17,9 +17,9 @@ api_base_url = api_address()
 
 kb = "kb_for_api_test"
 test_files = {
-    "FAQ.MD": str(root_path / "docs" / "FAQ.MD"),
-    "README.MD": str(root_path / "README.MD"),
-    "test.txt": get_file_path("samples", "test.txt"),
+    "wiki/Home.MD": get_file_path("samples", "wiki/Home.md"),
+    "wiki/开发环境部署.MD": get_file_path("samples", "wiki/开发环境部署.md"),
+    "test_files/test.txt": get_file_path("samples", "test_files/test.txt"),
 }
 
 print("\n\n直接url访问\n")

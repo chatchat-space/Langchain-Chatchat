@@ -298,10 +298,6 @@ class KnowledgeFile:
                                                    chunk_overlap=chunk_overlap)
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
-                for doc in docs:
-                    # 如果文档有元数据
-                    if doc.metadata:
-                        doc.metadata["source"] = os.path.basename(self.filepath)
             else:
                 docs = text_splitter.split_documents(docs)
 
