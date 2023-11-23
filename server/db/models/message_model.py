@@ -9,7 +9,7 @@ class MessageModel(Base):
     """
     __tablename__ = 'message'
     id = Column(String(32), primary_key=True, comment='聊天记录ID')
-    conversation_id = Column(String(32), index=True, comment='对话框ID')
+    conversation_id = Column(String(32), default=None, index=True, comment='对话框ID')
     # chat/agent_chat等
     chat_type = Column(String(50), comment='聊天类型')
     query = Column(String(4096), comment='用户问题')
