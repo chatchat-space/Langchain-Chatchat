@@ -27,4 +27,4 @@ if not os.path.exists(LOG_PATH):
 BASE_TEMP_DIR = os.path.join(tempfile.gettempdir(), "chatchat")
 if os.path.isdir(BASE_TEMP_DIR):
     shutil.rmtree(BASE_TEMP_DIR)
-os.makedirs(BASE_TEMP_DIR)
+os.makedirs(BASE_TEMP_DIR, exist_ok=True)

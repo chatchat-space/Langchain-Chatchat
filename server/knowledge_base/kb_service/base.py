@@ -2,7 +2,7 @@ import operator
 from abc import ABC, abstractmethod
 
 import os
-
+from pathlib import Path
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
@@ -111,12 +111,20 @@ class KBService(ABC):
         if docs:
             custom_docs = True
             for doc in docs:
-                doc.metadata.setdefault("source", kb_file.filepath)
+                doc.metadata.setdefault("source", kb_file.filename)
         else:
             docs = kb_file.file2text()
             custom_docs = False
 
         if docs:
+            # 将 metadata["source"] 改为相对路径
+            for doc in docs:
+                try:
+                    source = doc.metadata.get("source", "")
+                    rel_path = Path(source).relative_to(self.doc_path)
+                    doc.metadata["source"] = str(rel_path.as_posix().strip("/"))
+                except Exception as e:
+                    print(f"cannot convert absolute path ({source}) to relative path. error is : {e}")
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
             status = add_file_to_db(kb_file,

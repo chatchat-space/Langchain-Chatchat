@@ -37,6 +37,9 @@ def _parse_files_in_thread(
             filename = file.filename
             file_path = os.path.join(dir, filename)
             file_content = file.file.read()  # 读取上传文件的内容
+
+            if not os.path.isdir(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
             with open(file_path, "wb") as f:
                 f.write(file_content)
             kb_file = KnowledgeFile(filename=filename, knowledge_base_name="temp")
@@ -141,9 +144,8 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
         )
 
         source_documents = []
-        doc_path = get_temp_dir(knowledge_id)[0]
         for inum, doc in enumerate(docs):
-            filename = Path(doc.metadata["source"]).resolve().relative_to(doc_path)
+            filename = doc.metadata.get("source")
             text = f"""出处 [{inum + 1}] [{filename}] \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
 

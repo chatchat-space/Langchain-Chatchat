@@ -54,6 +54,7 @@ class FilteredCSVLoader(CSVLoader):
             raise RuntimeError(f"Error loading {self.file_path}") from e
 
         return docs
+
     def __read_file(self, csvfile: TextIOWrapper) -> List[Document]:
         docs = []
         csv_reader = csv.DictReader(csvfile, **self.csv_args)  # type: ignore
