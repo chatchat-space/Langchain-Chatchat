@@ -21,7 +21,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
 
-
 class CustomOutputParser(AgentOutputParser):
     begin: bool = False
     def __init__(self):
@@ -54,21 +53,6 @@ class CustomOutputParser(AgentOutputParser):
 
         action = parts[1].split("Action Input:")[0].strip()
         action_input = parts[1].split("Action Input:")[1].strip()
-
-        # 原来的正则化检查方式，更严格，但是成功率更低
-        # regex = r"Action\s*\d*\s*:(.*?)\nAction\s*\d*\s*Input\s*\d*\s*:[\s]*(.*)"
-        # print("llm_output",llm_output)
-        # match = re.search(regex, llm_output, re.DOTALL)
-        # print("match",match)
-        # if not match:
-        #     return AgentFinish(
-        #         return_values={"output": f"调用agent失败: `{llm_output}`"},
-        #         log=llm_output,
-        #     )
-        # action = match.group(1).strip()
-        # action_input = match.group(2)
-
-        # Return the action and action input
         try:
             ans = AgentAction(
                 tool=action,

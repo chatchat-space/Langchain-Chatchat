@@ -22,13 +22,14 @@ class MilvusKBService(KBService):
     #     if self.milvus.col:
     #         self.milvus.col.flush()
 
-    def get_doc_by_id(self, id: str) -> Optional[Document]:
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        result = []
         if self.milvus.col:
-            data_list = self.milvus.col.query(expr=f'pk == {id}', output_fields=["*"])
-            if len(data_list) > 0:
-                data = data_list[0]
+            data_list = self.milvus.col.query(expr=f'pk in {ids}', output_fields=["*"])
+            for data in data_list:
                 text = data.pop("text")
-                return Document(page_content=text, metadata=data)
+                result.append(Document(page_content=text, metadata=data))
+        return result
 
     @staticmethod
     def search(milvus_name, content, limit=3):
@@ -99,7 +100,7 @@ if __name__ == '__main__':
     milvusService = MilvusKBService("test")
     # milvusService.add_doc(KnowledgeFile("README.md", "test"))
 
-    print(milvusService.get_doc_by_id("444022434274215486"))
+    print(milvusService.get_doc_by_ids(["444022434274215486"]))
     # milvusService.delete_doc(KnowledgeFile("README.md", "test"))
     # milvusService.do_drop_kb()
     # print(milvusService.search_docs("如何启动api服务"))

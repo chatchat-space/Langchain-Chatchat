@@ -1,0 +1,10 @@
+name: arxiv
+description: A wrapper around Arxiv.org for searching and retrieving scientific articles in various fields.
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: The search query title
+required:
+  - query

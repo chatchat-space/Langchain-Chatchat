@@ -13,8 +13,8 @@ from pydantic import Json
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import get_file_detail
-from typing import List
 from langchain.docstore.document import Document
+from typing import List
 
 
 class DocumentWithScore(Document):
@@ -81,6 +81,8 @@ def _save_files_in_thread(files: List[UploadFile],
                 logger.warn(file_status)
                 return dict(code=404, msg=file_status, data=data)
 
+            if not os.path.isdir(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
             with open(file_path, "wb") as f:
                 f.write(file_content)
             return dict(code=200, msg=f"成功上传文件 {filename}", data=data)

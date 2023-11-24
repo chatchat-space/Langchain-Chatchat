@@ -20,13 +20,14 @@ class ZillizKBService(KBService):
     #     if self.zilliz.col:
     #         self.zilliz.col.flush()
 
-    def get_doc_by_id(self, id: str) -> Optional[Document]:
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        result = []
         if self.zilliz.col:
-            data_list = self.zilliz.col.query(expr=f'pk == {id}', output_fields=["*"])
-            if len(data_list) > 0:
-                data = data_list[0]
+            data_list = self.zilliz.col.query(expr=f'pk in {ids}', output_fields=["*"])
+            for data in data_list:
                 text = data.pop("text")
-                return Document(page_content=text, metadata=data)
+                result.append(Document(page_content=text, metadata=data))
+        return result
 
     @staticmethod
     def search(zilliz_name, content, limit=3):

@@ -1,4 +1,4 @@
-from configs import CACHED_VS_NUM
+from configs import CACHED_VS_NUM, CACHED_MEMO_VS_NUM
 from server.knowledge_base.kb_cache.base import *
 from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 from server.utils import load_local_embeddings
@@ -123,7 +123,7 @@ class MemoFaissPool(_FaissPool):
 
 
 kb_faiss_pool = KBFaissPool(cache_num=CACHED_VS_NUM)
-memo_faiss_pool = MemoFaissPool()
+memo_faiss_pool = MemoFaissPool(cache_num=CACHED_MEMO_VS_NUM)
 
 
 if __name__ == "__main__":

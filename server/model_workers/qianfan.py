@@ -8,6 +8,7 @@ from fastchat import conversation as conv
 import sys
 from server.model_workers.base import ApiEmbeddingsParams
 from typing import List, Literal, Dict
+from configs import logger, log_verbose
 
 MODEL_VERSIONS = {
     "ernie-bot-4": "completions_pro",
@@ -132,6 +133,11 @@ class QianFanWorker(ApiModelWorker):
         }
 
         text = ""
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:data: {payload}')
+            logger.info(f'{self.__class__.__name__}:url: {url}')
+            logger.info(f'{self.__class__.__name__}:headers: {headers}')
+
         with get_httpx_client() as client:
             with client.stream("POST", url, headers=headers, json=payload) as response:
                 for line in response.iter_lines():
@@ -150,7 +156,13 @@ class QianFanWorker(ApiModelWorker):
                     else:
                         yield {
                             "error_code": resp["error_code"],
-                            "text": resp["error_msg"]
+                            "text": resp["error_msg"],
+                            "error": {
+                                "message": resp["error_msg"],
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
+                            }
                         }
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
@@ -168,13 +180,25 @@ class QianFanWorker(ApiModelWorker):
         embed_model = params.embed_model or self.DEFAULT_EMBED_MODEL
         access_token = get_baidu_access_token(params.api_key, params.secret_key)
         url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/{embed_model}?access_token={access_token}"
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:url: {url}')
+
         with get_httpx_client() as client:
             resp = client.post(url, json={"input": params.texts}).json()
             if "error_cdoe" not in resp:
                 embeddings = [x["embedding"] for x in resp.get("data", [])]
                 return {"code": 200, "data": embeddings}
             else:
-                return {"code": resp["error_code"], "msg": resp["error_msg"]}
+                return {
+                            "code": resp["error_code"],
+                            "msg": resp["error_msg"],
+                            "error": {
+                                "message": resp["error_msg"],
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
+                            }
+                        }
 
     # TODO: qianfan支持续写模型
     def get_embeddings(self, params):

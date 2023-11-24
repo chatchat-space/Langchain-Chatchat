@@ -52,7 +52,7 @@ class TianGongWorker(ApiModelWorker):
 
         text = ""
         # 处理响应流
-        for line in response.iter_lines():
+        for line in response.iter_lines(chunk_size=None, decode_unicode=True):
             if line:
                 # 处理接收到的数据
                 # print(line.decode('utf-8'))

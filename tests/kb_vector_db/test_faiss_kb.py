@@ -2,6 +2,7 @@ from server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
 from server.knowledge_base.migrate import create_tables
 from server.knowledge_base.utils import KnowledgeFile
 
+
 kbService = FaissKBService("test")
 test_kb_name = "test"
 test_file_name = "README.md"
@@ -24,11 +25,10 @@ def test_add_doc():
 def test_search_db():
     result = kbService.search_docs(search_content)
     assert len(result) > 0
+
+
 def test_delete_doc():
     assert kbService.delete_doc(testKnowledgeFile)
-
-
-
 
 
 def test_delete_db():

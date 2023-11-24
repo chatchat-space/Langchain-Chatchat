@@ -17,7 +17,7 @@ def list_docs_from_db(session,
     '''
     docs = session.query(FileDocModel).filter_by(kb_name=kb_name)
     if file_name:
-        docs = docs.filter_by(file_name=file_name)
+        docs = docs.filter(FileDocModel.file_name.ilike(file_name))
     for k, v in metadata.items():
         docs = docs.filter(FileDocModel.meta_data[k].as_string()==str(v))
 

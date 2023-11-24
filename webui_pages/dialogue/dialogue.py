@@ -5,6 +5,8 @@ from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
+from server.knowledge_base.utils import LOADER_DICT
+import uuid
 from typing import List, Dict
 
 
@@ -36,9 +38,22 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
+@st.cache_data
+def upload_temp_docs(files, _api: ApiRequest) -> str:
+    '''
+    将文件上传到临时目录，用于文件对话
+    返回临时向量库ID
+    '''
+    return _api.upload_temp_docs(files).get("data", {}).get("id")
+
+
 def dialogue_page(api: ApiRequest, is_lite: bool = False):
+    st.session_state.setdefault("conversation_ids", {})
+    st.session_state["conversation_ids"].setdefault(chat_box.cur_chat_name, uuid.uuid4().hex)
+    st.session_state.setdefault("file_chat_id", None)
+    default_model = api.get_default_llm_model()[0]
+
     if not chat_box.chat_inited:
-        default_model = api.get_default_llm_model()[0]
         st.toast(
             f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
@@ -46,6 +61,32 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.init_session()
 
     with st.sidebar:
+        # 多会话
+        cols = st.columns([3, 1])
+        conv_name = cols[0].text_input("会话名称")
+        with cols[1]:
+            if st.button("添加"):
+                if not conv_name or conv_name in st.session_state["conversation_ids"]:
+                    st.error("请指定有效的会话名称")
+                else:
+                    st.session_state["conversation_ids"][conv_name] = uuid.uuid4().hex
+                    st.session_state["cur_conv_name"] = conv_name
+                    st.session_state["conv_name"] = ""
+            if st.button("删除"):
+                if not conv_name or conv_name not in st.session_state["conversation_ids"]:
+                    st.error("请指定有效的会话名称")
+                else:
+                    st.session_state["conversation_ids"].pop(conv_name, None)
+                    st.session_state["cur_conv_name"] = ""
+                
+        conv_names = list(st.session_state["conversation_ids"].keys())
+        index = 0
+        if st.session_state.get("cur_conv_name") in conv_names:
+            index = conv_names.index(st.session_state.get("cur_conv_name"))
+        conversation_name = st.selectbox("当前会话：", conv_names, index=index)
+        chat_box.use_chat_name(conversation_name)
+        conversation_id = st.session_state["conversation_ids"][conversation_name]
+
         # TODO: 对话模型与会话绑定
         def on_mode_change():
             mode = st.session_state.dialogue_mode
@@ -57,10 +98,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.toast(text)
 
         dialogue_modes = ["LLM 对话",
-                            "知识库问答",
-                            "搜索引擎问答",
-                            "自定义Agent问答",
-                            ]
+                        "知识库问答",
+                        "文件对话",
+                        "搜索引擎问答",
+                        "自定义Agent问答",
+                        ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=0,
@@ -83,15 +125,20 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         running_models = list(api.list_running_models())
         available_models = []
         config_models = api.list_config_models()
-        worker_models = list(config_models.get("worker", {}))  # 仅列出在FSCHAT_MODEL_WORKERS中配置的模型
-        for m in worker_models:
-            if m not in running_models and m != "default":
-                available_models.append(m)
+        if not is_lite:
+            for k, v in config_models.get("local", {}).items(): # 列出配置了有效本地路径的模型
+                if (v.get("model_path_exists")
+                    and k not in running_models):
+                    available_models.append(k)
         for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
             if not v.get("provider") and k not in running_models:
                 available_models.append(k)
         llm_models = running_models + available_models
-        index = llm_models.index(st.session_state.get("cur_llm_model", api.get_default_llm_model()[0]))
+        cur_llm_model = st.session_state.get("cur_llm_model", default_model)
+        if cur_llm_model in llm_models:
+            index = llm_models.index(cur_llm_model)
+        else:
+            index = 0
         llm_model = st.selectbox("选择LLM模型：",
                                  llm_models,
                                  index,
@@ -118,6 +165,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             "自定义Agent问答": "agent_chat",
             "搜索引擎问答": "search_engine_chat",
             "知识库问答": "knowledge_base_chat",
+            "文件对话": "knowledge_base_chat",
         }
         prompt_templates_kb_list = list(PROMPT_TEMPLATES[index_prompt[dialogue_mode]].keys())
         prompt_template_name = prompt_templates_kb_list[0]
@@ -159,7 +207,18 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
                 ## Bge 模型会超过1
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+        elif dialogue_mode == "文件对话":
+            with st.expander("文件对话配置", True):
+                files = st.file_uploader("上传知识文件：",
+                                        [i for ls in LOADER_DICT.values() for i in ls],
+                                        accept_multiple_files=True,
+                                        )
+                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
+                ## Bge 模型会超过1
+                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+                if st.button("开始上传", disabled=len(files)==0):
+                    st.session_state["file_chat_id"] = upload_temp_docs(files, api)
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
             if DEFAULT_SEARCH_ENGINE in search_engine_list:
@@ -181,12 +240,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
     def on_feedback(
         feedback,
-        chat_history_id: str = "",
+        message_id: str = "",
         history_index: int = -1,
     ):
         reason = feedback["text"]
         score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
-        api.chat_feedback(chat_history_id=chat_history_id,
+        api.chat_feedback(message_id=message_id,
                           score=score_int,
                           reason=reason)
         st.session_state["need_rerun"] = True
@@ -202,9 +261,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
             text = ""
-            chat_history_id = ""
+            message_id = ""
             r = api.chat_chat(prompt,
                               history=history,
+                              conversation_id=conversation_id,
                               model=llm_model,
                               prompt_name=prompt_template_name,
                               temperature=temperature)
@@ -214,16 +274,16 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     break
                 text += t.get("text", "")
                 chat_box.update_msg(text)
-                chat_history_id = t.get("chat_history_id", "")
+                message_id = t.get("message_id", "")
 
             metadata = {
-                "chat_history_id": chat_history_id,
+                "message_id": message_id,
                 }
             chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
             chat_box.show_feedback(**feedback_kwargs,
-                                   key=chat_history_id,
+                                   key=message_id,
                                    on_submit=on_feedback,
-                                   kwargs={"chat_history_id": chat_history_id, "history_index": len(chat_box.history) - 1})
+                                   kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
         elif dialogue_mode == "自定义Agent问答":
             if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
@@ -277,6 +337,30 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                              model=llm_model,
                                              prompt_name=prompt_template_name,
                                              temperature=temperature):
+                if error_msg := check_error_msg(d):  # check whether error occured
+                    st.error(error_msg)
+                elif chunk := d.get("answer"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=0)
+            chat_box.update_msg(text, element_index=0, streaming=False)
+            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+        elif dialogue_mode == "文件对话":
+            if st.session_state["file_chat_id"] is None:
+                st.error("请先上传文件再进行对话")
+                st.stop()
+            chat_box.ai_say([
+                f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
+                Markdown("...", in_expander=True, title="文件匹配结果", state="complete"),
+            ])
+            text = ""
+            for d in api.file_chat(prompt,
+                                    knowledge_id=st.session_state["file_chat_id"],
+                                    top_k=kb_top_k,
+                                    score_threshold=score_threshold,
+                                    history=history,
+                                    model=llm_model,
+                                    prompt_name=prompt_template_name,
+                                    temperature=temperature):
                 if error_msg := check_error_msg(d):  # check whether error occured
                     st.error(error_msg)
                 elif chunk := d.get("answer"):
