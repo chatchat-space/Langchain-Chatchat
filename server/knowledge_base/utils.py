@@ -51,25 +51,35 @@ def list_kbs_from_folder():
 
 
 def list_files_from_folder(kb_name: str):
-    def is_skiped_path(path: str): # 跳过 [temp, tmp, ., ~$] 开头的目录和文件
-        tail = os.path.basename(path).lower()
-        flag = False
-        for x in ["temp", "tmp", ".", "~$"]:
-            if tail.startswith(x):
-                flag = True
-                break
-        return flag
-
     doc_path = get_doc_path(kb_name)
     result = []
-    for root, _, files in os.walk(doc_path):
-        if is_skiped_path(root):
-            continue
-        for file in files:
-            if is_skiped_path(file):
-                continue
-            path = Path(doc_path) / root / file
-            result.append(path.resolve().relative_to(doc_path).as_posix())
+
+    def is_skiped_path(path: str):
+        tail = os.path.basename(path).lower()
+        for x in ["temp", "tmp", ".", "~$"]:
+            if tail.startswith(x):
+                return True
+        return False
+
+    def process_entry(entry):
+        if is_skiped_path(entry.path):
+            return
+
+        if entry.is_symlink():
+            target_path = os.path.realpath(entry.path)
+            with os.scandir(target_path) as target_it:
+                for target_entry in target_it:
+                    process_entry(target_entry)
+        elif entry.is_file():
+            result.append(entry.path)
+        elif entry.is_dir():
+            with os.scandir(entry.path) as it:
+                for sub_entry in it:
+                    process_entry(sub_entry)
+
+    with os.scandir(doc_path) as it:
+        for entry in it:
+            process_entry(entry)
 
     return result
 

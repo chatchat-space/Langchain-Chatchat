@@ -218,6 +218,12 @@ VLLM_MODEL_DICT = {
     "baichuan-7b": "baichuan-inc/Baichuan-7B",
     "baichuan-13b": "baichuan-inc/Baichuan-13B",
     'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
+
+    'chatglm2-6b': 'THUDM/chatglm2-6b',
+    'chatglm2-6b-32k': 'THUDM/chatglm2-6b-32k',
+    'chatglm3-6b': 'THUDM/chatglm3-6b',
+    'chatglm3-6b-32k': 'THUDM/chatglm3-6b-32k',
+
     # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
     # "bloom":"bigscience/bloom",
     # "bloomz":"bigscience/bloomz",
