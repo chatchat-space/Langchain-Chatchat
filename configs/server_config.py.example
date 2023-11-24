@@ -120,6 +120,9 @@ FSCHAT_MODEL_WORKERS = {
     "azure-api": {
         "port": 21008,
     },
+    "tiangong-api": {
+        "port": 21009,
+    },
 }
 
 # fastchat multi model worker server
