@@ -104,7 +104,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
         from configs.model_config import VLLM_MODEL_DICT
         if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
             import fastchat.serve.vllm_worker
-            from fastchat.serve.vllm_worker import VLLMWorker, app
+            from fastchat.serve.vllm_worker import VLLMWorker, app,worker_id
             from vllm import AsyncLLMEngine
             from vllm.engine.arg_utils import AsyncEngineArgs,EngineArgs
 
