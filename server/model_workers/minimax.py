@@ -106,7 +106,7 @@ class MiniMaxWorker(ApiModelWorker):
 
         data = {
             "model": params.embed_model or self.DEFAULT_EMBED_MODEL,
-            "texts": params.texts,
+            "texts": [],
             "type": "query" if params.to_query else "db",
         }
         if log_verbose:
@@ -115,21 +115,26 @@ class MiniMaxWorker(ApiModelWorker):
             logger.info(f'{self.__class__.__name__}:headers: {headers}')
 
         with get_httpx_client() as client:
-            r = client.post(url, headers=headers, json=data).json()
-            if embeddings := r.get("vectors"):
-                return {"code": 200, "data": embeddings}
-            elif error := r.get("base_resp"):
-                return {
-                            "code": error["status_code"],
-                            "msg": error["status_msg"],
-
-                            "error": {
-                                "message":  error["status_msg"],
-                                "type": "invalid_request_error",
-                                "param": None,
-                                "code": None,
+            result = []
+            i = 0
+            for texts in params.texts[i:i+10]:
+                data["texts"] = texts
+                r = client.post(url, headers=headers, json=data).json()
+                if embeddings := r.get("vectors"):
+                    result += embeddings
+                elif error := r.get("base_resp"):
+                    return {
+                                "code": error["status_code"],
+                                "msg": error["status_msg"],
+                                "error": {
+                                    "message":  error["status_msg"],
+                                    "type": "invalid_request_error",
+                                    "param": None,
+                                    "code": None,
+                                }
                             }
-                        }
+                i += 10
+            return {"code": 200, "data": embeddings}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

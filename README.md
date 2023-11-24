@@ -5,7 +5,7 @@
 
 📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
 
-基于 Langchain 与 ChatGLM 等大语言模型的本地知识库问答应用实现。
+基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目。
 
 ---
 
@@ -42,21 +42,21 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v10` 版本所使用代码已更新至本项目 `v0.2.6` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v11` 版本所使用代码已更新至本项目 `v0.2.7` 版本。
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6) 已经更新到 ```0.2.6``` 版本。
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6) 已经更新到 ```0.2.7``` 版本。
 
 🌲 一行命令运行 Docker ：
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7
 ```
 
-🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，__仅仅是入门教程，能够基础运行__。 如果你想要更深入的了解本项目，或者对相对本项目做出共享。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)  界面
+🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，__仅仅是入门教程，能够基础运行__。 如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)  界面
 
 ## 解决的痛点
 
-该项目是一个可以实现 __完全本地化__推理的知识库增强方案, 重点解决数数据安全保护，私域化部署的企业痛点。
+该项目是一个可以实现 __完全本地化__推理的知识库增强方案, 重点解决数据安全保护，私域化部署的企业痛点。
 本开源方案采用```Apache License```，可以免费商用，无需付费。
 
 我们支持市面上主流的本地大预言模型和Embedding模型，支持开源的本地向量数据库。
@@ -67,7 +67,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ### 1. 环境配置
 
-+ 首先，确保你的机器安装了 Python 3.10
++ 首先，确保你的机器安装了 Python 3.8 - 3.10
 ```
 $ python --version
 Python 3.10.12
@@ -148,11 +148,12 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_71.jpg" alt="二维码" width="300" />
+<img src="img/qr_code_74.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
-### 公众号
-![](img/official_wechat_mp_account.png)
-🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
-<u>[Langchain-Chatchat](https://github.com/chatchat-space/Langchain-Chatchat)</u>:基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目
+### 公众号
+
+<img src="img/official_wechat_mp_account.png" alt="二维码" width="300" />
+
+🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。

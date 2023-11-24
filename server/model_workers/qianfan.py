@@ -184,21 +184,26 @@ class QianFanWorker(ApiModelWorker):
             logger.info(f'{self.__class__.__name__}:url: {url}')
 
         with get_httpx_client() as client:
-            resp = client.post(url, json={"input": params.texts}).json()
-            if "error_cdoe" not in resp:
-                embeddings = [x["embedding"] for x in resp.get("data", [])]
-                return {"code": 200, "data": embeddings}
-            else:
-                return {
-                            "code": resp["error_code"],
-                            "msg": resp["error_msg"],
-                            "error": {
-                                "message": resp["error_msg"],
-                                "type": "invalid_request_error",
-                                "param": None,
-                                "code": None,
+            result = []
+            i = 0
+            for texts in params.texts[i:i+10]:
+                resp = client.post(url, json={"input": texts}).json()
+                if "error_cdoe" in resp:
+                    return {
+                                "code": resp["error_code"],
+                                "msg": resp["error_msg"],
+                                "error": {
+                                    "message": resp["error_msg"],
+                                    "type": "invalid_request_error",
+                                    "param": None,
+                                    "code": None,
+                                }
                             }
-                        }
+                else:
+                    embeddings = [x["embedding"] for x in resp.get("data", [])]
+                    result += embeddings
+                i += 10
+            return {"code": 200, "data": result}
 
     # TODO: qianfan支持续写模型
     def get_embeddings(self, params):
