@@ -91,9 +91,12 @@ FSCHAT_MODEL_WORKERS = {
 
     },
     # 可以如下示例方式更改默认配置
-    # "baichuan-7b": { # 使用default中的IP和端口
+    # "Qwen-7B-Chat": { # 使用default中的IP和端口
     #    "device": "cpu",
     # },
+    "chatglm3-6b": { # 使用default中的IP和端口
+        "device": "cuda",
+    },
 
     #以下配置可以不用修改，在model_config中设置启动的模型
     "zhipu-api": {
