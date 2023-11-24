@@ -113,6 +113,14 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "provider": "AzureWorker",
     },
+    
+    # 昆仑万维天工 API https://model-platform.tiangong.cn/
+    "tiangong-api": {
+        "version":"SkyChat-MegaVerse",
+        "api_key": "",
+        "secret_key": "",
+        "provider": "TianGongWorker",
+    },
 
 }
 
