@@ -100,7 +100,7 @@ kbs_config = {
         "index_name": "test_index",
         "user": "",
         "password": ""
-   }
+    }
 }
 
 # TextSplitter配置项，如果你不明白其中的含义，就不要修改。
