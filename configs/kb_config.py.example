@@ -9,6 +9,9 @@ DEFAULT_VS_TYPE = "faiss"
 # 缓存向量库数量（针对FAISS）
 CACHED_VS_NUM = 1
 
+# 缓存临时向量库数量（针对FAISS），用于文件对话
+CACHED_MEMO_VS_NUM = 10
+
 # 知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)
 CHUNK_SIZE = 250
 

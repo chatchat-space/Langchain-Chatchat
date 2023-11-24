@@ -22,13 +22,12 @@ class PGKBService(KBService):
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
 
-    def get_doc_by_id(self, id: str) -> Optional[Document]:
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         with self.pg_vector.connect() as connect:
-            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id=:id")
+            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id in :ids")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
-                       connect.execute(stmt, parameters={'id': id}).fetchall()]
-            if len(results) > 0:
-                return results[0]
+                       connect.execute(stmt, parameters={'ids': ids}).fetchall()]
+            return results
 
     def do_init(self):
         self._load_pg_vector()
@@ -88,5 +87,5 @@ if __name__ == '__main__':
     # pGKBService.add_doc(KnowledgeFile("README.md", "test"))
     # pGKBService.delete_doc(KnowledgeFile("README.md", "test"))
     # pGKBService.drop_kb()
-    print(pGKBService.get_doc_by_id("f1e51390-3029-4a19-90dc-7118aaa25772"))
+    print(pGKBService.get_doc_by_ids(["f1e51390-3029-4a19-90dc-7118aaa25772"]))
     # print(pGKBService.search_docs("如何启动api服务"))

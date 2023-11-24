@@ -2,7 +2,7 @@ from fastapi import Body
 from configs import logger, log_verbose, LLM_MODELS, HTTPX_DEFAULT_TIMEOUT
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
-from copy import deepcopy
+from typing import List
 
 
 def list_running_models(
@@ -28,26 +28,23 @@ def list_running_models(
             msg=f"failed to get available models from controller: {controller_address}。错误信息是： {e}")
 
 
-def list_config_models() -> BaseResponse:
+def list_config_models(
+    types: List[str] = Body(["local", "online"], description="模型配置项类别，如local, online, worker"),
+    placeholder: str = Body(None, description="占位用，无实际效果")
+) -> BaseResponse:
     '''
     从本地获取configs中配置的模型列表
     '''
-    configs = {}
-    # 删除ONLINE_MODEL配置中的敏感信息
-    for name, config in list_config_llm_models()["online"].items():
-        configs[name] = {}
-        for k, v in config.items():
-            if not (k == "worker_class"
-                or "key" in k.lower()
-                or "secret" in k.lower()
-                or k.lower().endswith("id")):
-                configs[name][k] = v
-    return BaseResponse(data=configs)
+    data = {}
+    for type, models in list_config_llm_models().items():
+        if type in types:
+            data[type] = {m: get_model_config(m).data for m in models}
+    return BaseResponse(data=data)
 
 
 def get_model_config(
     model_name: str = Body(description="配置中LLM模型的名称"),
-    placeholder: str = Body(description="占位用，无实际效果")
+    placeholder: str = Body(None, description="占位用，无实际效果")
 ) -> BaseResponse:
     '''
     获取LLM模型配置项（合并后的）

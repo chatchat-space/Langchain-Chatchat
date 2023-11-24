@@ -12,7 +12,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI, AzureOpenAI, Anthropic
 import httpx
-from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
+from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
+import logging
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -20,6 +21,7 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     try:
         await fn
     except Exception as e:
+        logging.exception(e)
         # TODO: handle exception
         msg = f"Caught exception: {e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
@@ -342,13 +344,14 @@ def list_embed_models() -> List[str]:
 def list_config_llm_models() -> Dict[str, Dict]:
     '''
     get configured llm models with different types.
-    return [(model_name, config_type), ...]
+    return {config_type: {model_name: config}, ...}
     '''
-    workers = list(FSCHAT_MODEL_WORKERS)
+    workers = FSCHAT_MODEL_WORKERS.copy()
+    workers.pop("default", None)
 
     return {
-        "local": MODEL_PATH["llm_model"],
-        "online": ONLINE_LLM_MODEL,
+        "local": MODEL_PATH["llm_model"].copy(),
+        "online": ONLINE_LLM_MODEL.copy(),
         "worker": workers,
     }
 
@@ -406,7 +409,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
                              exc_info=e if log_verbose else None)
     # 本地模型
     if model_name in MODEL_PATH["llm_model"]:
-        config["model_path"] = get_model_path(model_name)
+        path = get_model_path(model_name)
+        config["model_path"] = path
+        if path and os.path.isdir(path):
+            config["model_path_exists"] = True
         config["device"] = llm_device(config.get("device"))
     return config
 
@@ -635,7 +641,10 @@ def get_httpx_client(
 
     # construct Client
     kwargs.update(timeout=timeout, proxies=default_proxies)
-    print(kwargs)
+
+    if log_verbose:
+        logger.info(f'{get_httpx_client.__class__.__name__}:kwargs: {kwargs}')
+
     if use_async:
         return httpx.AsyncClient(**kwargs)
     else:
@@ -696,3 +705,19 @@ def load_local_embeddings(model: str = None, device: str = embedding_device()):
 
     model = model or EMBEDDING_MODEL
     return embeddings_pool.load_embeddings(model=model, device=device)
+
+
+def get_temp_dir(id: str = None) -> Tuple[str, str]:
+    '''
+    创建一个临时目录，返回（路径，文件夹名称）
+    '''
+    from configs.basic_config import BASE_TEMP_DIR
+    import tempfile
+
+    if id is not None: # 如果指定的临时目录已存在，直接返回
+        path = os.path.join(BASE_TEMP_DIR, id)
+        if os.path.isdir(path):
+            return path, id
+
+    path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
+    return path, os.path.basename(path)

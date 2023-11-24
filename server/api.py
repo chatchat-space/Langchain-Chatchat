@@ -142,6 +142,7 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
 
 def mount_knowledge_routes(app: FastAPI):
     from server.chat.knowledge_base_chat import knowledge_base_chat
+    from server.chat.file_chat import upload_temp_docs, file_chat
     from server.chat.agent_chat import agent_chat
     from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
     from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
@@ -151,6 +152,11 @@ def mount_knowledge_routes(app: FastAPI):
     app.post("/chat/knowledge_base_chat",
              tags=["Chat"],
              summary="与知识库对话")(knowledge_base_chat)
+
+    app.post("/chat/file_chat",
+             tags=["Knowledge Base Management"],
+             summary="文件对话"
+             )(file_chat)
 
     app.post("/chat/agent_chat",
              tags=["Chat"],
@@ -217,6 +223,11 @@ def mount_knowledge_routes(app: FastAPI):
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
+
+    app.post("/knowledge_base/upload_temp_docs",
+             tags=["Knowledge Base Management"],
+             summary="上传文件到临时目录，用于文件对话。"
+             )(upload_temp_docs)
 
 
 def run_api(host, port, **kwargs):

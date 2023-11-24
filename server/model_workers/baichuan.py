@@ -9,7 +9,7 @@ from fastchat import conversation as conv
 import sys
 import json
 from typing import List, Literal, Dict
-
+from configs import logger, log_verbose
 
 def calculate_md5(input_string):
     md5 = hashlib.md5()
@@ -56,6 +56,11 @@ class BaiChuanWorker(ApiModelWorker):
         }
 
         text = ""
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:json_data: {json_data}')
+            logger.info(f'{self.__class__.__name__}:url: {url}')
+            logger.info(f'{self.__class__.__name__}:headers: {headers}')
+
         with get_httpx_client() as client:
             with client.stream("POST", url, headers=headers, json=data) as response:
                 for line in response.iter_lines():
@@ -71,8 +76,14 @@ class BaiChuanWorker(ApiModelWorker):
                     else:
                         yield {
                             "error_code": resp["code"],
-                            "text": resp["msg"]
+                            "text": resp["msg"],
+                            "error": {
+                                "message": resp["msg"],
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
                             }
+                        }
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

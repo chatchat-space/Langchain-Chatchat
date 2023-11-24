@@ -6,6 +6,7 @@ import json
 from server.model_workers.base import ApiEmbeddingsParams
 from server.utils import get_httpx_client
 from typing import List, Dict
+from configs import logger, log_verbose
 
 
 class MiniMaxWorker(ApiModelWorker):
@@ -59,6 +60,10 @@ class MiniMaxWorker(ApiModelWorker):
             # "bot_setting": [],
             # "role_meta": params.role_meta,
         }
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:data: {data}')
+            logger.info(f'{self.__class__.__name__}:url: {url.format(pro=pro, group_id=params.group_id)}')
+            logger.info(f'{self.__class__.__name__}:headers: {headers}')
 
         with get_httpx_client() as client:
             response = client.stream("POST",
@@ -69,7 +74,16 @@ class MiniMaxWorker(ApiModelWorker):
                 text = ""
                 for e in r.iter_text():
                     if not e.startswith("data: "): # 真是优秀的返回
-                        yield {"error_code": 500, "text": f"minimax返回错误的结果：{e}"}
+                        yield {
+                                "error_code": 500,
+                                "text": f"minimax返回错误的结果：{e}",
+                                "error": {
+                                    "message":  f"minimax返回错误的结果：{e}",
+                                    "type": "invalid_request_error",
+                                    "param": None,
+                                    "code": None,
+                                }
+                        }
                         continue
 
                     data = json.loads(e[6:])
@@ -95,13 +109,27 @@ class MiniMaxWorker(ApiModelWorker):
             "texts": params.texts,
             "type": "query" if params.to_query else "db",
         }
-        
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:data: {data}')
+            logger.info(f'{self.__class__.__name__}:url: {url}')
+            logger.info(f'{self.__class__.__name__}:headers: {headers}')
+
         with get_httpx_client() as client:
             r = client.post(url, headers=headers, json=data).json()
             if embeddings := r.get("vectors"):
                 return {"code": 200, "data": embeddings}
             elif error := r.get("base_resp"):
-                return {"code": error["status_code"], "msg": error["status_msg"]}
+                return {
+                            "code": error["status_code"],
+                            "msg": error["status_msg"],
+
+                            "error": {
+                                "message":  error["status_msg"],
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
+                            }
+                        }
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings
