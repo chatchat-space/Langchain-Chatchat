@@ -1,21 +1,21 @@
 # API requirements
 
 langchain>=0.0.334 
-langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.32
-xformers>=0.0.22.post4
-openai>=0.28.1
+langchain-experimental>=0.0.42
+fschat[model_worker]>=0.2.33
+xformers>=0.0.22.post7
+openai~=0.28.1
 sentence_transformers
-transformers>=4.34
-torch>=2.0.1 # suggest version 2.1
+transformers>=4.35.2
+torch==2.1.0
 torchvision
 torchaudio
 fastapi>=0.104
 nltk>=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
-pydantic~=1.10.11
-unstructured[all-docs]>=0.10.12
+pydantic<2
+unstructured[all-docs]>=0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
@@ -38,13 +38,14 @@ pandas~=2.0.3
 einops
 transformers_stream_generator==0.0.4
 
-vllm>=0.2.0; sys_platform == "linux"
+vllm==0.2.2; sys_platform == "linux"
 
-# online api libs
-# zhipuai
-# dashscope>=1.10.0 # qwen
-# qianfan
-# volcengine>=1.0.106 # fangzhou
+# online api libs dependencies
+
+# zhipuai>=1.0.7
+# dashscope>=1.10.0
+# qianfan>=0.2.0
+# volcengine>=1.0.106
 
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3
@@ -53,10 +54,10 @@ vllm>=0.2.0; sys_platform == "linux"
 
 # WebUI requirements
 
-streamlit~=1.28.1
+streamlit~=1.28.2
 streamlit-option-menu>=0.3.6
-streamlit-antd-components>=0.1.11
+streamlit-antd-components>=0.2.3
 streamlit-chatbox>=1.1.11
 streamlit-aggrid>=0.3.4.post3
-httpx~=0.24.0
+httpx[brotli,http2,socks]~=0.24.1
 watchdog

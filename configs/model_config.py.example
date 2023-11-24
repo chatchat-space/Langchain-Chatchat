@@ -1,13 +1,12 @@
 import os
 
-
 # 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
 # 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录。
 # 如果模型目录名称和 MODEL_PATH 中的 key 或 value 相同，程序会自动检测加载，无需修改 MODEL_PATH 中的路径。
 MODEL_ROOT_PATH = ""
 
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "m3e-base" # bge-large-zh
+EMBEDDING_MODEL = "bge-large-zh"
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
@@ -18,7 +17,7 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 
 # 要运行的 LLM 名称，可以包括本地模型和在线模型。
 # 第一个将作为 API 和 WEBUI 的默认模型
-LLM_MODELS = ["chatglm2-6b", "zhipu-api", "openai-api"]
+LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"]
 
 # AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
 Agent_MODEL = None
@@ -153,6 +152,7 @@ MODEL_PATH = {
         "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
+        "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
         "text-embedding-ada-002": "your OPENAI_API_KEY",
     },
 
@@ -169,7 +169,7 @@ MODEL_PATH = {
 
         "baichuan-7b": "baichuan-inc/Baichuan-7B",
         "baichuan-13b": "baichuan-inc/Baichuan-13B",
-        'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
+        "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat",
 
         "aquila-7b": "BAAI/Aquila-7B",
         "aquilachat-7b": "BAAI/AquilaChat-7B",
@@ -210,6 +210,12 @@ MODEL_PATH = {
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
         "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",  # 确保已经安装了auto-gptq optimum flash-attn
         "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",  # 确保已经安装了auto-gptq optimum flash-attn
+
+        "agentlm-7b": "THUDM/agentlm-7b",
+        "agentlm-13b": "THUDM/agentlm-13b",
+        "agentlm-70b": "THUDM/agentlm-70b",
+
+        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat", # 更多01-ai模型尚未进行测试。如果需要使用，请自行测试。
     },
 }
 
@@ -225,7 +231,16 @@ VLLM_MODEL_DICT = {
 
     "baichuan-7b": "baichuan-inc/Baichuan-7B",
     "baichuan-13b": "baichuan-inc/Baichuan-13B",
-    'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
+    "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat",
+
+    "chatglm2-6b": "THUDM/chatglm2-6b",
+    "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
+    "chatglm3-6b": "THUDM/chatglm3-6b",
+    "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
+
+    "BlueLM-7B-Chat": "vivo-ai/BlueLM-7B-Chat",
+    "BlueLM-7B-Chat-32k": "vivo-ai/BlueLM-7B-Chat-32k",
+
     # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
     # "bloom":"bigscience/bloom",
     # "bloomz":"bigscience/bloomz",

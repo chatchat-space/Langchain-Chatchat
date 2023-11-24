@@ -1,25 +1,25 @@
 # API requirements
 
-langchain>=0.0.334 
-langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.32
-xformers>=0.0.22.post4
-openai>=0.28.1
+langchain>=0.0.334
+langchain-experimental>=0.0.42
+fschat[model_worker]>=0.2.33
+xformers>=0.0.22.post7
+openai~=0.28.1
 sentence_transformers
-transformers>=4.34
-torch>=2.0.1 # suggest version 2.1
+transformers>=4.35.2
+torch==2.1.0
 torchvision
 torchaudio
 fastapi>=0.104
 nltk>=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
-pydantic~=1.10.11
-unstructured[all-docs]>=0.10.12
+pydantic<2
+unstructured[all-docs]>=0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
-accelerate
+accelerate>=0.24.1
 spacy
 PyMuPDF
 rapidocr_onnxruntime
@@ -36,7 +36,7 @@ websockets
 numpy~=1.24.4
 pandas~=2.0.3
 einops
-transformers_stream_generator==0.0.4
+transformers_stream_generator>=0.0.4
 
 vllm>=0.2.0; sys_platform == "linux"
 
