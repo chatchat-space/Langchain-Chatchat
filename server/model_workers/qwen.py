@@ -53,7 +53,7 @@ class QwenWorker(ApiModelWorker):
                         "text": choices[0]["message"]["content"],
                     }
             else:
-                yield {
+                data = {
                     "error_code": resp["status_code"],
                     "text": resp["message"],
                     "error": {
@@ -63,7 +63,8 @@ class QwenWorker(ApiModelWorker):
                         "code": None,
                     }
                 }
-
+                self.logger.error(f"请求千问 API 时发生错误：{data}")
+                yield data
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         import dashscope
@@ -80,7 +81,7 @@ class QwenWorker(ApiModelWorker):
                 api_key=params.api_key,
             )
             if resp["status_code"] != 200:
-                return {
+                data = {
                             "code": resp["status_code"],
                             "msg": resp.message,
                             "error": {
@@ -90,6 +91,8 @@ class QwenWorker(ApiModelWorker):
                                 "code": None,
                             }
                         }
+                self.logger.error(f"请求千问 API 时发生错误：{data}")
+                return data
             else:
                 embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
                 result += embeddings

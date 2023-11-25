@@ -74,7 +74,7 @@ class MiniMaxWorker(ApiModelWorker):
                 text = ""
                 for e in r.iter_text():
                     if not e.startswith("data: "): # 真是优秀的返回
-                        yield {
+                        data = {
                                 "error_code": 500,
                                 "text": f"minimax返回错误的结果：{e}",
                                 "error": {
@@ -84,6 +84,8 @@ class MiniMaxWorker(ApiModelWorker):
                                     "code": None,
                                 }
                         }
+                        self.logger.error(f"请求 MiniMax API 时发生错误：{data}")
+                        yield data
                         continue
 
                     data = json.loads(e[6:])
@@ -123,7 +125,7 @@ class MiniMaxWorker(ApiModelWorker):
                 if embeddings := r.get("vectors"):
                     result += embeddings
                 elif error := r.get("base_resp"):
-                    return {
+                    data = {
                                 "code": error["status_code"],
                                 "msg": error["status_msg"],
                                 "error": {
@@ -133,6 +135,8 @@ class MiniMaxWorker(ApiModelWorker):
                                     "code": None,
                                 }
                             }
+                    self.logger.error(f"请求 MiniMax API 时发生错误：{data}")
+                    return data
                 i += 10
             return {"code": 200, "data": embeddings}
 

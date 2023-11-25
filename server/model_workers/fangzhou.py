@@ -52,7 +52,7 @@ class FangZhouWorker(ApiModelWorker):
         for resp in maas.stream_chat(req):
             error = resp.error
             if error.code_n > 0:
-                yield {
+                data = {
                         "error_code": error.code_n,
                         "text": error.message,
                         "error": {
@@ -62,6 +62,8 @@ class FangZhouWorker(ApiModelWorker):
                                "code": None,
                            }
                        }
+                self.logger.error(f"请求方舟 API 时发生错误：{data}")
+                yield data
             elif chunk := resp.choice.message.content:
                 text += chunk
                 yield {"error_code": 0, "text": text}

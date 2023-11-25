@@ -18,7 +18,7 @@ from server.callback_handler.conversation_callback_handler import ConversationCa
 
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-               conversation_id: str = Body(None, description="对话框ID"),
+               conversation_id: str = Body("", description="对话框ID"),
                history: Union[int, List[History]] = Body([],
                                                          description="历史对话，设为一个整数可以从数据库中读取历史消息",
                                                          examples=[[
@@ -54,7 +54,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             callbacks=callbacks,
         )
 
-        if conversation_id is None:
+        if not conversation_id:
             history = [History.from_data(h) for h in history]
             prompt_template = get_prompt_template("llm_chat", prompt_name)
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
