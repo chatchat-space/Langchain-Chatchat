@@ -40,6 +40,8 @@ FSCHAT_MODEL_WORKERS = {
         "device": LLM_DEVICE,
         # False,'vllm',使用的推理加速框架,使用vllm如果出现HuggingFace通信问题，参见doc/FAQ
         # vllm对一些模型支持还不成熟，暂时默认关闭
+        # fschat=0.2.33的代码有bug, 如需使用，源码修改fastchat.server.vllm_worker，
+        # 将103行中sampling_params = SamplingParams的参数stop=list(stop)修改为stop= [i for i in stop if i!=""]
         "infer_turbo": False,
 
         # model_worker多卡加载需要配置的参数
