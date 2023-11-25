@@ -154,7 +154,7 @@ class QianFanWorker(ApiModelWorker):
                             "text": text
                         }
                     else:
-                        yield {
+                        data = {
                             "error_code": resp["error_code"],
                             "text": resp["error_msg"],
                             "error": {
@@ -164,6 +164,8 @@ class QianFanWorker(ApiModelWorker):
                                 "code": None,
                             }
                         }
+                        self.logger.error(f"请求千帆 API 时发生错误：{data}")
+                        yield data
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         params.load_config(self.model_names[0])

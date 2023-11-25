@@ -12,8 +12,8 @@ class AzureWorker(ApiModelWorker):
     def __init__(
             self,
             *,
-            controller_addr: str,
-            worker_addr: str,
+            controller_addr: str = None,
+            worker_addr: str = None,
             model_names: List[str] = ["azure-api"],
             version: str = "gpt-35-turbo",
             **kwargs,

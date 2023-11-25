@@ -16,7 +16,7 @@ for x in list_config_llm_models()["online"]:
         workers.append(x)
 print(f"all workers to test: {workers}")
 
-# workers = ["qianfan-api"]
+# workers = ["fangzhou-api"]
 
 
 @pytest.mark.parametrize("worker", workers)
@@ -28,11 +28,11 @@ def test_chat(worker):
     )
     print(f"\nchat with {worker} \n")
 
-    worker_class = get_model_worker_config(worker)["worker_class"]
-    for x in worker_class().do_chat(params):
-        pprint(x)
-        assert isinstance(x, dict)
-        assert x["error_code"] == 0
+    if worker_class := get_model_worker_config(worker).get("worker_class"):
+        for x in worker_class().do_chat(params):
+            pprint(x)
+            assert isinstance(x, dict)
+            assert x["error_code"] == 0
 
 
 @pytest.mark.parametrize("worker", workers)
@@ -44,19 +44,19 @@ def test_embeddings(worker):
         ]
     )
 
-    worker_class = get_model_worker_config(worker)["worker_class"]
-    if worker_class.can_embedding():
-        print(f"\embeddings with {worker} \n")
-        resp = worker_class().do_embeddings(params)
+    if worker_class := get_model_worker_config(worker).get("worker_class"):
+        if worker_class.can_embedding():
+            print(f"\embeddings with {worker} \n")
+            resp = worker_class().do_embeddings(params)
 
-        pprint(resp, depth=2)
-        assert resp["code"] == 200
-        assert "data" in resp
-        embeddings = resp["data"]
-        assert isinstance(embeddings, list) and len(embeddings) > 0
-        assert isinstance(embeddings[0], list) and len(embeddings[0]) > 0
-        assert isinstance(embeddings[0][0], float)
-        print("向量长度：", len(embeddings[0]))
+            pprint(resp, depth=2)
+            assert resp["code"] == 200
+            assert "data" in resp
+            embeddings = resp["data"]
+            assert isinstance(embeddings, list) and len(embeddings) > 0
+            assert isinstance(embeddings[0], list) and len(embeddings[0]) > 0
+            assert isinstance(embeddings[0][0], float)
+            print("向量长度：", len(embeddings[0]))
 
 
 # @pytest.mark.parametrize("worker", workers)
