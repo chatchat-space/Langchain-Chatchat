@@ -233,15 +233,21 @@ def mount_knowledge_routes(app: FastAPI):
 
 
 def mount_filename_summary_routes(app: FastAPI):
-    from server.knowledge_base.kb_summary_api import (summary_file_to_vector_store, recreate_summary_vector_store)
+    from server.knowledge_base.kb_summary_api import (summary_file_to_vector_store, recreate_summary_vector_store,
+                                                      summary_doc_ids_to_vector_store)
 
     app.post("/knowledge_base/kb_summary_api/summary_file_to_vector_store",
              tags=["Knowledge kb_summary_api Management"],
-             summary="文件摘要"
+             summary="单个知识库根据文件名称摘要"
              )(summary_file_to_vector_store)
+    app.post("/knowledge_base/kb_summary_api/summary_doc_ids_to_vector_store",
+             tags=["Knowledge kb_summary_api Management"],
+             summary="单个知识库根据doc_ids摘要",
+             response_model=BaseResponse,
+             )(summary_doc_ids_to_vector_store)
     app.post("/knowledge_base/kb_summary_api/recreate_summary_vector_store",
              tags=["Knowledge kb_summary_api Management"],
-             summary="重建文件摘要"
+             summary="重建单个知识库文件摘要"
              )(recreate_summary_vector_store)
 
 
