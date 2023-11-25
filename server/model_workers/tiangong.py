@@ -6,7 +6,6 @@ from fastchat.conversation import Conversation
 from server.model_workers.base import *
 from server.utils import get_httpx_client
 from fastchat import conversation as conv
-import sys
 import json
 from typing import List, Literal, Dict
 import requests
@@ -64,12 +63,12 @@ class TianGongWorker(ApiModelWorker):
                         "text": text
                         }
                 else:
-                    yield {
+                    data = {
                         "error_code": resp["code"],
                         "text": resp["code_msg"]
-                        }    
-        
-
+                        }
+                    self.logger.error(f"请求天工 API 时出错：{data}")
+                    yield data
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

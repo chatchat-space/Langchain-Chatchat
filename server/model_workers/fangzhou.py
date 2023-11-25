@@ -48,23 +48,33 @@ class FangZhouWorker(ApiModelWorker):
 
         text = ""
         if log_verbose:
-            logger.info(f'{self.__class__.__name__}:maas: {maas}')
+            self.logger.info(f'{self.__class__.__name__}:maas: {maas}')
         for resp in maas.stream_chat(req):
-            error = resp.error
-            if error.code_n > 0:
-                yield {
-                        "error_code": error.code_n,
-                        "text": error.message,
-                        "error": {
-                               "message": error.message,
-                               "type": "invalid_request_error",
-                               "param": None,
-                               "code": None,
-                           }
-                       }
-            elif chunk := resp.choice.message.content:
-                text += chunk
-                yield {"error_code": 0, "text": text}
+            if error := resp.error:
+                if error.code_n > 0:
+                    data = {
+                            "error_code": error.code_n,
+                            "text": error.message,
+                            "error": {
+                                "message": error.message,
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
+                            }
+                        }
+                    self.logger.error(f"请求方舟 API 时发生错误：{data}")
+                    yield data
+                elif chunk := resp.choice.message.content:
+                    text += chunk
+                    yield {"error_code": 0, "text": text}
+            else:
+                data = {
+                    "error_code": 500,
+                    "text": f"请求方舟 API 时发生未知的错误: {resp}"
+                }
+                self.logger.error(data)
+                yield data
+                break
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

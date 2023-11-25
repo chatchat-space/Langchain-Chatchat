@@ -12,8 +12,8 @@ class AzureWorker(ApiModelWorker):
     def __init__(
             self,
             *,
-            controller_addr: str,
-            worker_addr: str,
+            controller_addr: str = None,
+            worker_addr: str = None,
             model_names: List[str] = ["azure-api"],
             version: str = "gpt-35-turbo",
             **kwargs,
@@ -60,6 +60,8 @@ class AzureWorker(ApiModelWorker):
                                     "error_code": 0,
                                     "text": text
                                 }
+                    else:
+                        self.logger.error(f"请求 Azure API 时发生错误：{resp}")
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

@@ -44,7 +44,7 @@ class ChatGLMWorker(ApiModelWorker):
             if e.event == "add":
                 yield {"error_code": 0, "text": e.data}
             elif e.event in ["error", "interrupted"]:
-                yield {
+                data = {
                     "error_code": 500,
                     "text": str(e),
                     "error": {
@@ -54,6 +54,8 @@ class ChatGLMWorker(ApiModelWorker):
                         "code": None,
                     }
                 }
+                self.logger.error(f"请求智谱 API 时发生错误：{data}")
+                yield data
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         import zhipuai
@@ -68,9 +70,12 @@ class ChatGLMWorker(ApiModelWorker):
                 if response["code"] == 200:
                     embeddings.append(response["data"]["embedding"])
                 else:
+                    self.logger.error(f"请求智谱 API 时发生错误：{response}")
                     return response  # dict with code & msg
         except Exception as e:
-            return {"code": 500, "msg": f"对文本向量化时出错：{e}"}
+            self.logger.error(f"请求智谱 API 时发生错误：{data}")
+            data = {"code": 500, "msg": f"对文本向量化时出错：{e}"}
+            return data
 
         return {"code": 200, "data": embeddings}
 
