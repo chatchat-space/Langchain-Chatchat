@@ -90,7 +90,6 @@ class SummaryAdapter:
                    token_max=token_max)
 
     def summarize(self,
-                  kb_name: str,
                   file_description: str,
                   docs: List[DocumentWithVSId] = []
                   ) -> List[Document]:
@@ -105,12 +104,10 @@ class SummaryAdapter:
 
             asyncio.set_event_loop(loop)
         # 同步调用协程代码
-        return loop.run_until_complete(self.asummarize(kb_name=kb_name,
-                                                       file_description=file_description,
+        return loop.run_until_complete(self.asummarize(file_description=file_description,
                                                        docs=docs))
 
     async def asummarize(self,
-                         kb_name: str,
                          file_description: str,
                          docs: List[DocumentWithVSId] = []) -> List[Document]:
 
