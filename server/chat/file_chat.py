@@ -114,6 +114,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
 
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
         callback = AsyncIteratorCallbackHandler()
+        if isinstance(max_tokens, int) and max_tokens <= 0:
+            max_tokens = None
+
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
