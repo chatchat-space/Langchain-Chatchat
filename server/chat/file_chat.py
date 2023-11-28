@@ -113,6 +113,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
     history = [History.from_data(h) for h in history]
 
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
+        nonlocal max_tokens
         callback = AsyncIteratorCallbackHandler()
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None

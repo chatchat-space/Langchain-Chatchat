@@ -43,6 +43,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
             model_name: str = LLM_MODELS[0],
             prompt_name: str = prompt_name,
     ) -> AsyncIterable[str]:
+        nonlocal max_tokens
         callback = CustomAsyncIteratorCallbackHandler()
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None

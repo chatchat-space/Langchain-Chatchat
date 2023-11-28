@@ -34,7 +34,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        nonlocal history
+        nonlocal history, max_tokens
         callback = AsyncIteratorCallbackHandler()
         callbacks = [callback]
         memory = None
