@@ -119,7 +119,9 @@ class MiniMaxWorker(ApiModelWorker):
         with get_httpx_client() as client:
             result = []
             i = 0
-            for texts in params.texts[i:i+10]:
+            batch_size = 10
+            while i < len(params.texts):
+                texts = params.texts[i:i+batch_size]
                 data["texts"] = texts
                 r = client.post(url, headers=headers, json=data).json()
                 if embeddings := r.get("vectors"):
@@ -137,7 +139,7 @@ class MiniMaxWorker(ApiModelWorker):
                             }
                     self.logger.error(f"请求 MiniMax API 时发生错误：{data}")
                     return data
-                i += 10
+                i += batch_size
             return {"code": 200, "data": embeddings}
 
     def get_embeddings(self, params):
