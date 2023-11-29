@@ -1,8 +1,8 @@
 # API requirements
 
-langchain>=0.0.329 # suggest to use latest Langchain
+langchain>=0.0.329,<0.0.340
 langchain-experimental>=0.0.30
-fschat[model_worker]==0.2.32
+fschat[model_worker]>=0.2.33
 xformers>=0.0.22.post4
 openai>=0.28.1
 sentence_transformers

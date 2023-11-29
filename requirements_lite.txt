@@ -1,5 +1,5 @@
-langchain>=0.0.329 # suggest to use latest Langchain
-fschat>=0.2.32
+langchain>=0.0.329,<0.0.340
+fschat>=0.2.33
 openai
 # sentence_transformers
 # transformers>=4.35.0

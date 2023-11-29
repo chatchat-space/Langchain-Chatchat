@@ -5,5 +5,5 @@ streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.11
 streamlit-aggrid>=0.3.4.post3
-httpx[brotli,http2,socks]>=0.25.0
+httpx[brotli,http2,socks]~=0.24.1
 watchdog
