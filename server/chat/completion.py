@@ -6,7 +6,8 @@ from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Optional
 import asyncio
-from langchain.prompts.chat import PromptTemplate
+from langchain.prompts import PromptTemplate
+
 from server.utils import get_prompt_template
 
 
