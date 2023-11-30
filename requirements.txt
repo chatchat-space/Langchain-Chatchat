@@ -58,6 +58,7 @@ streamlit~=1.28.2 # # on win, make sure write its path in environment variable
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.2.3
 streamlit-chatbox>=1.1.11
+streamlit-modal==0.1.0
 streamlit-aggrid>=0.3.4.post3
 httpx[brotli,http2,socks]~=0.24.1
 watchdog
