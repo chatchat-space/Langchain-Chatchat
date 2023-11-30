@@ -41,7 +41,7 @@ def get_ChatOpenAI(
         **kwargs: Any,
 ) -> ChatOpenAI:
     config = get_model_worker_config(model_name)
-    if config.get("openai-api"):
+    if model_name == "openai-api":
         model_name = config.get("model_name")
     model = ChatOpenAI(
         streaming=streaming,
@@ -56,6 +56,7 @@ def get_ChatOpenAI(
         **kwargs
     )
     return model
+
 def get_OpenAI(
         model_name: str,
         temperature: float,
@@ -67,7 +68,7 @@ def get_OpenAI(
         **kwargs: Any,
 ) -> OpenAI:
     config = get_model_worker_config(model_name)
-    if config.get("openai-api"):
+    if model_name == "openai-api":
         model_name = config.get("model_name")
     model = OpenAI(
         streaming=streaming,
