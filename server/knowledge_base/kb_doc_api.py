@@ -327,7 +327,6 @@ def download_doc(
             return FileResponse(
                 path=kb_file.filepath,
                 filename=kb_file.filename,
-                media_type="multipart/form-data",
                 content_disposition_type=content_disposition_type,
             )
     except Exception as e:
