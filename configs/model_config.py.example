@@ -112,7 +112,7 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "provider": "AzureWorker",
     },
-    
+
     # 昆仑万维天工 API https://model-platform.tiangong.cn/
     "tiangong-api": {
         "version":"SkyChat-MegaVerse",
@@ -163,6 +163,25 @@ MODEL_PATH = {
 
         "chatglm3-6b": "THUDM/chatglm3-6b",
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
+        "chatglm3-6b-base": "THUDM/chatglm3-6b-base",
+
+        "Qwen-1_8B": "Qwen/Qwen-1_8B",
+        "Qwen-1_8B-Chat":"Qwen/Qwen-1_8B-Chat",
+        "Qwen-1_8B-Chat-Int8":"Qwen/Qwen-1_8B-Chat-Int8",
+        "Qwen-1_8B-Chat-Int4":"Qwen/Qwen-1_8B-Chat-Int4",
+
+        "Qwen-7B": "Qwen/Qwen-7B",
+        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
+
+        "Qwen-14B": "Qwen/Qwen-14B",
+        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
+        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",
+
+        "Qwen-72B": "Qwen/Qwen-72B",
+        "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
+        "Qwen-72B-Chat-Int8":"Qwen/Qwen-72B-Chat-Int8"
+        "Qwen-72B-Chat-Int4":"Qwen/Qwen-72B-Chat-Int4"
 
         "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
         "baichuan2-7b": "baichuan-inc/Baichuan2-7B-Chat",
@@ -204,18 +223,11 @@ MODEL_PATH = {
         "opt-66b": "facebook/opt-66b",
         "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
-        "Qwen-7B": "Qwen/Qwen-7B",
-        "Qwen-14B": "Qwen/Qwen-14B",
-        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
-        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",  # 确保已经安装了auto-gptq optimum flash-attn
-        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",  # 确保已经安装了auto-gptq optimum flash-attn
-
         "agentlm-7b": "THUDM/agentlm-7b",
         "agentlm-13b": "THUDM/agentlm-13b",
         "agentlm-70b": "THUDM/agentlm-70b",
 
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat", # 更多01-ai模型尚未进行测试。如果需要使用，请自行测试。
+        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
     },
 }
 
@@ -273,10 +285,23 @@ VLLM_MODEL_DICT = {
     "opt-66b": "facebook/opt-66b",
     "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
+    "Qwen-1_8B": "Qwen/Qwen-1_8B",
+    "Qwen-1_8B-Chat":"Qwen/Qwen-1_8B-Chat",
+    "Qwen-1_8B-Chat-Int8":"Qwen/Qwen-1_8B-Chat-Int8",
+    "Qwen-1_8B-Chat-Int4":"Qwen/Qwen-1_8B-Chat-Int4",
+
     "Qwen-7B": "Qwen/Qwen-7B",
-    "Qwen-14B": "Qwen/Qwen-14B",
     "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
+
+    "Qwen-14B": "Qwen/Qwen-14B",
     "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+    "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
+    "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",
+
+    "Qwen-72B": "Qwen/Qwen-72B",
+    "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
+    "Qwen-72B-Chat-Int8":"Qwen/Qwen-72B-Chat-Int8"
+    "Qwen-72B-Chat-Int4":"Qwen/Qwen-72B-Chat-Int4"
 
     "agentlm-7b": "THUDM/agentlm-7b",
     "agentlm-13b": "THUDM/agentlm-13b",
