@@ -40,11 +40,9 @@ def get_ChatOpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> ChatOpenAI:
-    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
-    config_models = list_config_llm_models()
-
-    ## 非Langchain原生支持的模型，走Fschat封装
     config = get_model_worker_config(model_name)
+    if config.get("openai-api"):
+        model_name = config.get("model_name")
     model = ChatOpenAI(
         streaming=streaming,
         verbose=verbose,
@@ -57,10 +55,7 @@ def get_ChatOpenAI(
         openai_proxy=config.get("openai_proxy"),
         **kwargs
     )
-
     return model
-
-
 def get_OpenAI(
         model_name: str,
         temperature: float,
@@ -71,67 +66,22 @@ def get_OpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> OpenAI:
-    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
-    config_models = list_config_llm_models()
-    if model_name in config_models.get("langchain", {}):
-        config = config_models["langchain"][model_name]
-        if model_name == "Azure-OpenAI":
-            model = AzureOpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                deployment_name=config.get("deployment_name"),
-                model_version=config.get("model_version"),
-                openai_api_type=config.get("openai_api_type"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_version=config.get("api_version"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-                echo=echo,
-            )
-
-        elif model_name == "OpenAI":
-            model = OpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-                echo=echo,
-            )
-        elif model_name == "Anthropic":
-            model = Anthropic(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                anthropic_api_key=config.get("api_key"),
-                echo=echo,
-            )
-    ## TODO 支持其他的Langchain原生支持的模型
-    else:
-        ## 非Langchain原生支持的模型，走Fschat封装
-        config = get_model_worker_config(model_name)
-        model = OpenAI(
-            streaming=streaming,
-            verbose=verbose,
-            callbacks=callbacks,
-            openai_api_key=config.get("api_key", "EMPTY"),
-            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            openai_proxy=config.get("openai_proxy"),
-            echo=echo,
-            **kwargs
-        )
-
+    config = get_model_worker_config(model_name)
+    if config.get("openai-api"):
+        model_name = config.get("model_name")
+    model = OpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        openai_proxy=config.get("openai_proxy"),
+        echo=echo,
+        **kwargs
+    )
     return model
 
 
@@ -630,7 +580,7 @@ def get_httpx_client(
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
             # default_proxies.update({host: None}) # Origin code
-            default_proxies.update({'all://' + host: None}) # PR 1838 fix, if not add 'all://', httpx will raise error
+            default_proxies.update({'all://' + host: None})  # PR 1838 fix, if not add 'all://', httpx will raise error
 
     # merge default proxies with user provided proxies
     if isinstance(proxies, str):
@@ -714,7 +664,7 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     from configs.basic_config import BASE_TEMP_DIR
     import tempfile
 
-    if id is not None: # 如果指定的临时目录已存在，直接返回
+    if id is not None:  # 如果指定的临时目录已存在，直接返回
         path = os.path.join(BASE_TEMP_DIR, id)
         if os.path.isdir(path):
             return path, id

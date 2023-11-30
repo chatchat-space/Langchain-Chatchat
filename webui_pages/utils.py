@@ -276,8 +276,8 @@ class ApiRequest:
             "max_tokens": max_tokens,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post(
             "/chat/fastchat",
@@ -288,16 +288,16 @@ class ApiRequest:
         return self._httpx_stream2generator(response)
 
     def chat_chat(
-        self,
-        query: str,
-        conversation_id: str = None,
-        history: List[Dict] = [],
-        stream: bool = True,
-        model: str = LLM_MODELS[0],
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        prompt_name: str = "default",
-        **kwargs,
+            self,
+            query: str,
+            conversation_id: str = None,
+            history: List[Dict] = [],
+            stream: bool = True,
+            model: str = LLM_MODELS[0],
+            temperature: float = TEMPERATURE,
+            max_tokens: int = None,
+            prompt_name: str = "default",
+            **kwargs,
     ):
         '''
         对应api.py/chat/chat接口 #TODO: 考虑是否返回json
