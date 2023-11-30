@@ -188,9 +188,11 @@ class QianFanWorker(ApiModelWorker):
         with get_httpx_client() as client:
             result = []
             i = 0
-            for texts in params.texts[i:i+10]:
+            batch_size = 10
+            while i < len(params.texts):
+                texts = params.texts[i:i+batch_size]
                 resp = client.post(url, json={"input": texts}).json()
-                if "error_cdoe" in resp:
+                if "error_code" in resp:
                     data = {
                                 "code": resp["error_code"],
                                 "msg": resp["error_msg"],
@@ -206,7 +208,7 @@ class QianFanWorker(ApiModelWorker):
                 else:
                     embeddings = [x["embedding"] for x in resp.get("data", [])]
                     result += embeddings
-                i += 10
+                i += batch_size
             return {"code": 200, "data": result}
 
     # TODO: qianfan支持续写模型
