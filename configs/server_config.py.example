@@ -66,7 +66,7 @@ FSCHAT_MODEL_WORKERS = {
         # "no_register": False,
         # "embed_in_truncate": False,
 
-        # 以下为vllm_woker配置参数,注意使用vllm必须有gpu，仅在Linux测试通过
+        # 以下为vllm_worker配置参数,注意使用vllm必须有gpu，仅在Linux测试通过
 
         # tokenizer = model_path # 如果tokenizer与model_path不一致在此处添加
         # 'tokenizer_mode':'auto',
@@ -96,11 +96,11 @@ FSCHAT_MODEL_WORKERS = {
     # "Qwen-7B-Chat": { # 使用default中的IP和端口
     #    "device": "cpu",
     # },
-    "chatglm3-6b": { # 使用default中的IP和端口
+    "chatglm3-6b": {  # 使用default中的IP和端口
         "device": "cuda",
     },
 
-    #以下配置可以不用修改，在model_config中设置启动的模型
+    # 以下配置可以不用修改，在model_config中设置启动的模型
     "zhipu-api": {
         "port": 21001,
     },
