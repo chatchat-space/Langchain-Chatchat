@@ -48,7 +48,7 @@ PROMPT_TEMPLATES = {
             '<已知信息>{{ context }}</已知信息>\n'
             '<问题>{{ question }}</问题>\n',
 
-        "Empty":  # 搜不到知识库的时候使用
+        "empty":  # 搜不到知识库的时候使用
             '请你回答我的问题:\n'
             '{{ question }}\n\n',
     },
