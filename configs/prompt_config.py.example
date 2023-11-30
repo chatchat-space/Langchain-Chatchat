@@ -1,7 +1,6 @@
 # prompt模板使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
 # 本配置文件支持热加载，修改prompt模板后无需重启服务。
 
-
 # LLM对话支持的变量：
 #   - input: 用户输入内容
 
@@ -75,9 +74,6 @@ PROMPT_TEMPLATES["agent_chat"] = {
 Answer the following questions as best you can. If it is in order, you can use some tools appropriately.You have access to the following tools:
 
 {tools}
-
-Please note that the "知识库查询工具" is information about the "西交利物浦大学" ,and if a question is asked about it, you must answer with the knowledge base，
-Please note that the "天气查询工具" can only be used once since Question begin.
 
 Use the following format:
 Question: the input question you must answer1
