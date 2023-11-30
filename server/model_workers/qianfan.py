@@ -192,7 +192,7 @@ class QianFanWorker(ApiModelWorker):
             while i < len(params.texts):
                 texts = params.texts[i:i+batch_size]
                 resp = client.post(url, json={"input": texts}).json()
-                if "error_cdoe" in resp:
+                if "error_code" in resp:
                     data = {
                                 "code": resp["error_code"],
                                 "msg": resp["error_msg"],
