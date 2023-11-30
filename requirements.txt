@@ -1,6 +1,6 @@
 # API requirements
 
-langchain>=0.0.343
+langchain==0.0.343
 langchain-experimental>=0.0.42
 fschat[model_worker]>=0.2.33
 xformers>=0.0.22.post7
