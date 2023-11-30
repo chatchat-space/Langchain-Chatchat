@@ -313,8 +313,8 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post("/chat/chat", json=data, stream=True, **kwargs)
         return self._httpx_stream2generator(response, as_json=True)
