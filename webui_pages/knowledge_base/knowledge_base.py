@@ -34,14 +34,19 @@ def config_aggrid(
         use_checkbox=use_checkbox,
         # pre_selected_rows=st.session_state.get("selected_rows", [0]),
     )
+    gb.configure_pagination(
+        enabled=True,
+        paginationAutoPageSize=False,
+        paginationPageSize=10
+    )
     return gb
 
 
 def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
-    '''
+    """
     check whether a doc file exists in local knowledge base folder.
     return the file's name and path if it exists.
-    '''
+    """
     if selected_rows:
         file_name = selected_rows[0]["file_name"]
         file_path = get_file_path(kb, file_name)
