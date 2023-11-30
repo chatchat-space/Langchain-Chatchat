@@ -16,122 +16,112 @@
 #   - input: 用户输入内容
 #   - agent_scratchpad: Agent的思维记录
 
-PROMPT_TEMPLATES = {}
+PROMPT_TEMPLATES = {
+    "llm_chat": {
+        "default":
+            '{{ input }}',
 
-PROMPT_TEMPLATES["llm_chat"] = {
-"default": "{{ input }}",
-"with_history":
-"""The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+        "with_history":
+            'The following is a friendly conversation between a human and an AI. '
+            'The AI is talkative and provides lots of specific details from its context. '
+            'If the AI does not know the answer to a question, it truthfully says it does not know.\n\n'
+            'Current conversation:\n'
+            '{history}\n'
+            'Human: {input}\n'
+            'AI:',
 
-Current conversation:
-{history}
-Human: {input}
-AI:""",
-"py":
-"""
-你是一个聪明的代码助手，请你给我写出简单的py代码。 \n
-{{ input }}
-""",
-}
+        "py":
+            '你是一个聪明的代码助手，请你给我写出简单的py代码。 \n'
+            '{{ input }}',
+    },
 
-PROMPT_TEMPLATES["knowledge_base_chat"] = {
-"default":
-"""
-<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 </指令>
-<已知信息>{{ context }}</已知信息>、
-<问题>{{ question }}</问题>
-""",
-"text":
-"""
-<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>
-<已知信息>{{ context }}</已知信息>、
-<问题>{{ question }}</问题>
-""",
-"Empty":  # 搜不到知识库的时候使用
-"""
-请你回答我的问题:
-{{ question }}
-\n
-""",
-}
-PROMPT_TEMPLATES["search_engine_chat"] = {
-"default":
-"""
-<指令>这是我搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 </指令>
-<已知信息>{{ context }}</已知信息>
-<问题>{{ question }}</问题>
-""",
-"search":
-"""
-<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>
-<已知信息>{{ context }}</已知信息>、
-<问题>{{ question }}</问题>
-""",
-}
-PROMPT_TEMPLATES["agent_chat"] = {
-"default":
-"""
-Answer the following questions as best you can. If it is in order, you can use some tools appropriately.You have access to the following tools:
 
-{tools}
+    "knowledge_base_chat": {
+        "default":
+            '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，'
+            '不允许在答案中添加编造成分，答案请使用中文。 </指令>\n'
+            '<已知信息>{{ context }}</已知信息>\n'
+            '<问题>{{ question }}</问题>\n',
 
-Use the following format:
-Question: the input question you must answer1
-Thought: you should always think about what to do and what tools to use.
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can be repeated zero or more times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question
-Begin!
+        "text":
+            '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>\n'
+            '<已知信息>{{ context }}</已知信息>\n'
+            '<问题>{{ question }}</问题>\n',
 
-history: {history}
+        "Empty":  # 搜不到知识库的时候使用
+            '请你回答我的问题:\n'
+            '{{ question }}\n\n',
+    },
 
-Question: {input}
 
-Thought: {agent_scratchpad}
-""",
+    "search_engine_chat": {
+        "default":
+            '<指令>这是我搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。'
+            '如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 </指令>\n'
+            '<已知信息>{{ context }}</已知信息>\n'
+            '<问题>{{ question }}</问题>\n',
 
-"ChatGLM3":
-"""
-You can answer using the tools, or answer directly using your knowledge without using the tools.Respond to the human as helpfully and accurately as possible.
-You have access to the following tools:
-{tools}
-Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).
-Valid "action" values: "Final Answer" or  [{tool_names}]
-Provide only ONE action per $JSON_BLOB, as shown:
+        "search":
+            '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>\n'
+            '<已知信息>{{ context }}</已知信息>\n'
+            '<问题>{{ question }}</问题>\n',
+    },
 
-```
-{{{{
-  "action": $TOOL_NAME,
-  "action_input": $INPUT
-}}}}
-```
 
-Follow this format:
+    "agent_chat": {
+        "default":
+            'Answer the following questions as best you can. If it is in order, you can use some tools appropriately. '
+            'You have access to the following tools:\n\n'
+            '{tools}\n\n'
+            'Use the following format:\n'
+            'Question: the input question you must answer1\n'
+            'Thought: you should always think about what to do and what tools to use.\n'
+            'Action: the action to take, should be one of [{tool_names}]\n'
+            'Action Input: the input to the action\n'
+            'Observation: the result of the action\n'
+            '... (this Thought/Action/Action Input/Observation can be repeated zero or more times)\n'
+            'Thought: I now know the final answer\n'
+            'Final Answer: the final answer to the original input question\n'
+            'Begin!\n\n'
+            'history: {history}\n\n'
+            'Question: {input}\n\n'
+            'Thought: {agent_scratchpad}\n',
 
-Question: input question to answer
-Thought: consider previous and subsequent steps
-Action:
-```
-$JSON_BLOB
-```
-Observation: action result
-... (repeat Thought/Action/Observation N times)
-Thought: I know what to respond
-Action:
-```
-{{{{
-  "action": "Final Answer",
-  "action_input": "Final response to human"
-}}}}
-Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
-
-history: {history}
-
-Question: {input}
-
-Thought: {agent_scratchpad}
-""",
+        "ChatGLM3":
+            'You can answer using the tools, or answer directly using your knowledge without using the tools. '
+            'Respond to the human as helpfully and accurately as possible.\n'
+            'You have access to the following tools:\n'
+            '{tools}\n'
+            'Use a json blob to specify a tool by providing an action key (tool name) '
+            'and an action_input key (tool input).\n'
+            'Valid "action" values: "Final Answer" or  [{tool_names}]'
+            'Provide only ONE action per $JSON_BLOB, as shown:\n\n'
+            '```\n'
+            '{{{{\n'
+            '  "action": $TOOL_NAME,\n'
+            '  "action_input": $INPUT\n'
+            '}}}}\n'
+            '```\n\n'
+            'Follow this format:\n\n'
+            'Question: input question to answer\n'
+            'Thought: consider previous and subsequent steps\n'
+            'Action:\n'
+            '```\n'
+            '$JSON_BLOB\n'
+            '```\n'
+            'Observation: action result\n'
+            '... (repeat Thought/Action/Observation N times)\n'
+            'Thought: I know what to respond\n'
+            'Action:\n'
+            '```\n'
+            '{{{{\n'
+            '  "action": "Final Answer",\n'
+            '  "action_input": "Final response to human"\n'
+            '}}}}\n'
+            'Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. '
+            'Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.\n'
+            'history: {history}\n\n'
+            'Question: {input}\n\n'
+            'Thought: {agent_scratchpad}',
+    }
 }
