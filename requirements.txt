@@ -1,64 +1,69 @@
 # API requirements
 
-langchain==0.0.343
+langchain==0.0.344
 langchain-experimental>=0.0.42
-fschat[model_worker]>=0.2.33
+pydantic==1.10.13
+fschat>=0.2.33
 xformers>=0.0.22.post7
-openai>=1.3.5
+openai>=1.3.6
 sentence_transformers
 transformers>=4.35.2
-torch==2.1.0 ##on win,  install the cuda version manually if you want use gpu
-torchvision #on win,  install the cuda version manually if you want use gpu
-torchaudio #on win,  install the cuda version manually if you want use gpu
+torch==2.1.0  ##on Windows system, install the cuda version manually from https://pytorch.org/
+torchvision  #on Windows system, install the cuda version manually from https://pytorch.org/
+torchaudio  #on Windows system, install the cuda version manually from https://pytorch.org/
 fastapi>=0.104
 nltk>=3.8.1
-uvicorn~=0.23.1
+uvicorn>=0.24.0.post1
 starlette~=0.27.0
-pydantic<2
 unstructured[all-docs]==0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
 faiss-cpu
-accelerate
-spacy
+accelerate>=0.24.1
+spacy>=3.7.2
 PyMuPDF
 rapidocr_onnxruntime
-
-requests
-pathlib
-pytest
-numexpr
-strsimpy
-markdownify
-tiktoken
-tqdm
+requests>=2.31.0
+pathlib>=1.0.1
+pytest>=7.4.3
+numexpr>=2.8.7
+strsimpy>=0.2.1
+markdownify>=0.11.6
+tiktoken>=0.5.1
+tqdm>=4.66.1
 websockets
 numpy~=1.24.4
 pandas~=2.0.3
-einops
+einops>=0.7.0
 transformers_stream_generator==0.0.4
-
 vllm==0.2.2; sys_platform == "linux"
 
-# online api libs dependencies
+
+# Online api libs dependencies
 
 # zhipuai>=1.0.7
 # dashscope>=1.10.0
 # qianfan>=0.2.0
 # volcengine>=1.0.106
-
-# uncomment libs if you want to use corresponding vector store
-# pymilvus==2.1.3 # requires milvus==2.1.3
+# pymilvus>=2.3.3
 # psycopg2
-# pgvector
+# pgvector>=0.2.4
+
+# Agent and Search Tools
+
+arxiv>=2.0.0
+youtube-search>=2.1.2
+duckduckgo-search>=4.9.3
+metaphor-python>=0.1.23
 
 # WebUI requirements
 
-streamlit~=1.28.2 # # on win, make sure write its path in environment variable
+streamlit>=1.29.0
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.2.3
 streamlit-chatbox>=1.1.11
-streamlit-modal==0.1.0
+streamlit-modal>=0.1.0
 streamlit-aggrid>=0.3.4.post3
-httpx[brotli,http2,socks]~=0.24.1
-watchdog
+httpx[brotli,http2,socks]>=0.25.2
+watchdog>=3.0.0
+

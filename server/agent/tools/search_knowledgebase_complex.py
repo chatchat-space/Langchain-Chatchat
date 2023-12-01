@@ -170,7 +170,6 @@ class LLMKnowledgeChain(LLMChain):
                 queries = [(line.split(",")[0].strip(), line.split(",")[1].strip()) for line in lines]
             except:
                 queries = [(line.split("，")[0].strip(), line.split("，")[1].strip()) for line in lines]
-            print(queries)
             run_manager.on_text("知识库查询询内容:\n\n" + str(queries) + " \n\n", color="blue", verbose=self.verbose)
             output = self._evaluate_expression(queries)
             run_manager.on_text("\nAnswer: ", verbose=self.verbose)
