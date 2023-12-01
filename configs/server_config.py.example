@@ -93,7 +93,7 @@ FSCHAT_MODEL_WORKERS = {
 
     },
     # 可以如下示例方式更改默认配置
-    # "Qwen-7B-Chat": { # 使用default中的IP和端口
+    # "Qwen-1_8B-Chat": { # 使用default中的IP和端口
     #    "device": "cpu",
     # },
     "chatglm3-6b": {  # 使用default中的IP和端口
