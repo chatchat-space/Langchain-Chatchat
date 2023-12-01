@@ -15,9 +15,11 @@ EMBEDDING_DEVICE = "auto"
 EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
 
-# 要运行的 LLM 名称，可以包括本地模型和在线模型。第一个将作为 API 和 WEBUI 的默认模型
-# 在这里，我们使用目前主流的两个离线模型，其中，chatglm3-6b 为默认加载模型，如果你的显存不足，可使用 Qwen-1_8B-Chat, 该模型 FP16 仅需 3.8G显存。
-LLM_MODELS = ["chatglm3-6b", "Qwen-1_8B-Chat", "zhipu-api", "openai-api"]
+# 要运行的 LLM 名称，可以包括本地模型和在线模型。列表中本地模型将在启动项目时全部加载。
+# 列表中第一个模型将作为 API 和 WEBUI 的默认模型。
+# 在这里，我们使用目前主流的两个离线模型，其中，chatglm3-6b 为默认加载模型。
+# 如果你的显存不足，可使用 Qwen-1_8B-Chat, 该模型 FP16 仅需 3.8G显存。
+LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"] # "Qwen-1_8B-Chat",
 
 # AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
 Agent_MODEL = None
