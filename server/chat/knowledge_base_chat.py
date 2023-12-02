@@ -1,5 +1,6 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
+from fastapi.concurrency import run_in_threadpool
 from configs import (LLM_MODELS, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
 from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
@@ -10,9 +11,7 @@ import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
 from server.chat.utils import History
 from server.knowledge_base.kb_service.base import KBServiceFactory
-from server.knowledge_base.utils import get_doc_path
 import json
-from pathlib import Path
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
 
@@ -72,7 +71,11 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             max_tokens=max_tokens,
             callbacks=[callback],
         )
-        docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
+        docs = await run_in_threadpool(search_docs,
+                                       query=query,
+                                       knowledge_base_name=knowledge_base_name,
+                                       top_k=top_k,
+                                       score_threshold=score_threshold)
         context = "\n".join([doc.page_content for doc in docs])
         if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
             prompt_template = get_prompt_template("knowledge_base_chat", "empty")
