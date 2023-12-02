@@ -5,4 +5,4 @@ from .server_config import *
 from .prompt_config import *
 
 
-VERSION = "v0.2.8-preview"
+VERSION = "v0.2.9-preview"

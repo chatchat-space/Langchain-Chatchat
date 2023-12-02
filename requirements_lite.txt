@@ -1,7 +1,7 @@
 langchain==0.0.344
 pydantic==1.10.13
 fschat>=0.2.33
-openai>=1.3.6
+openai>=1.3.7
 fastapi>=0.104.1
 python-multipart
 nltk~=3.8.1
@@ -39,14 +39,15 @@ zhipuai>=1.0.7 # zhipu
 
 numpy~=1.24.4
 pandas~=2.0.3
-streamlit~=1.28.1
+streamlit>=1.29.0
 streamlit-option-menu>=0.3.6
-streamlit-antd-components>=0.1.11
-streamlit-chatbox==1.1.11
+streamlit-antd-components>=0.2.3
+streamlit-chatbox>=1.1.11
+streamlit-modal>=0.1.0
 streamlit-aggrid>=0.3.4.post3
-httpx~=0.24.1
-watchdog
-tqdm
+httpx[brotli,http2,socks]>=0.25.2
+watchdog>=3.0.0
+tqdm>=4.66.1
 websockets
 einops>=0.7.0
 
@@ -58,5 +59,5 @@ einops>=0.7.0
 
 arxiv>=2.0.0
 youtube-search>=2.1.2
-duckduckgo-search>=4.9.3
+duckduckgo-search>=3.9.9
 metaphor-python>=0.1.23

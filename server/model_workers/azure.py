@@ -1,4 +1,5 @@
 import sys
+import os
 from fastchat.conversation import Conversation
 from server.model_workers.base import *
 from server.utils import get_httpx_client
@@ -19,16 +20,16 @@ class AzureWorker(ApiModelWorker):
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 8000) #TODO 16K模型需要改成16384
         super().__init__(**kwargs)
         self.version = version
 
     def do_chat(self, params: ApiChatParams) -> Dict:
         params.load_config(self.model_names[0])
+
         data = dict(
             messages=params.messages,
             temperature=params.temperature,
-            max_tokens=params.max_tokens,
+            max_tokens=params.max_tokens if params.max_tokens else None,
             stream=True,
         )
         url = ("https://{}.openai.azure.com/openai/deployments/{}/chat/completions?api-version={}"
@@ -47,6 +48,7 @@ class AzureWorker(ApiModelWorker):
 
         with get_httpx_client() as client:
             with client.stream("POST", url, headers=headers, json=data) as response:
+                print(data)
                 for line in response.iter_lines():
                     if not line.strip() or "[DONE]" in line:
                         continue
@@ -60,6 +62,7 @@ class AzureWorker(ApiModelWorker):
                                     "error_code": 0,
                                     "text": text
                                 }
+                        print(text)
                     else:
                         self.logger.error(f"请求 Azure API 时发生错误：{resp}")
 

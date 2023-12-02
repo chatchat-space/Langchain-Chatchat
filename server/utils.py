@@ -43,6 +43,7 @@ def get_ChatOpenAI(
     config = get_model_worker_config(model_name)
     if model_name == "openai-api":
         model_name = config.get("model_name")
+
     model = ChatOpenAI(
         streaming=streaming,
         verbose=verbose,
