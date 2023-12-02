@@ -26,8 +26,7 @@ from server.knowledge_base.utils import (
 
 from typing import List, Union, Dict, Optional
 
-from server.embeddings_api import embed_texts
-from server.embeddings_api import embed_documents
+from server.embeddings_api import embed_texts, aembed_texts, embed_documents
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 
 
@@ -405,12 +404,16 @@ class EmbeddingsFunAdapter(Embeddings):
         normalized_query_embed = normalize(query_embed_2d)
         return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
-    # TODO: 暂不支持异步
-    # async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
-    #     return normalize(await self.embeddings.aembed_documents(texts))
+    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings = (await aembed_texts(texts=texts, embed_model=self.embed_model, to_query=False)).data
+        return normalize(embeddings).tolist()
 
-    # async def aembed_query(self, text: str) -> List[float]:
-    #     return normalize(await self.embeddings.aembed_query(text))
+    async def aembed_query(self, text: str) -> List[float]:
+        embeddings = (await aembed_texts(texts=[text], embed_model=self.embed_model, to_query=True)).data
+        query_embed = embeddings[0]
+        query_embed_2d = np.reshape(query_embed, (1, -1))  # 将一维数组转换为二维数组
+        normalized_query_embed = normalize(query_embed_2d)
+        return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
 
 def score_threshold_process(score_threshold, k, docs):
