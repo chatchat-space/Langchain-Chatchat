@@ -9,8 +9,7 @@ from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI, AzureOpenAI, Anthropic
+from langchain.chat_models import ChatOpenAI,AzureChatOpenAI
 import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
 import logging
@@ -41,20 +40,29 @@ def get_ChatOpenAI(
         **kwargs: Any,
 ) -> ChatOpenAI:
     config = get_model_worker_config(model_name)
-    if model_name == "openai-api":
-        model_name = config.get("model_name")
-    model = ChatOpenAI(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        openai_proxy=config.get("openai_proxy"),
-        **kwargs
-    )
+    if model_name in ["openai-api","azure-api"]:
+        model = get_OpenAI(
+            model_name = model_name,
+            temperature = temperature,
+            max_tokens = max_tokens,
+            streaming = streaming,
+            callbacks = callbacks,
+            verbose = verbose,
+            **kwargs
+        )
+    else:
+        model = ChatOpenAI(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            openai_api_key=config.get("api_key", "EMPTY"),
+            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            openai_proxy=config.get("openai_proxy"),
+            **kwargs
+        )
     return model
 
 def get_OpenAI(
@@ -67,22 +75,53 @@ def get_OpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> OpenAI:
-    config = get_model_worker_config(model_name)
-    if model_name == "openai-api":
-        model_name = config.get("model_name")
-    model = OpenAI(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        openai_proxy=config.get("openai_proxy"),
-        echo=echo,
-        **kwargs
-    )
+    config_models = list_config_llm_models()
+    if model_name in config_models.get("online", {}):
+        config = config_models["online"][model_name]
+        if model_name == "azure-api":
+            resource_name = config.get("resource_name")
+            base_url = f"https://{resource_name}.openai.azure.com"
+            model = AzureChatOpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                azure_deployment=config.get("deployment_name"),
+                openai_api_type=config.get("api_type"),
+                base_url=base_url,
+                api_version=config.get("api_version"),
+                api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+        elif model_name == "openai-api":
+            model = ChatOpenAI(
+                streaming=streaming,
+                verbose=verbose,
+                callbacks=callbacks,
+                model_name=config.get("model_name"),
+                openai_api_base=config.get("api_base_url"),
+                openai_api_key=config.get("api_key"),
+                openai_proxy=config.get("openai_proxy"),
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+    else:    
+        config = get_model_worker_config(model_name)    
+        model = OpenAI(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            openai_api_key=config.get("api_key", "EMPTY"),
+            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            openai_proxy=config.get("openai_proxy"),
+            echo=echo,
+            **kwargs
+        )
     return model
 
 

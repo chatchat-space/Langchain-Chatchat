@@ -45,6 +45,7 @@ ONLINE_LLM_MODEL = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "",
         "openai_proxy": "",
+        "provider": "OpenaiWorker",
     },
 
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
@@ -112,6 +113,7 @@ ONLINE_LLM_MODEL = {
         "resource_name": "",  # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
         "api_version": "",  # API的版本，不是模型版本
         "api_key": "",
+        "api_type": "azure",
         "provider": "AzureWorker",
     },
 
