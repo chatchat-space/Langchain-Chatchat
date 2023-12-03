@@ -315,40 +315,11 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        # print(f"received input message:")
-        # pprint(data)
+        print(f"received input message:")
+        pprint(data)
 
         response = self.post("/chat/chat", json=data, stream=True, **kwargs)
         return self._httpx_stream2generator(response, as_json=True)
-
-    def agent_chat(
-        self,
-        query: str,
-        history: List[Dict] = [],
-        stream: bool = True,
-        model: str = LLM_MODELS[0],
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        prompt_name: str = "default",
-    ):
-        '''
-        对应api.py/chat/agent_chat 接口
-        '''
-        data = {
-            "query": query,
-            "history": history,
-            "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post("/chat/agent_chat", json=data, stream=True)
-        return self._httpx_stream2generator(response)
 
     def knowledge_base_chat(
         self,

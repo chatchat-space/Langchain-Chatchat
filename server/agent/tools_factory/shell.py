@@ -6,4 +6,4 @@ def shell(query: str):
     return tool.run(tool_input=query)
 
 class ShellInput(BaseModel):
-    query: str = Field(description="一个能在Linux命令行运行的Shell命令")
+    query: str = Field(description="The command to execute")

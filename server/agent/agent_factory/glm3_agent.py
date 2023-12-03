@@ -1,5 +1,5 @@
 """
-This file is a modified version for ChatGLM3-6B the original ChatGLM3Agent.py file from the langchain repo.
+This file is a modified version for ChatGLM3-6B the original glm3_agent.py file from the langchain repo.
 """
 from __future__ import annotations
 
@@ -10,11 +10,7 @@ from typing import Any, List, Sequence, Tuple, Optional, Union
 import os
 from langchain.agents.agent import Agent
 from langchain.chains.llm import LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate, MessagesPlaceholder,
-)
+from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate
 import json
 import logging
 from langchain.agents.agent import AgentOutputParser
@@ -25,6 +21,7 @@ from langchain.agents.agent import AgentExecutor
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
+from pydantic.schema import model_schema
 
 HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
 logger = logging.getLogger(__name__)
@@ -43,12 +40,19 @@ class StructuredChatOutputParserWithRetries(AgentOutputParser):
         first_index = min([text.find(token) if token in text else len(text) for token in special_tokens])
         text = text[:first_index]
         if "tool_call" in text:
-            tool_name_end = text.find("```")
-            tool_name = text[:tool_name_end].strip()
-            input_para = text.split("='")[-1].split("'")[0]
+            action_end = text.find("```")
+            action = text[:action_end].strip()
+
+            params_str_start = text.find("(") + 1
+            params_str_end = text.find(")")
+            params_str = text[params_str_start:params_str_end]
+
+            params_pairs = [param.split("=") for param in params_str.split(",") if "=" in param]
+            params = {pair[0].strip(): pair[1].strip().strip("'\"") for pair in params_pairs}
+
             action_json = {
-                "action": tool_name,
-                "action_input": input_para
+                "action": action,
+                "action_input": params
             }
         else:
             action_json = {
@@ -131,44 +135,25 @@ class StructuredGLM3ChatAgent(Agent):
             input_variables: Optional[List[str]] = None,
             memory_prompts: Optional[List[BasePromptTemplate]] = None,
     ) -> BasePromptTemplate:
-        def tool_config_from_file(tool_name, directory="server/agent/tools/"):
-            """search tool yaml and return simplified json format"""
-            file_path = os.path.join(directory, f"{tool_name.lower()}.yaml")
-            try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    tool_config = yaml.safe_load(file)
-                    # Simplify the structure if needed
-                    simplified_config = {
-                        "name": tool_config.get("name", ""),
-                        "description": tool_config.get("description", ""),
-                        "parameters": tool_config.get("parameters", {})
-                    }
-                    return simplified_config
-            except FileNotFoundError:
-                logger.error(f"File not found: {file_path}")
-                return None
-            except Exception as e:
-                logger.error(f"An error occurred while reading {file_path}: {e}")
-                return None
-
         tools_json = []
         tool_names = []
         for tool in tools:
-            tool_config = tool_config_from_file(tool.name)
-            if tool_config:
-                tools_json.append(tool_config)
-                tool_names.append(tool.name)
-
-        # Format the tools for output
+            tool_schema = model_schema(tool.args_schema) if tool.args_schema else {}
+            simplified_config_langchain = {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool_schema.get("properties", {})
+            }
+            tools_json.append(simplified_config_langchain)
+            tool_names.append(tool.name)
         formatted_tools = "\n".join([
             f"{tool['name']}: {tool['description']}, args: {tool['parameters']}"
             for tool in tools_json
         ])
         formatted_tools = formatted_tools.replace("'", "\\'").replace("{", "{{").replace("}", "}}")
-
         template = prompt.format(tool_names=tool_names,
                                  tools=formatted_tools,
-                                 history="{history}",
+                                 history="None",
                                  input="{input}",
                                  agent_scratchpad="{agent_scratchpad}")
 
@@ -248,4 +233,3 @@ def initialize_glm3_agent(
         tags=tags_,
         **kwargs,
     )
-

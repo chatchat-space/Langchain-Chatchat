@@ -29,9 +29,4 @@ def search_internet(query: str):
     return asyncio.run(search_engine_iter(query))
 
 class SearchInternetInput(BaseModel):
-    location: str = Field(description="Query for Internet search")
-
-
-if __name__ == "__main__":
-    result = search_internet("今天星期几")
-    print("答案:",result)
+    query: str = Field(description="Query for Internet search")

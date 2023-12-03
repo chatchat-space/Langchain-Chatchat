@@ -37,7 +37,7 @@ def test_list_search_engines():
     assert len(engines) > 0
 
 
-@pytest.mark.parametrize("type", ["llm_chat", "agent_chat"])
+@pytest.mark.parametrize("type", ["llm_chat"])
 def test_get_prompt_template(type):
     print(f"prompt template for: {type}")
     template = api.get_prompt_template(type=type)

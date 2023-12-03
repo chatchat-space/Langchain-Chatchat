@@ -311,13 +311,8 @@ VLLM_MODEL_DICT = {
 
 }
 
-# 你认为支持Agent能力的模型，可以在这里添加，添加后不会出现可视化界面的警告
-# 经过我们测试，原生支持Agent的模型仅有以下几个
+# 0.2.9新版支持的多参数 Agent 模型仅有以下两种
 SUPPORT_AGENT_MODEL = [
-    "azure-api",
     "openai-api",
-    "qwen-api",
-    "Qwen",
     "chatglm3",
-    "xinghuo-api",
 ]

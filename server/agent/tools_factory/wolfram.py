@@ -8,4 +8,4 @@ def wolfram(query: str):
     return ans
 
 class WolframInput(BaseModel):
-    location: str = Field(description="需要运算的具体问题")
+    formula: str = Field(description="The formula to be calculated")
