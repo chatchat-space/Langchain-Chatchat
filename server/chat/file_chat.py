@@ -15,8 +15,6 @@ from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 from server.knowledge_base.utils import KnowledgeFile
 import json
 import os
-from pathlib import Path
-
 
 def _parse_files_in_thread(
     files: List[UploadFile],

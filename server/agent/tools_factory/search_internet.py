@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field
 
 async def search_engine_iter(query: str):
     response = await search_engine_chat(query=query,
-                                         search_engine_name="bing", # 这里切换搜索引擎
+                                         search_engine_name="bing",
                                          model_name=model_container.MODEL.model_name,
-                                         temperature=0.01, # Agent 搜索互联网的时候，温度设置为0.01
+                                         temperature=0.01,
                                          history=[],
                                          top_k = VECTOR_SEARCH_TOP_K,
                                          max_tokens= MAX_TOKENS,
@@ -17,7 +17,6 @@ async def search_engine_iter(query: str):
                                          stream=False)
 
     contents = ""
-
     async for data in response.body_iterator: # 这里的data是一个json字符串
         data = json.loads(data)
         contents = data["answer"]
