@@ -30,9 +30,16 @@ PROMPT_TEMPLATES = {
             'Human: {input}\n'
             'AI:',
 
-        "py":
-            '你是一个聪明的代码助手，请你给我写出简单的py代码。 \n'
-            '{{ input }}',
+        "tool":
+            '请你根据我的描述，认为是否需要使用工具，还是可以直接回答问题。你只要回答一个数字。1 或者 0，1代表需要使用工具，0代表不需要使用工具。\n'
+            '以下几种情况要使用工具,请返回1\n'
+            '1. 实时性的问题，例如天气，日期，地点等信息\n'
+            '2. 需要数学计算的问题\n'
+            '3. 需要查询数据，地点等精确数据\n'
+            '4. 需要行业知识的问题\n'
+            '<question>'
+            '{input}'
+            '</question>'
     },
 
 
@@ -52,22 +59,6 @@ PROMPT_TEMPLATES = {
             '请你回答我的问题:\n'
             '{{ question }}\n\n',
     },
-
-
-    "search_engine_chat": {
-        "default":
-            '<指令>这是我搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。'
-            '如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 </指令>\n'
-            '<已知信息>{{ context }}</已知信息>\n'
-            '<问题>{{ question }}</问题>\n',
-
-        "search":
-            '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，答案请使用中文。 </指令>\n'
-            '<已知信息>{{ context }}</已知信息>\n'
-            '<问题>{{ question }}</问题>\n',
-    },
-
-
     "agent_chat": {
         "default":
             'Answer the following questions as best you can. If it is in order, you can use some tools appropriately. '

@@ -108,9 +108,3 @@ def change_llm_model(
         return BaseResponse(
             code=500,
             msg=f"failed to switch LLM model from controller: {controller_address}。错误信息是： {e}")
-
-
-def list_search_engines() -> BaseResponse:
-    from server.chat.search_engine_chat import SEARCH_ENGINES
-
-    return BaseResponse(data=list(SEARCH_ENGINES))

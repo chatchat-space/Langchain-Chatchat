@@ -15,7 +15,6 @@ from configs import (
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
-    SEARCH_ENGINE_TOP_K,
     HTTPX_DEFAULT_TIMEOUT,
     logger, log_verbose,
 )
@@ -237,10 +236,6 @@ class ApiRequest:
         response = self.post("/server/configs", **kwargs)
         return self._get_response_value(response, as_json=True)
 
-    def list_search_engines(self, **kwargs) -> List:
-        response = self.post("/server/list_search_engines", **kwargs)
-        return self._get_response_value(response, as_json=True, value_func=lambda r: r["data"])
-
     def get_prompt_template(
         self,
         type: str = "llm_chat",
@@ -434,46 +429,6 @@ class ApiRequest:
             stream=True,
         )
         return self._httpx_stream2generator(response, as_json=True)
-
-    def search_engine_chat(
-        self,
-        query: str,
-        search_engine_name: str,
-        top_k: int = SEARCH_ENGINE_TOP_K,
-        history: List[Dict] = [],
-        stream: bool = True,
-        model: str = LLM_MODELS[0],
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        prompt_name: str = "default",
-        split_result: bool = False,
-    ):
-        '''
-        对应api.py/chat/search_engine_chat接口
-        '''
-        data = {
-            "query": query,
-            "search_engine_name": search_engine_name,
-            "top_k": top_k,
-            "history": history,
-            "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
-            "split_result": split_result,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post(
-            "/chat/search_engine_chat",
-            json=data,
-            stream=True,
-        )
-        return self._httpx_stream2generator(response, as_json=True)
-
     # 知识库相关操作
 
     def list_knowledge_bases(
@@ -813,15 +768,6 @@ class ApiRequest:
         response = self.post(
             "/llm_model/get_model_config",
             json=data,
-        )
-        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
-
-    def list_search_engines(self) -> List[str]:
-        '''
-        获取服务器支持的搜索引擎
-        '''
-        response = self.post(
-            "/server/list_search_engines",
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
 

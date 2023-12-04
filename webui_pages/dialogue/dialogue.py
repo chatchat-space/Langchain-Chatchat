@@ -7,7 +7,7 @@ import os
 import re
 import time
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
+                     DEFAULT_KNOWLEDGE_BASE)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
 from typing import List, Dict
@@ -139,7 +139,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         dialogue_modes = ["LLM 对话",
                           "知识库问答",
                           "文件对话",
-                          "搜索引擎问答",
                           ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
@@ -200,7 +199,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
         index_prompt = {
             "LLM 对话": "llm_chat",
-            "搜索引擎问答": "search_engine_chat",
             "知识库问答": "knowledge_base_chat",
             "文件对话": "knowledge_base_chat",
         }
@@ -256,20 +254,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
                 if st.button("开始上传", disabled=len(files) == 0):
                     st.session_state["file_chat_id"] = upload_temp_docs(files, api)
-        elif dialogue_mode == "搜索引擎问答":
-            search_engine_list = api.list_search_engines()
-            if DEFAULT_SEARCH_ENGINE in search_engine_list:
-                index = search_engine_list.index(DEFAULT_SEARCH_ENGINE)
-            else:
-                index = search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0
-            with st.expander("搜索引擎配置", True):
-                search_engine = st.selectbox(
-                    label="请选择搜索引擎",
-                    options=search_engine_list,
-                    index=index,
-                )
-                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
-
     # Display chat messages from history on app rerun
     chat_box.output_messages()
 
@@ -387,28 +371,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                         chat_box.update_msg(text, element_index=0)
                 chat_box.update_msg(text, element_index=0, streaming=False)
                 chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
-            elif dialogue_mode == "搜索引擎问答":
-                chat_box.ai_say([
-                    f"正在执行 `{search_engine}` 搜索...",
-                    Markdown("...", in_expander=True, title="网络搜索结果", state="complete"),
-                ])
-                text = ""
-                for d in api.search_engine_chat(prompt,
-                                                search_engine_name=search_engine,
-                                                top_k=se_top_k,
-                                                history=history,
-                                                model=llm_model,
-                                                prompt_name=prompt_template_name,
-                                                temperature=temperature,
-                                                split_result=se_top_k > 1):
-                    if error_msg := check_error_msg(d):  # check whether error occured
-                        st.error(error_msg)
-                    elif chunk := d.get("answer"):
-                        text += chunk
-                        chat_box.update_msg(text, element_index=0)
-                chat_box.update_msg(text, element_index=0, streaming=False)
-                chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
-
     if st.session_state.get("need_rerun"):
         st.session_state["need_rerun"] = False
         st.rerun()
