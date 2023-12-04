@@ -85,6 +85,7 @@ def list_files_from_folder(kb_name: str):
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
+               "MHTMLLoader": ['.mhtml'],
                "UnstructuredMarkdownLoader": ['.md'],
                "JSONLoader": [".json"],
                "JSONLinesLoader": [".jsonl"],
@@ -106,6 +107,7 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredWordDocumentLoader": ['.docx', 'doc'],
                "UnstructuredXMLLoader": ['.xml'],
                "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
+               "EverNoteLoader": ['.enex'],
                "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]

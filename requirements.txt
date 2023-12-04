@@ -38,6 +38,12 @@ einops>=0.7.0
 transformers_stream_generator==0.0.4
 vllm==0.2.2; sys_platform == "linux"
 
+# optional document loaders
+# rapidocr_paddle[gpu] # gpu accelleration for ocr of pdf and image files
+# jq # for .json and .jsonl files. suggest `conda install jq` on windows
+# html2text # for .enex files
+# beautifulsoup4 # for .mhtml files
+# pysrt # for .srt files
 
 # Online api libs dependencies
 
