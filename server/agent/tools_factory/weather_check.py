@@ -4,10 +4,7 @@
 from pydantic import BaseModel, Field
 import requests
 
-api_key = ""
-
-
-def weather_check(location: str):
+def weather(location: str, api_key: str):
     url = f"https://api.seniverse.com/v3/weather/now.json?key={api_key}&location={location}&language=zh-Hans&unit=c"
     response = requests.get(url)
     if response.status_code == 200:
@@ -22,5 +19,7 @@ def weather_check(location: str):
             f"Failed to retrieve weather: {response.status_code}")
 
 
+def weather_check(location: str):
+    return weather(location, "S8vrB4U_-c5mvAMiK")
 class WeatherInput(BaseModel):
     location: str = Field(description="City name,include city and county,like '厦门'")

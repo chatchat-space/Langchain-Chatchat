@@ -1,31 +1,33 @@
-from server.chat.knowledge_base_chat import knowledge_base_chat
-import json
-from configs import VECTOR_SEARCH_TOP_K, MAX_TOKENS, SCORE_THRESHOLD
-import asyncio
-from server.agent import model_container
+from urllib.parse import urlencode
+
 from pydantic import BaseModel, Field
 
+from server.knowledge_base.kb_doc_api import search_docs
+from configs import TOOL_CONFIG
 
-async def search_knowledge_base_iter(database: str, query: str) -> str:
-    response = await knowledge_base_chat(query=query,
-                                         knowledge_base_name=database,
-                                         model_name=model_container.MODEL.model_name,
-                                         temperature=0.01,
-                                         history=[],
-                                         top_k=VECTOR_SEARCH_TOP_K,
-                                         max_tokens=MAX_TOKENS,
-                                         prompt_name="default",
-                                         score_threshold=SCORE_THRESHOLD,
-                                         stream=False)
 
-    contents = ""
-    async for data in response.body_iterator:
-        data = json.loads(data)
-        contents = data["answer"] + "\n出处:\n"
-        docs = data["docs"]
-        for doc in docs:
-            contents += doc + "\n"
-    return contents
+def search_knowledgebase(query: str, database: str, config: dict):
+    docs = search_docs(
+        query=query,
+        knowledge_base_name=database,
+        top_k=config["top_k"],
+        score_threshold=config["score_threshold"])
+    context = ""
+    source_documents = []
+    for inum, doc in enumerate(docs):
+        filename = doc.metadata.get("source")
+        parameters = urlencode({"knowledge_base_name": database, "file_name": filename})
+        url = f"download_doc?" + parameters
+        text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+        source_documents.append(text)
+
+    if len(source_documents) == 0:
+        context= "没有找到相关文档,请更换关键词重试"
+    else:
+        for doc in source_documents:
+            context += doc + "\n"
+
+    return context
 
 
 class SearchKnowledgeInput(BaseModel):
@@ -34,4 +36,5 @@ class SearchKnowledgeInput(BaseModel):
 
 
 def search_local_knowledgebase(database: str, query: str):
-    return asyncio.run(search_knowledge_base_iter(database, query))
+    tool_config = TOOL_CONFIG["search_local_knowledgebase"]
+    return search_knowledgebase(query=query, database=database, config=tool_config)

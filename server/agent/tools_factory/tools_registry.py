@@ -5,7 +5,8 @@ from configs import KB_INFO
 template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool."
 KB_info_str = '\n'.join([f"{key}: {value}" for key, value in KB_INFO.items()])
 template_knowledge = template.format(KB_info=KB_info_str)
-tools = [
+
+all_tools = [
     StructuredTool.from_function(
         func=calculate,
         name="calculate",
@@ -55,3 +56,4 @@ tools = [
         args_schema=SearchKnowledgeInput,
     ),
 ]
+

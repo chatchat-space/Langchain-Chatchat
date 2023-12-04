@@ -7,7 +7,6 @@ from typing import Any, AsyncIterator, Dict, List, Literal, Union, cast, Optiona
 from langchain_core.outputs import LLMResult
 from langchain.callbacks.base import AsyncCallbackHandler
 
-
 def dumps(obj: Dict) -> str:
     return json.dumps(obj, ensure_ascii=False)
 
@@ -30,6 +29,29 @@ class CustomAsyncIteratorCallbackHandler(AsyncCallbackHandler):
         self.cur_tool = {}
         self.out = False
 
+    async def on_tool_start(
+            self,
+            serialized: Dict[str, Any],
+            input_str: str,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            metadata: Optional[Dict[str, Any]] = None,
+            **kwargs: Any,
+    ) -> None:
+        print("on_tool_start")
+
+    async def on_tool_end(
+            self,
+            output: str,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
+    ) -> None:
+        print("on_tool_end")
     async def on_tool_error(self, error: Exception | KeyboardInterrupt, *, run_id: UUID,
                             parent_run_id: UUID | None = None, tags: List[str] | None = None, **kwargs: Any) -> None:
         self.cur_tool.update(

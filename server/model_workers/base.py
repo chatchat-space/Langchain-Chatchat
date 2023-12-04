@@ -1,5 +1,5 @@
 from fastchat.conversation import Conversation
-from configs import LOG_PATH, TEMPERATURE
+from configs import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
 from fastchat.serve.base_model_worker import BaseModelWorker
@@ -63,7 +63,7 @@ class ApiModelParams(ApiConfigParams):
     deployment_name: Optional[str] = None # for azure
     resource_name: Optional[str] = None # for azure
 
-    temperature: float = TEMPERATURE
+    temperature: float = 0.9
     max_tokens: Optional[int] = None
     top_p: Optional[float] = 1.0
 

@@ -6,8 +6,7 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE)
+from configs import (TOOL_CONFIG, LLM_MODEL_CONFIG)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
 from typing import List, Dict
@@ -55,6 +54,7 @@ def parse_command(text: str, modal: Modal) -> bool:
     /new {session_name}。如果未提供名称，默认为“会话X”
     /del {session_name}。如果未提供名称，在会话数量>1的情况下，删除当前会话。
     /clear {session_name}。如果未提供名称，默认清除当前会话
+    /stop {session_name}。如果未提供名称，默认停止当前会话
     /help。查看命令帮助
     返回值：输入的是命令返回True，否则返回False
     '''
@@ -117,35 +117,38 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.write("\n\n".join(cmds))
 
     with st.sidebar:
-        # 多会话
         conv_names = list(st.session_state["conversation_ids"].keys())
         index = 0
+
+        tools = list(TOOL_CONFIG.keys())
+        selected_tool_configs = {}
+
+        with st.expander("工具栏"):
+            for tool in tools:
+                is_selected = st.checkbox(tool, value=TOOL_CONFIG[tool]["use"], key=tool)
+                if is_selected:
+                    selected_tool_configs[tool] = TOOL_CONFIG[tool]
+
         if st.session_state.get("cur_conv_name") in conv_names:
             index = conv_names.index(st.session_state.get("cur_conv_name"))
-        conversation_name = st.selectbox("当前会话：", conv_names, index=index)
+        conversation_name = st.selectbox("当前会话", conv_names, index=index)
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        # TODO: 对话模型与会话绑定
-        def on_mode_change():
-            mode = st.session_state.dialogue_mode
-            text = f"已切换到 {mode} 模式。"
-            if mode == "知识库问答":
-                cur_kb = st.session_state.get("selected_kb")
-                if cur_kb:
-                    text = f"{text} 当前知识库： `{cur_kb}`。"
-            st.toast(text)
+        # def on_mode_change():
+        #     mode = st.session_state.dialogue_mode
+        #     text = f"已切换到 {mode} 模式。"
+        #     st.toast(text)
 
-        dialogue_modes = ["LLM 对话",
-                          "知识库问答",
-                          "文件对话",
-                          ]
-        dialogue_mode = st.selectbox("请选择对话模式：",
-                                     dialogue_modes,
-                                     index=0,
-                                     on_change=on_mode_change,
-                                     key="dialogue_mode",
-                                     )
+        # dialogue_modes = ["智能对话",
+        #                   "文件对话",
+        #                   ]
+        # dialogue_mode = st.selectbox("请选择对话模式：",
+        #                              dialogue_modes,
+        #                              index=0,
+        #                              on_change=on_mode_change,
+        #                              key="dialogue_mode",
+        #                              )
 
         def on_llm_change():
             if llm_model:
@@ -176,87 +179,38 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             index = llm_models.index(cur_llm_model)
         else:
             index = 0
-        llm_model = st.selectbox("选择LLM模型：",
+        llm_model = st.selectbox("选择LLM模型",
                                  llm_models,
                                  index,
                                  format_func=llm_model_format_func,
                                  on_change=on_llm_change,
                                  key="llm_model",
                                  )
-        if (st.session_state.get("prev_llm_model") != llm_model
-                and not is_lite
-                and not llm_model in config_models.get("online", {})
-                and not llm_model in config_models.get("langchain", {})
-                and llm_model not in running_models):
-            with st.spinner(f"正在加载模型： {llm_model}，请勿进行操作或刷新页面"):
-                prev_model = st.session_state.get("prev_llm_model")
-                r = api.change_llm_model(prev_model, llm_model)
-                if msg := check_error_msg(r):
-                    st.error(msg)
-                elif msg := check_success_msg(r):
-                    st.success(msg)
-                    st.session_state["prev_llm_model"] = llm_model
-
-        index_prompt = {
-            "LLM 对话": "llm_chat",
-            "知识库问答": "knowledge_base_chat",
-            "文件对话": "knowledge_base_chat",
+        model_config = {
+            "llm_model": {},
+            "agent_model": {}
         }
-        prompt_templates_kb_list = list(PROMPT_TEMPLATES[index_prompt[dialogue_mode]].keys())
-        prompt_template_name = prompt_templates_kb_list[0]
-        if "prompt_template_select" not in st.session_state:
-            st.session_state.prompt_template_select = prompt_templates_kb_list[0]
+        agent_model = next(iter(LLM_MODEL_CONFIG['agent_model']))
+        model_config["llm_model"][llm_model] = LLM_MODEL_CONFIG["llm_model"].get(llm_model, {})
+        model_config["agent_model"][agent_model] = LLM_MODEL_CONFIG["agent_model"].get(agent_model, {})
+        files = st.file_uploader("上传附件",
+                                 type=[i for ls in LOADER_DICT.values() for i in ls],
+                                 accept_multiple_files=True)
 
-        def prompt_change():
-            text = f"已切换为 {prompt_template_name} 模板。"
-            st.toast(text)
-
-        prompt_template_select = st.selectbox(
-            "请选择Prompt模板：",
-            prompt_templates_kb_list,
-            index=0,
-            on_change=prompt_change,
-            key="prompt_template_select",
-        )
-        prompt_template_name = st.session_state.prompt_template_select
-        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
-        history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
-
-        def on_kb_change():
-            st.toast(f"已加载知识库： {st.session_state.selected_kb}")
-
-        if dialogue_mode == "知识库问答":
-            with st.expander("知识库配置", True):
-                kb_list = api.list_knowledge_bases()
-                index = 0
-                if DEFAULT_KNOWLEDGE_BASE in kb_list:
-                    index = kb_list.index(DEFAULT_KNOWLEDGE_BASE)
-                selected_kb = st.selectbox(
-                    "请选择知识库：",
-                    kb_list,
-                    index=index,
-                    on_change=on_kb_change,
-                    key="selected_kb",
-                )
-                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
-
-                ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
-        elif dialogue_mode == "文件对话":
-            with st.expander("文件对话配置", True):
-                files = st.file_uploader("上传知识文件：",
-                                         [i for ls in LOADER_DICT.values() for i in ls],
-                                         accept_multiple_files=True,
-                                         )
-                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
-
-                ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
-                if st.button("开始上传", disabled=len(files) == 0):
-                    st.session_state["file_chat_id"] = upload_temp_docs(files, api)
+        # if dialogue_mode == "文件对话":
+        #     with st.expander("文件对话配置", True):
+        #         files = st.file_uploader("上传知识文件：",
+        #                                  [i for ls in LOADER_DICT.values() for i in ls],
+        #                                  accept_multiple_files=True,
+        #                                  )
+        #         kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
+        #         score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+        #         if st.button("开始上传", disabled=len(files) == 0):
+        #             st.session_state["file_chat_id"] = upload_temp_docs(files, api)
     # Display chat messages from history on app rerun
-    chat_box.output_messages()
 
+
+    chat_box.output_messages()
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
 
     def on_feedback(
@@ -277,100 +231,79 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     }
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        if parse_command(text=prompt, modal=modal):  # 用户输入自定义命令
+        if parse_command(text=prompt, modal=modal):
             st.rerun()
         else:
-            history = get_messages_history(history_len)
+            history = get_messages_history(
+                model_config["llm_model"][next(iter(LLM_MODEL_CONFIG['llm_model']))]["history_len"])
             chat_box.user_say(prompt)
-            if dialogue_mode == "LLM 对话":
-                chat_box.ai_say("正在思考...")
-                text = ""
-                message_id = ""
-                element_index = 0
-                for d in api.chat_chat(prompt,
-                                       history=history,
-                                       model=llm_model,
-                                       conversation_id=conversation_id,
-                                       prompt_name=prompt_template_name,
-                                       temperature=temperature,
-                                       ):
-                    try:
-                        d = json.loads(d)
-                    except:
-                        pass
-                    message_id = d.get("message_id", "")
-                    metadata = {
-                        "message_id": message_id,
-                    }
-                    if error_msg := check_error_msg(d):  # check whether error occured
-                        st.error(error_msg)
-                    if chunk := d.get("agent_action"):
-                        chat_box.insert_msg(Markdown("...", in_expander=True, title="Tools", state="complete"))
-                        element_index = 1
-                        formatted_data = {
-                            "action": chunk["tool_name"],
-                            "action_input": chunk["tool_input"]
-                        }
-                        formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                        text += f"\n```\nInput Params:\n" + formatted_json + f"\n```\n"
-                        chat_box.update_msg(text, element_index=element_index, metadata=metadata)
-                    if chunk := d.get("text"):
-                        text += chunk
-                        chat_box.update_msg(text, element_index=element_index, metadata=metadata)
-                    if chunk := d.get("agent_finish"):
-                        element_index = 0
-                        text = chunk
-                    chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
-                chat_box.show_feedback(**feedback_kwargs,
-                                       key=message_id,
-                                       on_submit=on_feedback,
-                                       kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
-            elif dialogue_mode == "知识库问答":
-                chat_box.ai_say([
-                    f"正在查询知识库 `{selected_kb}` ...",
-                    Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
-                ])
-                text = ""
-                for d in api.knowledge_base_chat(prompt,
-                                                 knowledge_base_name=selected_kb,
-                                                 top_k=kb_top_k,
-                                                 score_threshold=score_threshold,
-                                                 history=history,
-                                                 model=llm_model,
-                                                 prompt_name=prompt_template_name,
-                                                 temperature=temperature):
-                    if error_msg := check_error_msg(d):  # check whether error occured
-                        st.error(error_msg)
-                    elif chunk := d.get("answer"):
-                        text += chunk
-                        chat_box.update_msg(text, element_index=0)
-                chat_box.update_msg(text, element_index=0, streaming=False)
-                chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
-            elif dialogue_mode == "文件对话":
-                if st.session_state["file_chat_id"] is None:
-                    st.error("请先上传文件再进行对话")
-                    st.stop()
-                chat_box.ai_say([
-                    f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
-                    Markdown("...", in_expander=True, title="文件匹配结果", state="complete"),
-                ])
-                text = ""
-                for d in api.file_chat(prompt,
-                                       knowledge_id=st.session_state["file_chat_id"],
-                                       top_k=kb_top_k,
-                                       score_threshold=score_threshold,
-                                       history=history,
-                                       model=llm_model,
-                                       prompt_name=prompt_template_name,
-                                       temperature=temperature):
-                    if error_msg := check_error_msg(d):  # check whether error occured
-                        st.error(error_msg)
-                    elif chunk := d.get("answer"):
-                        text += chunk
-                        chat_box.update_msg(text, element_index=0)
-                chat_box.update_msg(text, element_index=0, streaming=False)
-                chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+            chat_box.ai_say("正在思考...")
+            text = ""
+            message_id = ""
+            element_index = 0
+            for d in api.chat_chat(query=prompt,
+                                   history=history,
+                                   model_config=model_config,
+                                   conversation_id=conversation_id,
+                                   tool_config=selected_tool_configs,
+                                   ):
+                try:
+                    d = json.loads(d)
+                except:
+                    pass
+                message_id = d.get("message_id", "")
+                metadata = {
+                    "message_id": message_id,
+                }
+                if error_msg := check_error_msg(d):
+                    st.error(error_msg)
+                if chunk := d.get("agent_action"):
+                    chat_box.insert_msg(Markdown("...", in_expander=True, title="Tools", state="complete"))
+                    element_index = 1
+                    formatted_data = {
+                        "action": chunk["tool_name"],
+                        "action_input": chunk["tool_input"]
+                    }
+                    formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                    text += f"\n```\nInput Params:\n" + formatted_json + f"\n```\n"
+                    chat_box.update_msg(text, element_index=element_index, metadata=metadata)
+                if chunk := d.get("text"):
+                    text += chunk
+                    chat_box.update_msg(text, element_index=element_index, metadata=metadata)
+                if chunk := d.get("agent_finish"):
+                    element_index = 0
+                    text = chunk
+                chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
+            chat_box.show_feedback(**feedback_kwargs,
+                                   key=message_id,
+                                   on_submit=on_feedback,
+                                   kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
+
+            # elif dialogue_mode == "文件对话":
+            #     if st.session_state["file_chat_id"] is None:
+            #         st.error("请先上传文件再进行对话")
+            #         st.stop()
+            #     chat_box.ai_say([
+            #         f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
+            #         Markdown("...", in_expander=True, title="文件匹配结果", state="complete"),
+            #     ])
+            #     text = ""
+            #     for d in api.file_chat(prompt,
+            #                            knowledge_id=st.session_state["file_chat_id"],
+            #                            top_k=kb_top_k,
+            #                            score_threshold=score_threshold,
+            #                            history=history,
+            #                            model=llm_model,
+            #                            prompt_name=prompt_template_name,
+            #                            temperature=temperature):
+            #         if error_msg := check_error_msg(d):
+            #             st.error(error_msg)
+            #         elif chunk := d.get("answer"):
+            #             text += chunk
+            #             chat_box.update_msg(text, element_index=0)
+            #     chat_box.update_msg(text, element_index=0, streaming=False)
+            #     chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
     if st.session_state.get("need_rerun"):
         st.session_state["need_rerun"] = False
         st.rerun()

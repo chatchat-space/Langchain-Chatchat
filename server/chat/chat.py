@@ -1,27 +1,25 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from langchain.agents import initialize_agent, AgentType
+from langchain_core.callbacks import AsyncCallbackManager
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableBranch
-
-from configs import LLM_MODELS, TEMPERATURE, Agent_MODEL
-from server.agent import model_container
 from server.agent.agent_factory import initialize_glm3_agent
-from server.agent.tools_factory.tools_registry import tools
+from server.agent.tools_factory.tools_registry import all_tools
 from server.utils import wrap_done, get_ChatOpenAI
 from langchain.chains import LLMChain
-from typing import AsyncIterable
+from typing import AsyncIterable, Dict
 import asyncio
 import json
 from langchain.prompts.chat import ChatPromptTemplate
-from typing import List, Optional, Union
+from typing import List, Union
 from server.chat.utils import History
 from langchain.prompts import PromptTemplate
 from server.utils import get_prompt_template
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
 from server.callback_handler.conversation_callback_handler import ConversationCallbackHandler
-from server.callback_handler.agent_callback_handler import Status,CustomAsyncIteratorCallbackHandler
+from server.callback_handler.agent_callback_handler import Status, CustomAsyncIteratorCallbackHandler
 
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
@@ -35,83 +33,78 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                                              {"role": "assistant", "content": "虎头虎脑"}]]
                                                          ),
                stream: bool = Body(False, description="流式输出"),
-               model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
-               temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
-               max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
-               # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
-               prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+               model_config: Dict = Body({}, description="LLM 模型配置。"),
+               tool_config: Dict = Body({}, description="工具配置"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        nonlocal history, max_tokens
+        nonlocal history
         callback = CustomAsyncIteratorCallbackHandler()
         callbacks = [callback]
         memory = None
         message_id = None
+
+        model_llm_name = next(iter(model_config['llm_model']))
+        model_llm_config = model_config['llm_model'][model_llm_name]
+        model_agent_name = next(iter(model_config['agent_model']))
+        model_agent_config = model_config['agent_model'][model_agent_name]
+
         if conversation_id:
             message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
             conversation_callback = ConversationCallbackHandler(conversation_id=conversation_id, message_id=message_id,
                                                                 chat_type="llm_chat",
                                                                 query=query)
             callbacks.append(conversation_callback)
-        if isinstance(max_tokens, int) and max_tokens <= 0:
-            max_tokens = None
+
+        tools = [tool for tool in all_tools if tool.name in tool_config]
 
         model_llm = get_ChatOpenAI(
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
+            model_name=model_llm_name,
+            temperature=model_llm_config['temperature'],
+            max_tokens=model_llm_config['max_tokens'],
+            callbacks=callbacks,
+        )
+        model_agent = get_ChatOpenAI(
+            model_name=model_agent_name,
+            temperature=model_agent_config['temperature'],
+            max_tokens=model_agent_config['max_tokens'],
             callbacks=callbacks,
         )
 
-        if Agent_MODEL:
-            model_agent = get_ChatOpenAI(
-                model_name=Agent_MODEL,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                callbacks=callbacks,
-            )
-            model_container.MODEL = model_agent
-        else:
-            model_container.MODEL = model_llm
-            model_agent = model_llm
-
         if history:
             history = [History.from_data(h) for h in history]
-            prompt_template = get_prompt_template("llm_chat", prompt_name)
+            prompt_template = get_prompt_template("llm_chain", model_llm_config["prompt_name"])
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
-        elif conversation_id and history_len > 0:  # 前端要求从数据库取历史消息
-            prompt = get_prompt_template("llm_chat", "with_history")
+        elif conversation_id and history_len > 0:
+            prompt = get_prompt_template("llm_chain", "with_history")
             chat_prompt = PromptTemplate.from_template(prompt)
             memory = ConversationBufferDBMemory(conversation_id=conversation_id,
                                                 llm=model_llm,
                                                 message_limit=history_len)
         else:
-            prompt_template = get_prompt_template("llm_chat", prompt_name)
+            prompt_template = get_prompt_template("llm_chain", model_llm_config["prompt_name"])
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model_llm, memory=memory)
 
-        prompt_template_agent = get_prompt_template("agent_chat", "ChatGLM3")
-        prompt_template_classifier = get_prompt_template("llm_chat", "tool")
+        prompt_template_agent = get_prompt_template("agent_chain", model_agent_config["prompt_name"])
+        prompt_template_classifier = get_prompt_template("classifier_chain", "default")
         classifier_chain = (
-                PromptTemplate.from_template(
-                    prompt_template_classifier
-                )
+                PromptTemplate.from_template(prompt_template_classifier)
                 | model_llm
                 | StrOutputParser()
         )
-
-
-        if "chatglm3" in model_container.MODEL.model_name:
+        if "chatglm3" in model_agent_name.lower():
+            # callback_manager1 = AsyncCallbackManager(),
             agent_executor = initialize_glm3_agent(
                 llm=model_agent,
                 tools=tools,
                 prompt=prompt_template_agent,
                 input_variables=["input", "intermediate_steps", "history"],
                 memory=memory,
+                callback_manager=AsyncCallbackManager(handlers=callbacks),
                 verbose=True,
             )
         else:
