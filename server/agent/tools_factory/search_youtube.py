@@ -6,4 +6,4 @@ def search_youtube(query: str):
     return tool.run(tool_input=query)
 
 class YoutubeInput(BaseModel):
-    location: str = Field(description="Query for Videos search")
+    query: str = Field(description="Query for Videos search")

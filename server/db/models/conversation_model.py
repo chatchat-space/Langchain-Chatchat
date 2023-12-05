@@ -9,7 +9,6 @@ class ConversationModel(Base):
     __tablename__ = 'conversation'
     id = Column(String(32), primary_key=True, comment='对话框ID')
     name = Column(String(50), comment='对话框名称')
-    # chat/agent_chat等
     chat_type = Column(String(50), comment='聊天类型')
     create_time = Column(DateTime, default=func.now(), comment='创建时间')
 
