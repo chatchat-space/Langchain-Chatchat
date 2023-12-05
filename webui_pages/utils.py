@@ -3,18 +3,15 @@
 
 from typing import *
 from pathlib import Path
-# 此处导入的配置为发起请求（如WEBUI）机器上的配置，主要用于为前端设置默认值。分布式部署时可以与服务器上的不同
 from configs import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
-    LLM_MODELS,
-    TEMPERATURE,
+    LLM_MODEL_CONFIG,
     SCORE_THRESHOLD,
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
-    SEARCH_ENGINE_TOP_K,
     HTTPX_DEFAULT_TIMEOUT,
     logger, log_verbose,
 )
@@ -26,7 +23,6 @@ from io import BytesIO
 from server.utils import set_httpx_config, api_address, get_httpx_client
 
 from pprint import pprint
-from langchain_core._api import deprecated
 
 set_httpx_config()
 
@@ -247,10 +243,6 @@ class ApiRequest:
         response = self.post("/server/configs", **kwargs)
         return self._get_response_value(response, as_json=True)
 
-    def list_search_engines(self, **kwargs) -> List:
-        response = self.post("/server/list_search_engines", **kwargs)
-        return self._get_response_value(response, as_json=True, value_func=lambda r: r["data"])
-
     def get_prompt_template(
             self,
             type: str = "llm_chat",
@@ -272,10 +264,8 @@ class ApiRequest:
             history_len: int = -1,
             history: List[Dict] = [],
             stream: bool = True,
-            model: str = LLM_MODELS[0],
-            temperature: float = TEMPERATURE,
-            max_tokens: int = None,
-            prompt_name: str = "default",
+            model_config: Dict = None,
+            tool_config: Dict = None,
             **kwargs,
     ):
         '''
@@ -287,88 +277,14 @@ class ApiRequest:
             "history_len": history_len,
             "history": history,
             "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
+            "model_config": model_config,
+            "tool_config": tool_config,
         }
 
         # print(f"received input message:")
         # pprint(data)
 
         response = self.post("/chat/chat", json=data, stream=True, **kwargs)
-        return self._httpx_stream2generator(response, as_json=True)
-
-    @deprecated(
-        since="0.3.0",
-        message="自定义Agent问答将于 Langchain-Chatchat 0.3.x重写, 0.2.x中相关功能将废弃",
-        removal="0.3.0")
-    def agent_chat(
-            self,
-            query: str,
-            history: List[Dict] = [],
-            stream: bool = True,
-            model: str = LLM_MODELS[0],
-            temperature: float = TEMPERATURE,
-            max_tokens: int = None,
-            prompt_name: str = "default",
-    ):
-        '''
-        对应api.py/chat/agent_chat 接口
-        '''
-        data = {
-            "query": query,
-            "history": history,
-            "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post("/chat/agent_chat", json=data, stream=True)
-        return self._httpx_stream2generator(response, as_json=True)
-
-    def knowledge_base_chat(
-            self,
-            query: str,
-            knowledge_base_name: str,
-            top_k: int = VECTOR_SEARCH_TOP_K,
-            score_threshold: float = SCORE_THRESHOLD,
-            history: List[Dict] = [],
-            stream: bool = True,
-            model: str = LLM_MODELS[0],
-            temperature: float = TEMPERATURE,
-            max_tokens: int = None,
-            prompt_name: str = "default",
-    ):
-        '''
-        对应api.py/chat/knowledge_base_chat接口
-        '''
-        data = {
-            "query": query,
-            "knowledge_base_name": knowledge_base_name,
-            "top_k": top_k,
-            "score_threshold": score_threshold,
-            "history": history,
-            "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post(
-            "/chat/knowledge_base_chat",
-            json=data,
-            stream=True,
-        )
         return self._httpx_stream2generator(response, as_json=True)
 
     def upload_temp_docs(
@@ -416,8 +332,8 @@ class ApiRequest:
             score_threshold: float = SCORE_THRESHOLD,
             history: List[Dict] = [],
             stream: bool = True,
-            model: str = LLM_MODELS[0],
-            temperature: float = TEMPERATURE,
+            model: str = None,
+            temperature: float = 0.9,
             max_tokens: int = None,
             prompt_name: str = "default",
     ):
@@ -439,50 +355,6 @@ class ApiRequest:
 
         response = self.post(
             "/chat/file_chat",
-            json=data,
-            stream=True,
-        )
-        return self._httpx_stream2generator(response, as_json=True)
-
-    @deprecated(
-        since="0.3.0",
-        message="搜索引擎问答将于 Langchain-Chatchat 0.3.x重写, 0.2.x中相关功能将废弃",
-        removal="0.3.0"
-    )
-    def search_engine_chat(
-            self,
-            query: str,
-            search_engine_name: str,
-            top_k: int = SEARCH_ENGINE_TOP_K,
-            history: List[Dict] = [],
-            stream: bool = True,
-            model: str = LLM_MODELS[0],
-            temperature: float = TEMPERATURE,
-            max_tokens: int = None,
-            prompt_name: str = "default",
-            split_result: bool = False,
-    ):
-        '''
-        对应api.py/chat/search_engine_chat接口
-        '''
-        data = {
-            "query": query,
-            "search_engine_name": search_engine_name,
-            "top_k": top_k,
-            "history": history,
-            "stream": stream,
-            "model_name": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "prompt_name": prompt_name,
-            "split_result": split_result,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post(
-            "/chat/search_engine_chat",
             json=data,
             stream=True,
         )
@@ -769,7 +641,7 @@ class ApiRequest:
     def get_default_llm_model(self, local_first: bool = True) -> Tuple[str, bool]:
         '''
         从服务器上获取当前运行的LLM模型。
-        当 local_first=True 时，优先返回运行中的本地模型，否则优先按LLM_MODELS配置顺序返回。
+        当 local_first=True 时，优先返回运行中的本地模型，否则优先按 LLM_MODEL_CONFIG['llm_model']配置顺序返回。
         返回类型为（model_name, is_local_model）
         '''
 
@@ -779,7 +651,7 @@ class ApiRequest:
                 return "", False
 
             model = ""
-            for m in LLM_MODELS:
+            for m in LLM_MODEL_CONFIG['llm_model']:
                 if m not in running_models:
                     continue
                 is_local = not running_models[m].get("online_api")
@@ -789,7 +661,7 @@ class ApiRequest:
                     model = m
                     break
 
-            if not model:  # LLM_MODELS中配置的模型都不在running_models里
+            if not model:  # LLM_MODEL_CONFIG['llm_model']中配置的模型都不在running_models里
                 model = list(running_models)[0]
             is_local = not running_models[model].get("online_api")
             return model, is_local
@@ -800,7 +672,7 @@ class ApiRequest:
                 return "", False
 
             model = ""
-            for m in LLM_MODELS:
+            for m in LLM_MODEL_CONFIG['llm_model']:
                 if m not in running_models:
                     continue
                 is_local = not running_models[m].get("online_api")
@@ -810,7 +682,7 @@ class ApiRequest:
                     model = m
                     break
 
-            if not model:  # LLM_MODELS中配置的模型都不在running_models里
+            if not model:  # LLM_MODEL_CONFIG['llm_model']中配置的模型都不在running_models里
                 model = list(running_models)[0]
             is_local = not running_models[model].get("online_api")
             return model, is_local
@@ -849,15 +721,6 @@ class ApiRequest:
         response = self.post(
             "/llm_model/get_model_config",
             json=data,
-        )
-        return self._get_response_value(response, as_json=True, value_func=lambda r: r.get("data", {}))
-
-    def list_search_engines(self) -> List[str]:
-        '''
-        获取服务器支持的搜索引擎
-        '''
-        response = self.post(
-            "/server/list_search_engines",
         )
         return self._get_response_value(response, as_json=True, value_func=lambda r: r.get("data", {}))
 

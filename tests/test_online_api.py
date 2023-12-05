@@ -57,14 +57,3 @@ def test_embeddings(worker):
             assert isinstance(embeddings[0], list) and len(embeddings[0]) > 0
             assert isinstance(embeddings[0][0], float)
             print("向量长度：", len(embeddings[0]))
-
-
-# @pytest.mark.parametrize("worker", workers)
-# def test_completion(worker):
-#     params = ApiCompletionParams(prompt="五十六个民族")
-    
-#     print(f"\completion with {worker} \n")
-
-#     worker_class = get_model_worker_config(worker)["worker_class"]
-#     resp = worker_class().do_completion(params)
-#     pprint(resp)

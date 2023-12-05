@@ -57,7 +57,7 @@ FSCHAT_MODEL_WORKERS = {
         # "awq_ckpt": None,
         # "awq_wbits": 16,
         # "awq_groupsize": -1,
-        # "model_names": LLM_MODELS,
+        # "model_names": None,
         # "conv_template": None,
         # "limit_worker_concurrency": 5,
         # "stream_interval": 2,

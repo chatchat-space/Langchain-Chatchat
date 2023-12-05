@@ -1,5 +1,5 @@
 from fastapi import Body
-from configs import logger, log_verbose, LLM_MODELS, HTTPX_DEFAULT_TIMEOUT
+from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 from typing import List
@@ -62,7 +62,7 @@ def get_model_config(
 
 
 def stop_llm_model(
-    model_name: str = Body(..., description="要停止的LLM模型名称", examples=[LLM_MODELS[0]]),
+    model_name: str = Body(..., description="要停止的LLM模型名称", examples=[]),
     controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
 ) -> BaseResponse:
     '''
@@ -86,8 +86,8 @@ def stop_llm_model(
 
 
 def change_llm_model(
-    model_name: str = Body(..., description="当前运行模型", examples=[LLM_MODELS[0]]),
-    new_model_name: str = Body(..., description="要切换的新模型", examples=[LLM_MODELS[0]]),
+    model_name: str = Body(..., description="当前运行模型"),
+    new_model_name: str = Body(..., description="要切换的新模型"),
     controller_address: str = Body(None, description="Fastchat controller服务器地址", examples=[fschat_controller_address()])
 ):
     '''
@@ -108,9 +108,3 @@ def change_llm_model(
         return BaseResponse(
             code=500,
             msg=f"failed to switch LLM model from controller: {controller_address}。错误信息是： {e}")
-
-
-def list_search_engines() -> BaseResponse:
-    from server.chat.search_engine_chat import SEARCH_ENGINES
-
-    return BaseResponse(data=list(SEARCH_ENGINES))

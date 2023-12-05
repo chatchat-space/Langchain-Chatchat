@@ -8,6 +8,7 @@ from datetime import datetime
 from pprint import pprint
 from langchain_core._api import deprecated
 
+# 设置numexpr最大线程数，默认为CPU核心数
 try:
     import numexpr
 
@@ -21,7 +22,7 @@ from configs import (
     LOG_PATH,
     log_verbose,
     logger,
-    LLM_MODELS,
+    LLM_MODEL_CONFIG,
     EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     FSCHAT_CONTROLLER,
@@ -32,13 +33,21 @@ from configs import (
     HTTPX_DEFAULT_TIMEOUT,
 )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                          fschat_openai_api_address, get_httpx_client, get_model_worker_config,
+                          fschat_openai_api_address, get_httpx_client,
+                          get_model_worker_config,
                           MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 from server.knowledge_base.migrate import create_tables
 import argparse
 from typing import List, Dict
 from configs import VERSION
 
+all_model_names = set()
+for model_category in LLM_MODEL_CONFIG.values():
+    for model_name in model_category.keys():
+        if model_name not in all_model_names:
+            all_model_names.add(model_name)
+
+all_model_names_list = list(all_model_names)
 
 @deprecated(
     since="0.3.0",
@@ -109,9 +118,9 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             import fastchat.serve.vllm_worker
             from fastchat.serve.vllm_worker import VLLMWorker, app, worker_id
             from vllm import AsyncLLMEngine
-            from vllm.engine.arg_utils import AsyncEngineArgs
+            from vllm.engine.arg_utils import AsyncEngineArgs, EngineArgs
 
-            args.tokenizer = args.model_path
+            args.tokenizer = args.model_path  # 如果tokenizer与model_path不一致在此处添加
             args.tokenizer_mode = 'auto'
             args.trust_remote_code = True
             args.download_dir = None
@@ -130,7 +139,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.conv_template = None
             args.limit_worker_concurrency = 5
             args.no_register = False
-            args.num_gpus = 1  # vllm worker的切分是tensor并行，这里填写显卡的数量
+            args.num_gpus = 4  # vllm worker的切分是tensor并行，这里填写显卡的数量
             args.engine_use_ray = False
             args.disable_log_requests = False
 
@@ -365,7 +374,7 @@ def run_controller(log_level: str = "INFO", started_event: mp.Event = None):
 
 
 def run_model_worker(
-        model_name: str = LLM_MODELS[0],
+        model_name: str = next(iter(LLM_MODEL_CONFIG['llm_model'])),
         controller_address: str = "",
         log_level: str = "INFO",
         q: mp.Queue = None,
@@ -502,7 +511,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-worker",
         action="store_true",
         help="run fastchat's model_worker server with specified model name. "
-             "specify --model-name if not using default LLM_MODELS",
+             "specify --model-name if not using default llm models",
         dest="model_worker",
     )
     parser.add_argument(
@@ -510,7 +519,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-name",
         type=str,
         nargs="+",
-        default=LLM_MODELS,
+        default=all_model_names_list,
         help="specify model name for model worker. "
              "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
@@ -574,7 +583,7 @@ def dump_server_info(after_start=False, args=None):
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
 
-    models = LLM_MODELS
+    models = list(LLM_MODEL_CONFIG['llm_model'].keys())
     if args and args.model_name:
         models = args.model_name
 
@@ -769,17 +778,17 @@ async def start_main_server():
             if p := processes.get("api"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
-                api_started.wait()
+                api_started.wait()  # 等待api.py启动完成
 
             if p := processes.get("webui"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
-                webui_started.wait()
+                webui_started.wait()  # 等待webui.py启动完成
 
             dump_server_info(after_start=True, args=args)
 
             while True:
-                cmd = queue.get()
+                cmd = queue.get()  # 收到切换模型的消息
                 e = manager.Event()
                 if isinstance(cmd, list):
                     model_name, cmd, new_model_name = cmd
@@ -877,20 +886,5 @@ if __name__ == "__main__":
             loop = asyncio.new_event_loop()
 
         asyncio.set_event_loop(loop)
-
     loop.run_until_complete(start_main_server())
 
-# 服务启动后接口调用示例：
-# import openai
-# openai.api_key = "EMPTY" # Not support yet
-# openai.api_base = "http://localhost:8888/v1"
-
-# model = "chatglm3-6b"
-
-# # create a chat completion
-# completion = openai.ChatCompletion.create(
-#   model=model,
-#   messages=[{"role": "user", "content": "Hello! What is your name?"}]
-# )
-# # print the completion
-# print(completion.choices[0].message.content)

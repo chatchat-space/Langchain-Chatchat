@@ -3,6 +3,14 @@ This file is a modified version for ChatGLM3-6B the original glm3_agent.py file 
 """
 from __future__ import annotations
 
+import yaml
+from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
+from langchain.memory import ConversationBufferWindowMemory
+from typing import Any, List, Sequence, Tuple, Optional, Union
+import os
+from langchain.agents.agent import Agent
+from langchain.chains.llm import LLMChain
+from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate
 import json
 import logging
 from typing import Any, List, Sequence, Tuple, Optional, Union
@@ -22,6 +30,7 @@ from langchain.agents.agent import AgentExecutor
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
+from pydantic.schema import model_schema
 
 HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
 logger = logging.getLogger(__name__)
@@ -42,8 +51,9 @@ class StructuredChatOutputParserWithRetries(AgentOutputParser):
         if "tool_call" in text:
             action_end = text.find("```")
             action = text[:action_end].strip()
+
             params_str_start = text.find("(") + 1
-            params_str_end = text.rfind(")")
+            params_str_end = text.find(")")
             params_str = text[params_str_start:params_str_end]
 
             params_pairs = [param.split("=") for param in params_str.split(",") if "=" in param]
