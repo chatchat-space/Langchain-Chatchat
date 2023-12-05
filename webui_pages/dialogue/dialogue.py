@@ -198,9 +198,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 first_key = next(iter(LLM_MODEL_CONFIG[key]))
                 model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
 
-        llm_model = next(iter(LLM_MODEL_CONFIG['llm_model']), None)
         if llm_model is not None:
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
+
+        print(model_config)
         files = st.file_uploader("上传附件",
                                  type=[i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True)
@@ -243,7 +244,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.rerun()
         else:
             history = get_messages_history(
-                model_config["llm_model"][next(iter(LLM_MODEL_CONFIG['llm_model']))]["history_len"])
+                model_config["llm_model"][next(iter(model_config["llm_model"]))]["history_len"])
             chat_box.user_say(prompt)
 
             chat_box.ai_say("正在思考...")
