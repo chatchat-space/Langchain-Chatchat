@@ -40,6 +40,13 @@ import argparse
 from typing import Tuple, List, Dict
 from configs import VERSION
 
+all_model_names = set()
+for model_category in LLM_MODEL_CONFIG.values():
+    for model_name in model_category.keys():
+        if model_name not in all_model_names:
+            all_model_names.add(model_name)
+
+all_model_names_list = list(all_model_names)
 
 def create_controller_app(
         dispatch_method: str,
@@ -507,7 +514,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-name",
         type=str,
         nargs="+",
-        default=list(LLM_MODEL_CONFIG['llm_model'].keys()),
+        default=all_model_names_list,
         help="specify model name for model worker. "
              "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
@@ -868,9 +875,7 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
-    # 确保数据库表被创建
     create_tables()
-
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()
     else:
@@ -880,20 +885,5 @@ if __name__ == "__main__":
             loop = asyncio.new_event_loop()
 
         asyncio.set_event_loop(loop)
-    # 同步调用协程代码
     loop.run_until_complete(start_main_server())
 
-# 服务启动后接口调用示例：
-# import openai
-# openai.api_key = "EMPTY" # Not support yet
-# openai.api_base = "http://localhost:8888/v1"
-
-# model = "chatglm2-6b"
-
-# # create a chat completion
-# completion = openai.ChatCompletion.create(
-#   model=model,
-#   messages=[{"role": "user", "content": "Hello! What is your name?"}]
-# )
-# # print the completion
-# print(completion.choices[0].message.content)

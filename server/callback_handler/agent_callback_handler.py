@@ -27,7 +27,7 @@ class CustomAsyncIteratorCallbackHandler(AsyncCallbackHandler):
         self.queue = asyncio.Queue()
         self.done = asyncio.Event()
         self.cur_tool = {}
-        self.out = False
+        self.out = True
 
     async def on_tool_start(
             self,

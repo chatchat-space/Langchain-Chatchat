@@ -186,13 +186,21 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                  on_change=on_llm_change,
                                  key="llm_model",
                                  )
-        model_config = {
-            "llm_model": {},
-            "agent_model": {}
-        }
-        agent_model = next(iter(LLM_MODEL_CONFIG['agent_model']))
-        model_config["llm_model"][llm_model] = LLM_MODEL_CONFIG["llm_model"].get(llm_model, {})
-        model_config["agent_model"][agent_model] = LLM_MODEL_CONFIG["agent_model"].get(agent_model, {})
+
+
+        #  传入后端的内容
+        model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
+
+        for key in LLM_MODEL_CONFIG:
+            if key == 'llm_model':
+                continue
+            if LLM_MODEL_CONFIG[key]:
+                first_key = next(iter(LLM_MODEL_CONFIG[key]))
+                model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
+
+        llm_model = next(iter(LLM_MODEL_CONFIG['llm_model']), None)
+        if llm_model is not None:
+            model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
         files = st.file_uploader("上传附件",
                                  type=[i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True)

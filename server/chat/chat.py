@@ -1,7 +1,7 @@
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 from langchain.agents import initialize_agent, AgentType
-from langchain_core.callbacks import AsyncCallbackManager
+from langchain_core.callbacks import AsyncCallbackManager, BaseCallbackManager
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableBranch
 from server.agent.agent_factory import initialize_glm3_agent
@@ -18,8 +18,26 @@ from langchain.prompts import PromptTemplate
 from server.utils import get_prompt_template
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
-from server.callback_handler.conversation_callback_handler import ConversationCallbackHandler
 from server.callback_handler.agent_callback_handler import Status, CustomAsyncIteratorCallbackHandler
+
+
+def create_models_from_config(configs: dict = {}, callbacks: list = []):
+    models = {}
+    prompts = {}
+    for model_type, model_configs in configs.items():
+        for model_name, params in model_configs.items():
+            callback = callbacks if params.get('callbacks', False) else None
+            model_instance = get_ChatOpenAI(
+                model_name=model_name,
+                temperature=params.get('temperature', 0.5),
+                max_tokens=params.get('max_tokens', 1000),
+                callbacks=callback
+            )
+            models[model_type] = model_instance
+            prompt_name = params.get('prompt_name', 'default')
+            prompt_template = get_prompt_template(type=model_type, name=prompt_name)
+            prompts[model_type] = prompt_template
+    return models, prompts
 
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
@@ -38,85 +56,55 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                ):
     async def chat_iterator() -> AsyncIterable[str]:
         nonlocal history
-        callback = CustomAsyncIteratorCallbackHandler()
-        callbacks = [callback]
         memory = None
         message_id = None
+        chat_prompt = None
 
-        model_llm_name = next(iter(model_config['llm_model']))
-        model_llm_config = model_config['llm_model'][model_llm_name]
-        model_agent_name = next(iter(model_config['agent_model']))
-        model_agent_config = model_config['agent_model'][model_agent_name]
+        callback = CustomAsyncIteratorCallbackHandler()
+        callbacks = [callback]
+        models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config)
 
         if conversation_id:
             message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
-            conversation_callback = ConversationCallbackHandler(conversation_id=conversation_id, message_id=message_id,
-                                                                chat_type="llm_chat",
-                                                                query=query)
-            callbacks.append(conversation_callback)
-
         tools = [tool for tool in all_tools if tool.name in tool_config]
-
-        model_llm = get_ChatOpenAI(
-            model_name=model_llm_name,
-            temperature=model_llm_config['temperature'],
-            max_tokens=model_llm_config['max_tokens'],
-            callbacks=callbacks,
-        )
-        model_agent = get_ChatOpenAI(
-            model_name=model_agent_name,
-            temperature=model_agent_config['temperature'],
-            max_tokens=model_agent_config['max_tokens'],
-            callbacks=callbacks,
-        )
 
         if history:
             history = [History.from_data(h) for h in history]
-            prompt_template = get_prompt_template("llm_chain", model_llm_config["prompt_name"])
-            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
         elif conversation_id and history_len > 0:
-            prompt = get_prompt_template("llm_chain", "with_history")
-            chat_prompt = PromptTemplate.from_template(prompt)
-            memory = ConversationBufferDBMemory(conversation_id=conversation_id,
-                                                llm=model_llm,
+            memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=models["llm_model"],
                                                 message_limit=history_len)
         else:
-            prompt_template = get_prompt_template("llm_chain", model_llm_config["prompt_name"])
-            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
-        chain = LLMChain(prompt=chat_prompt, llm=model_llm, memory=memory)
-
-        prompt_template_agent = get_prompt_template("agent_chain", model_agent_config["prompt_name"])
-        prompt_template_classifier = get_prompt_template("classifier_chain", "default")
+        chain = LLMChain(prompt=chat_prompt, llm=models["llm_model"], memory=memory)
         classifier_chain = (
-                PromptTemplate.from_template(prompt_template_classifier)
-                | model_llm
+                PromptTemplate.from_template(prompts["preprocess_model"])
+                | models["preprocess_model"]
                 | StrOutputParser()
         )
-        if "chatglm3" in model_agent_name.lower():
-            # callback_manager1 = AsyncCallbackManager(),
+        if "chatglm3" in models["action_model"].model_name.lower():
             agent_executor = initialize_glm3_agent(
-                llm=model_agent,
+                llm=models["action_model"],
                 tools=tools,
-                prompt=prompt_template_agent,
+                prompt=prompts["action_model"],
                 input_variables=["input", "intermediate_steps", "history"],
                 memory=memory,
-                callback_manager=AsyncCallbackManager(handlers=callbacks),
+                callback_manager=BaseCallbackManager(handlers=callbacks),
                 verbose=True,
             )
         else:
             agent_executor = initialize_agent(
-                llm=model_agent,
+                llm=models["action_model"],
                 tools=tools,
                 callbacks=callbacks,
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 memory=memory,
                 verbose=True,
             )
-
         branch = RunnableBranch(
             (lambda x: "1" in x["topic"].lower(), agent_executor),
             chain

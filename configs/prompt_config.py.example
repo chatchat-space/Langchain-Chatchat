@@ -1,7 +1,7 @@
 PROMPT_TEMPLATES = {
-    "classifier_chain": {
+    "preprocess_model": {
         "default":
-            '请你根据我的描述，认为是否需要使用工具，还是可以直接回答问题。你只要回答一个数字。1 或者 0，1代表需要使用工具，0代表不需要使用工具。\n'
+            '请你根据我的描述和我们对话的历史，来判断本次跟我交流是否需要使用工具，还是可以直接凭借你的知识或者历史记录跟我对话。你只要回答一个数字。1 或者 0，1代表需要使用工具，0代表不需要使用工具。\n'
             '以下几种情况要使用工具,请返回1\n'
             '1. 实时性的问题，例如天气，日期，地点等信息\n'
             '2. 需要数学计算的问题\n'
@@ -11,7 +11,7 @@ PROMPT_TEMPLATES = {
             '{input}'
             '</question>'
     },
-    "llm_chain": {
+    "llm_model": {
         "default":
             '{{ input }}',
         "with_history":
@@ -23,7 +23,7 @@ PROMPT_TEMPLATES = {
             'Human: {input}\n'
             'AI:',
     },
-    "agent_chain": {
+    "action_model": {
         "GPT-4":
             'Answer the following questions as best you can. You have access to the following tools:\n'
             'The way you use the tools is by specifying a json blob.\n'
@@ -87,7 +87,7 @@ PROMPT_TEMPLATES = {
             'Question: {input}\n\n'
             'Thought: {agent_scratchpad}\n',
     },
-    "conclusion_chain": {
-        "default":"{{input}}",
+    "postprocess_model": {
+        "default": "{{input}}",
     }
 }

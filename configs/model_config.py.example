@@ -8,41 +8,65 @@ EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
 
 LLM_MODEL_CONFIG = {
-    ## 聊天模型带有历史记录
+    # 意图识别不需要输出，模型后台知道就行
+    "preprocess_model": {
+        "zhipu-api": {
+            "temperature": 0.4,
+            "max_tokens": 2048,
+            "history_len": 100,
+            "prompt_name": "default",
+            "callbacks": False
+        },
+    },
     "llm_model": {
         "chatglm3-6b": {
             "temperature": 0.9,
             "max_tokens": 4096,
             "history_len": 3,
             "prompt_name": "default",
+            "callbacks": True
         },
         "zhipu-api": {
-            "temperature": 0.4,
-            "max_tokens": 2048,
+            "temperature": 0.9,
+            "max_tokens": 4000,
             "history_len": 5,
             "prompt_name": "default",
+            "callbacks": True
         },
-
+        "Qwen-1_8B-Chat": {
+            "temperature": 0.4,
+            "max_tokens": 2048,
+            "history_len": 100,
+            "prompt_name": "default",
+            "callbacks": False
+        },
     },
-    # 执行Agent的模型不带有历史记录
-    "agent_model": {
+    "action_model": {
         "chatglm3-6b": {
             "temperature": 0.01,
-            "top_p": 0.2,
             "max_tokens": 4096,
-            "repetition_penalty": 1.1,
             "prompt_name": "ChatGLM3",
+            "callbacks": True
+        },
+        "zhipu-api": {
+            "temperature": 0.01,
+            "max_tokens": 2096,
+            "history_len": 5,
+            "prompt_name": "ChatGLM3",
+            "callbacks": True
+        },
+    },
+    "postprocess_model": {
+        "chatglm3-6b": {
+            "temperature": 0.01,
+            "max_tokens": 4096,
+            "prompt_name": "default",
+            "callbacks": True
         }
     },
-    # 总结模型不带有历史记录
-    "conclusion_model": {
-        "model": "openai-api",
-        "temperature": 0.2,
-        "top_p": 0.95,
-        "max_tokens": 8192,
-        "repetition_penalty": 1.2,
-    },
+
 }
+
 TOOL_CONFIG = {
     "search_local_knowledgebase": {
         "use": True,
@@ -196,7 +220,7 @@ MODEL_PATH = {
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "nlp_gte_sentence-embedding_chinese-large": "/Models/nlp_gte_sentence-embedding_chinese-large",
-        "text-embedding-ada-002": "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",
+        "text-embedding-ada-002": "Just write your OpenAI key like "sk-o3IGBhC9g8AiFvTGWVKsT*****" ",
     },
 
     "llm_model": {
@@ -247,6 +271,7 @@ MODEL_PATH = {
         "opt-66b": "facebook/opt-66b",
         "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
+        "Qwen-1_8B-Chat":"Qwen/Qwen-1_8B-Chat"
         "Qwen-7B": "Qwen/Qwen-7B",
         "Qwen-14B": "Qwen/Qwen-14B",
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
