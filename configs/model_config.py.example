@@ -1,134 +1,179 @@
 import os
-
-# 可以指定一个绝对路径，统一存放所有的Embedding和LLM模型。
-# 每个模型可以是一个单独的目录，也可以是某个目录下的二级子目录。
-# 如果模型目录名称和 MODEL_PATH 中的 key 或 value 相同，程序会自动检测加载，无需修改 MODEL_PATH 中的路径。
 MODEL_ROOT_PATH = ""
-
-# 选用的 Embedding 名称
-EMBEDDING_MODEL = "bge-large-zh"
-
-# Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+EMBEDDING_MODEL = "bge-large-zh-v1.5"  # bge-large-zh
 EMBEDDING_DEVICE = "auto"
 
 # 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
 EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
 
-# 要运行的 LLM 名称，可以包括本地模型和在线模型。列表中本地模型将在启动项目时全部加载。
-# 列表中第一个模型将作为 API 和 WEBUI 的默认模型。
-# 在这里，我们使用目前主流的两个离线模型，其中，chatglm3-6b 为默认加载模型。
-# 如果你的显存不足，可使用 Qwen-1_8B-Chat, 该模型 FP16 仅需 3.8G显存。
+LLM_MODEL_CONFIG = {
+    ## 聊天模型带有历史记录
+    "llm_model": {
+        "chatglm3-6b": {
+            "temperature": 0.9,
+            "max_tokens": 4096,
+            "history_len": 3,
+            "prompt_name": "default",
+        },
+        "zhipu-api": {
+            "temperature": 0.4,
+            "max_tokens": 2048,
+            "history_len": 5,
+            "prompt_name": "default",
+        },
+
+    },
+    # 执行Agent的模型不带有历史记录
+    "agent_model": {
+        "chatglm3-6b": {
+            "temperature": 0.01,
+            "top_p": 0.2,
+            "max_tokens": 4096,
+            "repetition_penalty": 1.1,
+            "prompt_name": "ChatGLM3",
+        }
+    },
+    # 总结模型不带有历史记录
+    "conclusion_model": {
+        "model": "openai-api",
+        "temperature": 0.2,
+        "top_p": 0.95,
+        "max_tokens": 8192,
+        "repetition_penalty": 1.2,
+    },
+}
+TOOL_CONFIG = {
+    "search_local_knowledgebase": {
+        "use": True,
+        "top_k": 10,
+        "score_threshold": 1,
+        "conclude_prompt": {
+            "with_result":
+                '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
+                '不允许在答案中添加编造成分，答案请使用中文。 </指令>\n'
+                '<已知信息>{{ context }}</已知信息>\n'
+                '<问题>{{ question }}</问题>\n',
+            "without_result":
+                '请你根据我的提问回答我的问题:\n'
+                '{{ question }}\n'
+                '请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n',
+        }
+    },
+    "search_internet": {
+        "use": True,
+        "search_engine_name": "bing",
+        "search_engine_config":
+            {
+                "bing": {
+                    "result_len": 3,
+                    "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
+                    "bing_key": "",
+                },
+                "metaphor": {
+                    "result_len": 3,
+                    "metaphor_api_key": "",
+                    "split_result": False,
+                    "chunk_size": 500,
+                    "chunk_overlap": 0,
+                },
+                "duckduckgo": {
+                    "result_len": 3
+                }
+            },
+        "top_k": 10,
+        "verbose": "Origin",
+        "conclude_prompt":
+            "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
+            "</指令>\n<已知信息>{{ context }}</已知信息>\n"
+            "<问题>\n"
+            "{{ question }}\n"
+            "</问题>\n"
+    },
+    "arxiv": {
+        "use": True,
+    },
+    "shell": {
+        "use": True,
+    },
+    "weather_check": {
+        "use": True,
+        "api-key": "",
+    },
+    "search_youtube": {
+        "use": False,
+    },
+    "wolfram": {
+        "use": False,
+    },
+    "calculate": {
+        "use": False,
+    },
+
+}
 
 # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 LLM_DEVICE = "auto"
 
-# 历史对话轮数
-HISTORY_LEN = 3
-
-# 大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度
-MAX_TOKENS = None
-
-# LLM通用对话参数
-TEMPERATURE = 0.7
-# TOP_P = 0.95 # ChatOpenAI暂不支持该参数
-
 ONLINE_LLM_MODEL = {
-    # 线上模型。请在server_config中为每个在线API设置不同的端口
-
     "openai-api": {
-        "model_name": "gpt-3.5-turbo",
+        "model_name": "gpt-4-1106-preview",
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "",
         "openai_proxy": "",
     },
-
-    # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
-        "version": "chatglm_turbo",  # 可选包括 "chatglm_turbo"
+        "version": "chatglm_turbo",
         "provider": "ChatGLMWorker",
     },
-
-
-    # 具体注册及api key获取请前往 https://api.minimax.chat/
     "minimax-api": {
         "group_id": "",
         "api_key": "",
         "is_pro": False,
         "provider": "MiniMaxWorker",
     },
-
-
-    # 具体注册及api key获取请前往 https://xinghuo.xfyun.cn/
     "xinghuo-api": {
         "APPID": "",
         "APISecret": "",
         "api_key": "",
-        "version": "v1.5",  # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
+        "version": "v3.0",
         "provider": "XingHuoWorker",
     },
-
-    # 百度千帆 API，申请方式请参考 https://cloud.baidu.com/doc/WENXINWORKSHOP/s/4lilb2lpf
     "qianfan-api": {
-        "version": "ERNIE-Bot",  # 注意大小写。当前支持 "ERNIE-Bot" 或 "ERNIE-Bot-turbo"， 更多的见官方文档。
-        "version_url": "",  # 也可以不填写version，直接填写在千帆申请模型发布的API地址
+        "version": "ernie-bot-4",
+        "version_url": "",
         "api_key": "",
         "secret_key": "",
         "provider": "QianFanWorker",
     },
-
-    # 火山方舟 API，文档参考 https://www.volcengine.com/docs/82379
     "fangzhou-api": {
-        "version": "chatglm-6b-model",  # 当前支持 "chatglm-6b-model"， 更多的见文档模型支持列表中方舟部分。
-        "version_url": "",  # 可以不填写version，直接填写在方舟申请模型发布的API地址
+        "version": "chatglm-6b-model",
+        "version_url": "",
         "api_key": "",
         "secret_key": "",
         "provider": "FangZhouWorker",
     },
-
-    # 阿里云通义千问 API，文档参考 https://help.aliyun.com/zh/dashscope/developer-reference/api-details
     "qwen-api": {
-        "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"
-        "api_key": "",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建
+        "version": "qwen-max",
+        "api_key": "",
         "provider": "QwenWorker",
     },
-
-    # 百川 API，申请方式请参考 https://www.baichuan-ai.com/home#api-enter
     "baichuan-api": {
-        "version": "Baichuan2-53B",  # 当前支持 "Baichuan2-53B"， 见官方文档。
+        "version": "Baichuan2-53B",
         "api_key": "",
         "secret_key": "",
         "provider": "BaiChuanWorker",
     },
-
-    # Azure API
     "azure-api": {
-        "deployment_name": "",  # 部署容器的名字
-        "resource_name": "",  # https://{resource_name}.openai.azure.com/openai/ 填写resource_name的部分，其他部分不要填写
-        "api_version": "",  # API的版本，不是模型版本
+        "deployment_name": "",
+        "resource_name": "",
+        "api_version": "2023-07-01-preview",
         "api_key": "",
         "provider": "AzureWorker",
     },
 
-    # 昆仑万维天工 API https://model-platform.tiangong.cn/
-    "tiangong-api": {
-        "version": "SkyChat-MegaVerse",
-        "api_key": "",
-        "secret_key": "",
-        "provider": "TianGongWorker",
-    },
-
 }
-
-# 在以下字典中修改属性值，以指定本地embedding模型存储位置。支持3种设置方法：
-# 1、将对应的值修改为模型绝对路径
-# 2、不修改此处的值（以 text2vec 为例）：
-#       2.1 如果{MODEL_ROOT_PATH}下存在如下任一子目录：
-#           - text2vec
-#           - GanymedeNil/text2vec-large-chinese
-#           - text2vec-large-chinese
-#       2.2 如果以上本地路径不存在，则使用huggingface模型
 MODEL_PATH = {
     "embed_model": {
         "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
@@ -144,49 +189,30 @@ MODEL_PATH = {
         "m3e-large": "moka-ai/m3e-large",
         "bge-small-zh": "BAAI/bge-small-zh",
         "bge-base-zh": "BAAI/bge-base-zh",
-        "bge-large-zh": "BAAI/bge-large-zh",
+        "bge-large-zh": "/media/zr/Data/Models/Embedding/bge-large-zh",
         "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
         "bge-base-zh-v1.5": "BAAI/bge-base-zh-v1.5",
-        "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
+        "bge-large-zh-v1.5": "/Models/bge-large-zh-v1.5",
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
-        "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
-        "text-embedding-ada-002": "your OPENAI_API_KEY",
+        "nlp_gte_sentence-embedding_chinese-large": "/Models/nlp_gte_sentence-embedding_chinese-large",
+        "text-embedding-ada-002": "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",
     },
 
     "llm_model": {
-        # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
         "chatglm2-6b": "THUDM/chatglm2-6b",
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
-
-        "chatglm3-6b": "THUDM/chatglm3-6b",
+        "chatglm3-6b": "/Models/chatglm3-6b",
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
-        "chatglm3-6b-base": "THUDM/chatglm3-6b-base",
 
-        "Qwen-1_8B": "Qwen/Qwen-1_8B",
-        "Qwen-1_8B-Chat": "Qwen/Qwen-1_8B-Chat",
-        "Qwen-1_8B-Chat-Int8": "Qwen/Qwen-1_8B-Chat-Int8",
-        "Qwen-1_8B-Chat-Int4": "Qwen/Qwen-1_8B-Chat-Int4",
+        "Yi-34B-Chat": "/data/share/models/Yi-34B-Chat",
+        "BlueLM-7B-Chat": "/Models/BlueLM-7B-Chat",
 
-        "Qwen-7B": "Qwen/Qwen-7B",
-        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
-
-        "Qwen-14B": "Qwen/Qwen-14B",
-        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
-        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",
-
-        "Qwen-72B": "Qwen/Qwen-72B",
-        "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
-        "Qwen-72B-Chat-Int8": "Qwen/Qwen-72B-Chat-Int8",
-        "Qwen-72B-Chat-Int4": "Qwen/Qwen-72B-Chat-Int4",
-
-        "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat",
-        "baichuan2-7b": "baichuan-inc/Baichuan2-7B-Chat",
-
+        "baichuan2-13b": "/media/zr/Data/Models/LLM/Baichuan2-13B-Chat",
+        "baichuan2-7b": "/media/zr/Data/Models/LLM/Baichuan2-7B-Chat",
         "baichuan-7b": "baichuan-inc/Baichuan-7B",
         "baichuan-13b": "baichuan-inc/Baichuan-13B",
-        "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat",
+        'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
 
         "aquila-7b": "BAAI/Aquila-7B",
         "aquilachat-7b": "BAAI/AquilaChat-7B",
@@ -221,18 +247,15 @@ MODEL_PATH = {
         "opt-66b": "facebook/opt-66b",
         "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
-        "agentlm-7b": "THUDM/agentlm-7b",
-        "agentlm-13b": "THUDM/agentlm-13b",
-        "agentlm-70b": "THUDM/agentlm-70b",
-
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
+        "Qwen-7B": "Qwen/Qwen-7B",
+        "Qwen-14B": "Qwen/Qwen-14B",
+        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
+        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",  # 确保已经安装了auto-gptq optimum flash-attn
+        "Qwen-14B-Chat-Int4": "/media/zr/Data/Models/LLM/Qwen-14B-Chat-Int4",  # 确保已经安装了auto-gptq optimum flash-attn
     },
 }
 
-
-# 通常情况下不需要更改以下内容
-
-# nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
 VLLM_MODEL_DICT = {
@@ -241,22 +264,12 @@ VLLM_MODEL_DICT = {
 
     "baichuan-7b": "baichuan-inc/Baichuan-7B",
     "baichuan-13b": "baichuan-inc/Baichuan-13B",
-    "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat",
+    'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
 
-    "chatglm2-6b": "THUDM/chatglm2-6b",
-    "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
-    "chatglm3-6b": "THUDM/chatglm3-6b",
-    "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
-
-    "BlueLM-7B-Chat": "vivo-ai/BlueLM-7B-Chat",
-    "BlueLM-7B-Chat-32k": "vivo-ai/BlueLM-7B-Chat-32k",
-
-    # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
-    # "bloom": "bigscience/bloom",
-    # "bloomz": "bigscience/bloomz",
-    # "bloomz-560m": "bigscience/bloomz-560m",
-    # "bloomz-7b1": "bigscience/bloomz-7b1",
-    # "bloomz-1b7": "bigscience/bloomz-1b7",
+    'chatglm2-6b': 'THUDM/chatglm2-6b',
+    'chatglm2-6b-32k': 'THUDM/chatglm2-6b-32k',
+    'chatglm3-6b': 'THUDM/chatglm3-6b',
+    'chatglm3-6b-32k': 'THUDM/chatglm3-6b-32k',
 
     "internlm-7b": "internlm/internlm-7b",
     "internlm-chat-7b": "internlm/internlm-chat-7b",
@@ -283,32 +296,13 @@ VLLM_MODEL_DICT = {
     "opt-66b": "facebook/opt-66b",
     "opt-iml-max-30b": "facebook/opt-iml-max-30b",
 
-    "Qwen-1_8B": "Qwen/Qwen-1_8B",
-    "Qwen-1_8B-Chat": "Qwen/Qwen-1_8B-Chat",
-    "Qwen-1_8B-Chat-Int8": "Qwen/Qwen-1_8B-Chat-Int8",
-    "Qwen-1_8B-Chat-Int4": "Qwen/Qwen-1_8B-Chat-Int4",
-
     "Qwen-7B": "Qwen/Qwen-7B",
-    "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
-
     "Qwen-14B": "Qwen/Qwen-14B",
+    "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
     "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
-    "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
-    "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",
-
-    "Qwen-72B": "Qwen/Qwen-72B",
-    "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
-    "Qwen-72B-Chat-Int8": "Qwen/Qwen-72B-Chat-Int8",
-    "Qwen-72B-Chat-Int4": "Qwen/Qwen-72B-Chat-Int4",
 
     "agentlm-7b": "THUDM/agentlm-7b",
     "agentlm-13b": "THUDM/agentlm-13b",
     "agentlm-70b": "THUDM/agentlm-70b",
 
 }
-
-# 0.2.9新版支持的多参数 Agent 模型仅有以下两种
-SUPPORT_AGENT_MODEL = [
-    "openai-api",
-    "chatglm3",
-]
