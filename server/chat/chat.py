@@ -19,6 +19,7 @@ from server.callback_handler.conversation_callback_handler import ConversationCa
 
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
                conversation_id: str = Body("", description="对话框ID"),
+               history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
                history: Union[int, List[History]] = Body([],
                                                          description="历史对话，设为一个整数可以从数据库中读取历史消息",
                                                          examples=[[
@@ -34,18 +35,20 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        nonlocal history
+        nonlocal history, max_tokens
         callback = AsyncIteratorCallbackHandler()
         callbacks = [callback]
         memory = None
 
-        message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
         # 负责保存llm response到message db
+        message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
         conversation_callback = ConversationCallbackHandler(conversation_id=conversation_id, message_id=message_id,
                                                             chat_type="llm_chat",
                                                             query=query)
         callbacks.append(conversation_callback)
 
+        if isinstance(max_tokens, int) and max_tokens <= 0:
+            max_tokens = None
 
         model = get_ChatOpenAI(
             model_name=model_name,
@@ -54,18 +57,24 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             callbacks=callbacks,
         )
 
-        if not conversation_id:
+        if history: # 优先使用前端传入的历史消息
             history = [History.from_data(h) for h in history]
             prompt_template = get_prompt_template("llm_chat", prompt_name)
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
-        else:
+        elif conversation_id and history_len > 0: # 前端要求从数据库取历史消息
             # 使用memory 时必须 prompt 必须含有memory.memory_key 对应的变量
             prompt = get_prompt_template("llm_chat", "with_history")
             chat_prompt = PromptTemplate.from_template(prompt)
             # 根据conversation_id 获取message 列表进而拼凑 memory
-            memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=model)
+            memory = ConversationBufferDBMemory(conversation_id=conversation_id,
+                                                llm=model,
+                                                message_limit=history_len)
+        else:
+            prompt_template = get_prompt_template("llm_chat", prompt_name)
+            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model, memory=memory)
 

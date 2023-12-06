@@ -85,7 +85,7 @@ class ApiRequest:
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
         while retry > 0:
             try:
-                print(kwargs)
+                # print(kwargs)
                 if stream:
                     return self.client.stream("POST", url, data=data, json=json, **kwargs)
                 else:
@@ -134,7 +134,7 @@ class ApiRequest:
                         if as_json:
                             try:
                                 data = json.loads(chunk)
-                                pprint(data, depth=1)
+                                # pprint(data, depth=1)
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
@@ -166,7 +166,7 @@ class ApiRequest:
                         if as_json:
                             try:
                                 data = json.loads(chunk)
-                                pprint(data, depth=1)
+                                # pprint(data, depth=1)
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
@@ -276,8 +276,8 @@ class ApiRequest:
             "max_tokens": max_tokens,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post(
             "/chat/fastchat",
@@ -288,23 +288,25 @@ class ApiRequest:
         return self._httpx_stream2generator(response)
 
     def chat_chat(
-        self,
-        query: str,
-        conversation_id: str = None,
-        history: List[Dict] = [],
-        stream: bool = True,
-        model: str = LLM_MODELS[0],
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        prompt_name: str = "default",
-        **kwargs,
+            self,
+            query: str,
+            conversation_id: str = None,
+            history_len: int = -1,
+            history: List[Dict] = [],
+            stream: bool = True,
+            model: str = LLM_MODELS[0],
+            temperature: float = TEMPERATURE,
+            max_tokens: int = None,
+            prompt_name: str = "default",
+            **kwargs,
     ):
         '''
-        对应api.py/chat/chat接口 #TODO: 考虑是否返回json
+        对应api.py/chat/chat接口
         '''
         data = {
             "query": query,
             "conversation_id": conversation_id,
+            "history_len": history_len,
             "history": history,
             "stream": stream,
             "model_name": model,
@@ -313,8 +315,8 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post("/chat/chat", json=data, stream=True, **kwargs)
         return self._httpx_stream2generator(response, as_json=True)
@@ -342,8 +344,8 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post("/chat/agent_chat", json=data, stream=True)
         return self._httpx_stream2generator(response)
@@ -377,8 +379,8 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post(
             "/chat/knowledge_base_chat",
@@ -452,8 +454,8 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post(
             "/chat/file_chat",
@@ -491,8 +493,8 @@ class ApiRequest:
             "split_result": split_result,
         }
 
-        print(f"received input message:")
-        pprint(data)
+        # print(f"received input message:")
+        # pprint(data)
 
         response = self.post(
             "/chat/search_engine_chat",

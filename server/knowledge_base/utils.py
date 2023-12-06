@@ -71,7 +71,7 @@ def list_files_from_folder(kb_name: str):
                 for target_entry in target_it:
                     process_entry(target_entry)
         elif entry.is_file():
-            result.append(entry.path)
+            result.append(os.path.relpath(entry.path, doc_path))
         elif entry.is_dir():
             with os.scandir(entry.path) as it:
                 for sub_entry in it:
@@ -85,6 +85,7 @@ def list_files_from_folder(kb_name: str):
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
+               "MHTMLLoader": ['.mhtml'],
                "UnstructuredMarkdownLoader": ['.md'],
                "JSONLoader": [".json"],
                "JSONLinesLoader": [".jsonl"],
@@ -106,6 +107,7 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredWordDocumentLoader": ['.docx', 'doc'],
                "UnstructuredXMLLoader": ['.xml'],
                "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
+               "EverNoteLoader": ['.enex'],
                "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
@@ -310,6 +312,9 @@ class KnowledgeFile:
                 docs = text_splitter.split_text(docs[0].page_content)
             else:
                 docs = text_splitter.split_documents(docs)
+
+        if not docs:
+            return []
 
         print(f"文档切分示例：{docs[0]}")
         if zh_title_enhance:

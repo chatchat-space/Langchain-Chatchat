@@ -3,6 +3,7 @@ from configs import EMBEDDING_MODEL, logger
 from server.model_workers.base import ApiEmbeddingsParams
 from server.utils import BaseResponse, get_model_worker_config, list_embed_models, list_online_embed_models
 from fastapi import Body
+from fastapi.concurrency import run_in_threadpool
 from typing import Dict, List
 
 
@@ -38,6 +39,32 @@ def embed_texts(
     except Exception as e:
         logger.error(e)
         return BaseResponse(code=500, msg=f"文本向量化过程中出现错误：{e}")
+
+
+async def aembed_texts(
+    texts: List[str],
+    embed_model: str = EMBEDDING_MODEL,
+    to_query: bool = False,
+) -> BaseResponse:
+    '''
+    对文本进行向量化。返回数据格式：BaseResponse(data=List[List[float]])
+    '''
+    try:
+        if embed_model in list_embed_models(): # 使用本地Embeddings模型
+            from server.utils import load_local_embeddings
+
+            embeddings = load_local_embeddings(model=embed_model)
+            return BaseResponse(data=await embeddings.aembed_documents(texts))
+
+        if embed_model in list_online_embed_models(): # 使用在线API
+            return await run_in_threadpool(embed_texts,
+                                           texts=texts,
+                                           embed_model=embed_model,
+                                           to_query=to_query)
+    except Exception as e:
+        logger.error(e)
+        return BaseResponse(code=500, msg=f"文本向量化过程中出现错误：{e}")
+
 
 def embed_texts_endpoint(
     texts: List[str] = Body(..., description="要嵌入的文本列表", examples=[["hello", "world"]]),

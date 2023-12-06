@@ -6,7 +6,8 @@ from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Optional
 import asyncio
-from langchain.prompts.chat import PromptTemplate
+from langchain.prompts import PromptTemplate
+
 from server.utils import get_prompt_template
 
 
@@ -27,7 +28,11 @@ async def completion(query: str = Body(..., description="用户输入", examples
                                   prompt_name: str = prompt_name,
                                   echo: bool = echo,
                                   ) -> AsyncIterable[str]:
+        nonlocal max_tokens
         callback = AsyncIteratorCallbackHandler()
+        if isinstance(max_tokens, int) and max_tokens <= 0:
+            max_tokens = None
+
         model = get_OpenAI(
             model_name=model_name,
             temperature=temperature,

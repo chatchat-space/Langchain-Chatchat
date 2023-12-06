@@ -113,7 +113,11 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
     history = [History.from_data(h) for h in history]
 
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
+        nonlocal max_tokens
         callback = AsyncIteratorCallbackHandler()
+        if isinstance(max_tokens, int) and max_tokens <= 0:
+            max_tokens = None
+
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
@@ -121,7 +125,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             callbacks=[callback],
         )
         embed_func = EmbeddingsFunAdapter()
-        embeddings = embed_func.embed_query(query)
+        embeddings = await embed_func.aembed_query(query)
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
             docs = [x[0] for x in docs]

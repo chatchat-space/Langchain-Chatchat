@@ -81,6 +81,8 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
 
     # 知识库相关接口
     mount_knowledge_routes(app)
+    # 摘要相关接口
+    mount_filename_summary_routes(app)
 
     # LLM模型相关接口
     app.post("/llm_model/list_running_models",
@@ -228,6 +230,26 @@ def mount_knowledge_routes(app: FastAPI):
              tags=["Knowledge Base Management"],
              summary="上传文件到临时目录，用于文件对话。"
              )(upload_temp_docs)
+
+
+def mount_filename_summary_routes(app: FastAPI):
+    from server.knowledge_base.kb_summary_api import (summary_file_to_vector_store, recreate_summary_vector_store,
+                                                      summary_doc_ids_to_vector_store)
+
+    app.post("/knowledge_base/kb_summary_api/summary_file_to_vector_store",
+             tags=["Knowledge kb_summary_api Management"],
+             summary="单个知识库根据文件名称摘要"
+             )(summary_file_to_vector_store)
+    app.post("/knowledge_base/kb_summary_api/summary_doc_ids_to_vector_store",
+             tags=["Knowledge kb_summary_api Management"],
+             summary="单个知识库根据doc_ids摘要",
+             response_model=BaseResponse,
+             )(summary_doc_ids_to_vector_store)
+    app.post("/knowledge_base/kb_summary_api/recreate_summary_vector_store",
+             tags=["Knowledge kb_summary_api Management"],
+             summary="重建单个知识库文件摘要"
+             )(recreate_summary_vector_store)
+
 
 
 def run_api(host, port, **kwargs):
