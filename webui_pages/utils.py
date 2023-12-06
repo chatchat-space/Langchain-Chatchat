@@ -285,6 +285,7 @@ class ApiRequest:
     def chat_chat(
             self,
             query: str,
+            metadata: dict,
             conversation_id: str = None,
             history_len: int = -1,
             history: List[Dict] = [],
@@ -298,6 +299,7 @@ class ApiRequest:
         '''
         data = {
             "query": query,
+            "metadata": metadata,
             "conversation_id": conversation_id,
             "history_len": history_len,
             "history": history,
