@@ -18,7 +18,7 @@ starlette~=0.27.0
 unstructured[all-docs]==0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
-faiss-cpu
+faiss-cpu # `conda install faiss-gpu -c conda-forge` if you want to accelerate with gpus
 accelerate>=0.24.1
 spacy>=3.7.2
 PyMuPDF
@@ -64,7 +64,7 @@ metaphor-python>=0.1.23
 
 # WebUI requirements
 
-streamlit>=1.29.0
+streamlit>=1.29.0 # do remember to add streamlit to environment variables if you use windows
 streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.2.3
 streamlit-chatbox>=1.1.11
