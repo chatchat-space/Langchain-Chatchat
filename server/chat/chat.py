@@ -21,7 +21,9 @@ from server.db.repository import add_message_to_db
 from server.callback_handler.agent_callback_handler import Status, CustomAsyncIteratorCallbackHandler
 
 
-def create_models_from_config(configs: dict = {}, callbacks: list = []):
+def create_models_from_config(configs, callbacks):
+    if configs is None:
+        configs = {}
     models = {}
     prompts = {}
     for model_type, model_configs in configs.items():
@@ -40,7 +42,57 @@ def create_models_from_config(configs: dict = {}, callbacks: list = []):
     return models, prompts
 
 
+# 在这里写构建逻辑
+def create_models_chains(history, history_len, prompts, models, tools, callbacks, conversation_id, metadata):
+    memory = None
+    chat_prompt = None
+    if history:
+        history = [History.from_data(h) for h in history]
+        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_template() for i in history] + [input_msg])
+    elif conversation_id and history_len > 0:
+        memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=models["llm_model"],
+                                            message_limit=history_len)
+    else:
+        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
+        chat_prompt = ChatPromptTemplate.from_messages([input_msg])
+
+    chain = LLMChain(prompt=chat_prompt, llm=models["llm_model"], memory=memory)
+    classifier_chain = (
+            PromptTemplate.from_template(prompts["preprocess_model"])
+            | models["preprocess_model"]
+            | StrOutputParser()
+    )
+    if "chatglm3" in models["action_model"].model_name.lower():
+        agent_executor = initialize_glm3_agent(
+            llm=models["action_model"],
+            tools=tools,
+            prompt=prompts["action_model"],
+            input_variables=["input", "intermediate_steps", "history"],
+            memory=memory,
+            callback_manager=BaseCallbackManager(handlers=callbacks),
+            verbose=True,
+        )
+    else:
+        agent_executor = initialize_agent(
+            llm=models["action_model"],
+            tools=tools,
+            callbacks=callbacks,
+            agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+            memory=memory,
+            verbose=True,
+        )
+    branch = RunnableBranch(
+        (lambda x: "1" in x["topic"].lower(), agent_executor),
+        chain
+    )
+    full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
+    return full_chain
+
+
 async def chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+               metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
                conversation_id: str = Body("", description="对话框ID"),
                history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
                history: Union[int, List[History]] = Body([],
@@ -55,61 +107,26 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                tool_config: Dict = Body({}, description="工具配置"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        nonlocal history
-        memory = None
-        message_id = None
-        chat_prompt = None
+        message_id = add_message_to_db(chat_type="llm_chat", query=query,
+                                       conversation_id=conversation_id) if conversation_id else None
 
         callback = CustomAsyncIteratorCallbackHandler()
         callbacks = [callback]
         models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config)
 
-        if conversation_id:
-            message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
         tools = [tool for tool in all_tools if tool.name in tool_config]
 
-        if history:
-            history = [History.from_data(h) for h in history]
-            input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
-            chat_prompt = ChatPromptTemplate.from_messages(
-                [i.to_msg_template() for i in history] + [input_msg])
-        elif conversation_id and history_len > 0:
-            memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=models["llm_model"],
-                                                message_limit=history_len)
-        else:
-            input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
-            chat_prompt = ChatPromptTemplate.from_messages([input_msg])
+        # 构建完整的Chain
+        full_chain = create_models_chains(prompts=prompts,
+                                          models=models,
+                                          conversation_id=conversation_id,
+                                          tools=tools,
+                                          callbacks=callbacks,
+                                          history=history,
+                                          history_len=history_len,
+                                          metadata=metadata)
 
-        chain = LLMChain(prompt=chat_prompt, llm=models["llm_model"], memory=memory)
-        classifier_chain = (
-                PromptTemplate.from_template(prompts["preprocess_model"])
-                | models["preprocess_model"]
-                | StrOutputParser()
-        )
-        if "chatglm3" in models["action_model"].model_name.lower():
-            agent_executor = initialize_glm3_agent(
-                llm=models["action_model"],
-                tools=tools,
-                prompt=prompts["action_model"],
-                input_variables=["input", "intermediate_steps", "history"],
-                memory=memory,
-                callback_manager=BaseCallbackManager(handlers=callbacks),
-                verbose=True,
-            )
-        else:
-            agent_executor = initialize_agent(
-                llm=models["action_model"],
-                tools=tools,
-                callbacks=callbacks,
-                agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-                memory=memory,
-                verbose=True,
-            )
-        branch = RunnableBranch(
-            (lambda x: "1" in x["topic"].lower(), agent_executor),
-            chain
-        )
-        full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
+        # 执行完整的Chain
         task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}, callbacks=callbacks), callback.done))
         if stream:
             async for chunk in callback.aiter():
@@ -132,7 +149,6 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             agent_finish = ""
             tool_info = None
             async for chunk in callback.aiter():
-                # Use server-sent-events to stream the response
                 data = json.loads(chunk)
                 if data["status"] == Status.agent_action:
                     tool_info = {

@@ -1,19 +1,19 @@
 PROMPT_TEMPLATES = {
     "preprocess_model": {
         "default":
-            '请你根据我的描述和我们对话的历史，来判断本次跟我交流是否需要使用工具，还是可以直接凭借你的知识或者历史记录跟我对话。你只要回答一个数字。1 或者 0，1代表需要使用工具，0代表不需要使用工具。\n'
-            '以下几种情况要使用工具,请返回1\n'
-            '1. 实时性的问题，例如天气，日期，地点等信息\n'
+            '根据我们对话的历史，判断本次跟我交流是否需要使用工具，还是可以直接凭借你的知识或者历史记录跟我对话。'
+            '以下几种情况要使用工具:\n'
+            '1. 实时性的问题，例如查询天气，日期，地点等信息\n'
             '2. 需要数学计算的问题\n'
             '3. 需要查询数据，地点等精确数据\n'
             '4. 需要行业知识的问题\n'
-            '<question>'
-            '{input}'
-            '</question>'
+            '5. 需要联网的内容\n'
+            '你只要回答一个数字:1代表需要使用工具，你无法为我直接提供服务。0代表不需要使用工具。你应该尽量使用工具\n'
+            '你只能回答0或者1'
     },
     "llm_model": {
         "default":
-            '{{ input }}',
+            '{{input}}',
         "with_history":
             'The following is a friendly conversation between a human and an AI. '
             'The AI is talkative and provides lots of specific details from its context. '

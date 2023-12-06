@@ -12,7 +12,10 @@ RERANKER_MAX_LENGTH = 1024
 # 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
 EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
-
+SUPPORT_AGENT_MODELS = [
+    "chatglm3-6b",
+    "openai-api"
+]
 LLM_MODEL_CONFIG = {
     # 意图识别不需要输出，模型后台知道就行
     "preprocess_model": {
@@ -44,7 +47,7 @@ LLM_MODEL_CONFIG = {
             "max_tokens": 2048,
             "history_len": 100,
             "prompt_name": "default",
-            "callbacks": False
+            "callbacks": True
         },
     },
     "action_model": {
@@ -54,11 +57,10 @@ LLM_MODEL_CONFIG = {
             "prompt_name": "ChatGLM3",
             "callbacks": True
         },
-        "zhipu-api": {
+        "openai-api": {
             "temperature": 0.01,
-            "max_tokens": 2096,
-            "history_len": 5,
-            "prompt_name": "ChatGLM3",
+            "max_tokens": 4096,
+            "prompt_name": "GPT-4",
             "callbacks": True
         },
     },

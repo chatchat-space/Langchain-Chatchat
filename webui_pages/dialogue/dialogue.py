@@ -1,4 +1,6 @@
 import streamlit as st
+
+from webui_pages.dialogue.utils import process_files
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from streamlit_modal import Modal
@@ -187,7 +189,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                  key="llm_model",
                                  )
 
-
         #  传入后端的内容
         model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
 
@@ -201,10 +202,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         if llm_model is not None:
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
 
-        print(model_config)
         files = st.file_uploader("上传附件",
                                  type=[i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True)
+        files_upload = process_files(files=files) if files else None
+        print(len(files_upload)) if files_upload else None
 
         # if dialogue_mode == "文件对话":
         #     with st.expander("文件对话配置", True):
@@ -218,7 +220,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         #             st.session_state["file_chat_id"] = upload_temp_docs(files, api)
     # Display chat messages from history on app rerun
 
-
     chat_box.output_messages()
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
 
@@ -227,6 +228,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             message_id: str = "",
             history_index: int = -1,
     ):
+
         reason = feedback["text"]
         score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
         api.chat_feedback(message_id=message_id,
@@ -252,6 +254,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             message_id = ""
             element_index = 0
             for d in api.chat_chat(query=prompt,
+                                   metadata=files_upload,
                                    history=history,
                                    model_config=model_config,
                                    conversation_id=conversation_id,

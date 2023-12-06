@@ -1,5 +1,5 @@
 from fastapi import Body
-from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT
+from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT, LLM_MODEL_CONFIG
 from server.utils import (BaseResponse, fschat_controller_address, list_config_llm_models,
                           get_httpx_client, get_model_worker_config)
 from typing import List
@@ -18,7 +18,14 @@ def list_running_models(
             r = client.post(controller_address + "/list_models")
             models = r.json()["models"]
             data = {m: get_model_config(m).data for m in models}
-            return BaseResponse(data=data)
+
+            ## 只有LLM模型才返回
+            result = {}
+            for model, config in data.items():
+                if model in LLM_MODEL_CONFIG['llm_model']:
+                    result[model] = config
+
+            return BaseResponse(data=result)
     except Exception as e:
         logger.error(f'{e.__class__.__name__}: {e}',
                         exc_info=e if log_verbose else None)
@@ -36,10 +43,17 @@ def list_config_models(
     从本地获取configs中配置的模型列表
     '''
     data = {}
+    result = {}
+
     for type, models in list_config_llm_models().items():
         if type in types:
             data[type] = {m: get_model_config(m).data for m in models}
-    return BaseResponse(data=data)
+
+            for model, config in data.items():
+                if model in LLM_MODEL_CONFIG['llm_model']:
+                    result[type][model] = config
+
+    return BaseResponse(data=result)
 
 
 def get_model_config(
