@@ -83,11 +83,15 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
             memory=memory,
             verbose=True,
         )
-    branch = RunnableBranch(
-        (lambda x: "1" in x["topic"].lower(), agent_executor),
-        chain
-    )
-    full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
+    agent_use = False
+    if agent_use:
+        branch = RunnableBranch(
+            (lambda x: "1" in x["topic"].lower(), agent_executor),
+            chain
+        )
+        full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
+    else:
+        full_chain = ({"input": lambda x: x["input"]} | chain)
     return full_chain
 
 
@@ -107,15 +111,11 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                tool_config: Dict = Body({}, description="工具配置"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        message_id = add_message_to_db(chat_type="llm_chat", query=query,
-                                       conversation_id=conversation_id) if conversation_id else None
-
+        message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id) if conversation_id else  None
         callback = CustomAsyncIteratorCallbackHandler()
         callbacks = [callback]
         models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config)
-
         tools = [tool for tool in all_tools if tool.name in tool_config]
-
         # 构建完整的Chain
         full_chain = create_models_chains(prompts=prompts,
                                           models=models,

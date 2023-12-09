@@ -58,6 +58,7 @@ def get_ChatOpenAI(
     )
     return model
 
+
 def get_OpenAI(
         model_name: str,
         temperature: float,
@@ -349,7 +350,8 @@ def get_model_worker_config(model_name: str = None) -> dict:
     config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
     config.update(ONLINE_LLM_MODEL.get(model_name, {}).copy())
     config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}).copy())
-
+    print(config, "*******")
+    breakpoint()
     if model_name in ONLINE_LLM_MODEL:
         config["online_api"] = True
         if provider := config.get("provider"):
@@ -366,6 +368,7 @@ def get_model_worker_config(model_name: str = None) -> dict:
         if path and os.path.isdir(path):
             config["model_path_exists"] = True
         config["device"] = llm_device(config.get("device"))
+    breakpoint()
     return config
 
 
@@ -513,6 +516,8 @@ def detect_device() -> Literal["cuda", "mps", "cpu"]:
 
 def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
     device = device or LLM_DEVICE
+    # if device.isdigit():
+    #     return "cuda:" + device
     if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
     return device
