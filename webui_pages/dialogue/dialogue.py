@@ -175,7 +175,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         for k, v in config_models.get("online", {}).items():
             if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
-        llm_models = running_models + available_models
+        llm_models = running_models + available_models + ["openai-api"]
         cur_llm_model = st.session_state.get("cur_llm_model", default_model)
         if cur_llm_model in llm_models:
             index = llm_models.index(cur_llm_model)

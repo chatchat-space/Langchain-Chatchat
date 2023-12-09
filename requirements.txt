@@ -1,6 +1,6 @@
 # API requirements
 
-langchain>=0.0.346
+langchain>=0.0.348
 langchain-experimental>=0.0.42
 pydantic==1.10.13
 fschat==0.2.35
