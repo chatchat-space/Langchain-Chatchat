@@ -1,3 +1,5 @@
+import base64
+
 import streamlit as st
 
 from webui_pages.dialogue.utils import process_files
@@ -12,6 +14,7 @@ from configs import (TOOL_CONFIG, LLM_MODEL_CONFIG)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
 from typing import List, Dict
+from PIL import Image
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -202,11 +205,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         if llm_model is not None:
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
 
-        files = st.file_uploader("上传附件",
-                                 type=[i for ls in LOADER_DICT.values() for i in ls],
-                                 accept_multiple_files=True)
-        files_upload = process_files(files=files) if files else None
-        print(len(files_upload)) if files_upload else None
+        # files = st.file_uploader("上传附件",accept_multiple_files=False)
+                                 # type=[i for ls in LOADER_DICT.values() for i in ls],)
+        uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
+        files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
+
+        # print(len(files_upload["audios"])) if files_upload else None
 
         # if dialogue_mode == "文件对话":
         #     with st.expander("文件对话配置", True):
@@ -248,11 +252,26 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             history = get_messages_history(
                 model_config["llm_model"][next(iter(model_config["llm_model"]))]["history_len"])
             chat_box.user_say(prompt)
+            if files_upload["images"]:
+                # 显示第一个上传的图像
+                st.markdown(f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
+                            unsafe_allow_html=True)
+            elif files_upload["videos"]:
+                # 显示第一个上传的视频
+                st.markdown(
+                    f'<video width="320" height="240" controls><source src="data:video/mp4;base64,{files_upload["videos"][0]}" type="video/mp4"></video>',
+                    unsafe_allow_html=True)
+            elif files_upload["audios"]:
+                # 播放第一个上传的音频
+                st.markdown(
+                    f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
+                    unsafe_allow_html=True)
 
             chat_box.ai_say("正在思考...")
             text = ""
             message_id = ""
             element_index = 0
+
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
                                    history=history,
@@ -287,6 +306,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     element_index = 0
                     text = chunk
                 chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
+
             chat_box.show_feedback(**feedback_kwargs,
                                    key=message_id,
                                    on_submit=on_feedback,

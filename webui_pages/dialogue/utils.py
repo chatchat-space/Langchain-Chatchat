@@ -1,7 +1,7 @@
+import streamlit as st
 import base64
 import os
 from io import BytesIO
-
 
 def encode_file_to_base64(file):
     # 将文件内容转换为 Base64 编码
@@ -11,8 +11,7 @@ def encode_file_to_base64(file):
 
 
 def process_files(files):
-    result = {"videos": [], "images": []}
-
+    result = {"videos": [], "images": [], "audios": []}
     for file in files:
         file_extension = os.path.splitext(file.name)[1].lower()
 
@@ -25,5 +24,9 @@ def process_files(files):
             # 图像文件处理
             image_base64 = encode_file_to_base64(file)
             result["images"].append(image_base64)
+        elif file_extension in ['.mp3', '.wav', '.ogg', '.flac']:
+            # 音频文件处理
+            audio_base64 = encode_file_to_base64(file)
+            result["audios"].append(audio_base64)
 
     return result

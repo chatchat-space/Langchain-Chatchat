@@ -55,5 +55,16 @@ all_tools = [
         description=template_knowledge,
         args_schema=SearchKnowledgeInput,
     ),
+    StructuredTool.from_function(
+        func=vqa_processor,
+        name="vqa_processor",
+        description="use this tool to get answer for image question",
+        args_schema=VQAInput,
+    ),
+    StructuredTool.from_function(
+        func=aqa_processor,
+        name="aqa_processor",
+        description="use this tool to get answer for audio question",
+        args_schema=AQAInput,
+    )
 ]
-
