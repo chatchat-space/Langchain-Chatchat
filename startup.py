@@ -143,7 +143,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.engine_use_ray = False
             args.disable_log_requests = False
 
-            # 0.2.1 vllm后要加的参数, 但是这里不需要
+            # 0.2.2 vllm后要加的参数, 但是这里不需要
             args.max_model_len = None
             args.revision = None
             args.quantization = None

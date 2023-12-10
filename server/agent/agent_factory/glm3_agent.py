@@ -51,9 +51,8 @@ class StructuredChatOutputParserWithRetries(AgentOutputParser):
         if "tool_call" in text:
             action_end = text.find("```")
             action = text[:action_end].strip()
-
             params_str_start = text.find("(") + 1
-            params_str_end = text.find(")")
+            params_str_end = text.rfind(")")
             params_str = text[params_str_start:params_str_end]
 
             params_pairs = [param.split("=") for param in params_str.split(",") if "=" in param]
