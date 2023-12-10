@@ -1,25 +1,28 @@
-from fastapi import Body
-from fastapi.responses import StreamingResponse
-from langchain.agents import initialize_agent, AgentType
-from langchain_core.callbacks import AsyncCallbackManager, BaseCallbackManager
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableBranch
-from server.agent.agent_factory import initialize_glm3_agent
-from server.agent.tools_factory.tools_registry import all_tools
-from server.utils import wrap_done, get_ChatOpenAI
-from langchain.chains import LLMChain
-from typing import AsyncIterable, Dict
 import asyncio
 import json
+from typing import List, Union, AsyncIterable, Dict
+
+from fastapi import Body
+from fastapi.responses import StreamingResponse
+
+from langchain.agents import initialize_agent, AgentType
+from langchain_core.callbacks import BaseCallbackManager
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableBranch
+from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
-from typing import List, Union
-from server.chat.utils import History
 from langchain.prompts import PromptTemplate
-from server.utils import get_prompt_template
+
+from server.agent.agent_factory import initialize_glm3_agent
+from server.agent.tools_factory.tools_registry import all_tools
+from server.agent.container import container
+
+from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
+from server.chat.utils import History
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
 from server.callback_handler.agent_callback_handler import Status, CustomAsyncIteratorCallbackHandler
-from server.agent.container import container
+
 
 def create_models_from_config(configs, callbacks):
     if configs is None:
@@ -47,6 +50,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
     memory = None
     chat_prompt = None
     container.metadata = metadata
+
     if history:
         history = [History.from_data(h) for h in history]
         input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
@@ -102,23 +106,35 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
                conversation_id: str = Body("", description="对话框ID"),
                history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-               history: Union[int, List[History]] = Body([],
-                                                         description="历史对话，设为一个整数可以从数据库中读取历史消息",
-                                                         examples=[[
-                                                             {"role": "user",
-                                                              "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                             {"role": "assistant", "content": "虎头虎脑"}]]
-                                                         ),
+               history: Union[int, List[History]] = Body(
+                   [],
+                   description="历史对话，设为一个整数可以从数据库中读取历史消息",
+                   examples=[
+                       [
+                           {"role": "user",
+                            "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                           {"role": "assistant", "content": "虎头虎脑"}
+                       ]
+                   ]
+               ),
                stream: bool = Body(False, description="流式输出"),
-               model_config: Dict = Body({}, description="LLM 模型配置。"),
+               model_config: Dict = Body({}, description="LLM 模型配置"),
                tool_config: Dict = Body({}, description="工具配置"),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
-        message_id = add_message_to_db(chat_type="llm_chat", query=query,
-                                       conversation_id=conversation_id) if conversation_id else None
+        message_id = add_message_to_db(
+            chat_type="llm_chat",
+            query=query,
+            conversation_id=conversation_id
+        ) if conversation_id else None
+
         callback = CustomAsyncIteratorCallbackHandler()
         callbacks = [callback]
+
+        # 从配置中选择模型
         models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config)
+
+        # 从配置中选择工具
         tools = [tool for tool in all_tools if tool.name in tool_config]
 
         # 构建完整的Chain
@@ -131,7 +147,8 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                           history_len=history_len,
                                           metadata=metadata)
 
-        # 执行完整的Chain
+        # Execute Chain
+
         task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}, callbacks=callbacks), callback.done))
         if stream:
             async for chunk in callback.aiter():
@@ -166,12 +183,22 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                     text += data["llm_token"]
             if tool_info:
                 yield json.dumps(
-                    {"text": text, "agent_action": tool_info, "agent_finish": agent_finish, "message_id": message_id},
-                    ensure_ascii=False)
+                    {
+                        "text": text,
+                        "agent_action": tool_info,
+                        "agent_finish": agent_finish,
+                        "message_id": message_id
+                    },
+                    ensure_ascii=False
+                )
             else:
                 yield json.dumps(
-                    {"text": text, "message_id": message_id},
-                    ensure_ascii=False)
+                    {
+                        "text": text,
+                        "message_id": message_id
+                    },
+                    ensure_ascii=False
+                )
         await task
 
     return EventSourceResponse(chat_iterator())

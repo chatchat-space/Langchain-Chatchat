@@ -1,4 +1,6 @@
-# 用于批量将configs下的.example文件复制并命名为.py文件
+"""
+用于批量将configs下的.example文件复制并命名为.py文件
+"""
 import os
 import shutil
 

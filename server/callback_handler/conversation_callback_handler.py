@@ -23,7 +23,7 @@ class ConversationCallbackHandler(BaseCallbackHandler):
     def on_llm_start(
             self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
-        # 如果想存更多信息，则prompts 也需要持久化
+        # TODO 如果想存更多信息，则 prompts 也需要持久化,不用的提示词需要特殊支持
         pass
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:

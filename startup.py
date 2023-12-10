@@ -49,10 +49,6 @@ for model_category in LLM_MODEL_CONFIG.values():
 
 all_model_names_list = list(all_model_names)
 
-@deprecated(
-    since="0.3.0",
-    message="模型启动功能将于 Langchain-Chatchat 0.3.x重写,支持更多模式和加速启动，0.2.x中相关功能将废弃",
-    removal="0.3.0")
 def create_controller_app(
         dispatch_method: str,
         log_level: str = "INFO",
@@ -111,6 +107,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
                               worker_addr=args.worker_address)
         # sys.modules["fastchat.serve.base_model_worker"].worker = worker
         sys.modules["fastchat.serve.base_model_worker"].logger.setLevel(log_level)
+
     # 本地模型
     else:
         from configs.model_config import VLLM_MODEL_DICT
@@ -876,7 +873,9 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
+
     create_tables()
+
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()
     else:
@@ -887,4 +886,3 @@ if __name__ == "__main__":
 
         asyncio.set_event_loop(loop)
     loop.run_until_complete(start_main_server())
-
