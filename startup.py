@@ -37,7 +37,7 @@ from server.utils import (fschat_controller_address, fschat_model_worker_address
                           MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 from server.knowledge_base.migrate import create_tables
 import argparse
-from typing import Tuple, List, Dict
+from typing import List, Dict
 from configs import VERSION
 
 all_model_names = set()
@@ -47,6 +47,7 @@ for model_category in LLM_MODEL_CONFIG.values():
             all_model_names.add(model_name)
 
 all_model_names_list = list(all_model_names)
+
 
 def create_controller_app(
         dispatch_method: str,
@@ -106,6 +107,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
                               worker_addr=args.worker_address)
         # sys.modules["fastchat.serve.base_model_worker"].worker = worker
         sys.modules["fastchat.serve.base_model_worker"].logger.setLevel(log_level)
+
     # 本地模型
     else:
         from configs.model_config import VLLM_MODEL_DICT
@@ -875,7 +877,9 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
+
     create_tables()
+
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()
     else:
@@ -886,4 +890,3 @@ if __name__ == "__main__":
 
         asyncio.set_event_loop(loop)
     loop.run_until_complete(start_main_server())
-

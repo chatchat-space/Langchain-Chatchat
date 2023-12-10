@@ -1,6 +1,6 @@
 # API requirements
 
-langchain>=0.0.348
+langchain>=0.0.350
 langchain-experimental>=0.0.42
 pydantic==1.10.13
 fschat>=0.2.33
@@ -8,7 +8,7 @@ xformers>=0.0.22.post7
 openai>=1.3.7
 sentence_transformers
 transformers>=4.35.2
-torch==2.1.0  ##on Windows system, install the cuda version manually from https://pytorch.org/
+torch==2.1.0  #on Windows system, install the cuda version manually from https://pytorch.org/
 torchvision  #on Windows system, install the cuda version manually from https://pytorch.org/
 torchaudio  #on Windows system, install the cuda version manually from https://pytorch.org/
 fastapi>=0.104

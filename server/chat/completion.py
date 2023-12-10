@@ -22,7 +22,7 @@ async def completion(query: str = Body(..., description="用户输入", examples
                                              description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
                      ):
 
-    #todo 因ApiModelWorker 默认是按chat处理的，会对params["prompt"] 解析为messages，因此ApiModelWorker 使用时需要有相应处理
+    #TODO: 因ApiModelWorker 默认是按chat处理的，会对params["prompt"] 解析为messages，因此ApiModelWorker 使用时需要有相应处理
     async def completion_iterator(query: str,
                                   model_name: str = None,
                                   prompt_name: str = prompt_name,

@@ -14,7 +14,6 @@ from configs import (TOOL_CONFIG, LLM_MODEL_CONFIG)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
 from typing import List, Dict
-from PIL import Image
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -206,7 +205,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
 
         # files = st.file_uploader("上传附件",accept_multiple_files=False)
-                                 # type=[i for ls in LOADER_DICT.values() for i in ls],)
+        # type=[i for ls in LOADER_DICT.values() for i in ls],)
         uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
         files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
 
@@ -252,20 +251,18 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             history = get_messages_history(
                 model_config["llm_model"][next(iter(model_config["llm_model"]))]["history_len"])
             chat_box.user_say(prompt)
-            if files_upload["images"]:
-                # 显示第一个上传的图像
-                st.markdown(f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
-                            unsafe_allow_html=True)
-            elif files_upload["videos"]:
-                # 显示第一个上传的视频
-                st.markdown(
-                    f'<video width="320" height="240" controls><source src="data:video/mp4;base64,{files_upload["videos"][0]}" type="video/mp4"></video>',
-                    unsafe_allow_html=True)
-            elif files_upload["audios"]:
-                # 播放第一个上传的音频
-                st.markdown(
-                    f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
-                    unsafe_allow_html=True)
+            if files_upload:
+                if files_upload["images"]:
+                    st.markdown(f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
+                                unsafe_allow_html=True)
+                elif files_upload["videos"]:
+                    st.markdown(
+                        f'<video width="400" height="300" controls><source src="data:video/mp4;base64,{files_upload["videos"][0]}" type="video/mp4"></video>',
+                        unsafe_allow_html=True)
+                elif files_upload["audios"]:
+                    st.markdown(
+                        f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
+                        unsafe_allow_html=True)
 
             chat_box.ai_say("正在思考...")
             text = ""
@@ -307,10 +304,16 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     text = chunk
                 chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
 
-            chat_box.show_feedback(**feedback_kwargs,
-                                   key=message_id,
-                                   on_submit=on_feedback,
-                                   kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
+            if os.path.exists("tmp/image.jpg"):
+                with open("tmp/image.jpg", "rb") as image_file:
+                    encoded_string = base64.b64encode(image_file.read()).decode()
+                    img_tag = f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
+                    st.markdown(img_tag, unsafe_allow_html=True)
+                os.remove("tmp/image.jpg")
+            # chat_box.show_feedback(**feedback_kwargs,
+            #                        key=message_id,
+            #                        on_submit=on_feedback,
+            #                        kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
             # elif dialogue_mode == "文件对话":
             #     if st.session_state["file_chat_id"] is None:
