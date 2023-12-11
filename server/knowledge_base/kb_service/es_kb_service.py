@@ -1,10 +1,3 @@
-#!/user/bin/env python3
-"""
-File_Name: es_kb_service.py
-Author: TangGuoLiang
-Email: 896165277@qq.com
-Created: 2023-09-05
-"""
 from typing import List
 import os
 import shutil
@@ -14,7 +7,7 @@ from langchain.vectorstores.elasticsearch import ElasticsearchStore
 from configs import KB_ROOT_PATH, EMBEDDING_MODEL, EMBEDDING_DEVICE, CACHED_VS_NUM
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.utils import load_local_embeddings
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch,BadRequestError
 from configs import logger
 from configs import kbs_config
 
@@ -27,6 +20,7 @@ class ESKBService(KBService):
         self.PORT = kbs_config[self.vs_type()]['port']
         self.user = kbs_config[self.vs_type()].get("user",'')
         self.password = kbs_config[self.vs_type()].get("password",'')
+        self.password = kbs_config[self.vs_type()].get("dims_length",None)
         self.embeddings_model = load_local_embeddings(self.embed_model, EMBEDDING_DEVICE)
         try:
             # ES python客户端连接（仅连接）
@@ -36,11 +30,18 @@ class ESKBService(KBService):
             else:
                 logger.warning("ES未配置用户名和密码")
                 self.es_client_python = Elasticsearch(f"http://{self.IP}:{self.PORT}")
-            self.es_client_python.indices.create(index=self.index_name)
         except ConnectionError:
             logger.error("连接到 Elasticsearch 失败！")
+            raise ConnectionError
         except Exception as e:
             logger.error(f"Error 发生 : {e}")
+            raise e
+        try:
+            # 首先尝试通过es_client_python创建
+            self.es_client_python.indices.create(index=self.index_name)
+        except BadRequestError as e:
+            logger.error("创建索引失败,重新")
+            logger.error(e)
 
         try:
             # langchain ES 连接、创建索引
@@ -64,10 +65,24 @@ class ESKBService(KBService):
                     embedding=self.embeddings_model,
                 )
         except ConnectionError:
-            print("### 连接到 Elasticsearch 失败！")
-            logger.error("### 连接到 Elasticsearch 失败！")
+            print("### 初始化 Elasticsearch 失败！")
+            logger.error("### 初始化 Elasticsearch 失败！")
+            raise ConnectionError
         except Exception as e:
             logger.error(f"Error 发生 : {e}")
+            raise e
+        try:
+            # 尝试通过db_init创建索引
+            self.db_init._create_index_if_not_exists(
+                                                     index_name=self.index_name,
+                                                     dims_length=self.dims_length
+                                                     )
+        except Exception as e:
+            logger.error("创建索引失败...")
+            logger.error(e)
+            # raise e 
+            
+        
 
     @staticmethod
     def get_kb_path(knowledge_base_name: str):
