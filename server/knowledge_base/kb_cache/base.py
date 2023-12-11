@@ -129,7 +129,7 @@ class EmbeddingsPool(CachePool):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
                     from langchain.embeddings.openai import OpenAIEmbeddings
-                    embeddings = OpenAIEmbeddings(model_name=model,
+                    embeddings = OpenAIEmbeddings(model=model,
                                                   openai_api_key=get_model_path(model),
                                                   chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:
