@@ -165,6 +165,8 @@ def torch_gc():
                        "以支持及时清理 torch 产生的内存占用。")
                 logger.error(f'{e.__class__.__name__}: {msg}',
                              exc_info=e if log_verbose else None)
+        elif torch.xpu.is_available():
+            torch.xpu.empty_cache()
     except Exception:
         ...
 
@@ -499,28 +501,48 @@ def set_httpx_config(
     # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
 
-def detect_device() -> Literal["cuda", "mps", "cpu"]:
+def detect_device() -> Literal["cuda", "mps", "xpu", "cpu"]:
     try:
         import torch
         if torch.cuda.is_available():
             return "cuda"
         if torch.backends.mps.is_available():
             return "mps"
+
+        try:
+            import intel_extension_for_pytorch
+
+            if torch.xpu.is_available():
+                return "xpu"
+        except:
+            pass
     except:
         pass
     return "cpu"
 
 
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def try_load_ipex(ipex_loaded = [False]):
+    if ipex_loaded[0]:
+        return
+    else:
+        import intel_extension_for_pytorch
+        ipex_loaded[0] = True
+
+
+def llm_device(device: str = None) -> Literal["cuda", "mps", "xpu", "cpu"]:
     device = device or LLM_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
+    if device == "xpu":
+        try_load_ipex()
+    if device not in ["cuda", "mps", "xpu", "cpu"]:
         device = detect_device()
     return device
 
 
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "xpu", "cpu"]:
     device = device or EMBEDDING_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
+    if device == "xpu":
+        try_load_ipex()
+    if device not in ["cuda", "mps", "xpu", "cpu"]:
         device = detect_device()
     return device
 
