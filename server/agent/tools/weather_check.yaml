@@ -1,0 +1,10 @@
+name: weather_check
+description: Use Weather API to get weather information
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: City name,include city and county,like "厦门市思明区"
+required:
+  - query

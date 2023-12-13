@@ -1,71 +1,58 @@
-# 该文件包含webui通用工具，可以被不同的webui使用
+# 该文件封装了对api.py的请求，可以被不同的webui使用
+# 通过ApiRequest和AsyncApiRequest支持同步/异步调用
+
+
 from typing import *
 from pathlib import Path
-from configs.model_config import (
+# 此处导入的配置为发起请求（如WEBUI）机器上的配置，主要用于为前端设置默认值。分布式部署时可以与服务器上的不同
+from configs import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
-    KB_ROOT_PATH,
-    LLM_MODEL,
+    LLM_MODELS,
+    TEMPERATURE,
     SCORE_THRESHOLD,
+    CHUNK_SIZE,
+    OVERLAP_SIZE,
+    ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
-    logger,
+    HTTPX_DEFAULT_TIMEOUT,
+    logger, log_verbose,
 )
 import httpx
-import asyncio
-from server.chat.openai_chat import OpenAiChatMsgIn
-from fastapi.responses import StreamingResponse
 import contextlib
 import json
+import os
 from io import BytesIO
-from server.db.repository.knowledge_base_repository import get_kb_detail
-from server.db.repository.knowledge_file_repository import get_file_detail
-from server.utils import run_async, iter_over_async
+from server.utils import set_httpx_config, api_address, get_httpx_client
 
-from configs.model_config import NLTK_DATA_PATH
-import nltk
-nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+from pprint import pprint
 
 
-def set_httpx_timeout(timeout=60.0):
-    '''
-    设置httpx默认timeout到60秒。
-    httpx默认timeout是5秒，在请求LLM回答时不够用。
-    '''
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
-    httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
-
-
-KB_ROOT_PATH = Path(KB_ROOT_PATH)
-set_httpx_timeout()
+set_httpx_config()
 
 
 class ApiRequest:
     '''
-    api.py调用的封装,主要实现:
-    1. 简化api调用方式
-    2. 实现无api调用(直接运行server.chat.*中的视图函数获取结果),无需启动api.py
+    api.py调用的封装（同步模式）,简化api调用方式
     '''
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:7861",
-        timeout: float = 60.0,
-        no_remote_api: bool = False,   # call api view function directly
+        base_url: str = api_address(),
+        timeout: float = HTTPX_DEFAULT_TIMEOUT,
     ):
         self.base_url = base_url
         self.timeout = timeout
-        self.no_remote_api = no_remote_api
+        self._use_async = False
+        self._client = None
 
-    def _parse_url(self, url: str) -> str:
-        if (not url.startswith("http")
-                    and self.base_url
-                ):
-            part1 = self.base_url.strip(" /")
-            part2 = url.strip(" /")
-            return f"{part1}/{part2}"
-        else:
-            return url
+    @property
+    def client(self):
+        if self._client is None or self._client.is_closed:
+            self._client = get_httpx_client(base_url=self.base_url,
+                                            use_async=self._use_async,
+                                            timeout=self.timeout)
+        return self._client
 
     def get(
         self,
@@ -74,39 +61,18 @@ class ApiRequest:
         retry: int = 3,
         stream: bool = False,
         **kwargs: Any,
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
+    ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("GET", url, params=params, **kwargs)
+                    return self.client.stream("GET", url, params=params, **kwargs)
                 else:
-                    return httpx.get(url, params=params, **kwargs)
+                    return self.client.get(url, params=params, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when get {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
-
-    async def aget(
-        self,
-        url: str,
-        params: Union[Dict, List[Tuple], bytes] = None,
-        retry: int = 3,
-        stream: bool = False,
-        **kwargs: Any,
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("GET", url, params=params, **kwargs)
-                    else:
-                        return await client.get(url, params=params, **kwargs)
-                except Exception as e:
-                    logger.error(e)
-                    retry -= 1
 
     def post(
         self,
@@ -116,41 +82,19 @@ class ApiRequest:
         retry: int = 3,
         stream: bool = False,
         **kwargs: Any
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
+    ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
         while retry > 0:
             try:
-                # return requests.post(url, data=data, json=json, stream=stream, **kwargs)
+                # print(kwargs)
                 if stream:
-                    return httpx.stream("POST", url, data=data, json=json, **kwargs)
+                    return self.client.stream("POST", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.post(url, data=data, json=json, **kwargs)
+                    return self.client.post(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when post {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
-
-    async def apost(
-        self,
-        url: str,
-        data: Dict = None,
-        json: Dict = None,
-        retry: int = 3,
-        stream: bool = False,
-        **kwargs: Any
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("POST", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.post(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    logger.error(e)
-                    retry -= 1
 
     def delete(
         self,
@@ -160,58 +104,18 @@ class ApiRequest:
         retry: int = 3,
         stream: bool = False,
         **kwargs: Any
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
+    ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
         while retry > 0:
             try:
                 if stream:
-                    return httpx.stream("DELETE", url, data=data, json=json, **kwargs)
+                    return self.client.stream("DELETE", url, data=data, json=json, **kwargs)
                 else:
-                    return httpx.delete(url, data=data, json=json, **kwargs)
+                    return self.client.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
-                logger.error(e)
+                msg = f"error when delete {url}: {e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                             exc_info=e if log_verbose else None)
                 retry -= 1
-
-    async def adelete(
-        self,
-        url: str,
-        data: Dict = None,
-        json: Dict = None,
-        retry: int = 3,
-        stream: bool = False,
-        **kwargs: Any
-    ) -> Union[httpx.Response, None]:
-        url = self._parse_url(url)
-        kwargs.setdefault("timeout", self.timeout)
-        async with httpx.AsyncClient() as client:
-            while retry > 0:
-                try:
-                    if stream:
-                        return await client.stream("DELETE", url, data=data, json=json, **kwargs)
-                    else:
-                        return await client.delete(url, data=data, json=json, **kwargs)
-                except Exception as e:
-                    logger.error(e)
-                    retry -= 1
-
-    def _fastapi_stream2generator(self, response: StreamingResponse, as_json: bool =False):
-        '''
-        将api.py中视图函数返回的StreamingResponse转化为同步生成器
-        '''
-        try:
-            loop = asyncio.get_event_loop()
-        except:
-            loop = asyncio.new_event_loop()
-        
-        try:
-            for chunk in  iter_over_async(response.body_iterator, loop):
-                if as_json and chunk:
-                    yield json.loads(chunk)
-                elif chunk.strip():
-                    yield chunk
-        except Exception as e:
-            logger.error(e)
 
     def _httpx_stream2generator(
         self,
@@ -221,26 +125,138 @@ class ApiRequest:
         '''
         将httpx.stream返回的GeneratorContextManager转化为普通生成器
         '''
-        try:
-            with response as r:
-                for chunk in r.iter_text(None):
-                    if as_json and chunk:
-                        yield json.loads(chunk)
-                    elif chunk.strip():
-                        yield chunk
-        except httpx.ConnectError as e:
-            msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。"
-            logger.error(msg)
-            logger.error(e)
-            yield {"code": 500, "msg": msg}
-        except httpx.ReadTimeout as e:
-            msg = f"API通信超时，请确认已启动FastChat与API服务（详见RADME '5. 启动 API 服务或 Web UI'）"
-            logger.error(msg)
-            logger.error(e)
-            yield {"code": 500, "msg": msg}
-        except Exception as e:
-            logger.error(e)
-            yield {"code": 500, "msg": str(e)}
+        async def ret_async(response, as_json):
+            try:
+                async with response as r:
+                    async for chunk in r.aiter_text(None):
+                        if not chunk: # fastchat api yield empty bytes on start and end
+                            continue
+                        if as_json:
+                            try:
+                                if chunk.startswith("data: "):
+                                    data = json.loads(chunk[6:-2])
+                                else:
+                                    data = json.loads(chunk)
+                                yield data
+                            except Exception as e:
+                                msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
+                                logger.error(f'{e.__class__.__name__}: {msg}',
+                                            exc_info=e if log_verbose else None)
+                        else:
+                            # print(chunk, end="", flush=True)
+                            yield chunk
+            except httpx.ConnectError as e:
+                msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。({e})"
+                logger.error(msg)
+                yield {"code": 500, "msg": msg}
+            except httpx.ReadTimeout as e:
+                msg = f"API通信超时，请确认已启动FastChat与API服务（详见Wiki '5. 启动 API 服务或 Web UI'）。（{e}）"
+                logger.error(msg)
+                yield {"code": 500, "msg": msg}
+            except Exception as e:
+                msg = f"API通信遇到错误：{e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                            exc_info=e if log_verbose else None)
+                yield {"code": 500, "msg": msg}
+
+        def ret_sync(response, as_json):
+            try:
+                with response as r:
+                    for chunk in r.iter_text(None):
+                        if not chunk: # fastchat api yield empty bytes on start and end
+                            continue
+                        if as_json:
+                            try:
+                                if chunk.startswith("data: "):
+                                    data = json.loads(chunk[6:-2])
+                                else:
+                                    data = json.loads(chunk)
+                                yield data
+                            except Exception as e:
+                                msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
+                                logger.error(f'{e.__class__.__name__}: {msg}',
+                                            exc_info=e if log_verbose else None)
+                        else:
+                            # print(chunk, end="", flush=True)
+                            yield chunk
+            except httpx.ConnectError as e:
+                msg = f"无法连接API服务器，请确认 ‘api.py’ 已正常启动。({e})"
+                logger.error(msg)
+                yield {"code": 500, "msg": msg}
+            except httpx.ReadTimeout as e:
+                msg = f"API通信超时，请确认已启动FastChat与API服务（详见Wiki '5. 启动 API 服务或 Web UI'）。（{e}）"
+                logger.error(msg)
+                yield {"code": 500, "msg": msg}
+            except Exception as e:
+                msg = f"API通信遇到错误：{e}"
+                logger.error(f'{e.__class__.__name__}: {msg}',
+                            exc_info=e if log_verbose else None)
+                yield {"code": 500, "msg": msg}
+
+        if self._use_async:
+            return ret_async(response, as_json)
+        else:
+            return ret_sync(response, as_json)
+
+    def _get_response_value(
+        self,
+        response: httpx.Response,
+        as_json: bool = False,
+        value_func: Callable = None,
+    ):
+        '''
+        转换同步或异步请求返回的响应
+        `as_json`: 返回json
+        `value_func`: 用户可以自定义返回值，该函数接受response或json
+        '''
+        def to_json(r):
+            try:
+                return r.json()
+            except Exception as e:
+                msg = "API未能返回正确的JSON。" + str(e)
+                if log_verbose:
+                    logger.error(f'{e.__class__.__name__}: {msg}',
+                                exc_info=e if log_verbose else None)
+                return {"code": 500, "msg": msg, "data": None}
+
+        if value_func is None:
+            value_func = (lambda r: r)
+
+        async def ret_async(response):
+            if as_json:
+                return value_func(to_json(await response))
+            else:
+                return value_func(await response)
+
+        if self._use_async:
+            return ret_async(response)
+        else:
+            if as_json:
+                return value_func(to_json(response))
+            else:
+                return value_func(response)
+
+    # 服务器信息
+    def get_server_configs(self, **kwargs) -> Dict:
+        response = self.post("/server/configs", **kwargs)
+        return self._get_response_value(response, as_json=True)
+
+    def list_search_engines(self, **kwargs) -> List:
+        response = self.post("/server/list_search_engines", **kwargs)
+        return self._get_response_value(response, as_json=True, value_func=lambda r: r["data"])
+
+    def get_prompt_template(
+        self,
+        type: str = "llm_chat",
+        name: str = "default",
+        **kwargs,
+    ) -> str:
+        data = {
+            "type": type,
+            "name": name,
+        }
+        response = self.post("/server/get_prompt_template", json=data, **kwargs)
+        return self._get_response_value(response, value_func=lambda r: r.text)
 
     # 对话相关操作
 
@@ -248,65 +264,95 @@ class ApiRequest:
         self,
         messages: List[Dict],
         stream: bool = True,
-        model: str = LLM_MODEL,
-        temperature: float = 0.7,
-        max_tokens: int = 1024, # todo:根据message内容自动计算max_tokens
-        no_remote_api: bool = None,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
         **kwargs: Any,
     ):
         '''
         对应api.py/chat/fastchat接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-        msg = OpenAiChatMsgIn(**{
+        data = {
             "messages": messages,
             "stream": stream,
             "model": model,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            **kwargs,
-        })
+        }
 
-        if no_remote_api:
-            from server.chat.openai_chat import openai_chat
-            response = openai_chat(msg)
-            return self._fastapi_stream2generator(response)
-        else:
-            data = msg.dict(exclude_unset=True, exclude_none=True)
-            response = self.post(
-                "/chat/fastchat",
-                json=data,
-                stream=stream,
-            )
-            return self._httpx_stream2generator(response)
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post(
+            "/chat/fastchat",
+            json=data,
+            stream=True,
+            **kwargs,
+        )
+        return self._httpx_stream2generator(response)
 
     def chat_chat(
-        self,
-        query: str,
-        history: List[Dict] = [],
-        stream: bool = True,
-        no_remote_api: bool = None,
+            self,
+            query: str,
+            conversation_id: str = None,
+            history_len: int = -1,
+            history: List[Dict] = [],
+            stream: bool = True,
+            model: str = LLM_MODELS[0],
+            temperature: float = TEMPERATURE,
+            max_tokens: int = None,
+            prompt_name: str = "default",
+            **kwargs,
     ):
         '''
         对应api.py/chat/chat接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
+        data = {
+            "query": query,
+            "conversation_id": conversation_id,
+            "history_len": history_len,
+            "history": history,
+            "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
+        }
 
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post("/chat/chat", json=data, stream=True, **kwargs)
+        return self._httpx_stream2generator(response, as_json=True)
+
+    def agent_chat(
+        self,
+        query: str,
+        history: List[Dict] = [],
+        stream: bool = True,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
+        prompt_name: str = "default",
+    ):
+        '''
+        对应api.py/chat/agent_chat 接口
+        '''
         data = {
             "query": query,
             "history": history,
             "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
         }
 
-        if no_remote_api:
-            from server.chat.chat import chat
-            response = chat(**data)
-            return self._fastapi_stream2generator(response)
-        else:
-            response = self.post("/chat/chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post("/chat/agent_chat", json=data, stream=True)
+        return self._httpx_stream2generator(response)
 
     def knowledge_base_chat(
         self,
@@ -316,14 +362,14 @@ class ApiRequest:
         score_threshold: float = SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
-        no_remote_api: bool = None,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
+        prompt_name: str = "default",
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
         data = {
             "query": query,
             "knowledge_base_name": knowledge_base_name,
@@ -331,273 +377,339 @@ class ApiRequest:
             "score_threshold": score_threshold,
             "history": history,
             "stream": stream,
-            "local_doc_url": no_remote_api,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
         }
 
-        if no_remote_api:
-            from server.chat.knowledge_base_chat import knowledge_base_chat
-            response = knowledge_base_chat(**data)
-            return self._fastapi_stream2generator(response, as_json=True)
-        else:
-            response = self.post(
-                "/chat/knowledge_base_chat",
-                json=data,
-                stream=True,
-            )
-            return self._httpx_stream2generator(response, as_json=True)
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post(
+            "/chat/knowledge_base_chat",
+            json=data,
+            stream=True,
+        )
+        return self._httpx_stream2generator(response, as_json=True)
+
+    def upload_temp_docs(
+        self,
+        files: List[Union[str, Path, bytes]],
+        knowledge_id: str = None,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
+    ):
+        '''
+        对应api.py/knowledge_base/upload_tmep_docs接口
+        '''
+        def convert_file(file, filename=None):
+            if isinstance(file, bytes): # raw bytes
+                file = BytesIO(file)
+            elif hasattr(file, "read"): # a file io like object
+                filename = filename or file.name
+            else: # a local path
+                file = Path(file).absolute().open("rb")
+                filename = filename or os.path.split(file.name)[-1]
+            return filename, file
+
+        files = [convert_file(file) for file in files]
+        data={
+            "knowledge_id": knowledge_id,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
+        }
+
+        response = self.post(
+            "/knowledge_base/upload_temp_docs",
+            data=data,
+            files=[("files", (filename, file)) for filename, file in files],
+        )
+        return self._get_response_value(response, as_json=True)
+
+    def file_chat(
+        self,
+        query: str,
+        knowledge_id: str,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: float = SCORE_THRESHOLD,
+        history: List[Dict] = [],
+        stream: bool = True,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
+        prompt_name: str = "default",
+    ):
+        '''
+        对应api.py/chat/file_chat接口
+        '''
+        data = {
+            "query": query,
+            "knowledge_id": knowledge_id,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+            "history": history,
+            "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
+        }
+
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post(
+            "/chat/file_chat",
+            json=data,
+            stream=True,
+        )
+        return self._httpx_stream2generator(response, as_json=True)
 
     def search_engine_chat(
         self,
         query: str,
         search_engine_name: str,
         top_k: int = SEARCH_ENGINE_TOP_K,
+        history: List[Dict] = [],
         stream: bool = True,
-        no_remote_api: bool = None,
+        model: str = LLM_MODELS[0],
+        temperature: float = TEMPERATURE,
+        max_tokens: int = None,
+        prompt_name: str = "default",
+        split_result: bool = False,
     ):
         '''
         对应api.py/chat/search_engine_chat接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
         data = {
             "query": query,
             "search_engine_name": search_engine_name,
             "top_k": top_k,
+            "history": history,
             "stream": stream,
+            "model_name": model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "prompt_name": prompt_name,
+            "split_result": split_result,
         }
 
-        if no_remote_api:
-            from server.chat.search_engine_chat import search_engine_chat
-            response = search_engine_chat(**data)
-            return self._fastapi_stream2generator(response, as_json=True)
-        else:
-            response = self.post(
-                "/chat/search_engine_chat",
-                json=data,
-                stream=True,
-            )
-            return self._httpx_stream2generator(response, as_json=True)
+        # print(f"received input message:")
+        # pprint(data)
+
+        response = self.post(
+            "/chat/search_engine_chat",
+            json=data,
+            stream=True,
+        )
+        return self._httpx_stream2generator(response, as_json=True)
 
     # 知识库相关操作
 
-    def _check_httpx_json_response(
-            self,
-            response: httpx.Response,
-            errorMsg: str = f"无法连接API服务器，请确认已执行python server\\api.py",
-        ) -> Dict:
-        '''
-        check whether httpx returns correct data with normal Response.
-        error in api with streaming support was checked in _httpx_stream2enerator
-        '''
-        try:
-            return response.json()
-        except Exception as e:
-            logger.error(e)
-            return {"code": 500, "msg": errorMsg or str(e)}
-
     def list_knowledge_bases(
         self,
-        no_remote_api: bool = None,
     ):
         '''
         对应api.py/knowledge_base/list_knowledge_bases接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        if no_remote_api:
-            from server.knowledge_base.kb_api import list_kbs
-            response = run_async(list_kbs())
-            return response.data
-        else:
-            response = self.get("/knowledge_base/list_knowledge_bases")
-            data = self._check_httpx_json_response(response)
-            return data.get("data", [])
+        response = self.get("/knowledge_base/list_knowledge_bases")
+        return self._get_response_value(response,
+                                        as_json=True,
+                                        value_func=lambda r: r.get("data", []))
 
     def create_knowledge_base(
         self,
         knowledge_base_name: str,
-        vector_store_type: str = "faiss",
+        vector_store_type: str = DEFAULT_VS_TYPE,
         embed_model: str = EMBEDDING_MODEL,
-        no_remote_api: bool = None,
     ):
         '''
         对应api.py/knowledge_base/create_knowledge_base接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
         data = {
             "knowledge_base_name": knowledge_base_name,
             "vector_store_type": vector_store_type,
             "embed_model": embed_model,
         }
 
-        if no_remote_api:
-            from server.knowledge_base.kb_api import create_kb
-            response = run_async(create_kb(**data))
-            return response.dict()
-        else:
-            response = self.post(
-                "/knowledge_base/create_knowledge_base",
-                json=data,
-            )
-            return self._check_httpx_json_response(response)
+        response = self.post(
+            "/knowledge_base/create_knowledge_base",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
 
     def delete_knowledge_base(
         self,
         knowledge_base_name: str,
-        no_remote_api: bool = None,
     ):
         '''
         对应api.py/knowledge_base/delete_knowledge_base接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        if no_remote_api:
-            from server.knowledge_base.kb_api import delete_kb
-            response = run_async(delete_kb(knowledge_base_name))
-            return response.dict()
-        else:
-            response = self.post(
-                "/knowledge_base/delete_knowledge_base",
-                json=f"{knowledge_base_name}",
-            )
-            return self._check_httpx_json_response(response)
+        response = self.post(
+            "/knowledge_base/delete_knowledge_base",
+            json=f"{knowledge_base_name}",
+        )
+        return self._get_response_value(response, as_json=True)
 
     def list_kb_docs(
         self,
         knowledge_base_name: str,
-        no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/list_docs接口
+        对应api.py/knowledge_base/list_files接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
+        response = self.get(
+            "/knowledge_base/list_files",
+            params={"knowledge_base_name": knowledge_base_name}
+        )
+        return self._get_response_value(response,
+                                        as_json=True,
+                                        value_func=lambda r: r.get("data", []))
 
-        if no_remote_api:
-            from server.knowledge_base.kb_doc_api import list_docs
-            response = run_async(list_docs(knowledge_base_name))
-            return response.data
-        else:
-            response = self.get(
-                "/knowledge_base/list_docs",
-                params={"knowledge_base_name": knowledge_base_name}
-            )
-            data = self._check_httpx_json_response(response)
-            return data.get("data", [])
-
-    def upload_kb_doc(
+    def search_kb_docs(
         self,
-        file: Union[str, Path, bytes],
+        query: str,
         knowledge_base_name: str,
-        filename: str = None,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: int = SCORE_THRESHOLD,
+    ) -> List:
+        '''
+        对应api.py/knowledge_base/search_docs接口
+        '''
+        data = {
+            "query": query,
+            "knowledge_base_name": knowledge_base_name,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+        }
+
+        response = self.post(
+            "/knowledge_base/search_docs",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
+
+    def upload_kb_docs(
+        self,
+        files: List[Union[str, Path, bytes]],
+        knowledge_base_name: str,
         override: bool = False,
+        to_vector_store: bool = True,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
-        no_remote_api: bool = None,
     ):
         '''
         对应api.py/knowledge_base/upload_docs接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
+        def convert_file(file, filename=None):
+            if isinstance(file, bytes): # raw bytes
+                file = BytesIO(file)
+            elif hasattr(file, "read"): # a file io like object
+                filename = filename or file.name
+            else: # a local path
+                file = Path(file).absolute().open("rb")
+                filename = filename or os.path.split(file.name)[-1]
+            return filename, file
 
-        if isinstance(file, bytes): # raw bytes
-            file = BytesIO(file)
-        elif hasattr(file, "read"): # a file io like object
-            filename = filename or file.name
-        else: # a local path
-            file = Path(file).absolute().open("rb")
-            filename = filename or file.name
+        files = [convert_file(file) for file in files]
+        data={
+            "knowledge_base_name": knowledge_base_name,
+            "override": override,
+            "to_vector_store": to_vector_store,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
 
-        if no_remote_api:
-            from server.knowledge_base.kb_doc_api import upload_doc
-            from fastapi import UploadFile
-            from tempfile import SpooledTemporaryFile
+        if isinstance(data["docs"], dict):
+            data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
+        response = self.post(
+            "/knowledge_base/upload_docs",
+            data=data,
+            files=[("files", (filename, file)) for filename, file in files],
+        )
+        return self._get_response_value(response, as_json=True)
 
-            temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
-            temp_file.write(file.read())
-            temp_file.seek(0)
-            response = run_async(upload_doc(
-                UploadFile(file=temp_file, filename=filename),
-                knowledge_base_name,
-                override,
-            ))
-            return response.dict()
-        else:
-            response = self.post(
-                "/knowledge_base/upload_doc",
-                data={
-                    "knowledge_base_name": knowledge_base_name,
-                    "override": override,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
-                files={"file": (filename, file)},
-            )
-            return self._check_httpx_json_response(response)
-
-    def delete_kb_doc(
+    def delete_kb_docs(
         self,
         knowledge_base_name: str,
-        doc_name: str,
+        file_names: List[str],
         delete_content: bool = False,
         not_refresh_vs_cache: bool = False,
-        no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/delete_doc接口
+        对应api.py/knowledge_base/delete_docs接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
         data = {
             "knowledge_base_name": knowledge_base_name,
-            "doc_name": doc_name,
+            "file_names": file_names,
             "delete_content": delete_content,
             "not_refresh_vs_cache": not_refresh_vs_cache,
         }
 
-        if no_remote_api:
-            from server.knowledge_base.kb_doc_api import delete_doc
-            response = run_async(delete_doc(**data))
-            return response.dict()
-        else:
-            response = self.post(
-                "/knowledge_base/delete_doc",
-                json=data,
-            )
-            return self._check_httpx_json_response(response)
+        response = self.post(
+            "/knowledge_base/delete_docs",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
 
-    def update_kb_doc(
+
+    def update_kb_info(self,knowledge_base_name,kb_info):
+        '''
+        对应api.py/knowledge_base/update_info接口
+        '''
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "kb_info": kb_info,
+        }
+
+        response = self.post(
+            "/knowledge_base/update_info",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
+
+    def update_kb_docs(
         self,
         knowledge_base_name: str,
-        file_name: str,
+        file_names: List[str],
+        override_custom_docs: bool = False,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
+        docs: Dict = {},
         not_refresh_vs_cache: bool = False,
-        no_remote_api: bool = None,
     ):
         '''
-        对应api.py/knowledge_base/update_doc接口
+        对应api.py/knowledge_base/update_docs接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "file_names": file_names,
+            "override_custom_docs": override_custom_docs,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
+            "docs": docs,
+            "not_refresh_vs_cache": not_refresh_vs_cache,
+        }
 
-        if no_remote_api:
-            from server.knowledge_base.kb_doc_api import update_doc
-            response = run_async(update_doc(knowledge_base_name, file_name))
-            return response.dict()
-        else:
-            response = self.post(
-                "/knowledge_base/update_doc",
-                json={
-                    "knowledge_base_name": knowledge_base_name,
-                    "file_name": file_name,
-                    "not_refresh_vs_cache": not_refresh_vs_cache,
-                },
-            )
-            return self._check_httpx_json_response(response)
+        if isinstance(data["docs"], dict):
+            data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
+
+        response = self.post(
+            "/knowledge_base/update_docs",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
 
     def recreate_vector_store(
         self,
@@ -605,33 +717,295 @@ class ApiRequest:
         allow_empty_kb: bool = True,
         vs_type: str = DEFAULT_VS_TYPE,
         embed_model: str = EMBEDDING_MODEL,
-        no_remote_api: bool = None,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=OVERLAP_SIZE,
+        zh_title_enhance=ZH_TITLE_ENHANCE,
     ):
         '''
         对应api.py/knowledge_base/recreate_vector_store接口
         '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
         data = {
             "knowledge_base_name": knowledge_base_name,
             "allow_empty_kb": allow_empty_kb,
             "vs_type": vs_type,
             "embed_model": embed_model,
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "zh_title_enhance": zh_title_enhance,
         }
 
-        if no_remote_api:
-            from server.knowledge_base.kb_doc_api import recreate_vector_store
-            response = run_async(recreate_vector_store(**data))
-            return self._fastapi_stream2generator(response, as_json=True)
+        response = self.post(
+            "/knowledge_base/recreate_vector_store",
+            json=data,
+            stream=True,
+            timeout=None,
+        )
+        return self._httpx_stream2generator(response, as_json=True)
+
+    # LLM模型相关操作
+    def list_running_models(
+        self,
+        controller_address: str = None,
+    ):
+        '''
+        获取Fastchat中正运行的模型列表
+        '''
+        data = {
+            "controller_address": controller_address,
+        }
+
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:data: {data}')
+
+        response = self.post(
+            "/llm_model/list_running_models",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", []))
+
+
+    def get_default_llm_model(self, local_first: bool = True) -> Tuple[str, bool]:
+        '''
+        从服务器上获取当前运行的LLM模型。
+        当 local_first=True 时，优先返回运行中的本地模型，否则优先按LLM_MODELS配置顺序返回。
+        返回类型为（model_name, is_local_model）
+        '''
+        def ret_sync():
+            running_models = self.list_running_models()
+            if not running_models:
+                return "", False
+
+            model = ""
+            for m in LLM_MODELS:
+                if m not in running_models:
+                    continue
+                is_local = not running_models[m].get("online_api")
+                if local_first and not is_local:
+                    continue
+                else:
+                    model = m
+                    break
+
+            if not model: # LLM_MODELS中配置的模型都不在running_models里
+                model = list(running_models)[0]
+            is_local = not running_models[model].get("online_api")
+            return model, is_local
+
+        async def ret_async():
+            running_models = await self.list_running_models()
+            if not running_models:
+                return "", False
+
+            model = ""
+            for m in LLM_MODELS:
+                if m not in running_models:
+                    continue
+                is_local = not running_models[m].get("online_api")
+                if local_first and not is_local:
+                    continue
+                else:
+                    model = m
+                    break
+
+            if not model: # LLM_MODELS中配置的模型都不在running_models里
+                model = list(running_models)[0]
+            is_local = not running_models[model].get("online_api")
+            return model, is_local
+
+        if self._use_async:
+            return ret_async()
         else:
+            return ret_sync()
+
+    def list_config_models(
+        self,
+        types: List[str] = ["local", "online"],
+    ) -> Dict[str, Dict]:
+        '''
+        获取服务器configs中配置的模型列表，返回形式为{"type": {model_name: config}, ...}。
+        '''
+        data = {
+            "types": types,
+        }
+        response = self.post(
+            "/llm_model/list_config_models",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
+
+    def get_model_config(
+        self,
+        model_name: str = None,
+    ) -> Dict:
+        '''
+        获取服务器上模型配置
+        '''
+        data={
+            "model_name": model_name,
+        }
+        response = self.post(
+            "/llm_model/get_model_config",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
+
+    def list_search_engines(self) -> List[str]:
+        '''
+        获取服务器支持的搜索引擎
+        '''
+        response = self.post(
+            "/server/list_search_engines",
+        )
+        return self._get_response_value(response, as_json=True, value_func=lambda r:r.get("data", {}))
+
+    def stop_llm_model(
+        self,
+        model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        停止某个LLM模型。
+        注意：由于Fastchat的实现方式，实际上是把LLM模型所在的model_worker停掉。
+        '''
+        data = {
+            "model_name": model_name,
+            "controller_address": controller_address,
+        }
+
+        response = self.post(
+            "/llm_model/stop",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
+
+    def change_llm_model(
+        self,
+        model_name: str,
+        new_model_name: str,
+        controller_address: str = None,
+    ):
+        '''
+        向fastchat controller请求切换LLM模型。
+        '''
+        if not model_name or not new_model_name:
+            return {
+                "code": 500,
+                "msg": f"未指定模型名称"
+            }
+
+        def ret_sync():
+            running_models = self.list_running_models()
+            if new_model_name == model_name or new_model_name in running_models:
+                return {
+                    "code": 200,
+                    "msg": "无需切换"
+                }
+
+            if model_name not in running_models:
+                return {
+                    "code": 500,
+                    "msg": f"指定的模型'{model_name}'没有运行。当前运行模型：{running_models}"
+                }
+
+            config_models = self.list_config_models()
+            if new_model_name not in config_models.get("local", {}):
+                return {
+                    "code": 500,
+                    "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
+                }
+
+            data = {
+                "model_name": model_name,
+                "new_model_name": new_model_name,
+                "controller_address": controller_address,
+            }
+
             response = self.post(
-                "/knowledge_base/recreate_vector_store",
+                "/llm_model/change",
                 json=data,
-                stream=True,
-                timeout=None,
             )
-            return self._httpx_stream2generator(response, as_json=True)
+            return self._get_response_value(response, as_json=True)
+
+        async def ret_async():
+            running_models = await self.list_running_models()
+            if new_model_name == model_name or new_model_name in running_models:
+                return {
+                    "code": 200,
+                    "msg": "无需切换"
+                }
+
+            if model_name not in running_models:
+                return {
+                    "code": 500,
+                    "msg": f"指定的模型'{model_name}'没有运行。当前运行模型：{running_models}"
+                }
+
+            config_models = await self.list_config_models()
+            if new_model_name not in config_models.get("local", {}):
+                return {
+                    "code": 500,
+                    "msg": f"要切换的模型'{new_model_name}'在configs中没有配置。"
+                }
+
+            data = {
+                "model_name": model_name,
+                "new_model_name": new_model_name,
+                "controller_address": controller_address,
+            }
+
+            response = self.post(
+                "/llm_model/change",
+                json=data,
+            )
+            return self._get_response_value(response, as_json=True)
+
+        if self._use_async:
+            return ret_async()
+        else:
+            return ret_sync()
+
+    def embed_texts(
+        self,
+        texts: List[str],
+        embed_model: str = EMBEDDING_MODEL,
+        to_query: bool = False,
+    ) -> List[List[float]]:
+        '''
+        对文本进行向量化，可选模型包括本地 embed_models 和支持 embeddings 的在线模型
+        '''
+        data = {
+            "texts": texts,
+            "embed_model": embed_model,
+            "to_query": to_query,
+        }
+        resp = self.post(
+            "/other/embed_texts",
+            json=data,
+        )
+        return self._get_response_value(resp, as_json=True, value_func=lambda r: r.get("data"))
+
+    def chat_feedback(
+        self,
+        message_id: str,
+        score: int,
+        reason: str = "",
+    ) -> int:
+        '''
+        反馈对话评价
+        '''
+        data = {
+            "message_id": message_id,
+            "score": score,
+            "reason": reason,
+        }
+        resp = self.post("/chat/feedback", json=data)
+        return self._get_response_value(resp)
+
+
+class AsyncApiRequest(ApiRequest):
+    def __init__(self, base_url: str = api_address(), timeout: float = HTTPX_DEFAULT_TIMEOUT):
+        super().__init__(base_url, timeout)
+        self._use_async = True
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
@@ -659,7 +1033,8 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
 
 
 if __name__ == "__main__":
-    api = ApiRequest(no_remote_api=True)
+    api = ApiRequest()
+    aapi = AsyncApiRequest()
 
     # print(api.chat_fastchat(
     #     messages=[{"role": "user", "content": "hello"}]

@@ -4,7 +4,8 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from configs.server_config import API_SERVER, api_address
+from configs import BING_SUBSCRIPTION_KEY
+from server.utils import api_address
 
 from pprint import pprint
 
@@ -39,12 +40,12 @@ data = {
         },
         {
             "role": "assistant",
-            "content": "你好，我是 ChatGLM"
+            "content": "你好，我是人工智能大模型"
         }
     ],
-    "stream": True
+    "stream": True,
+    "temperature": 0.7,
 }
-
 
 
 def test_chat_fastchat(api="/chat/fastchat"):
@@ -88,21 +89,37 @@ def test_knowledge_chat(api="/chat/knowledge_base_chat"):
     response = requests.post(url, headers=headers, json=data, stream=True)
     print("\n")
     print("=" * 30 + api + "  output" + "="*30)
-    first = True
     for line in response.iter_content(None, decode_unicode=True):
-        data = json.loads(line)
-        if first:
-            for doc in data["docs"]:
-                print(doc)
-            first = False
-        print(data["answer"], end="", flush=True)
+        data = json.loads(line[6:])
+        if "answer" in data:
+            print(data["answer"], end="", flush=True)
+    pprint(data)
+    assert "docs" in data and len(data["docs"]) > 0
     assert response.status_code == 200
 
 
 def test_search_engine_chat(api="/chat/search_engine_chat"):
+    global data
+
+    data["query"] = "室温超导最新进展是什么样？"
+
     url = f"{api_base_url}{api}"
     for se in ["bing", "duckduckgo"]:
-        dump_input(data, api)
+        data["search_engine_name"] = se
+        dump_input(data, api + f" by {se}")
         response = requests.post(url, json=data, stream=True)
-        dump_output(response, api)
+        if se == "bing" and not BING_SUBSCRIPTION_KEY:
+            data = response.json()
+            assert data["code"] == 404
+            assert data["msg"] == f"要使用Bing搜索引擎，需要设置 `BING_SUBSCRIPTION_KEY`"
+
+        print("\n")
+        print("=" * 30 + api + f" by {se}  output" + "="*30)
+        for line in response.iter_content(None, decode_unicode=True):
+            data = json.loads(line[6:])
+            if "answer" in data:
+                print(data["answer"], end="", flush=True)
+        assert "docs" in data and len(data["docs"]) > 0
+        pprint(data["docs"])
         assert response.status_code == 200
+

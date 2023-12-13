@@ -1,0 +1,70 @@
+langchain==0.0.344
+pydantic==1.10.13
+fschat>=0.2.33
+openai>=1.3.7
+fastapi>=0.104.1
+python-multipart
+nltk~=3.8.1
+uvicorn>=0.24.0.post1
+starlette~=0.27.0
+unstructured[docx,csv]==0.11.0 # add pdf if need
+python-magic-bin; sys_platform == 'win32'
+SQLAlchemy==2.0.19
+numexpr>=2.8.7
+strsimpy>=0.2.1
+
+faiss-cpu
+# accelerate>=0.24.1
+# spacy>=3.7.2
+# PyMuPDF==1.22.5 # install if need pdf
+# rapidocr_onnxruntime>=1.3.2 # install if need pdf
+
+# optional document loaders
+# rapidocr_paddle[gpu] # gpu accelleration for ocr of pdf and image files
+# jq # for .json and .jsonl files. suggest `conda install jq` on windows
+# html2text # for .enex files
+# beautifulsoup4 # for .mhtml files
+# pysrt # for .srt files
+
+requests
+pathlib
+pytest
+# scikit-learn
+# numexpr
+# vllm==0.2.2; sys_platform == "linux"
+
+# online api libs
+
+zhipuai>=1.0.7 # zhipu
+# dashscope>=1.10.0 # qwen
+# volcengine>=1.0.106 # fangzhou
+
+# uncomment libs if you want to use corresponding vector store
+# pymilvus==2.1.3 # requires milvus==2.1.3
+# psycopg2
+# pgvector>=0.2.4
+
+numpy~=1.24.4
+pandas~=2.0.3
+streamlit>=1.29.0
+streamlit-option-menu>=0.3.6
+streamlit-antd-components>=0.2.3
+streamlit-chatbox>=1.1.11
+streamlit-modal>=0.1.0
+streamlit-aggrid>=0.3.4.post3
+httpx[brotli,http2,socks]>=0.25.2
+watchdog>=3.0.0
+tqdm>=4.66.1
+websockets
+einops>=0.7.0
+
+# tiktoken
+# scipy>=1.11.4
+# transformers_stream_generator==0.0.4
+
+# Agent and Search Tools
+
+arxiv>=2.0.0
+youtube-search>=2.1.2
+duckduckgo-search>=3.9.9
+metaphor-python>=0.1.23

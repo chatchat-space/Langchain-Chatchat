@@ -1,0 +1,10 @@
+name: shell
+description: Use Linux Shell to execute Linux commands
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: The command to execute
+required:
+  - query

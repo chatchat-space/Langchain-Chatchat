@@ -1,0 +1,10 @@
+name: wolfram
+description: Useful for when you need to calculate difficult math formulas
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: The formula to be calculated
+required:
+  - query
