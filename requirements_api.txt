@@ -12,6 +12,7 @@ torch==2.1.0  ##on Windows system, install the cuda version manually from https:
 torchvision  #on Windows system, install the cuda version manually from https://pytorch.org/
 torchaudio  #on Windows system, install the cuda version manually from https://pytorch.org/
 fastapi>=0.104
+sse_starlette
 nltk>=3.8.1
 uvicorn>=0.24.0.post1
 starlette~=0.27.0
