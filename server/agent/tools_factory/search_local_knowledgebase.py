@@ -1,5 +1,4 @@
 from urllib.parse import urlencode
-
 from pydantic import BaseModel, Field
 
 from server.knowledge_base.kb_doc_api import search_docs
@@ -9,7 +8,7 @@ from configs import TOOL_CONFIG
 def search_knowledgebase(query: str, database: str, config: dict):
     docs = search_docs(
         query=query,
-        knowledge_base_name=database,
+        knowledge_base_name="samples",
         top_k=config["top_k"],
         score_threshold=config["score_threshold"])
     context = ""
@@ -22,7 +21,7 @@ def search_knowledgebase(query: str, database: str, config: dict):
         source_documents.append(text)
 
     if len(source_documents) == 0:
-        context= "没有找到相关文档,请更换关键词重试"
+        context = "没有找到相关文档,请更换关键词重试"
     else:
         for doc in source_documents:
             context += doc + "\n"

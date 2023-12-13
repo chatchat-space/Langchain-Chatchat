@@ -10,8 +10,7 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (TOOL_CONFIG, LLM_MODEL_CONFIG)
-from server.knowledge_base.utils import LOADER_DICT
+from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS)
 import uuid
 from typing import List, Dict
 
@@ -124,15 +123,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         conv_names = list(st.session_state["conversation_ids"].keys())
         index = 0
 
-        tools = list(TOOL_CONFIG.keys())
-        selected_tool_configs = {}
-
-        with st.expander("工具栏"):
-            for tool in tools:
-                is_selected = st.checkbox(tool, value=TOOL_CONFIG[tool]["use"], key=tool)
-                if is_selected:
-                    selected_tool_configs[tool] = TOOL_CONFIG[tool]
-
         if st.session_state.get("cur_conv_name") in conv_names:
             index = conv_names.index(st.session_state.get("cur_conv_name"))
         conversation_name = st.selectbox("当前会话", conv_names, index=index)
@@ -177,7 +167,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         for k, v in config_models.get("online", {}).items():
             if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
-        llm_models = running_models + available_models + ["openai-api"]
+        llm_models = running_models + available_models  # + ["openai-api"]
         cur_llm_model = st.session_state.get("cur_llm_model", default_model)
         if cur_llm_model in llm_models:
             index = llm_models.index(cur_llm_model)
@@ -193,22 +183,39 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
         #  传入后端的内容
         model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
-
+        tool_use = True
         for key in LLM_MODEL_CONFIG:
             if key == 'llm_model':
                 continue
+            if key == 'action_model':
+                first_key = next(iter(LLM_MODEL_CONFIG[key]))
+                if first_key not in SUPPORT_AGENT_MODELS:
+                    st.warning("不支持Agent的模型，无法执行任何工具调用")
+                    tool_use = False
+                    continue
             if LLM_MODEL_CONFIG[key]:
                 first_key = next(iter(LLM_MODEL_CONFIG[key]))
                 model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
 
+        # 选择工具
+        selected_tool_configs = {}
+        if tool_use:
+            from configs import prompt_config
+            import importlib
+            importlib.reload(prompt_config)
+
+            tools = list(prompt_config.TOOL_CONFIG.keys())
+            with st.expander("工具栏"):
+                for tool in tools:
+                    is_selected = st.checkbox(tool, value=prompt_config.TOOL_CONFIG[tool]["use"], key=tool)
+                    if is_selected:
+                        selected_tool_configs[tool] = prompt_config.TOOL_CONFIG[tool]
+
         if llm_model is not None:
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
 
-        # files = st.file_uploader("上传附件",accept_multiple_files=False)
-        # type=[i for ls in LOADER_DICT.values() for i in ls],)
         uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
         files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
-
         # print(len(files_upload["audios"])) if files_upload else None
 
         # if dialogue_mode == "文件对话":
@@ -354,6 +361,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         ):
             chat_box.reset_history()
             st.rerun()
+
+        warning_placeholder = st.empty()
+        with warning_placeholder.container():
+            st.warning('Running in 8 x A100')
 
     export_btn.download_button(
         "导出记录",

@@ -6,12 +6,11 @@ from fastapi import Body
 from fastapi.responses import StreamingResponse
 
 from langchain.agents import initialize_agent, AgentType
-from langchain_core.callbacks import BaseCallbackManager
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableBranch
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnableBranch
 
 from server.agent.agent_factory import initialize_glm3_agent
 from server.agent.tools_factory.tools_registry import all_tools
@@ -57,48 +56,55 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
     elif conversation_id and history_len > 0:
-        memory = ConversationBufferDBMemory(conversation_id=conversation_id, llm=models["llm_model"],
-                                            message_limit=history_len)
+        memory = ConversationBufferDBMemory(
+            conversation_id=conversation_id,
+            llm=models["llm_model"],
+            message_limit=history_len
+        )
     else:
         input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
-    chain = LLMChain(prompt=chat_prompt, llm=models["llm_model"], memory=memory)
+    chain = LLMChain(
+        prompt=chat_prompt,
+        llm=models["llm_model"],
+        memory=memory
+    )
     classifier_chain = (
             PromptTemplate.from_template(prompts["preprocess_model"])
             | models["preprocess_model"]
             | StrOutputParser()
     )
 
-    if "chatglm3" in models["action_model"].model_name.lower():
-        agent_executor = initialize_glm3_agent(
-            llm=models["action_model"],
-            tools=tools,
-            prompt=prompts["action_model"],
-            input_variables=["input", "intermediate_steps", "history"],
-            memory=memory,
-            callback_manager=BaseCallbackManager(handlers=callbacks),
-            verbose=True,
-        )
-    else:
-        agent_executor = initialize_agent(
-            llm=models["action_model"],
-            tools=tools,
-            callbacks=callbacks,
-            agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-            memory=memory,
-            verbose=True,
-        )
-    agent_use = False
-    if agent_use:
-        branch = RunnableBranch(
-            (lambda x: "1" in x["topic"].lower(), agent_executor),
-            chain
-        )
-        full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
-    else:
-        # full_chain = ({"input": lambda x: x["input"]} | chain)
+    if "action_model" in models and tools:
+        if "chatglm3" in models["action_model"].model_name.lower():
+            agent_executor = initialize_glm3_agent(
+                llm=models["action_model"],
+                tools=tools,
+                prompt=prompts["action_model"],
+                input_variables=["input", "intermediate_steps", "history"],
+                memory=memory,
+                # callback_manager=BaseCallbackManager(handlers=callbacks),
+                verbose=True,
+            )
+        else:
+            agent_executor = initialize_agent(
+                llm=models["action_model"],
+                tools=tools,
+                callbacks=callbacks,
+                agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+                memory=memory,
+                verbose=True,
+            )
+
+        # branch = RunnableBranch(
+        #     (lambda x: "1" in x["topic"].lower(), agent_executor),
+        #     chain
+        # )
+        # full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
         full_chain = ({"input": lambda x: x["input"]} | agent_executor)
+    else:
+        full_chain = ({"input": lambda x: x["input"]} | chain)
     return full_chain
 
 
@@ -149,7 +155,8 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         # Execute Chain
 
-        task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}, callbacks=callbacks), callback.done))
+        task = asyncio.create_task(
+            wrap_done(full_chain.ainvoke({"input": query}, callbacks=callbacks), callback.done))
         if stream:
             async for chunk in callback.aiter():
                 data = json.loads(chunk)

@@ -2,9 +2,9 @@ from langchain_core.tools import StructuredTool
 from server.agent.tools_factory import *
 from configs import KB_INFO
 
-template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool."
+template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool. The 'database' should be one of the above [{key}]."
 KB_info_str = '\n'.join([f"{key}: {value}" for key, value in KB_INFO.items()])
-template_knowledge = template.format(KB_info=KB_info_str)
+template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 all_tools = [
     StructuredTool.from_function(
@@ -24,6 +24,7 @@ all_tools = [
         name="shell",
         description="Use Shell to execute Linux commands",
         args_schema=ShellInput,
+        # return_direct=True, #是否直接返回，不做大模型处理
     ),
     StructuredTool.from_function(
         func=wolfram,
