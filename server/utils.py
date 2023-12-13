@@ -499,30 +499,33 @@ def set_httpx_config(
     # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
 
-def detect_device() -> Literal["cuda", "mps", "cpu"]:
+def detect_device() -> Literal["cuda", "mps", "cpu", "xpu"]:
     try:
         import torch
         if torch.cuda.is_available():
             return "cuda"
         if torch.backends.mps.is_available():
             return "mps"
+        import intel_extension_for_pytorch as ipex
+        if torch.xpu.get_device_properties(0):
+            return "xpu"
     except:
         pass
     return "cpu"
 
 
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
     device = device or LLM_DEVICE
     # if device.isdigit():
     #     return "cuda:" + device
-    if device not in ["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
         device = detect_device()
     return device
 
 
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
     device = device or EMBEDDING_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
         device = detect_device()
     return device
 

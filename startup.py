@@ -219,7 +219,6 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
                 wbits=args.awq_wbits,
                 groupsize=args.awq_groupsize,
             )
-
             worker = ModelWorker(
                 controller_addr=args.controller_address,
                 worker_addr=args.worker_address,
@@ -391,7 +390,6 @@ def run_model_worker(
     kwargs["worker_address"] = fschat_model_worker_address(model_name)
     model_path = kwargs.get("model_path", "")
     kwargs["model_path"] = model_path
-
     app = create_model_worker_app(log_level=log_level, **kwargs)
     _set_app_event(app, started_event)
     if log_level == "ERROR":

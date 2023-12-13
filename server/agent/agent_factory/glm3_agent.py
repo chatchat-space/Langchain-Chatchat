@@ -3,16 +3,17 @@ This file is a modified version for ChatGLM3-6B the original glm3_agent.py file 
 """
 from __future__ import annotations
 
-import yaml
+import json
+import logging
+from typing import Any, List, Sequence, Tuple, Optional, Union
+from pydantic.schema import model_schema
+
+
 from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
 from langchain.memory import ConversationBufferWindowMemory
-from typing import Any, List, Sequence, Tuple, Optional, Union
-import os
 from langchain.agents.agent import Agent
 from langchain.chains.llm import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate
-import json
-import logging
 from langchain.agents.agent import AgentOutputParser
 from langchain.output_parsers import OutputFixingParser
 from langchain.pydantic_v1 import Field
@@ -21,7 +22,8 @@ from langchain.agents.agent import AgentExecutor
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
-from pydantic.schema import model_schema
+from langchain_core.callbacks import Callbacks
+
 
 HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
 logger = logging.getLogger(__name__)
@@ -113,10 +115,6 @@ class StructuredGLM3ChatAgent(Agent):
             return agent_scratchpad
 
     @classmethod
-    def _validate_tools(cls, tools: Sequence[BaseTool]) -> None:
-        pass
-
-    @classmethod
     def _get_default_output_parser(
             cls, llm: Optional[BaseLanguageModel] = None, **kwargs: Any
     ) -> AgentOutputParser:
@@ -124,7 +122,7 @@ class StructuredGLM3ChatAgent(Agent):
 
     @property
     def _stop(self) -> List[str]:
-        return ["```<observation>"]
+        return ["<|observation|>"]
 
     @classmethod
     def create_prompt(
@@ -190,6 +188,7 @@ class StructuredGLM3ChatAgent(Agent):
             llm=llm,
             prompt=prompt,
             callback_manager=callback_manager,
+            verbose=True
         )
         tool_names = [tool.name for tool in tools]
         _output_parser = output_parser or cls._get_default_output_parser(llm=llm)
@@ -209,7 +208,6 @@ def initialize_glm3_agent(
         tools: Sequence[BaseTool],
         llm: BaseLanguageModel,
         prompt: str = None,
-        callback_manager: Optional[BaseCallbackManager] = None,
         memory: Optional[ConversationBufferWindowMemory] = None,
         agent_kwargs: Optional[dict] = None,
         *,
@@ -222,12 +220,11 @@ def initialize_glm3_agent(
         llm=llm,
         tools=tools,
         prompt=prompt,
-        callback_manager=callback_manager, **agent_kwargs
+        **agent_kwargs
     )
     return AgentExecutor.from_agent_and_tools(
         agent=agent_obj,
         tools=tools,
-        callback_manager=callback_manager,
         memory=memory,
         tags=tags_,
         **kwargs,
