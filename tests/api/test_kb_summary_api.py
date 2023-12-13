@@ -25,7 +25,7 @@ def test_summary_file_to_vector_store(api="/knowledge_base/kb_summary_api/summar
                                  "file_name": file_name
                                  }, stream=True)
     for chunk in r.iter_content(None):
-        data = json.loads(chunk)
+        data = json.loads(chunk[6:])
         assert isinstance(data, dict)
         assert data["code"] == 200
         print(data["msg"])
@@ -38,7 +38,7 @@ def test_summary_doc_ids_to_vector_store(api="/knowledge_base/kb_summary_api/sum
                                  "doc_ids": doc_ids
                                  }, stream=True)
     for chunk in r.iter_content(None):
-        data = json.loads(chunk)
+        data = json.loads(chunk[6:])
         assert isinstance(data, dict)
         assert data["code"] == 200
         print(data)

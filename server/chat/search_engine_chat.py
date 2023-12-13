@@ -4,7 +4,7 @@ from configs import (BING_SEARCH_URL, BING_SUBSCRIPTION_KEY, METAPHOR_API_KEY,
                      LLM_MODELS, SEARCH_ENGINE_TOP_K, TEMPERATURE,
                      TEXT_SPLITTER_NAME, OVERLAP_SIZE)
 from fastapi import Body
-from fastapi.responses import StreamingResponse
+from sse_starlette import EventSourceResponse
 from fastapi.concurrency import run_in_threadpool
 from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
@@ -197,10 +197,10 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
                              ensure_ascii=False)
         await task
 
-    return StreamingResponse(search_engine_chat_iterator(query=query,
+    return EventSourceResponse(search_engine_chat_iterator(query=query,
                                                          search_engine_name=search_engine_name,
                                                          top_k=top_k,
                                                          history=history,
                                                          model_name=model_name,
                                                          prompt_name=prompt_name),
-                             media_type="text/event-stream")
+                             )

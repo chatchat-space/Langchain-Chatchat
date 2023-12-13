@@ -25,6 +25,8 @@ if not os.path.exists(LOG_PATH):
 
 # 临时文件目录，主要用于文件对话
 BASE_TEMP_DIR = os.path.join(tempfile.gettempdir(), "chatchat")
-if os.path.isdir(BASE_TEMP_DIR):
+try:
     shutil.rmtree(BASE_TEMP_DIR)
+except Exception:
+    pass
 os.makedirs(BASE_TEMP_DIR, exist_ok=True)

@@ -3,7 +3,7 @@ from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
                      OVERLAP_SIZE,
                      logger, log_verbose, )
 from server.knowledge_base.utils import (list_files_from_folder)
-from fastapi.responses import StreamingResponse
+from sse_starlette import EventSourceResponse
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from typing import List, Optional
@@ -90,7 +90,7 @@ def recreate_summary_vector_store(
                     })
                 i += 1
 
-    return StreamingResponse(output(), media_type="text/event-stream")
+    return EventSourceResponse(output())
 
 
 def summary_file_to_vector_store(
@@ -163,7 +163,7 @@ def summary_file_to_vector_store(
                     "msg": msg,
                 })
 
-    return StreamingResponse(output(), media_type="text/event-stream")
+    return EventSourceResponse(output())
 
 
 def summary_doc_ids_to_vector_store(

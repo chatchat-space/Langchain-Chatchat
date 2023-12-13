@@ -8,7 +8,8 @@ from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder, get_file_path,
                                          files2docs_in_thread, KnowledgeFile)
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
+from sse_starlette import EventSourceResponse
 from pydantic import Json
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
@@ -95,20 +96,6 @@ def _save_files_in_thread(files: List[UploadFile],
     params = [{"file": file, "knowledge_base_name": knowledge_base_name, "override": override} for file in files]
     for result in run_in_thread_pool(save_file, params=params):
         yield result
-
-
-# 似乎没有单独增加一个文件上传API接口的必要
-# def upload_files(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
-#                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
-#                 override: bool = Form(False, description="覆盖已有文件")):
-#     '''
-#     API接口：上传文件。流式返回保存结果：{"code":200, "msg": "xxx", "data": {"knowledge_base_name":"xxx", "file_name": "xxx"}}
-#     '''
-#     def generate(files, knowledge_base_name, override):
-#         for result in _save_files_in_thread(files, knowledge_base_name=knowledge_base_name, override=override):
-#             yield json.dumps(result, ensure_ascii=False)
-
-#     return StreamingResponse(generate(files, knowledge_base_name=knowledge_base_name, override=override), media_type="text/event-stream")
 
 
 # TODO: 等langchain.document_loaders支持内存文件的时候再开通
@@ -397,4 +384,4 @@ def recreate_vector_store(
             if not not_refresh_vs_cache:
                 kb.save_vector_store()
 
-    return StreamingResponse(output(), media_type="text/event-stream")
+    return EventSourceResponse(output())

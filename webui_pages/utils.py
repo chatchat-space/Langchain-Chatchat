@@ -133,8 +133,10 @@ class ApiRequest:
                             continue
                         if as_json:
                             try:
-                                data = json.loads(chunk)
-                                # pprint(data, depth=1)
+                                if chunk.startswith("data: "):
+                                    data = json.loads(chunk[6:-2])
+                                else:
+                                    data = json.loads(chunk)
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
@@ -165,8 +167,10 @@ class ApiRequest:
                             continue
                         if as_json:
                             try:
-                                data = json.loads(chunk)
-                                # pprint(data, depth=1)
+                                if chunk.startswith("data: "):
+                                    data = json.loads(chunk[6:-2])
+                                else:
+                                    data = json.loads(chunk)
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"

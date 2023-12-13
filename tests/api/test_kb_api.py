@@ -181,7 +181,7 @@ def test_recreate_vs(api="/knowledge_base/recreate_vector_store"):
     print("\n重建知识库：")
     r = requests.post(url, json={"knowledge_base_name": kb}, stream=True)
     for chunk in r.iter_content(None):
-        data = json.loads(chunk)
+        data = json.loads(chunk[6:])
         assert isinstance(data, dict)
         assert data["code"] == 200
         print(data["msg"])

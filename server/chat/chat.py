@@ -1,5 +1,5 @@
 from fastapi import Body
-from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 from configs import LLM_MODELS, TEMPERATURE
 from server.utils import wrap_done, get_ChatOpenAI
 from langchain.chains import LLMChain
@@ -100,4 +100,4 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         await task
 
-    return StreamingResponse(chat_iterator(), media_type="text/event-stream")
+    return EventSourceResponse(chat_iterator())

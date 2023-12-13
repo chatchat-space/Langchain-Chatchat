@@ -55,7 +55,7 @@ def knowledge_chat(api="/chat/knowledge_base_chat"):
     response = requests.post(url, headers=headers, json=data, stream=True)
 
     for line in response.iter_content(None, decode_unicode=True):
-        data = json.loads(line)
+        data = json.loads(line[6:])
         result.append(data)
     
     return result
