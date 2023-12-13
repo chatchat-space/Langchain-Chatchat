@@ -48,7 +48,11 @@ class MilvusKBService(KBService):
 
     def _load_milvus(self):
         self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(self.embed_model),
-                             collection_name=self.kb_name, connection_args=kbs_config.get("milvus"))
+                             collection_name=self.kb_name, 
+                             connection_args=kbs_config.get("milvus"),
+                             index_params=kbs_config.ge("milvus_kwargs")["index_params"],
+                             search_params=kbs_config.get("milvus_kwargs")["search_params"]
+                             )
 
     def do_init(self):
         self._load_milvus()
