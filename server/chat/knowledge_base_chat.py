@@ -57,7 +57,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             query: str,
             top_k: int,
             history: Optional[List[History]],
-            model_name: str = LLM_MODELS[0],
+            model_name: str = model_name,
             prompt_name: str = prompt_name,
     ) -> AsyncIterable[str]:
         nonlocal max_tokens
@@ -120,3 +120,4 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         await task
 
     return EventSourceResponse(knowledge_base_chat_iterator(query, top_k, history,model_name,prompt_name))
+
