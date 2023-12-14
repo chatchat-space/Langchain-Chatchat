@@ -119,4 +119,4 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                              ensure_ascii=False)
         await task
 
-    return EventSourceResponse(knowledge_base_chat_iterator(query, kb, top_k, history))
+    return EventSourceResponse(knowledge_base_chat_iterator(query, top_k, history,model_name,prompt_name))
