@@ -20,7 +20,7 @@ class ESKBService(KBService):
         self.PORT = kbs_config[self.vs_type()]['port']
         self.user = kbs_config[self.vs_type()].get("user",'')
         self.password = kbs_config[self.vs_type()].get("password",'')
-        self.password = kbs_config[self.vs_type()].get("dims_length",None)
+        self.dims_length = kbs_config[self.vs_type()].get("dims_length",None)
         self.embeddings_model = load_local_embeddings(self.embed_model, EMBEDDING_DEVICE)
         try:
             # ES python客户端连接（仅连接）
