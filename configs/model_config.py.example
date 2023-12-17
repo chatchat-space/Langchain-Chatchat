@@ -96,6 +96,7 @@ ONLINE_LLM_MODEL = {
         "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"
         "api_key": "",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建
         "provider": "QwenWorker",
+        "embed_model": "text-embedding-v1" # embedding 模型名称
     },
 
     # 百川 API，申请方式请参考 https://www.baichuan-ai.com/home#api-enter
