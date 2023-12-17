@@ -62,8 +62,6 @@ class GeminiWorker(ApiModelWorker):
             'Content-Type': 'application/json',
 
         }
-
-        text = ""
         if log_verbose:
             logger.info(f'{self.__class__.__name__}:url: {url}')
             logger.info(f'{self.__class__.__name__}:headers: {headers}')
