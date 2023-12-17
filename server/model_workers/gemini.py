@@ -45,7 +45,6 @@ class GeminiWorker(ApiModelWorker):
           
     def do_chat(self, params: ApiChatParams) -> Dict:
         params.load_config(self.model_names[0])
-        print(params.messages)
         data = self.create_gemini_messages(messages=params.messages)
         generationConfig=dict(
             temperature = params.temperature,
@@ -55,12 +54,10 @@ class GeminiWorker(ApiModelWorker):
             stopSequences=[]
         )
 
-        data['generationConfig'] = generationConfig 
-        print(data)           
+        data['generationConfig'] = generationConfig         
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"+ '?key=' + params.api_key
         headers = {
             'Content-Type': 'application/json',
-
         }
         if log_verbose:
             logger.info(f'{self.__class__.__name__}:url: {url}')
