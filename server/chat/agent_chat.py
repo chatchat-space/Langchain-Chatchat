@@ -70,6 +70,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
             model_container.MODEL = model_agent
         else:
             model_container.MODEL = model
+            model_container.LLM_MODEL_NAME = model_name
 
         prompt_template = get_prompt_template("agent_chat", prompt_name)
         prompt_template_agent = CustomPromptTemplate(

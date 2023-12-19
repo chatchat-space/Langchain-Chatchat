@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 async def search_knowledge_base_iter(database: str, query: str):
     response = await knowledge_base_chat(query=query,
                                          knowledge_base_name=database,
-                                         model_name=model_container.MODEL.model_name,
+                                         model_name=model_container.LLM_MODEL_NAME,
                                          temperature=0.01,
                                          history=[],
                                          top_k=VECTOR_SEARCH_TOP_K,
