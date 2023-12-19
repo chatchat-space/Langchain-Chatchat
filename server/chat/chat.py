@@ -39,6 +39,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
         callback = AsyncIteratorCallbackHandler()
         callbacks = [callback]
         memory = None
+        message_id = None
 
         if conversation_id:
             message_id = add_message_to_db(chat_type="llm_chat", query=query, conversation_id=conversation_id)
