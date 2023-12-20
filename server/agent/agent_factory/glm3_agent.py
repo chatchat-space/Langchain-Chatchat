@@ -19,7 +19,7 @@ from langchain.output_parsers import OutputFixingParser
 from langchain.pydantic_v1 import Field
 from langchain.schema import AgentAction, AgentFinish, OutputParserException, BasePromptTemplate
 from langchain.agents.agent import AgentExecutor
-from langchain.callbacks.base import BaseCallbackManager
+from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
 from langchain_core.callbacks import Callbacks
@@ -169,7 +169,7 @@ class StructuredGLM3ChatAgent(Agent):
             llm: BaseLanguageModel,
             tools: Sequence[BaseTool],
             prompt: str = None,
-            callback_manager: Optional[BaseCallbackManager] = None,
+            callbacks: List[BaseCallbackHandler] = [],
             output_parser: Optional[AgentOutputParser] = None,
             human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
             input_variables: Optional[List[str]] = None,
@@ -187,7 +187,7 @@ class StructuredGLM3ChatAgent(Agent):
         llm_chain = LLMChain(
             llm=llm,
             prompt=prompt,
-            callback_manager=callback_manager,
+            callbacks=callbacks,
             verbose=True
         )
         tool_names = [tool.name for tool in tools]
@@ -208,6 +208,7 @@ def initialize_glm3_agent(
         tools: Sequence[BaseTool],
         llm: BaseLanguageModel,
         prompt: str = None,
+        callbacks: List[BaseCallbackHandler] = [],
         memory: Optional[ConversationBufferWindowMemory] = None,
         agent_kwargs: Optional[dict] = None,
         *,
@@ -216,6 +217,7 @@ def initialize_glm3_agent(
 ) -> AgentExecutor:
     tags_ = list(tags) if tags else []
     agent_kwargs = agent_kwargs or {}
+    llm.callbacks=callbacks
     agent_obj = StructuredGLM3ChatAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,
@@ -225,6 +227,7 @@ def initialize_glm3_agent(
     return AgentExecutor.from_agent_and_tools(
         agent=agent_obj,
         tools=tools,
+        callbacks=callbacks,
         memory=memory,
         tags=tags_,
         intermediate_steps=[],

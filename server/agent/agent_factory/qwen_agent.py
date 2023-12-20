@@ -14,7 +14,7 @@ from langchain.pydantic_v1 import Field
 from langchain.schema import (AgentAction, AgentFinish, OutputParserException,
                               HumanMessage, SystemMessage, AIMessage)
 from langchain.agents.agent import AgentExecutor
-from langchain.callbacks.base import BaseCallbackManager
+from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
 from langchain.tools.render import format_tool_to_openai_function
@@ -107,16 +107,16 @@ class QwenChatAgent(LLMSingleActionAgent):
 
     @classmethod
     def from_llm_and_tools(
-            cls,
-            llm: BaseLanguageModel,
-            tools: Sequence[BaseTool],
-            prompt: str = None,
-            callback_manager: Optional[BaseCallbackManager] = None,
-            output_parser: Optional[AgentOutputParser] = None,
-            human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
-            input_variables: Optional[List[str]] = None,
-            memory_prompts: Optional[List[BaseChatPromptTemplate]] = None,
-            **kwargs: Any,
+        cls,
+        llm: BaseLanguageModel,
+        tools: Sequence[BaseTool],
+        prompt: str = None,
+        callbacks: List[BaseCallbackHandler] = [],
+        output_parser: Optional[AgentOutputParser] = None,
+        human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
+        input_variables: Optional[List[str]] = None,
+        memory_prompts: Optional[List[BaseChatPromptTemplate]] = None,
+        **kwargs: Any,
     ) -> QwenChatAgent:
         """Construct an agent from an LLM and tools."""
         cls._validate_tools(tools)
@@ -129,7 +129,7 @@ class QwenChatAgent(LLMSingleActionAgent):
         llm_chain = LLMChain(
             llm=llm,
             prompt=prompt,
-            callback_manager=callback_manager,
+            callbacks=callbacks,
         )
         tool_names = [tool.name for tool in tools]
         output_parser = output_parser or QwenChatAgentOutputParser()
@@ -147,34 +147,33 @@ class QwenChatAgent(LLMSingleActionAgent):
 
 
 def initialize_qwen_agent(
-        tools: Sequence[BaseTool],
-        llm: BaseLanguageModel,
-        prompt: str = None,
-        callback_manager: Optional[BaseCallbackManager] = None,
-        memory: Optional[ConversationBufferWindowMemory] = None,
-        agent_kwargs: Optional[dict] = None,
-        *,
-        return_direct: Optional[bool] = None,
-        tags: Optional[Sequence[str]] = None,
-        **kwargs: Any,
+    tools: Sequence[BaseTool],
+    llm: BaseLanguageModel,
+    prompt: str = None,
+    callbacks: List[BaseCallbackHandler] = [],
+    memory: Optional[ConversationBufferWindowMemory] = None,
+    agent_kwargs: Optional[dict] = None,
+    *,
+    return_direct: Optional[bool] = None,
+    tags: Optional[Sequence[str]] = None,
+    **kwargs: Any,
 ) -> AgentExecutor:
     tags_ = list(tags) if tags else []
     agent_kwargs = agent_kwargs or {}
 
     if isinstance(return_direct, bool):  # can make all tools return directly
         tools = [t.copy(update={"return_direct": return_direct}) for t in tools]
-
+    llm.callbacks=callbacks
     agent_obj = QwenChatAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,
         prompt=prompt,
-        callback_manager=callback_manager,
-        **agent_kwargs
+        **agent_kwargs,
     )
     return AgentExecutor.from_agent_and_tools(
         agent=agent_obj,
         tools=tools,
-        callback_manager=callback_manager,
+        callbacks=callbacks,
         memory=memory,
         tags=tags_,
         intermediate_steps=[],

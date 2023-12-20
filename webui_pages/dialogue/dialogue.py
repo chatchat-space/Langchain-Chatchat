@@ -11,6 +11,7 @@ import os
 import re
 import time
 from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG)
+from server.callback_handler.agent_callback_handler import AgentStatus
 import uuid
 from typing import List, Dict
 
@@ -271,10 +272,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                         f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
                         unsafe_allow_html=True)
 
-            chat_box.ai_say("正在思考...")
+            chat_box.ai_say(["正在思考...",
+                             Markdown(title="tool call", in_expander=True, expanded=True,state="running"),
+                             Markdown()])
             text = ""
             message_id = ""
-            element_index = 0
+            tool_called = False
 
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
@@ -283,33 +286,33 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                    conversation_id=conversation_id,
                                    tool_config=selected_tool_configs,
                                    ):
-                try:
-                    d = json.loads(d)
-                except:
-                    pass
                 message_id = d.get("message_id", "")
                 metadata = {
                     "message_id": message_id,
                 }
-                if error_msg := check_error_msg(d):
-                    st.error(error_msg)
-                if chunk := d.get("agent_action"):
-                    chat_box.insert_msg(Markdown("...", in_expander=True, title="Tools", state="complete"))
-                    element_index = 1
+                if not tool_called: # 避免工具调用之后重复输出，将LLM输出分为工具调用前后分别处理
+                    element_index = 0
+                else:
+                    element_index = -1
+                if d["status"] == AgentStatus.error:
+                    st.error(d["text"])
+                elif d["status"] == AgentStatus.agent_action:
                     formatted_data = {
-                        "action": chunk["tool_name"],
-                        "action_input": chunk["tool_input"]
+                        "action": d["tool_name"],
+                        "action_input": d["tool_input"]
                     }
                     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                    text += f"\n```\nInput Params:\n" + formatted_json + f"\n```\n"
-                    chat_box.update_msg(text, element_index=element_index, metadata=metadata)
-                if chunk := d.get("text"):
-                    text += chunk
-                    chat_box.update_msg(text, element_index=element_index, metadata=metadata)
-                if chunk := d.get("agent_finish"):
-                    element_index = 0
-                    text = chunk
-                chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
+                    chat_box.update_msg(Markdown(f"\n```\nInput Params:\n" + formatted_json + f"\n```\n"), element_index=1)
+                    tool_called = True
+                    text = ""
+                elif d["status"] == AgentStatus.llm_new_token:
+                    text += d["text"]
+                    chat_box.update_msg(text, streaming=True, element_index=element_index, metadata=metadata)
+                elif d["status"] == AgentStatus.llm_end:
+                    chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
+                elif d["status"] == AgentStatus.agent_finish:
+                    chat_box.update_msg(element_index=1, state="complete", expanded=False)
+                    chat_box.update_msg(Markdown(d["text"]), streaming=False, element_index=-1)
 
             if os.path.exists("tmp/image.jpg"):
                 with open("tmp/image.jpg", "rb") as image_file:
