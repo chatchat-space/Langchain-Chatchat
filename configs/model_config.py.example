@@ -179,9 +179,10 @@ MODEL_PATH = {
 
         "Qwen-14B": "Qwen/Qwen-14B",
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
+
+        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
         # 在新版的transformers下需要手动修改模型的config.json文件，在quantization_config字典中
         # 增加`disable_exllama:true` 字段才能启动qwen的量化模型
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
         "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4",
 
         "Qwen-72B": "Qwen/Qwen-72B",
