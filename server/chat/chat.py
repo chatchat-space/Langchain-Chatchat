@@ -20,22 +20,23 @@ from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
 from server.chat.utils import History
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
-from server.callback_handler.agent_callback_handler import Status, CustomAsyncIteratorCallbackHandler
+from server.callback_handler.agent_callback_handler import AgentStatus, AgentExecutorAsyncIteratorCallbackHandler
 
 
-def create_models_from_config(configs, callbacks):
+def create_models_from_config(configs, callbacks, stream):
     if configs is None:
         configs = {}
     models = {}
     prompts = {}
     for model_type, model_configs in configs.items():
         for model_name, params in model_configs.items():
-            callback = callbacks if params.get('callbacks', False) else None
+            callbacks = callbacks if params.get('callbacks', False) else None
             model_instance = get_ChatOpenAI(
                 model_name=model_name,
                 temperature=params.get('temperature', 0.5),
                 max_tokens=params.get('max_tokens', 1000),
-                callbacks=callback
+                callbacks=callbacks,
+                streaming=stream,
             )
             models[model_type] = model_instance
             prompt_name = params.get('prompt_name', 'default')
@@ -83,7 +84,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 tools=tools,
                 prompt=prompts["action_model"],
                 memory=memory,
-                # callback_manager=BaseCallbackManager(handlers=callbacks),
+                callbacks=callbacks,
                 verbose=True,
             )
         elif "qwen" in models["action_model"].model_name.lower():
@@ -92,7 +93,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 tools=tools,
                 prompt=prompts["action_model"],
                 memory=memory,
-                # callback_manager=BaseCallbackManager(handlers=callbacks),
+                callbacks=callbacks,
                 verbose=True,
             )
         else:
@@ -131,7 +132,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                        ]
                    ]
                ),
-               stream: bool = Body(False, description="流式输出"),
+               stream: bool = Body(True, description="流式输出"),
                model_config: Dict = Body({}, description="LLM 模型配置"),
                tool_config: Dict = Body({}, description="工具配置"),
                ):
@@ -142,11 +143,11 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             conversation_id=conversation_id
         ) if conversation_id else None
 
-        callback = CustomAsyncIteratorCallbackHandler()
+        callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
 
         # 从配置中选择模型
-        models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config)
+        models, prompts = create_models_from_config(callbacks=[], configs=model_config, stream=stream)
 
         # 从配置中选择工具
         tools = [tool for tool in all_tools if tool.name in tool_config]
@@ -164,56 +165,13 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
         # Execute Chain
 
         task = asyncio.create_task(
-            wrap_done(full_chain.ainvoke({"input": query}, callbacks=callbacks), callback.done))
-        if stream:
-            async for chunk in callback.aiter():
-                data = json.loads(chunk)
-                if data["status"] == Status.start:
-                    continue
-                elif data["status"] == Status.agent_action:
-                    tool_info = {
-                        "tool_name": data["tool_name"],
-                        "tool_input": data["tool_input"]
-                    }
-                    yield json.dumps({"agent_action": tool_info, "message_id": message_id}, ensure_ascii=False)
-                elif data["status"] == Status.agent_finish:
-                    yield json.dumps({"agent_finish": data["agent_finish"], "message_id": message_id},
-                                     ensure_ascii=False)
-                else:
-                    yield json.dumps({"text": data["llm_token"], "message_id": message_id}, ensure_ascii=False)
-        else:
-            text = ""
-            agent_finish = ""
-            tool_info = None
-            async for chunk in callback.aiter():
-                data = json.loads(chunk)
-                if data["status"] == Status.agent_action:
-                    tool_info = {
-                        "tool_name": data["tool_name"],
-                        "tool_input": data["tool_input"]
-                    }
-                if data["status"] == Status.agent_finish:
-                    agent_finish = data["agent_finish"]
-                else:
-                    text += data["llm_token"]
-            if tool_info:
-                yield json.dumps(
-                    {
-                        "text": text,
-                        "agent_action": tool_info,
-                        "agent_finish": agent_finish,
-                        "message_id": message_id
-                    },
-                    ensure_ascii=False
-                )
-            else:
-                yield json.dumps(
-                    {
-                        "text": text,
-                        "message_id": message_id
-                    },
-                    ensure_ascii=False
-                )
+            wrap_done(full_chain.ainvoke({"input": query}), callback.done))
+
+        async for chunk in callback.aiter():
+            data = json.loads(chunk)
+            data["message_id"] = message_id
+            yield json.dumps(data, ensure_ascii=False)
+
         await task
 
     return EventSourceResponse(chat_iterator())
