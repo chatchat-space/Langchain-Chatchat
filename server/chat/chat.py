@@ -12,7 +12,7 @@ from langchain.prompts.chat import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables import RunnableBranch
 
-from server.agent.agent_factory import initialize_glm3_agent
+from server.agent.agent_factory import initialize_glm3_agent, initialize_qwen_agent
 from server.agent.tools_factory.tools_registry import all_tools
 from server.agent.container import container
 
@@ -83,6 +83,15 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 tools=tools,
                 prompt=prompts["action_model"],
                 input_variables=["input", "intermediate_steps", "history"],
+                memory=memory,
+                # callback_manager=BaseCallbackManager(handlers=callbacks),
+                verbose=True,
+            )
+        elif "qwen" in models["action_model"].model_name.lower():
+            agent_executor = initialize_qwen_agent(
+                llm=models["action_model"],
+                tools=tools,
+                prompt=prompts["action_model"],
                 memory=memory,
                 # callback_manager=BaseCallbackManager(handlers=callbacks),
                 verbose=True,
