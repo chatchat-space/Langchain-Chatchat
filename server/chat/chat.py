@@ -82,7 +82,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 llm=models["action_model"],
                 tools=tools,
                 prompt=prompts["action_model"],
-                input_variables=["input", "intermediate_steps", "history"],
                 memory=memory,
                 # callback_manager=BaseCallbackManager(handlers=callbacks),
                 verbose=True,

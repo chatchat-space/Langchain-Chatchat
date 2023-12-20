@@ -1,15 +1,14 @@
 PROMPT_TEMPLATES = {
     "preprocess_model": {
         "default":
-            '根据我们对话的历史，判断本次跟我交流是否需要使用工具，还是可以直接凭借你的知识或者历史记录跟我对话。'
-            '以下几种情况要使用工具:\n'
-            '1. 实时性的问题，例如查询天气，日期，地点等信息\n'
-            '2. 需要数学计算的问题\n'
-            '3. 需要查询数据，地点等精确数据\n'
-            '4. 需要行业知识的问题\n'
-            '5. 需要联网的内容\n'
-            '你只要回答一个数字:1代表需要使用工具，你无法为我直接提供服务。0代表不需要使用工具。你应该尽量使用工具\n'
-            '你只能回答0或者1'
+            '你只要回复0 和 1 ，代表不需要使用工具。以下几种问题不需要使用工具:'
+            '1. 介绍一下你自己, 回复0\n'
+            '2. 讲一个故事, 回复0\n'
+            '3. 给我开一个玩笑, 回复0\n'
+            '4. 我当前运行的文件夹是, 回复1\n'
+            '5. where is this cat, 回复1\n'
+            '6. 介绍一下像极了我大学, 回复1\n'
+            '这是我的问题:'
     },
     "llm_model": {
         "default":
@@ -83,7 +82,6 @@ PROMPT_TEMPLATES = {
             '}}}}\n'
             'Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary.\n'
             'Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.\n'
-            'history: {history}\n\n'
             'Question: {input}\n\n'
             'Thought: {agent_scratchpad}\n',
         "qwen":
@@ -102,8 +100,96 @@ PROMPT_TEMPLATES = {
             'Begin!\n\n'
             'Question: {input}\n\n'
             '{agent_scratchpad}\n\n',
+
     },
     "postprocess_model": {
         "default": "{{input}}",
     }
+}
+
+TOOL_CONFIG = {
+    "search_local_knowledgebase": {
+        "use": False,
+        "top_k": 3,
+        "score_threshold": 1,
+        "conclude_prompt": {
+            "with_result":
+                '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
+                '不允许在答案中添加编造成分，答案请使用中文。 </指令>\n'
+                '<已知信息>{{ context }}</已知信息>\n'
+                '<问题>{{ question }}</问题>\n',
+            "without_result":
+                '请你根据我的提问回答我的问题:\n'
+                '{{ question }}\n'
+                '请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n',
+        }
+    },
+    "search_internet": {
+        "use": False,
+        "search_engine_name": "bing",
+        "search_engine_config":
+            {
+                "bing": {
+                    "result_len": 3,
+                    "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
+                    "bing_key": "your bing key",
+                },
+                "metaphor": {
+                    "result_len": 3,
+                    "metaphor_api_key": "",
+                    "split_result": False,
+                    "chunk_size": 500,
+                    "chunk_overlap": 0,
+                },
+                "duckduckgo": {
+                    "result_len": 3
+                }
+            },
+        "top_k": 10,
+        "verbose": "Origin",
+        "conclude_prompt":
+            "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
+            "</指令>\n<已知信息>{{ context }}</已知信息>\n"
+            "<问题>\n"
+            "{{ question }}\n"
+            "</问题>\n"
+    },
+    "arxiv": {
+        "use": False,
+    },
+    "shell": {
+        "use": False,
+    },
+    "weather_check": {
+        "use": False,
+        "api-key": "your key",
+    },
+    "search_youtube": {
+        "use": False,
+    },
+    "wolfram": {
+        "use": False,
+    },
+    "calculate": {
+        "use": False,
+    },
+
+    # Use THUDM/cogvlm-chat-hf as default
+
+    "vqa_processor": {
+        "use": False,
+        "model_path": "your model path",
+        "tokenizer_path": "your tokenizer path",
+        "device": "cuda:1"
+    },
+
+    # Use Qwen/Qwen-Audio-Chat as default
+
+    "aqa_processor": {
+        "use": False,
+        "model_path": "your model path",
+        "tokenizer_path": "yout tokenizer path",
+        "device": "cuda:2"
+    },
+
 }
