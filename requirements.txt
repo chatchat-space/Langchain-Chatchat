@@ -74,3 +74,6 @@ streamlit-modal>=0.1.0
 streamlit-aggrid>=0.3.4.post3
 watchdog>=3.0.0
 
+
+openapi-pydantic==0.3.2
+
