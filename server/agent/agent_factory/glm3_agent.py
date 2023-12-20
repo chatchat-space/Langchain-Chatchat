@@ -227,5 +227,6 @@ def initialize_glm3_agent(
         tools=tools,
         memory=memory,
         tags=tags_,
+        intermediate_steps=[],
         **kwargs,
     )

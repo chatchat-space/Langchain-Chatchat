@@ -10,7 +10,7 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS)
+from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG)
 import uuid
 from typing import List, Dict
 
@@ -204,12 +204,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             import importlib
             importlib.reload(model_config_py)
 
-            tools = list(model_config_py.TOOL_CONFIG.keys())
+            tools = list(TOOL_CONFIG.keys())
             with st.expander("工具栏"):
                 for tool in tools:
-                    is_selected = st.checkbox(tool, value=model_config_py.TOOL_CONFIG[tool]["use"], key=tool)
+                    is_selected = st.checkbox(tool, value=TOOL_CONFIG[tool]["use"], key=tool)
                     if is_selected:
-                        selected_tool_configs[tool] = model_config_py.TOOL_CONFIG[tool]
+                        selected_tool_configs[tool] = TOOL_CONFIG[tool]
 
         if llm_model is not None:
             model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
