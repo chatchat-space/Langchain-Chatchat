@@ -14,6 +14,8 @@ EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
 SUPPORT_AGENT_MODELS = [
     "chatglm3-6b",
+    "Qwen-14b-Chat",
+    "Qwen-1_8B-Chat",
     "openai-api"
 ]
 LLM_MODEL_CONFIG = {
@@ -39,13 +41,6 @@ LLM_MODEL_CONFIG = {
             "temperature": 0.9,
             "max_tokens": 4000,
             "history_len": 5,
-            "prompt_name": "default",
-            "callbacks": True
-        },
-        "Qwen-1_8B-Chat": {
-            "temperature": 0.4,
-            "max_tokens": 2048,
-            "history_len": 100,
             "prompt_name": "default",
             "callbacks": True
         },
@@ -141,7 +136,12 @@ TOOL_CONFIG = {
     "calculate": {
         "use": False,
     },
-
+    "aqa_processor": {
+        "use": False,
+    },
+    "vqa_processor": {
+        "use": False,
+    },
 }
 
 # LLM 模型运行设备。设为"auto"会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
