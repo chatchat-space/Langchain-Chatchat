@@ -12,9 +12,9 @@ EMBEDDING_MODEL = "bge-large-zh"
 EMBEDDING_DEVICE = "auto"
 
 # 选用的reranker模型
-RERANKER_MDOEL = "bge-reranker-large"
+RERANKER_MODEL = "bge-reranker-large"
 # 是否启用reranker模型
-USE_RERANKER = True 
+USE_RERANKER = False
 RERANKER_MAX_LENGTH = 1024
 # 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
 EMBEDDING_KEYWORD_FILE = "keywords.txt"
@@ -243,7 +243,7 @@ MODEL_PATH = {
         "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
     },
     "reranker":{
-        "bge-reranker-large":BAAI/bge-reranker-large",
+        "bge-reranker-large":"BAAI/bge-reranker-large",
         "bge-reranker-base":"BAAI/bge-reranker-base",
         #TODO 增加在线reranker，如cohere
     }

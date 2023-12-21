@@ -87,14 +87,18 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         # 加入reranker
         if USE_RERANKER:
             reranker_model_path = MODEL_PATH["reranker"].get(RERANKER_MODEL,"BAAI/bge-reranker-large")
+            print("-----------------model path------------------")
+            print(reranker_model_path)
             reranker_model = LangchainReranker(top_n=top_k,
                                             device=embedding_device(),
                                             max_length=RERANKER_MAX_LENGTH,
                                             model_name_or_path=reranker_model_path
                                             )
+            print(docs)
             docs = reranker_model.compress_documents(documents=docs,
                                                      query=query)
-        
+            print("---------after rerank------------------")
+            print(docs)
         context = "\n".join([doc.page_content for doc in docs])
 
         if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
