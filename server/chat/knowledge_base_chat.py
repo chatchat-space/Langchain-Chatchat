@@ -1,7 +1,14 @@
 from fastapi import Body, Request
 from sse_starlette.sse import EventSourceResponse
 from fastapi.concurrency import run_in_threadpool
-from configs import (LLM_MODELS, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE)
+from configs import (LLM_MODELS, 
+                     VECTOR_SEARCH_TOP_K, 
+                     SCORE_THRESHOLD, 
+                     TEMPERATURE,
+                     USE_RERANKER,
+                     RERANKER_MODEL,
+                     RERANKER_MAX_LENGTH,
+                     MODEL_PATH)
 from server.utils import wrap_done, get_ChatOpenAI
 from server.utils import BaseResponse, get_prompt_template
 from langchain.chains import LLMChain
@@ -14,8 +21,8 @@ from server.knowledge_base.kb_service.base import KBServiceFactory
 import json
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
-
-
+from server.reranker.reranker import LangchainReranker
+from server.utils import embedding_device
 async def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                               knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
                               top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
@@ -76,7 +83,20 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                                        knowledge_base_name=knowledge_base_name,
                                        top_k=top_k,
                                        score_threshold=score_threshold)
+
+        # 加入reranker
+        if USE_RERANKER:
+            reranker_model_path = MODEL_PATH["reranker"].get(RERANKER_MODEL,"BAAI/bge-reranker-large")
+            reranker_model = LangchainReranker(top_n=top_k,
+                                            device=embedding_device(),
+                                            max_length=RERANKER_MAX_LENGTH,
+                                            model_name_or_path=reranker_model_path
+                                            )
+            docs = reranker_model.compress_documents(documents=docs,
+                                                     query=query)
+        
         context = "\n".join([doc.page_content for doc in docs])
+
         if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
             prompt_template = get_prompt_template("knowledge_base_chat", "empty")
         else:
