@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
 
 from server.db.base import Base
-
+from configs import KB_TABLE_PREFIX
 
 class KnowledgeBaseModel(Base):
     """
     知识库模型
     """
-    __tablename__ = 'knowledge_base'
+    __tablename__ = KB_TABLE_PREFIX + 'knowledge_base'
     id = Column(Integer, primary_key=True, autoincrement=True, comment='知识库ID')
     kb_name = Column(String(50), comment='知识库名称')
     kb_info = Column(String(200), comment='知识库简介(用于Agent)')

@@ -133,3 +133,6 @@ TEXT_SPLITTER_NAME = "ChineseRecursiveTextSplitter"
 
 # Embedding模型定制词语的词表文件
 EMBEDDING_KEYWORD_FILE = "embedding_keywords.txt"
+
+# 知识库数据库相关表前缀，如"ai_"，不加默认使用项目设计的表名
+KB_TABLE_PREFIX = ""

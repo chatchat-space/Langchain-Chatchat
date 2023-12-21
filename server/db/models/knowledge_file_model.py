@@ -1,13 +1,14 @@
 from sqlalchemy import Column, Integer, String, DateTime, Float, Boolean, JSON, func
 
 from server.db.base import Base
+from configs import KB_TABLE_PREFIX
 
 
 class KnowledgeFileModel(Base):
     """
     知识文件模型
     """
-    __tablename__ = 'knowledge_file'
+    __tablename__ = KB_TABLE_PREFIX + 'knowledge_file'
     id = Column(Integer, primary_key=True, autoincrement=True, comment='知识文件ID')
     file_name = Column(String(255), comment='文件名')
     file_ext = Column(String(10), comment='文件扩展名')

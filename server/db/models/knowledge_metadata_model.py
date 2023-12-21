@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Float, Boolean, JSON, func
 
 from server.db.base import Base
+from configs import KB_TABLE_PREFIX
 
 
 class SummaryChunkModel(Base):
@@ -15,7 +16,7 @@ class SummaryChunkModel(Base):
         语义相似度
 
     """
-    __tablename__ = 'summary_chunk'
+    __tablename__ = KB_TABLE_PREFIX + 'summary_chunk'
     id = Column(Integer, primary_key=True, autoincrement=True, comment='ID')
     kb_name = Column(String(50), comment='知识库名称')
     summary_context = Column(String(255), comment='总结文本')

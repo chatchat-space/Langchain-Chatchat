@@ -1,13 +1,14 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON, func
 
 from server.db.base import Base
+from configs import KB_TABLE_PREFIX
 
 
 class MessageModel(Base):
     """
     聊天记录模型
     """
-    __tablename__ = 'message'
+    __tablename__ = KB_TABLE_PREFIX + 'message'
     id = Column(String(32), primary_key=True, comment='聊天记录ID')
     conversation_id = Column(String(32), default=None, index=True, comment='对话框ID')
     # chat/agent_chat等
