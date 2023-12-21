@@ -11,6 +11,11 @@ EMBEDDING_MODEL = "bge-large-zh"
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
 
+# 选用的reranker模型
+RERANKER_MODEL = "bge-reranker-large"
+# 是否启用reranker模型
+USE_RERANKER = False
+RERANKER_MAX_LENGTH = 1024
 # 如果需要在 EMBEDDING_MODEL 中增加自定义的关键字时配置
 EMBEDDING_KEYWORD_FILE = "keywords.txt"
 EMBEDDING_MODEL_OUTPUT_PATH = "output"
@@ -19,8 +24,9 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 # 列表中第一个模型将作为 API 和 WEBUI 的默认模型。
 # 在这里，我们使用目前主流的两个离线模型，其中，chatglm3-6b 为默认加载模型。
 # 如果你的显存不足，可使用 Qwen-1_8B-Chat, 该模型 FP16 仅需 3.8G显存。
-# chatglm3-6b输出角色标签<|user|>及自问自答的问题是由于fschat=0.2.33并未正确适配chatglm3的对话模板
-# 如需修正该问题，需修改fschat的源码，详细步骤见项目wiki->常见问题->Q20.
+
+# chatglm3-6b输出角色标签<|user|>及自问自答的问题详见项目wiki->常见问题->Q20.
+
 LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"] # "Qwen-1_8B-Chat",
 
 # AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
@@ -236,6 +242,11 @@ MODEL_PATH = {
 
         "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
     },
+    "reranker":{
+        "bge-reranker-large":"BAAI/bge-reranker-large",
+        "bge-reranker-base":"BAAI/bge-reranker-base",
+        #TODO 增加在线reranker，如cohere
+    }
 }
 
 
