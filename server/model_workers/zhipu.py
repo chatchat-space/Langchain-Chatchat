@@ -46,9 +46,9 @@ class ChatGLMWorker(ApiModelWorker):
             elif e.event in ["error", "interrupted"]:
                 data = {
                     "error_code": 500,
-                    "text": str(e),
+                    "text": e.data,
                     "error": {
-                        "message":  str(e),
+                        "message": e.data,
                         "type": "invalid_request_error",
                         "param": None,
                         "code": None,
