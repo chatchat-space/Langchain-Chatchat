@@ -2,7 +2,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.faiss import FAISS
 import threading
 from configs import (EMBEDDING_MODEL, CHUNK_SIZE,
-                    logger, log_verbose)
+                     logger, log_verbose)
 from server.utils import embedding_device, get_model_path, list_online_embed_models
 from contextlib import contextmanager
 from collections import OrderedDict
@@ -99,10 +99,10 @@ class CachePool:
             return cache
 
     def load_kb_embeddings(
-        self,
-        kb_name: str,
-        embed_device: str = embedding_device(),
-        default_embed_model: str = EMBEDDING_MODEL,
+            self,
+            kb_name: str,
+            embed_device: str = embedding_device(),
+            default_embed_model: str = EMBEDDING_MODEL,
     ) -> Embeddings:
         from server.db.repository.knowledge_base_repository import get_kb_detail
         from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
@@ -129,7 +129,7 @@ class EmbeddingsPool(CachePool):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
                     from langchain.embeddings.openai import OpenAIEmbeddings
-                    embeddings = OpenAIEmbeddings(model_name=model,
+                    embeddings = OpenAIEmbeddings(model=model,
                                                   openai_api_key=get_model_path(model),
                                                   chunk_size=CHUNK_SIZE)
                 elif 'bge-' in model:
@@ -145,12 +145,13 @@ class EmbeddingsPool(CachePool):
                         query_instruction = ""
                     embeddings = HuggingFaceBgeEmbeddings(model_name=get_model_path(model),
                                                           model_kwargs={'device': device},
-                                                          query_instruction=query_instruction)             
+                                                          query_instruction=query_instruction)
                     if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
                         embeddings.query_instruction = ""
                 else:
                     from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-                    embeddings = HuggingFaceEmbeddings(model_name=get_model_path(model), model_kwargs={'device': device})
+                    embeddings = HuggingFaceEmbeddings(model_name=get_model_path(model),
+                                                       model_kwargs={'device': device})
                 item.obj = embeddings
                 item.finish_loading()
         else:
