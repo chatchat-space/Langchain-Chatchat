@@ -113,6 +113,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         # full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
         full_chain = ({"input": lambda x: x["input"]} | agent_executor)
     else:
+        chain.llm.callbacks = callbacks
         full_chain = ({"input": lambda x: x["input"]} | chain)
     return full_chain
 
