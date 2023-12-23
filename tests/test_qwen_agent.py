@@ -15,8 +15,9 @@ from langchain import globals
 
 async def main():
     callback = AgentExecutorAsyncIteratorCallbackHandler()
+    tools = [t.copy(update={"callbacks": [callback]}) for t in all_tools]
     qwen_model = get_ChatOpenAI("Qwen-1_8B-Chat", 0.01, streaming=True, callbacks=[callback])
-    executor = initialize_qwen_agent(tools=all_tools,
+    executor = initialize_qwen_agent(tools=tools,
                                      llm=qwen_model,
                                      callbacks=[callback],
                                      )
