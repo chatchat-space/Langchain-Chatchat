@@ -24,13 +24,13 @@ all_tools = [
         name="shell",
         description="Use Shell to execute Linux commands",
         args_schema=ShellInput,
-        # return_direct=True, #是否直接返回，不做大模型处理
     ),
     StructuredTool.from_function(
         func=wolfram,
         name="wolfram",
         description="Useful for when you need to calculate difficult formulas",
         args_schema=WolframInput,
+
     ),
     StructuredTool.from_function(
         func=search_youtube,
@@ -67,5 +67,6 @@ all_tools = [
         name="aqa_processor",
         description="use this tool to get answer for audio question",
         args_schema=AQAInput,
+
     )
 ]

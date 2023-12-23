@@ -69,6 +69,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
     chain = LLMChain(
         prompt=chat_prompt,
         llm=models["llm_model"],
+        callbacks=callbacks,
         memory=memory
     )
     classifier_chain = (
@@ -76,8 +77,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
             | models["preprocess_model"]
             | StrOutputParser()
     )
-
-    if "action_model" in models and tools:
+    if "action_model" in models and len(tools) > 0:
         if "chatglm3" in models["action_model"].model_name.lower():
             agent_executor = initialize_glm3_agent(
                 llm=models["action_model"],
@@ -151,7 +151,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         # 从配置中选择工具
         tools = [tool for tool in all_tools if tool.name in tool_config]
-
+        tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
         # 构建完整的Chain
         full_chain = create_models_chains(prompts=prompts,
                                           models=models,
@@ -161,12 +161,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                           history=history,
                                           history_len=history_len,
                                           metadata=metadata)
-
-        # Execute Chain
-
-        task = asyncio.create_task(
-            wrap_done(full_chain.ainvoke({"input": query}), callback.done))
-
+        task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}), callback.done))
         async for chunk in callback.aiter():
             data = json.loads(chunk)
             data["message_id"] = message_id
