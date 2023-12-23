@@ -154,15 +154,11 @@ def initialize_qwen_agent(
     memory: Optional[ConversationBufferWindowMemory] = None,
     agent_kwargs: Optional[dict] = None,
     *,
-    return_direct: Optional[bool] = None,
     tags: Optional[Sequence[str]] = None,
     **kwargs: Any,
 ) -> AgentExecutor:
     tags_ = list(tags) if tags else []
     agent_kwargs = agent_kwargs or {}
-
-    if isinstance(return_direct, bool):  # can make all tools return directly
-        tools = [t.copy(update={"return_direct": return_direct}) for t in tools]
     llm.callbacks=callbacks
     agent_obj = QwenChatAgent.from_llm_and_tools(
         llm=llm,

@@ -272,12 +272,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                         f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
                         unsafe_allow_html=True)
 
-            chat_box.ai_say(["正在思考...",
-                             Markdown(title="tool call", in_expander=True, expanded=True,state="running"),
-                             Markdown()])
+            chat_box.ai_say("正在思考...")
             text = ""
-            message_id = ""
-            tool_called = False
+            text_action = ""
+            element_index = 0
 
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
@@ -290,30 +288,33 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 metadata = {
                     "message_id": message_id,
                 }
-                if not tool_called: # 避免工具调用之后重复输出，将LLM输出分为工具调用前后分别处理
-                    element_index = 0
-                else:
-                    element_index = -1
                 if d["status"] == AgentStatus.error:
                     st.error(d["text"])
                 elif d["status"] == AgentStatus.agent_action:
                     formatted_data = {
-                        "action": d["tool_name"],
-                        "action_input": d["tool_input"]
+                        "Function": d["tool_name"],
+                        "function_input": d["tool_input"]
                     }
+                    element_index += 1
                     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                    chat_box.update_msg(Markdown(f"\n```\nInput Params:\n" + formatted_json + f"\n```\n"), element_index=1)
-                    tool_called = True
-                    text = ""
+                    chat_box.insert_msg(
+                        Markdown(title="Function call", in_expander=True, expanded=True, state="running"))
+                    text = """\n```{}\n```\n""".format(formatted_json)
+                    chat_box.update_msg(Markdown(text), element_index=element_index)
+                elif d["status"] == AgentStatus.tool_end:
+                    text += """\n```\nObservation:\n{}\n```\n""".format(d["tool_output"])
+                    chat_box.update_msg(Markdown(text), element_index=element_index, expanded=False, state="complete")
                 elif d["status"] == AgentStatus.llm_new_token:
                     text += d["text"]
                     chat_box.update_msg(text, streaming=True, element_index=element_index, metadata=metadata)
                 elif d["status"] == AgentStatus.llm_end:
                     chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
                 elif d["status"] == AgentStatus.agent_finish:
-                    chat_box.update_msg(element_index=1, state="complete", expanded=False)
-                    chat_box.update_msg(Markdown(d["text"]), streaming=False, element_index=-1)
+                    element_index += 1
 
+                    # print(d["text"])
+                    chat_box.insert_msg(Markdown(d["text"], expanded=True))
+                    chat_box.update_msg(Markdown(d["text"]), element_index=element_index)
             if os.path.exists("tmp/image.jpg"):
                 with open("tmp/image.jpg", "rb") as image_file:
                     encoded_string = base64.b64encode(image_file.read()).decode()

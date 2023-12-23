@@ -8,7 +8,6 @@ import logging
 from typing import Any, List, Sequence, Tuple, Optional, Union
 from pydantic.schema import model_schema
 
-
 from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.agents.agent import Agent
@@ -23,7 +22,6 @@ from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
 from langchain_core.callbacks import Callbacks
-
 
 HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
 logger = logging.getLogger(__name__)
@@ -177,6 +175,7 @@ class StructuredGLM3ChatAgent(Agent):
             **kwargs: Any,
     ) -> Agent:
         """Construct an agent from an LLM and tools."""
+
         cls._validate_tools(tools)
         prompt = cls.create_prompt(
             tools,
@@ -217,7 +216,7 @@ def initialize_glm3_agent(
 ) -> AgentExecutor:
     tags_ = list(tags) if tags else []
     agent_kwargs = agent_kwargs or {}
-    llm.callbacks=callbacks
+    llm.callbacks = callbacks
     agent_obj = StructuredGLM3ChatAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,

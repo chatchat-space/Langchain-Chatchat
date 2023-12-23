@@ -19,7 +19,9 @@ class AgentStatus:
     llm_end: int = 3
     agent_action: int = 4
     agent_finish: int = 5
-    error: int = 6
+    tool_begin: int = 6
+    tool_end: int = 7
+    error: int = 8
 
 
 class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
@@ -31,12 +33,11 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
     async def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
         data = {
-            "status" : AgentStatus.llm_start,
-            "text" : "",
+            "status": AgentStatus.llm_start,
+            "text": "",
         }
         self.done.clear()
         self.queue.put_nowait(dumps(data))
-
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         special_tokens = ["Action", "<|observation|>"]
@@ -44,7 +45,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             if stoken in token:
                 before_action = token.split(stoken)[0]
                 data = {
-                    "status" : AgentStatus.llm_new_token,
+                    "status": AgentStatus.llm_new_token,
                     "text": before_action + "\n",
                 }
                 self.queue.put_nowait(dumps(data))
@@ -53,15 +54,29 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
         if token is not None and token != "" and self.out:
             data = {
-                "status" : AgentStatus.llm_new_token,
-                "text" : token,
+                "status": AgentStatus.llm_new_token,
+                "text": token,
             }
             self.queue.put_nowait(dumps(data))
 
-    async def on_chat_model_start(
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        data = {
+            "status": AgentStatus.llm_end,
+            "text": "",
+        }
+        self.queue.put_nowait(dumps(data))
+
+    async def on_llm_error(self, error: Exception | KeyboardInterrupt, **kwargs: Any) -> None:
+        data = {
+            "status": AgentStatus.error,
+            "text": str(error),
+        }
+        self.queue.put_nowait(dumps(data))
+
+    async def on_tool_start(
             self,
             serialized: Dict[str, Any],
-            messages: List[List],
+            input_str: str,
             *,
             run_id: UUID,
             parent_run_id: Optional[UUID] = None,
@@ -69,26 +84,40 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             metadata: Optional[Dict[str, Any]] = None,
             **kwargs: Any,
     ) -> None:
+        print("tool_begin")
+
+    async def on_tool_end(
+            self,
+            output: str,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
+    ) -> None:
+        """Run when tool ends running."""
         data = {
-            "status" : AgentStatus.llm_start,
-            "text" : "",
+            "status": AgentStatus.tool_end,
+            "tool_output": output,
         }
         self.done.clear()
         self.queue.put_nowait(dumps(data))
 
-    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+    async def on_tool_error(
+            self,
+            error: BaseException,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
+    ) -> None:
+        """Run when tool errors."""
         data = {
-            "status" : AgentStatus.llm_end,
-            "text" : response.generations[0][0].message.content,
+            "status": AgentStatus.tool_end,
+            "text": error,
         }
-        self.out = True
-        self.queue.put_nowait(dumps(data))
-
-    async def on_llm_error(self, error: Exception | KeyboardInterrupt, **kwargs: Any) -> None:
-        data = {
-            "status" : AgentStatus.error,
-            "text" : str(error),
-        }
+        self.done.clear()
         self.queue.put_nowait(dumps(data))
 
     async def on_agent_action(
@@ -101,9 +130,9 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             **kwargs: Any,
     ) -> None:
         data = {
-            "status" : AgentStatus.agent_action,
-            "tool_name" : action.tool,
-            "tool_input" : action.tool_input,
+            "status": AgentStatus.agent_action,
+            "tool_name": action.tool,
+            "tool_input": action.tool_input,
             "text": action.log,
         }
         self.queue.put_nowait(dumps(data))
@@ -113,12 +142,16 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             tags: Optional[List[str]] = None,
             **kwargs: Any,
     ) -> None:
+
         if "Thought:" in finish.return_values["output"]:
             finish.return_values["output"] = finish.return_values["output"].replace("Thought:", "")
 
         data = {
-            "status" : AgentStatus.agent_finish,
-            "text" : finish.return_values["output"],
+            "status": AgentStatus.agent_finish,
+            "text": finish.return_values["output"],
         }
+
         self.done.set()
         self.queue.put_nowait(dumps(data))
+
+        self.out = True
