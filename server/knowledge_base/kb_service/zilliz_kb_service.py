@@ -29,6 +29,9 @@ class ZillizKBService(KBService):
                 result.append(Document(page_content=text, metadata=data))
         return result
 
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        self.zilliz.col.delete(expr=f'pk in {ids}')
+
     @staticmethod
     def search(zilliz_name, content, limit=3):
         search_params = {

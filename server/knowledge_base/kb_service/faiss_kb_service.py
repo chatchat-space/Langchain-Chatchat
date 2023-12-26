@@ -36,6 +36,10 @@ class FaissKBService(KBService):
         with self.load_vector_store().acquire() as vs:
             return [vs.docstore._dict.get(id) for id in ids]
 
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        with self.load_vector_store().acquire() as vs:
+            vs.delete(ids)
+
     def do_init(self):
         self.vector_name = self.vector_name or self.embed_model
         self.kb_path = self.get_kb_path()
@@ -72,7 +76,8 @@ class FaissKBService(KBService):
 
         with self.load_vector_store().acquire() as vs:
             ids = vs.add_embeddings(text_embeddings=zip(data["texts"], data["embeddings"]),
-                                    metadatas=data["metadatas"])
+                                    metadatas=data["metadatas"],
+                                    ids=kwargs.get("ids"))
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
@@ -83,7 +88,7 @@ class FaissKBService(KBService):
                       kb_file: KnowledgeFile,
                       **kwargs):
         with self.load_vector_store().acquire() as vs:
-            ids = [k for k, v in vs.docstore._dict.items() if v.metadata.get("source") == kb_file.filename]
+            ids = [k for k, v in vs.docstore._dict.items() if v.metadata.get("source").lower() == kb_file.filename.lower()]
             if len(ids) > 0:
                 vs.delete(ids)
             if not kwargs.get("not_refresh_vs_cache"):

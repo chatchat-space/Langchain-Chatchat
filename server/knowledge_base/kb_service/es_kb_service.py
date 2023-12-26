@@ -145,6 +145,14 @@ class ESKBService(KBService):
                                          k=top_k)
         return docs
 
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        for doc_id in ids:
+            try:
+                self.es_client_python.delete(index=self.index_name,
+                                            id=doc_id,
+                                            refresh=True)
+            except Exception as e:
+                logger.error(f"ES Docs Delete Error! {e}")
 
     def do_delete_doc(self, kb_file, **kwargs):
         if self.es_client_python.indices.exists(index=self.index_name):
@@ -168,7 +176,7 @@ class ESKBService(KBService):
                                                      id=doc_id,
                                                      refresh=True)
                     except Exception as e:
-                        logger.error("ES Docs Delete Error!")
+                        logger.error(f"ES Docs Delete Error! {e}")
 
             # self.db_init.delete(ids=delete_list)
             #self.es_client_python.indices.refresh(index=self.index_name)

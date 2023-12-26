@@ -12,7 +12,7 @@ def list_summary_from_db(session,
     列出某知识库chunk summary。
     返回形式：[{"id": str, "summary_context": str, "doc_ids": str}, ...]
     '''
-    docs = session.query(SummaryChunkModel).filter_by(kb_name=kb_name)
+    docs = session.query(SummaryChunkModel).filter(SummaryChunkModel.kb_name.ilike(kb_name))
 
     for k, v in metadata.items():
         docs = docs.filter(SummaryChunkModel.meta_data[k].as_string() == str(v))
@@ -33,8 +33,8 @@ def delete_summary_from_db(session,
     返回形式：[{"id": str, "summary_context": str, "doc_ids": str}, ...]
     '''
     docs = list_summary_from_db(kb_name=kb_name)
-    query = session.query(SummaryChunkModel).filter_by(kb_name=kb_name)
-    query.delete()
+    query = session.query(SummaryChunkModel).filter(SummaryChunkModel.kb_name.ilike(kb_name))
+    query.delete(synchronize_session=False)
     session.commit()
     return docs
 
@@ -63,4 +63,4 @@ def add_summary_to_db(session,
 
 @with_session
 def count_summary_from_db(session, kb_name: str) -> int:
-    return session.query(SummaryChunkModel).filter_by(kb_name=kb_name).count()
+    return session.query(SummaryChunkModel).filter(SummaryChunkModel.kb_name.ilike(kb_name)).count()

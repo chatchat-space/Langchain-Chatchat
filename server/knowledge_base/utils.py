@@ -71,7 +71,8 @@ def list_files_from_folder(kb_name: str):
                 for target_entry in target_it:
                     process_entry(target_entry)
         elif entry.is_file():
-            result.append(os.path.relpath(entry.path, doc_path))
+            file_path = (Path(os.path.relpath(entry.path, doc_path)).as_posix()) # 路径统一为 posix 格式
+            result.append(file_path)
         elif entry.is_dir():
             with os.scandir(entry.path) as it:
                 for sub_entry in it:
@@ -272,7 +273,7 @@ class KnowledgeFile:
         对应知识库目录中的文件，必须是磁盘上存在的才能进行向量化等操作。
         '''
         self.kb_name = knowledge_base_name
-        self.filename = filename
+        self.filename = str(Path(filename).as_posix())
         self.ext = os.path.splitext(filename)[-1].lower()
         if self.ext not in SUPPORTED_EXTS:
             raise ValueError(f"暂未支持的文件格式 {self.filename}")

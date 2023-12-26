@@ -29,6 +29,10 @@ class PGKBService(KBService):
                        connect.execute(stmt, parameters={'ids': ids}).fetchall()]
             return results
 
+    # TODO:
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        return super().del_doc_by_ids(ids)
+
     def do_init(self):
         self._load_pg_vector()
 

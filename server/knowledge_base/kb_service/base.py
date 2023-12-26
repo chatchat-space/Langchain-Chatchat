@@ -121,8 +121,9 @@ class KBService(ABC):
             for doc in docs:
                 try:
                     source = doc.metadata.get("source", "")
-                    rel_path = Path(source).relative_to(self.doc_path)
-                    doc.metadata["source"] = str(rel_path.as_posix().strip("/"))
+                    if os.path.isabs(source):
+                        rel_path = Path(source).relative_to(self.doc_path)
+                        doc.metadata["source"] = str(rel_path.as_posix().strip("/"))
                 except Exception as e:
                     print(f"cannot convert absolute path ({source}) to relative path. error is : {e}")
             self.delete_doc(kb_file)
@@ -176,12 +177,32 @@ class KBService(ABC):
                     query: str,
                     top_k: int = VECTOR_SEARCH_TOP_K,
                     score_threshold: float = SCORE_THRESHOLD,
-                    ):
+                    ) ->List[Document]:
         docs = self.do_search(query, top_k, score_threshold)
         return docs
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         return []
+
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        raise NotImplementedError
+
+    def update_doc_by_ids(self, docs: Dict[str, Document]) -> bool:
+        '''
+        传入参数为： {doc_id: Document, ...}
+        如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
+        TODO：是否要支持新增 docs ？
+        '''
+        self.del_doc_by_ids(list(docs.keys()))
+        docs = []
+        ids = []
+        for k, v in docs.items():
+            if not v or not v.page_content.strip():
+                continue
+            ids.append(k)
+            docs.append(v)
+        self.do_add_doc(docs=docs, ids=ids)
+        return True
 
     def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
         '''
@@ -190,10 +211,10 @@ class KBService(ABC):
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
         docs = []
         for x in doc_infos:
-            doc_info_s = self.get_doc_by_ids([x["id"]])
-            if doc_info_s is not None and doc_info_s != []:
+            doc_info = self.get_doc_by_ids([x["id"]])[0]
+            if doc_info is not None:
                 # 处理非空的情况
-                doc_with_id = DocumentWithVSId(**doc_info_s[0].dict(), id=x["id"])
+                doc_with_id = DocumentWithVSId(**doc_info.dict(), id=x["id"])
                 docs.append(doc_with_id)
             else:
                 # 处理空的情况
@@ -249,6 +270,7 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
+                   **kwargs,
                    ) -> List[Dict]:
         """
         向知识库添加文档子类实自己逻辑
@@ -371,12 +393,13 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
             "in_folder": True,
             "in_db": False,
         }
+    lower_names = {x.lower(): x for x in result}
     for doc in files_in_db:
         doc_detail = get_file_detail(kb_name, doc)
         if doc_detail:
             doc_detail["in_db"] = True
-            if doc in result:
-                result[doc].update(doc_detail)
+            if doc.lower() in lower_names:
+                result[lower_names[doc.lower()]].update(doc_detail)
             else:
                 doc_detail["in_folder"] = False
                 result[doc] = doc_detail
