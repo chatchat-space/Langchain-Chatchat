@@ -15,15 +15,12 @@ import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import get_file_detail
 from langchain.docstore.document import Document
-from typing import List
-
-
-class DocumentWithScore(Document):
-    score: float = None
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from typing import List, Dict
 
 
 def search_docs(
-        query: str = Body(..., description="用户输入", examples=["你好"]),
+        query: str = Body("", description="用户输入", examples=["你好"]),
         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
         score_threshold: float = Body(SCORE_THRESHOLD,
@@ -31,13 +28,34 @@ def search_docs(
                                                   "SCORE越小，相关度越高，"
                                                   "取到1相当于不筛选，建议设置在0.5左右",
                                       ge=0, le=1),
-) -> List[DocumentWithScore]:
+        file_name: str = Body("", description="文件名称，支持 sql 通配符"),
+        metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
+) -> List[DocumentWithVSId]:
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    data = []
+    if kb is not None:
+        if query:
+            docs = kb.search_docs(query, top_k, score_threshold)
+            data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
+        elif file_name or metadata:
+            data = kb.list_docs(file_name=file_name, metadata=metadata)
+    return data
+
+
+def update_docs_by_id(
+        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+        docs: Dict[str, Document] = Body(..., description="要更新的文档内容，形如：{id: Document, ...}")
+) -> BaseResponse:
+    '''
+    按照文档 ID 更新文档内容
+    '''
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
-        return []
-    docs = kb.search_docs(query, top_k, score_threshold)
-    data = [DocumentWithScore(**x[0].dict(), score=x[1]) for x in docs]
-    return data
+        return BaseResponse(code=500, msg=f"指定的知识库 {knowledge_base_name} 不存在")
+    if kb.update_doc_by_ids(docs=docs):
+        return BaseResponse(msg=f"文档更新成功")
+    else:
+        return BaseResponse(msg=f"文档更新失败")
 
 
 def list_files(

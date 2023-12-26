@@ -4,9 +4,23 @@ from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 from server.utils import load_local_embeddings
 from server.knowledge_base.utils import get_vs_path
 from langchain.vectorstores.faiss import FAISS
+from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.schema import Document
 import os
 from langchain.schema import Document
+
+
+# patch FAISS to include doc id in Document.metadata
+def _new_ds_search(self, search: str) -> Union[str, Document]:
+    if search not in self._dict:
+        return f"ID {search} not found."
+    else:
+        doc = self._dict[search]
+        if isinstance(doc, Document):
+            doc.metadata["id"] = search
+        return doc
+InMemoryDocstore.search = _new_ds_search
+
 
 class ThreadSafeFaiss(ThreadSafeObject):
     def __repr__(self) -> str:

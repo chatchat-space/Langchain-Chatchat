@@ -571,10 +571,12 @@ class ApiRequest:
 
     def search_kb_docs(
         self,
-        query: str,
         knowledge_base_name: str,
+        query: str = "",
         top_k: int = VECTOR_SEARCH_TOP_K,
         score_threshold: int = SCORE_THRESHOLD,
+        file_name: str = "",
+        metadata: dict = {},
     ) -> List:
         '''
         对应api.py/knowledge_base/search_docs接口
@@ -584,6 +586,8 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "top_k": top_k,
             "score_threshold": score_threshold,
+            "file_name": file_name,
+            "metadata": metadata,
         }
 
         response = self.post(
@@ -591,6 +595,24 @@ class ApiRequest:
             json=data,
         )
         return self._get_response_value(response, as_json=True)
+
+    def update_docs_by_id(
+        self,
+        knowledge_base_name: str,
+        docs: Dict[str, Dict],
+    ) -> bool:
+        '''
+        对应api.py/knowledge_base/update_docs_by_id接口
+        '''
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "docs": docs,
+        }
+        response = self.post(
+            "/knowledge_base/update_docs_by_id",
+            json=data
+        )
+        return self._get_response_value(response)
 
     def upload_kb_docs(
         self,

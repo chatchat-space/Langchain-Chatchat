@@ -190,6 +190,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
         # 知识库详情
         # st.info("请选择文件，点击按钮进行操作。")
         doc_details = pd.DataFrame(get_kb_file_details(kb))
+        selected_rows = []
         if not len(doc_details):
             st.info(f"知识库 `{kb}` 中暂无文件")
         else:
@@ -284,32 +285,80 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
 
         st.divider()
 
-        cols = st.columns(3)
+        # cols = st.columns(3)
 
-        if cols[0].button(
-                "依据源文件重建向量库",
-                # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
-                use_container_width=True,
-                type="primary",
-        ):
-            with st.spinner("向量库重构中，请耐心等待，勿刷新或关闭页面。"):
-                empty = st.empty()
-                empty.progress(0.0, "")
-                for d in api.recreate_vector_store(kb,
-                                                chunk_size=chunk_size,
-                                                chunk_overlap=chunk_overlap,
-                                                zh_title_enhance=zh_title_enhance):
-                    if msg := check_error_msg(d):
-                        st.toast(msg)
+        # if cols[0].button(
+        #         "依据源文件重建向量库",
+        #         # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+        #         use_container_width=True,
+        #         type="primary",
+        # ):
+        #     with st.spinner("向量库重构中，请耐心等待，勿刷新或关闭页面。"):
+        #         empty = st.empty()
+        #         empty.progress(0.0, "")
+        #         for d in api.recreate_vector_store(kb,
+        #                                         chunk_size=chunk_size,
+        #                                         chunk_overlap=chunk_overlap,
+        #                                         zh_title_enhance=zh_title_enhance):
+        #             if msg := check_error_msg(d):
+        #                 st.toast(msg)
+        #             else:
+        #                 empty.progress(d["finished"] / d["total"], d["msg"])
+        #         st.rerun()
+
+        # if cols[2].button(
+        #         "删除知识库",
+        #         use_container_width=True,
+        # ):
+        #     ret = api.delete_knowledge_base(kb)
+        #     st.toast(ret.get("msg", " "))
+        #     time.sleep(1)
+        #     st.rerun()
+
+        # with st.sidebar:
+        #     keyword = st.text_input("查询关键字")
+        #     top_k = st.slider("匹配条数", 1, 100, 3)
+
+        st.write("文件内文档列表。双击进行修改，在删除列填入 Y 可删除对应行。")
+        docs = []
+        df = pd.DataFrame([], columns=["seq", "id", "content", "source"])
+        if selected_rows:
+            file_name = selected_rows[0]["file_name"]
+            docs = api.search_kb_docs(knowledge_base_name=selected_kb, file_name=file_name)
+            data = [{"seq": i+1, "id": x["id"], "page_content": x["page_content"], "source": x["metadata"].get("source"),
+                    "type": x["type"],
+                    "metadata": json.dumps(x["metadata"], ensure_ascii=False),
+                    "to_del": "",
+                    } for i, x in enumerate(docs)]
+            df = pd.DataFrame(data)
+
+            gb = GridOptionsBuilder.from_dataframe(df)
+            gb.configure_columns(["id", "source", "type", "metadata"], hide=True)
+            gb.configure_column("seq", "No.", width=50)
+            gb.configure_column("page_content", "内容", editable=True, autoHeight=True, wrapText=True, flex=1,
+                                cellEditor="agLargeTextCellEditor", cellEditorPopup=True)
+            gb.configure_column("to_del", "删除", editable=True, width=50, wrapHeaderText=True,
+                                cellEditor="agCheckboxCellEditor", cellRender="agCheckboxCellRenderer")
+            gb.configure_selection()
+            edit_docs = AgGrid(df, gb.build())
+
+            if st.button("保存更改"):
+                # origin_docs = {x["id"]: {"page_content": x["page_content"], "type": x["type"], "metadata": x["metadata"]} for x in docs}
+                changed_docs = []
+                for index, row in edit_docs.data.iterrows():
+                    # origin_doc = origin_docs[row["id"]]
+                    # if row["page_content"] != origin_doc["page_content"]:
+                    if row["to_del"] not in ["Y", "y", 1]:
+                        changed_docs.append({
+                            "page_content": row["page_content"],
+                            "type": row["type"],
+                            "metadata": json.loads(row["metadata"]),
+                        })
+
+                if changed_docs:
+                    if api.update_kb_docs(knowledge_base_name=selected_kb,
+                                        file_names=[file_name],
+                                        docs={file_name: changed_docs}):
+                        st.toast("更新文档成功")
                     else:
-                        empty.progress(d["finished"] / d["total"], d["msg"])
-                st.rerun()
-
-        if cols[2].button(
-                "删除知识库",
-                use_container_width=True,
-        ):
-            ret = api.delete_knowledge_base(kb)
-            st.toast(ret.get("msg", " "))
-            time.sleep(1)
-            st.rerun()
+                        st.toast("更新文档失败")
