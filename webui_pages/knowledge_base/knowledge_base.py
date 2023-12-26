@@ -354,7 +354,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                             "type": row["type"],
                             "metadata": json.loads(row["metadata"]),
                         })
-                st.write(changed_docs)
+
                 if changed_docs:
                     if api.update_kb_docs(knowledge_base_name=selected_kb,
                                         file_names=[file_name],
