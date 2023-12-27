@@ -230,7 +230,7 @@ MODEL_PATH = {
         "agentlm-13b": "THUDM/agentlm-13b",
         "agentlm-70b": "THUDM/agentlm-70b",
 
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
+        "Yi-34B-Chat": "01-ai/Yi-34B-Chat",
     },
 }
 
