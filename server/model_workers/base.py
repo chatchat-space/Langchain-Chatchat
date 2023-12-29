@@ -113,6 +113,9 @@ class ApiModelWorker(BaseModelWorker):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
+
         self.context_len = context_len
         self.semaphore = asyncio.Semaphore(self.limit_worker_concurrency)
         self.version = None

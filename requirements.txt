@@ -1,18 +1,18 @@
 # API requirements
 
 # On Windows system, install the cuda version manually from https://pytorch.org/
-torch>=2.1.2
-torchvision>=0.16.2
-torchaudio>=2.1.2
+torch~=2.1.2
+torchvision~=0.16.2
+torchaudio~=2.1.2
 
-langchain>=0.0.352
-langchain-experimental>=0.0.47
+langchain==0.0.352
+langchain-experimental==0.0.47
 pydantic==1.10.13
-fschat>=0.2.33
-xformers>=0.0.23.post1
-openai>=1.6.0
-sentence_transformers>=2.2.2
-transformers>=4.36.2
+fschat==0.2.34
+xformers==0.0.23.post1
+openai~=1.6.0
+sentence_transformers==2.2.2
+transformers==4.36.2
 fastapi>=0.105
 nltk>=3.8.1
 uvicorn>=0.24.0.post1
@@ -20,11 +20,11 @@ starlette~=0.27.0
 unstructured[all-docs]==0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
-faiss-cpu>=1.7.4
-accelerate>=0.24.1
-spacy>=3.7.2
-PyMuPDF>=1.23.8
-rapidocr_onnxruntime>=1.3.8
+faiss-cpu~=1.7.4
+accelerate==0.24.1
+spacy~=3.7.2
+PyMuPDF~=1.23.8
+rapidocr_onnxruntime~=1.3.8
 requests>=2.31.0
 pathlib>=1.0.1
 pytest>=7.4.3
@@ -37,20 +37,20 @@ websockets>=12.0
 numpy~=1.26.2
 pandas~=2.1.4
 einops>=0.7.0
-transformers_stream_generator>=0.0.4
-vllm>=0.2.6; sys_platform == "linux"
+transformers_stream_generator==0.0.4
+vllm==0.2.6; sys_platform == "linux"
 
 # optional document loaders
 
 rapidocr_paddle[gpu]>=1.3.0.post5
 jq>=1.6.0
 html2text
-beautifulsoup4>=4.12.2
-pysrt>=1.1.2
+beautifulsoup4~=4.12.2
+pysrt~=1.1.2
 
 # Online api libs dependencies
 
-zhipuai>=1.0.7
+zhipuai>=1.0.7，<=2.0.0
 dashscope>=1.13.6
 volcengine>=1.0.119
 pymilvus>=2.3.4
@@ -61,17 +61,15 @@ pymilvus>=2.3.4
 
 arxiv>=2.0.0
 youtube-search>=2.1.2
-duckduckgo-search>=4.1.0
+duckduckgo-search>=3.9.9
 metaphor-python>=0.1.23
 
 # WebUI requirements
 
-streamlit>=1.29.0
+streamlit~=1.29.0
 streamlit-option-menu>=0.3.6
-streamlit-antd-components>=0.2.4
-streamlit-chatbox>=1.1.11
+streamlit-chatbox==1.1.11
 streamlit-modal>=0.1.0
 streamlit-aggrid>=0.3.4.post3
 httpx[brotli,http2,socks]>=0.25.2
 watchdog>=3.0.0
-

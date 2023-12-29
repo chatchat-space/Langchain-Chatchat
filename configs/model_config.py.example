@@ -105,6 +105,7 @@ ONLINE_LLM_MODEL = {
         "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"
         "api_key": "",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建
         "provider": "QwenWorker",
+        "embed_model": "text-embedding-v1" # embedding 模型名称
     },
 
     # 百川 API，申请方式请参考 https://www.baichuan-ai.com/home#api-enter
@@ -241,7 +242,7 @@ MODEL_PATH = {
         "agentlm-13b": "THUDM/agentlm-13b",
         "agentlm-70b": "THUDM/agentlm-70b",
 
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
+        "Yi-34B-Chat": "01-ai/Yi-34B-Chat",
     },
     "reranker":{
         "bge-reranker-large":"BAAI/bge-reranker-large",
