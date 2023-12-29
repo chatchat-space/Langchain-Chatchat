@@ -259,38 +259,6 @@ class ApiRequest:
         return self._get_response_value(response, value_func=lambda r: r.text)
 
     # 对话相关操作
-
-    def chat_fastchat(
-        self,
-        messages: List[Dict],
-        stream: bool = True,
-        model: str = LLM_MODELS[0],
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        **kwargs: Any,
-    ):
-        '''
-        对应api.py/chat/fastchat接口
-        '''
-        data = {
-            "messages": messages,
-            "stream": stream,
-            "model": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
-
-        # print(f"received input message:")
-        # pprint(data)
-
-        response = self.post(
-            "/chat/fastchat",
-            json=data,
-            stream=True,
-            **kwargs,
-        )
-        return self._httpx_stream2generator(response)
-
     def chat_chat(
             self,
             query: str,
@@ -1057,10 +1025,6 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
 if __name__ == "__main__":
     api = ApiRequest()
     aapi = AsyncApiRequest()
-
-    # print(api.chat_fastchat(
-    #     messages=[{"role": "user", "content": "hello"}]
-    # ))
 
     # with api.chat_chat("你好") as r:
     #     for t in r.iter_text(None):
