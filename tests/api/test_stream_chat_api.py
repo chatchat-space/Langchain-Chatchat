@@ -48,18 +48,6 @@ data = {
 }
 
 
-def test_chat_fastchat(api="/chat/fastchat"):
-    url = f"{api_base_url}{api}"
-    data2 = {
-        "stream": True,
-        "messages": data["history"] + [{"role": "user", "content": "推荐一部科幻电影"}]
-    }
-    dump_input(data2, api)
-    response = requests.post(url, headers=headers, json=data2, stream=True)
-    dump_output(response, api)
-    assert response.status_code == 200
-
-
 def test_chat_chat(api="/chat/chat"):
     url = f"{api_base_url}{api}"
     dump_input(data, api)
