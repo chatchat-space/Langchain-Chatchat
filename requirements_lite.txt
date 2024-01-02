@@ -52,7 +52,7 @@ pysrt~=1.1.2
 
 # Online api libs dependencies
 
-zhipuai>=1.0.7，<=2.0.0 # zhipu
+zhipuai>=1.0.7, <=2.0.0 # zhipu
 dashscope>=1.13.6 # qwen
 # volcengine>=1.0.119 # fangzhou
 
