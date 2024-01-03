@@ -102,6 +102,10 @@ kbs_config = {
         "index_name": "test_index",
         "user": "",
         "password": ""
+    },
+    "milvus_kwargs":{
+        "search_params":{"metric_type": "L2"}, #在此处增加search_params
+        "index_params":{"metric_type": "L2","index_type": "HNSW"} # 在此处增加index_params
     }
 }
 
