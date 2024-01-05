@@ -500,8 +500,8 @@ def set_httpx_config(
 
 
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
+    import torch 
     try:
-        import torch
         if torch.cuda.is_available():
             return "cuda"
         if torch.backends.mps.is_available():
@@ -513,14 +513,36 @@ def detect_device() -> Literal["cuda", "mps", "cpu"]:
 
 def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
     device = device or LLM_DEVICE
+    import torch 
+    # 检查设备是否被支持
     if device not in ["cuda", "mps", "cpu"]:
+        print(f"device not in ['cuda', 'mps', 'cpu'], device = {device}")
+        device = detect_device()
+    elif device == "cuda" and not torch.cuda.is_available():
+        # 如果指定了CUDA但CUDA不可用，则回退到其他可用设备
+        print("CUDA is not available, switching to available device")
+        device = detect_device()
+    elif device == "mps" and not torch.backends.mps.is_available():
+        # 如果指定了MPS但MPS不可用，则回退到其他可用设备
+        print("MPS is not available, switching to available device")
         device = detect_device()
     return device
 
 
 def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
     device = device or EMBEDDING_DEVICE
+    import torch 
+    # 检查设备是否被支持
     if device not in ["cuda", "mps", "cpu"]:
+        print(f"device not in ['cuda', 'mps', 'cpu'], device = {device}")
+        device = detect_device()
+    elif device == "cuda" and not torch.cuda.is_available():
+        # 如果指定了CUDA但CUDA不可用，则回退到其他可用设备
+        print("CUDA is not available, switching to available device")
+        device = detect_device()
+    elif device == "mps" and not torch.backends.mps.is_available():
+        # 如果指定了MPS但MPS不可用，则回退到其他可用设备
+        print("MPS is not available, switching to available device")
         device = detect_device()
     return device
 
