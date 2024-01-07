@@ -1,19 +1,16 @@
 import asyncio
 import json
-from typing import List, Union, AsyncIterable, Dict
+from typing import AsyncIterable, List, Union, Dict
 
 from fastapi import Body
 from fastapi.responses import StreamingResponse
-
-from langchain.agents import initialize_agent, AgentType, create_structured_chat_agent, AgentExecutor
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import AIMessage, HumanMessage
+
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
-from langchain_core.runnables import RunnableBranch
-
-from server.agent.agent_factory import initialize_glm3_agent, initialize_qwen_agent
+from server.agent.agent_factory.agents_registry import agents_registry
 from server.agent.tools_factory.tools_registry import all_tools
 from server.agent.container import container
 
@@ -21,7 +18,7 @@ from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
 from server.chat.utils import History
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
-from server.callback_handler.agent_callback_handler import AgentStatus, AgentExecutorAsyncIteratorCallbackHandler
+from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler
 
 
 def create_models_from_config(configs, callbacks, stream):
@@ -46,7 +43,6 @@ def create_models_from_config(configs, callbacks, stream):
     return models, prompts
 
 
-# 在这里写构建逻辑
 def create_models_chains(history, history_len, prompts, models, tools, callbacks, conversation_id, metadata):
     memory = None
     chat_prompt = None
@@ -78,38 +74,21 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
             | models["preprocess_model"]
             | StrOutputParser()
     )
-    if "action_model" in models and len(tools) > 0:
-        if "chatglm3" in models["action_model"].model_name.lower():
-            agent_executor = initialize_glm3_agent(
-                llm=models["action_model"],
-                tools=tools,
-                prompt=prompts["action_model"],
-                callbacks=callbacks,
-                verbose=True,
-            )
-        elif "qwen" in models["action_model"].model_name.lower():
-            agent_executor = initialize_qwen_agent(
-                llm=models["action_model"],
-                tools=tools,
-                prompt=prompts["action_model"],
-                callbacks=callbacks,
-                verbose=True,
-            )
-        else:
-            agent_executor = initialize_agent(
-                llm=models["action_model"],
-                tools=tools,
-                callbacks=callbacks,
-                agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-                verbose=True,
-            )
 
+    if "action_model" in models and tools is not None:
+        agent_executor = agents_registry(
+            llm=models["action_model"],
+            callbacks=callbacks,
+            tools=tools,
+            prompt=None,
+            verbose=True
+        )
         # branch = RunnableBranch(
         #     (lambda x: "1" in x["topic"].lower(), agent_executor),
         #     chain
         # )
         # full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
-        full_chain = ({"input": lambda x: x["input"], } | agent_executor)
+        full_chain = ({"input": lambda x: x["input"]} | agent_executor)
     else:
         chain.llm.callbacks = callbacks
         full_chain = ({"input": lambda x: x["input"]} | chain)
@@ -155,7 +134,17 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                           history=history,
                                           history_len=history_len,
                                           metadata=metadata)
-        task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}), callback.done))
+        task = asyncio.create_task(wrap_done(
+            full_chain.ainvoke(
+                {
+                    "input": query,
+                    "chat_history": [
+                        HumanMessage(content="今天北京的温度是多少度"),
+                        AIMessage(content="今天北京的温度是1度"),
+                    ],
+
+                }
+            ),callback.done))
 
         async for chunk in callback.aiter():
             data = json.loads(chunk)
