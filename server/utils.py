@@ -9,8 +9,8 @@ from configs import (LLM_MODEL_CONFIG, LLM_DEVICE, EMBEDDING_DEVICE,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_community.llms import OpenAI
 import httpx
 from typing import (
     TYPE_CHECKING,

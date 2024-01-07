@@ -5,7 +5,8 @@ from typing import List, Union, AsyncIterable, Dict
 from fastapi import Body
 from fastapi.responses import StreamingResponse
 
-from langchain.agents import initialize_agent, AgentType
+from langchain.agents import initialize_agent, AgentType, create_structured_chat_agent, AgentExecutor
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
@@ -83,7 +84,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 llm=models["action_model"],
                 tools=tools,
                 prompt=prompts["action_model"],
-                memory=memory,
                 callbacks=callbacks,
                 verbose=True,
             )
@@ -92,7 +92,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 llm=models["action_model"],
                 tools=tools,
                 prompt=prompts["action_model"],
-                memory=memory,
                 callbacks=callbacks,
                 verbose=True,
             )
@@ -102,7 +101,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
                 tools=tools,
                 callbacks=callbacks,
                 agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-                memory=memory,
                 verbose=True,
             )
 
@@ -111,7 +109,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         #     chain
         # )
         # full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
-        full_chain = ({"input": lambda x: x["input"]} | agent_executor)
+        full_chain = ({"input": lambda x: x["input"], } | agent_executor)
     else:
         chain.llm.callbacks = callbacks
         full_chain = ({"input": lambda x: x["input"]} | chain)
@@ -146,14 +144,9 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
-
-        # 从配置中选择模型
         models, prompts = create_models_from_config(callbacks=[], configs=model_config, stream=stream)
-
-        # 从配置中选择工具
         tools = [tool for tool in all_tools if tool.name in tool_config]
         tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-        # 构建完整的Chain
         full_chain = create_models_chains(prompts=prompts,
                                           models=models,
                                           conversation_id=conversation_id,
@@ -163,6 +156,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                           history_len=history_len,
                                           metadata=metadata)
         task = asyncio.create_task(wrap_done(full_chain.ainvoke({"input": query}), callback.done))
+
         async for chunk in callback.aiter():
             data = json.loads(chunk)
             data["message_id"] = message_id

@@ -11,7 +11,7 @@ def calculate(a: float, b: float, operator: str) -> float:
         if b != 0:
             return a / b
         else:
-            return float('inf')  # 防止除以零
+            return float('inf')
     elif operator == "^":
         return a ** b
     else:

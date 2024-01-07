@@ -1,8 +1,8 @@
 """
 This file is a modified version for ChatGLM3-6B the original glm3_agent.py file from the langchain repo.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 import json
 import logging
 from typing import Any, List, Sequence, Tuple, Optional, Union
@@ -21,9 +21,7 @@ from langchain.agents.agent import AgentExecutor
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
-from langchain_core.callbacks import Callbacks
 
-HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
 logger = logging.getLogger(__name__)
 
 
@@ -148,7 +146,6 @@ class StructuredGLM3ChatAgent(Agent):
         formatted_tools = formatted_tools.replace("'", "\\'").replace("{", "{{").replace("}", "}}")
         template = prompt.format(tool_names=tool_names,
                                  tools=formatted_tools,
-                                 history="None",
                                  input="{input}",
                                  agent_scratchpad="{agent_scratchpad}")
 
@@ -169,7 +166,6 @@ class StructuredGLM3ChatAgent(Agent):
             prompt: str = None,
             callbacks: List[BaseCallbackHandler] = [],
             output_parser: Optional[AgentOutputParser] = None,
-            human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
             input_variables: Optional[List[str]] = None,
             memory_prompts: Optional[List[BasePromptTemplate]] = None,
             **kwargs: Any,
@@ -229,6 +225,5 @@ def initialize_glm3_agent(
         callbacks=callbacks,
         memory=memory,
         tags=tags_,
-        intermediate_steps=[],
         **kwargs,
     )

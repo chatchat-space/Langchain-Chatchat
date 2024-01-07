@@ -17,8 +17,9 @@ from langchain.text_splitter import TextSplitter
 from pathlib import Path
 from server.utils import run_in_thread_pool, get_model_worker_config
 import json
-from typing import List, Union,Dict, Tuple, Generator
+from typing import List, Union, Dict, Tuple, Generator
 import chardet
+from langchain_community.document_loaders import JSONLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -122,15 +123,13 @@ def _new_json_dumps(obj, **kwargs):
     kwargs["ensure_ascii"] = False
     return _origin_json_dumps(obj, **kwargs)
 
+
 if json.dumps is not _new_json_dumps:
     _origin_json_dumps = json.dumps
     json.dumps = _new_json_dumps
 
 
-class JSONLinesLoader(langchain.document_loaders.JSONLoader):
-    '''
-    行式 Json 加载器，要求文件扩展名为 .jsonl
-    '''
+class JSONLinesLoader(JSONLoader):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._json_lines = True
