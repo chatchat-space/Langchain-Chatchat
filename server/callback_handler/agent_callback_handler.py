@@ -102,7 +102,8 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             metadata: Optional[Dict[str, Any]] = None,
             **kwargs: Any,
     ) -> None:
-        print("tool_start")
+       pass
+
 
     async def on_tool_end(
             self,

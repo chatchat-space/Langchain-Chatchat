@@ -1,13 +1,15 @@
 # API requirements
 
-# On Windows system, install the cuda version manually from https://pytorch.org/
+# Torch requiremnts, install the cuda version manually from https://pytorch.org/
 torch>=2.1.2
 torchvision>=0.16.2
 torchaudio>=2.1.2
 
+# Langchain 0.1.x requirements
 langchain>=0.1.0
 langchain_openai>=0.0.2
 langchain-community>=1.0.0
+langchainhub>=0.1.14
 
 pydantic==1.10.13
 fschat==0.2.35

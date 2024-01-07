@@ -95,5 +95,5 @@ def search_internet(query: str):
     return search_engine(query=query, config=tool_config)
 
 class SearchInternetInput(BaseModel):
-    query: str = Field(description="Query for Internet search")
+    query: str = Field(description="query for Internet search")
 
