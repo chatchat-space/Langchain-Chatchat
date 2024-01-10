@@ -21,6 +21,11 @@ from server.db.repository import add_message_to_db
 from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler
 
 
+# from langchain.globals import set_debug, set_verbose
+# set_debug(True)
+# set_verbose(True)
+
+
 def create_models_from_config(configs, callbacks, stream):
     if configs is None:
         configs = {}

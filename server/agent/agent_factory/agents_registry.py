@@ -8,7 +8,8 @@ from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
 
-from server.agent.agent_factory import create_structured_glm3_chat_agent
+from server.agent.agent_factory import (create_structured_glm3_chat_agent,
+                                        create_structured_qwen_chat_agent)
 
 
 def agents_registry(
@@ -22,10 +23,14 @@ def agents_registry(
     else:
         prompt = hub.pull("hwchase17/structured-chat-agent") # default prompt
 
+    # llm.callbacks = callbacks
+
     # Write any optimized method here.
     if "glm3" in llm.model_name.lower():
         # An optimized method of langchain Agent that uses the glm3 series model
         agent = create_structured_glm3_chat_agent(llm=llm, tools=tools)
+    elif "qwen" in llm.model_name.lower():
+        agent = create_structured_qwen_chat_agent(llm=llm, tools=tools)
     else:
         agent = create_structured_chat_agent(llm=llm, tools=tools, prompt=prompt)
 
