@@ -1,26 +1,24 @@
 from __future__ import annotations
 
-from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
-from langchain.memory import ConversationBufferWindowMemory
-from typing import Any, List, Sequence, Tuple, Optional, Union
-import re
-from langchain.agents import Tool
-from langchain.agents.agent import LLMSingleActionAgent, AgentOutputParser
-from langchain.chains.llm import LLMChain
-from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, BaseChatPromptTemplate
 import json
 import logging
-from langchain.pydantic_v1 import Field
+from operator import itemgetter
+import re
+from typing import List, Sequence, Union
+
+from langchain_core.runnables import Runnable, RunnablePassthrough
+from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
+from langchain.callbacks.base import BaseCallbackHandler
+from langchain.prompts.chat import BaseChatPromptTemplate
 from langchain.schema import (AgentAction, AgentFinish, OutputParserException,
                               HumanMessage, SystemMessage, AIMessage)
-from langchain.agents.agent import AgentExecutor
-from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
 from langchain.tools.render import format_tool_to_openai_function
+
 from server.utils import get_prompt_template
 
-HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}"
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +26,7 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
     # The template to use
     template: str
     # The list of tools available
-    tools: List[Tool]
+    tools: List[BaseTool]
 
     def format_messages(self, **kwargs) -> str:
         # Get the intermediate steps (AgentAction, Observation tuples)
@@ -52,8 +50,8 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
         return [HumanMessage(content=formatted)]
 
 
-class QwenChatAgentOutputParser(StructuredChatOutputParser):
-    """Output parser with retries for the structured chat agent."""
+class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
+    """Output parser with retries for the structured chat agent with custom qwen prompt."""
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
         if s := re.findall(r"\nAction:\s*(.+)\nAction\sInput:\s*(.+)", text, flags=re.DOTALL):
@@ -67,111 +65,51 @@ class QwenChatAgentOutputParser(StructuredChatOutputParser):
 
     @property
     def _type(self) -> str:
-        return "structured_chat_qwen_with_retries"
+        return "StructuredQWenChatOutputParserCustom"
 
 
-class QwenChatAgent(LLMSingleActionAgent):
-    """Structured Chat Agent."""
+class QwenChatAgentOutputParserLC(StructuredChatOutputParser):
+    """Output parser with retries for the structured chat agent with standard lc prompt."""
 
-    output_parser: AgentOutputParser = Field(
-        default_factory=QwenChatAgentOutputParser
-    )
-    """Output parser for the agent."""
+    def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
+        if s := re.findall(r"\nAction:\s*```(.+)```", text, flags=re.DOTALL):
+            action = json.loads(s[0])
+            tool = action.get("action")
+            if tool == "Final Answer":
+                return AgentFinish({"output": action.get("action_input", "")}, log=text)
+            else:
+                return AgentAction(tool=tool, tool_input=action.get("action_input", {}), log=text)
+        else:
+            raise OutputParserException(f"Could not parse LLM output: {text}")
 
     @property
-    def observation_prefix(self) -> str:
-        """Prefix to append the qwen observation with."""
-        return "\nObservation:"
+    def _type(self) -> str:
+        return "StructuredQWenChatOutputParserLC"
 
-    @property
-    def llm_prefix(self) -> str:
-        """Prefix to append the llm call with."""
-        return "\nThought:"
 
-    @classmethod
-    def _validate_tools(cls, tools: Sequence[BaseTool]) -> None:
-        pass
-
-    @classmethod
-    def create_prompt(
-            cls,
-            tools: Sequence[BaseTool],
-            prompt: str = None,
-            input_variables: Optional[List[str]] = None,
-            memory_prompts: Optional[List[QwenChatAgentPromptTemplate]] = None,
-    ) -> QwenChatAgentPromptTemplate:
-        template = get_prompt_template("action_model", "qwen")
-        return QwenChatAgentPromptTemplate(input_variables=["input", "intermediate_steps"],
-                                           template=template,
-                                           tools=tools)
-
-    @classmethod
-    def from_llm_and_tools(
-        cls,
+def create_structured_qwen_chat_agent(
         llm: BaseLanguageModel,
         tools: Sequence[BaseTool],
-        prompt: str = None,
-        callbacks: List[BaseCallbackHandler] = [],
-        output_parser: Optional[AgentOutputParser] = None,
-        human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
-        input_variables: Optional[List[str]] = None,
-        memory_prompts: Optional[List[BaseChatPromptTemplate]] = None,
-        **kwargs: Any,
-    ) -> QwenChatAgent:
-        """Construct an agent from an LLM and tools."""
-        cls._validate_tools(tools)
-        prompt = cls.create_prompt(
-            tools,
-            prompt=prompt,
-            input_variables=input_variables,
-            memory_prompts=memory_prompts,
-        )
-        llm_chain = LLMChain(
-            llm=llm,
-            prompt=prompt,
-            callbacks=callbacks,
-        )
-        tool_names = [tool.name for tool in tools]
-        output_parser = output_parser or QwenChatAgentOutputParser()
-        return cls(
-            llm_chain=llm_chain,
-            allowed_tools=tool_names,
-            output_parser=output_parser,
-            stop=["\nObservation:"],
-            **kwargs,
-        )
+        use_custom_prompt: bool = True,
+) -> Runnable:
+    if use_custom_prompt:
+        prompt = "qwen"
+        output_parser = QwenChatAgentOutputParserCustom()
+    else:
+        prompt = "structured-chat-agent"
+        output_parser = QwenChatAgentOutputParserLC()
 
-    @property
-    def _agent_type(self) -> str:
-        return "qwen_chat_agent"
+    template = get_prompt_template("action_model", prompt)
+    prompt = QwenChatAgentPromptTemplate(input_variables=["input", "intermediate_steps"],
+                                        template=template,
+                                        tools=tools)
 
-
-def initialize_qwen_agent(
-    tools: Sequence[BaseTool],
-    llm: BaseLanguageModel,
-    prompt: str = None,
-    callbacks: List[BaseCallbackHandler] = [],
-    memory: Optional[ConversationBufferWindowMemory] = None,
-    agent_kwargs: Optional[dict] = None,
-    *,
-    tags: Optional[Sequence[str]] = None,
-    **kwargs: Any,
-) -> AgentExecutor:
-    tags_ = list(tags) if tags else []
-    agent_kwargs = agent_kwargs or {}
-    llm.callbacks=callbacks
-    agent_obj = QwenChatAgent.from_llm_and_tools(
-        llm=llm,
-        tools=tools,
-        prompt=prompt,
-        **agent_kwargs,
+    agent = (
+        RunnablePassthrough.assign(
+            agent_scratchpad=itemgetter("intermediate_steps")
+        )
+        | prompt
+        | llm.bind(stop="\nObservation:")
+        | output_parser
     )
-    return AgentExecutor.from_agent_and_tools(
-        agent=agent_obj,
-        tools=tools,
-        callbacks=callbacks,
-        memory=memory,
-        tags=tags_,
-        intermediate_steps=[],
-        **kwargs,
-    )
+    return agent
