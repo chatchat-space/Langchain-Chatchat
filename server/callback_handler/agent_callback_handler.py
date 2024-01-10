@@ -168,8 +168,9 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "status": AgentStatus.agent_finish,
             "text": finish.return_values["output"],
         }
-
-        self.done.set()
         self.queue.put_nowait(dumps(data))
 
+
+    async def on_chain_end(self, outputs: Dict[str, Any], *, run_id: UUID, parent_run_id: UUID | None = None, tags: List[str] | None = None, **kwargs: Any) -> None:
+        self.done.set()
         self.out = True

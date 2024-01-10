@@ -18,12 +18,8 @@ def agents_registry(
         callbacks: List[BaseCallbackHandler] = [],
         prompt: str = None,
         verbose: bool = False):
-    if prompt is not None:
-        prompt = ChatPromptTemplate.from_messages([SystemMessage(content=prompt)])
-    else:
-        prompt = hub.pull("hwchase17/structured-chat-agent") # default prompt
-
     # llm.callbacks = callbacks
+    llm.streaming = False # qwen agent not support streaming
 
     # Write any optimized method here.
     if "glm3" in llm.model_name.lower():
@@ -32,6 +28,10 @@ def agents_registry(
     elif "qwen" in llm.model_name.lower():
         agent = create_structured_qwen_chat_agent(llm=llm, tools=tools)
     else:
+        if prompt is not None:
+            prompt = ChatPromptTemplate.from_messages([SystemMessage(content=prompt)])
+        else:
+            prompt = hub.pull("hwchase17/structured-chat-agent") # default prompt
         agent = create_structured_chat_agent(llm=llm, tools=tools, prompt=prompt)
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose, callbacks=callbacks)
