@@ -49,11 +49,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-i",
-        "--increament",
+        "--increment",
         action="store_true",
         help=('''
             update vector store for files exist in local folder and not exist in database.
-            use this option if you want to create vectors increamentally.
+            use this option if you want to create vectors incrementally.
             '''
         )
     )
@@ -109,8 +109,8 @@ if __name__ == "__main__":
         import_from_db(args.import_db)
     elif args.update_in_db:
         folder2db(kb_names=args.kb_name, mode="update_in_db", embed_model=args.embed_model)
-    elif args.increament:
-        folder2db(kb_names=args.kb_name, mode="increament", embed_model=args.embed_model)
+    elif args.increment:
+        folder2db(kb_names=args.kb_name, mode="increment", embed_model=args.embed_model)
     elif args.prune_db:
         prune_db_docs(args.kb_name)
     elif args.prune_folder:
