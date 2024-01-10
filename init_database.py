@@ -6,7 +6,6 @@ from configs.model_config import NLTK_DATA_PATH, EMBEDDING_MODEL
 import nltk
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 from datetime import datetime
-import sys
 
 
 if __name__ == "__main__":
@@ -100,7 +99,7 @@ if __name__ == "__main__":
 
     if args.clear_tables:
         reset_tables()
-        print("database talbes reseted")
+        print("database tables reset")
 
     if args.recreate_vs:
         create_tables()
