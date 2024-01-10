@@ -13,10 +13,10 @@ from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIte
 from langchain import globals
 
 globals.set_debug(True)
-# globals.set_verbose(True)
+globals.set_verbose(True)
 
 
-async def main():
+async def test1():
     callback = AgentExecutorAsyncIteratorCallbackHandler()
     tools = [t.copy(update={"callbacks": [callback]}) for t in all_tools]
     # qwen_model = get_ChatOpenAI("Qwen-1_8B-Chat", 0.01, streaming=True, callbacks=[callback])
@@ -38,4 +38,52 @@ async def main():
     # ret = executor.invoke("chatchat项目主要issue有哪些")
     await ret
 
-asyncio.run(main())
+
+async def test2():
+    from server.chat.chat import chat
+
+    mc={'preprocess_model': {
+        'qwen': {
+            'temperature': 0.4,
+            'max_tokens': 2048,
+            'history_len': 100,
+            'prompt_name': 'default',
+            'callbacks': False}
+        },
+        'llm_model': {
+            'qwen': {
+                'temperature': 0.9,
+                'max_tokens': 4096,
+                'history_len': 3,
+                'prompt_name': 'default',
+                'callbacks': True}
+            },
+        'action_model': {
+            'qwen': {
+                'temperature': 0.01,
+                'max_tokens': 4096,
+                'prompt_name': 'qwen',
+                'callbacks': True}
+            },
+        'postprocess_model': {
+            'qwen': {
+                'temperature': 0.01,
+                'max_tokens': 4096,
+                'prompt_name': 'default',
+                'callbacks': True}
+            }
+        }
+
+    tc={'weather_check': {'use': False, 'api-key': 'your key'}}
+
+    async for x in (await chat("苏州天气如何",{},
+                            model_config=mc,
+                            tool_config=tc,
+                            conversation_id=None,
+                            history_len=-1,
+                            history=[],
+                            stream=True)).body_iterator:
+        print(x)
+
+
+asyncio.run(test2())

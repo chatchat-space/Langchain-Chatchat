@@ -21,11 +21,6 @@ from server.db.repository import add_message_to_db
 from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler
 
 
-# from langchain.globals import set_debug, set_verbose
-# set_debug(True)
-# set_verbose(True)
-
-
 def create_models_from_config(configs, callbacks, stream):
     if configs is None:
         configs = {}
@@ -128,7 +123,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
-        models, prompts = create_models_from_config(callbacks=[], configs=model_config, stream=stream)
+        models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config, stream=stream)
         tools = [tool for tool in all_tools if tool.name in tool_config]
         tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
         full_chain = create_models_chains(prompts=prompts,
@@ -143,13 +138,9 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
             full_chain.ainvoke(
                 {
                     "input": query,
-                    "chat_history": [
-                        HumanMessage(content="今天北京的温度是多少度"),
-                        AIMessage(content="今天北京的温度是1度"),
-                    ],
-
+                    "chat_history": [],
                 }
-            ),callback.done))
+            ), callback.done))
 
         async for chunk in callback.aiter():
             data = json.loads(chunk)
