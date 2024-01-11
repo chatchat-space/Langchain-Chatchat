@@ -171,6 +171,9 @@ TOOL_CONFIG = {
     "calculate": {
         "use": False,
     },
+    "text2images": {
+        "use": False,
+    },
 
     # Use THUDM/cogvlm-chat-hf as default
 

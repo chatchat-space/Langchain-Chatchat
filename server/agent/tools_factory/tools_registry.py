@@ -70,3 +70,5 @@ all_tools = [
 
     )
 ]
+
+all_tools.append(text2images)

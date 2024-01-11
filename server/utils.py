@@ -447,8 +447,8 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
 
     from configs import prompt_config
     import importlib
-    importlib.reload(prompt_config)
-    return prompt_config.PROMPT_TEMPLATES[type].get(name)
+    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+    return prompt_config.PROMPT_TEMPLATES.get(type, {}).get(name)
 
 
 def set_httpx_config(

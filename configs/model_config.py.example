@@ -55,6 +55,11 @@ LLM_MODEL_CONFIG = {
             "callbacks": True
         }
     },
+    "image_model": {
+        "sd-turbo": {
+            "size": "1024x1024",
+        }
+    }
 }
 LLM_DEVICE = "auto"
 ONLINE_LLM_MODEL = {
@@ -63,6 +68,11 @@ ONLINE_LLM_MODEL = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "sk-",
         "openai_proxy": "",
+    },
+    "sd-turbo": {
+        "model_name": "sd-turbo",
+        "api_base_url": "http://127.0.0.1:9997/v1",
+        "api_key": "EMPTY",
     },
     "zhipu-api": {
         "api_key": "",
