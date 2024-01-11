@@ -84,7 +84,7 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
 
 def folder2db(
         kb_names: List[str],
-        mode: Literal["recreate_vs", "update_in_db", "increament"],
+        mode: Literal["recreate_vs", "update_in_db", "increment"],
         vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
         embed_model: str = EMBEDDING_MODEL,
         chunk_size: int = CHUNK_SIZE,
@@ -97,7 +97,7 @@ def folder2db(
         recreate_vs: recreate all vector store and fill info to database using existed files in local folder
         fill_info_only(disabled): do not create vector store, fill info to db using existed files only
         update_in_db: update vector store and database info using local files that existed in database only
-        increament: create vector store and database info for local files that not existed in database only
+        increment: create vector store and database info for local files that not existed in database only
     """
 
     def files2vs(kb_name: str, kb_files: List[KnowledgeFile]):
@@ -142,7 +142,7 @@ def folder2db(
             files2vs(kb_name, kb_files)
             kb.save_vector_store()
         # 对比本地目录与数据库中的文件列表，进行增量向量化
-        elif mode == "increament":
+        elif mode == "increment":
             db_files = kb.list_files()
             folder_files = list_files_from_folder(kb_name)
             files = list(set(folder_files) - set(db_files))
@@ -150,7 +150,7 @@ def folder2db(
             files2vs(kb_name, kb_files)
             kb.save_vector_store()
         else:
-            print(f"unspported migrate mode: {mode}")
+            print(f"unsupported migrate mode: {mode}")
 
 
 def prune_db_docs(kb_names: List[str]):

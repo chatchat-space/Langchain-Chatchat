@@ -14,8 +14,7 @@ from server.knowledge_base.migrate import folder2db, prune_db_docs, prune_folder
 # setup test knowledge base
 kb_name = "test_kb_for_migrate"
 test_files = {
-    "faq.md": str(root_path / "docs" / "faq.md"),
-    "install.md": str(root_path / "docs" / "install.md"),
+    "readme.md": str(root_path / "readme.md"),
 }
 
 
@@ -56,13 +55,13 @@ def test_recreate_vs():
             assert doc.metadata["source"] == name
 
 
-def test_increament():
+def test_increment():
     kb = KBServiceFactory.get_service_by_name(kb_name)
     kb.clear_vs()
     assert kb.list_files() == []
     assert kb.list_docs() == []
 
-    folder2db([kb_name], "increament")
+    folder2db([kb_name], "increment")
 
     files = kb.list_files()
     print(files)
