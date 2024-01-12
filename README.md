@@ -151,7 +151,7 @@ $ python startup.py -a
 ### 项目交流群
 <img src="img/qr_code_85.jpg" alt="二维码" width="300" />
 
-🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流~
 
 ### 公众号
 
