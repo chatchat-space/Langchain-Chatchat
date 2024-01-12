@@ -36,8 +36,8 @@ numpy~=1.24.4
 pandas~=2.0.3
 einops>=0.7.0
 transformers_stream_generator==0.0.4
-vllm==0.2.6; sys_platform == "linux"
-httpx[brotli,http2,socks]==0.25.2
+vllm==0.2.7; sys_platform == "linux"
+httpx==0.26.0
 llama-index
 
 # optional document loaders
