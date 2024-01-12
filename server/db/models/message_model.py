@@ -3,13 +3,13 @@ from sqlalchemy import Column, Integer, String, DateTime, JSON, func
 from server.db.base import Base
 
 
-class ChatHistoryModel(Base):
+class MessageModel(Base):
     """
     聊天记录模型
     """
-    __tablename__ = 'chat_history'
-    # 由前端生成的uuid，如果是自增的话，则需要将id 传给前端，这在流式返回里有点麻烦
+    __tablename__ = 'message'
     id = Column(String(32), primary_key=True, comment='聊天记录ID')
+    conversation_id = Column(String(32), default=None, index=True, comment='对话框ID')
     # chat/agent_chat等
     chat_type = Column(String(50), comment='聊天类型')
     query = Column(String(4096), comment='用户问题')
@@ -22,4 +22,4 @@ class ChatHistoryModel(Base):
     create_time = Column(DateTime, default=func.now(), comment='创建时间')
 
     def __repr__(self):
-        return f"<ChatHistory(id='{self.id}', chat_type='{self.chat_type}', query='{self.query}', response='{self.response}',meta_data='{self.meta_data}',feedback_score='{self.feedback_score}',feedback_reason='{self.feedback_reason}', create_time='{self.create_time}')>"
+        return f"<message(id='{self.id}', conversation_id='{self.conversation_id}', chat_type='{self.chat_type}', query='{self.query}', response='{self.response}',meta_data='{self.meta_data}',feedback_score='{self.feedback_score}',feedback_reason='{self.feedback_reason}', create_time='{self.create_time}')>"

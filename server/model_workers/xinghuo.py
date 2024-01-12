@@ -62,7 +62,7 @@ class XingHuoWorker(ApiModelWorker):
             loop = asyncio.get_event_loop()
         except:
             loop = asyncio.new_event_loop()
-        params.max_tokens = min(details["max_tokens"], params.max_tokens)
+        params.max_tokens = min(details["max_tokens"], params.max_tokens or 0)
         for chunk in iter_over_async(
                 request(params.APPID, params.api_key, params.APISecret, Spark_url, domain, params.messages,
                         params.temperature, params.max_tokens),

@@ -5,7 +5,7 @@ from server.db.session import with_session
 @with_session
 def add_kb_to_db(session, kb_name, kb_info, vs_type, embed_model):
     # 创建知识库实例
-    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if not kb:
         kb = KnowledgeBaseModel(kb_name=kb_name, kb_info=kb_info, vs_type=vs_type, embed_model=embed_model)
         session.add(kb)
@@ -25,14 +25,14 @@ def list_kbs_from_db(session, min_file_count: int = -1):
 
 @with_session
 def kb_exists(session, kb_name):
-    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     status = True if kb else False
     return status
 
 
 @with_session
 def load_kb_from_db(session, kb_name):
-    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if kb:
         kb_name, vs_type, embed_model = kb.kb_name, kb.vs_type, kb.embed_model
     else:
@@ -42,7 +42,7 @@ def load_kb_from_db(session, kb_name):
 
 @with_session
 def delete_kb_from_db(session, kb_name):
-    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if kb:
         session.delete(kb)
     return True
@@ -50,7 +50,7 @@ def delete_kb_from_db(session, kb_name):
 
 @with_session
 def get_kb_detail(session, kb_name: str) -> dict:
-    kb: KnowledgeBaseModel = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    kb: KnowledgeBaseModel = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if kb:
         return {
             "kb_name": kb.kb_name,

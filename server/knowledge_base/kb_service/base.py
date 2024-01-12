@@ -2,7 +2,7 @@ import operator
 from abc import ABC, abstractmethod
 
 import os
-
+from pathlib import Path
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
@@ -26,8 +26,8 @@ from server.knowledge_base.utils import (
 
 from typing import List, Union, Dict, Optional
 
-from server.embeddings_api import embed_texts
-from server.embeddings_api import embed_documents
+from server.embeddings_api import embed_texts, aembed_texts, embed_documents
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 
 
 def normalize(embeddings: List[List[float]]) -> np.ndarray:
@@ -111,12 +111,21 @@ class KBService(ABC):
         if docs:
             custom_docs = True
             for doc in docs:
-                doc.metadata.setdefault("source", kb_file.filepath)
+                doc.metadata.setdefault("source", kb_file.filename)
         else:
             docs = kb_file.file2text()
             custom_docs = False
 
         if docs:
+            # 将 metadata["source"] 改为相对路径
+            for doc in docs:
+                try:
+                    source = doc.metadata.get("source", "")
+                    if os.path.isabs(source):
+                        rel_path = Path(source).relative_to(self.doc_path)
+                        doc.metadata["source"] = str(rel_path.as_posix().strip("/"))
+                except Exception as e:
+                    print(f"cannot convert absolute path ({source}) to relative path. error is : {e}")
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
             status = add_file_to_db(kb_file,
@@ -168,19 +177,49 @@ class KBService(ABC):
                     query: str,
                     top_k: int = VECTOR_SEARCH_TOP_K,
                     score_threshold: float = SCORE_THRESHOLD,
-                    ):
+                    ) ->List[Document]:
         docs = self.do_search(query, top_k, score_threshold)
         return docs
 
-    def get_doc_by_id(self, id: str) -> Optional[Document]:
-        return None
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        return []
 
-    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[Document]:
+    def del_doc_by_ids(self, ids: List[str]) -> bool:
+        raise NotImplementedError
+
+    def update_doc_by_ids(self, docs: Dict[str, Document]) -> bool:
+        '''
+        传入参数为： {doc_id: Document, ...}
+        如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
+        TODO：是否要支持新增 docs ？
+        '''
+        self.del_doc_by_ids(list(docs.keys()))
+        docs = []
+        ids = []
+        for k, v in docs.items():
+            if not v or not v.page_content.strip():
+                continue
+            ids.append(k)
+            docs.append(v)
+        self.do_add_doc(docs=docs, ids=ids)
+        return True
+
+    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
         '''
         通过file_name或metadata检索Document
         '''
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
-        docs = [self.get_doc_by_id(x["id"]) for x in doc_infos]
+        docs = []
+        for x in doc_infos:
+            doc_info = self.get_doc_by_ids([x["id"]])[0]
+            if doc_info is not None:
+                # 处理非空的情况
+                doc_with_id = DocumentWithVSId(**doc_info.dict(), id=x["id"])
+                docs.append(doc_with_id)
+            else:
+                # 处理空的情况
+                # 可以选择跳过当前循环迭代或执行其他操作
+                pass
         return docs
 
     @abstractmethod
@@ -231,6 +270,7 @@ class KBService(ABC):
     @abstractmethod
     def do_add_doc(self,
                    docs: List[Document],
+                   **kwargs,
                    ) -> List[Dict]:
         """
         向知识库添加文档子类实自己逻辑
@@ -353,12 +393,13 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
             "in_folder": True,
             "in_db": False,
         }
+    lower_names = {x.lower(): x for x in result}
     for doc in files_in_db:
         doc_detail = get_file_detail(kb_name, doc)
         if doc_detail:
             doc_detail["in_db"] = True
-            if doc in result:
-                result[doc].update(doc_detail)
+            if doc.lower() in lower_names:
+                result[lower_names[doc.lower()]].update(doc_detail)
             else:
                 doc_detail["in_folder"] = False
                 result[doc] = doc_detail
@@ -386,12 +427,16 @@ class EmbeddingsFunAdapter(Embeddings):
         normalized_query_embed = normalize(query_embed_2d)
         return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
-    # TODO: 暂不支持异步
-    # async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
-    #     return normalize(await self.embeddings.aembed_documents(texts))
+    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings = (await aembed_texts(texts=texts, embed_model=self.embed_model, to_query=False)).data
+        return normalize(embeddings).tolist()
 
-    # async def aembed_query(self, text: str) -> List[float]:
-    #     return normalize(await self.embeddings.aembed_query(text))
+    async def aembed_query(self, text: str) -> List[float]:
+        embeddings = (await aembed_texts(texts=[text], embed_model=self.embed_model, to_query=True)).data
+        query_embed = embeddings[0]
+        query_embed_2d = np.reshape(query_embed, (1, -1))  # 将一维数组转换为二维数组
+        normalized_query_embed = normalize(query_embed_2d)
+        return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
 
 def score_threshold_process(score_threshold, k, docs):

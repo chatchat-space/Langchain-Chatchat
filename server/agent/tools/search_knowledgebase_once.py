@@ -218,7 +218,7 @@ class LLMKnowledgeChain(LLMChain):
         return cls(llm_chain=llm_chain, **kwargs)
 
 
-def knowledge_search_once(query: str):
+def search_knowledgebase_once(query: str):
     model = model_container.MODEL
     llm_knowledge = LLMKnowledgeChain.from_llm(model, verbose=True, prompt=PROMPT)
     ans = llm_knowledge.run(query)
@@ -226,9 +226,9 @@ def knowledge_search_once(query: str):
 
 
 class KnowledgeSearchInput(BaseModel):
-    location: str = Field(description="知识库查询的内容")
+    location: str = Field(description="The query to be searched")
 
 
 if __name__ == "__main__":
-    result = knowledge_search_once("大数据的男女比例")
+    result = search_knowledgebase_once("大数据的男女比例")
     print(result)

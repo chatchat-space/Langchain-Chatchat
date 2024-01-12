@@ -1,0 +1,10 @@
+name: search_youtube
+description: Use this tools to search youtube videos
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: Query for Videos search
+required:
+  - query

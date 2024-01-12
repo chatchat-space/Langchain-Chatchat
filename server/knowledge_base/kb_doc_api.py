@@ -8,21 +8,19 @@ from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder, get_file_path,
                                          files2docs_in_thread, KnowledgeFile)
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
+from sse_starlette import EventSourceResponse
 from pydantic import Json
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import get_file_detail
-from typing import List
 from langchain.docstore.document import Document
-
-
-class DocumentWithScore(Document):
-    score: float = None
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from typing import List, Dict
 
 
 def search_docs(
-        query: str = Body(..., description="用户输入", examples=["你好"]),
+        query: str = Body("", description="用户输入", examples=["你好"]),
         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
         score_threshold: float = Body(SCORE_THRESHOLD,
@@ -30,13 +28,34 @@ def search_docs(
                                                   "SCORE越小，相关度越高，"
                                                   "取到1相当于不筛选，建议设置在0.5左右",
                                       ge=0, le=1),
-) -> List[DocumentWithScore]:
+        file_name: str = Body("", description="文件名称，支持 sql 通配符"),
+        metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
+) -> List[DocumentWithVSId]:
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    data = []
+    if kb is not None:
+        if query:
+            docs = kb.search_docs(query, top_k, score_threshold)
+            data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
+        elif file_name or metadata:
+            data = kb.list_docs(file_name=file_name, metadata=metadata)
+    return data
+
+
+def update_docs_by_id(
+        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+        docs: Dict[str, Document] = Body(..., description="要更新的文档内容，形如：{id: Document, ...}")
+) -> BaseResponse:
+    '''
+    按照文档 ID 更新文档内容
+    '''
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
-        return []
-    docs = kb.search_docs(query, top_k, score_threshold)
-    data = [DocumentWithScore(**x[0].dict(), score=x[1]) for x in docs]
-    return data
+        return BaseResponse(code=500, msg=f"指定的知识库 {knowledge_base_name} 不存在")
+    if kb.update_doc_by_ids(docs=docs):
+        return BaseResponse(msg=f"文档更新成功")
+    else:
+        return BaseResponse(msg=f"文档更新失败")
 
 
 def list_files(
@@ -81,6 +100,8 @@ def _save_files_in_thread(files: List[UploadFile],
                 logger.warn(file_status)
                 return dict(code=404, msg=file_status, data=data)
 
+            if not os.path.isdir(os.path.dirname(file_path)):
+                os.makedirs(os.path.dirname(file_path))
             with open(file_path, "wb") as f:
                 f.write(file_content)
             return dict(code=200, msg=f"成功上传文件 {filename}", data=data)
@@ -93,20 +114,6 @@ def _save_files_in_thread(files: List[UploadFile],
     params = [{"file": file, "knowledge_base_name": knowledge_base_name, "override": override} for file in files]
     for result in run_in_thread_pool(save_file, params=params):
         yield result
-
-
-# 似乎没有单独增加一个文件上传API接口的必要
-# def upload_files(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
-#                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
-#                 override: bool = Form(False, description="覆盖已有文件")):
-#     '''
-#     API接口：上传文件。流式返回保存结果：{"code":200, "msg": "xxx", "data": {"knowledge_base_name":"xxx", "file_name": "xxx"}}
-#     '''
-#     def generate(files, knowledge_base_name, override):
-#         for result in _save_files_in_thread(files, knowledge_base_name=knowledge_base_name, override=override):
-#             yield json.dumps(result, ensure_ascii=False)
-
-#     return StreamingResponse(generate(files, knowledge_base_name=knowledge_base_name, override=override), media_type="text/event-stream")
 
 
 # TODO: 等langchain.document_loaders支持内存文件的时候再开通
@@ -395,4 +402,4 @@ def recreate_vector_store(
             if not not_refresh_vs_cache:
                 kb.save_vector_store()
 
-    return StreamingResponse(output(), media_type="text/event-stream")
+    return EventSourceResponse(output())

@@ -9,6 +9,7 @@ from typing import List, Literal, Dict
 from fastchat import conversation as conv
 from server.model_workers.base import *
 from server.model_workers.base import ApiEmbeddingsParams
+from configs import logger, log_verbose
 
 
 class QwenWorker(ApiModelWorker):
@@ -31,6 +32,8 @@ class QwenWorker(ApiModelWorker):
     def do_chat(self, params: ApiChatParams) -> Dict:
         import dashscope
         params.load_config(self.model_names[0])
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:params: {params}')
 
         gen = dashscope.Generation()
         responses = gen.call(
@@ -50,15 +53,24 @@ class QwenWorker(ApiModelWorker):
                         "text": choices[0]["message"]["content"],
                     }
             else:
-                yield {
+                data = {
                     "error_code": resp["status_code"],
                     "text": resp["message"],
+                    "error": {
+                        "message": resp["message"],
+                        "type": "invalid_request_error",
+                        "param": None,
+                        "code": None,
+                    }
                 }
+                self.logger.error(f"请求千问 API 时发生错误：{data}")
+                yield data
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         import dashscope
         params.load_config(self.model_names[0])
-
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:params: {params}')
         result = []
         i = 0
         while i < len(params.texts):
@@ -69,7 +81,18 @@ class QwenWorker(ApiModelWorker):
                 api_key=params.api_key,
             )
             if resp["status_code"] != 200:
-                return {"code": resp["status_code"], "msg": resp.message}
+                data = {
+                            "code": resp["status_code"],
+                            "msg": resp.message,
+                            "error": {
+                                "message": resp["message"],
+                                "type": "invalid_request_error",
+                                "param": None,
+                                "code": None,
+                            }
+                        }
+                self.logger.error(f"请求千问 API 时发生错误：{data}")
+                return data
             else:
                 embeddings = [x["embedding"] for x in resp["output"]["embeddings"]]
                 result += embeddings

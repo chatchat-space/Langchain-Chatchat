@@ -9,10 +9,12 @@ from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.chat_models import ChatOpenAI, AzureChatOpenAI, ChatAnthropic
-from langchain.llms import OpenAI, AzureOpenAI, Anthropic
+from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 import httpx
-from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union
+from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
+import logging
+import torch
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -20,6 +22,7 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     try:
         await fn
     except Exception as e:
+        logging.exception(e)
         # TODO: handle exception
         msg = f"Caught exception: {e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
@@ -38,11 +41,10 @@ def get_ChatOpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> ChatOpenAI:
-    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
-    config_models = list_config_llm_models()
-
-    ## 非Langchain原生支持的模型，走Fschat封装
     config = get_model_worker_config(model_name)
+    if model_name == "openai-api":
+        model_name = config.get("model_name")
+
     model = ChatOpenAI(
         streaming=streaming,
         verbose=verbose,
@@ -55,7 +57,6 @@ def get_ChatOpenAI(
         openai_proxy=config.get("openai_proxy"),
         **kwargs
     )
-
     return model
 
 
@@ -69,67 +70,22 @@ def get_OpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> OpenAI:
-    ## 以下模型是Langchain原生支持的模型，这些模型不会走Fschat封装
-    config_models = list_config_llm_models()
-    if model_name in config_models.get("langchain", {}):
-        config = config_models["langchain"][model_name]
-        if model_name == "Azure-OpenAI":
-            model = AzureOpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                deployment_name=config.get("deployment_name"),
-                model_version=config.get("model_version"),
-                openai_api_type=config.get("openai_api_type"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_version=config.get("api_version"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-                echo=echo,
-            )
-
-        elif model_name == "OpenAI":
-            model = OpenAI(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                openai_api_base=config.get("api_base_url"),
-                openai_api_key=config.get("api_key"),
-                openai_proxy=config.get("openai_proxy"),
-                temperature=temperature,
-                max_tokens=max_tokens,
-                echo=echo,
-            )
-        elif model_name == "Anthropic":
-            model = Anthropic(
-                streaming=streaming,
-                verbose=verbose,
-                callbacks=callbacks,
-                model_name=config.get("model_name"),
-                anthropic_api_key=config.get("api_key"),
-                echo=echo,
-            )
-    ## TODO 支持其他的Langchain原生支持的模型
-    else:
-        ## 非Langchain原生支持的模型，走Fschat封装
-        config = get_model_worker_config(model_name)
-        model = OpenAI(
-            streaming=streaming,
-            verbose=verbose,
-            callbacks=callbacks,
-            openai_api_key=config.get("api_key", "EMPTY"),
-            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            openai_proxy=config.get("openai_proxy"),
-            echo=echo,
-            **kwargs
-        )
-
+    config = get_model_worker_config(model_name)
+    if model_name == "openai-api":
+        model_name = config.get("model_name")
+    model = OpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key=config.get("api_key", "EMPTY"),
+        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        openai_proxy=config.get("openai_proxy"),
+        echo=echo,
+        **kwargs
+    )
     return model
 
 
@@ -197,7 +153,6 @@ class ChatMessage(BaseModel):
 
 def torch_gc():
     try:
-        import torch
         if torch.cuda.is_available():
             # with torch.cuda.device(DEVICE):
             torch.cuda.empty_cache()
@@ -342,13 +297,14 @@ def list_embed_models() -> List[str]:
 def list_config_llm_models() -> Dict[str, Dict]:
     '''
     get configured llm models with different types.
-    return [(model_name, config_type), ...]
+    return {config_type: {model_name: config}, ...}
     '''
-    workers = list(FSCHAT_MODEL_WORKERS)
+    workers = FSCHAT_MODEL_WORKERS.copy()
+    workers.pop("default", None)
 
     return {
-        "local": MODEL_PATH["llm_model"],
-        "online": ONLINE_LLM_MODEL,
+        "local": MODEL_PATH["llm_model"].copy(),
+        "online": ONLINE_LLM_MODEL.copy(),
         "worker": workers,
     }
 
@@ -406,7 +362,10 @@ def get_model_worker_config(model_name: str = None) -> dict:
                              exc_info=e if log_verbose else None)
     # 本地模型
     if model_name in MODEL_PATH["llm_model"]:
-        config["model_path"] = get_model_path(model_name)
+        path = get_model_path(model_name)
+        config["model_path"] = path
+        if path and os.path.isdir(path):
+            config["model_path_exists"] = True
         config["device"] = llm_device(config.get("device"))
     return config
 
@@ -541,29 +500,58 @@ def set_httpx_config(
     # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
 
+def is_mps_available():
+    return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
+
+
+def is_cuda_available():
+    return torch.cuda.is_available()
+
+
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
     try:
-        import torch
         if torch.cuda.is_available():
             return "cuda"
-        if torch.backends.mps.is_available():
+        if is_mps_available():
             return "mps"
     except:
         pass
     return "cpu"
 
 
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
     device = device or LLM_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
+        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
         device = detect_device()
+    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
+        logging.warning("cuda is not available, fallback to mps")
+        return "mps"
+    if device == 'mps' and not is_mps_available() and is_cuda_available():
+        logging.warning("mps is not available, fallback to cuda")
+        return "cuda"
+
+    # auto detect device if not specified
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
+        return detect_device()
     return device
 
 
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
-    device = device or EMBEDDING_DEVICE
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
+    device = device or LLM_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
+        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
         device = detect_device()
+    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
+        logging.warning("cuda is not available, fallback to mps")
+        return "mps"
+    if device == 'mps' and not is_mps_available() and is_cuda_available():
+        logging.warning("mps is not available, fallback to cuda")
+        return "cuda"
+
+    # auto detect device if not specified
+    if device not in ["cuda", "mps", "cpu"]:
+        return detect_device()
     return device
 
 
@@ -623,7 +611,8 @@ def get_httpx_client(
     })
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
-            default_proxies.update({host: None})
+            # default_proxies.update({host: None}) # Origin code
+            default_proxies.update({'all://' + host: None})  # PR 1838 fix, if not add 'all://', httpx will raise error
 
     # merge default proxies with user provided proxies
     if isinstance(proxies, str):
@@ -634,7 +623,10 @@ def get_httpx_client(
 
     # construct Client
     kwargs.update(timeout=timeout, proxies=default_proxies)
-    print(kwargs)
+
+    if log_verbose:
+        logger.info(f'{get_httpx_client.__class__.__name__}:kwargs: {kwargs}')
+
     if use_async:
         return httpx.AsyncClient(**kwargs)
     else:
@@ -695,3 +687,19 @@ def load_local_embeddings(model: str = None, device: str = embedding_device()):
 
     model = model or EMBEDDING_MODEL
     return embeddings_pool.load_embeddings(model=model, device=device)
+
+
+def get_temp_dir(id: str = None) -> Tuple[str, str]:
+    '''
+    创建一个临时目录，返回（路径，文件夹名称）
+    '''
+    from configs.basic_config import BASE_TEMP_DIR
+    import tempfile
+
+    if id is not None:  # 如果指定的临时目录已存在，直接返回
+        path = os.path.join(BASE_TEMP_DIR, id)
+        if os.path.isdir(path):
+            return path, id
+
+    path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
+    return path, os.path.basename(path)

@@ -1,0 +1,10 @@
+name: search_internet
+description: Use this tool to surf internet and get information
+parameters:
+  type: object
+  properties:
+    query:
+      type: string
+      description: Query for Internet search
+required:
+  - query

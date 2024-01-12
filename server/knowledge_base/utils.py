@@ -16,10 +16,9 @@ import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
-import json
 from server.utils import run_in_thread_pool, get_model_worker_config
-import io
-from typing import List, Union, Callable, Dict, Optional, Tuple, Generator
+import json
+from typing import List, Union,Dict, Tuple, Generator
 import chardet
 
 
@@ -54,26 +53,45 @@ def list_kbs_from_folder():
 def list_files_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
     result = []
-    for root, _, files in os.walk(doc_path):
-        tail = os.path.basename(root).lower()
-        if (tail.startswith("temp")
-            or tail.startswith("tmp")
-            or tail.startswith(".")): # 跳过 [temp, tmp, .] 开头的文件夹
-            continue
-        for file in files:
-            if file.startswith("~$"): # 跳过 ~$ 开头的文件
-                continue
-            path = Path(doc_path) / root / file
-            result.append(path.resolve().relative_to(doc_path).as_posix())
+
+    def is_skiped_path(path: str):
+        tail = os.path.basename(path).lower()
+        for x in ["temp", "tmp", ".", "~$"]:
+            if tail.startswith(x):
+                return True
+        return False
+
+    def process_entry(entry):
+        if is_skiped_path(entry.path):
+            return
+
+        if entry.is_symlink():
+            target_path = os.path.realpath(entry.path)
+            with os.scandir(target_path) as target_it:
+                for target_entry in target_it:
+                    process_entry(target_entry)
+        elif entry.is_file():
+            file_path = (Path(os.path.relpath(entry.path, doc_path)).as_posix()) # 路径统一为 posix 格式
+            result.append(file_path)
+        elif entry.is_dir():
+            with os.scandir(entry.path) as it:
+                for sub_entry in it:
+                    process_entry(sub_entry)
+
+    with os.scandir(doc_path) as it:
+        for entry in it:
+            process_entry(entry)
 
     return result
 
 
 LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
+               "MHTMLLoader": ['.mhtml'],
                "UnstructuredMarkdownLoader": ['.md'],
-               "CustomJSONLoader": [".json"],
+               "JSONLoader": [".json"],
+               "JSONLinesLoader": [".jsonl"],
                "CSVLoader": [".csv"],
-               # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
+               # "FilteredCSVLoader": [".csv"], 如果使用自定义分割csv
                "RapidOCRPDFLoader": [".pdf"],
                "RapidOCRDocLoader": ['.docx', '.doc'],
                "RapidOCRPPTLoader": ['.ppt', '.pptx', ],
@@ -81,64 +99,45 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
                                           '.rtf', '.txt', '.xml',
                                           '.epub', '.odt','.tsv'],
+               "UnstructuredEmailLoader": ['.eml', '.msg'],
+               "UnstructuredEPubLoader": ['.epub'],
+               "UnstructuredExcelLoader": ['.xlsx', '.xls', '.xlsd'],
+               "NotebookLoader": ['.ipynb'],
+               "UnstructuredODTLoader": ['.odt'],
+               "PythonLoader": ['.py'],
+               "UnstructuredRSTLoader": ['.rst'],
+               "UnstructuredRTFLoader": ['.rtf'],
+               "SRTLoader": ['.srt'],
+               "TomlLoader": ['.toml'],
+               "UnstructuredTSVLoader": ['.tsv'],
+               "UnstructuredWordDocumentLoader": ['.docx', '.doc'],
+               "UnstructuredXMLLoader": ['.xml'],
+               "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
+               "EverNoteLoader": ['.enex'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
 
-class CustomJSONLoader(langchain.document_loaders.JSONLoader):
+# patch json.dumps to disable ensure_ascii
+def _new_json_dumps(obj, **kwargs):
+    kwargs["ensure_ascii"] = False
+    return _origin_json_dumps(obj, **kwargs)
+
+if json.dumps is not _new_json_dumps:
+    _origin_json_dumps = json.dumps
+    json.dumps = _new_json_dumps
+
+
+class JSONLinesLoader(langchain.document_loaders.JSONLoader):
     '''
-    langchain的JSONLoader需要jq，在win上使用不便，进行替代。针对langchain==0.0.286
+    行式 Json 加载器，要求文件扩展名为 .jsonl
     '''
-
-    def __init__(
-            self,
-            file_path: Union[str, Path],
-            content_key: Optional[str] = None,
-            metadata_func: Optional[Callable[[Dict, Dict], Dict]] = None,
-            text_content: bool = True,
-            json_lines: bool = False,
-    ):
-        """Initialize the JSONLoader.
-
-        Args:
-            file_path (Union[str, Path]): The path to the JSON or JSON Lines file.
-            content_key (str): The key to use to extract the content from the JSON if
-                results to a list of objects (dict).
-            metadata_func (Callable[Dict, Dict]): A function that takes in the JSON
-                object extracted by the jq_schema and the default metadata and returns
-                a dict of the updated metadata.
-            text_content (bool): Boolean flag to indicate whether the content is in
-                string format, default to True.
-            json_lines (bool): Boolean flag to indicate whether the input is in
-                JSON Lines format.
-        """
-        self.file_path = Path(file_path).resolve()
-        self._content_key = content_key
-        self._metadata_func = metadata_func
-        self._text_content = text_content
-        self._json_lines = json_lines
-
-    def _parse(self, content: str, docs: List[Document]) -> None:
-        """Convert given content to documents."""
-        data = json.loads(content)
-
-        # Perform some validation
-        # This is not a perfect validation, but it should catch most cases
-        # and prevent the user from getting a cryptic error later on.
-        if self._content_key is not None:
-            self._validate_content_key(data)
-        if self._metadata_func is not None:
-            self._validate_metadata_func(data)
-
-        for i, sample in enumerate(data, len(docs) + 1):
-            text = self._get_text(sample=sample)
-            metadata = self._get_metadata(
-                sample=sample, source=str(self.file_path), seq_num=i
-            )
-            docs.append(Document(page_content=text, metadata=metadata))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._json_lines = True
 
 
-langchain.document_loaders.CustomJSONLoader = CustomJSONLoader
+langchain.document_loaders.JSONLinesLoader = JSONLinesLoader
 
 
 def get_LoaderClass(file_extension):
@@ -146,12 +145,11 @@ def get_LoaderClass(file_extension):
         if file_extension in extensions:
             return LoaderClass
 
-
-# 把一些向量化共用逻辑从KnowledgeFile抽取出来，等langchain支持内存文件的时候，可以将非磁盘文件向量化
-def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.StringIO, io.BytesIO]):
+def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     '''
     根据loader_name和文件路径或内容返回文档加载器。
     '''
+    loader_kwargs = loader_kwargs or {}
     try:
         if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
                            "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
@@ -160,34 +158,32 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
             document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
-        msg = f"为文件{file_path_or_content}查找加载器{loader_name}时出错：{e}"
+        msg = f"为文件{file_path}查找加载器{loader_name}时出错：{e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
         document_loaders_module = importlib.import_module('langchain.document_loaders')
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
     if loader_name == "UnstructuredFileLoader":
-        loader = DocumentLoader(file_path_or_content, autodetect_encoding=True)
+        loader_kwargs.setdefault("autodetect_encoding", True)
     elif loader_name == "CSVLoader":
-        # 自动识别文件编码类型，避免langchain loader 加载文件报编码错误
-        with open(file_path_or_content, 'rb') as struct_file:
-            encode_detect = chardet.detect(struct_file.read())
-        if encode_detect is None:
-            encode_detect = {"encoding": "utf-8"}
-
-        loader = DocumentLoader(file_path_or_content, encoding=encode_detect["encoding"])
+        if not loader_kwargs.get("encoding"):
+            # 如果未指定 encoding，自动识别文件编码类型，避免langchain loader 加载文件报编码错误
+            with open(file_path, 'rb') as struct_file:
+                encode_detect = chardet.detect(struct_file.read())
+            if encode_detect is None:
+                encode_detect = {"encoding": "utf-8"}
+            loader_kwargs["encoding"] = encode_detect["encoding"]
         ## TODO：支持更多的自定义CSV读取逻辑
 
     elif loader_name == "JSONLoader":
-        loader = DocumentLoader(file_path_or_content, jq_schema=".", text_content=False)
-    elif loader_name == "CustomJSONLoader":
-        loader = DocumentLoader(file_path_or_content, text_content=False)
-    elif loader_name == "UnstructuredMarkdownLoader":
-        loader = DocumentLoader(file_path_or_content, mode="elements")
-    elif loader_name == "UnstructuredHTMLLoader":
-        loader = DocumentLoader(file_path_or_content, mode="elements")
-    else:
-        loader = DocumentLoader(file_path_or_content)
+        loader_kwargs.setdefault("jq_schema", ".")
+        loader_kwargs.setdefault("text_content", False)
+    elif loader_name == "JSONLinesLoader":
+        loader_kwargs.setdefault("jq_schema", ".")
+        loader_kwargs.setdefault("text_content", False)
+
+    loader = DocumentLoader(file_path, **loader_kwargs)
     return loader
 
 
@@ -265,7 +261,7 @@ def make_text_splitter(
         print(e)
         text_splitter_module = importlib.import_module('langchain.text_splitter')
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
-        text_splitter = TextSplitter(chunk_size=250, chunk_overlap=50)
+        text_splitter = TextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     return text_splitter
 
 
@@ -273,16 +269,18 @@ class KnowledgeFile:
     def __init__(
             self,
             filename: str,
-            knowledge_base_name: str
+            knowledge_base_name: str,
+            loader_kwargs: Dict = {},
     ):
         '''
         对应知识库目录中的文件，必须是磁盘上存在的才能进行向量化等操作。
         '''
         self.kb_name = knowledge_base_name
-        self.filename = filename
+        self.filename = str(Path(filename).as_posix())
         self.ext = os.path.splitext(filename)[-1].lower()
         if self.ext not in SUPPORTED_EXTS:
-            raise ValueError(f"暂未支持的文件格式 {self.ext}")
+            raise ValueError(f"暂未支持的文件格式 {self.filename}")
+        self.loader_kwargs = loader_kwargs
         self.filepath = get_file_path(knowledge_base_name, filename)
         self.docs = None
         self.splited_docs = None
@@ -292,7 +290,9 @@ class KnowledgeFile:
     def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
             logger.info(f"{self.document_loader_name} used for {self.filepath}")
-            loader = get_loader(self.document_loader_name, self.filepath)
+            loader = get_loader(loader_name=self.document_loader_name,
+                                file_path=self.filepath,
+                                loader_kwargs=self.loader_kwargs)
             self.docs = loader.load()
         return self.docs
 
@@ -314,12 +314,11 @@ class KnowledgeFile:
                                                    chunk_overlap=chunk_overlap)
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
-                for doc in docs:
-                    # 如果文档有元数据
-                    if doc.metadata:
-                        doc.metadata["source"] = os.path.basename(self.filepath)
             else:
                 docs = text_splitter.split_documents(docs)
+
+        if not docs:
+            return []
 
         print(f"文档切分示例：{docs[0]}")
         if zh_title_enhance:

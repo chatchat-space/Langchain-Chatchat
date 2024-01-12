@@ -15,10 +15,6 @@ from typing import Dict, List, Optional
 
 __all__ = ["ApiModelWorker", "ApiChatParams", "ApiCompletionParams", "ApiEmbeddingsParams"]
 
-# 恢复被fastchat覆盖的标准输出
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
-
 
 class ApiConfigParams(BaseModel):
     '''
@@ -110,10 +106,15 @@ class ApiModelWorker(BaseModelWorker):
                         controller_addr=controller_addr,
                         worker_addr=worker_addr,
                         **kwargs)
+        import fastchat.serve.base_model_worker
         import sys
+        self.logger = fastchat.serve.base_model_worker.logger
         # 恢复被fastchat覆盖的标准输出
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
 
         self.context_len = context_len
         self.semaphore = asyncio.Semaphore(self.limit_worker_concurrency)

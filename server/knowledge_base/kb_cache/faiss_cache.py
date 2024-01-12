@@ -1,12 +1,26 @@
-from configs import CACHED_VS_NUM
+from configs import CACHED_VS_NUM, CACHED_MEMO_VS_NUM
 from server.knowledge_base.kb_cache.base import *
 from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 from server.utils import load_local_embeddings
 from server.knowledge_base.utils import get_vs_path
 from langchain.vectorstores.faiss import FAISS
+from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.schema import Document
 import os
 from langchain.schema import Document
+
+
+# patch FAISS to include doc id in Document.metadata
+def _new_ds_search(self, search: str) -> Union[str, Document]:
+    if search not in self._dict:
+        return f"ID {search} not found."
+    else:
+        doc = self._dict[search]
+        if isinstance(doc, Document):
+            doc.metadata["id"] = search
+        return doc
+InMemoryDocstore.search = _new_ds_search
+
 
 class ThreadSafeFaiss(ThreadSafeObject):
     def __repr__(self) -> str:
@@ -45,7 +59,7 @@ class _FaissPool(CachePool):
         # create an empty vector store
         embeddings = EmbeddingsFunAdapter(embed_model)
         doc = Document(page_content="init", metadata={})
-        vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True)
+        vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True,distance_strategy="METRIC_INNER_PRODUCT")
         ids = list(vector_store.docstore._dict.keys())
         vector_store.delete(ids)
         return vector_store
@@ -82,7 +96,7 @@ class KBFaissPool(_FaissPool):
 
                 if os.path.isfile(os.path.join(vs_path, "index.faiss")):
                     embeddings = self.load_kb_embeddings(kb_name=kb_name, embed_device=embed_device, default_embed_model=embed_model)
-                    vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True)
+                    vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True,distance_strategy="METRIC_INNER_PRODUCT")
                 elif create:
                     # create an empty vector store
                     if not os.path.exists(vs_path):
@@ -123,7 +137,7 @@ class MemoFaissPool(_FaissPool):
 
 
 kb_faiss_pool = KBFaissPool(cache_num=CACHED_VS_NUM)
-memo_faiss_pool = MemoFaissPool()
+memo_faiss_pool = MemoFaissPool(cache_num=CACHED_MEMO_VS_NUM)
 
 
 if __name__ == "__main__":

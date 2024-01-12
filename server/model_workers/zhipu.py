@@ -3,6 +3,7 @@ from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
 from typing import List, Dict, Iterator, Literal
+from configs import logger, log_verbose
 
 
 class ChatGLMWorker(ApiModelWorker):
@@ -29,6 +30,9 @@ class ChatGLMWorker(ApiModelWorker):
         params.load_config(self.model_names[0])
         zhipuai.api_key = params.api_key
 
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:params: {params}')
+
         response = zhipuai.model_api.sse_invoke(
             model=params.version,
             prompt=params.messages,
@@ -40,7 +44,18 @@ class ChatGLMWorker(ApiModelWorker):
             if e.event == "add":
                 yield {"error_code": 0, "text": e.data}
             elif e.event in ["error", "interrupted"]:
-                yield {"error_code": 500, "text": str(e)}
+                data = {
+                    "error_code": 500,
+                    "text": e.data,
+                    "error": {
+                        "message": e.data,
+                        "type": "invalid_request_error",
+                        "param": None,
+                        "code": None,
+                    }
+                }
+                self.logger.error(f"请求智谱 API 时发生错误：{data}")
+                yield data
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         import zhipuai
@@ -55,9 +70,12 @@ class ChatGLMWorker(ApiModelWorker):
                 if response["code"] == 200:
                     embeddings.append(response["data"]["embedding"])
                 else:
-                    return response # dict with code & msg
+                    self.logger.error(f"请求智谱 API 时发生错误：{response}")
+                    return response  # dict with code & msg
         except Exception as e:
-            return {"code": 500, "msg": f"对文本向量化时出错：{e}"}
+            self.logger.error(f"请求智谱 API 时发生错误：{data}")
+            data = {"code": 500, "msg": f"对文本向量化时出错：{e}"}
+            return data
 
         return {"code": 200, "data": embeddings}
 
