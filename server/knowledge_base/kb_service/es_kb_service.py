@@ -15,7 +15,7 @@ class ESKBService(KBService):
 
     def do_init(self):
         self.kb_path = self.get_kb_path(self.kb_name)
-        self.index_name = self.kb_path.split("/")[-1]
+        self.index_name = kbs_config[self.vs_type()]['index_name']
         self.IP = kbs_config[self.vs_type()]['host']
         self.PORT = kbs_config[self.vs_type()]['port']
         self.user = kbs_config[self.vs_type()].get("user",'')
@@ -25,11 +25,11 @@ class ESKBService(KBService):
         try:
             # ES python客户端连接（仅连接）
             if self.user != "" and self.password != "":
-                self.es_client_python =  Elasticsearch(f"http://{self.IP}:{self.PORT}",
+                self.es_client_python =  Elasticsearch(f"https://{self.IP}:{self.PORT}",
                 basic_auth=(self.user,self.password))
             else:
                 logger.warning("ES未配置用户名和密码")
-                self.es_client_python = Elasticsearch(f"http://{self.IP}:{self.PORT}")
+                self.es_client_python = Elasticsearch(f"https://{self.IP}:{self.PORT}")
         except ConnectionError:
             logger.error("连接到 Elasticsearch 失败！")
             raise ConnectionError
@@ -47,7 +47,7 @@ class ESKBService(KBService):
             # langchain ES 连接、创建索引
             if self.user != "" and self.password != "":
                 self.db_init = ElasticsearchStore(
-                es_url=f"http://{self.IP}:{self.PORT}",
+                es_url=f"https://{self.IP}:{self.PORT}",
                 index_name=self.index_name,
                 query_field="context",
                 vector_query_field="dense_vector",
@@ -58,7 +58,7 @@ class ESKBService(KBService):
             else:
                 logger.warning("ES未配置用户名和密码")
                 self.db_init = ElasticsearchStore(
-                    es_url=f"http://{self.IP}:{self.PORT}",
+                    es_url=f"https://{self.IP}:{self.PORT}",
                     index_name=self.index_name,
                     query_field="context",
                     vector_query_field="dense_vector",
@@ -110,7 +110,7 @@ class ESKBService(KBService):
                 self.db = ElasticsearchStore.from_documents(
                         documents=docs,
                         embedding=embed_model,
-                        es_url= f"http://{self.IP}:{self.PORT}",
+                        es_url= f"https://{self.IP}:{self.PORT}",
                         index_name=self.index_name,
                         distance_strategy="COSINE",
                         query_field="context",
@@ -123,7 +123,7 @@ class ESKBService(KBService):
                 self.db = ElasticsearchStore.from_documents(
                         documents=docs,
                         embedding=embed_model,
-                        es_url= f"http://{self.IP}:{self.PORT}",
+                        es_url= f"https://{self.IP}:{self.PORT}",
                         index_name=self.index_name,
                         distance_strategy="COSINE",
                         query_field="context",
