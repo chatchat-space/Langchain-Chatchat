@@ -56,6 +56,12 @@ ONLINE_LLM_MODEL = {
         "openai_proxy": "",
     },
 
+    # 获取api_key请前往https://makersuite.google.com/或者google cloud，使用前先确认网络正常，使用代理请在项目启动（python startup.py -a)环境内设置https_proxy环境变量
+    "gemini-api": {
+        "api_key": "", 
+        "provider": "GeminiWorker",
+    },
+
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
