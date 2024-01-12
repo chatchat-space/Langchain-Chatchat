@@ -1,6 +1,5 @@
 # API requirements
 
-# On Windows system, install the cuda version manually from https://pytorch.org/
 torch~=2.1.2
 torchvision~=0.16.2
 torchaudio~=2.1.2
@@ -8,30 +7,30 @@ xformers==0.0.23.post1
 transformers==4.36.2
 sentence_transformers==2.2.2
 
-langchain==0.0.352
+langchain==0.0.354
 langchain-experimental==0.0.47
 pydantic==1.10.13
 fschat==0.2.34
-openai~=1.6.0
-fastapi>=0.105
-sse_starlette
+openai~=1.7.1
+fastapi~=0.108.0
+sse_starlette==1.8.2
 nltk>=3.8.1
 uvicorn>=0.24.0.post1
-starlette~=0.27.0
+starlette~=0.32.0
 unstructured[all-docs]==0.11.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy==2.0.19
-faiss-cpu~=1.7.4 # `conda install faiss-gpu -c conda-forge` if you want to accelerate with gpus
-accelerate==0.24.1
+faiss-cpu~=1.7.4  # `conda install faiss-gpu -c conda-forge` if you want to accelerate with gpus
+accelerate~=0.24.1
 spacy~=3.7.2
 PyMuPDF~=1.23.8
 rapidocr_onnxruntime==1.3.8
-requests>=2.31.0
-pathlib>=1.0.1
-pytest>=7.4.3
-numexpr>=2.8.6 # max version for py38
-strsimpy>=0.2.1
-markdownify>=0.11.6
+requests~=2.31.0
+pathlib~=1.0.1
+pytest~=7.4.3
+numexpr~=2.8.6 # max version for py38
+strsimpy~=0.2.1
+markdownify~=0.11.6
 tiktoken~=0.5.2
 tqdm>=4.66.1
 websockets>=12.0
@@ -46,15 +45,14 @@ llama-index
 # optional document loaders
 
 # rapidocr_paddle[gpu]>=1.3.0.post5 # gpu accelleration for ocr of pdf and image files
-jq>=1.6.0 # for .json and .jsonl files. suggest `conda install jq` on windows
-# html2text # for .enex files
+jq==1.6.0 # for .json and .jsonl files. suggest `conda install jq` on windows
 beautifulsoup4~=4.12.2 # for .mhtml files
 pysrt~=1.1.2
 
 # Online api libs dependencies
 
-zhipuai>=1.0.7, <=2.0.0 # zhipu
-dashscope>=1.13.6 # qwen
+zhipuai==1.0.7 # zhipu
+dashscope==1.13.6 # qwen
 # volcengine>=1.0.119 # fangzhou
 
 # uncomment libs if you want to use corresponding vector store
@@ -64,14 +62,14 @@ dashscope>=1.13.6 # qwen
 
 # Agent and Search Tools
 
-arxiv>=2.0.0
-youtube-search>=2.1.2
-duckduckgo-search>=3.9.9
-metaphor-python>=0.1.23
+arxiv~=2.1.0
+youtube-search~=2.1.2
+duckduckgo-search~=3.9.9
+metaphor-python~=0.1.23
 
 # WebUI requirements
 
-streamlit~=1.29.0 # do remember to add streamlit to environment variables if you use windows
+streamlit~=1.29.0
 streamlit-option-menu>=0.3.6
 streamlit-chatbox==1.1.11
 streamlit-modal>=0.1.0

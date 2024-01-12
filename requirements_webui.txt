@@ -1,8 +1,9 @@
 # WebUI requirements
 
-streamlit~=1.29.0 # do remember to add streamlit to environment variables if you use windows
+streamlit>=1.29.0
 streamlit-option-menu>=0.3.6
-streamlit-chatbox==1.1.11
+streamlit-antd-components>=0.3.0
+streamlit-chatbox>=1.1.11
 streamlit-modal>=0.1.0
 streamlit-aggrid>=0.3.4.post3
 httpx[brotli,http2,socks]>=0.25.2

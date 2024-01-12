@@ -10,10 +10,11 @@ from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI, AzureOpenAI, Anthropic
+from langchain.llms import OpenAI
 import httpx
 from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
 import logging
+import torch
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -57,6 +58,7 @@ def get_ChatOpenAI(
         **kwargs
     )
     return model
+
 
 def get_OpenAI(
         model_name: str,
@@ -151,7 +153,6 @@ class ChatMessage(BaseModel):
 
 def torch_gc():
     try:
-        import torch
         if torch.cuda.is_available():
             # with torch.cuda.device(DEVICE):
             torch.cuda.empty_cache()
@@ -499,29 +500,58 @@ def set_httpx_config(
     # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
 
+def is_mps_available():
+    return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
+
+
+def is_cuda_available():
+    return torch.cuda.is_available()
+
+
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
     try:
-        import torch
         if torch.cuda.is_available():
             return "cuda"
-        if torch.backends.mps.is_available():
+        if is_mps_available():
             return "mps"
     except:
         pass
     return "cpu"
 
 
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
     device = device or LLM_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
+        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
         device = detect_device()
+    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
+        logging.warning("cuda is not available, fallback to mps")
+        return "mps"
+    if device == 'mps' and not is_mps_available() and is_cuda_available():
+        logging.warning("mps is not available, fallback to cuda")
+        return "cuda"
+
+    # auto detect device if not specified
+    if device not in ["cuda", "mps", "cpu", "xpu"]:
+        return detect_device()
     return device
 
 
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
-    device = device or EMBEDDING_DEVICE
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
+    device = device or LLM_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
+        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
         device = detect_device()
+    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
+        logging.warning("cuda is not available, fallback to mps")
+        return "mps"
+    if device == 'mps' and not is_mps_available() and is_cuda_available():
+        logging.warning("mps is not available, fallback to cuda")
+        return "cuda"
+
+    # auto detect device if not specified
+    if device not in ["cuda", "mps", "cpu"]:
+        return detect_device()
     return device
 
 

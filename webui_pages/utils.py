@@ -135,6 +135,8 @@ class ApiRequest:
                             try:
                                 if chunk.startswith("data: "):
                                     data = json.loads(chunk[6:-2])
+                                elif chunk.startswith(":"): # skip sse comment line
+                                    continue
                                 else:
                                     data = json.loads(chunk)
                                 yield data
@@ -169,6 +171,8 @@ class ApiRequest:
                             try:
                                 if chunk.startswith("data: "):
                                     data = json.loads(chunk[6:-2])
+                                elif chunk.startswith(":"): # skip sse comment line
+                                    continue
                                 else:
                                     data = json.loads(chunk)
                                 yield data

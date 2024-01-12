@@ -55,10 +55,10 @@ The main process analysis from the aspect of document process:
 🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update
-to v0.2.5.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v13 the codes are update
+to v0.2.9.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
+🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7)
 
 ## Pain Points Addressed
 
@@ -98,6 +98,7 @@ $ pip install -r requirements_webui.txt
 
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
+Please note that the LangChain-Chachat `0.2.x` series is for the Langchain `0.0.x` series version. If you are using the Langchain `0.1.x` series version, you need to downgrade.
 
 ### Model Download
 
