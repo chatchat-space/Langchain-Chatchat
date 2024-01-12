@@ -28,7 +28,7 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 
 # chatglm3-6b输出角色标签<|user|>及自问自答的问题详见项目wiki->常见问题->Q20.
 
-LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"] # "Qwen-1_8B-Chat",
+LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"]  # "Qwen-1_8B-Chat",
 
 # AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
 Agent_MODEL = None
@@ -54,6 +54,12 @@ ONLINE_LLM_MODEL = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "",
         "openai_proxy": "",
+    },
+
+    # 获取api_key请前往https://makersuite.google.com/或者google cloud，使用前先确认网络正常，使用代理请在项目启动（python startup.py -a)环境内设置https_proxy环境变量
+    "gemini-api": {
+        "api_key": "", 
+        "provider": "GeminiWorker",
     },
 
     # 具体注册及api key获取请前往 http://open.bigmodel.cn
@@ -105,6 +111,7 @@ ONLINE_LLM_MODEL = {
         "version": "qwen-turbo",  # 可选包括 "qwen-turbo", "qwen-plus"
         "api_key": "",  # 请在阿里云控制台模型服务灵积API-KEY管理页面创建
         "provider": "QwenWorker",
+        "embed_model": "text-embedding-v1" # embedding 模型名称
     },
 
     # 百川 API，申请方式请参考 https://www.baichuan-ai.com/home#api-enter
@@ -241,7 +248,7 @@ MODEL_PATH = {
         "agentlm-13b": "THUDM/agentlm-13b",
         "agentlm-70b": "THUDM/agentlm-70b",
 
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
+        "Yi-34B-Chat": "01-ai/Yi-34B-Chat",
     },
     "reranker":{
         "bge-reranker-large":"BAAI/bge-reranker-large",
