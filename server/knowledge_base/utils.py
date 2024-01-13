@@ -262,6 +262,10 @@ def make_text_splitter(
         text_splitter_module = importlib.import_module('langchain.text_splitter')
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
         text_splitter = TextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        
+    # If you use SpacyTextSplitter you can use GPU to do split likes Issue #1287
+    # text_splitter._tokenizer.max_length = 37016792
+    # text_splitter._tokenizer.prefer_gpu()
     return text_splitter
 
 
