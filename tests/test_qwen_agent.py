@@ -3,6 +3,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 import asyncio
+import json
+from pprint import pprint
 from langchain.agents import AgentExecutor
 from langchain_openai.chat_models import ChatOpenAI
 # from langchain.chat_models.openai import ChatOpenAI
@@ -12,8 +14,8 @@ from server.agent.agent_factory.qwen_agent import create_structured_qwen_chat_ag
 from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler
 from langchain import globals
 
-globals.set_debug(True)
-globals.set_verbose(True)
+# globals.set_debug(True)
+# globals.set_verbose(True)
 
 
 async def test1():
@@ -39,7 +41,7 @@ async def test1():
     await ret
 
 
-async def test2():
+async def test_server_chat():
     from server.chat.chat import chat
 
     mc={'preprocess_model': {
@@ -83,7 +85,57 @@ async def test2():
                             history_len=-1,
                             history=[],
                             stream=True)).body_iterator:
-        print(x)
+        pprint(x)
 
 
-asyncio.run(test2())
+async def test_text2image():
+    from server.chat.chat import chat
+
+    mc={'preprocess_model': {
+        'qwen-api': {
+            'temperature': 0.4,
+            'max_tokens': 2048,
+            'history_len': 100,
+            'prompt_name': 'default',
+            'callbacks': False}
+        },
+        'llm_model': {
+            'qwen-api': {
+                'temperature': 0.9,
+                'max_tokens': 4096,
+                'history_len': 3,
+                'prompt_name': 'default',
+                'callbacks': True}
+            },
+        'action_model': {
+            'qwen-api': {
+                'temperature': 0.01,
+                'max_tokens': 4096,
+                'prompt_name': 'qwen',
+                'callbacks': True}
+            },
+        'postprocess_model': {
+            'qwen-api': {
+                'temperature': 0.01,
+                'max_tokens': 4096,
+                'prompt_name': 'default',
+                'callbacks': True}
+            },
+        'image_model': {
+            'sd-turbo': {}
+        }
+    }
+
+    tc={'text2images': {'use': True}}
+
+    async for x in (await chat("draw a house",{},
+                            model_config=mc,
+                            tool_config=tc,
+                            conversation_id=None,
+                            history_len=-1,
+                            history=[],
+                            stream=False)).body_iterator:
+        x = json.loads(x)
+        pprint(x)
+
+asyncio.run(test_text2image())

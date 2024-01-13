@@ -14,11 +14,11 @@ from server.agent.agent_factory.agents_registry import agents_registry
 from server.agent.tools_factory.tools_registry import all_tools
 from server.agent.container import container
 
-from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
+from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template, MsgType
 from server.chat.utils import History
 from server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from server.db.repository import add_message_to_db
-from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler
+from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler, AgentStatus
 
 
 def create_models_from_config(configs, callbacks, stream):
@@ -63,10 +63,11 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
+    llm=models["llm_model"]
+    llm.callbacks = callbacks
     chain = LLMChain(
         prompt=chat_prompt,
-        llm=models["llm_model"],
-        callbacks=callbacks,
+        llm=llm,
         memory=memory
     )
     classifier_chain = (
@@ -77,7 +78,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
 
     if "action_model" in models and tools is not None:
         agent_executor = agents_registry(
-            llm=models["action_model"],
+            llm=llm,
             callbacks=callbacks,
             tools=tools,
             prompt=None,
@@ -144,6 +145,21 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         async for chunk in callback.aiter():
             data = json.loads(chunk)
+            if data["status"] == AgentStatus.tool_end:
+                try:
+                    tool_output = json.loads(data["tool_output"])
+                    if message_type := tool_output.get("message_type"):
+                        data["message_type"] = message_type
+                except:
+                    ...
+            elif data["status"] == AgentStatus.agent_finish:
+                try:
+                    tool_output = json.loads(data["text"])
+                    if message_type := tool_output.get("message_type"):
+                        data["message_type"] = message_type
+                except:
+                    ...
+            data.setdefault("message_type", MsgType.TEXT)
             data["message_id"] = message_id
             yield json.dumps(data, ensure_ascii=False)
 
