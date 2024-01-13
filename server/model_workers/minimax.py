@@ -28,7 +28,7 @@ class MiniMaxWorker(ApiModelWorker):
 
     def validate_messages(self, messages: List[Dict]) -> List[Dict]:
         role_maps = {
-            "user": self.user_role,
+            "USER": self.user_role,
             "assistant": self.ai_role,
             "system": "system",
         }
@@ -140,7 +140,7 @@ class MiniMaxWorker(ApiModelWorker):
                     self.logger.error(f"请求 MiniMax API 时发生错误：{data}")
                     return data
                 i += batch_size
-            return {"code": 200, "data": embeddings}
+            return {"code": 200, "data": result}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings
