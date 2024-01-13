@@ -12,6 +12,7 @@ import re
 import time
 from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG)
 from server.callback_handler.agent_callback_handler import AgentStatus
+from server.utils import MsgType
 import uuid
 from typing import List, Dict
 
@@ -168,7 +169,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         for k, v in config_models.get("online", {}).items():
             if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
-        llm_models = running_models + available_models  # + ["openai-api"]
+        llm_models = running_models + available_models
         cur_llm_model = st.session_state.get("cur_llm_model", default_model)
         if cur_llm_model in llm_models:
             index = llm_models.index(cur_llm_model)
@@ -276,7 +277,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             text = ""
             text_action = ""
             element_index = 0
-
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
                                    history=history,
@@ -288,6 +288,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 metadata = {
                     "message_id": message_id,
                 }
+                print(d)
                 if d["status"] == AgentStatus.error:
                     st.error(d["text"])
                 elif d["status"] == AgentStatus.agent_action:
@@ -310,11 +311,14 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 elif d["status"] == AgentStatus.llm_end:
                     chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
                 elif d["status"] == AgentStatus.agent_finish:
-                    element_index += 1
+                    if d["message_type"] == MsgType.IMAGE:
+                        for url in json.loads(d["text"]).get("images", []):
+                            url = f"{api.base_url}/media/{url}"
+                            chat_box.insert_msg(Image(url))
+                        chat_box.update_msg(element_index=element_index, expanded=False, state="complete")
+                    else:
+                        chat_box.insert_msg(Markdown(d["text"], expanded=True))
 
-                    # print(d["text"])
-                    chat_box.insert_msg(Markdown(d["text"], expanded=True))
-                    chat_box.update_msg(Markdown(d["text"]), element_index=element_index)
             if os.path.exists("tmp/image.jpg"):
                 with open("tmp/image.jpg", "rb") as image_file:
                     encoded_string = base64.b64encode(image_file.read()).decode()

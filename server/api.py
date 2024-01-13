@@ -4,13 +4,14 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from configs import VERSION
+from configs import VERSION, MEDIA_PATH
 from configs.model_config import NLTK_DATA_PATH
 from configs.server_config import OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
 from fastapi import Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 from server.chat.chat import chat
 from server.chat.completion import completion
@@ -124,6 +125,9 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
             tags=["Other"],
             summary="将文本向量化，支持本地模型和在线模型",
             )(embed_texts_endpoint)
+
+    # 媒体文件
+    app.mount("/media", StaticFiles(directory=MEDIA_PATH), name="media")
 
 
 def mount_knowledge_routes(app: FastAPI):
