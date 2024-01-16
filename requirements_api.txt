@@ -7,6 +7,7 @@ sentence_transformers==2.2.2
 
 langchain==0.0.354
 langchain-experimental==0.0.47
+langchain-openai==0.0.2.post1
 pydantic==1.10.13
 fschat==0.2.34
 openai~=1.7.1

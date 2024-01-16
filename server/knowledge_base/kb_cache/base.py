@@ -128,7 +128,7 @@ class EmbeddingsPool(CachePool):
             with item.acquire(msg="初始化"):
                 self.atomic.release()
                 if model == "text-embedding-ada-002":  # openai text-embedding-ada-002
-                    from langchain.embeddings.openai import OpenAIEmbeddings
+                    from langchain_openai import OpenAIEmbeddings
                     embeddings = OpenAIEmbeddings(model=model,
                                                   openai_api_key=get_model_path(model),
                                                   chunk_size=CHUNK_SIZE)
