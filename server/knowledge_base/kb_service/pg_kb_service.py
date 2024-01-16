@@ -22,10 +22,10 @@ class PGKBService(KBService):
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
-        with self.pg_vector.connect() as connect:
-            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id in :ids")
+        with Session(self.pg_vector._bind) as session:
+            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE custom_id in :ids OR collection_id in :ids")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
-                       connect.execute(stmt, parameters={'ids': ids}).fetchall()]
+                       session.execute(stmt, params={'ids': tuple(ids)}).fetchall()]
             return results
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
