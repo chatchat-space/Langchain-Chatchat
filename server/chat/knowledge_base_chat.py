@@ -21,7 +21,6 @@ from server.knowledge_base.kb_service.base import KBServiceFactory
 import json
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
-from server.reranker.reranker import LangchainReranker
 from server.utils import embedding_device
 async def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                               knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
@@ -86,6 +85,8 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
 
         # 加入reranker
         if USE_RERANKER:
+            from server.reranker.reranker import LangchainReranker
+
             reranker_model_path = MODEL_PATH["reranker"].get(RERANKER_MODEL,"BAAI/bge-reranker-large")
             print("-----------------model path------------------")
             print(reranker_model_path)
