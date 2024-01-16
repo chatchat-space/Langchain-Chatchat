@@ -1,16 +1,15 @@
-import json
-from typing import List, Dict, Optional
+import shutil
+from typing import List, Dict
 
 from langchain.schema import Document
 from langchain.vectorstores.pgvector import PGVector, DistanceStrategy
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from configs import kbs_config
-
 from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
     score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
-import shutil
 
 
 class PGKBService(KBService):
@@ -29,9 +28,11 @@ class PGKBService(KBService):
                        connect.execute(stmt, parameters={'ids': ids}).fetchall()]
             return results
 
-    # TODO:
     def del_doc_by_ids(self, ids: List[str]) -> bool:
-        return super().del_doc_by_ids(ids)
+        with Session(self.pg_vector._bind) as session:
+            session.execute(text("DELETE FROM langchain_pg_embedding WHERE custom_id in :ids OR collection_id in :ids"), params={"ids": tuple(ids)})
+            session.commit()
+        return True
 
     def do_init(self):
         self._load_pg_vector()
