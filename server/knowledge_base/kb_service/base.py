@@ -1,33 +1,29 @@
-import operator
-from abc import ABC, abstractmethod
-
 import os
+from abc import ABC, abstractmethod
 from pathlib import Path
-import numpy as np
-from langchain.embeddings.base import Embeddings
-from langchain.docstore.document import Document
+from typing import List, Union, Dict
 
+import numpy as np
+from langchain.docstore.document import Document
+from langchain.embeddings.base import Embeddings
+
+from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                     EMBEDDING_MODEL, KB_INFO)
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
     load_kb_from_db, get_kb_detail,
 )
 from server.db.repository.knowledge_file_repository import (
-    add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
+    add_file_to_db, delete_files_from_db, file_exists_in_db,
     count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db,
     list_docs_from_db,
 )
-
-from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                     EMBEDDING_MODEL, KB_INFO)
+from server.embeddings_api import embed_texts, aembed_texts, embed_documents
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
-
-from typing import List, Union, Dict, Optional
-
-from server.embeddings_api import embed_texts, aembed_texts, embed_documents
-from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 
 
 def normalize(embeddings: List[List[float]]) -> np.ndarray:
@@ -441,12 +437,9 @@ class EmbeddingsFunAdapter(Embeddings):
 
 def score_threshold_process(score_threshold, k, docs):
     if score_threshold is not None:
-        cmp = (
-            operator.le
-        )
         docs = [
             (doc, similarity)
             for doc, similarity in docs
-            if cmp(similarity, score_threshold)
+            if similarity < score_threshold
         ]
     return docs[:k]
