@@ -440,6 +440,6 @@ def score_threshold_process(score_threshold, k, docs):
         docs = [
             (doc, similarity)
             for doc, similarity in docs
-            if similarity < score_threshold
+            if similarity <= score_threshold
         ]
     return docs[:k]
