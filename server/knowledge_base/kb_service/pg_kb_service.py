@@ -44,8 +44,8 @@ class PGKBService(KBService):
         return SupportedVSType.PG
 
     def do_drop_kb(self):
-        with self.pg_vector.connect() as connect:
-            connect.execute(text(f'''
+        with Session(self.pg_vector._bind) as session:
+            session.execute(text(f'''
                     -- 删除 langchain_pg_embedding 表中关联到 langchain_pg_collection 表中 的记录
                     DELETE FROM langchain_pg_embedding
                     WHERE collection_id IN (
@@ -54,7 +54,7 @@ class PGKBService(KBService):
                     -- 删除 langchain_pg_collection 表中 记录
                     DELETE FROM langchain_pg_collection WHERE name = '{self.kb_name}';
             '''))
-            connect.commit()
+            session.commit()
             shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
