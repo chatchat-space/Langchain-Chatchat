@@ -70,13 +70,11 @@ class PGKBService(KBService):
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
-        with self.pg_vector.connect() as connect:
-            filepath = kb_file.filepath.replace('\\', '\\\\')
-            connect.execute(
-                text(
-                    ''' DELETE FROM langchain_pg_embedding WHERE cmetadata::jsonb @> '{"source": "filepath"}'::jsonb;'''.replace(
-                        "filepath", filepath)))
-            connect.commit()
+        with Session(self.pg_vector._bind) as session:
+            session.execute(
+                text(f"DELETE FROM langchain_pg_embedding WHERE cmetadata ->> 'source' ILIKE '%{kb_file.filename}'")
+            )
+            session.commit()
 
     def do_clear_vs(self):
         self.pg_vector.delete_collection()
