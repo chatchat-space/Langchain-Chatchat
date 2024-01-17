@@ -17,9 +17,7 @@ from server.chat.chat import chat
 from server.chat.completion import completion
 from server.chat.feedback import chat_feedback
 from server.embeddings_api import embed_texts_endpoint
-from server.llm_api import (list_running_models, list_config_models,
-                            change_llm_model, stop_llm_model,
-                            get_model_config)
+
 from server.utils import (BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline,
                           get_server_configs, get_prompt_template)
 from typing import List, Literal
@@ -72,32 +70,6 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
     mount_knowledge_routes(app)
     # 摘要相关接口
     mount_filename_summary_routes(app)
-
-    # LLM模型相关接口
-    app.post("/llm_model/list_running_models",
-             tags=["LLM Model Management"],
-             summary="列出当前已加载的模型",
-             )(list_running_models)
-
-    app.post("/llm_model/list_config_models",
-             tags=["LLM Model Management"],
-             summary="列出configs已配置的模型",
-             )(list_config_models)
-
-    app.post("/llm_model/get_model_config",
-             tags=["LLM Model Management"],
-             summary="获取模型配置（合并后）",
-             )(get_model_config)
-
-    app.post("/llm_model/stop",
-             tags=["LLM Model Management"],
-             summary="停止指定的LLM模型（Model Worker)",
-             )(stop_llm_model)
-
-    app.post("/llm_model/change",
-             tags=["LLM Model Management"],
-             summary="切换指定的LLM模型（Model Worker)",
-             )(change_llm_model)
 
     # 服务器相关接口
     app.post("/server/configs",
