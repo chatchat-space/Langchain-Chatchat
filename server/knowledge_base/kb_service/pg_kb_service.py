@@ -20,15 +20,14 @@ class PGKBService(KBService):
     engine: Engine = sqlalchemy.create_engine(kbs_config.get("pg").get("connection_uri"), pool_size=10)
 
     def _load_pg_vector(self):
-        self.connection = PGKBService.engine.connect()
         self.pg_vector = PGVector(embedding_function=EmbeddingsFunAdapter(self.embed_model),
                                   collection_name=self.kb_name,
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
-                                  connection=self.connection,
+                                  connection=PGKBService.engine,
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
-        with Session(self.connection) as session:
+        with Session(PGKBService.engine) as session:
             stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id in :ids")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
                        session.execute(stmt, {'ids': ids}).fetchall()]
@@ -48,7 +47,7 @@ class PGKBService(KBService):
         return SupportedVSType.PG
 
     def do_drop_kb(self):
-        with Session(self.connection) as session:
+        with Session(PGKBService.engine) as session:
             session.execute(text(f'''
                     -- 删除 langchain_pg_embedding 表中关联到 langchain_pg_collection 表中 的记录
                     DELETE FROM langchain_pg_embedding
@@ -73,7 +72,7 @@ class PGKBService(KBService):
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
-        with Session(self.connection) as session:
+        with Session(PGKBService.engine) as session:
             filepath = kb_file.filepath.replace('\\', '\\\\')
             session.execute(
                 text(
