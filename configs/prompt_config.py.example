@@ -1,7 +1,7 @@
 PROMPT_TEMPLATES = {
     "preprocess_model": {
         "default":
-            '你只要回复0 和 1 ，代表不需要使用工具。以下几种问题需要使用工具:'
+            '你只要回复0 和 1 ，代表不需要使用工具。以下几种问题不需要使用工具:'
             '1. 需要联网查询的内容\n'
             '2. 需要计算的内容\n'
             '3. 需要查询实时性的内容\n'
@@ -45,9 +45,9 @@ PROMPT_TEMPLATES = {
             'Thought: I now know the final answer\n'
             'Final Answer: the final answer to the original input question\n'
             'Begin! Reminder to always use the exact characters `Final Answer` when responding.\n'
-            'history: {history}\n'
             'Question:{input}\n'
             'Thought:{agent_scratchpad}\n',
+
         "ChatGLM3":
             'You can answer using the tools.Respond to the human as helpfully and accurately as possible.\n'
             'You have access to the following tools:\n'
@@ -81,7 +81,7 @@ PROMPT_TEMPLATES = {
             'Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary.\n'
             'Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.\n'
             'Question: {input}\n\n'
-            'Thought: {agent_scratchpad}\n',
+            '{agent_scratchpad}\n',
         "qwen":
             'Answer the following question as best you can. You have access to the following APIs:\n\n'
             '{tools}\n\n'
@@ -130,7 +130,7 @@ TOOL_CONFIG = {
                 "bing": {
                     "result_len": 3,
                     "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
-                    "bing_key": "your bing key",
+                    "bing_key": "680a39347d7242c5bd2d7a9576a125b7",
                 },
                 "metaphor": {
                     "result_len": 3,
@@ -160,7 +160,7 @@ TOOL_CONFIG = {
     },
     "weather_check": {
         "use": False,
-        "api-key": "your key",
+        "api-key": "S8vrB4U_-c5mvAMiK",
     },
     "search_youtube": {
         "use": False,
@@ -171,21 +171,12 @@ TOOL_CONFIG = {
     "calculate": {
         "use": False,
     },
-    "text2images": {
-        "use": False,
-    },
-
-    # Use THUDM/cogvlm-chat-hf as default
-
     "vqa_processor": {
         "use": False,
         "model_path": "your model path",
         "tokenizer_path": "your tokenizer path",
         "device": "cuda:1"
     },
-
-    # Use Qwen/Qwen-Audio-Chat as default
-
     "aqa_processor": {
         "use": False,
         "model_path": "your model path",

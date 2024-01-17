@@ -6,7 +6,7 @@ from pathlib import Path
 import asyncio
 from configs import (LLM_MODEL_CONFIG, LLM_DEVICE, EMBEDDING_DEVICE,
                      MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
-                     FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
+                     HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain_openai.chat_models import ChatOpenAI
@@ -319,20 +319,6 @@ def list_embed_models() -> List[str]:
     return list(MODEL_PATH["embed_model"])
 
 
-def list_config_llm_models() -> Dict[str, Dict]:
-    '''
-    get configured llm models with different types.
-    return {config_type: {model_name: config}, ...}
-    '''
-    workers = FSCHAT_MODEL_WORKERS.copy()
-    workers.pop("default", None)
-
-    return {
-        "local": MODEL_PATH["llm_model"].copy(),
-        "online": ONLINE_LLM_MODEL.copy(),
-        "worker": workers,
-    }
-
 
 def get_model_path(model_name: str, type: str = None) -> Optional[str]:
     if type in MODEL_PATH:
@@ -368,14 +354,8 @@ def get_model_worker_config(model_name: str = None) -> dict:
     加载model worker的配置项。
     优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
-    from configs.model_config import ONLINE_LLM_MODEL, MODEL_PATH
-    from configs.server_config import FSCHAT_MODEL_WORKERS
 
-    config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    config.update(ONLINE_LLM_MODEL.get(model_name, {}).copy())
-    config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}).copy())
-
-    return config
+    return {}
 
 
 def api_address() -> str:

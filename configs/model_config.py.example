@@ -22,29 +22,54 @@ SUPPORT_AGENT_MODELS = [
 ]
 LLM_MODEL_CONFIG = {
     "preprocess_model": {
+        # "Mixtral-8x7B-v0.1": {
+        #     "temperature": 0.01,
+        #     "max_tokens": 5,
+        #     "prompt_name": "default",
+        #     "callbacks": False
+        # },
         "chatglm3-6b": {
-            "temperature": 0.01,
-            "max_tokens": 5,
+            "temperature": 0.05,
+            "max_tokens": 4096,
             "prompt_name": "default",
             "callbacks": False
         },
     },
     "llm_model": {
+        # "Mixtral-8x7B-v0.1": {
+        #     "temperature": 0.9,
+        #     "max_tokens": 4000,
+        #     "history_len": 5,
+        #     "prompt_name": "default",
+        #     "callbacks": True
+        # },
         "chatglm3-6b": {
-            "temperature": 0.9,
-            "max_tokens": 4000,
-            "history_len": 5,
+            "temperature": 0.05,
+            "max_tokens": 4096,
             "prompt_name": "default",
+            "history_len": 10,
             "callbacks": True
         },
     },
     "action_model": {
+        # "Qwen-14B-Chat": {
+        #     "temperature": 0.05,
+        #     "max_tokens": 4096,
+        #     "prompt_name": "qwen",
+        #     "callbacks": True
+        # },
         "chatglm3-6b": {
             "temperature": 0.05,
             "max_tokens": 4096,
             "prompt_name": "ChatGLM3",
             "callbacks": True
         },
+        # "zhipu-api": {
+        #     "temperature": 0.01,
+        #     "max_tokens": 4096,
+        #     "prompt_name": "ChatGLM3",
+        #     "callbacks": True
+        # }
 
     },
     "postprocess_model": {
@@ -55,11 +80,6 @@ LLM_MODEL_CONFIG = {
             "callbacks": True
         }
     },
-    "image_model": {
-        "sd-turbo": {
-            "size": "1024x1024",
-        }
-    }
 }
 LLM_DEVICE = "auto"
 ONLINE_LLM_MODEL = {
@@ -68,11 +88,6 @@ ONLINE_LLM_MODEL = {
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "sk-",
         "openai_proxy": "",
-    },
-    "sd-turbo": {
-        "model_name": "sd-turbo",
-        "api_base_url": "http://127.0.0.1:9997/v1",
-        "api_key": "EMPTY",
     },
     "zhipu-api": {
         "api_key": "",
@@ -174,91 +189,8 @@ MODEL_PATH = {
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "nlp_gte_sentence-embedding_chinese-large": "/Models/nlp_gte_sentence-embedding_chinese-large",
         "text-embedding-ada-002": "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",
-    },
-
-    "llm_model": {
-
-        "vicuna-7b-v1.5": "/share/official_pretrains/hf_home/vicuna-7b-v1.5",
-
-        "Mixtral-8x7B-v0.1": "/share/home/zyx/Models/Mixtral-8x7B-v0.1",
-
-        "chatglm2-6b": "THUDM/chatglm2-6b",
-        "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
-
-        "chatglm3-6b": "/share/home/zyx/Models/chatglm3-6b",
-        "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
-
-        "Yi-34B-Chat": "/share/home/zyx/Models/Yi-34B-Chat",
-        "BlueLM-7B-Chat": "/Models/BlueLM-7B-Chat",
-
-        "baichuan2-13b": "/media/zr/Data/Models/LLM/Baichuan2-13B-Chat",
-        "baichuan2-7b": "/media/zr/Data/Models/LLM/Baichuan2-7B-Chat",
-
-        "baichuan-7b": "baichuan-inc/Baichuan-7B",
-        "baichuan-13b": "baichuan-inc/Baichuan-13B",
-        'baichuan-13b-chat': 'baichuan-inc/Baichuan-13B-Chat',
-
-        "aquila-7b": "BAAI/Aquila-7B",
-        "aquilachat-7b": "BAAI/AquilaChat-7B",
-
-        "internlm-7b": "internlm/internlm-7b",
-        "internlm-chat-7b": "internlm/internlm-chat-7b",
-        "internlm2-chat-7b": "internlm/internlm2-chat-7b",
-        "internlm2-chat-20b": "internlm/internlm2-chat-20b",
-
-        "BlueLM-7B-Chat": "vivo-ai/BlueLM-7B-Chat",
-        "BlueLM-7B-Chat-32k": "vivo-ai/BlueLM-7B-Chat-32k",
-
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat",
-
-        "agentlm-7b": "THUDM/agentlm-7b",
-        "agentlm-13b": "THUDM/agentlm-13b",
-        "agentlm-70b": "THUDM/agentlm-70b",
-
-        "falcon-7b": "tiiuae/falcon-7b",
-        "falcon-40b": "tiiuae/falcon-40b",
-        "falcon-rw-7b": "tiiuae/falcon-rw-7b",
-
-        "aquila-7b": "BAAI/Aquila-7B",
-        "aquilachat-7b": "BAAI/AquilaChat-7B",
-        "open_llama_13b": "openlm-research/open_llama_13b",
-        "vicuna-13b-v1.5": "lmsys/vicuna-13b-v1.5",
-        "koala": "young-geng/koala",
-        "mpt-7b": "mosaicml/mpt-7b",
-        "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter",
-        "mpt-30b": "mosaicml/mpt-30b",
-        "opt-66b": "facebook/opt-66b",
-        "opt-iml-max-30b": "facebook/opt-iml-max-30b",
-        "gpt2": "gpt2",
-        "gpt2-xl": "gpt2-xl",
-        "gpt-j-6b": "EleutherAI/gpt-j-6b",
-        "gpt4all-j": "nomic-ai/gpt4all-j",
-        "gpt-neox-20b": "EleutherAI/gpt-neox-20b",
-        "pythia-12b": "EleutherAI/pythia-12b",
-        "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
-        "dolly-v2-12b": "databricks/dolly-v2-12b",
-        "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b",
-
-        "Llama-2-13b-hf": "meta-llama/Llama-2-13b-hf",
-        "Llama-2-70b-hf": "meta-llama/Llama-2-70b-hf",
-        "open_llama_13b": "openlm-research/open_llama_13b",
-        "vicuna-13b-v1.3": "lmsys/vicuna-13b-v1.3",
-        "koala": "young-geng/koala",
-
-        "mpt-7b": "mosaicml/mpt-7b",
-        "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter",
-        "mpt-30b": "mosaicml/mpt-30b",
-        "opt-66b": "facebook/opt-66b",
-        "opt-iml-max-30b": "facebook/opt-iml-max-30b",
-
-        "Qwen-1_8B-Chat": "/home/zr/Models/Qwen-1_8B-Chat",
-        "Qwen-7B": "Qwen/Qwen-7B",
-        "Qwen-14B": "Qwen/Qwen-14B",
-        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
-        "Qwen-14B-Chat": "/share/home/zyx/Models/Qwen-14B-Chat",
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8",
-        "Qwen-14B-Chat-Int4": "/media/zr/Data/Models/LLM/Qwen-14B-Chat-Int4",
-    },
+    }
+}
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 
@@ -315,3 +247,7 @@ VLLM_MODEL_DICT = {
     "agentlm-70b": "THUDM/agentlm-70b",
 
 }
+
+LOOM_CONFIG = "/media/gpt4-pdf-chatbot-langchain/LooM/src/core/loom.yaml"
+OPENAI_KEY = None
+OPENAI_PROXY = None
