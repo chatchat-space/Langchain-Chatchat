@@ -1,6 +1,6 @@
 import os
 
-# 默认使用的知识库
+
 DEFAULT_KNOWLEDGE_BASE = "samples"
 
 # 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector,全文检索引擎es
@@ -24,15 +24,16 @@ VECTOR_SEARCH_TOP_K = 3
 # 知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右
 SCORE_THRESHOLD = 1
 
-# 是否开启中文标题加强，以及标题增强的相关配置
-# 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；
-# 然后将文本与往上一级的标题进行拼合，实现文本信息的增强。
-ZH_TITLE_ENHANCE = False
+# 默认搜索引擎。可选：bing, duckduckgo, metaphor
+DEFAULT_SEARCH_ENGINE = "duckduckgo"
 
+# 搜索引擎匹配结题数量
+SEARCH_ENGINE_TOP_K = 3
+
+ZH_TITLE_ENHANCE = False
 
 # 每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。
 KB_INFO = {
-    "知识库名称": "知识库介绍",
     "samples": "关于本项目issue的解答",
 }
 
