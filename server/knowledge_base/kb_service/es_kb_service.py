@@ -38,7 +38,12 @@ class ESKBService(KBService):
             raise e
         try:
             # 首先尝试通过es_client_python创建
-            self.es_client_python.indices.create(index=self.index_name)
+            mappings = {
+                "dense_vector": {
+                    "type": "dense_vector"
+                }
+            }
+            self.es_client_python.indices.create(index=self.index_name, mappings=mappings)
         except BadRequestError as e:
             logger.error("创建索引失败,重新")
             logger.error(e)
