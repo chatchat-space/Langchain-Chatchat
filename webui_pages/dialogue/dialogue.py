@@ -1,8 +1,11 @@
 import base64
 
 import streamlit as st
+from streamlit_antd_components.utils import ParseItems
 
 from webui_pages.dialogue.utils import process_files
+from webui_pages.loom_view_client import build_plugins_name, find_menu_items_by_index, set_llm_select, \
+    get_select_model_endpoint
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from streamlit_modal import Modal
@@ -10,11 +13,14 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG)
+from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG, OPENAI_KEY, OPENAI_PROXY)
 from server.callback_handler.agent_callback_handler import AgentStatus
 from server.utils import MsgType
 import uuid
 from typing import List, Dict
+
+import streamlit_antd_components as sac
+
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -105,14 +111,8 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     st.session_state.setdefault("conversation_ids", {})
     st.session_state["conversation_ids"].setdefault(chat_box.cur_chat_name, uuid.uuid4().hex)
     st.session_state.setdefault("file_chat_id", None)
-    default_model = api.get_default_llm_model()[0]
-
-    if not chat_box.chat_inited:
-        st.toast(
-            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
-            f"当前运行的模型`{default_model}`, 您可以开始提问了."
-        )
-        chat_box.init_session()
+    st.session_state.setdefault("select_plugins_info", None)
+    st.session_state.setdefault("select_model_worker", None)
 
     # 弹出自定义命令帮助信息
     modal = Modal("自定义命令", key="cmd_help", max_width="500")
@@ -131,57 +131,18 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        # def on_mode_change():
-        #     mode = st.session_state.dialogue_mode
-        #     text = f"已切换到 {mode} 模式。"
-        #     st.toast(text)
+        with st.expander("模型选择"):
+            plugins_menu = build_plugins_name()
 
-        # dialogue_modes = ["智能对话",
-        #                   "文件对话",
-        #                   ]
-        # dialogue_mode = st.selectbox("请选择对话模式：",
-        #                              dialogue_modes,
-        #                              index=0,
-        #                              on_change=on_mode_change,
-        #                              key="dialogue_mode",
-        #                              )
+            items, _ = ParseItems(plugins_menu).multi()
 
-        def on_llm_change():
-            if llm_model:
-                config = api.get_model_config(llm_model)
-                if not config.get("online_api"):  # 只有本地model_worker可以切换模型
-                    st.session_state["prev_llm_model"] = llm_model
-                st.session_state["cur_llm_model"] = st.session_state.llm_model
+            if len(plugins_menu) > 0:
 
-        def llm_model_format_func(x):
-            if x in running_models:
-                return f"{x} (Running)"
-            return x
-
-        running_models = list(api.list_running_models())
-        available_models = []
-        config_models = api.list_config_models()
-        if not is_lite:
-            for k, v in config_models.get("local", {}).items():  # 列出配置了有效本地路径的模型
-                if (v.get("model_path_exists")
-                        and k not in running_models):
-                    available_models.append(k)
-        for k, v in config_models.get("online", {}).items():
-            if not v.get("provider") and k not in running_models and k in LLM_MODELS:
-                available_models.append(k)
-        llm_models = running_models + available_models
-        cur_llm_model = st.session_state.get("cur_llm_model", default_model)
-        if cur_llm_model in llm_models:
-            index = llm_models.index(cur_llm_model)
-        else:
-            index = 0
-        llm_model = st.selectbox("选择LLM模型",
-                                 llm_models,
-                                 index,
-                                 format_func=llm_model_format_func,
-                                 on_change=on_llm_change,
-                                 key="llm_model",
-                                 )
+                llm_model_index = sac.menu(plugins_menu, index=1, return_index=True)
+                plugins_info, llm_model_worker = find_menu_items_by_index(items, llm_model_index)
+                set_llm_select(plugins_info, llm_model_worker)
+            else:
+                st.info("没有可用的插件")
 
         #  传入后端的内容
         model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
@@ -213,8 +174,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     if is_selected:
                         selected_tool_configs[tool] = TOOL_CONFIG[tool]
 
+        llm_model = None
+        if st.session_state["select_model_worker"] is not None:
+            llm_model = st.session_state["select_model_worker"]['label']
+
         if llm_model is not None:
-            model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'][llm_model]
+            model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
 
         uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
         files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
@@ -258,7 +223,8 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.rerun()
         else:
             history = get_messages_history(
-                model_config["llm_model"][next(iter(model_config["llm_model"]))]["history_len"])
+                model_config["llm_model"].get(next(iter(model_config["llm_model"])), {}).get("history_len", 1)
+            )
             chat_box.user_say(prompt)
             if files_upload:
                 if files_upload["images"]:
@@ -277,10 +243,18 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             text = ""
             text_action = ""
             element_index = 0
+
+            openai_config = {}
+            endpoint_host, select_model_name = get_select_model_endpoint()
+            openai_config["endpoint_host"] = endpoint_host
+            openai_config["model_name"] = select_model_name
+            openai_config["endpoint_host_key"] = OPENAI_KEY
+            openai_config["endpoint_host_proxy"] = OPENAI_PROXY
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
                                    history=history,
                                    model_config=model_config,
+                                   openai_config=openai_config,
                                    conversation_id=conversation_id,
                                    tool_config=selected_tool_configs,
                                    ):

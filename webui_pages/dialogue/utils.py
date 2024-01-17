@@ -3,6 +3,7 @@ import base64
 import os
 from io import BytesIO
 
+
 def encode_file_to_base64(file):
     # 将文件内容转换为 Base64 编码
     buffer = BytesIO()

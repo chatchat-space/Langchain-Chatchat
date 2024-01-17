@@ -8,13 +8,13 @@ from server.model_workers.base import *
 from server.utils import get_model_worker_config, list_config_llm_models
 from pprint import pprint
 import pytest
-
-
-workers = []
-for x in list_config_llm_models()["online"]:
-    if x in ONLINE_LLM_MODEL and x not in workers:
-        workers.append(x)
-print(f"all workers to test: {workers}")
+#
+#
+# workers = []
+# for x in list_config_llm_models()["online"]:
+#     if x in ONLINE_LLM_MODEL and x not in workers:
+#         workers.append(x)
+# print(f"all workers to test: {workers}")
 
 # workers = ["fangzhou-api"]
 
