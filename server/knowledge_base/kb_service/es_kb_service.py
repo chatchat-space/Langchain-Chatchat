@@ -6,6 +6,7 @@ from langchain.schema import Document
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 from configs import KB_ROOT_PATH, EMBEDDING_MODEL, EMBEDDING_DEVICE, CACHED_VS_NUM
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from server.knowledge_base.utils import KnowledgeFile
 from server.utils import load_local_embeddings
 from elasticsearch import Elasticsearch,BadRequestError
 from configs import logger
@@ -15,7 +16,7 @@ class ESKBService(KBService):
 
     def do_init(self):
         self.kb_path = self.get_kb_path(self.kb_name)
-        self.index_name = kbs_config[self.vs_type()]['index_name']
+        self.index_name = os.path.split(self.kb_path)[-1]
         self.IP = kbs_config[self.vs_type()]['host']
         self.PORT = kbs_config[self.vs_type()]['port']
         self.user = kbs_config[self.vs_type()].get("user",'')
@@ -25,11 +26,11 @@ class ESKBService(KBService):
         try:
             # ES python客户端连接（仅连接）
             if self.user != "" and self.password != "":
-                self.es_client_python =  Elasticsearch(f"https://{self.IP}:{self.PORT}",
+                self.es_client_python =  Elasticsearch(f"http://{self.IP}:{self.PORT}",
                 basic_auth=(self.user,self.password))
             else:
                 logger.warning("ES未配置用户名和密码")
-                self.es_client_python = Elasticsearch(f"https://{self.IP}:{self.PORT}")
+                self.es_client_python = Elasticsearch(f"http://{self.IP}:{self.PORT}")
         except ConnectionError:
             logger.error("连接到 Elasticsearch 失败！")
             raise ConnectionError
@@ -39,8 +40,12 @@ class ESKBService(KBService):
         try:
             # 首先尝试通过es_client_python创建
             mappings = {
-                "dense_vector": {
-                    "type": "dense_vector"
+                "properties": {
+                    "dense_vector": {
+                        "type": "dense_vector",
+                        "dims": self.dims_length,
+                        "index": True
+                    }
                 }
             }
             self.es_client_python.indices.create(index=self.index_name, mappings=mappings)
@@ -52,7 +57,7 @@ class ESKBService(KBService):
             # langchain ES 连接、创建索引
             if self.user != "" and self.password != "":
                 self.db_init = ElasticsearchStore(
-                es_url=f"https://{self.IP}:{self.PORT}",
+                es_url=f"http://{self.IP}:{self.PORT}",
                 index_name=self.index_name,
                 query_field="context",
                 vector_query_field="dense_vector",
@@ -63,7 +68,7 @@ class ESKBService(KBService):
             else:
                 logger.warning("ES未配置用户名和密码")
                 self.db_init = ElasticsearchStore(
-                    es_url=f"https://{self.IP}:{self.PORT}",
+                    es_url=f"http://{self.IP}:{self.PORT}",
                     index_name=self.index_name,
                     query_field="context",
                     vector_query_field="dense_vector",
@@ -85,9 +90,9 @@ class ESKBService(KBService):
         except Exception as e:
             logger.error("创建索引失败...")
             logger.error(e)
-            # raise e 
-            
-        
+            # raise e
+
+
 
     @staticmethod
     def get_kb_path(knowledge_base_name: str):
@@ -115,7 +120,7 @@ class ESKBService(KBService):
                 self.db = ElasticsearchStore.from_documents(
                         documents=docs,
                         embedding=embed_model,
-                        es_url= f"https://{self.IP}:{self.PORT}",
+                        es_url= f"http://{self.IP}:{self.PORT}",
                         index_name=self.index_name,
                         distance_strategy="COSINE",
                         query_field="context",
@@ -128,7 +133,7 @@ class ESKBService(KBService):
                 self.db = ElasticsearchStore.from_documents(
                         documents=docs,
                         embedding=embed_model,
-                        es_url= f"https://{self.IP}:{self.PORT}",
+                        es_url= f"http://{self.IP}:{self.PORT}",
                         index_name=self.index_name,
                         distance_strategy="COSINE",
                         query_field="context",
@@ -225,7 +230,12 @@ class ESKBService(KBService):
             shutil.rmtree(self.kb_path)
 
 
-
+if __name__ == '__main__':
+    esKBService = ESKBService("test")
+    #esKBService.clear_vs()
+    #esKBService.create_kb()
+    esKBService.add_doc(KnowledgeFile(filename="README.md", knowledge_base_name="test"))
+    print(esKBService.search_docs("如何启动api服务"))
 
 
 
