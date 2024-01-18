@@ -345,8 +345,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.rerun()
 
         warning_placeholder = st.empty()
-        with warning_placeholder.container():
-            st.warning('Running in 8 x A100')
 
     export_btn.download_button(
         "导出记录",

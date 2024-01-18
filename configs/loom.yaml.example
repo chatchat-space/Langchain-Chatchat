@@ -25,7 +25,7 @@ plugins:
       # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
       llm_device: "auto"
       model_names:
-        - "internlm2-chat-7b"
+        - "chatglm3-6b"
       run_controller:
         host: "127.0.0.1"
         port: 20001

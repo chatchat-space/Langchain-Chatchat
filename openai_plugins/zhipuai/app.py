@@ -10,7 +10,7 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 
 
-class OpenAIApplicationAdapter(ApplicationAdapter):
+class ZhipuAIApplicationAdapter(ApplicationAdapter):
 
     def __init__(self, cfg=None, state_dict: dict = None):
         self.processesInfo = None
@@ -24,10 +24,10 @@ class OpenAIApplicationAdapter(ApplicationAdapter):
     @classmethod
     def from_config(cls, cfg=None):
         _state_dict = {
-            "application_name": "openai",
+            "application_name": "zhipuai",
             "application_version": "0.0.1",
-            "application_description": "openai application",
-            "application_author": "openai"
+            "application_description": "zhipuai application",
+            "application_author": "zhipuai"
         }
         state_dict = cfg.get("state_dict", {})
         if state_dict is not None and _state_dict is not None:

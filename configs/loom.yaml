@@ -10,9 +10,9 @@ publish_server:
   port: 8001
 
 openai_plugins_folder:
-  - "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/openai_plugins"
+  - "openai_plugins"
 openai_plugins_load_folder:
-  - "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/configs"
+  - "configs"
 
 
 plugins:
@@ -21,11 +21,11 @@ plugins:
 
   - fastchat:
       name: "fastchat"
-      logdir: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/logs"
+      logdir: "logs"
       # LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
       llm_device: "auto"
       model_names:
-        - "Qwen-1_8B-Chat"
+        - "chatglm3-6b"
       run_controller:
         host: "127.0.0.1"
         port: 20001
@@ -38,10 +38,6 @@ plugins:
             host: "127.0.0.1"
             port: 20002
             device: "auto"
-            # False,'vllm',使用的推理加速框架,使用vllm如果出现HuggingFace通信问题，参见doc/FAQ
-            # vllm对一些模型支持还不成熟，暂时默认关闭
-            # fschat=0.2.33的代码有bug, 如需使用，源码修改fastchat.server.vllm_worker，
-            # 将103行中sampling_params = SamplingParams的参数stop=list(stop)修改为stop= [i for i in stop if i!=""]
             infer_turbo: False
 
             # model_worker多卡加载需要配置的参数
@@ -90,11 +86,16 @@ plugins:
             # 'num_gpus': 1
             # 'engine_use_ray': False,
             # 'disable_log_requests': False
-        - Qwen-1_8B:
+
+        - chatglm3-6b:
             host: "127.0.0.1"
-            port: 20008
-        - chatglm3-6b:   # 使用default中的IP和端口
-            device": "cuda"
+            device: "cuda"
+            port: 20009
+
+        - internlm2-chat-7b:
+            host: "127.0.0.1"
+            device: "cuda"
+            port: 20009
 
           # 以下配置可以不用修改，在model_config中设置启动的模型
         - zhipu-api:
@@ -197,104 +198,95 @@ plugins:
             "secret_key": ""
             "provider": "TianGongWorker"
       "llm_model":
-        # 以下部分模型并未完全测试，仅根据fastchat和vllm模型的模型列表推定支持
+
         "chatglm2-6b": "THUDM/chatglm2-6b"
         "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k"
-        "chatglm3-6b": "THUDM/chatglm3-6b"
+        "chatglm3-6b": "/share/home/zyx/Models/chatglm3-6b"
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k"
-        "chatglm3-6b-base": "THUDM/chatglm3-6b-base"
 
-        "Qwen-1_8B": "/media/checkpoint/Qwen-1_8B"
+        "Llama-2-7b-chat-hf": "meta-llama/Llama-2-7b-chat-hf"
+        "Llama-2-13b-chat-hf": "meta-llama/Llama-2-13b-chat-hf"
+        "Llama-2-70b-chat-hf": "meta-llama/Llama-2-70b-chat-hf"
+
         "Qwen-1_8B-Chat": "/media/checkpoint/Qwen-1_8B-Chat"
-        "Qwen-1_8B-Chat-Int8": "Qwen/Qwen-1_8B-Chat-Int8"
-        "Qwen-1_8B-Chat-Int4": "Qwen/Qwen-1_8B-Chat-Int4"
-
-        "Qwen-7B": "Qwen/Qwen-7B"
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat"
-
-        "Qwen-14B": "Qwen/Qwen-14B"
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat"
-
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8"
-        # 在新版的transformers下需要手动修改模型的config.json文件，在quantization_config字典中
-        # 增加`disable_exllama:true` 字段才能启动qwen的量化模型
-        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4"
-
-        "Qwen-72B": "Qwen/Qwen-72B"
         "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat"
-        "Qwen-72B-Chat-Int8": "Qwen/Qwen-72B-Chat-Int8"
-        "Qwen-72B-Chat-Int4": "Qwen/Qwen-72B-Chat-Int4"
 
-        "baichuan2-13b": "baichuan-inc/Baichuan2-13B-Chat"
-        "baichuan2-7b": "baichuan-inc/Baichuan2-7B-Chat"
-
-        "baichuan-7b": "baichuan-inc/Baichuan-7B"
-        "baichuan-13b": "baichuan-inc/Baichuan-13B"
+        "baichuan-7b-chat": "baichuan-inc/Baichuan-7B-Chat"
         "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat"
-
-        "aquila-7b": "BAAI/Aquila-7B"
-        "aquilachat-7b": "BAAI/AquilaChat-7B"
+        "baichuan2-7b-chat": "baichuan-inc/Baichuan2-7B-Chat"
+        "baichuan2-13b-chat": "baichuan-inc/Baichuan2-13B-Chat"
 
         "internlm-7b": "internlm/internlm-7b"
         "internlm-chat-7b": "internlm/internlm-chat-7b"
-
-        "falcon-7b": "tiiuae/falcon-7b"
-        "falcon-40b": "tiiuae/falcon-40b"
-        "falcon-rw-7b": "tiiuae/falcon-rw-7b"
-
-        "gpt2": "gpt2"
-        "gpt2-xl": "gpt2-xl"
-
-        "gpt-j-6b": "EleutherAI/gpt-j-6b"
-        "gpt4all-j": "nomic-ai/gpt4all-j"
-        "gpt-neox-20b": "EleutherAI/gpt-neox-20b"
-        "pythia-12b": "EleutherAI/pythia-12b"
-        "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
-        "dolly-v2-12b": "databricks/dolly-v2-12b"
-        "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b"
-
-        "Llama-2-13b-hf": "meta-llama/Llama-2-13b-hf"
-        "Llama-2-70b-hf": "meta-llama/Llama-2-70b-hf"
-        "open_llama_13b": "openlm-research/open_llama_13b"
-        "vicuna-13b-v1.3": "lmsys/vicuna-13b-v1.3"
-        "koala": "young-geng/koala"
-
-        "mpt-7b": "mosaicml/mpt-7b"
-        "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter"
-        "mpt-30b": "mosaicml/mpt-30b"
-        "opt-66b": "facebook/opt-66b"
-        "opt-iml-max-30b": "facebook/opt-iml-max-30b"
-
-        "agentlm-7b": "THUDM/agentlm-7b"
-        "agentlm-13b": "THUDM/agentlm-13b"
-        "agentlm-70b": "THUDM/agentlm-70b"
-
-        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat"
-      vllm_model_dict:
-        "aquila-7b": "BAAI/Aquila-7B"
-        "aquilachat-7b": "BAAI/AquilaChat-7B"
-
-        "baichuan-7b": "baichuan-inc/Baichuan-7B"
-        "baichuan-13b": "baichuan-inc/Baichuan-13B"
-        "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat"
-
-        "chatglm2-6b": "THUDM/chatglm2-6b"
-        "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k"
-        "chatglm3-6b": "THUDM/chatglm3-6b"
-        "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k"
+        "internlm2-chat-7b": "internlm/internlm2-chat-7b"
+        "internlm2-chat-20b": "internlm/internlm2-chat-20b"
 
         "BlueLM-7B-Chat": "vivo-ai/BlueLM-7B-Chat"
         "BlueLM-7B-Chat-32k": "vivo-ai/BlueLM-7B-Chat-32k"
 
-        # 注意：bloom系列的tokenizer与model是分离的，因此虽然vllm支持，但与fschat框架不兼容
-        # "bloom": "bigscience/bloom",
-        # "bloomz": "bigscience/bloomz",
-        # "bloomz-560m": "bigscience/bloomz-560m",
-        # "bloomz-7b1": "bigscience/bloomz-7b1",
-        # "bloomz-1b7": "bigscience/bloomz-1b7",
+        "Yi-34B-Chat": "https://huggingface.co/01-ai/Yi-34B-Chat"
+
+        "agentlm-7b": "THUDM/agentlm-7b"
+        "agentlm-13b": "THUDM/agentlm-13b"
+        "agentlm-70b": "THUDM/agentlm-70b"
+
+        "falcon-7b": "tiiuae/falcon-7b"
+        "falcon-40b": "tiiuae/falcon-40b"
+        "falcon-rw-7b": "tiiuae/falcon-rw-7b"
+
+        "aquila-7b": "BAAI/Aquila-7B"
+        "aquilachat-7b": "BAAI/AquilaChat-7B"
+        "open_llama_13b": "openlm-research/open_llama_13b"
+        "vicuna-13b-v1.5": "lmsys/vicuna-13b-v1.5"
+        "koala": "young-geng/koala"
+        "mpt-7b": "mosaicml/mpt-7b"
+        "mpt-7b-storywriter": "mosaicml/mpt-7b-storywriter"
+        "mpt-30b": "mosaicml/mpt-30b"
+        "opt-66b": "facebook/opt-66b"
+        "opt-iml-max-30b": "facebook/opt-iml-max-30b"
+        "gpt2": "gpt2"
+        "gpt2-xl": "gpt2-xl"
+        "gpt-j-6b": "EleutherAI/gpt-j-6b"
+        "gpt4all-j": "nomic-ai/gpt4all-j"
+        "gpt-neox-20b": "EleutherAI/gpt-neox-20b"
+        "pythia-12b": "EleutherAI/pythia-12b"
+        "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
+        "dolly-v2-12b": "databricks/dolly-v2-12b"
+        "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b"
+
+      vllm_model_dict:
+        "chatglm2-6b": "THUDM/chatglm2-6b"
+        "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k"
+        "chatglm3-6b": "THUDM/chatglm3-6b"
+        "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k"
+
+        "Llama-2-7b-chat-hf": "meta-llama/Llama-2-7b-chat-hf"
+        "Llama-2-13b-chat-hf": "meta-llama/Llama-2-13b-chat-hf"
+        "Llama-2-70b-chat-hf": "meta-llama/Llama-2-70b-chat-hf"
+
+        "Qwen-1_8B-Chat": "Qwen/Qwen-1_8B-Chat"
+        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat"
+        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat"
+        "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat"
+
+        "baichuan-7b-chat": "baichuan-inc/Baichuan-7B-Chat"
+        "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat"
+        "baichuan2-7b-chat": "baichuan-inc/Baichuan-7B-Chat"
+        "baichuan2-13b-chat": "baichuan-inc/Baichuan-13B-Chat"
+
+        "BlueLM-7B-Chat": "vivo-ai/BlueLM-7B-Chat"
+        "BlueLM-7B-Chat-32k": "vivo-ai/BlueLM-7B-Chat-32k"
 
         "internlm-7b": "internlm/internlm-7b"
         "internlm-chat-7b": "internlm/internlm-chat-7b"
+        "internlm2-chat-7b": "internlm/Models/internlm2-chat-7b"
+        "internlm2-chat-20b": "internlm/Models/internlm2-chat-20b"
+
+        "aquila-7b": "BAAI/Aquila-7B"
+        "aquilachat-7b": "BAAI/AquilaChat-7B"
+
         "falcon-7b": "tiiuae/falcon-7b"
         "falcon-40b": "tiiuae/falcon-40b"
         "falcon-rw-7b": "tiiuae/falcon-rw-7b"
@@ -307,8 +299,6 @@ plugins:
         "oasst-sft-4-pythia-12b-epoch-3.5": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
         "dolly-v2-12b": "databricks/dolly-v2-12b"
         "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b"
-        "Llama-2-13b-hf": "meta-llama/Llama-2-13b-hf"
-        "Llama-2-70b-hf": "meta-llama/Llama-2-70b-hf"
         "open_llama_13b": "openlm-research/open_llama_13b"
         "vicuna-13b-v1.3": "lmsys/vicuna-13b-v1.3"
         "koala": "young-geng/koala"
@@ -318,24 +308,3 @@ plugins:
         "opt-66b": "facebook/opt-66b"
         "opt-iml-max-30b": "facebook/opt-iml-max-30b"
 
-        "Qwen-1_8B": "Qwen/Qwen-1_8B"
-        "Qwen-1_8B-Chat": "Qwen/Qwen-1_8B-Chat"
-        "Qwen-1_8B-Chat-Int8": "Qwen/Qwen-1_8B-Chat-Int8"
-        "Qwen-1_8B-Chat-Int4": "Qwen/Qwen-1_8B-Chat-Int4"
-
-        "Qwen-7B": "Qwen/Qwen-7B"
-        "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat"
-
-        "Qwen-14B": "Qwen/Qwen-14B"
-        "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat"
-        "Qwen-14B-Chat-Int8": "Qwen/Qwen-14B-Chat-Int8"
-        "Qwen-14B-Chat-Int4": "Qwen/Qwen-14B-Chat-Int4"
-
-        "Qwen-72B": "Qwen/Qwen-72B"
-        "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat"
-        "Qwen-72B-Chat-Int8": "Qwen/Qwen-72B-Chat-Int8"
-        "Qwen-72B-Chat-Int4": "Qwen/Qwen-72B-Chat-Int4"
-
-        "agentlm-7b": "THUDM/agentlm-7b"
-        "agentlm-13b": "THUDM/agentlm-13b"
-        "agentlm-70b": "THUDM/agentlm-70b"
