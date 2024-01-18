@@ -70,6 +70,3 @@ def openai_plugins_page(api: ApiRequest, is_lite: bool = None):
                           on_click=start_worker)
                 st.button("停止" + st.session_state.worker_id, key="stop_worker",
                           on_click=stop_worker)
-
-
-
