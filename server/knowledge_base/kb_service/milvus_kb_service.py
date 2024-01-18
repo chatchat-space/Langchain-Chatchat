@@ -22,10 +22,14 @@ class MilvusKBService(KBService):
     #     if self.milvus.col:
     #         self.milvus.col.flush()
 
-    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+    def get_doc_by_ids(self, ids: List[int]) -> List[Document]:
         result = []
         if self.milvus.col:
-            data_list = self.milvus.col.query(expr=f'pk in {ids}', output_fields=["*"])
+
+            # 使用整数形式的 ids 进行查询
+            int_ids = [int(id) for id in ids]
+
+            data_list = self.milvus.col.query(expr=f'pk in {int_ids}', output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
                 result.append(Document(page_content=text, metadata=data))
