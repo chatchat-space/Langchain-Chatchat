@@ -5,7 +5,6 @@ import sys
 import logging
 
 logger = logging.getLogger(__name__)
-# 为了能使用插件中的函数，需要将当前目录加入到sys.path中
 root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
 

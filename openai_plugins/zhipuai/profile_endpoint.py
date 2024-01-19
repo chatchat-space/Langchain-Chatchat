@@ -37,11 +37,11 @@ class ZhipuAIProfileEndpointAdapter(ProfileEndpointAdapter):
                                          model_description="glm-3-turbo",
                                          providers=["model", "embedding"],
                                          model_extra_info="{}"))
-        list_worker.append(LLMWorkerInfo(worker_id="embedding-2",
-                                         model_name="embedding-2",
-                                         model_description="embedding-2",
-                                         providers=["embedding"],
-                                         model_extra_info="{}"))
+        # list_worker.append(LLMWorkerInfo(worker_id="embedding-2",
+        #                                  model_name="embedding-2",
+        #                                  model_description="embedding-2",
+        #                                  providers=["embedding"],
+        #                                  model_extra_info="{}"))
         return list_worker
 
     def list_llm_models(self) -> List[LLMWorkerInfo]:
@@ -57,11 +57,11 @@ class ZhipuAIProfileEndpointAdapter(ProfileEndpointAdapter):
                                          model_description="glm-3-turbo",
                                          providers=["model", "embedding"],
                                          model_extra_info="{}"))
-        list_worker.append(LLMWorkerInfo(worker_id="embedding-2",
-                                         model_name="embedding-2",
-                                         model_description="embedding-2",
-                                         providers=["embedding"],
-                                         model_extra_info="{}"))
+        # list_worker.append(LLMWorkerInfo(worker_id="embedding-2",
+        #                                  model_name="embedding-2",
+        #                                  model_description="embedding-2",
+        #                                  providers=["embedding"],
+        #                                  model_extra_info="{}"))
         return list_worker
 
     def get_model_config(self, model_name) -> LLMWorkerInfo:
