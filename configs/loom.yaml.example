@@ -23,7 +23,7 @@ plugins:
 
   - imitater:
       name: "imitater"
-      logdir: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/logs"
+      logdir: "/logs"
       worker_name: "qwen-worker1"
       run_openai_api:
         host: "127.0.0.1"
@@ -32,15 +32,15 @@ plugins:
         - qwen-worker1:
             model:
                 name: "Qwen-1_8B-Chat"
-                chat_model_path: "/media/checkpoint/Qwen-1_8B"
+                chat_model_path: "Qwen-1_8B"
                 chat_model_device: "0"
-                chat_template_path: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/openai_plugins/imitater/templates/qwen.jinja"
-                generation_config_path: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/openai_plugins/imitater/generation_config/qwen"
+                chat_template_path: "openai_plugins/imitater/templates/qwen.jinja"
+                generation_config_path: "openai_plugins/imitater/generation_config/qwen"
                 agent_type: "react"
 
             embedding:
                 name: "bge-large-zh"
-                embed_model_path: "/media/checkpoint/bge-large-zh"
+                embed_model_path: "BAAI/bge-large-zh"
                 embed_model_device: "0"
                 embed_batch_size: 16
 
