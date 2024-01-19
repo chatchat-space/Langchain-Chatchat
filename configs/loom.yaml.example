@@ -19,6 +19,30 @@ plugins:
   - openai:
       name: "openai"
 
+  - imitater:
+      name: "imitater"
+      logdir: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/logs"
+      worker_name: "worker1"
+      run_openai_api:
+        host: "127.0.0.1"
+        port: 30000
+      imitate_model_workers:
+        - worker1:
+            model:
+                name: "Qwen-1_8B-Chat"
+                chat_model_path: "/media/checkpoint/Qwen-1_8B"
+                chat_model_device: "0"
+                chat_template_path: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/openai_plugins/imitater/templates/qwen.jinja"
+                generation_config_path: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/openai_plugins/imitater/generation_config/qwen"
+                agent_type: "react"
+
+            embedding:
+                name: "bge-large-zh"
+                embed_model_path: "/media/checkpoint/bge-large-zh"
+                embed_model_device: "0"
+                embed_batch_size: 16
+
+
   - fastchat:
       name: "fastchat"
       logdir: "logs"
@@ -96,6 +120,9 @@ plugins:
             host: "127.0.0.1"
             device: "cuda"
             port: 20009
+        - Qwen-1_8B:
+            host: "127.0.0.1"
+            port: 20008
 
           # 以下配置可以不用修改，在model_config中设置启动的模型
         - zhipu-api:

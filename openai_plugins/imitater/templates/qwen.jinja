@@ -1,0 +1,20 @@
+{%- if not add_generation_prompt is defined -%}
+    {%- set add_generation_prompt = false -%}
+{%- endif -%}
+{%- if messages[0]['role'] == 'system' -%}
+    {%- set loop_messages = messages[1:] -%}
+    {%- set system_message = messages[0]['content'] -%}
+{%- else -%}
+    {%- set loop_messages = messages -%}
+    {%- set system_message = 'You are a helpful assistant.' -%}
+{%- endif -%}
+{{ '<|im_start|>' + 'system' + '\\n' + system_message + '<|im_end|>' + '\\n' }}
+{%- for message in loop_messages -%}
+    {{ '<|im_start|>' + message['role'] + '\\n' + message['content']}}
+    {%- if (loop.last and add_generation_prompt) or not loop.last -%}
+        {{ '<|im_end|>' + '\\n' }}
+    {%- endif -%}
+{%- endfor -%}
+{%- if add_generation_prompt and messages[-1]['role'] != 'assistant' -%}
+    {{ '<|im_start|>' + 'assistant' + '\\n' }}
+{%- endif -%}
