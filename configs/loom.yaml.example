@@ -22,12 +22,12 @@ plugins:
   - imitater:
       name: "imitater"
       logdir: "/media/gpt4-pdf-chatbot-langchain/langchain-chatchat-archive/logs"
-      worker_name: "worker1"
+      worker_name: "qwen-worker1"
       run_openai_api:
         host: "127.0.0.1"
         port: 30000
       imitate_model_workers:
-        - worker1:
+        - qwen-worker1:
             model:
                 name: "Qwen-1_8B-Chat"
                 chat_model_path: "/media/checkpoint/Qwen-1_8B"
