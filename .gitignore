@@ -8,6 +8,7 @@ logs
 /knowledge_base/samples/vector_store
 
 /configs/*.py
+/configs/loom.yaml
 .vscode/
 
 # below are standard python ignore files
