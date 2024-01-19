@@ -18,6 +18,8 @@ openai_plugins_load_folder:
 plugins:
   - openai:
       name: "openai"
+  - zhipuai:
+      name: "zhipuai"
 
   - imitater:
       name: "imitater"

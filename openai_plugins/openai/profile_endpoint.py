@@ -43,11 +43,11 @@ class OpenAIProfileEndpointAdapter(ProfileEndpointAdapter):
                                          model_description="gpt-4-1106-preview",
                                          providers=["model", "embedding"],
                                          model_extra_info="{}"))
-        list_worker.append(LLMWorkerInfo(worker_id="text-embedding-ada-002",
-                                         model_name="text-embedding-ada-002",
-                                         model_description="text-embedding-ada-002",
-                                         providers=["embedding"],
-                                         model_extra_info="{}"))
+        # list_worker.append(LLMWorkerInfo(worker_id="text-embedding-ada-002",
+        #                                  model_name="text-embedding-ada-002",
+        #                                  model_description="text-embedding-ada-002",
+        #                                  providers=["embedding"],
+        #                                  model_extra_info="{}"))
         return list_worker
 
     def list_llm_models(self) -> List[LLMWorkerInfo]:
@@ -68,11 +68,11 @@ class OpenAIProfileEndpointAdapter(ProfileEndpointAdapter):
                                          model_description="gpt-4-1106-preview",
                                          providers=["model", "embedding"],
                                          model_extra_info="{}"))
-        list_worker.append(LLMWorkerInfo(worker_id="text-embedding-ada-002",
-                                         model_name="text-embedding-ada-002",
-                                         model_description="text-embedding-ada-002",
-                                         providers=["embedding"],
-                                         model_extra_info="{}"))
+        # list_worker.append(LLMWorkerInfo(worker_id="text-embedding-ada-002",
+        #                                  model_name="text-embedding-ada-002",
+        #                                  model_description="text-embedding-ada-002",
+        #                                  providers=["embedding"],
+        #                                  model_extra_info="{}"))
         return list_worker
 
     def get_model_config(self, model_name) -> LLMWorkerInfo:

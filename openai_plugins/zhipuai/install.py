@@ -9,8 +9,6 @@ import locale
 logger = logging.getLogger(__name__)
 root_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root_dir)
-
-# Perform install
 processed_install = set()
 pip_list = None
 
