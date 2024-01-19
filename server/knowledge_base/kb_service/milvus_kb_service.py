@@ -22,7 +22,7 @@ class MilvusKBService(KBService):
     #     if self.milvus.col:
     #         self.milvus.col.flush()
 
-    def get_doc_by_ids(self, ids: List[int]) -> List[Document]:
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         result = []
         if self.milvus.col:
 
