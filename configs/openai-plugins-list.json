@@ -1,6 +1,6 @@
 {
   "openai_plugins": [
-    "fastchat", "openai"
+    "fastchat", "openai", "imitater"
     ]
 
 }

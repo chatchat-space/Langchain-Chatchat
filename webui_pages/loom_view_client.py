@@ -2,24 +2,32 @@ from typing import Tuple, Any
 
 import streamlit as st
 from loom_core.openai_plugins.publish import LoomOpenAIPluginsClient
-
+import logging
+logger = logging.getLogger(__name__)
 client = LoomOpenAIPluginsClient(base_url="http://localhost:8000", timeout=300, use_async=False)
 
 
 def update_store():
+    logger.info("update_status")
     st.session_state.status = client.status()
+    logger.info("update_list_plugins")
     list_plugins = client.list_plugins()
     st.session_state.run_plugins_list = list_plugins.get("plugins_list", [])
+
+    logger.info("update_launch_subscribe_info")
     launch_subscribe_info = {}
     for plugin_name in st.session_state.run_plugins_list:
         launch_subscribe_info[plugin_name] = client.launch_subscribe_info(plugin_name)
 
     st.session_state.launch_subscribe_info = launch_subscribe_info
+
+    logger.info("update_list_running_models")
     list_running_models = {}
     for plugin_name in st.session_state.run_plugins_list:
         list_running_models[plugin_name] = client.list_running_models(plugin_name)
     st.session_state.list_running_models = list_running_models
 
+    logger.info("update_model_config")
     model_config = {}
     for plugin_name in st.session_state.run_plugins_list:
         model_config[plugin_name] = client.list_llm_models(plugin_name)
