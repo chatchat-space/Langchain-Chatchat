@@ -10,7 +10,7 @@ sentence_transformers==2.2.2
 langchain==0.0.354
 langchain-experimental==0.0.47
 pydantic==1.10.13
-fschat==0.2.34
+fschat==0.2.35
 openai~=1.7.1
 fastapi~=0.108.0
 sse_starlette==1.8.2
