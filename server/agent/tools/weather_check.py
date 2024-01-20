@@ -20,6 +20,6 @@ def weather(location: str, api_key: str):
 
 
 def weathercheck(location: str):
-    return weather(location, "S8vrB4U_-c5mvAMiK")
+    return weather(location, "your keys")
 class WeatherInput(BaseModel):
-    location: str = Field(description="City name,include city and county,like '厦门'")
+    location: str = Field(description="City name,include city and county")
