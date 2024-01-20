@@ -19,7 +19,7 @@ class ZillizKBService(KBService):
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         result = []
         if self.zilliz.col:
-            ids = [int(id) for id in ids]  # for milvus if needed
+            # ids = [int(id) for id in ids]  # for zilliz if needed #pr 2725
             data_list = self.zilliz.col.query(expr=f'pk in {ids}', output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
