@@ -42,7 +42,6 @@ numpy>=1.26.3
 pandas~=2.1.4
 einops>=0.7.0
 transformers_stream_generator>=0.0.4
-vllm>=0.2.7; sys_platform == "linux"
 
 # optional document loaders
 
