@@ -23,7 +23,7 @@ plugins:
 
   - imitater:
       name: "imitater"
-      logdir: "/logs"
+      logdir: "logs"
       worker_name: "qwen-worker1"
       run_openai_api:
         host: "127.0.0.1"
@@ -43,7 +43,6 @@ plugins:
                 embed_model_path: "BAAI/bge-large-zh"
                 embed_model_device: "0"
                 embed_batch_size: 16
-
 
   - fastchat:
       name: "fastchat"
@@ -91,27 +90,31 @@ plugins:
             # 以下为vllm_worker配置参数,注意使用vllm必须有gpu，仅在Linux测试通过
 
             # tokenizer = model_path # 如果tokenizer与model_path不一致在此处添加
-            # 'tokenizer_mode':'auto',
-            # 'trust_remote_code':True,
-            # 'download_dir':None,
-            # 'load_format':'auto',
-            # 'dtype':'auto',
-            # 'seed':0,
-            # 'worker_use_ray':False,
-            # 'pipeline_parallel_size':1,
-            # 'tensor_parallel_size':1,
-            # 'block_size':16,
-            # 'swap_space':4 , # GiB
-            # 'gpu_memory_utilization':0.90,
-            # 'max_num_batched_tokens':2560,
-            # 'max_num_seqs':256,
-            # 'disable_log_stats':False,
-            # 'conv_template':None,
-            # 'limit_worker_concurrency':5,
-            # 'no_register':False,
-            # 'num_gpus': 1
-            # 'engine_use_ray': False,
-            # 'disable_log_requests': False
+#            'max_model_len': 1024
+#            'max_parallel_loading_workers': 1
+#            'max_context_len_to_capture': 1024
+#            'enforce_eager': False
+#            'tokenizer_mode': 'auto'
+#            'trust_remote_code': True
+#            'download_dir': None
+#            'load_format': 'auto'
+#            'dtype': 'auto'
+#            'seed': 0
+#            'worker_use_ray': False
+#            'pipeline_parallel_size': 1
+#            'tensor_parallel_size': 1
+#            'block_size': 16
+#            'swap_space': 4  # GiB
+#            'gpu_memory_utilization': 0.90
+#            'max_num_batched_tokens': 2560
+#            'max_num_seqs': 256
+#            'disable_log_stats': False
+#            'conv_template': 'qwen-7b-chat'
+#            'limit_worker_concurrency': 5
+#            'no_register': False
+#            'num_gpus': 1
+#            'engine_use_ray': False
+#            'disable_log_requests': False
 
         - chatglm3-6b:
             host: "127.0.0.1"
