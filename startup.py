@@ -88,7 +88,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
 
     for k, v in kwargs.items():
         setattr(args, k, v)
-    if worker_class := kwargs.get("langchain_model"): #Langchian支持的模型不用做操作
+    if worker_class := kwargs.get("langchain_model"): # Langchain支持的模型不用做操作
         from fastchat.serve.base_model_worker import app
         worker = ""
     # 在线模型API

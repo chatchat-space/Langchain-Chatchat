@@ -583,7 +583,7 @@ def get_httpx_client(
     helper to get httpx client with default proxies that bypass local addesses.
     '''
     default_proxies = {
-        # do not use proxy for locahost
+        # do not use proxy for localhost
         "all://127.0.0.1": None,
         "all://localhost": None,
     }
@@ -596,7 +596,7 @@ def get_httpx_client(
         host = ":".join(x.split(":")[:2])
         default_proxies.update({host: None})
 
-    # get proxies from system envionrent
+    # get proxies from system environment
     # proxy not str empty string, None, False, 0, [] or {}
     default_proxies.update({
         "http://": (os.environ.get("http_proxy")
