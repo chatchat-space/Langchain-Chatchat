@@ -48,8 +48,7 @@ beautifulsoup4~=4.12.2 # for .mhtml files
 pysrt~=1.1.2
 
 # Online api libs dependencies
-
-zhipuai==1.0.7 # zhipu
+# zhipuAI sdk is not supported on our platform, so use http instead
 dashscope==1.13.6 # qwen
 # volcengine>=1.0.119 # fangzhou
 

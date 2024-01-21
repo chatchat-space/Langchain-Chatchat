@@ -36,7 +36,7 @@ pytest
 
 # Online api libs dependencies
 
-zhipuai==1.0.7
+# zhipuAI sdk is not supported on our platform, so use http instead
 dashscope==1.13.6
 # volcengine>=1.0.119
 
