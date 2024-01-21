@@ -24,7 +24,7 @@ from server.knowledge_base.utils import (
     list_kbs_from_folder, list_files_from_folder,
 )
 
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Tuple
 
 from server.embeddings_api import embed_texts, aembed_texts, embed_documents
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -261,7 +261,7 @@ class KBService(ABC):
                   query: str,
                   top_k: int,
                   score_threshold: float,
-                  ) -> List[Document]:
+                  ) -> List[Tuple[Document, float]]:
         """
         搜索知识库子类实自己逻辑
         """
