@@ -1,6 +1,6 @@
 from langchain.docstore.document import Document
 from configs import EMBEDDING_MODEL, logger
-from server.model_workers.base import ApiEmbeddingsParams
+# from server.model_workers.base import ApiEmbeddingsParams
 from server.utils import BaseResponse, get_model_worker_config, list_embed_models, list_online_embed_models
 from fastapi import Body
 from fastapi.concurrency import run_in_threadpool
@@ -30,8 +30,8 @@ def embed_texts(
             embed_model = config.get("embed_model")
             worker = worker_class()
             if worker_class.can_embedding():
-                params = ApiEmbeddingsParams(texts=texts, to_query=to_query, embed_model=embed_model)
-                resp = worker.do_embeddings(params)
+                # params = ApiEmbeddingsParams(texts=texts, to_query=to_query)
+                resp = worker.do_embeddings(None)
                 return BaseResponse(**resp)
 
         return BaseResponse(code=500, msg=f"指定的模型 {embed_model} 不支持 Embeddings 功能。")
