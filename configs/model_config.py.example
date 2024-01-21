@@ -29,6 +29,7 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 LLM_MODELS = ["zhipu-api"]
 Agent_MODEL = None
 
+# LLM 模型运行设备。设为"auto"会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
 LLM_DEVICE = "cuda"
 
 HISTORY_LEN = 3
@@ -45,10 +46,10 @@ ONLINE_LLM_MODEL = {
         "openai_proxy": "",
     },
 
-    # 智谱AI API（不支持GLM4，本版本无法兼容，敬请期待0.3.x）具体注册及api key获取请前往 http://open.bigmodel.cn
+    # 智谱AI API,具体注册及api key获取请前往 http://open.bigmodel.cn
     "zhipu-api": {
         "api_key": "",
-        "version": "chatglm_turbo",
+        "version": "glm-4",
         "provider": "ChatGLMWorker",
     },
 
@@ -119,7 +120,7 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "TianGongWorker",
     },
-    # Gemini API (开发组未测试，由社群提供，只支持pro）
+    # Gemini API (开发组未测试，由社群提供，只支持pro）https://makersuite.google.com/或者google cloud，使用前先确认网络正常，使用代理请在项目启动（python startup.py -a)环境内设置https_proxy环境变量
     "gemini-api": {
         "api_key": "",
         "provider": "GeminiWorker",
@@ -196,7 +197,7 @@ MODEL_PATH = {
         "agentlm-70b": "THUDM/agentlm-70b",
 
         "falcon-7b": "tiiuae/falcon-7b",
-        "falcon-40b": "tiiuae/falcon-40,b",
+        "falcon-40b": "tiiuae/falcon-40b",
         "falcon-rw-7b": "tiiuae/falcon-rw-7b",
 
         "aquila-7b": "BAAI/Aquila-7B",
@@ -291,7 +292,4 @@ SUPPORT_AGENT_MODEL = [
     "qwen-api",
     "Qwen",
     "chatglm3",
-    "xinghuo-api",
-    "internlm2-chat-7b",
-    "internlm2-chat-20b"
 ]
