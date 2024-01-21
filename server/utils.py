@@ -333,7 +333,7 @@ def get_model_path(model_name: str, type: str = None) -> Optional[str]:
 
     if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
         path = Path(path_str)
-        if path.is_dir():  # 任意绝对路径
+        if path.is_dir() and path.is_absolute(): # 任意绝对路径
             return str(path)
 
         root_path = Path(MODEL_ROOT_PATH)
