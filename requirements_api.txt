@@ -39,6 +39,7 @@ transformers_stream_generator==0.0.4
 vllm==0.2.7; sys_platform == "linux"
 httpx==0.26.0
 llama-index
+# flash-attn>=2.4.3 # For Orion-14B-Chat and Qwen-14B-Chat
 
 # optional document loaders
 

@@ -19,6 +19,7 @@ from server.chat.utils import History
 from server.agent import model_container
 from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 
+
 async def agent_chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
                      history: List[History] = Body([],
                                                    description="历史对话",
@@ -82,8 +83,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                 memory.chat_memory.add_user_message(message.content)
             else:
                 memory.chat_memory.add_ai_message(message.content)
-
-        if "chatglm3" in model_container.MODEL.model_name:
+        if "chatglm3" in model_container.MODEL.model_name or "zhipu-api" in model_container.MODEL.model_name:
             agent_executor = initialize_glm3_agent(
                 llm=model,
                 tools=tools,
