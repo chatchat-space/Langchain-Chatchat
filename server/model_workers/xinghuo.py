@@ -37,7 +37,7 @@ class XingHuoWorker(ApiModelWorker):
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 8000) # TODO: V1模型的最大长度为4000，需要自行修改
+        kwargs.setdefault("context_len", 8000)
         super().__init__(**kwargs)
         self.version = version
 

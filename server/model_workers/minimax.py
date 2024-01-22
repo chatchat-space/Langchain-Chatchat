@@ -28,7 +28,7 @@ class MiniMaxWorker(ApiModelWorker):
 
     def validate_messages(self, messages: List[Dict]) -> List[Dict]:
         role_maps = {
-            "user": self.user_role,
+            "USER": self.user_role,
             "assistant": self.ai_role,
             "system": "system",
         }
@@ -73,7 +73,7 @@ class MiniMaxWorker(ApiModelWorker):
             with response as r:
                 text = ""
                 for e in r.iter_text():
-                    if not e.startswith("data: "): # 真是优秀的返回
+                    if not e.startswith("data: "):
                         data = {
                                 "error_code": 500,
                                 "text": f"minimax返回错误的结果：{e}",
@@ -140,7 +140,7 @@ class MiniMaxWorker(ApiModelWorker):
                     self.logger.error(f"请求 MiniMax API 时发生错误：{data}")
                     return data
                 i += batch_size
-            return {"code": 200, "data": embeddings}
+            return {"code": 200, "data": result}
 
     def get_embeddings(self, params):
         # TODO: 支持embeddings

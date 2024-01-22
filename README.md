@@ -42,7 +42,7 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v11` 版本所使用代码已更新至本项目 `v0.2.7` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v13` 版本所使用代码已更新至本项目 `v0.2.9` 版本。
 
 🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6) 已经更新到 ```0.2.7``` 版本。
 
@@ -67,10 +67,10 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 ### 1. 环境配置
 
-+ 首先，确保你的机器安装了 Python 3.8 - 3.10
++ 首先，确保你的机器安装了 Python 3.8 - 3.11
 ```
 $ python --version
-Python 3.10.12
+Python 3.11.7
 ```
 接着，创建一个虚拟环境，并在虚拟环境内安装项目的依赖
 ```shell
@@ -88,6 +88,7 @@ $ pip install -r requirements_webui.txt
 
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
+请注意，LangChain-Chatchat `0.2.x` 系列是针对 Langchain `0.0.x` 系列版本的，如果你使用的是 Langchain `0.1.x` 系列版本，需要降级。
 ### 2， 模型下载
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
@@ -141,14 +142,20 @@ $ python startup.py -a
 ---
 ## 项目里程碑
 
++ `2023年4月`: `Langchain-ChatGLM 0.1.0` 发布，支持基于 ChatGLM-6B 模型的本地知识库问答。
++ `2023年8月`: `Langchain-ChatGLM` 改名为 `Langchain-Chatchat`，`0.2.0` 发布，使用 `fastchat` 作为模型加载方案，支持更多的模型和数据库。
++ `2023年10月`: `Langchain-Chatchat 0.2.5` 发布，推出 Agent 内容，开源项目在`Founder Park & Zhipu AI & Zilliz` 举办的黑客马拉松获得三等奖。 
++ `2023年12月`: `Langchain-Chatchat` 开源项目获得超过 **20K** stars.
++ `2024年1月`: `LangChain 0.1.x` 推出，`Langchain-Chatchat 0.2.x` 停止更新和技术支持，全力研发具有更强应用性的 `Langchain-Chatchat 0.3.x`。
 
++ 🔥 让我们一起期待未来 Chatchat 的故事 ···
 ---
 ## 联系我们
 ### Telegram
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_82.jpg" alt="二维码" width="300" />
+<img src="img/qr_code_85.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 

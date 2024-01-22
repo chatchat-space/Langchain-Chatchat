@@ -84,30 +84,6 @@ class QianFanWorker(ApiModelWorker):
 
     def do_chat(self, params: ApiChatParams) -> Dict:
         params.load_config(self.model_names[0])
-        # import qianfan
-
-        # comp = qianfan.ChatCompletion(model=params.version,
-        #                               endpoint=params.version_url,
-        #                               ak=params.api_key,
-        #                               sk=params.secret_key,)
-        # text = ""
-        # for resp in comp.do(messages=params.messages,
-        #                     temperature=params.temperature,
-        #                     top_p=params.top_p,
-        #                     stream=True):
-        #     if resp.code == 200:
-        #         if chunk := resp.body.get("result"):
-        #             text += chunk
-        #             yield {
-        #                 "error_code": 0,
-        #                 "text": text
-        #             }
-        #     else:
-        #         yield {
-        #             "error_code": resp.code,
-        #             "text": str(resp.body),
-        #         }
-
         BASE_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' \
                    '/{model_version}?access_token={access_token}'
 
@@ -190,19 +166,19 @@ class QianFanWorker(ApiModelWorker):
             i = 0
             batch_size = 10
             while i < len(params.texts):
-                texts = params.texts[i:i+batch_size]
+                texts = params.texts[i:i + batch_size]
                 resp = client.post(url, json={"input": texts}).json()
                 if "error_code" in resp:
                     data = {
-                                "code": resp["error_code"],
-                                "msg": resp["error_msg"],
-                                "error": {
-                                    "message": resp["error_msg"],
-                                    "type": "invalid_request_error",
-                                    "param": None,
-                                    "code": None,
-                                }
-                            }
+                        "code": resp["error_code"],
+                        "msg": resp["error_msg"],
+                        "error": {
+                            "message": resp["error_msg"],
+                            "type": "invalid_request_error",
+                            "param": None,
+                            "code": None,
+                        }
+                    }
                     self.logger.error(f"请求千帆 API 时发生错误：{data}")
                     return data
                 else:

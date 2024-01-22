@@ -55,10 +55,10 @@ The main process analysis from the aspect of document process:
 🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
-🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v9 the codes are update
-to v0.2.5.
+🌐 [AutoDL image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5) is supported, and in v13 the codes are update
+to v0.2.9.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)
+🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7)
 
 ## Pain Points Addressed
 
@@ -98,6 +98,7 @@ $ pip install -r requirements_webui.txt
 
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
+Please note that the LangChain-Chachat `0.2.x` series is for the Langchain `0.0.x` series version. If you are using the Langchain `0.1.x` series version, you need to downgrade.
 
 ### Model Download
 
@@ -156,6 +157,16 @@ The above instructions are provided for a quick start. If you need more features
 please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/).
 
 ---
+## Project Milestones
+
++ `April 2023`: `Langchain-ChatGLM 0.1.0` released, supporting local knowledge base question and answer based on the ChatGLM-6B model.
++ `August 2023`: `Langchain-ChatGLM` was renamed to `Langchain-Chatchat`, `0.2.0` was released, using `fastchat` as the model loading solution, supporting more models and databases.
++ `October 2023`: `Langchain-Chachat 0.2.5` was released, Agent content was launched, and the open source project won the third prize in the hackathon held by `Founder Park & Zhipu AI & Zilliz`.
++ `December 2023`: `Langchain-Chachat` open source project received more than **20K** stars.
++ `January 2024`: `LangChain 0.1.x` is launched, `Langchain-Chatchat 0.2.x` will stop updating and technical support, and all efforts will be made to develop `Langchain-Chatchat 0.3.x` with stronger applicability.
+
++ 🔥 Let’s look forward to the future Chatchat stories together···
+---
 
 ## Contact Us
 
@@ -163,9 +174,9 @@ please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
-### WeChat Group、
+### WeChat Group
 
-<img src="img/qr_code_67.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_85.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat Official Account
 

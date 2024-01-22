@@ -18,13 +18,10 @@ class MilvusKBService(KBService):
         from pymilvus import Collection
         return Collection(milvus_name)
 
-    # def save_vector_store(self):
-    #     if self.milvus.col:
-    #         self.milvus.col.flush()
-
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         result = []
         if self.milvus.col:
+            # ids = [int(id) for id in ids]  # for milvus if needed #pr 2725
             data_list = self.milvus.col.query(expr=f'pk in {ids}', output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
@@ -53,7 +50,7 @@ class MilvusKBService(KBService):
         self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(self.embed_model),
                              collection_name=self.kb_name, 
                              connection_args=kbs_config.get("milvus"),
-                             index_params=kbs_config.ge("milvus_kwargs")["index_params"],
+                             index_params=kbs_config.get("milvus_kwargs")["index_params"],
                              search_params=kbs_config.get("milvus_kwargs")["search_params"]
                              )
 

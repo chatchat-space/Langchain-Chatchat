@@ -7,31 +7,35 @@
 保存的模型的位置位于原本嵌入模型的目录下，模型的名称为原模型名称+Merge_Keywords_时间戳
 '''
 import sys
+
 sys.path.append("..")
+import os
+import torch
+
 from datetime import datetime
 from configs import (
     MODEL_PATH,
     EMBEDDING_MODEL,
     EMBEDDING_KEYWORD_FILE,
 )
-import os
-import torch
+
 from safetensors.torch import save_model
 from sentence_transformers import SentenceTransformer
+from langchain_core._api import deprecated
 
 
+@deprecated(
+        since="0.3.0",
+        message="自定义关键词 Langchain-Chatchat 0.3.x 重写, 0.2.x中相关功能将废弃",
+        removal="0.3.0"
+    )
 def get_keyword_embedding(bert_model, tokenizer, key_words):
     tokenizer_output = tokenizer(key_words, return_tensors="pt", padding=True, truncation=True)
-
-    # No need to manually convert to tensor as we've set return_tensors="pt"
     input_ids = tokenizer_output['input_ids']
-
-    # Remove the first and last token for each sequence in the batch
     input_ids = input_ids[:, 1:-1]
 
     keyword_embedding = bert_model.embeddings.word_embeddings(input_ids)
     keyword_embedding = torch.mean(keyword_embedding, 1)
-
     return keyword_embedding
 
 
@@ -47,14 +51,11 @@ def add_keyword_to_model(model_name=EMBEDDING_MODEL, keyword_file: str = "", out
     bert_model = word_embedding_model.auto_model
     tokenizer = word_embedding_model.tokenizer
     key_words_embedding = get_keyword_embedding(bert_model, tokenizer, key_words)
-    # key_words_embedding = st_model.encode(key_words)
 
     embedding_weight = bert_model.embeddings.word_embeddings.weight
     embedding_weight_len = len(embedding_weight)
     tokenizer.add_tokens(key_words)
     bert_model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=32)
-
-    # key_words_embedding_tensor = torch.from_numpy(key_words_embedding)
     embedding_weight = bert_model.embeddings.word_embeddings.weight
     with torch.no_grad():
         embedding_weight[embedding_weight_len:embedding_weight_len + key_words_len, :] = key_words_embedding
@@ -76,46 +77,3 @@ def add_keyword_to_embedding_model(path: str = EMBEDDING_KEYWORD_FILE):
     output_model_name = "{}_Merge_Keywords_{}".format(EMBEDDING_MODEL, current_time)
     output_model_path = os.path.join(model_parent_directory, output_model_name)
     add_keyword_to_model(model_name, keyword_file, output_model_path)
-
-
-if __name__ == '__main__':
-    add_keyword_to_embedding_model(EMBEDDING_KEYWORD_FILE)
-
-    # input_model_name = ""
-    # output_model_path = ""
-    # # 以下为加入关键字前后tokenizer的测试用例对比
-    # def print_token_ids(output, tokenizer, sentences):
-    #     for idx, ids in enumerate(output['input_ids']):
-    #         print(f'sentence={sentences[idx]}')
-    #         print(f'ids={ids}')
-    #         for id in ids:
-    #             decoded_id = tokenizer.decode(id)
-    #             print(f'    {decoded_id}->{id}')
-    #
-    # sentences = [
-    #     '数据科学与大数据技术',
-    #     'Langchain-Chatchat'
-    # ]
-    #
-    # st_no_keywords = SentenceTransformer(input_model_name)
-    # tokenizer_without_keywords = st_no_keywords.tokenizer
-    # print("===== tokenizer with no keywords added =====")
-    # output = tokenizer_without_keywords(sentences)
-    # print_token_ids(output, tokenizer_without_keywords, sentences)
-    # print(f'-------- embedding with no keywords added -----')
-    # embeddings = st_no_keywords.encode(sentences)
-    # print(embeddings)
-    #
-    # print("--------------------------------------------")
-    # print("--------------------------------------------")
-    # print("--------------------------------------------")
-    #
-    # st_with_keywords = SentenceTransformer(output_model_path)
-    # tokenizer_with_keywords = st_with_keywords.tokenizer
-    # print("===== tokenizer with keyword added =====")
-    # output = tokenizer_with_keywords(sentences)
-    # print_token_ids(output, tokenizer_with_keywords, sentences)
-    #
-    # print(f'-------- embedding with keywords added -----')
-    # embeddings = st_with_keywords.encode(sentences)
-    # print(embeddings)
