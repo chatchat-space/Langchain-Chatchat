@@ -12,16 +12,16 @@ class FangZhouWorker(ApiModelWorker):
     """
 
     def __init__(
-        self,
-        *,
-        model_names: List[str] = ["fangzhou-api"],
-        controller_addr: str = None,
-        worker_addr: str = None,
-        version: Literal["chatglm-6b-model"] = "chatglm-6b-model",
-        **kwargs,
+            self,
+            *,
+            model_names: List[str] = ["fangzhou-api"],
+            controller_addr: str = None,
+            worker_addr: str = None,
+            version: Literal["chatglm-6b-model"] = "chatglm-6b-model",
+            **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 16384) # TODO: 不同的模型有不同的大小
+        kwargs.setdefault("context_len", 16384)
         super().__init__(**kwargs)
         self.version = version
 
@@ -53,15 +53,15 @@ class FangZhouWorker(ApiModelWorker):
             if error := resp.error:
                 if error.code_n > 0:
                     data = {
-                            "error_code": error.code_n,
-                            "text": error.message,
-                            "error": {
-                                "message": error.message,
-                                "type": "invalid_request_error",
-                                "param": None,
-                                "code": None,
-                            }
+                        "error_code": error.code_n,
+                        "text": error.message,
+                        "error": {
+                            "message": error.message,
+                            "type": "invalid_request_error",
+                            "param": None,
+                            "code": None,
                         }
+                    }
                     self.logger.error(f"请求方舟 API 时发生错误：{data}")
                     yield data
                 elif chunk := resp.choice.message.content:
@@ -77,7 +77,6 @@ class FangZhouWorker(ApiModelWorker):
                 break
 
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 

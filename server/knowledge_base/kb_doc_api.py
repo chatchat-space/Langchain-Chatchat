@@ -95,7 +95,6 @@ def _save_files_in_thread(files: List[UploadFile],
                     and not override
                     and os.path.getsize(file_path) == len(file_content)
             ):
-                # TODO: filesize 不同后的处理
                 file_status = f"文件 {filename} 已存在。"
                 logger.warn(file_status)
                 return dict(code=404, msg=file_status, data=data)
@@ -116,7 +115,6 @@ def _save_files_in_thread(files: List[UploadFile],
         yield result
 
 
-# TODO: 等langchain.document_loaders支持内存文件的时候再开通
 # def files2docs(files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
 #                 knowledge_base_name: str = Form(..., description="知识库名称", examples=["samples"]),
 #                 override: bool = Form(False, description="覆盖已有文件"),

@@ -36,7 +36,6 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         await fn
     except Exception as e:
         logging.exception(e)
-        # TODO: handle exception
         msg = f"Caught exception: {e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
@@ -404,7 +403,7 @@ def fschat_controller_address() -> str:
 
 
 def fschat_model_worker_address(model_name: str = LLM_MODELS[0]) -> str:
-    if model := get_model_worker_config(model_name):  # TODO: depends fastchat
+    if model := get_model_worker_config(model_name):
         host = model["host"]
         if host == "0.0.0.0":
             host = "127.0.0.1"
@@ -449,7 +448,7 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
 
     from configs import prompt_config
     import importlib
-    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+    importlib.reload(prompt_config)
     return prompt_config.PROMPT_TEMPLATES[type].get(name)
 
 
@@ -550,7 +549,7 @@ def run_in_thread_pool(
             thread = pool.submit(func, **kwargs)
             tasks.append(thread)
 
-        for obj in as_completed(tasks):  # TODO: Ctrl+c无法停止
+        for obj in as_completed(tasks):
             yield obj.result()
 
 

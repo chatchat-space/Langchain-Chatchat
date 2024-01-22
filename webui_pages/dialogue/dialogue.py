@@ -126,7 +126,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        # TODO: 对话模型与会话绑定
         def on_mode_change():
             mode = st.session_state.dialogue_mode
             text = f"已切换到 {mode} 模式。"

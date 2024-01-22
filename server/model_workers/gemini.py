@@ -95,7 +95,6 @@ class GeminiWorker(ApiModelWorker):
                 print("Invalid JSON string:", json_string)
 
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 

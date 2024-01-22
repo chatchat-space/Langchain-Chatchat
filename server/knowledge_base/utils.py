@@ -174,7 +174,6 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
             if encode_detect is None:
                 encode_detect = {"encoding": "utf-8"}
             loader_kwargs["encoding"] = encode_detect["encoding"]
-        ## TODO：支持更多的自定义CSV读取逻辑
 
     elif loader_name == "JSONLoader":
         loader_kwargs.setdefault("jq_schema", ".")
