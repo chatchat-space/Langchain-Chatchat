@@ -55,8 +55,6 @@ class _FaissPool(CachePool):
         embed_model: str = EMBEDDING_MODEL,
         embed_device: str = embedding_device(),
     ) -> FAISS:
-        # TODO: 整个Embeddings加载逻辑有些混乱，待清理
-        # create an empty vector store
         embeddings = EmbeddingsFunAdapter(embed_model)
         doc = Document(page_content="init", metadata={})
         vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True,distance_strategy="METRIC_INNER_PRODUCT")

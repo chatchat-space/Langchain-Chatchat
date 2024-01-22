@@ -70,7 +70,6 @@ class MilvusKBService(KBService):
         return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
-        # TODO: workaround for bug #10492 in langchain
         for doc in docs:
             for k, v in doc.metadata.items():
                 doc.metadata[k] = str(v)

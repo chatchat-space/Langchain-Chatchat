@@ -187,14 +187,11 @@ class QianFanWorker(ApiModelWorker):
                 i += batch_size
             return {"code": 200, "data": result}
 
-    # TODO: qianfan支持续写模型
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 
     def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
-        # TODO: 确认模板是否需要修改
         return conv.Conversation(
             name=self.model_names[0],
             system_message="你是一个聪明的助手，请根据用户的提示来完成任务",

@@ -191,7 +191,6 @@ class KBService(ABC):
         '''
         传入参数为： {doc_id: Document, ...}
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
-        TODO：是否要支持新增 docs ？
         '''
         self.del_doc_by_ids(list(docs.keys()))
         docs = []

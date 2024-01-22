@@ -132,12 +132,6 @@ FSCHAT_MODEL_WORKERS = {
     },
 }
 
-# fastchat multi model worker server
-FSCHAT_MULTI_MODEL_WORKERS = {
-    # TODO:
-}
-
-# fastchat controller server
 FSCHAT_CONTROLLER = {
     "host": DEFAULT_BIND_HOST,
     "port": 20001,

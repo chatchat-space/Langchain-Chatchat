@@ -100,12 +100,10 @@ class QwenWorker(ApiModelWorker):
         return {"code": 200, "data": result}
 
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 
     def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
-        # TODO: 确认模板是否需要修改
         return conv.Conversation(
             name=self.model_names[0],
             system_message="你是一个聪明、对人类有帮助的人工智能，你可以对人类提出的问题给出有用、详细、礼貌的回答。",
