@@ -57,21 +57,24 @@ class ChatGLMWorker(ApiModelWorker):
             "messages": params.messages,
             "max_tokens": params.max_tokens,
             "temperature": params.temperature,
-            "stream": True
+            "stream": False
         }
         url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-        response = requests.post(url, headers=headers, json=data, stream=True)
-        for chunk in response.iter_lines():
-            if chunk:
-                chunk_str = chunk.decode('utf-8')
-                json_start_pos = chunk_str.find('{"id"')
-                if json_start_pos != -1:
-                    json_str = chunk_str[json_start_pos:]
-                    json_data = json.loads(json_str)
-                    for choice in json_data.get('choices', []):
-                        delta = choice.get('delta', {})
-                        content = delta.get('content', '')
-                        yield {"error_code": 0, "text": content}
+        response = requests.post(url, headers=headers, json=data)
+        # for chunk in response.iter_lines():
+        #     if chunk:
+        #         chunk_str = chunk.decode('utf-8')
+        #         json_start_pos = chunk_str.find('{"id"')
+        #         if json_start_pos != -1:
+        #             json_str = chunk_str[json_start_pos:]
+        #             json_data = json.loads(json_str)
+        #             for choice in json_data.get('choices', []):
+        #                 delta = choice.get('delta', {})
+        #                 content = delta.get('content', '')
+        #                 yield {"error_code": 0, "text": content}
+        ans = response.json()
+        content = ans["choices"][0]["message"]["content"]
+        yield {"error_code": 0, "text": content}
 
     def get_embeddings(self, params):
         # 临时解决方案，不支持embedding
