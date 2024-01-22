@@ -13,9 +13,9 @@ def list_kbs():
 
 
 def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
-            vector_store_type: str = Body("faiss"),
-            embed_model: str = Body(EMBEDDING_MODEL),
-            ) -> BaseResponse:
+              vector_store_type: str = Body("faiss"),
+              embed_model: str = Body(EMBEDDING_MODEL),
+              ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -39,8 +39,8 @@ def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
 
 
 def delete_kb(
-    knowledge_base_name: str = Body(..., examples=["samples"])
-    ) -> BaseResponse:
+        knowledge_base_name: str = Body(..., examples=["samples"])
+) -> BaseResponse:
     # Delete selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
