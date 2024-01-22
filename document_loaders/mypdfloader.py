@@ -16,11 +16,8 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
 
             b_unit = tqdm.tqdm(total=doc.page_count, desc="RapidOCRPDFLoader context page index: 0")
             for i, page in enumerate(doc):
-                # 更新描述
                 b_unit.set_description("RapidOCRPDFLoader context page index: {}".format(i))
-                # 立即显示进度条更新结果
                 b_unit.refresh()
-                # TODO: 依据文本与图片顺序调整处理方式
                 text = page.get_text("")
                 resp += text + "\n"
 

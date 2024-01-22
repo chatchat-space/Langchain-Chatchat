@@ -120,7 +120,7 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "TianGongWorker",
     },
-    # Gemini API (开发组未测试，由社群提供，只支持pro）
+    # Gemini API https://makersuite.google.com/app/apikey
     "gemini-api": {
         "api_key": "",
         "provider": "GeminiWorker",

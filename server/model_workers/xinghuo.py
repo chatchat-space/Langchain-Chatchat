@@ -42,7 +42,6 @@ class XingHuoWorker(ApiModelWorker):
         self.version = version
 
     def do_chat(self, params: ApiChatParams) -> Dict:
-        # TODO: 当前每次对话都要重新连接websocket，确认是否可以保持连接
         params.load_config(self.model_names[0])
 
         version_mapping = {
@@ -73,12 +72,10 @@ class XingHuoWorker(ApiModelWorker):
                 yield {"error_code": 0, "text": text}
 
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 
     def make_conv_template(self, conv_template: str = None, model_path: str = None) -> Conversation:
-        # TODO: 确认模板是否需要修改
         return conv.Conversation(
             name=self.model_names[0],
             system_message="你是一个聪明的助手，请根据用户的提示来完成任务",

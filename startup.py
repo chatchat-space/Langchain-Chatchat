@@ -418,7 +418,7 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     set_httpx_config()
 
     controller_addr = fschat_controller_address()
-    app = create_openai_api_app(controller_addr, log_level=log_level)  # TODO: not support keys yet.
+    app = create_openai_api_app(controller_addr, log_level=log_level)
     _set_app_event(app, started_event)
 
     host = FSCHAT_OPENAI_API["host"]

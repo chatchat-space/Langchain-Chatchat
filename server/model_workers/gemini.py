@@ -3,7 +3,7 @@ from fastchat.conversation import Conversation
 from server.model_workers.base import *
 from server.utils import get_httpx_client
 from fastchat import conversation as conv
-import json,httpx
+import json, httpx
 from typing import List, Dict
 from configs import logger, log_verbose
 
@@ -14,14 +14,14 @@ class GeminiWorker(ApiModelWorker):
             *,
             controller_addr: str = None,
             worker_addr: str = None,
-            model_names: List[str] = ["Gemini-api"],
+            model_names: List[str] = ["gemini-api"],
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
         kwargs.setdefault("context_len", 4096)
         super().__init__(**kwargs)
 
-    def create_gemini_messages(self,messages) -> json:
+    def create_gemini_messages(self, messages) -> json:
         has_history = any(msg['role'] == 'assistant' for msg in messages)
         gemini_msg = []
 
@@ -42,11 +42,11 @@ class GeminiWorker(ApiModelWorker):
 
         msg = dict(contents=gemini_msg)
         return msg
-          
+
     def do_chat(self, params: ApiChatParams) -> Dict:
         params.load_config(self.model_names[0])
         data = self.create_gemini_messages(messages=params.messages)
-        generationConfig=dict(
+        generationConfig = dict(
             temperature=params.temperature,
             topK=1,
             topP=1,
@@ -54,8 +54,8 @@ class GeminiWorker(ApiModelWorker):
             stopSequences=[]
         )
 
-        data['generationConfig'] = generationConfig         
-        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"+ '?key=' + params.api_key
+        data['generationConfig'] = generationConfig
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent" + '?key=' + params.api_key
         headers = {
             'Content-Type': 'application/json',
         }
@@ -67,7 +67,7 @@ class GeminiWorker(ApiModelWorker):
         text = ""
         json_string = ""
         timeout = httpx.Timeout(60.0)
-        client=get_httpx_client(timeout=timeout)
+        client = get_httpx_client(timeout=timeout)
         with client.stream("POST", url, headers=headers, json=data) as response:
             for line in response.iter_lines():
                 line = line.strip()
@@ -89,13 +89,12 @@ class GeminiWorker(ApiModelWorker):
                                     "error_code": 0,
                                     "text": text
                                 }
-                        print(text)       
+                        print(text)
             except json.JSONDecodeError as e:
                 print("Failed to decode JSON:", e)
                 print("Invalid JSON string:", json_string)
 
     def get_embeddings(self, params):
-        # TODO: 支持embeddings
         print("embedding")
         print(params)
 

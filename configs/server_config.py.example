@@ -92,11 +92,10 @@ FSCHAT_MODEL_WORKERS = {
         # 'disable_log_requests': False
 
     },
-    # 可以如下示例方式更改默认配置
-    # "Qwen-1_8B-Chat": { # 使用default中的IP和端口
-    #    "device": "cpu",
-    # },
-    "chatglm3-6b": {  # 使用default中的IP和端口
+    "Qwen-1_8B-Chat": {
+        "device": "cpu",
+    },
+    "chatglm3-6b": {
         "device": "cuda",
     },
 
@@ -129,16 +128,10 @@ FSCHAT_MODEL_WORKERS = {
         "port": 21009,
     },
     "gemini-api": {
-        "port": 21012,
+        "port": 21010,
     },
 }
 
-# fastchat multi model worker server
-FSCHAT_MULTI_MODEL_WORKERS = {
-    # TODO:
-}
-
-# fastchat controller server
 FSCHAT_CONTROLLER = {
     "host": DEFAULT_BIND_HOST,
     "port": 20001,

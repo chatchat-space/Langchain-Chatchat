@@ -32,8 +32,6 @@ class PGKBService(KBService):
             results = [Document(page_content=row[0], metadata=row[1]) for row in
                        session.execute(stmt, {'ids': ids}).fetchall()]
             return results
-
-    # TODO:
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         return super().del_doc_by_ids(ids)
 
