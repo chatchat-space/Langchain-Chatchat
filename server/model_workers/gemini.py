@@ -18,7 +18,7 @@ class GeminiWorker(ApiModelWorker):
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
-        kwargs.setdefault("context_len", 4096) #TODO 16K模型需要改成16384
+        kwargs.setdefault("context_len", 4096)
         super().__init__(**kwargs)
 
     def create_gemini_messages(self,messages) -> json:
@@ -47,10 +47,10 @@ class GeminiWorker(ApiModelWorker):
         params.load_config(self.model_names[0])
         data = self.create_gemini_messages(messages=params.messages)
         generationConfig=dict(
-            temperature = params.temperature,
-            topK = 1,
-            topP = 1,
-            maxOutputTokens = 4096,
+            temperature=params.temperature,
+            topK=1,
+            topP=1,
+            maxOutputTokens=4096,
             stopSequences=[]
         )
 

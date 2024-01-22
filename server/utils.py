@@ -503,15 +503,11 @@ def set_httpx_config(
             no_proxy.append(host)
     os.environ["NO_PROXY"] = ",".join(no_proxy)
 
-    # TODO: 简单的清除系统代理不是个好的选择，影响太多。似乎修改代理服务器的bypass列表更好。
-    # patch requests to use custom proxies instead of system settings
     def _get_proxies():
         return proxies
 
     import urllib.request
     urllib.request.getproxies = _get_proxies
-
-    # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
 
 
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
