@@ -7,9 +7,9 @@ fastapi~=0.109.0
 sse_starlette~=1.8.2
 nltk~=3.8.1
 uvicorn~=0.24.0.post1
-starlette~=0.32.0
+starlette~=0.35.0
 unstructured[all-docs]~=0.12.0
-python-magic-bin; sys_platform ~= 'win32'
+python-magic-bin; sys_platform == 'win32'
 SQLAlchemy~=2.0.25
 faiss-cpu~=1.7.4
 accelerate~=0.24.1
