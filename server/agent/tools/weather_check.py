@@ -3,6 +3,8 @@
 """
 from pydantic import BaseModel, Field
 import requests
+from configs.kb_config import SENIVERSE_API_KEY
+
 
 def weather(location: str, api_key: str):
     url = f"https://api.seniverse.com/v3/weather/now.json?key={api_key}&location={location}&language=zh-Hans&unit=c"
@@ -20,6 +22,8 @@ def weather(location: str, api_key: str):
 
 
 def weathercheck(location: str):
-    return weather(location, "your keys")
+    return weather(location, SENIVERSE_API_KEY)
+
+
 class WeatherInput(BaseModel):
     location: str = Field(description="City name,include city and county")

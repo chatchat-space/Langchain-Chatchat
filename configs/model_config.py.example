@@ -201,7 +201,7 @@ MODEL_PATH = {
         "agentlm-70b": "THUDM/agentlm-70b",
 
         "falcon-7b": "tiiuae/falcon-7b",
-        "falcon-40b": "tiiuae/falcon-40,b",
+        "falcon-40b": "tiiuae/falcon-40b",
         "falcon-rw-7b": "tiiuae/falcon-rw-7b",
 
         "aquila-7b": "BAAI/Aquila-7B",
