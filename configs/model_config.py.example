@@ -8,7 +8,7 @@ MODEL_ROOT_PATH = ""
 # 选用的 Embedding 名称
 EMBEDDING_MODEL = "bge-large-zh-v1.5"
 
-# Embedding 模型运行设备。设为"auto"会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
+# Embedding 模型运行设备。设为 "auto" 会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
 EMBEDDING_DEVICE = "auto"
 
 # 选用的reranker模型
@@ -26,11 +26,11 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 # 在这里，我们使用目前主流的两个离线模型，其中，chatglm3-6b 为默认加载模型。
 # 如果你的显存不足，可使用 Qwen-1_8B-Chat, 该模型 FP16 仅需 3.8G显存。
 
-LLM_MODELS = ["zhipu-api"]
+LLM_MODELS = ["chatglm3-6b", "zhipu-api", "openai-api"]
 Agent_MODEL = None
 
 # LLM 模型运行设备。设为"auto"会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
-LLM_DEVICE = "cuda"
+LLM_DEVICE = "auto"
 
 HISTORY_LEN = 3
 
@@ -66,7 +66,7 @@ ONLINE_LLM_MODEL = {
         "APPID": "",
         "APISecret": "",
         "api_key": "",
-        "version": "v1.5",  # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
+        "version": "v3.0",  # 你使用的讯飞星火大模型版本，可选包括 "v3.0", "v1.5", "v2.0"
         "provider": "XingHuoWorker",
     },
 
@@ -120,7 +120,7 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "TianGongWorker",
     },
-    # Gemini API (开发组未测试，由社群提供，只支持pro）https://makersuite.google.com/或者google cloud，使用前先确认网络正常，使用代理请在项目启动（python startup.py -a)环境内设置https_proxy环境变量
+    # Gemini API (开发组未测试，由社群提供，只支持pro）
     "gemini-api": {
         "api_key": "",
         "provider": "GeminiWorker",
@@ -155,7 +155,7 @@ MODEL_PATH = {
         "bge-large-zh": "BAAI/bge-large-zh",
         "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
         "bge-base-zh-v1.5": "BAAI/bge-base-zh-v1.5",
-        "bge-large-zh-v1.5": "/share/home/zyx/Models/bge-large-zh-v1.5",
+        "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
@@ -168,11 +168,15 @@ MODEL_PATH = {
         "chatglm3-6b": "THUDM/chatglm3-6b",
         "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
 
+        "Orion-14B-Chat": "OrionStarAI/Orion-14B-Chat",
+        "Orion-14B-Chat-Plugin": "OrionStarAI/Orion-14B-Chat-Plugin",
+        "Orion-14B-LongChat": "OrionStarAI/Orion-14B-LongChat",
+
         "Llama-2-7b-chat-hf": "meta-llama/Llama-2-7b-chat-hf",
         "Llama-2-13b-chat-hf": "meta-llama/Llama-2-13b-chat-hf",
         "Llama-2-70b-chat-hf": "meta-llama/Llama-2-70b-chat-hf",
 
-        "Qwen-1_8B-Chat": "/media/checkpoint/Qwen-1_8B-Chat",
+        "Qwen-1_8B-Chat": "Qwen/Qwen-1_8B-Chat",
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
         "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
@@ -197,7 +201,7 @@ MODEL_PATH = {
         "agentlm-70b": "THUDM/agentlm-70b",
 
         "falcon-7b": "tiiuae/falcon-7b",
-        "falcon-40b": "tiiuae/falcon-40b",
+        "falcon-40b": "tiiuae/falcon-40,b",
         "falcon-rw-7b": "tiiuae/falcon-rw-7b",
 
         "aquila-7b": "BAAI/Aquila-7B",
@@ -287,9 +291,11 @@ VLLM_MODEL_DICT = {
 }
 
 SUPPORT_AGENT_MODEL = [
-    "azure-api",
-    "openai-api",
-    "qwen-api",
-    "Qwen",
-    "chatglm3",
+    "openai-api",  # GPT4 模型
+    "qwen-api",  # Qwen Max模型
+    "zhipu-api",  # 智谱AI GLM4模型
+    "Qwen",  # 所有Qwen系列本地模型
+    "chatglm3-6b",
+    "internlm2-chat-20b",
+    "Orion-14B-Chat-Plugin",
 ]
