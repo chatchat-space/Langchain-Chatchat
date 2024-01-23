@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
+from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES, LLM_MODELS,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
@@ -168,8 +168,8 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 if (v.get("model_path_exists")
                         and k not in running_models):
                     available_models.append(k)
-        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
-            if not v.get("provider") and k not in running_models:
+        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中可直接访问且在LLM_MODELS中配置的模型
+            if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
         llm_models = running_models + available_models
         cur_llm_model = st.session_state.get("cur_llm_model", default_model)

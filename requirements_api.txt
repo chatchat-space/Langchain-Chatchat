@@ -37,15 +37,16 @@ einops>=0.7.0
 transformers_stream_generator==0.0.4
 vllm==0.2.7; sys_platform == "linux"
 httpx==0.26.0
-llama-index
-jq==1.6.0
-beautifulsoup4~=4.12.2
-pysrt~=1.1.2
-dashscope==1.13.6
-arxiv~=2.1.0
-youtube-search~=2.1.2
-duckduckgo-search~=3.9.9
-metaphor-python~=0.1.23
+llama-index==0.9.35
+
+# jq==1.6.0
+# beautifulsoup4~=4.12.2
+# pysrt~=1.1.2
+# dashscope==1.13.6
+# arxiv~=2.1.0
+# youtube-search~=2.1.2
+# duckduckgo-search~=3.9.9
+# metaphor-python~=0.1.23
 
 # volcengine>=1.0.119
 # pymilvus>=2.3.4
