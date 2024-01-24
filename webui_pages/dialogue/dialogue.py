@@ -164,11 +164,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         available_models = []
         config_models = api.list_config_models()
         if not is_lite:
-            for k, v in config_models.get("local", {}).items():  # 列出配置了有效本地路径的模型
+            for k, v in config_models.get("local", {}).items():
                 if (v.get("model_path_exists")
                         and k not in running_models):
                     available_models.append(k)
-        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中可直接访问且在LLM_MODELS中配置的模型
+        for k, v in config_models.get("online", {}).items():
             if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
         llm_models = running_models + available_models
