@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 import torch
 from PIL import Image, ImageDraw
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from configs import TOOL_CONFIG
 import re
 from server.agent.container import container
