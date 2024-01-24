@@ -20,7 +20,7 @@ from server.agent import model_container
 from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 
 
-async def agent_chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+async def agent_chat(query: str = Body(..., description="用户输入", examples=["今天天气"]),
                      history: List[History] = Body([],
                                                    description="历史对话",
                                                    examples=[[
