@@ -31,4 +31,3 @@ watchdog~=3.0.0
 # pymilvus>=2.3.4
 # psycopg2==2.9.9
 # pgvector>=0.2.4
-# flash-attn>=2.4.3 # For Orion-14B-Chat and Qwen-14B-Chat
