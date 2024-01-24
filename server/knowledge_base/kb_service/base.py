@@ -1,10 +1,7 @@
-import operator
 from abc import ABC, abstractmethod
 
 import os
 from pathlib import Path
-import numpy as np
-from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 
 from server.db.repository.knowledge_base_repository import (
@@ -26,18 +23,7 @@ from server.knowledge_base.utils import (
 
 from typing import List, Union, Dict, Optional, Tuple
 
-from server.embeddings_api import embed_texts, aembed_texts, embed_documents
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
-
-
-def normalize(embeddings: List[List[float]]) -> np.ndarray:
-    '''
-    sklearn.preprocessing.normalize 的替代（使用 L2），避免安装 scipy, scikit-learn
-    '''
-    norm = np.linalg.norm(embeddings, axis=1)
-    norm = np.reshape(norm, (norm.shape[0], 1))
-    norm = np.tile(norm, (1, len(embeddings[0])))
-    return np.divide(embeddings, norm)
 
 
 class SupportedVSType:
@@ -97,12 +83,6 @@ class KBService(ABC):
         self.do_drop_kb()
         status = delete_kb_from_db(self.kb_name)
         return status
-
-    def _docs_to_embeddings(self, docs: List[Document]) -> Dict:
-        '''
-        将 List[Document] 转化为 VectorStore.add_embeddings 可以接受的参数
-        '''
-        return embed_documents(docs=docs, embed_model=self.embed_model, to_query=False)
 
     def add_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
@@ -310,7 +290,7 @@ class KBServiceFactory:
             return PGKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.MILVUS == vector_store_type:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
-            return MilvusKBService(kb_name,embed_model=embed_model)
+            return MilvusKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.ZILLIZ == vector_store_type:
             from server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
             return ZillizKBService(kb_name, embed_model=embed_model)
@@ -414,33 +394,6 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
         data.append(v)
 
     return data
-
-
-class EmbeddingsFunAdapter(Embeddings):
-    def __init__(self, embed_model: str = EMBEDDING_MODEL):
-        self.embed_model = embed_model
-
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = embed_texts(texts=texts, embed_model=self.embed_model, to_query=False).data
-        return normalize(embeddings).tolist()
-
-    def embed_query(self, text: str) -> List[float]:
-        embeddings = embed_texts(texts=[text], embed_model=self.embed_model, to_query=True).data
-        query_embed = embeddings[0]
-        query_embed_2d = np.reshape(query_embed, (1, -1))  # 将一维数组转换为二维数组
-        normalized_query_embed = normalize(query_embed_2d)
-        return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
-
-    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = (await aembed_texts(texts=texts, embed_model=self.embed_model, to_query=False)).data
-        return normalize(embeddings).tolist()
-
-    async def aembed_query(self, text: str) -> List[float]:
-        embeddings = (await aembed_texts(texts=[text], embed_model=self.embed_model, to_query=True)).data
-        query_embed = embeddings[0]
-        query_embed_2d = np.reshape(query_embed, (1, -1))  # 将一维数组转换为二维数组
-        normalized_query_embed = normalize(query_embed_2d)
-        return normalized_query_embed[0].tolist()  # 将结果转换为一维数组并返回
 
 
 def score_threshold_process(score_threshold, k, docs):

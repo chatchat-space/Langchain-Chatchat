@@ -88,7 +88,6 @@ def get_OpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> OpenAI:
-
     # TODO: 从API获取模型信息
     model = OpenAI(
         streaming=streaming,
@@ -319,7 +318,6 @@ def list_embed_models() -> List[str]:
     return list(MODEL_PATH["embed_model"])
 
 
-
 def get_model_path(model_name: str, type: str = None) -> Optional[str]:
     if type in MODEL_PATH:
         paths = MODEL_PATH[type]
@@ -345,17 +343,6 @@ def get_model_path(model_name: str, type: str = None) -> Optional[str]:
             if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
                 return str(path)
         return path_str  # THUDM/chatglm06b
-
-
-# 从server_config中获取服务信息
-
-def get_model_worker_config(model_name: str = None) -> dict:
-    '''
-    加载model worker的配置项。
-    优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
-    '''
-
-    return {}
 
 
 def api_address() -> str:
@@ -559,15 +546,37 @@ def get_server_configs() -> Dict:
     return {**{k: v for k, v in locals().items() if k[0] != "_"}, **_custom}
 
 
-def list_online_embed_models() -> List[str]:
+def list_online_embed_models(
+        endpoint_host: str,
+        endpoint_host_key: str,
+        endpoint_host_proxy: str
+) -> List[str]:
     ret = []
     # TODO: 从在线API获取支持的模型列表
+    client = get_httpx_client(base_url=endpoint_host, proxies=endpoint_host_proxy, timeout=HTTPX_DEFAULT_TIMEOUT)
+    try:
+        headers = {
+            "Authorization": f"Bearer {endpoint_host_key}",
+        }
+        resp = client.get("/models", headers=headers)
+        if resp.status_code == 200:
+            models = resp.json().get("data", [])
+            for model in models:
+                if "embedding" in model.get("id", None):
+                    ret.append(model.get("id"))
+
+    except Exception as e:
+        msg = f"获取在线Embeddings模型列表失败：{e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
+    finally:
+        client.close()
     return ret
 
 
 def load_local_embeddings(model: str = None, device: str = embedding_device()):
     '''
-    从缓存中加载embeddings，可以避免多线程时竞争加载。
+    从缓存中本地Embeddings模型加载，可以避免多线程时竞争加载。
     '''
     from server.knowledge_base.kb_cache.base import embeddings_pool
     from configs import EMBEDDING_MODEL

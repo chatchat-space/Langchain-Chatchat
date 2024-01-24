@@ -15,7 +15,7 @@ import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
-from server.utils import run_in_thread_pool, get_model_worker_config
+from server.utils import run_in_thread_pool
 import json
 from typing import List, Union, Dict, Tuple, Generator
 import chardet
@@ -187,8 +187,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
 def make_text_splitter(
         splitter_name,
         chunk_size,
-        chunk_overlap,
-        llm_model,
+        chunk_overlap
 ):
     """
     根据参数获取特定的分词器
@@ -223,10 +222,6 @@ def make_text_splitter(
                         chunk_overlap=chunk_overlap
                     )
             elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
-                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
-                    config = get_model_worker_config(llm_model)
-                    text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
-                        config.get("model_path")
 
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast

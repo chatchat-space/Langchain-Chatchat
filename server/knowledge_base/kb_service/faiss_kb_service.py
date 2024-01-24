@@ -2,7 +2,7 @@ import os
 import shutil
 
 from configs import SCORE_THRESHOLD
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 from server.utils import torch_gc
@@ -14,7 +14,7 @@ class FaissKBService(KBService):
     vs_path: str
     kb_path: str
     vector_name: str = None
- 
+
     def vs_type(self) -> str:
         return SupportedVSType.FAISS
 
@@ -55,16 +55,16 @@ class FaissKBService(KBService):
         try:
             shutil.rmtree(self.kb_path)
         except Exception:
-            ...
+            pass
 
     def do_search(self,
                   query: str,
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
-                  ) -> List[Tuple[Document, float]]:
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
-        embeddings = embed_func.embed_query(query)
+                  ) -> List[Document]:
+
         with self.load_vector_store().acquire() as vs:
+            embeddings = vs.embeddings.embed_query(query)
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
@@ -72,12 +72,14 @@ class FaissKBService(KBService):
                    docs: List[Document],
                    **kwargs,
                    ) -> List[Dict]:
-        data = self._docs_to_embeddings(docs) # 将向量化单独出来可以减少向量库的锁定时间
 
         with self.load_vector_store().acquire() as vs:
-            ids = vs.add_embeddings(text_embeddings=zip(data["texts"], data["embeddings"]),
-                                    metadatas=data["metadatas"],
-                                    ids=kwargs.get("ids"))
+            texts = [x.page_content for x in docs]
+            metadatas = [x.metadata for x in docs]
+            embeddings = vs.embeddings.embed_documents(texts)
+
+            ids = vs.add_embeddings(text_embeddings=zip(texts, embeddings),
+                                    metadatas=metadatas)
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]

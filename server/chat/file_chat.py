@@ -1,8 +1,9 @@
 from fastapi import Body, File, Form, UploadFile
 from fastapi.responses import StreamingResponse
 from configs import (VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
+from server.embeddings.adapter import load_temp_adapter_embeddings
 from server.utils import (wrap_done, get_ChatOpenAI,
-                        BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)
+                          BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)
 from server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -10,22 +11,23 @@ from typing import AsyncIterable, List, Optional
 import asyncio
 from langchain.prompts.chat import ChatPromptTemplate
 from server.chat.utils import History
-from server.knowledge_base.kb_service.base import EmbeddingsFunAdapter
 from server.knowledge_base.utils import KnowledgeFile
 import json
 import os
 
+
 def _parse_files_in_thread(
-    files: List[UploadFile],
-    dir: str,
-    zh_title_enhance: bool,
-    chunk_size: int,
-    chunk_overlap: int,
+        files: List[UploadFile],
+        dir: str,
+        zh_title_enhance: bool,
+        chunk_size: int,
+        chunk_overlap: int,
 ):
     """
     通过多线程将上传的文件保存到对应目录内。
     生成器返回保存结果：[success or error, filename, msg, docs]
     """
+
     def parse_file(file: UploadFile) -> dict:
         '''
         保存单个文件。
@@ -55,11 +57,14 @@ def _parse_files_in_thread(
 
 
 def upload_temp_docs(
-    files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
-    prev_id: str = Form(None, description="前知识库ID"),
-    chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-    chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-    zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+        endpoint_host: str = Body(False, description="接入点地址"),
+        endpoint_host_key: str = Body(False, description="接入点key"),
+        endpoint_host_proxy: str = Body(False, description="接入点代理地址"),
+        files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
+        prev_id: str = Form(None, description="前知识库ID"),
+        chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+        chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+        zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
 ) -> BaseResponse:
     '''
     将文件保存到临时目录，并进行向量化。
@@ -72,16 +77,20 @@ def upload_temp_docs(
     documents = []
     path, id = get_temp_dir(prev_id)
     for success, file, msg, docs in _parse_files_in_thread(files=files,
-                                                        dir=path,
-                                                        zh_title_enhance=zh_title_enhance,
-                                                        chunk_size=chunk_size,
-                                                        chunk_overlap=chunk_overlap):
+                                                           dir=path,
+                                                           zh_title_enhance=zh_title_enhance,
+                                                           chunk_size=chunk_size,
+                                                           chunk_overlap=chunk_overlap):
         if success:
             documents += docs
         else:
             failed_files.append({file: msg})
 
-    with memo_faiss_pool.load_vector_store(id).acquire() as vs:
+    with memo_faiss_pool.load_vector_store(kb_name=id,
+                                           endpoint_host=endpoint_host,
+                                           endpoint_host_key=endpoint_host_key,
+                                           endpoint_host_proxy=endpoint_host_proxy,
+                                           ).acquire() as vs:
         vs.add_documents(documents)
     return BaseResponse(data={"id": id, "failed_files": failed_files})
 
@@ -89,15 +98,17 @@ def upload_temp_docs(
 async def file_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                     knowledge_id: str = Body(..., description="临时知识库ID"),
                     top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
-                    score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=2),
+                    score_threshold: float = Body(SCORE_THRESHOLD,
+                                                  description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右",
+                                                  ge=0, le=2),
                     history: List[History] = Body([],
-                                                description="历史对话",
-                                                examples=[[
-                                                    {"role": "user",
-                                                    "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                                                    {"role": "assistant",
-                                                    "content": "虎头虎脑"}]]
-                                                ),
+                                                  description="历史对话",
+                                                  examples=[[
+                                                      {"role": "user",
+                                                       "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                      {"role": "assistant",
+                                                       "content": "虎头虎脑"}]]
+                                                  ),
                     stream: bool = Body(False, description="流式输出"),
                     endpoint_host: str = Body(False, description="接入点地址"),
                     endpoint_host_key: str = Body(False, description="接入点key"),
@@ -105,8 +116,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                     model_name: str = Body(None, description="LLM 模型名称。"),
                     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                     max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
-                    prompt_name: str = Body("default", description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
-                ):
+                    prompt_name: str = Body("default",
+                                            description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                    ):
     if knowledge_id not in memo_faiss_pool.keys():
         return BaseResponse(code=404, msg=f"未找到临时知识库 {knowledge_id}，请先上传文件")
 
@@ -127,7 +139,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             max_tokens=max_tokens,
             callbacks=[callback],
         )
-        embed_func = EmbeddingsFunAdapter()
+        embed_func = load_temp_adapter_embeddings(endpoint_host=endpoint_host,
+                                                  endpoint_host_key=endpoint_host_key,
+                                                  endpoint_host_proxy=endpoint_host_proxy)
         embeddings = await embed_func.aembed_query(query)
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
@@ -156,7 +170,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             text = f"""出处 [{inum + 1}] [{filename}] \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
 
-        if len(source_documents) == 0: # 没有找到相关文档
+        if len(source_documents) == 0:  # 没有找到相关文档
             source_documents.append(f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>""")
 
         if stream:

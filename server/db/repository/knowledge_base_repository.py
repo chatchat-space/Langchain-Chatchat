@@ -49,6 +49,16 @@ def delete_kb_from_db(session, kb_name):
 
 
 @with_session
+def update_kb_endpoint_from_db(session, kb_name, endpoint_host, endpoint_host_key, endpoint_host_proxy):
+    kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_name).first()
+    if kb:
+        kb.endpoint_host = endpoint_host
+        kb.endpoint_host_key = endpoint_host_key
+        kb.endpoint_host_proxy = endpoint_host_proxy
+    return True
+
+
+@with_session
 def get_kb_detail(session, kb_name: str) -> dict:
     kb: KnowledgeBaseModel = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if kb:
@@ -56,6 +66,9 @@ def get_kb_detail(session, kb_name: str) -> dict:
             "kb_name": kb.kb_name,
             "kb_info": kb.kb_info,
             "vs_type": kb.vs_type,
+            "endpoint_host": kb.endpoint_host,
+            "endpoint_host_key": kb.endpoint_host_key,
+            "endpoint_host_proxy": kb.endpoint_host_proxy,
             "embed_model": kb.embed_model,
             "file_count": kb.file_count,
             "create_time": kb.create_time,
