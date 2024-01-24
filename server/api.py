@@ -16,7 +16,7 @@ from starlette.responses import RedirectResponse
 from server.chat.chat import chat
 from server.chat.completion import completion
 from server.chat.feedback import chat_feedback
-from server.embeddings_api import embed_texts_endpoint
+from server.embeddings.core.embeddings_api import embed_texts_endpoint
 
 from server.utils import (BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline,
                           get_server_configs, get_prompt_template)
