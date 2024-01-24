@@ -265,7 +265,7 @@ class ApiRequest:
             history_len: int = -1,
             history: List[Dict] = [],
             stream: bool = True,
-            model_config: Dict = None,
+            chat_model_config: Dict = None,
             openai_config: Dict = None,
             tool_config: Dict = None,
             **kwargs,
@@ -280,7 +280,7 @@ class ApiRequest:
             "history_len": history_len,
             "history": history,
             "stream": stream,
-            "model_config": model_config,
+            "chat_model_config": chat_model_config,
             "openai_config": openai_config,
             "tool_config": tool_config,
         }

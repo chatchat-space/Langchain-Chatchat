@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import AsyncIterable, List, Union, Dict
+from typing import AsyncIterable, List, Union, Dict, Annotated
 
 from fastapi import Body
 from fastapi.responses import StreamingResponse
@@ -103,7 +103,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
                conversation_id: str = Body("", description="对话框ID"),
                history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-               history: Union[int, List[History]] = Body(
+               history: List[History] = Body(
                    [],
                    description="历史对话，设为一个整数可以从数据库中读取历史消息",
                    examples=[
@@ -115,9 +115,9 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                    ]
                ),
                stream: bool = Body(True, description="流式输出"),
-               model_config: Dict = Body({}, description="LLM 模型配置"),
-               openai_config: Dict = Body({}, description="openaiEndpoint配置"),
-               tool_config: Dict = Body({}, description="工具配置"),
+               chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
+               openai_config: dict = Body({}, description="openaiEndpoint配置", examples=[]),
+               tool_config: dict = Body({}, description="工具配置", examples=[]),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
         message_id = add_message_to_db(
@@ -128,7 +128,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
-        models, prompts = create_models_from_config(callbacks=callbacks, configs=model_config,
+        models, prompts = create_models_from_config(callbacks=callbacks, configs=chat_model_config,
                                                     openai_config=openai_config, stream=stream)
         tools = [tool for tool in all_tools if tool.name in tool_config]
         tools = [t.copy(update={"callbacks": callbacks}) for t in tools]

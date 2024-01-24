@@ -145,7 +145,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 st.info("没有可用的插件")
 
         #  传入后端的内容
-        model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
+        chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
         tool_use = True
         for key in LLM_MODEL_CONFIG:
             if key == 'llm_model':
@@ -158,7 +158,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     continue
             if LLM_MODEL_CONFIG[key]:
                 first_key = next(iter(LLM_MODEL_CONFIG[key]))
-                model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
+                chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
 
         # 选择工具
         selected_tool_configs = {}
@@ -179,7 +179,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             llm_model = st.session_state["select_model_worker"]['label']
 
         if llm_model is not None:
-            model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
+            chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
 
         uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
         files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
@@ -223,7 +223,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.rerun()
         else:
             history = get_messages_history(
-                model_config["llm_model"].get(next(iter(model_config["llm_model"])), {}).get("history_len", 1)
+                chat_model_config["llm_model"].get(next(iter(chat_model_config["llm_model"])), {}).get("history_len", 1)
             )
             chat_box.user_say(prompt)
             if files_upload:
@@ -253,7 +253,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
                                    history=history,
-                                   model_config=model_config,
+                                   chat_model_config=chat_model_config,
                                    openai_config=openai_config,
                                    conversation_id=conversation_id,
                                    tool_config=selected_tool_configs,
