@@ -1,6 +1,6 @@
 import base64
 import os
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 
 def save_base64_audio(base64_audio, file_path):
     audio_data = base64.b64decode(base64_audio)
