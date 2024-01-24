@@ -224,6 +224,7 @@ MODEL_PATH = {
         "dolly-v2-12b": "databricks/dolly-v2-12b",
         "stablelm-tuned-alpha-7b": "stabilityai/stablelm-tuned-alpha-7b",
     },
+
     "reranker": {
         "bge-reranker-large": "BAAI/bge-reranker-large",
         "bge-reranker-base": "BAAI/bge-reranker-base",

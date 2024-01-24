@@ -437,9 +437,6 @@ class ApiRequest:
             "prompt_name": prompt_name,
         }
 
-        # print(f"received input message:")
-        # pprint(data)
-
         response = self.post(
             "/chat/file_chat",
             json=data,
