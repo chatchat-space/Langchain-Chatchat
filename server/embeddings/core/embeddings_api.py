@@ -78,9 +78,9 @@ async def aembed_texts(
 
 def embed_texts_endpoint(
     texts: List[str] = Body(..., description="要嵌入的文本列表", examples=[["hello", "world"]]),
-    endpoint_host: str = Body(False, description="接入点地址"),
-    endpoint_host_key: str = Body(False, description="接入点key"),
-    endpoint_host_proxy: str = Body(False, description="接入点代理地址"),
+    endpoint_host: str = Body(None, description="接入点地址"),
+    endpoint_host_key: str = Body(None, description="接入点key"),
+    endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
     embed_model: str = Body(EMBEDDING_MODEL, description=f"使用的嵌入模型"),
     to_query: bool = Body(False, description="向量是否用于查询。有些模型如Minimax对存储/查询的向量进行了区分优化。"),
 ) -> BaseResponse:
