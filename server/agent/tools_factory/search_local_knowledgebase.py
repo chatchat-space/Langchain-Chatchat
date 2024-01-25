@@ -8,7 +8,7 @@ from configs import TOOL_CONFIG
 def search_knowledgebase(query: str, database: str, config: dict):
     docs = search_docs(
         query=query,
-        knowledge_base_name="samples",
+        knowledge_base_name=database,
         top_k=config["top_k"],
         score_threshold=config["score_threshold"])
     context = ""
