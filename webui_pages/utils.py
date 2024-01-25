@@ -562,6 +562,26 @@ class ApiRequest:
         )
         return self._get_response_value(response, as_json=True)
 
+    def update_kb_endpoint(self,
+                           knowledge_base_name,
+                           endpoint_host: str = None,
+                           endpoint_host_key: str = None,
+                           endpoint_host_proxy: str = None):
+        '''
+        对应api.py/knowledge_base/update_info接口
+        '''
+        data = {
+            "knowledge_base_name": knowledge_base_name,
+            "endpoint_host": endpoint_host,
+            "endpoint_host_key": endpoint_host_key,
+            "endpoint_host_proxy": endpoint_host_proxy,
+        }
+
+        response = self.post(
+            "/knowledge_base/update_kb_endpoint",
+            json=data,
+        )
+        return self._get_response_value(response, as_json=True)
     def update_kb_docs(
             self,
             knowledge_base_name: str,

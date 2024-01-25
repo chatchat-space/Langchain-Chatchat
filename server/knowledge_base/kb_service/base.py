@@ -6,7 +6,7 @@ from langchain.docstore.document import Document
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
-    load_kb_from_db, get_kb_detail,
+    load_kb_from_db, get_kb_detail, update_kb_endpoint_from_db,
 )
 from server.db.repository.knowledge_file_repository import (
     add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
@@ -142,6 +142,16 @@ class KBService(ABC):
         """
         self.kb_info = kb_info
         status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
+        return status
+
+    def update_kb_endpoint(self,
+                           endpoint_host: str = None,
+                           endpoint_host_key: str = None,
+                           endpoint_host_proxy: str = None):
+        """
+        更新知识库在线api接入点配置
+        """
+        status = update_kb_endpoint_from_db(self.kb_name, endpoint_host, endpoint_host_key, endpoint_host_proxy)
         return status
 
     def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):

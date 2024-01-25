@@ -2,6 +2,8 @@ import nltk
 import sys
 import os
 
+from server.knowledge_base.kb_doc_api import update_kb_endpoint
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs import VERSION, MEDIA_PATH
@@ -168,6 +170,13 @@ def mount_knowledge_routes(app: FastAPI):
              response_model=BaseResponse,
              summary="更新知识库介绍"
              )(update_info)
+
+    app.post("/knowledge_base/update_kb_endpoint",
+             tags=["Knowledge Base Management"],
+             response_model=BaseResponse,
+             summary="更新知识库在线api接入点配置"
+             )(update_kb_endpoint)
+
     app.post("/knowledge_base/update_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,

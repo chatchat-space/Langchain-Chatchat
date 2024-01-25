@@ -230,6 +230,26 @@ def update_info(
     return BaseResponse(code=200, msg=f"知识库介绍修改完成", data={"kb_info": kb_info})
 
 
+def update_kb_endpoint(
+        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
+):
+    if not validate_kb_name(knowledge_base_name):
+        return BaseResponse(code=403, msg="Don't attack me")
+
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    kb.update_kb_endpoint(endpoint_host, endpoint_host_key, endpoint_host_proxy)
+
+    return BaseResponse(code=200, msg=f"知识库在线api接入点配置修改完成",
+                        data={"endpoint_host": endpoint_host,
+                              "endpoint_host_key": endpoint_host_key,
+                              "endpoint_host_proxy": endpoint_host_proxy})
+
+
 def update_docs(
         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
         file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),

@@ -169,6 +169,9 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
     elif selected_kb:
         kb = selected_kb
         st.session_state["selected_kb_info"] = kb_list[kb]['kb_info']
+        st.session_state["kb_endpoint_host"] = kb_list[kb]['endpoint_host']
+        st.session_state["kb_endpoint_host_key"] = kb_list[kb]['endpoint_host_key']
+        st.session_state["kb_endpoint_host_proxy"] = kb_list[kb]['endpoint_host_proxy']
         # 上传文件
         files = st.file_uploader("上传知识文件：",
                                  [i for ls in LOADER_DICT.values() for i in ls],
@@ -181,6 +184,37 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
         if kb_info != st.session_state["selected_kb_info"]:
             st.session_state["selected_kb_info"] = kb_info
             api.update_kb_info(kb, kb_info)
+
+        if st.session_state["kb_endpoint_host"] is not None:
+            with st.expander(
+                    "在线api接入点配置",
+                    expanded=True,
+            ):
+                endpoint_host = st.text_input(
+                    "接入点地址",
+                    placeholder="接入点地址",
+                    key="endpoint_host",
+                    value=st.session_state["kb_endpoint_host"],
+                )
+                endpoint_host_key = st.text_input(
+                    "接入点key",
+                    placeholder="接入点key",
+                    key="endpoint_host_key",
+                    value=st.session_state["kb_endpoint_host_key"],
+                )
+                endpoint_host_proxy = st.text_input(
+                    "接入点代理地址",
+                    placeholder="接入点代理地址",
+                    key="endpoint_host_proxy",
+                    value=st.session_state["kb_endpoint_host_proxy"],
+                )
+                if endpoint_host != st.session_state["kb_endpoint_host"] \
+                        or endpoint_host_key != st.session_state["kb_endpoint_host_key"] \
+                        or endpoint_host_proxy != st.session_state["kb_endpoint_host_proxy"]:
+                    st.session_state["kb_endpoint_host"] = endpoint_host
+                    st.session_state["kb_endpoint_host_key"] = endpoint_host_key
+                    st.session_state["kb_endpoint_host_proxy"] = endpoint_host_proxy
+                    api.update_kb_endpoint(kb, endpoint_host, endpoint_host_key, endpoint_host_proxy)
 
         # with st.sidebar:
         with st.expander(
@@ -278,7 +312,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             # 将文件分词并加载到向量库中
             if cols[1].button(
                     "重新添加至向量库" if selected_rows and (
-                    pd.DataFrame(selected_rows)["in_db"]).any() else "添加至向量库",
+                            pd.DataFrame(selected_rows)["in_db"]).any() else "添加至向量库",
                     disabled=not file_exists(kb, selected_rows)[0],
                     use_container_width=True,
             ):
