@@ -11,12 +11,7 @@ from webui_pages.loom_view_client import (
 
 
 def openai_plugins_page(api: ApiRequest, is_lite: bool = None):
-    if "status" not in st.session_state \
-            or "run_plugins_list" not in st.session_state \
-            or "launch_subscribe_info" not in st.session_state \
-            or "list_running_models" not in st.session_state \
-            or "model_config" not in st.session_state:
-        update_store()
+
 
     with (st.container()):
 
