@@ -1,6 +1,7 @@
 ![](img/logo-long-chatchat-trans-v2.png)
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
+🌍 [日本語で読む](README_ja.md)
 
 📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
 
@@ -188,7 +189,6 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-
 <img src="img/qr_code_87.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
