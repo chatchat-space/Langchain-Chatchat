@@ -3,6 +3,7 @@ from typing import Tuple, Any
 import streamlit as st
 from loom_core.openai_plugins.publish import LoomOpenAIPluginsClient
 import logging
+
 logger = logging.getLogger(__name__)
 client = LoomOpenAIPluginsClient(base_url="http://localhost:8000", timeout=300, use_async=False)
 
@@ -45,11 +46,11 @@ def start_plugin():
 
         st.toast("start_plugin " + start_plugins_name + ",starting.")
         result = client.launch_subscribe(start_plugins_name)
-        st.toast("start_plugin "+start_plugins_name + " ." + result.get("detail", ""))
+        st.toast("start_plugin " + start_plugins_name + " ." + result.get("detail", ""))
         time.sleep(3)
         result1 = client.launch_subscribe_start(start_plugins_name)
 
-        st.toast("start_plugin "+start_plugins_name + " ." + result1.get("detail", ""))
+        st.toast("start_plugin " + start_plugins_name + " ." + result1.get("detail", ""))
         time.sleep(2)
         update_store()
 
@@ -103,7 +104,7 @@ def stop_worker():
         update_store()
 
 
-def build_plugins_name():
+def build_providers_model_plugins_name():
     import streamlit_antd_components as sac
     if "run_plugins_list" not in st.session_state:
         return []
@@ -112,7 +113,25 @@ def build_plugins_name():
     for key, value in st.session_state.list_running_models.items():
         menu_item_children = []
         for model in value:
-            menu_item_children.append(sac.MenuItem(model["model_name"], description=model["model_description"]))
+            if "model" in model["providers"]:
+                menu_item_children.append(sac.MenuItem(model["model_name"], description=model["model_description"]))
+
+        menu_items.append(sac.MenuItem(key, icon='box-fill', children=menu_item_children))
+
+    return menu_items
+
+
+def build_providers_embedding_plugins_name():
+    import streamlit_antd_components as sac
+    if "run_plugins_list" not in st.session_state:
+        return []
+    # 按照模型构建sac.menu(菜单
+    menu_items = []
+    for key, value in st.session_state.list_running_models.items():
+        menu_item_children = []
+        for model in value:
+            if "embedding" in model["providers"]:
+                menu_item_children.append(sac.MenuItem(model["model_name"], description=model["model_description"]))
 
         menu_items.append(sac.MenuItem(key, icon='box-fill', children=menu_item_children))
 
@@ -144,3 +163,22 @@ def get_select_model_endpoint() -> Tuple[str, str]:
     adapter_description = st.session_state.launch_subscribe_info[plugins_name]
     endpoint_host = adapter_description.get("adapter_description", {}).get("endpoint_host", "")
     return endpoint_host, select_model_name
+
+
+def set_embed_select(plugins_info, embed_model_worker):
+    st.session_state["select_embed_plugins_info"] = plugins_info
+    st.session_state["select_embed_model_worker"] = embed_model_worker
+
+
+def get_select_embed_endpoint() -> Tuple[str, str]:
+    select_embed_plugins_info = st.session_state["select_embed_plugins_info"]
+    select_embed_model_worker = st.session_state["select_embed_model_worker"]
+    if select_embed_plugins_info is None or select_embed_model_worker is None:
+        raise ValueError("select_embed_plugins_info or select_embed_model_worker is None")
+    embed_plugins_name = st.session_state["select_embed_plugins_info"]['label']
+    select_embed_model_name = st.session_state["select_embed_model_worker"]['label']
+    endpoint_host = None
+    if embed_plugins_name in st.session_state.launch_subscribe_info:
+        adapter_description = st.session_state.launch_subscribe_info[embed_plugins_name]
+        endpoint_host = adapter_description.get("adapter_description", {}).get("endpoint_host", "")
+    return endpoint_host, select_embed_model_name

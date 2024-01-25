@@ -3,16 +3,22 @@ from server.db.session import with_session
 
 
 @with_session
-def add_kb_to_db(session, kb_name, kb_info, vs_type, embed_model):
+def add_kb_to_db(session, kb_name, kb_info, vs_type, embed_model, endpoint_host: str = None,
+                 endpoint_host_key: str = None, endpoint_host_proxy: str = None):
     # 创建知识库实例
     kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(kb_name)).first()
     if not kb:
-        kb = KnowledgeBaseModel(kb_name=kb_name, kb_info=kb_info, vs_type=vs_type, embed_model=embed_model)
+        kb = KnowledgeBaseModel(kb_name=kb_name, kb_info=kb_info, vs_type=vs_type, embed_model=embed_model,
+                                endpoint_host=endpoint_host, endpoint_host_key=endpoint_host_key,
+                                endpoint_host_proxy=endpoint_host_proxy)
         session.add(kb)
     else:  # update kb with new vs_type and embed_model
         kb.kb_info = kb_info
         kb.vs_type = vs_type
         kb.embed_model = embed_model
+        kb.endpoint_host = endpoint_host
+        kb.endpoint_host_key = endpoint_host_key
+        kb.endpoint_host_proxy = endpoint_host_proxy
     return True
 
 

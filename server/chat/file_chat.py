@@ -57,9 +57,9 @@ def _parse_files_in_thread(
 
 
 def upload_temp_docs(
-        endpoint_host: str = Body(False, description="接入点地址"),
-        endpoint_host_key: str = Body(False, description="接入点key"),
-        endpoint_host_proxy: str = Body(False, description="接入点代理地址"),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
         files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
         prev_id: str = Form(None, description="前知识库ID"),
         chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
@@ -110,9 +110,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                                                        "content": "虎头虎脑"}]]
                                                   ),
                     stream: bool = Body(False, description="流式输出"),
-                    endpoint_host: str = Body(False, description="接入点地址"),
-                    endpoint_host_key: str = Body(False, description="接入点key"),
-                    endpoint_host_proxy: str = Body(False, description="接入点代理地址"),
+                    endpoint_host: str = Body(None, description="接入点地址"),
+                    endpoint_host_key: str = Body(None, description="接入点key"),
+                    endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
                     model_name: str = Body(None, description="LLM 模型名称。"),
                     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                     max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),

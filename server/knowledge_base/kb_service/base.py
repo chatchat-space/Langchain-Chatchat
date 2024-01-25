@@ -58,14 +58,23 @@ class KBService(ABC):
         '''
         pass
 
-    def create_kb(self):
+    def create_kb(self,
+                  endpoint_host: str = None,
+                  endpoint_host_key: str = None,
+                  endpoint_host_proxy: str = None):
         """
         创建知识库
         """
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
-        self.do_create_kb()
-        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
+
+        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model,
+                              endpoint_host=endpoint_host,
+                              endpoint_host_key=endpoint_host_key,
+                              endpoint_host_proxy=endpoint_host_proxy)
+
+        if status:
+            self.do_create_kb()
         return status
 
     def clear_vs(self):

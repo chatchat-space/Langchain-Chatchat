@@ -346,6 +346,9 @@ def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body(DEFAULT_VS_TYPE),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
         embed_model: str = Body(EMBEDDING_MODEL),
         chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
@@ -366,7 +369,9 @@ def recreate_vector_store(
         else:
             if kb.exists():
                 kb.clear_vs()
-            kb.create_kb()
+            kb.create_kb(endpoint_host=endpoint_host,
+                         endpoint_host_key=endpoint_host_key,
+                         endpoint_host_proxy=endpoint_host_proxy)
             files = list_files_from_folder(knowledge_base_name)
             kb_files = [(file, knowledge_base_name) for file in files]
             i = 0

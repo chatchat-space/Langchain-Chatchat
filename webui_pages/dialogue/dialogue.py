@@ -4,7 +4,7 @@ import streamlit as st
 from streamlit_antd_components.utils import ParseItems
 
 from webui_pages.dialogue.utils import process_files
-from webui_pages.loom_view_client import build_plugins_name, find_menu_items_by_index, set_llm_select, \
+from webui_pages.loom_view_client import build_providers_model_plugins_name, find_menu_items_by_index, set_llm_select, \
     get_select_model_endpoint
 from webui_pages.utils import *
 from streamlit_chatbox import *
@@ -132,7 +132,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
         with st.expander("模型选择"):
-            plugins_menu = build_plugins_name()
+            plugins_menu = build_providers_model_plugins_name()
 
             items, _ = ParseItems(plugins_menu).multi()
 

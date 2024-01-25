@@ -382,6 +382,9 @@ class ApiRequest:
             knowledge_base_name: str,
             vector_store_type: str = DEFAULT_VS_TYPE,
             embed_model: str = EMBEDDING_MODEL,
+            endpoint_host: str = None,
+            endpoint_host_key: str = None,
+            endpoint_host_proxy: str = None
     ):
         '''
         对应api.py/knowledge_base/create_knowledge_base接口
@@ -390,6 +393,9 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "vector_store_type": vector_store_type,
             "embed_model": embed_model,
+            "endpoint_host": endpoint_host,
+            "endpoint_host_key": endpoint_host_key,
+            "endpoint_host_proxy": endpoint_host_proxy,
         }
 
         response = self.post(
