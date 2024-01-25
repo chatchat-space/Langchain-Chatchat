@@ -12,9 +12,22 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 import httpx
-from typing import Literal, Optional, Callable, Generator, Dict, Any, Awaitable, Union, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Optional,
+    Callable,
+    Generator,
+    Dict,
+    Any,
+    Awaitable,
+    Union,
+    Tuple
+)
 import logging
 import torch
+
+from server.minx_chat_openai import MinxChatOpenAI
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -23,7 +36,6 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         await fn
     except Exception as e:
         logging.exception(e)
-        # TODO: handle exception
         msg = f"Caught exception: {e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
@@ -44,7 +56,7 @@ def get_ChatOpenAI(
     config = get_model_worker_config(model_name)
     if model_name == "openai-api":
         model_name = config.get("model_name")
-
+    ChatOpenAI._get_encoding_model = MinxChatOpenAI.get_encoding_model
     model = ChatOpenAI(
         streaming=streaming,
         verbose=verbose,
@@ -153,6 +165,7 @@ class ChatMessage(BaseModel):
 
 def torch_gc():
     try:
+        import torch
         if torch.cuda.is_available():
             # with torch.cuda.device(DEVICE):
             torch.cuda.empty_cache()
@@ -390,7 +403,7 @@ def fschat_controller_address() -> str:
 
 
 def fschat_model_worker_address(model_name: str = LLM_MODELS[0]) -> str:
-    if model := get_model_worker_config(model_name):  # TODO: depends fastchat
+    if model := get_model_worker_config(model_name):
         host = model["host"]
         if host == "0.0.0.0":
             host = "127.0.0.1"
@@ -435,7 +448,7 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
 
     from configs import prompt_config
     import importlib
-    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+    importlib.reload(prompt_config)
     return prompt_config.PROMPT_TEMPLATES[type].get(name)
 
 
@@ -489,69 +502,36 @@ def set_httpx_config(
             no_proxy.append(host)
     os.environ["NO_PROXY"] = ",".join(no_proxy)
 
-    # TODO: 简单的清除系统代理不是个好的选择，影响太多。似乎修改代理服务器的bypass列表更好。
-    # patch requests to use custom proxies instead of system settings
     def _get_proxies():
         return proxies
 
     import urllib.request
     urllib.request.getproxies = _get_proxies
 
-    # 自动检查torch可用的设备。分布式部署时，不运行LLM的机器上可以不装torch
-
-
-def is_mps_available():
-    return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
-
-
-def is_cuda_available():
-    return torch.cuda.is_available()
-
 
 def detect_device() -> Literal["cuda", "mps", "cpu"]:
     try:
+        import torch
         if torch.cuda.is_available():
             return "cuda"
-        if is_mps_available():
+        if torch.backends.mps.is_available():
             return "mps"
     except:
         pass
     return "cpu"
 
 
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
+def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
     device = device or LLM_DEVICE
-    if device not in ["cuda", "mps", "cpu", "xpu"]:
-        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
+    if device not in ["cuda", "mps", "cpu"]:
         device = detect_device()
-    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
-        logging.warning("cuda is not available, fallback to mps")
-        return "mps"
-    if device == 'mps' and not is_mps_available() and is_cuda_available():
-        logging.warning("mps is not available, fallback to cuda")
-        return "cuda"
-
-    # auto detect device if not specified
-    if device not in ["cuda", "mps", "cpu", "xpu"]:
-        return detect_device()
     return device
 
 
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
-    device = device or LLM_DEVICE
+def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
+    device = device or EMBEDDING_DEVICE
     if device not in ["cuda", "mps", "cpu"]:
-        logging.warning(f"device not in ['cuda', 'mps', 'cpu','xpu'], device = {device}")
         device = detect_device()
-    elif device == 'cuda' and not is_cuda_available() and is_mps_available():
-        logging.warning("cuda is not available, fallback to mps")
-        return "mps"
-    if device == 'mps' and not is_mps_available() and is_cuda_available():
-        logging.warning("mps is not available, fallback to cuda")
-        return "cuda"
-
-    # auto detect device if not specified
-    if device not in ["cuda", "mps", "cpu"]:
-        return detect_device()
     return device
 
 
@@ -569,7 +549,7 @@ def run_in_thread_pool(
             thread = pool.submit(func, **kwargs)
             tasks.append(thread)
 
-        for obj in as_completed(tasks):  # TODO: Ctrl+c无法停止
+        for obj in as_completed(tasks):
             yield obj.result()
 
 

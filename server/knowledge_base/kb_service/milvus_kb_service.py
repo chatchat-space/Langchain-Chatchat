@@ -18,13 +18,10 @@ class MilvusKBService(KBService):
         from pymilvus import Collection
         return Collection(milvus_name)
 
-    # def save_vector_store(self):
-    #     if self.milvus.col:
-    #         self.milvus.col.flush()
-
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         result = []
         if self.milvus.col:
+            # ids = [int(id) for id in ids]  # for milvus if needed #pr 2725
             data_list = self.milvus.col.query(expr=f'pk in {ids}', output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
@@ -73,7 +70,6 @@ class MilvusKBService(KBService):
         return score_threshold_process(score_threshold, top_k, docs)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
-        # TODO: workaround for bug #10492 in langchain
         for doc in docs:
             for k, v in doc.metadata.items():
                 doc.metadata[k] = str(v)

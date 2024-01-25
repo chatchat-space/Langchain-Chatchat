@@ -91,9 +91,14 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "JSONLoader": [".json"],
                "JSONLinesLoader": [".jsonl"],
                "CSVLoader": [".csv"],
-               # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
+               # "FilteredCSVLoader": [".csv"], 如果使用自定义分割csv
                "RapidOCRPDFLoader": [".pdf"],
+               "RapidOCRDocLoader": ['.docx', '.doc'],
+               "RapidOCRPPTLoader": ['.ppt', '.pptx', ],
                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
+               "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
+                                          '.rtf', '.txt', '.xml',
+                                          '.epub', '.odt','.tsv'],
                "UnstructuredEmailLoader": ['.eml', '.msg'],
                "UnstructuredEPubLoader": ['.epub'],
                "UnstructuredExcelLoader": ['.xlsx', '.xls', '.xlsd'],
@@ -109,7 +114,6 @@ LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
                "UnstructuredXMLLoader": ['.xml'],
                "UnstructuredPowerPointLoader": ['.ppt', '.pptx'],
                "EverNoteLoader": ['.enex'],
-               "UnstructuredFileLoader": ['.txt'],
                }
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
@@ -141,15 +145,14 @@ def get_LoaderClass(file_extension):
         if file_extension in extensions:
             return LoaderClass
 
-
-# 把一些向量化共用逻辑从KnowledgeFile抽取出来，等langchain支持内存文件的时候，可以将非磁盘文件向量化
 def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     '''
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     loader_kwargs = loader_kwargs or {}
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader","FilteredCSVLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
+                           "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')
@@ -171,7 +174,6 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
             if encode_detect is None:
                 encode_detect = {"encoding": "utf-8"}
             loader_kwargs["encoding"] = encode_detect["encoding"]
-        ## TODO：支持更多的自定义CSV读取逻辑
 
     elif loader_name == "JSONLoader":
         loader_kwargs.setdefault("jq_schema", ".")
@@ -259,6 +261,10 @@ def make_text_splitter(
         text_splitter_module = importlib.import_module('langchain.text_splitter')
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
         text_splitter = TextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        
+    # If you use SpacyTextSplitter you can use GPU to do split likes Issue #1287
+    # text_splitter._tokenizer.max_length = 37016792
+    # text_splitter._tokenizer.prefer_gpu()
     return text_splitter
 
 

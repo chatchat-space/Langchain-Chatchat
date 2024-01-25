@@ -6,12 +6,11 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
+from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES, LLM_MODELS,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from server.knowledge_base.utils import LOADER_DICT
 import uuid
 from typing import List, Dict
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
@@ -127,7 +126,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        # TODO: 对话模型与会话绑定
         def on_mode_change():
             mode = st.session_state.dialogue_mode
             text = f"已切换到 {mode} 模式。"
@@ -138,11 +136,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.toast(text)
 
         dialogue_modes = ["LLM 对话",
-                        "知识库问答",
-                        "文件对话",
-                        "搜索引擎问答",
-                        "自定义Agent问答",
-                        ]
+                          "知识库问答",
+                          "文件对话",
+                          "搜索引擎问答",
+                          "自定义Agent问答",
+                          ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=0,
@@ -166,12 +164,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         available_models = []
         config_models = api.list_config_models()
         if not is_lite:
-            for k, v in config_models.get("local", {}).items(): # 列出配置了有效本地路径的模型
+            for k, v in config_models.get("local", {}).items():
                 if (v.get("model_path_exists")
-                    and k not in running_models):
+                        and k not in running_models):
                     available_models.append(k)
-        for k, v in config_models.get("online", {}).items():  # 列出ONLINE_MODELS中直接访问的模型
-            if not v.get("provider") and k not in running_models:
+        for k, v in config_models.get("online", {}).items():
+            if not v.get("provider") and k not in running_models and k in LLM_MODELS:
                 available_models.append(k)
         llm_models = running_models + available_models
         cur_llm_model = st.session_state.get("cur_llm_model", default_model)
@@ -250,14 +248,14 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         elif dialogue_mode == "文件对话":
             with st.expander("文件对话配置", True):
                 files = st.file_uploader("上传知识文件：",
-                                        [i for ls in LOADER_DICT.values() for i in ls],
-                                        accept_multiple_files=True,
-                                        )
+                                         [i for ls in LOADER_DICT.values() for i in ls],
+                                         accept_multiple_files=True,
+                                         )
                 kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
 
                 ## Bge 模型会超过1
                 score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
-                if st.button("开始上传", disabled=len(files)==0):
+                if st.button("开始上传", disabled=len(files) == 0):
                     st.session_state["file_chat_id"] = upload_temp_docs(files, api)
         elif dialogue_mode == "搜索引擎问答":
             search_engine_list = api.list_search_engines()
@@ -279,9 +277,9 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
 
     def on_feedback(
-        feedback,
-        message_id: str = "",
-        history_index: int = -1,
+            feedback,
+            message_id: str = "",
+            history_index: int = -1,
     ):
         reason = feedback["text"]
         score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
@@ -296,7 +294,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     }
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        if parse_command(text=prompt, modal=modal): # 用户输入自定义命令
+        if parse_command(text=prompt, modal=modal):  # 用户输入自定义命令
             st.rerun()
         else:
             history = get_messages_history(history_len)
@@ -306,11 +304,11 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 text = ""
                 message_id = ""
                 r = api.chat_chat(prompt,
-                                history=history,
-                                conversation_id=conversation_id,
-                                model=llm_model,
-                                prompt_name=prompt_template_name,
-                                temperature=temperature)
+                                  history=history,
+                                  conversation_id=conversation_id,
+                                  model=llm_model,
+                                  prompt_name=prompt_template_name,
+                                  temperature=temperature)
                 for t in r:
                     if error_msg := check_error_msg(t):  # check whether error occured
                         st.error(error_msg)
@@ -321,12 +319,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
                 metadata = {
                     "message_id": message_id,
-                    }
+                }
                 chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
                 chat_box.show_feedback(**feedback_kwargs,
-                                    key=message_id,
-                                    on_submit=on_feedback,
-                                    kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
+                                       key=message_id,
+                                       on_submit=on_feedback,
+                                       kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
             elif dialogue_mode == "自定义Agent问答":
                 if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
@@ -373,13 +371,13 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 ])
                 text = ""
                 for d in api.knowledge_base_chat(prompt,
-                                                knowledge_base_name=selected_kb,
-                                                top_k=kb_top_k,
-                                                score_threshold=score_threshold,
-                                                history=history,
-                                                model=llm_model,
-                                                prompt_name=prompt_template_name,
-                                                temperature=temperature):
+                                                 knowledge_base_name=selected_kb,
+                                                 top_k=kb_top_k,
+                                                 score_threshold=score_threshold,
+                                                 history=history,
+                                                 model=llm_model,
+                                                 prompt_name=prompt_template_name,
+                                                 temperature=temperature):
                     if error_msg := check_error_msg(d):  # check whether error occured
                         st.error(error_msg)
                     elif chunk := d.get("answer"):
@@ -397,13 +395,13 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                 ])
                 text = ""
                 for d in api.file_chat(prompt,
-                                        knowledge_id=st.session_state["file_chat_id"],
-                                        top_k=kb_top_k,
-                                        score_threshold=score_threshold,
-                                        history=history,
-                                        model=llm_model,
-                                        prompt_name=prompt_template_name,
-                                        temperature=temperature):
+                                       knowledge_id=st.session_state["file_chat_id"],
+                                       top_k=kb_top_k,
+                                       score_threshold=score_threshold,
+                                       history=history,
+                                       model=llm_model,
+                                       prompt_name=prompt_template_name,
+                                       temperature=temperature):
                     if error_msg := check_error_msg(d):  # check whether error occured
                         st.error(error_msg)
                     elif chunk := d.get("answer"):

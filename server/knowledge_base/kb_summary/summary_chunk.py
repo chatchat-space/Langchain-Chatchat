@@ -112,12 +112,6 @@ class SummaryAdapter:
                          docs: List[DocumentWithVSId] = []) -> List[Document]:
 
         logger.info("start summary")
-        # TODO 暂不处理文档中涉及语义重复、上下文缺失、document was longer than the context length 的问题
-        # merge_docs = self._drop_overlap(docs)
-        # # 将merge_docs中的句子合并成一个文档
-        # text = self._join_docs(merge_docs)
-        # 根据段落于句子的分隔符，将文档分成chunk，每个chunk长度小于token_max长度
-
         """
         这个过程分成两个部分：
         1. 对每个文档进行处理，得到每个文档的摘要

@@ -13,7 +13,6 @@ from server.db.repository.knowledge_metadata_repository import add_summary_to_db
 from langchain.docstore.document import Document
 
 
-# TODO 暂不考虑文件更新，需要重新删除相关文档，再重新添加
 class KBSummaryService(ABC):
     kb_name: str
     embed_model: str
