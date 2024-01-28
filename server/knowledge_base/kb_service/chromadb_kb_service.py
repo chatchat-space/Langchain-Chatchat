@@ -1,17 +1,13 @@
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import chromadb
-from chromadb.api.types import (ID, CollectionMetadata, Embedding,
-                                EmbeddingFunction, GetResult, IDs, Include,
-                                Metadata, OneOrMany, QueryResult, Where)
+from chromadb.api.types import (GetResult, QueryResult)
 from langchain.docstore.document import Document
-from langchain_community.vectorstores.chroma import Chroma
 
-from configs import SCORE_THRESHOLD, logger
+from configs import SCORE_THRESHOLD
 from server.knowledge_base.kb_service.base import (EmbeddingsFunAdapter,
-                                                   KBService, SupportedVSType,
-                                                   score_threshold_process)
+                                                   KBService, SupportedVSType)
 from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 
 
