@@ -16,7 +16,6 @@ def embed_texts(
 ) -> BaseResponse:
     '''
     对文本进行向量化。返回数据格式：BaseResponse(data=List[List[float]])
-    TODO: 也许需要加入缓存机制，减少 token 消耗
     '''
     try:
         if embed_model in list_embed_models():  # 使用本地Embeddings模型

@@ -1,9 +1,10 @@
 from typing import List
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
-from ocr import get_ocr
 import cv2
 from PIL import Image
 import numpy as np
+from configs import PDF_OCR_THRESHOLD
+from document_loaders.ocr import get_ocr
 import tqdm
 
 
@@ -42,33 +43,34 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
 
             b_unit = tqdm.tqdm(total=doc.page_count, desc="RapidOCRPDFLoader context page index: 0")
             for i, page in enumerate(doc):
-
-                # 更新描述
                 b_unit.set_description("RapidOCRPDFLoader context page index: {}".format(i))
-                # 立即显示进度条更新结果
                 b_unit.refresh()
-                # TODO: 依据文本与图片顺序调整处理方式
                 text = page.get_text("")
                 resp += text + "\n"
 
-                img_list = page.get_images()
+                img_list = page.get_image_info(xrefs=True)
                 for img in img_list:
-                    pix = fitz.Pixmap(doc, img[0])
-                    pix = fitz.Pixmap(doc, img[0])
-                    samples = pix.samples
-                    if int(page.rotation)!=0:  #如果Page有旋转角度，则旋转图片
-                        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
-                        tmp_img = Image.fromarray(img_array);
-                        ori_img = cv2.cvtColor(np.array(tmp_img),cv2.COLOR_RGB2BGR)
-                        rot_img = rotate_img(img=ori_img, angle=360-page.rotation)
-                        img_array = cv2.cvtColor(rot_img, cv2.COLOR_RGB2BGR)
-                    else:
-                        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
-                    result, _ = ocr(img_array)
+                    if xref := img.get("xref"):
+                        bbox = img["bbox"]
+                        # 检查图片尺寸是否超过设定的阈值
+                        if ((bbox[2] - bbox[0]) / (page.rect.width) < PDF_OCR_THRESHOLD[0]
+                            or (bbox[3] - bbox[1]) / (page.rect.height) < PDF_OCR_THRESHOLD[1]):
+                            continue
+                        pix = fitz.Pixmap(doc, xref)
+                        samples = pix.samples
+                        if int(page.rotation)!=0:  #如果Page有旋转角度，则旋转图片
+                            img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
+                            tmp_img = Image.fromarray(img_array);
+                            ori_img = cv2.cvtColor(np.array(tmp_img),cv2.COLOR_RGB2BGR)
+                            rot_img = rotate_img(img=ori_img, angle=360-page.rotation)
+                            img_array = cv2.cvtColor(rot_img, cv2.COLOR_RGB2BGR)
+                        else:
+                            img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
 
-                    if result:
-                        ocr_result = [line[1] for line in result]
-                        resp += "\n".join(ocr_result)
+                        result, _ = ocr(img_array)
+                        if result:
+                            ocr_result = [line[1] for line in result]
+                            resp += "\n".join(ocr_result)
 
                 # 更新进度
                 b_unit.update(1)

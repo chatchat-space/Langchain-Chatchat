@@ -1,22 +1,23 @@
-from langchain.memory import ConversationBufferWindowMemory
+import json
+import asyncio
 
-from server.agent.custom_agent.ChatGLM3Agent import initialize_glm3_agent
-from server.agent.tools_select import tools, tool_names
-from server.agent.callbacks import CustomAsyncIteratorCallbackHandler, Status
-from langchain.agents import LLMSingleActionAgent, AgentExecutor
-from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 from fastapi import Body
 from sse_starlette.sse import EventSourceResponse
 from configs import LLM_MODELS, TEMPERATURE, HISTORY_LEN, Agent_MODEL
-from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
+
 from langchain.chains import LLMChain
-from typing import AsyncIterable, Optional
-import asyncio
-from typing import List
-from server.chat.utils import History
-import json
-from server.agent import model_container
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.agents import LLMSingleActionAgent, AgentExecutor
+from typing import AsyncIterable, Optional, List
+
+from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
 from server.knowledge_base.kb_service.base import get_kb_details
+from server.agent.custom_agent.ChatGLM3Agent import initialize_glm3_agent
+from server.agent.tools_select import tools, tool_names
+from server.agent.callbacks import CustomAsyncIteratorCallbackHandler, Status
+from server.chat.utils import History
+from server.agent import model_container
+from server.agent.custom_template import CustomOutputParser, CustomPromptTemplate
 
 
 async def agent_chat(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
@@ -33,7 +34,6 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                      max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
                      prompt_name: str = Body("default",
                                              description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
-                     # top_p: float = Body(TOP_P, description="LLM 核采样。勿与temperature同时设置", gt=0.0, lt=1.0),
                      ):
     history = [History.from_data(h) for h in history]
 
@@ -55,12 +55,10 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
             callbacks=[callback],
         )
 
-        ## 传入全局变量来实现agent调用
         kb_list = {x["kb_name"]: x for x in get_kb_details()}
         model_container.DATABASE = {name: details['kb_info'] for name, details in kb_list.items()}
 
         if Agent_MODEL:
-            ## 如果有指定使用Agent模型来完成任务
             model_agent = get_ChatOpenAI(
                 model_name=Agent_MODEL,
                 temperature=temperature,
@@ -79,23 +77,17 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         )
         output_parser = CustomOutputParser()
         llm_chain = LLMChain(llm=model, prompt=prompt_template_agent)
-        # 把history转成agent的memory
         memory = ConversationBufferWindowMemory(k=HISTORY_LEN * 2)
         for message in history:
-            # 检查消息的角色
             if message.role == 'user':
-                # 添加用户消息
                 memory.chat_memory.add_user_message(message.content)
             else:
-                # 添加AI消息
                 memory.chat_memory.add_ai_message(message.content)
-
-        if "chatglm3" in model_container.MODEL.model_name:
+        if "chatglm3" in model_container.MODEL.model_name or "zhipu-api" in model_container.MODEL.model_name:
             agent_executor = initialize_glm3_agent(
                 llm=model,
                 tools=tools,
                 callback_manager=None,
-                # Langchain Prompt is not constructed directly here, it is constructed inside the GLM3 agent.
                 prompt=prompt_template,
                 input_variables=["input", "intermediate_steps", "history"],
                 memory=memory,
@@ -155,7 +147,6 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
             answer = ""
             final_answer = ""
             async for chunk in callback.aiter():
-                # Use server-sent-events to stream the response
                 data = json.loads(chunk)
                 if data["status"] == Status.start or data["status"] == Status.complete:
                     continue
@@ -181,7 +172,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         await task
 
     return EventSourceResponse(agent_chat_iterator(query=query,
-                                                 history=history,
-                                                 model_name=model_name,
-                                                 prompt_name=prompt_name),
-                             )
+                                                   history=history,
+                                                   model_name=model_name,
+                                                   prompt_name=prompt_name),
+                               )

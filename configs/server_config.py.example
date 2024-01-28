@@ -40,8 +40,6 @@ FSCHAT_MODEL_WORKERS = {
         "device": LLM_DEVICE,
         # False,'vllm',使用的推理加速框架,使用vllm如果出现HuggingFace通信问题，参见doc/FAQ
         # vllm对一些模型支持还不成熟，暂时默认关闭
-        # fschat=0.2.33的代码有bug, 如需使用，源码修改fastchat.server.vllm_worker，
-        # 将103行中sampling_params = SamplingParams的参数stop=list(stop)修改为stop= [i for i in stop if i!=""]
         "infer_turbo": False,
 
         # model_worker多卡加载需要配置的参数
@@ -92,11 +90,10 @@ FSCHAT_MODEL_WORKERS = {
         # 'disable_log_requests': False
 
     },
-    # 可以如下示例方式更改默认配置
-    # "Qwen-1_8B-Chat": { # 使用default中的IP和端口
-    #    "device": "cpu",
-    # },
-    "chatglm3-6b": {  # 使用default中的IP和端口
+    "Qwen-1_8B-Chat": {
+        "device": "cpu",
+    },
+    "chatglm3-6b": {
         "device": "cuda",
     },
 
@@ -128,14 +125,11 @@ FSCHAT_MODEL_WORKERS = {
     "tiangong-api": {
         "port": 21009,
     },
+    "gemini-api": {
+        "port": 21010,
+    },
 }
 
-# fastchat multi model worker server
-FSCHAT_MULTI_MODEL_WORKERS = {
-    # TODO:
-}
-
-# fastchat controller server
 FSCHAT_CONTROLLER = {
     "host": DEFAULT_BIND_HOST,
     "port": 20001,

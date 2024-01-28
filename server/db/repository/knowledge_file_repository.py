@@ -83,7 +83,7 @@ def add_file_to_db(session,
                 kb_file: KnowledgeFile,
                 docs_count: int = 0,
                 custom_docs: bool = False,
-                doc_infos: List[str] = [], # 形式：[{"id": str, "metadata": dict}, ...]
+                doc_infos: List[Dict] = [], # 形式：[{"id": str, "metadata": dict}, ...]
                 ):
     kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_file.kb_name).first()
     if kb:
