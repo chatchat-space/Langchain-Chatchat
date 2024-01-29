@@ -20,6 +20,7 @@ requests~=2.31.0
 pathlib~=1.0.1
 pytest~=7.4.3
 llama-index==0.9.35
+pyjwt==2.8.0
 
 dashscope==1.13.6
 arxiv~=2.1.0
