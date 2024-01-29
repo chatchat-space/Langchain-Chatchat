@@ -31,3 +31,4 @@ watchdog~=3.0.0
 # pymilvus>=2.3.4
 # psycopg2==2.9.9
 # pgvector>=0.2.4
+# chromadb==0.4.13
