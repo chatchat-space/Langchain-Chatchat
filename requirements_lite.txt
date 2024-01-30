@@ -20,6 +20,7 @@ requests~=2.31.0
 pathlib~=1.0.1
 pytest~=7.4.3
 llama-index==0.9.35
+pyjwt==2.8.0
 
 dashscope==1.13.6
 arxiv~=2.1.0
@@ -31,3 +32,4 @@ watchdog~=3.0.0
 # pymilvus>=2.3.4
 # psycopg2==2.9.9
 # pgvector>=0.2.4
+# chromadb==0.4.13
