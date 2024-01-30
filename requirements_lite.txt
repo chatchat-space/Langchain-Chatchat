@@ -33,6 +33,7 @@ watchdog~=3.0.0
 # psycopg2==2.9.9
 # pgvector>=0.2.4
 # chromadb==0.4.13
+
 # jq==1.6.0
 # beautifulsoup4~=4.12.2
 # pysrt~=1.1.2
