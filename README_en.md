@@ -9,7 +9,8 @@ A LLM application aims to implement knowledge and search engine based QA based o
 LLM API.
 
 ⚠️`0.2.10` will be the last version of the `0.2.x` series. The `0.2.x` series will stop updating and technical support,
-and strive to develop `Langchain-Chachat 0.3.x with stronger applicability. `.
+and strive to develop `Langchain-Chachat 0.3.x` with stronger applicability.
+Subsequent bug fixes for `0.2.10` will be pushed directly to the `master` branch without version updates.
 
 
 ---
@@ -61,7 +62,7 @@ The main process analysis from the aspect of document process:
 🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
-🌐 [AutoDL image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) is supported, and in v13 the codes are update to v0.2.9.
+🌐 [AutoDL image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) is supported, and in `0.2.10` the codes are update to v0.2.10.
 
 🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7) is supported to 0.2.7
 
@@ -191,7 +192,7 @@ please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/
 
 ### WeChat Group
 
-<img src="img/qr_code_87.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_88.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat Official Account
 

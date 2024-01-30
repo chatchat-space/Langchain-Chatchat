@@ -3,7 +3,7 @@ import os
 # 默认使用的知识库
 DEFAULT_KNOWLEDGE_BASE = "samples"
 
-# 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector,全文检索引擎es
+# 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector, chromadb 全文检索引擎es
 DEFAULT_VS_TYPE = "faiss"
 
 # 缓存向量库数量（针对FAISS）
@@ -110,7 +110,8 @@ kbs_config = {
     "milvus_kwargs":{
         "search_params":{"metric_type": "L2"}, #在此处增加search_params
         "index_params":{"metric_type": "L2","index_type": "HNSW"} # 在此处增加index_params
-    }
+    },
+    "chromadb": {}
 }
 
 # TextSplitter配置项，如果你不明白其中的含义，就不要修改。

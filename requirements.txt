@@ -2,7 +2,7 @@ torch==2.1.2
 torchvision==0.16.2
 torchaudio==2.1.2
 xformers==0.0.23.post1
-transformers==4.36.2
+transformers==4.37.1
 sentence_transformers==2.2.2
 langchain==0.0.354
 langchain-experimental==0.0.47
@@ -12,7 +12,7 @@ openai==1.9.0
 fastapi==0.109.0
 sse_starlette==1.8.2
 nltk==3.8.1
-uvicorn==0.24.0.post1
+uvicorn>=0.27.0.post1
 starlette==0.35.0
 unstructured[all-docs] # ==0.11.8
 python-magic-bin; sys_platform == 'win32'
@@ -38,15 +38,17 @@ transformers_stream_generator==0.0.4
 vllm==0.2.7; sys_platform == "linux"
 llama-index==0.9.35
 
-#jq==1.6.0
+# jq==1.6.0
 # beautifulsoup4==4.12.2
 # pysrt==1.1.2
 # dashscope==1.13.6 # qwen
 # volcengine==1.0.119 # fangzhou
 # uncomment libs if you want to use corresponding vector store
-# pymilvus==2.3.4
+# pymilvus==2.3.6
 # psycopg2==2.9.9
-# pgvector==0.2.4
+# pgvector>=0.2.4
+# chromadb==0.4.13
+
 #flash-attn==2.4.2 # For Orion-14B-Chat and Qwen-14B-Chat
 #autoawq==0.1.8 # For Int4
 #rapidocr_paddle[gpu]==1.3.11 # gpu accelleration for ocr of pdf and image files
@@ -63,4 +65,4 @@ streamlit-modal==0.1.0
 streamlit-aggrid==0.3.4.post3
 httpx==0.26.0
 watchdog==3.0.0
-jwt==1.3.1
+pyjwt==2.8.0
