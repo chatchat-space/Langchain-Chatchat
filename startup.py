@@ -763,24 +763,23 @@ async def start_main_server():
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
 
-            # 等待所有model_worker启动完成
             for e in model_worker_started:
                 e.wait()
 
             if p := processes.get("api"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
-                api_started.wait()  # 等待api.py启动完成
+                api_started.wait()
 
             if p := processes.get("webui"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
-                webui_started.wait()  # 等待webui.py启动完成
+                webui_started.wait()
 
             dump_server_info(after_start=True, args=args)
 
             while True:
-                cmd = queue.get()  # 收到切换模型的消息
+                cmd = queue.get()
                 e = manager.Event()
                 if isinstance(cmd, list):
                     model_name, cmd, new_model_name = cmd
@@ -851,9 +850,6 @@ async def start_main_server():
             logger.error(e)
             logger.warning("Caught KeyboardInterrupt! Setting stop event...")
         finally:
-            # Send SIGINT if process doesn't exit quickly enough, and kill it as last resort
-            # .is_alive() also implicitly joins the process (good practice in linux)
-            # while alive_procs := [p for p in processes.values() if p.is_alive()]:
 
             for p in processes.values():
                 logger.warning("Sending SIGKILL to %s", p)

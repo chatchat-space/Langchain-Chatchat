@@ -15,7 +15,7 @@ def _get_result_to_documents(get_result: GetResult) -> List[Document]:
     if not get_result['documents']:
         return []
 
-    _metadatas = get_result['metadatas'] if get_result['metadatas'] else [{}] * len(get_result['documents']) 
+    _metadatas = get_result['metadatas'] if get_result['metadatas'] else [{}] * len(get_result['documents'])
 
     document_list = []
     for page_content, metadata in zip(get_result['documents'], _metadatas):
@@ -23,13 +23,13 @@ def _get_result_to_documents(get_result: GetResult) -> List[Document]:
 
     return document_list
 
+
 def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
     """
     from langchain_community.vectorstores.chroma import Chroma
     """
     return [
         # TODO: Chroma can do batch querying,
-        # we shouldn't hard code to the 1st result
         (Document(page_content=result[0], metadata=result[1] or {}), result[2])
         for result in zip(
             results["documents"][0],
@@ -40,13 +40,11 @@ def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
 
 
 class ChromaKBService(KBService):
-
     vs_path: str
     kb_path: str
 
     client = None
     collection = None
-
 
     def vs_type(self) -> str:
         return SupportedVSType.CHROMADB
@@ -75,16 +73,16 @@ class ChromaKBService(KBService):
             if not str(e) == f"Collection {self.kb_name} does not exist.":
                 raise e
 
-    def do_search(self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD) -> List[Tuple[Document, float]]:
+    def do_search(self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD) -> List[
+        Tuple[Document, float]]:
         embed_func = EmbeddingsFunAdapter(self.embed_model)
         embeddings = embed_func.embed_query(query)
         query_result: QueryResult = self.collection.query(query_embeddings=embeddings, n_results=top_k)
-        return  _results_to_docs_and_scores(query_result)
+        return _results_to_docs_and_scores(query_result)
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         doc_infos = []
         data = self._docs_to_embeddings(docs)
-        print(data)
         ids = [str(uuid.uuid1()) for _ in range(len(data["texts"]))]
         for _id, text, embedding, metadata in zip(ids, data["texts"], data["embeddings"], data["metadatas"]):
             self.collection.add(ids=_id, embeddings=embedding, metadatas=metadata, documents=text)

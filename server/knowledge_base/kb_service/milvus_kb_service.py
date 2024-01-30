@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 
 from langchain.schema import Document
 from langchain.vectorstores.milvus import Milvus
+import os
 
 from configs import kbs_config
 
@@ -85,6 +86,7 @@ class MilvusKBService(KBService):
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         if self.milvus.col:
             filepath = kb_file.filepath.replace('\\', '\\\\')
+            filename = os.path.basename(filepath)
             delete_list = [item.get("pk") for item in
                            self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
             self.milvus.col.delete(expr=f'pk in {delete_list}')
