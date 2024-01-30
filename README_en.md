@@ -62,8 +62,7 @@ The main process analysis from the aspect of document process:
 🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
 
-🌐 [AutoDL image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) is supported, and
-in v14 the codes are update to v0.2.10.
+🌐 [AutoDL image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) is supported, and in `0.2.10` the codes are update to v0.2.10.
 
 🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7) is supported to 0.2.7
 
