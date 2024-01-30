@@ -62,7 +62,7 @@ Q&A）ソリューションを構築することです。
 
 🚩 トレーニングやファインチューニングはプロジェクトには含まれないが、これらを行うことで必ずパフォーマンスを向上させることができます。
 
-🌐 [AutoDL イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)がサポートされ、v13 では v0.2.9
+🌐 [AutoDL イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)がサポートされ、`0.2.10` では v0.2.10
 にアップデートされました。
 
 🐳 [Docker イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7)
