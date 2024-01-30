@@ -315,6 +315,7 @@ class KBServiceFactory:
             from server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
             return ZillizKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.DEFAULT == vector_store_type:
+            from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,
                                    embed_model=embed_model)  # other milvus parameters are set in model_config.kbs_config
         elif SupportedVSType.ES == vector_store_type:

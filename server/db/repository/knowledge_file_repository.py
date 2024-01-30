@@ -6,6 +6,19 @@ from typing import List, Dict
 
 
 @with_session
+def list_file_num_docs_id_by_kb_name_and_file_name(session,
+                                                   kb_name: str,
+                                                   file_name: str,
+                                                   ) -> List[int]:
+    '''
+    列出某知识库某文件对应的所有Document的id。
+    返回形式：[str, ...]
+    '''
+    doc_ids = session.query(FileDocModel.doc_id).filter_by(kb_name=kb_name, file_name=file_name).all()
+    return [int(_id[0]) for _id in doc_ids]
+
+
+@with_session
 def list_docs_from_db(session,
                       kb_name: str,
                       file_name: str = None,
@@ -19,16 +32,16 @@ def list_docs_from_db(session,
     if file_name:
         docs = docs.filter(FileDocModel.file_name.ilike(file_name))
     for k, v in metadata.items():
-        docs = docs.filter(FileDocModel.meta_data[k].as_string()==str(v))
+        docs = docs.filter(FileDocModel.meta_data[k].as_string() == str(v))
 
     return [{"id": x.doc_id, "metadata": x.metadata} for x in docs.all()]
 
 
 @with_session
 def delete_docs_from_db(session,
-                      kb_name: str,
-                      file_name: str = None,
-                      ) -> List[Dict]:
+                        kb_name: str,
+                        file_name: str = None,
+                        ) -> List[Dict]:
     '''
     删除某知识库某文件对应的所有Document，并返回被删除的Document。
     返回形式：[{"id": str, "metadata": dict}, ...]
@@ -51,7 +64,7 @@ def add_docs_to_db(session,
     将某知识库某文件对应的所有Document信息添加到数据库。
     doc_infos形式：[{"id": str, "metadata": dict}, ...]
     '''
-    #! 这里会出现doc_infos为None的情况，需要进一步排查
+    # ! 这里会出现doc_infos为None的情况，需要进一步排查
     if doc_infos is None:
         print("输入的server.db.repository.knowledge_file_repository.add_docs_to_db的doc_infos参数为None")
         return False
@@ -80,18 +93,18 @@ def list_files_from_db(session, kb_name):
 
 @with_session
 def add_file_to_db(session,
-                kb_file: KnowledgeFile,
-                docs_count: int = 0,
-                custom_docs: bool = False,
-                doc_infos: List[Dict] = [], # 形式：[{"id": str, "metadata": dict}, ...]
-                ):
+                   kb_file: KnowledgeFile,
+                   docs_count: int = 0,
+                   custom_docs: bool = False,
+                   doc_infos: List[Dict] = [],  # 形式：[{"id": str, "metadata": dict}, ...]
+                   ):
     kb = session.query(KnowledgeBaseModel).filter_by(kb_name=kb_file.kb_name).first()
     if kb:
         # 如果已经存在该文件，则更新文件信息与版本号
         existing_file: KnowledgeFileModel = (session.query(KnowledgeFileModel)
                                              .filter(KnowledgeFileModel.kb_name.ilike(kb_file.kb_name),
                                                      KnowledgeFileModel.file_name.ilike(kb_file.filename))
-                                            .first())
+                                             .first())
         mtime = kb_file.get_mtime()
         size = kb_file.get_size()
 
@@ -111,7 +124,7 @@ def add_file_to_db(session,
                 text_splitter_name=kb_file.text_splitter_name or "SpacyTextSplitter",
                 file_mtime=mtime,
                 file_size=size,
-                docs_count = docs_count,
+                docs_count=docs_count,
                 custom_docs=custom_docs,
             )
             kb.file_count += 1
@@ -124,8 +137,8 @@ def add_file_to_db(session,
 def delete_file_from_db(session, kb_file: KnowledgeFile):
     existing_file = (session.query(KnowledgeFileModel)
                      .filter(KnowledgeFileModel.file_name.ilike(kb_file.filename),
-                            KnowledgeFileModel.kb_name.ilike(kb_file.kb_name))
-                    .first())
+                             KnowledgeFileModel.kb_name.ilike(kb_file.kb_name))
+                     .first())
     if existing_file:
         session.delete(existing_file)
         delete_docs_from_db(kb_name=kb_file.kb_name, file_name=kb_file.filename)
@@ -140,8 +153,10 @@ def delete_file_from_db(session, kb_file: KnowledgeFile):
 
 @with_session
 def delete_files_from_db(session, knowledge_base_name: str):
-    session.query(KnowledgeFileModel).filter(KnowledgeFileModel.kb_name.ilike(knowledge_base_name)).delete(synchronize_session=False)
-    session.query(FileDocModel).filter(FileDocModel.kb_name.ilike(knowledge_base_name)).delete(synchronize_session=False)
+    session.query(KnowledgeFileModel).filter(KnowledgeFileModel.kb_name.ilike(knowledge_base_name)).delete(
+        synchronize_session=False)
+    session.query(FileDocModel).filter(FileDocModel.kb_name.ilike(knowledge_base_name)).delete(
+        synchronize_session=False)
     kb = session.query(KnowledgeBaseModel).filter(KnowledgeBaseModel.kb_name.ilike(knowledge_base_name)).first()
     if kb:
         kb.file_count = 0
@@ -154,8 +169,8 @@ def delete_files_from_db(session, knowledge_base_name: str):
 def file_exists_in_db(session, kb_file: KnowledgeFile):
     existing_file = (session.query(KnowledgeFileModel)
                      .filter(KnowledgeFileModel.file_name.ilike(kb_file.filename),
-                            KnowledgeFileModel.kb_name.ilike(kb_file.kb_name))
-                    .first())
+                             KnowledgeFileModel.kb_name.ilike(kb_file.kb_name))
+                     .first())
     return True if existing_file else False
 
 
