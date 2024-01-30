@@ -5,6 +5,7 @@ from langchain.vectorstores.milvus import Milvus
 import os
 
 from configs import kbs_config
+from server.db.repository import list_file_num_docs_id_by_kb_name_and_file_name
 
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
     score_threshold_process
@@ -23,7 +24,7 @@ class MilvusKBService(KBService):
         result = []
         if self.milvus.col:
             # ids = [int(id) for id in ids]  # for milvus if needed #pr 2725
-            data_list = self.milvus.col.query(expr=f'pk in {ids}', output_fields=["*"])
+            data_list = self.milvus.col.query(expr=f'pk in {[int(_id) for _id in ids]}', output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
                 result.append(Document(page_content=text, metadata=data))
@@ -84,12 +85,9 @@ class MilvusKBService(KBService):
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
+        id_list = list_file_num_docs_id_by_kb_name_and_file_name(kb_file.kb_name, kb_file.filename)
         if self.milvus.col:
-            filepath = kb_file.filepath.replace('\\', '\\\\')
-            filename = os.path.basename(filepath)
-            delete_list = [item.get("pk") for item in
-                           self.milvus.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
-            self.milvus.col.delete(expr=f'pk in {delete_list}')
+            self.milvus.col.delete(expr=f'pk in {id_list}')
 
     def do_clear_vs(self):
         if self.milvus.col:
