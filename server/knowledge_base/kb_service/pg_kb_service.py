@@ -27,6 +27,7 @@ class PGKBService(KBService):
                                   connection_string=kbs_config.get("pg").get("connection_uri"))
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        ids = tuple(ids)
         with Session(PGKBService.engine) as session:
             stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id in :ids")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
