@@ -138,6 +138,9 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
 
 def mount_knowledge_routes(app: FastAPI):
     from server.chat.knowledge_base_chat import knowledge_base_chat
+    from server.chat.career_flow_chat import career_flow_chat
+    from server.chat.bert_chat_judge import bert_chat_judge
+    from server.chat.bert_truth_judge import bert_truth_judge
     from server.chat.file_chat import upload_temp_docs, file_chat
     from server.chat.agent_chat import agent_chat
     from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
@@ -145,10 +148,43 @@ def mount_knowledge_routes(app: FastAPI):
                                                 update_docs, download_doc, recreate_vector_store,
                                                 search_docs, DocumentWithVSId, update_info,
                                                 update_docs_by_id,)
+    from server.rank_prediction.score_insight_train import score_insight_train
+    from server.ai_magazine.es_add_data import es_add_data
+    from server.ai_magazine.get_content_tags_stream import get_content_tags_stream
+    from server.ai_magazine.get_recommend_articles import get_recommend_articles
 
     app.post("/chat/knowledge_base_chat",
              tags=["Chat"],
              summary="与知识库对话")(knowledge_base_chat)
+    
+    app.post("/chat/career_flow_chat",
+             tags=["Chat"],
+             summary="生涯导师对话流程")(career_flow_chat)
+    app.post("/chat/bert_chat_judge",
+             tags=["Chat"],
+             summary="bert判断是闲聊意图还是职业意图")(bert_chat_judge)
+    app.post("/chat/bert_truth_judge",
+             tags=["Chat"],
+             summary="bert判断是事实意图还是观点意图")(bert_truth_judge)
+    
+    # 学业目标透视
+    app.post("/rank/score_insight_train",
+             tags=["Rank"],
+             summary="学业透视预测模块")(score_insight_train)
+    
+    # es相关操作
+    app.post("/chat/es_add_data",
+            tags=["ES"],
+            summary="es数据库新增数据")(es_add_data)
+    app.post("/chat/get_recommend_articles",
+            tags=["ES"],
+            summary="推荐文章")(get_recommend_articles)
+    
+    # 个性化指导报告
+    app.post("/chat/get_content_tags_stream",
+             tags=["Chat"],
+             summary="大模型给内容打标签流")(get_content_tags_stream)
+    
 
     app.post("/chat/file_chat",
              tags=["Knowledge Base Management"],
