@@ -155,6 +155,20 @@ class ESKBService(KBService):
                                          k=top_k)
         return docs
 
+    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+        results = []
+        for doc_id in ids:
+            try:
+                response = self.es_client_python.get(index=self.index_name, id=doc_id)
+                source = response["_source"]
+                # Assuming your document has "text" and "metadata" fields
+                text = source.get("context", "")
+                metadata = source.get("metadata", {})
+                results.append(Document(page_content=text, metadata=metadata))
+            except Exception as e:
+                logger.error(f"Error retrieving document from Elasticsearch! {e}")
+        return results
+
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         for doc_id in ids:
             try:
@@ -210,7 +224,8 @@ class ESKBService(KBService):
                     }
                 }
             }
-            search_results = self.es_client_python.search(body=query)
+            # 注意设置size，默认返回10个。
+            search_results = self.es_client_python.search(body=query, size=50)
             if len(search_results["hits"]["hits"]) == 0:
                 raise ValueError("召回元素个数为0")
         info_docs = [{"id":hit["_id"], "metadata": hit["_source"]["metadata"]} for hit in search_results["hits"]["hits"]]
