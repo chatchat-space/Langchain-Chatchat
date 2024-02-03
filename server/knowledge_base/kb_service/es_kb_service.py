@@ -214,13 +214,16 @@ class ESKBService(KBService):
         # 获取 id 和 source , 格式：[{"id": str, "metadata": dict}, ...]
         print("写入数据成功.")
         print("*"*100)
-        
+
         if self.es_client_python.indices.exists(index=self.index_name):
             file_path = docs[0].metadata.get("source")
             query = {
                 "query": {
                     "term": {
                         "metadata.source.keyword": file_path
+                    },
+                    "term": {
+                        "_index": self.index_name
                     }
                 }
             }
