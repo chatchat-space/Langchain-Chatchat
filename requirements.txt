@@ -2,7 +2,7 @@ torch==2.1.2
 torchvision==0.16.2
 torchaudio==2.1.2
 xformers==0.0.23.post1
-transformers==4.37.1
+transformers==4.37.2
 sentence_transformers==2.2.2
 langchain==0.0.354
 langchain-experimental==0.0.47

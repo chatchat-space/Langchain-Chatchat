@@ -185,7 +185,7 @@ $ python startup.py -a
 
 ### WeChat グループ
 
-<img src="img/qr_code_88.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_89.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat 公式アカウント
 
