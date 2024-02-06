@@ -94,7 +94,7 @@ FSCHAT_MODEL_WORKERS = {
         "device": "cpu",
     },
     "chatglm3-6b": {
-        "device": "cuda",
+        "device": "cpu",
     },
 
     # 以下配置可以不用修改，在model_config中设置启动的模型
