@@ -37,6 +37,7 @@ einops>=0.7.0
 transformers_stream_generator==0.0.4
 vllm==0.2.7; sys_platform == "linux"
 httpx==0.26.0
+httpx_sse==0.4.0
 llama-index==0.9.35
 pyjwt==2.8.0
 
