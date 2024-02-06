@@ -192,7 +192,7 @@ please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/
 
 ### WeChat Group
 
-<img src="img/qr_code_88.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_89.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat Official Account
 

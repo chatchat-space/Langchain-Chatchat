@@ -90,13 +90,12 @@ FSCHAT_MODEL_WORKERS = {
         # 'disable_log_requests': False
 
     },
-    "Qwen-1_8B-Chat": {
-        "device": "cpu",
-    },
     "chatglm3-6b": {
         "device": "cuda",
     },
-
+    "Qwen1.5-0.5B-Chat": {
+        "device": "cuda",
+    },
     # 以下配置可以不用修改，在model_config中设置启动的模型
     "zhipu-api": {
         "port": 21001,
