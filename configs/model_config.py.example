@@ -150,12 +150,16 @@ MODEL_PATH = {
         "m3e-small": "moka-ai/m3e-small",
         "m3e-base": "moka-ai/m3e-base",
         "m3e-large": "moka-ai/m3e-large",
+
         "bge-small-zh": "BAAI/bge-small-zh",
         "bge-base-zh": "BAAI/bge-base-zh",
         "bge-large-zh": "BAAI/bge-large-zh",
         "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
         "bge-base-zh-v1.5": "BAAI/bge-base-zh-v1.5",
         "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
+
+        "bge-m3": "BAAI/bge-m3",
+
         "piccolo-base-zh": "sensenova/piccolo-base-zh",
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
@@ -180,6 +184,14 @@ MODEL_PATH = {
         "Qwen-7B-Chat": "Qwen/Qwen-7B-Chat",
         "Qwen-14B-Chat": "Qwen/Qwen-14B-Chat",
         "Qwen-72B-Chat": "Qwen/Qwen-72B-Chat",
+
+        # Qwen1.5 模型 VLLM可能出现问题
+        "Qwen1.5-0.5B-Chat": "Qwen/Qwen1.5-0.5B-Chat",
+        "Qwen1.5-1.8B-Chat": "Qwen/Qwen1.5-1.8B-Chat",
+        "Qwen1.5-4B-Chat": "Qwen/Qwen1.5-4B-Chat",
+        "Qwen1.5-7B-Chat": "Qwen/Qwen1.5-7B-Chat",
+        "Qwen1.5-14B-Chat": "Qwen/Qwen1.5-14B-Chat",
+        "Qwen1.5-72B-Chat": "Qwen/Qwen1.5-72B-Chat",
 
         "baichuan-7b-chat": "baichuan-inc/Baichuan-7B-Chat",
         "baichuan-13b-chat": "baichuan-inc/Baichuan-13B-Chat",

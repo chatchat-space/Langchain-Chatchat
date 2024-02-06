@@ -1,13 +1,21 @@
+from contextlib import contextmanager
+
+import httpx
 from fastchat.conversation import Conversation
+from httpx_sse import EventSource
+
 from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
-from typing import List, Dict, Iterator, Literal
-from configs import logger, log_verbose
-import requests
+from typing import List, Dict, Iterator, Literal, Any
 import jwt
 import time
-import json
+
+
+@contextmanager
+def connect_sse(client: httpx.Client, method: str, url: str, **kwargs: Any):
+    with client.stream(method, url, **kwargs) as response:
+        yield EventSource(response)
 
 
 def generate_token(apikey: str, exp_seconds: int):
@@ -37,7 +45,7 @@ class ChatGLMWorker(ApiModelWorker):
             model_names: List[str] = ["zhipu-api"],
             controller_addr: str = None,
             worker_addr: str = None,
-            version: Literal["chatglm_turbo"] = "chatglm_turbo",
+            version: Literal["glm-4"] = "glm-4",
             **kwargs,
     ):
         kwargs.update(model_names=model_names, controller_addr=controller_addr, worker_addr=worker_addr)
@@ -59,25 +67,25 @@ class ChatGLMWorker(ApiModelWorker):
             "temperature": params.temperature,
             "stream": False
         }
+
         url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-        response = requests.post(url, headers=headers, json=data)
-        # for chunk in response.iter_lines():
-        #     if chunk:
-        #         chunk_str = chunk.decode('utf-8')
-        #         json_start_pos = chunk_str.find('{"id"')
-        #         if json_start_pos != -1:
-        #             json_str = chunk_str[json_start_pos:]
-        #             json_data = json.loads(json_str)
-        #             for choice in json_data.get('choices', []):
-        #                 delta = choice.get('delta', {})
-        #                 content = delta.get('content', '')
-        #                 yield {"error_code": 0, "text": content}
-        ans = response.json()
-        content = ans["choices"][0]["message"]["content"]
-        yield {"error_code": 0, "text": content}
+        with httpx.Client(headers=headers) as client:
+            response = client.post(url, json=data)
+            response.raise_for_status()
+            chunk = response.json()
+            print(chunk)
+            yield {"error_code": 0, "text": chunk["choices"][0]["message"]["content"]}
+
+            # with connect_sse(client, "POST", url, json=data) as event_source:
+            #     for sse in event_source.iter_sse():
+            #         chunk = json.loads(sse.data)
+            #         if len(chunk["choices"]) != 0:
+            #             text += chunk["choices"][0]["delta"]["content"]
+            #             yield {"error_code": 0, "text": text}
+
+
 
     def get_embeddings(self, params):
-        # 临时解决方案，不支持embedding
         print("embedding")
         print(params)
 

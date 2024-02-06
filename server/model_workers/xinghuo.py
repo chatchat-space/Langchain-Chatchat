@@ -13,7 +13,6 @@ async def request(appid, api_key, api_secret, Spark_url, domain, question, tempe
     wsParam = SparkApi.Ws_Param(appid, api_key, api_secret, Spark_url)
     wsUrl = wsParam.create_url()
     data = SparkApi.gen_params(appid, domain, question, temperature, max_token)
-    print(data)
     async with websockets.connect(wsUrl) as ws:
         await ws.send(json.dumps(data, ensure_ascii=False))
         finish = False

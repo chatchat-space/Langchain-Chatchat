@@ -50,7 +50,7 @@ class MilvusKBService(KBService):
 
     def _load_milvus(self):
         self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(self.embed_model),
-                             collection_name=self.kb_name, 
+                             collection_name=self.kb_name,
                              connection_args=kbs_config.get("milvus"),
                              index_params=kbs_config.get("milvus_kwargs")["index_params"],
                              search_params=kbs_config.get("milvus_kwargs")["search_params"]
@@ -88,6 +88,14 @@ class MilvusKBService(KBService):
         id_list = list_file_num_docs_id_by_kb_name_and_file_name(kb_file.kb_name, kb_file.filename)
         if self.milvus.col:
             self.milvus.col.delete(expr=f'pk in {id_list}')
+
+        # Issue 2846, for windows
+        # if self.milvus.col:
+        #     file_path = kb_file.filepath.replace("\\", "\\\\")
+        #     file_name = os.path.basename(file_path)
+        #     id_list = [item.get("pk") for item in
+        #                self.milvus.col.query(expr=f'source == "{file_name}"', output_fields=["pk"])]
+        #     self.milvus.col.delete(expr=f'pk in {id_list}')
 
     def do_clear_vs(self):
         if self.milvus.col:
