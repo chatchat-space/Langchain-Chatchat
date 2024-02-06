@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
+import logging
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
@@ -24,7 +25,7 @@ from server.knowledge_base.utils import (
     list_kbs_from_folder, list_files_from_folder,
 )
 
-from typing import List, Union, Dict, Optional, Tuple
+from typing import List, Union, Dict, Optional
 
 from server.embeddings_api import embed_texts, aembed_texts, embed_documents
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -47,8 +48,7 @@ class SupportedVSType:
     ZILLIZ = 'zilliz'
     PG = 'pg'
     ES = 'es'
-    CHROMADB = 'chromadb'
-
+    ORCL = 'orcl'
 
 class KBService(ABC):
 
@@ -157,7 +157,7 @@ class KBService(ABC):
 
     def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
         """
-        使用content中的文件更新向量库
+       使用content中的文件更新向量库
         如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
         """
         if os.path.exists(kb_file.filepath):
@@ -192,6 +192,7 @@ class KBService(ABC):
         '''
         传入参数为： {doc_id: Document, ...}
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
+        TODO：是否要支持新增 docs ？
         '''
         self.del_doc_by_ids(list(docs.keys()))
         docs = []
@@ -208,13 +209,16 @@ class KBService(ABC):
         '''
         通过file_name或metadata检索Document
         '''
+        self.logger = logging.getLogger(__name__)
         doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
+        self.logger.debug(f"Executing get_doc_info: {doc_infos}")
         docs = []
         for x in doc_infos:
             doc_info = self.get_doc_by_ids([x["id"]])[0]
             if doc_info is not None:
                 # 处理非空的情况
                 doc_with_id = DocumentWithVSId(**doc_info.dict(), id=x["id"])
+                self.logger.debug(f"Executing doc_with_id: {doc_with_id}")
                 docs.append(doc_with_id)
             else:
                 # 处理空的情况
@@ -261,7 +265,7 @@ class KBService(ABC):
                   query: str,
                   top_k: int,
                   score_threshold: float,
-                  ) -> List[Tuple[Document, float]]:
+                  ) -> List[Document]:
         """
         搜索知识库子类实自己逻辑
         """
@@ -308,6 +312,9 @@ class KBServiceFactory:
         elif SupportedVSType.PG == vector_store_type:
             from server.knowledge_base.kb_service.pg_kb_service import PGKBService
             return PGKBService(kb_name, embed_model=embed_model)
+        elif SupportedVSType.ORCL == vector_store_type:
+            from server.knowledge_base.kb_service.oracle_kb_service import ORCLKBService
+            return ORCLKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.MILVUS == vector_store_type:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,embed_model=embed_model)
@@ -315,15 +322,11 @@ class KBServiceFactory:
             from server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
             return ZillizKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.DEFAULT == vector_store_type:
-            from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,
                                    embed_model=embed_model)  # other milvus parameters are set in model_config.kbs_config
         elif SupportedVSType.ES == vector_store_type:
             from server.knowledge_base.kb_service.es_kb_service import ESKBService
             return ESKBService(kb_name, embed_model=embed_model)
-        elif SupportedVSType.CHROMADB == vector_store_type:
-            from server.knowledge_base.kb_service.chromadb_kb_service import ChromaKBService
-            return ChromaKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.DEFAULT == vector_store_type:  # kb_exists of default kbservice is False, to make validation easier.
             from server.knowledge_base.kb_service.default_kb_service import DefaultKBService
             return DefaultKBService(kb_name)
