@@ -1,6 +1,6 @@
 import os
 
-# 默认使用的知识库
+
 DEFAULT_KNOWLEDGE_BASE = "samples"
 
 # 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector, chromadb 全文检索引擎es
@@ -62,7 +62,6 @@ PDF_OCR_THRESHOLD = (0.6, 0.6)
 
 # 每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。
 KB_INFO = {
-    "知识库名称": "知识库介绍",
     "samples": "关于本项目issue的解答",
 }
 

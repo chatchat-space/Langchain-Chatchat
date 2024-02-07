@@ -7,7 +7,6 @@ from configs import (
     logger,
     log_verbose,
     text_splitter_dict,
-    LLM_MODELS,
     TEXT_SPLITTER_NAME,
 )
 import importlib
@@ -16,10 +15,11 @@ import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
-from server.utils import run_in_thread_pool, get_model_worker_config
+from server.utils import run_in_thread_pool
 import json
-from typing import List, Union,Dict, Tuple, Generator
+from typing import List, Union, Dict, Tuple, Generator
 import chardet
+from langchain_community.document_loaders import JSONLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -123,15 +123,13 @@ def _new_json_dumps(obj, **kwargs):
     kwargs["ensure_ascii"] = False
     return _origin_json_dumps(obj, **kwargs)
 
+
 if json.dumps is not _new_json_dumps:
     _origin_json_dumps = json.dumps
     json.dumps = _new_json_dumps
 
 
-class JSONLinesLoader(langchain.document_loaders.JSONLoader):
-    '''
-    行式 Json 加载器，要求文件扩展名为 .jsonl
-    '''
+class JSONLinesLoader(JSONLoader):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._json_lines = True
@@ -187,10 +185,9 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
 
 
 def make_text_splitter(
-        splitter_name: str = TEXT_SPLITTER_NAME,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        llm_model: str = LLM_MODELS[0],
+        splitter_name,
+        chunk_size,
+        chunk_overlap
 ):
     """
     根据参数获取特定的分词器
@@ -225,10 +222,6 @@ def make_text_splitter(
                         chunk_overlap=chunk_overlap
                     )
             elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
-                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
-                    config = get_model_worker_config(llm_model)
-                    text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
-                        config.get("model_path")
 
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast

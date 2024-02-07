@@ -10,8 +10,8 @@ from typing import List, Optional
 from server.knowledge_base.kb_summary.base import KBSummaryService
 from server.knowledge_base.kb_summary.summary_chunk import SummaryAdapter
 from server.utils import wrap_done, get_ChatOpenAI, BaseResponse
-from configs import LLM_MODELS, TEMPERATURE
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
+
 
 def recreate_summary_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
@@ -19,13 +19,19 @@ def recreate_summary_vector_store(
         vs_type: str = Body(DEFAULT_VS_TYPE),
         embed_model: str = Body(EMBEDDING_MODEL),
         file_description: str = Body(''),
-        model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
-        temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
+        model_name: str = Body(None, description="LLM 模型名称。"),
+        temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
         max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
 ):
     """
     重建单个知识库文件摘要
     :param max_tokens:
+    :param endpoint_host:
+    :param endpoint_host_key:
+    :param endpoint_host_proxy:
     :param model_name:
     :param temperature:
     :param file_description:
@@ -48,11 +54,17 @@ def recreate_summary_vector_store(
             kb_summary.create_kb_summary()
 
             llm = get_ChatOpenAI(
+                endpoint_host=endpoint_host,
+                endpoint_host_key=endpoint_host_key,
+                endpoint_host_proxy=endpoint_host_proxy,
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
             reduce_llm = get_ChatOpenAI(
+                endpoint_host=endpoint_host,
+                endpoint_host_key=endpoint_host_key,
+                endpoint_host_proxy=endpoint_host_proxy,
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -100,12 +112,18 @@ def summary_file_to_vector_store(
         vs_type: str = Body(DEFAULT_VS_TYPE),
         embed_model: str = Body(EMBEDDING_MODEL),
         file_description: str = Body(''),
-        model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
-        temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
+        model_name: str = Body(None, description="LLM 模型名称。"),
+        temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
         max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
 ):
     """
     单个知识库根据文件名称摘要
+    :param endpoint_host:
+    :param endpoint_host_key:
+    :param endpoint_host_proxy:
     :param model_name:
     :param max_tokens:
     :param temperature:
@@ -128,11 +146,17 @@ def summary_file_to_vector_store(
             kb_summary.create_kb_summary()
 
             llm = get_ChatOpenAI(
+                endpoint_host=endpoint_host,
+                endpoint_host_key=endpoint_host_key,
+                endpoint_host_proxy=endpoint_host_proxy,
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
             reduce_llm = get_ChatOpenAI(
+                endpoint_host=endpoint_host,
+                endpoint_host_key=endpoint_host_key,
+                endpoint_host_proxy=endpoint_host_proxy,
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -172,13 +196,19 @@ def summary_doc_ids_to_vector_store(
         vs_type: str = Body(DEFAULT_VS_TYPE),
         embed_model: str = Body(EMBEDDING_MODEL),
         file_description: str = Body(''),
-        model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
-        temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
+        model_name: str = Body(None, description="LLM 模型名称。"),
+        temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
         max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
 ) -> BaseResponse:
     """
     单个知识库根据doc_ids摘要
     :param knowledge_base_name:
+    :param endpoint_host:
+    :param endpoint_host_key:
+    :param endpoint_host_proxy:
     :param doc_ids:
     :param model_name:
     :param max_tokens:
@@ -193,11 +223,17 @@ def summary_doc_ids_to_vector_store(
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data={})
     else:
         llm = get_ChatOpenAI(
+            endpoint_host=endpoint_host,
+            endpoint_host_key=endpoint_host_key,
+            endpoint_host_proxy=endpoint_host_proxy,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
         )
         reduce_llm = get_ChatOpenAI(
+            endpoint_host=endpoint_host,
+            endpoint_host_key=endpoint_host_key,
+            endpoint_host_proxy=endpoint_host_proxy,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,

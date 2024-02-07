@@ -136,8 +136,7 @@ def upload_docs(
         chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
-        docs: Json = Form({}, description="自定义的docs，需要转为json字符串",
-                          examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+        docs: Json = Form({}, description="自定义的docs，需要转为json字符串"),
         not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
 ) -> BaseResponse:
     """
@@ -231,6 +230,26 @@ def update_info(
     return BaseResponse(code=200, msg=f"知识库介绍修改完成", data={"kb_info": kb_info})
 
 
+def update_kb_endpoint(
+        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
+):
+    if not validate_kb_name(knowledge_base_name):
+        return BaseResponse(code=403, msg="Don't attack me")
+
+    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    if kb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+    kb.update_kb_endpoint(endpoint_host, endpoint_host_key, endpoint_host_proxy)
+
+    return BaseResponse(code=200, msg=f"知识库在线api接入点配置修改完成",
+                        data={"endpoint_host": endpoint_host,
+                              "endpoint_host_key": endpoint_host_key,
+                              "endpoint_host_proxy": endpoint_host_proxy})
+
+
 def update_docs(
         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
         file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),
@@ -238,8 +257,7 @@ def update_docs(
         chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
         override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
-        docs: Json = Body({}, description="自定义的docs，需要转为json字符串",
-                          examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+        docs: Json = Body({}, description="自定义的docs，需要转为json字符串"),
         not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ) -> BaseResponse:
     """
@@ -348,6 +366,9 @@ def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body(DEFAULT_VS_TYPE),
+        endpoint_host: str = Body(None, description="接入点地址"),
+        endpoint_host_key: str = Body(None, description="接入点key"),
+        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
         embed_model: str = Body(EMBEDDING_MODEL),
         chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
@@ -368,7 +389,9 @@ def recreate_vector_store(
         else:
             if kb.exists():
                 kb.clear_vs()
-            kb.create_kb()
+            kb.create_kb(endpoint_host=endpoint_host,
+                         endpoint_host_key=endpoint_host_key,
+                         endpoint_host_proxy=endpoint_host_proxy)
             files = list_files_from_folder(knowledge_base_name)
             kb_files = [(file, knowledge_base_name) for file in files]
             i = 0
