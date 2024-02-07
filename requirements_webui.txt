@@ -6,4 +6,4 @@ streamlit-modal==0.1.0
 streamlit-aggrid==0.3.4.post3
 httpx==0.26.0
 httpx_sse==0.4.0
-watchdog=s=3.0.0
+watchdog==3.0.0
