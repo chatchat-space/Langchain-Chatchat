@@ -11,7 +11,7 @@ from configs import (
     TEXT_SPLITTER_NAME,
 )
 import importlib
-from text_splitter import zh_title_enhance as func_zh_title_enhance
+from server.text_splitter import zh_title_enhance as func_zh_title_enhance
 import langchain.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
@@ -153,15 +153,15 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     try:
         if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
                            "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
-            document_loaders_module = importlib.import_module('document_loaders')
+            document_loaders_module = importlib.import_module("server.document_loaders")
         else:
-            document_loaders_module = importlib.import_module('langchain.document_loaders')
+            document_loaders_module = importlib.import_module("langchain.document_loaders")
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
         msg = f"为文件{file_path}查找加载器{loader_name}时出错：{e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
-        document_loaders_module = importlib.import_module('langchain.document_loaders')
+        document_loaders_module = importlib.import_module("langchain.document_loaders")
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
     if loader_name == "UnstructuredFileLoader":
@@ -204,10 +204,10 @@ def make_text_splitter(
         else:
 
             try:  ## 优先使用用户自定义的text_splitter
-                text_splitter_module = importlib.import_module('text_splitter')
+                text_splitter_module = importlib.import_module("server.text_splitter")
                 TextSplitter = getattr(text_splitter_module, splitter_name)
             except:  ## 否则使用langchain的text_splitter
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
+                text_splitter_module = importlib.import_module("langchain.text_splitter")
                 TextSplitter = getattr(text_splitter_module, splitter_name)
 
             if text_splitter_dict[splitter_name]["source"] == "tiktoken":  ## 从tiktoken加载
