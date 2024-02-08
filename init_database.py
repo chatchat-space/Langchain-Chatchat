@@ -2,9 +2,7 @@ import sys
 sys.path.append(".")
 from server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
                                            folder2db, prune_db_docs, prune_folder_files)
-from configs.model_config import NLTK_DATA_PATH, EMBEDDING_MODEL
-import nltk
-nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+from configs.model_config import NLTK_DATA_PATH, DEFAULT_EMBEDDING_MODEL
 from datetime import datetime
 
 
@@ -19,7 +17,7 @@ if __name__ == "__main__":
         action="store_true",
         help=('''
             recreate vector store.
-            use this option if you have copied document files to the content folder, but vector store has not been populated or DEFAUL_VS_TYPE/EMBEDDING_MODEL changed.
+            use this option if you have copied document files to the content folder, but vector store has not been populated or DEFAUL_VS_TYPE/DEFAULT_EMBEDDING_MODEL changed.
             '''
         )
     )
@@ -87,7 +85,7 @@ if __name__ == "__main__":
         "-e",
         "--embed-model",
         type=str,
-        default=EMBEDDING_MODEL,
+        default=DEFAULT_EMBEDDING_MODEL,
         help=("specify embeddings model.")
     )
 

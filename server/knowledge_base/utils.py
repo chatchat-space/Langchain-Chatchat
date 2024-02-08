@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 from configs import (
     KB_ROOT_PATH,
     CHUNK_SIZE,
@@ -143,6 +144,7 @@ def get_LoaderClass(file_extension):
         if file_extension in extensions:
             return LoaderClass
 
+
 def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     '''
     根据loader_name和文件路径或内容返回文档加载器。
@@ -184,6 +186,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     return loader
 
 
+@lru_cache()
 def make_text_splitter(
         splitter_name,
         chunk_size,

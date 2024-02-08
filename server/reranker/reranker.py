@@ -109,14 +109,13 @@ if __name__ == "__main__":
                          RERANKER_MODEL,
                          RERANKER_MAX_LENGTH,
                          MODEL_PATH)
-    from server.utils import embedding_device
 
     if USE_RERANKER:
         reranker_model_path = MODEL_PATH["reranker"].get(RERANKER_MODEL, "BAAI/bge-reranker-large")
         print("-----------------model path------------------")
         print(reranker_model_path)
         reranker_model = LangchainReranker(top_n=3,
-                                           device=embedding_device(),
+                                           device="cpu",
                                            max_length=RERANKER_MAX_LENGTH,
                                            model_name_or_path=reranker_model_path
                                            )

@@ -6,7 +6,7 @@ from langchain.docstore.document import Document
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
-    load_kb_from_db, get_kb_detail, update_kb_endpoint_from_db,
+    load_kb_from_db, get_kb_detail,
 )
 from server.db.repository.knowledge_file_repository import (
     add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
@@ -15,7 +15,7 @@ from server.db.repository.knowledge_file_repository import (
 )
 
 from configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                     EMBEDDING_MODEL, KB_INFO)
+                     DEFAULT_EMBEDDING_MODEL, KB_INFO)
 from server.knowledge_base.utils import (
     get_kb_path, get_doc_path, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
@@ -40,7 +40,7 @@ class KBService(ABC):
 
     def __init__(self,
                  knowledge_base_name: str,
-                 embed_model: str = EMBEDDING_MODEL,
+                 embed_model: str = DEFAULT_EMBEDDING_MODEL,
                  ):
         self.kb_name = knowledge_base_name
         self.kb_info = KB_INFO.get(knowledge_base_name, f"关于{knowledge_base_name}的知识库")
@@ -58,20 +58,14 @@ class KBService(ABC):
         '''
         pass
 
-    def create_kb(self,
-                  endpoint_host: str = None,
-                  endpoint_host_key: str = None,
-                  endpoint_host_proxy: str = None):
+    def create_kb(self):
         """
         创建知识库
         """
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
 
-        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model,
-                              endpoint_host=endpoint_host,
-                              endpoint_host_key=endpoint_host_key,
-                              endpoint_host_proxy=endpoint_host_proxy)
+        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
 
         if status:
             self.do_create_kb()
@@ -142,16 +136,6 @@ class KBService(ABC):
         """
         self.kb_info = kb_info
         status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
-        return status
-
-    def update_kb_endpoint(self,
-                           endpoint_host: str = None,
-                           endpoint_host_key: str = None,
-                           endpoint_host_proxy: str = None):
-        """
-        更新知识库在线api接入点配置
-        """
-        status = update_kb_endpoint_from_db(self.kb_name, endpoint_host, endpoint_host_key, endpoint_host_proxy)
         return status
 
     def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
@@ -297,7 +281,7 @@ class KBServiceFactory:
     @staticmethod
     def get_service(kb_name: str,
                     vector_store_type: Union[str, SupportedVSType],
-                    embed_model: str = EMBEDDING_MODEL,
+                    embed_model: str = DEFAULT_EMBEDDING_MODEL,
                     ) -> KBService:
         if isinstance(vector_store_type, str):
             vector_store_type = getattr(SupportedVSType, vector_store_type.upper())

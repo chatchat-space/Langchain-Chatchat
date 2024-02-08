@@ -1,5 +1,5 @@
 from configs import (
-    EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
+    DEFAULT_EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
     CHUNK_SIZE, OVERLAP_SIZE,
     logger, log_verbose
 )
@@ -86,7 +86,7 @@ def folder2db(
         kb_names: List[str],
         mode: Literal["recreate_vs", "update_in_db", "increment"],
         vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
-        embed_model: str = EMBEDDING_MODEL,
+        embed_model: str = DEFAULT_EMBEDDING_MODEL,
         chunk_size: int = CHUNK_SIZE,
         chunk_overlap: int = OVERLAP_SIZE,
         zh_title_enhance: bool = ZH_TITLE_ENHANCE,

@@ -1,7 +1,7 @@
 import streamlit as st
 
-from webui_pages.loom_view_client import update_store
-from webui_pages.openai_plugins import openai_plugins_page
+# from webui_pages.loom_view_client import update_store
+# from webui_pages.openai_plugins import openai_plugins_page
 from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages.dialogue.dialogue import dialogue_page, chat_box
@@ -12,9 +12,9 @@ from configs import VERSION
 from server.utils import api_address
 
 
-def on_change(key):
-    if key:
-        update_store()
+# def on_change(key):
+#     if key:
+#         update_store()
 
 
 api = ApiRequest(base_url=api_address())
@@ -59,18 +59,18 @@ if __name__ == "__main__":
             "icon": "hdd-stack",
             "func": knowledge_base_page,
         },
-        "模型服务": {
-            "icon": "hdd-stack",
-            "func": openai_plugins_page,
-        },
+        # "模型服务": {
+        #     "icon": "hdd-stack",
+        #     "func": openai_plugins_page,
+        # },
     }
     # 更新状态
-    if "status" not in st.session_state \
-            or "run_plugins_list" not in st.session_state \
-            or "launch_subscribe_info" not in st.session_state \
-            or "list_running_models" not in st.session_state \
-            or "model_config" not in st.session_state:
-        update_store()
+    # if "status" not in st.session_state \
+    #         or "run_plugins_list" not in st.session_state \
+    #         or "launch_subscribe_info" not in st.session_state \
+    #         or "list_running_models" not in st.session_state \
+    #         or "model_config" not in st.session_state:
+    #     update_store()
 
     with st.sidebar:
         st.image(
@@ -95,7 +95,6 @@ if __name__ == "__main__":
             icons=icons,
             # menu_icon="chat-quote",
             default_index=default_index,
-            on_change=on_change,
         )
 
     if selected_page in pages:
