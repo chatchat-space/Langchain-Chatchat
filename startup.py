@@ -1,12 +1,11 @@
 import asyncio
+from contextlib import asynccontextmanager
 import multiprocessing as mp
 import os
 import subprocess
 import sys
 from multiprocessing import Process
-from datetime import datetime
-from pprint import pprint
-from langchain_core._api import deprecated
+
 
 # 设置numexpr最大线程数，默认为CPU核心数
 try:
@@ -17,38 +16,29 @@ try:
 except:
     pass
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from configs import (
     LOG_PATH,
     log_verbose,
     logger,
-    LLM_MODEL_CONFIG,
-    EMBEDDING_MODEL,
+    DEFAULT_EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     API_SERVER,
     WEBUI_SERVER,
-    HTTPX_DEFAULT_TIMEOUT,
 )
-from server.utils import (FastAPI, embedding_device)
+from server.utils import FastAPI
 from server.knowledge_base.migrate import create_tables
 import argparse
 from typing import List, Dict
 from configs import VERSION
 
-all_model_names = set()
-for model_category in LLM_MODEL_CONFIG.values():
-    for model_name in model_category.keys():
-        if model_name not in all_model_names:
-            all_model_names.add(model_name)
-
-all_model_names_list = list(all_model_names)
-
 
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
-    @app.on_event("startup")
-    async def on_startup():
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
         if started_event is not None:
             started_event.set()
+        yield
+    app.router.lifespan_context = lifespan
 
 
 def run_api_server(started_event: mp.Event = None, run_mode: str = None):
@@ -159,7 +149,7 @@ def dump_server_info(after_start=False, args=None):
 
     print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
 
-    print(f"当前Embbedings模型： {EMBEDDING_MODEL} @ {embedding_device()}")
+    print(f"当前Embbedings模型： {DEFAULT_EMBEDDING_MODEL}")
 
     if after_start:
         print("\n")
@@ -232,13 +222,13 @@ async def start_main_server():
         return len(processes)
 
     loom_started = manager.Event()
-    process = Process(
-        target=run_loom,
-        name=f"run_loom Server",
-        kwargs=dict(started_event=loom_started),
-        daemon=True,
-    )
-    processes["run_loom"] = process
+    # process = Process(
+    #     target=run_loom,
+    #     name=f"run_loom Server",
+    #     kwargs=dict(started_event=loom_started),
+    #     daemon=True,
+    # )
+    # processes["run_loom"] = process
     api_started = manager.Event()
     if args.api:
         process = Process(
@@ -283,7 +273,6 @@ async def start_main_server():
 
             # 等待所有进程退出
             if p := processes.get("webui"):
-
                 p.join()
         except Exception as e:
             logger.error(e)
@@ -306,9 +295,7 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
-
     create_tables()
-
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()
     else:

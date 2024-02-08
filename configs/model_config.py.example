@@ -1,10 +1,25 @@
 import os
 
-MODEL_ROOT_PATH = ""
-EMBEDDING_MODEL = "bge-large-zh-v1.5"  # bge-large-zh
-EMBEDDING_DEVICE = "auto"
-EMBEDDING_KEYWORD_FILE = "keywords.txt"
-EMBEDDING_MODEL_OUTPUT_PATH = "output"
+
+# 默认选用的 LLM 名称
+DEFAULT_LLM_MODEL = "chatglm3-6b"
+
+# 默认选用的 Embedding 名称
+DEFAULT_EMBEDDING_MODEL = "bge-large-zh-v1.5"
+
+
+# AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
+Agent_MODEL = None
+
+# 历史对话轮数
+HISTORY_LEN = 3
+
+# 大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度
+MAX_TOKENS = None
+
+# LLM通用对话参数
+TEMPERATURE = 0.7
+# TOP_P = 0.95 # ChatOpenAI暂不支持该参数
 
 SUPPORT_AGENT_MODELS = [
     "chatglm3-6b",
@@ -12,97 +27,103 @@ SUPPORT_AGENT_MODELS = [
     "Qwen-14B-Chat",
     "Qwen-7B-Chat",
 ]
+
+
 LLM_MODEL_CONFIG = {
+# 意图识别不需要输出，模型后台知道就行
     "preprocess_model": {
-        # "Mixtral-8x7B-v0.1": {
-        #     "temperature": 0.01,
-        #     "max_tokens": 5,
-        #     "prompt_name": "default",
-        #     "callbacks": False
-        # },
-        "chatglm3-6b": {
+        DEFAULT_LLM_MODEL: {
             "temperature": 0.05,
             "max_tokens": 4096,
+            "history_len": 100,
             "prompt_name": "default",
             "callbacks": False
         },
     },
     "llm_model": {
-        # "Mixtral-8x7B-v0.1": {
-        #     "temperature": 0.9,
-        #     "max_tokens": 4000,
-        #     "history_len": 5,
-        #     "prompt_name": "default",
-        #     "callbacks": True
-        # },
-        "chatglm3-6b": {
-            "temperature": 0.05,
+        DEFAULT_LLM_MODEL: {
+            "temperature": 0.9,
             "max_tokens": 4096,
-            "prompt_name": "default",
             "history_len": 10,
+            "prompt_name": "default",
             "callbacks": True
         },
     },
     "action_model": {
-        # "Qwen-14B-Chat": {
-        #     "temperature": 0.05,
-        #     "max_tokens": 4096,
-        #     "prompt_name": "qwen",
-        #     "callbacks": True
-        # },
-        "chatglm3-6b": {
-            "temperature": 0.05,
+        DEFAULT_LLM_MODEL: {
+            "temperature": 0.01,
             "max_tokens": 4096,
             "prompt_name": "ChatGLM3",
             "callbacks": True
         },
-        # "zhipu-api": {
-        #     "temperature": 0.01,
-        #     "max_tokens": 4096,
-        #     "prompt_name": "ChatGLM3",
-        #     "callbacks": True
-        # }
-
-    },
+            },
     "postprocess_model": {
-        "zhipu-api": {
+        DEFAULT_LLM_MODEL: {
             "temperature": 0.01,
             "max_tokens": 4096,
             "prompt_name": "default",
             "callbacks": True
         }
     },
-}
- 
- 
-MODEL_PATH = {
-    "embed_model": {
-        "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
-        "ernie-base": "nghuyong/ernie-3.0-base-zh",
-        "text2vec-base": "shibing624/text2vec-base-chinese",
-        "text2vec": "GanymedeNil/text2vec-large-chinese",
-        "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
-        "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
-        "text2vec-multilingual": "shibing624/text2vec-base-multilingual",
-        "text2vec-bge-large-chinese": "shibing624/text2vec-bge-large-chinese",
-        "m3e-small": "moka-ai/m3e-small",
-        "m3e-base": "moka-ai/m3e-base",
-        "m3e-large": "moka-ai/m3e-large",
-        "bge-small-zh": "BAAI/bge-small-zh",
-        "bge-base-zh": "BAAI/bge-base-zh",
-        "bge-large-zh": "BAAI/bge-large-zh",
-        "bge-large-zh-noinstruct": "BAAI/bge-large-zh-noinstruct",
-        "bge-base-zh-v1.5": "BAAI/bge-base-zh-v1.5",
-        "bge-large-zh-v1.5": "BAAI/bge-large-zh-v1.5",
-        "piccolo-base-zh": "sensenova/piccolo-base-zh",
-        "piccolo-large-zh": "sensenova/piccolo-large-zh",
-        "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
-        "text-embedding-ada-002": "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",
-    }
+    "image_model": {
+        "sd-turbo": {
+            "size": "256*256",
+        }
+    },
+    "multimodal_model": {
+        "qwen-vl": {}
+    },
 }
 
-NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
- 
-LOOM_CONFIG = "./loom.yaml"
-OPENAI_KEY = None
-OPENAI_PROXY = None
+# 可以通过 loom/xinference/oneapi/fatchat 启动模型服务，然后将其 URL 和 KEY 配置过来即可。
+MODEL_PLATFORMS = [
+    {
+        "platform_name": "openai-api",
+        "platform_type": "openai",
+        "llm_models": [
+            "gpt-3.5-turbo",
+        ],
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "sk-",
+        "api_proxy": "",
+    },
+
+    {
+        "platform_name": "xinference",
+        "platform_type": "xinference",
+        "llm_models": [
+            "chatglm3-6b",
+        ],
+        "embed_models": [
+            "bge-large-zh-v1.5",
+        ],
+        "image_models": [
+            "sd-turbo",
+        ],
+        "multimodal_models": [
+            "qwen-vl",
+        ],
+        "api_base_url": "http://127.0.0.1:9997/v1",
+        "api_key": "EMPTY",
+    },
+
+    {
+        "platform_name": "oneapi",
+        "platform_type": "oneapi",
+        "api_key": "",
+        "llm_models": [
+            "chatglm3-6b",
+        ],
+    },
+
+    {
+        "platform_name": "loom",
+        "platform_type": "loom",
+        "api_key": "",
+        "llm_models": [
+            "chatglm3-6b",
+        ],
+    },
+]
+
+LOOM_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "loom.yaml")

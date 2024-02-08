@@ -6,7 +6,7 @@ from typing import List
 import uuid
 
 from langchain.agents import tool
-from pydantic.v1 import BaseModel, Field
+from langchain.pydantic_v1 import Field
 import openai
 from pydantic.fields import FieldInfo
 

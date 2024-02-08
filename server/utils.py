@@ -1,32 +1,28 @@
-import pydantic
-from pydantic import BaseModel
-from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs import (LLM_MODEL_CONFIG, LLM_DEVICE, EMBEDDING_DEVICE,
-                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
-                     HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from langchain.pydantic_v1 import BaseModel, Field
+from langchain.embeddings.base import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
-from langchain_community.llms import OpenAI
+from langchain_openai.llms import OpenAI
 import httpx
 from typing import (
-    TYPE_CHECKING,
-    Literal,
     Optional,
     Callable,
     Generator,
     Dict,
+    List,
     Any,
     Awaitable,
     Union,
-    Tuple
+    Tuple,
+    Literal,
 )
 import logging
-import torch
 
+from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT, DEFAULT_EMBEDDING_MODEL
 from server.minx_chat_openai import MinxChatOpenAI
 
 
@@ -44,10 +40,66 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         event.set()
 
 
+def get_config_models(
+    model_name: str = None,
+    model_type: Literal["llm", "embed", "image", "multimodal"] = None,
+    platform_name: str = None,
+) -> Dict[str, Dict]:
+    '''
+    获取配置的模型列表，返回值为:
+    {model_name: {
+        "platform_name": xx,
+        "platform_type": xx,
+        "model_type": xx,
+        "model_name": xx,
+        "api_base_url": xx,
+        "api_key": xx,
+        "api_proxy": xx,
+    }}
+    '''
+    import importlib
+    from configs import model_config
+    importlib.reload(model_config)
+
+    result = {}
+    for m in model_config.MODEL_PLATFORMS:
+        if platform_name is not None and platform_name != m.get("platform_name"):
+            continue
+        if model_type is not None and f"{model_type}_models" not in m:
+            continue
+
+        if model_type is None:
+            model_types = ["llm_models", "embed_models", "image_models", "multimodal_models"]
+        else:
+            model_types = [f"{model_type}_models"]
+
+        for m_type in model_types:
+            for m_name in m.get(m_type, []):
+                if model_name is None or model_name == m_name:
+                    result[m_name] = {
+                        "platform_name": m.get("platform_name"),
+                        "platform_type": m.get("platform_type"),
+                        "model_type": m_type.split("_")[0],
+                        "model_name": m_name,
+                        "api_base_url": m.get("api_base_url"),
+                        "api_key": m.get("api_key"),
+                        "api_proxy": m.get("api_proxy"),
+                    }
+    return result
+
+
+def get_model_info(model_name: str, platform_name: str = None) -> Dict:
+    '''
+    获取配置的模型信息，主要是 api_base_url, api_key
+    '''
+    result = get_config_models(model_name=model_name, platform_name=platform_name)
+    if len(result) > 0:
+        return list(result.values())[0]
+    else:
+        return {}
+
+
 def get_ChatOpenAI(
-        endpoint_host: str,
-        endpoint_host_key: str,
-        endpoint_host_proxy: str,
         model_name: str,
         temperature: float,
         max_tokens: int = None,
@@ -56,29 +108,23 @@ def get_ChatOpenAI(
         verbose: bool = True,
         **kwargs: Any,
 ) -> ChatOpenAI:
-    config = get_model_worker_config(model_name)
-    if model_name == "openai-api":
-        model_name = config.get("model_name")
-    ChatOpenAI._get_encoding_model = MinxChatOpenAI.get_encoding_model
+    model_info = get_model_info(model_name)
     model = ChatOpenAI(
         streaming=streaming,
         verbose=verbose,
         callbacks=callbacks,
-        openai_api_key=endpoint_host_key if endpoint_host_key else "None",
-        openai_api_base=endpoint_host if endpoint_host else "None",
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        openai_proxy=endpoint_host_proxy if endpoint_host_proxy else None,
+        openai_api_key=model_info.get("api_key"),
+        openai_api_base=model_info.get("api_base_url"),
+        openai_proxy=model_info.get("api_proxy"),
         **kwargs
     )
     return model
 
 
 def get_OpenAI(
-        endpoint_host: str,
-        endpoint_host_key: str,
-        endpoint_host_proxy: str,
         model_name: str,
         temperature: float,
         max_tokens: int = None,
@@ -89,20 +135,38 @@ def get_OpenAI(
         **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
+    model_info = get_model_info(model_name)
     model = OpenAI(
         streaming=streaming,
         verbose=verbose,
         callbacks=callbacks,
-        openai_api_key=endpoint_host_key if endpoint_host_key else "None",
-        openai_api_base=endpoint_host if endpoint_host else "None",
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        openai_proxy=endpoint_host_proxy if endpoint_host_proxy else None,
+        openai_api_key=model_info.get("api_key"),
+        openai_api_base=model_info.get("api_base_url"),
+        openai_proxy=model_info.get("api_proxy"),
         echo=echo,
         **kwargs
     )
     return model
+
+
+def get_Embeddings(embed_model: str = DEFAULT_EMBEDDING_MODEL) -> Embeddings:
+    from langchain_community.embeddings.openai import OpenAIEmbeddings
+    from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
+
+    model_info = get_model_info(model_name=embed_model)
+    params = {
+        "model": embed_model,
+        "base_url": model_info.get("api_base_url"),
+        "api_key": model_info.get("api_key"),
+        "openai_proxy": model_info.get("api_proxy"),
+    }
+    if model_info.get("platform_type") == "openai":
+        return OpenAIEmbeddings(**params)
+    else:
+        return LocalAIEmbeddings(**params)
 
 
 class MsgType:
@@ -113,9 +177,9 @@ class MsgType:
 
 
 class BaseResponse(BaseModel):
-    code: int = pydantic.Field(200, description="API status code")
-    msg: str = pydantic.Field("success", description="API status message")
-    data: Any = pydantic.Field(None, description="API data")
+    code: int = Field(200, description="API status code")
+    msg: str = Field("success", description="API status message")
+    data: Any = Field(None, description="API data")
 
     class Config:
         schema_extra = {
@@ -127,7 +191,7 @@ class BaseResponse(BaseModel):
 
 
 class ListResponse(BaseResponse):
-    data: List[str] = pydantic.Field(..., description="List of names")
+    data: List[str] = Field(..., description="List of names")
 
     class Config:
         schema_extra = {
@@ -140,10 +204,10 @@ class ListResponse(BaseResponse):
 
 
 class ChatMessage(BaseModel):
-    question: str = pydantic.Field(..., description="Question text")
-    response: str = pydantic.Field(..., description="Response text")
-    history: List[List[str]] = pydantic.Field(..., description="History text")
-    source_documents: List[str] = pydantic.Field(
+    question: str = Field(..., description="Question text")
+    response: str = Field(..., description="Response text")
+    history: List[List[str]] = Field(..., description="History text")
+    source_documents: List[str] = Field(
         ..., description="List of source documents and their scores"
     )
 
@@ -310,39 +374,40 @@ def MakeFastAPIOffline(
 
 
 # 从model_config中获取模型信息
+# TODO: 移出模型加载后，这些功能需要删除或改变实现
 
-def list_embed_models() -> List[str]:
-    '''
-    get names of configured embedding models
-    '''
-    return list(MODEL_PATH["embed_model"])
+# def list_embed_models() -> List[str]:
+#     '''
+#     get names of configured embedding models
+#     '''
+#     return list(MODEL_PATH["embed_model"])
 
 
-def get_model_path(model_name: str, type: str = None) -> Optional[str]:
-    if type in MODEL_PATH:
-        paths = MODEL_PATH[type]
-    else:
-        paths = {}
-        for v in MODEL_PATH.values():
-            paths.update(v)
+# def get_model_path(model_name: str, type: str = None) -> Optional[str]:
+#     if type in MODEL_PATH:
+#         paths = MODEL_PATH[type]
+#     else:
+#         paths = {}
+#         for v in MODEL_PATH.values():
+#             paths.update(v)
 
-    if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
-        path = Path(path_str)
-        if path.is_dir():  # 任意绝对路径
-            return str(path)
+#     if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
+#         path = Path(path_str)
+#         if path.is_dir():  # 任意绝对路径
+#             return str(path)
 
-        root_path = Path(MODEL_ROOT_PATH)
-        if root_path.is_dir():
-            path = root_path / model_name
-            if path.is_dir():  # use key, {MODEL_ROOT_PATH}/chatglm-6b
-                return str(path)
-            path = root_path / path_str
-            if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
-                return str(path)
-            path = root_path / path_str.split("/")[-1]
-            if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
-                return str(path)
-        return path_str  # THUDM/chatglm06b
+#         root_path = Path(MODEL_ROOT_PATH)
+#         if root_path.is_dir():
+#             path = root_path / model_name
+#             if path.is_dir():  # use key, {MODEL_ROOT_PATH}/chatglm-6b
+#                 return str(path)
+#             path = root_path / path_str
+#             if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
+#                 return str(path)
+#             path = root_path / path_str.split("/")[-1]
+#             if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
+#                 return str(path)
+#         return path_str  # THUDM/chatglm06b
 
 
 def api_address() -> str:
@@ -427,37 +492,6 @@ def set_httpx_config(
 
     import urllib.request
     urllib.request.getproxies = _get_proxies
-
-
-def detect_device() -> Literal["cuda", "mps", "cpu", "xpu"]:
-    try:
-        import torch
-        if torch.cuda.is_available():
-            return "cuda"
-        if torch.backends.mps.is_available():
-            return "mps"
-        import intel_extension_for_pytorch as ipex
-        if torch.xpu.get_device_properties(0):
-            return "xpu"
-    except:
-        pass
-    return "cpu"
-
-
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
-    device = device or LLM_DEVICE
-    # if device.isdigit():
-    #     return "cuda:" + device
-    if device not in ["cuda", "mps", "cpu", "xpu"]:
-        device = detect_device()
-    return device
-
-
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu", "xpu"]:
-    device = device or EMBEDDING_DEVICE
-    if device not in ["cuda", "mps", "cpu", "xpu"]:
-        device = detect_device()
-    return device
 
 
 def run_in_thread_pool(
@@ -546,56 +580,19 @@ def get_server_configs() -> Dict:
     return {**{k: v for k, v in locals().items() if k[0] != "_"}, **_custom}
 
 
-def list_online_embed_models(
-        endpoint_host: str,
-        endpoint_host_key: str,
-        endpoint_host_proxy: str
-) -> List[str]:
-    ret = []
-    # TODO: 从在线API获取支持的模型列表
-    client = get_httpx_client(base_url=endpoint_host, proxies=endpoint_host_proxy, timeout=HTTPX_DEFAULT_TIMEOUT)
-    try:
-        headers = {
-            "Authorization": f"Bearer {endpoint_host_key}",
-        }
-        resp = client.get("/models", headers=headers)
-        if resp.status_code == 200:
-            models = resp.json().get("data", [])
-            for model in models:
-                if "embedding" in model.get("id", None):
-                    ret.append(model.get("id"))
-
-    except Exception as e:
-        msg = f"获取在线Embeddings模型列表失败：{e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
-    finally:
-        client.close()
-    return ret
-
-
-def load_local_embeddings(model: str = None, device: str = embedding_device()):
-    '''
-    从缓存中本地Embeddings模型加载，可以避免多线程时竞争加载。
-    '''
-    from server.knowledge_base.kb_cache.base import embeddings_pool
-    from configs import EMBEDDING_MODEL
-
-    model = model or EMBEDDING_MODEL
-    return embeddings_pool.load_embeddings(model=model, device=device)
-
-
 def get_temp_dir(id: str = None) -> Tuple[str, str]:
     '''
     创建一个临时目录，返回（路径，文件夹名称）
     '''
     from configs.basic_config import BASE_TEMP_DIR
-    import tempfile
+    import uuid
 
     if id is not None:  # 如果指定的临时目录已存在，直接返回
         path = os.path.join(BASE_TEMP_DIR, id)
         if os.path.isdir(path):
             return path, id
 
-    path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
-    return path, os.path.basename(path)
+    id = uuid.uuid4().hex
+    path = os.path.join(BASE_TEMP_DIR, id)
+    os.mkdir(path)
+    return path, id

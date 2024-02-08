@@ -1,6 +1,5 @@
 from fastapi import Body
-from fastapi.responses import StreamingResponse
-from configs import LLM_MODEL_CONFIG
+from sse_starlette.sse import EventSourceResponse
 from server.utils import wrap_done, get_OpenAI
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -14,9 +13,6 @@ from server.utils import get_prompt_template
 async def completion(query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
                      stream: bool = Body(False, description="流式输出"),
                      echo: bool = Body(False, description="除了输出之外，还回显输入"),
-                     endpoint_host: str = Body(None, description="接入点地址"),
-                     endpoint_host_key: str = Body(None, description="接入点key"),
-                     endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
                      model_name: str = Body(None, description="LLM 模型名称。"),
                      temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                      max_tokens: Optional[int] = Body(1024, description="限制LLM生成Token数量，默认None代表模型最大值"),
@@ -27,9 +23,6 @@ async def completion(query: str = Body(..., description="用户输入", examples
 
     #TODO: 因ApiModelWorker 默认是按chat处理的，会对params["prompt"] 解析为messages，因此ApiModelWorker 使用时需要有相应处理
     async def completion_iterator(query: str,
-                                  endpoint_host: str,
-                                  endpoint_host_key: str,
-                                  endpoint_host_proxy: str,
                                   model_name: str = None,
                                   prompt_name: str = prompt_name,
                                   echo: bool = echo,
@@ -40,9 +33,6 @@ async def completion(query: str = Body(..., description="用户输入", examples
             max_tokens = None
 
         model = get_OpenAI(
-            endpoint_host=endpoint_host,
-            endpoint_host_key=endpoint_host_key,
-            endpoint_host_proxy=endpoint_host_proxy,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -72,10 +62,7 @@ async def completion(query: str = Body(..., description="用户输入", examples
 
         await task
 
-    return StreamingResponse(completion_iterator(query=query,
-                                                 endpoint_host=endpoint_host,
-                                                 endpoint_host_key=endpoint_host_key,
-                                                 endpoint_host_proxy=endpoint_host_proxy,
+    return EventSourceResponse(completion_iterator(query=query,
                                                  model_name=model_name,
                                                  prompt_name=prompt_name),
                              )

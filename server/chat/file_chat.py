@@ -1,8 +1,7 @@
 from fastapi import Body, File, Form, UploadFile
 from fastapi.responses import StreamingResponse
 from configs import (VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
-from server.embeddings.adapter import load_temp_adapter_embeddings
-from server.utils import (wrap_done, get_ChatOpenAI,
+from server.utils import (wrap_done, get_ChatOpenAI, get_Embeddings,
                           BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)
 from server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from langchain.chains import LLMChain
@@ -57,9 +56,6 @@ def _parse_files_in_thread(
 
 
 def upload_temp_docs(
-        endpoint_host: str = Body(None, description="接入点地址"),
-        endpoint_host_key: str = Body(None, description="接入点key"),
-        endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
         files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
         prev_id: str = Form(None, description="前知识库ID"),
         chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
@@ -86,11 +82,7 @@ def upload_temp_docs(
         else:
             failed_files.append({file: msg})
 
-    with memo_faiss_pool.load_vector_store(kb_name=id,
-                                           endpoint_host=endpoint_host,
-                                           endpoint_host_key=endpoint_host_key,
-                                           endpoint_host_proxy=endpoint_host_proxy,
-                                           ).acquire() as vs:
+    with memo_faiss_pool.load_vector_store(kb_name=id).acquire() as vs:
         vs.add_documents(documents)
     return BaseResponse(data={"id": id, "failed_files": failed_files})
 
@@ -110,9 +102,6 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                                                        "content": "虎头虎脑"}]]
                                                   ),
                     stream: bool = Body(False, description="流式输出"),
-                    endpoint_host: str = Body(None, description="接入点地址"),
-                    endpoint_host_key: str = Body(None, description="接入点key"),
-                    endpoint_host_proxy: str = Body(None, description="接入点代理地址"),
                     model_name: str = Body(None, description="LLM 模型名称。"),
                     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                     max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
@@ -131,17 +120,12 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             max_tokens = None
 
         model = get_ChatOpenAI(
-            endpoint_host=endpoint_host,
-            endpoint_host_key=endpoint_host_key,
-            endpoint_host_proxy=endpoint_host_proxy,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
             callbacks=[callback],
         )
-        embed_func = load_temp_adapter_embeddings(endpoint_host=endpoint_host,
-                                                  endpoint_host_key=endpoint_host_key,
-                                                  endpoint_host_proxy=endpoint_host_proxy)
+        embed_func = get_Embeddings()
         embeddings = await embed_func.aembed_query(query)
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)

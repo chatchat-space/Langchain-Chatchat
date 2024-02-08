@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import AsyncIterable, List, Union, Dict, Annotated
+from typing import AsyncIterable, List
 
 from fastapi import Body
 from fastapi.responses import StreamingResponse
@@ -21,7 +21,7 @@ from server.db.repository import add_message_to_db
 from server.callback_handler.agent_callback_handler import AgentExecutorAsyncIteratorCallbackHandler, AgentStatus
 
 
-def create_models_from_config(configs, openai_config, callbacks, stream):
+def create_models_from_config(configs, callbacks, stream):
     if configs is None:
         configs = {}
     models = {}
@@ -30,9 +30,6 @@ def create_models_from_config(configs, openai_config, callbacks, stream):
         for model_name, params in model_configs.items():
             callbacks = callbacks if params.get('callbacks', False) else None
             model_instance = get_ChatOpenAI(
-                endpoint_host=openai_config.get('endpoint_host', None),
-                endpoint_host_key=openai_config.get('endpoint_host_key', None),
-                endpoint_host_proxy=openai_config.get('endpoint_host_proxy', None),
                 model_name=model_name,
                 temperature=params.get('temperature', 0.5),
                 max_tokens=params.get('max_tokens', 1000),
@@ -116,7 +113,6 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                ),
                stream: bool = Body(True, description="流式输出"),
                chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
-               openai_config: dict = Body({}, description="openaiEndpoint配置", examples=[]),
                tool_config: dict = Body({}, description="工具配置", examples=[]),
                ):
     async def chat_iterator() -> AsyncIterable[str]:
@@ -129,7 +125,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
         callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
         models, prompts = create_models_from_config(callbacks=callbacks, configs=chat_model_config,
-                                                    openai_config=openai_config, stream=stream)
+                                                    stream=stream)
         tools = [tool for tool in all_tools if tool.name in tool_config]
         tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
         full_chain = create_models_chains(prompts=prompts,

@@ -1,13 +1,11 @@
 from typing import List
 import os
 import shutil
-from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
-from configs import KB_ROOT_PATH, EMBEDDING_MODEL, EMBEDDING_DEVICE, CACHED_VS_NUM
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.utils import KnowledgeFile
-from server.utils import load_local_embeddings
+from server.utils import get_Embeddings
 from elasticsearch import Elasticsearch,BadRequestError
 from configs import logger
 from configs import kbs_config
@@ -22,7 +20,7 @@ class ESKBService(KBService):
         self.user = kbs_config[self.vs_type()].get("user",'')
         self.password = kbs_config[self.vs_type()].get("password",'')
         self.dims_length = kbs_config[self.vs_type()].get("dims_length",None)
-        self.embeddings_model = load_local_embeddings(self.embed_model, EMBEDDING_DEVICE)
+        self.embeddings_model = get_Embeddings(self.embed_model)
         try:
             # ES python客户端连接（仅连接）
             if self.user != "" and self.password != "":

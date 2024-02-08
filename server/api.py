@@ -1,13 +1,9 @@
-import nltk
 import sys
 import os
-
-from server.knowledge_base.kb_doc_api import update_kb_endpoint
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from configs import VERSION, MEDIA_PATH
-from configs.model_config import NLTK_DATA_PATH
 from configs.server_config import OPEN_CROSS_DOMAIN
 import argparse
 import uvicorn
@@ -18,13 +14,10 @@ from starlette.responses import RedirectResponse
 from server.chat.chat import chat
 from server.chat.completion import completion
 from server.chat.feedback import chat_feedback
-from server.embeddings.core.embeddings_api import embed_texts_endpoint
-
+from server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from server.utils import (BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline,
                           get_server_configs, get_prompt_template)
 from typing import List, Literal
-
-nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
 async def document():
@@ -95,11 +88,6 @@ def mount_app_routes(app: FastAPI, run_mode: str = None):
              summary="要求llm模型补全(通过LLMChain)",
              )(completion)
 
-    app.post("/other/embed_texts",
-            tags=["Other"],
-            summary="将文本向量化，支持本地模型和在线模型",
-            )(embed_texts_endpoint)
-
     # 媒体文件
     app.mount("/media", StaticFiles(directory=MEDIA_PATH), name="media")
 
@@ -109,8 +97,7 @@ def mount_knowledge_routes(app: FastAPI):
     from server.knowledge_base.kb_api import list_kbs, create_kb, delete_kb
     from server.knowledge_base.kb_doc_api import (list_files, upload_docs, delete_docs,
                                                 update_docs, download_doc, recreate_vector_store,
-                                                search_docs, DocumentWithVSId, update_info,
-                                                update_docs_by_id,)
+                                                search_docs, update_info)
 
     app.post("/chat/file_chat",
              tags=["Knowledge Base Management"],
@@ -146,13 +133,6 @@ def mount_knowledge_routes(app: FastAPI):
              summary="搜索知识库"
              )(search_docs)
 
-    app.post("/knowledge_base/update_docs_by_id",
-             tags=["Knowledge Base Management"],
-             response_model=BaseResponse,
-             summary="直接更新知识库文档"
-             )(update_docs_by_id)
-
-
     app.post("/knowledge_base/upload_docs",
              tags=["Knowledge Base Management"],
              response_model=BaseResponse,
@@ -170,12 +150,6 @@ def mount_knowledge_routes(app: FastAPI):
              response_model=BaseResponse,
              summary="更新知识库介绍"
              )(update_info)
-
-    app.post("/knowledge_base/update_kb_endpoint",
-             tags=["Knowledge Base Management"],
-             response_model=BaseResponse,
-             summary="更新知识库在线api接入点配置"
-             )(update_kb_endpoint)
 
     app.post("/knowledge_base/update_docs",
              tags=["Knowledge Base Management"],

@@ -98,7 +98,25 @@ PROMPT_TEMPLATES = {
             'Begin!\n\n'
             'Question: {input}\n\n'
             '{agent_scratchpad}\n\n',
-
+        "structured-chat-agent":
+            'Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n'
+            '{tools}\n\n'
+            'Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\n'
+            'Valid "action" values: "Final Answer" or {tool_names}\n\n'
+            'Provide only ONE action per $JSON_BLOB, as shown:\n\n'
+            '```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\n'
+            'Follow this format:\n\n'
+            'Question: input question to answer\n'
+            'Thought: consider previous and subsequent steps\n'
+            'Action:\n```\n$JSON_BLOB\n```\n'
+            'Observation: action result\n'
+            '... (repeat Thought/Action/Observation N times)\n'
+            'Thought: I know what to respond\n'
+            'Action:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n\n'
+            'Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation\n'
+            '{input}\n\n'
+            '{agent_scratchpad}\n\n'
+            # '(reminder to respond in a JSON blob no matter what)'
     },
     "postprocess_model": {
         "default": "{{input}}",
@@ -130,7 +148,7 @@ TOOL_CONFIG = {
                 "bing": {
                     "result_len": 3,
                     "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
-                    "bing_key": "680a39347d7242c5bd2d7a9576a125b7",
+                    "bing_key": "",
                 },
                 "metaphor": {
                     "result_len": 3,
@@ -182,6 +200,10 @@ TOOL_CONFIG = {
         "model_path": "your model path",
         "tokenizer_path": "yout tokenizer path",
         "device": "cuda:2"
+    },
+
+    "text2images": {
+        "use": False,
     },
 
 }

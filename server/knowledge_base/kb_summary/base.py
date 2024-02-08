@@ -1,7 +1,7 @@
 from typing import List
 
 from configs import (
-    EMBEDDING_MODEL,
+    DEFAULT_EMBEDDING_MODEL,
     KB_ROOT_PATH)
 
 from abc import ABC, abstractmethod
@@ -21,7 +21,7 @@ class KBSummaryService(ABC):
 
     def __init__(self,
                  knowledge_base_name: str,
-                 embed_model: str = EMBEDDING_MODEL
+                 embed_model: str = DEFAULT_EMBEDDING_MODEL
                  ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model

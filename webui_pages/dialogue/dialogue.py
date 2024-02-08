@@ -4,8 +4,8 @@ import streamlit as st
 from streamlit_antd_components.utils import ParseItems
 
 from webui_pages.dialogue.utils import process_files
-from webui_pages.loom_view_client import build_providers_model_plugins_name, find_menu_items_by_index, set_llm_select, \
-    get_select_model_endpoint
+# from webui_pages.loom_view_client import build_providers_model_plugins_name, find_menu_items_by_index, set_llm_select, \
+#     get_select_model_endpoint
 from webui_pages.utils import *
 from streamlit_chatbox import *
 from streamlit_modal import Modal
@@ -13,9 +13,9 @@ from datetime import datetime
 import os
 import re
 import time
-from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, TOOL_CONFIG, OPENAI_KEY, OPENAI_PROXY)
+from configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, MODEL_PLATFORMS, TOOL_CONFIG)
 from server.callback_handler.agent_callback_handler import AgentStatus
-from server.utils import MsgType
+from server.utils import MsgType, get_config_models
 import uuid
 from typing import List, Dict
 
@@ -111,8 +111,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     st.session_state.setdefault("conversation_ids", {})
     st.session_state["conversation_ids"].setdefault(chat_box.cur_chat_name, uuid.uuid4().hex)
     st.session_state.setdefault("file_chat_id", None)
-    st.session_state.setdefault("select_plugins_info", None)
-    st.session_state.setdefault("select_model_worker", None)
 
     # 弹出自定义命令帮助信息
     modal = Modal("自定义命令", key="cmd_help", max_width="500")
@@ -131,18 +129,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        with st.expander("模型选择"):
-            plugins_menu = build_providers_model_plugins_name()
-
-            items, _ = ParseItems(plugins_menu).multi()
-
-            if len(plugins_menu) > 0:
-
-                llm_model_index = sac.menu(plugins_menu, index=1, return_index=True)
-                plugins_info, llm_model_worker = find_menu_items_by_index(items, llm_model_index)
-                set_llm_select(plugins_info, llm_model_worker)
-            else:
-                st.info("没有可用的插件")
+        platforms = [x["platform_name"] for x in MODEL_PLATFORMS]
+        platform = st.selectbox("选择模型平台", platforms, 1)
+        llm_models = list(get_config_models(model_type="llm", platform_name=platform))
+        llm_model = st.selectbox("选择LLM模型", llm_models)
 
         #  传入后端的内容
         chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
@@ -174,10 +164,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     if is_selected:
                         selected_tool_configs[tool] = TOOL_CONFIG[tool]
 
-        llm_model = None
-        if st.session_state["select_model_worker"] is not None:
-            llm_model = st.session_state["select_model_worker"]['label']
-
         if llm_model is not None:
             chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
 
@@ -200,23 +186,23 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     chat_box.output_messages()
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
 
-    def on_feedback(
-            feedback,
-            message_id: str = "",
-            history_index: int = -1,
-    ):
+    # def on_feedback(
+    #         feedback,
+    #         message_id: str = "",
+    #         history_index: int = -1,
+    # ):
 
-        reason = feedback["text"]
-        score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
-        api.chat_feedback(message_id=message_id,
-                          score=score_int,
-                          reason=reason)
-        st.session_state["need_rerun"] = True
+    #     reason = feedback["text"]
+    #     score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
+    #     api.chat_feedback(message_id=message_id,
+    #                       score=score_int,
+    #                       reason=reason)
+    #     st.session_state["need_rerun"] = True
 
-    feedback_kwargs = {
-        "feedback_type": "thumbs",
-        "optional_text_label": "欢迎反馈您打分的理由",
-    }
+    # feedback_kwargs = {
+    #     "feedback_type": "thumbs",
+    #     "optional_text_label": "欢迎反馈您打分的理由",
+    # }
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         if parse_command(text=prompt, modal=modal):  # 用户输入自定义命令
@@ -244,17 +230,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             text_action = ""
             element_index = 0
 
-            openai_config = {}
-            endpoint_host, select_model_name = get_select_model_endpoint()
-            openai_config["endpoint_host"] = endpoint_host
-            openai_config["model_name"] = select_model_name
-            openai_config["endpoint_host_key"] = OPENAI_KEY
-            openai_config["endpoint_host_proxy"] = OPENAI_PROXY
             for d in api.chat_chat(query=prompt,
                                    metadata=files_upload,
                                    history=history,
                                    chat_model_config=chat_model_config,
-                                   openai_config=openai_config,
                                    conversation_id=conversation_id,
                                    tool_config=selected_tool_configs,
                                    ):

@@ -4,7 +4,7 @@
 from typing import *
 from pathlib import Path
 from configs import (
-    EMBEDDING_MODEL,
+    DEFAULT_EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
     LLM_MODEL_CONFIG,
     SCORE_THRESHOLD,
@@ -266,7 +266,6 @@ class ApiRequest:
             history: List[Dict] = [],
             stream: bool = True,
             chat_model_config: Dict = None,
-            openai_config: Dict = None,
             tool_config: Dict = None,
             **kwargs,
     ):
@@ -281,7 +280,6 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "chat_model_config": chat_model_config,
-            "openai_config": openai_config,
             "tool_config": tool_config,
         }
 
@@ -381,10 +379,7 @@ class ApiRequest:
             self,
             knowledge_base_name: str,
             vector_store_type: str = DEFAULT_VS_TYPE,
-            embed_model: str = EMBEDDING_MODEL,
-            endpoint_host: str = None,
-            endpoint_host_key: str = None,
-            endpoint_host_proxy: str = None
+            embed_model: str = DEFAULT_EMBEDDING_MODEL,
     ):
         '''
         对应api.py/knowledge_base/create_knowledge_base接口
@@ -393,9 +388,6 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "vector_store_type": vector_store_type,
             "embed_model": embed_model,
-            "endpoint_host": endpoint_host,
-            "endpoint_host_key": endpoint_host_key,
-            "endpoint_host_proxy": endpoint_host_proxy,
         }
 
         response = self.post(
@@ -458,24 +450,6 @@ class ApiRequest:
             json=data,
         )
         return self._get_response_value(response, as_json=True)
-
-    def update_docs_by_id(
-            self,
-            knowledge_base_name: str,
-            docs: Dict[str, Dict],
-    ) -> bool:
-        '''
-        对应api.py/knowledge_base/update_docs_by_id接口
-        '''
-        data = {
-            "knowledge_base_name": knowledge_base_name,
-            "docs": docs,
-        }
-        response = self.post(
-            "/knowledge_base/update_docs_by_id",
-            json=data
-        )
-        return self._get_response_value(response)
 
     def upload_kb_docs(
             self,
@@ -562,26 +536,6 @@ class ApiRequest:
         )
         return self._get_response_value(response, as_json=True)
 
-    def update_kb_endpoint(self,
-                           knowledge_base_name,
-                           endpoint_host: str = None,
-                           endpoint_host_key: str = None,
-                           endpoint_host_proxy: str = None):
-        '''
-        对应api.py/knowledge_base/update_info接口
-        '''
-        data = {
-            "knowledge_base_name": knowledge_base_name,
-            "endpoint_host": endpoint_host,
-            "endpoint_host_key": endpoint_host_key,
-            "endpoint_host_proxy": endpoint_host_proxy,
-        }
-
-        response = self.post(
-            "/knowledge_base/update_kb_endpoint",
-            json=data,
-        )
-        return self._get_response_value(response, as_json=True)
     def update_kb_docs(
             self,
             knowledge_base_name: str,
@@ -621,7 +575,7 @@ class ApiRequest:
             knowledge_base_name: str,
             allow_empty_kb: bool = True,
             vs_type: str = DEFAULT_VS_TYPE,
-            embed_model: str = EMBEDDING_MODEL,
+            embed_model: str = DEFAULT_EMBEDDING_MODEL,
             chunk_size=CHUNK_SIZE,
             chunk_overlap=OVERLAP_SIZE,
             zh_title_enhance=ZH_TITLE_ENHANCE,
@@ -650,7 +604,7 @@ class ApiRequest:
     def embed_texts(
             self,
             texts: List[str],
-            embed_model: str = EMBEDDING_MODEL,
+            embed_model: str = DEFAULT_EMBEDDING_MODEL,
             to_query: bool = False,
     ) -> List[List[float]]:
         '''
