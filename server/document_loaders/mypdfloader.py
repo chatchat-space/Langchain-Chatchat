@@ -4,7 +4,7 @@ import cv2
 from PIL import Image
 import numpy as np
 from configs import PDF_OCR_THRESHOLD
-from document_loaders.ocr import get_ocr
+from server.document_loaders.ocr import get_ocr
 import tqdm
 
 

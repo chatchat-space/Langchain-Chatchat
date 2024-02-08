@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import operator
 import os
 from pathlib import Path
 from langchain.docstore.document import Document
