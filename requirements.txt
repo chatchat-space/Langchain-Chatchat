@@ -1,5 +1,6 @@
 # API requirements
 langchain==0.1.5
+langchainhub==0.1.14
 langchain-community==0.0.17
 langchain-openai==0.0.5
 langchain-experimental==0.0.50
@@ -7,12 +8,12 @@ fastapi==0.109.2
 sse_starlette~=1.8.2
 nltk~=3.8.1
 uvicorn>=0.27.0.post1
-unstructured[all-docs]~=0.12.0
+unstructured[]~=0.12.0
 python-magic-bin; sys_platform == 'win32'
 SQLAlchemy~=2.0.25
 faiss-cpu~=1.7.4
-accelerate~=0.24.1
-spacy~=3.7.2
+# accelerate~=0.24.1
+# spacy~=3.7.2
 PyMuPDF~=1.23.16
 rapidocr_onnxruntime~=1.3.8
 requests~=2.31.0
