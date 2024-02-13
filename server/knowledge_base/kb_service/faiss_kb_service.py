@@ -4,8 +4,7 @@ import shutil
 from configs import SCORE_THRESHOLD
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
-from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
-from server.utils import torch_gc
+from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path, EmbeddingsFunAdapter
 from langchain.docstore.document import Document
 from typing import List, Dict, Optional, Tuple
 
@@ -83,7 +82,6 @@ class FaissKBService(KBService):
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
-        torch_gc()
         return doc_infos
 
     def do_delete_doc(self,

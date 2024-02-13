@@ -3,9 +3,8 @@ Method Use cogagent to generate response for a given image and query.
 """
 import base64
 from io import BytesIO
-import torch
 from PIL import Image, ImageDraw
-from pydantic.v1 import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field
 from configs import TOOL_CONFIG
 import re
 from server.agent.container import container
@@ -72,6 +71,8 @@ def vqa_run(model, tokenizer, image_base_64, query, history=[], device="cuda", m
         temperature (float): temperature
         top_k (int): top k
     """
+    import torch
+
     image = Image.open(BytesIO(base64.b64decode(image_base_64)))
 
     inputs = model.build_conversation_input_ids(tokenizer, query=query, history=history, images=[image])

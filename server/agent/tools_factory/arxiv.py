@@ -1,5 +1,5 @@
 # LangChain 的 ArxivQueryRun 工具
-from pydantic.v1 import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.arxiv.tool import ArxivQueryRun
 def arxiv(query: str):
     tool = ArxivQueryRun()

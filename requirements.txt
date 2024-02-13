@@ -1,46 +1,24 @@
 # API requirements
-
-# Torch requiremnts, install the cuda version manually from https://pytorch.org/
-torch>=2.1.2
-torchvision>=0.16.2
-torchaudio>=2.1.2
-
-# Langchain 0.1.x requirements
-langchain>=0.1.0
-langchain_openai>=0.0.2
-langchain-community>=0.0.11
-langchainhub>=0.1.14
-
-pydantic==1.10.13
-fschat==0.2.35
-openai==1.9.0
-fastapi==0.109.0
-sse_starlette==1.8.2
-nltk==3.8.1
+langchain==0.1.5
+langchainhub==0.1.14
+langchain-community==0.0.17
+langchain-openai==0.0.5
+langchain-experimental==0.0.50
+fastapi==0.109.2
+sse_starlette~=1.8.2
+nltk~=3.8.1
 uvicorn>=0.27.0.post1
-starlette==0.35.0
-unstructured[all-docs] # ==0.11.8
+unstructured[]~=0.12.0
 python-magic-bin; sys_platform == 'win32'
-SQLAlchemy==2.0.25
-faiss-cpu==1.7.4
-accelerate==0.24.1
-spacy==3.7.2
-PyMuPDF==1.23.16
-rapidocr_onnxruntime==1.3.8
-requests==2.31.0
-pathlib==1.0.1
-pytest==7.4.3
-numexpr==2.8.6
-strsimpy==0.2.1
-markdownify==0.11.6
-tiktoken==0.5.2
-tqdm==4.66.1
-websockets==12.0
-numpy==1.24.4
-pandas==2.0.3
-einops==0.7.0
-transformers_stream_generator==0.0.4
-vllm==0.2.7; sys_platform == "linux"
+SQLAlchemy~=2.0.25
+faiss-cpu~=1.7.4
+# accelerate~=0.24.1
+# spacy~=3.7.2
+PyMuPDF~=1.23.16
+rapidocr_onnxruntime~=1.3.8
+requests~=2.31.0
+pathlib~=1.0.1
+pytest~=7.4.3
 llama-index==0.9.35
 
 # jq==1.6.0

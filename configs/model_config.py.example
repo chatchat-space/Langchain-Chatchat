@@ -26,6 +26,7 @@ SUPPORT_AGENT_MODELS = [
     "openai-api",
     "Qwen-14B-Chat",
     "Qwen-7B-Chat",
+    "qwen-turbo",
 ]
 
 
@@ -83,6 +84,9 @@ MODEL_PLATFORMS = [
         "llm_models": [
             "gpt-3.5-turbo",
         ],
+        "embed_models": [],
+        "image_models": [],
+        "multimodal_models": [],
         "api_base_url": "https://api.openai.com/v1",
         "api_key": "sk-",
         "api_proxy": "",
@@ -112,8 +116,16 @@ MODEL_PLATFORMS = [
         "platform_type": "oneapi",
         "api_key": "",
         "llm_models": [
-            "chatglm3-6b",
+            "qwen-turbo",
+            "qwen-plus",
+            "chatglm_turbo",
+            "chatglm_std",
         ],
+        "embed_models": [],
+        "image_models": [],
+        "multimodal_models": [],
+        "api_base_url": "http://127.0.0.1:3000/v1",
+        "api_key": "sk-xxx",
     },
 
     {
@@ -123,6 +135,11 @@ MODEL_PLATFORMS = [
         "llm_models": [
             "chatglm3-6b",
         ],
+        "embed_models": [],
+        "image_models": [],
+        "multimodal_models": [],
+        "api_base_url": "http://127.0.0.1:7860/v1",
+        "api_key": "EMPTY",
     },
 ]
 

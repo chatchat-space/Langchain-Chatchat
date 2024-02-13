@@ -129,9 +129,9 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         chat_box.use_chat_name(conversation_name)
         conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-        platforms = [x["platform_name"] for x in MODEL_PLATFORMS]
-        platform = st.selectbox("选择模型平台", platforms, 1)
-        llm_models = list(get_config_models(model_type="llm", platform_name=platform))
+        platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
+        platform = st.selectbox("选择模型平台", platforms)
+        llm_models = list(get_config_models(model_type="llm", platform_name=None if platform=="所有" else platform))
         llm_model = st.selectbox("选择LLM模型", llm_models)
 
         #  传入后端的内容

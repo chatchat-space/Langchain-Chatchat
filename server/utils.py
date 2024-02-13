@@ -22,7 +22,7 @@ from typing import (
 )
 import logging
 
-from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT, DEFAULT_EMBEDDING_MODEL
+from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT, DEFAULT_EMBEDDING_MODEL, TEMPERATURE
 from server.minx_chat_openai import MinxChatOpenAI
 
 
@@ -101,7 +101,7 @@ def get_model_info(model_name: str, platform_name: str = None) -> Dict:
 
 def get_ChatOpenAI(
         model_name: str,
-        temperature: float,
+        temperature: float = TEMPERATURE,
         max_tokens: int = None,
         streaming: bool = True,
         callbacks: List[Callable] = [],
@@ -109,18 +109,22 @@ def get_ChatOpenAI(
         **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
-    model = ChatOpenAI(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        openai_api_key=model_info.get("api_key"),
-        openai_api_base=model_info.get("api_base_url"),
-        openai_proxy=model_info.get("api_proxy"),
-        **kwargs
-    )
+    try:
+        model = ChatOpenAI(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            openai_api_key=model_info.get("api_key"),
+            openai_api_base=model_info.get("api_base_url"),
+            openai_proxy=model_info.get("api_proxy"),
+            **kwargs
+        )
+    except Exception as e:
+        logger.error(f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True)
+        model = None
     return model
 
 
@@ -236,26 +240,6 @@ class ChatMessage(BaseModel):
                 ],
             }
         }
-
-
-def torch_gc():
-    try:
-        import torch
-        if torch.cuda.is_available():
-            # with torch.cuda.device(DEVICE):
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
-        elif torch.backends.mps.is_available():
-            try:
-                from torch.mps import empty_cache
-                empty_cache()
-            except Exception as e:
-                msg = ("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，"
-                       "以支持及时清理 torch 产生的内存占用。")
-                logger.error(f'{e.__class__.__name__}: {msg}',
-                             exc_info=e if log_verbose else None)
-    except Exception:
-        ...
 
 
 def run_async(cor):
