@@ -5,5 +5,5 @@ ADD . /code
 # 设置code文件夹是工作目录
 WORKDIR /code
 # 安装支持
-RUN pip install -r requirements.txt && python copy_config_example.py && python init_database.py --recreate-vs
+RUN pip install -r requirements.txt && python init_database.py --recreate-vs
 CMD [ "python","startup.py -a"]
