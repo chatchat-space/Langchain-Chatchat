@@ -22,6 +22,10 @@ def embed_texts(
             from server.utils import load_local_embeddings
 
             embeddings = load_local_embeddings(model=embed_model)
+
+            if to_query:
+                texts = [getattr(embeddings, 'query_instruction', '') + text for text in texts]
+
             return BaseResponse(data=embeddings.embed_documents(texts))
 
         if embed_model in list_online_embed_models():  # 使用在线API
@@ -53,6 +57,10 @@ async def aembed_texts(
             from server.utils import load_local_embeddings
 
             embeddings = load_local_embeddings(model=embed_model)
+
+            if to_query:
+                texts = [getattr(embeddings, 'query_instruction', '') + text for text in texts]
+
             return BaseResponse(data=await embeddings.aembed_documents(texts))
 
         if embed_model in list_online_embed_models(): # 使用在线API
