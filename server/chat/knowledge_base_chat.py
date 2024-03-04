@@ -5,6 +5,7 @@ from configs import (LLM_MODELS,
                      VECTOR_SEARCH_TOP_K, 
                      SCORE_THRESHOLD, 
                      TEMPERATURE,
+                     MAX_TOKENS,
                      USE_RERANKER,
                      RERANKER_MODEL,
                      RERANKER_MAX_LENGTH,
@@ -45,8 +46,8 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                               model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                               temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
                               max_tokens: Optional[int] = Body(
-                                  None,
-                                  description="限制LLM生成Token数量，默认None代表模型最大值"
+                                  MAX_TOKENS,
+                                  description="限制LLM生成Token数量，默认MAX_TOKENS代表模型最大值"
                               ),
                               prompt_name: str = Body(
                                   "default",
