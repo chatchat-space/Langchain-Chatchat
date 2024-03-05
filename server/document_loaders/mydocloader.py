@@ -1,4 +1,4 @@
-from langchain.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 from typing import List
 import tqdm
 

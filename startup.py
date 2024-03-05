@@ -42,7 +42,7 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
 
 
 def run_api_server(started_event: mp.Event = None, run_mode: str = None):
-    from server.api import create_app
+    from server.api_server.server_app import create_app
     import uvicorn
     from server.utils import set_httpx_config
     set_httpx_config()
@@ -197,13 +197,6 @@ async def start_main_server():
         args.model_worker = True
         args.api = True
         args.api_worker = True
-        args.webui = False
-
-    elif args.llm_api:
-        args.openai_api = True
-        args.model_worker = True
-        args.api_worker = True
-        args.api = False
         args.webui = False
 
     if args.lite:

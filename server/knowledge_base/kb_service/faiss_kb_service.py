@@ -4,7 +4,8 @@ import shutil
 from configs import SCORE_THRESHOLD
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
-from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path, EmbeddingsFunAdapter
+from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
+from server.utils import get_Embeddings
 from langchain.docstore.document import Document
 from typing import List, Dict, Optional, Tuple
 
@@ -61,7 +62,7 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   ) -> List[Tuple[Document, float]]:
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
             embeddings = vs.embeddings.embed_query(query)
@@ -75,8 +76,8 @@ class FaissKBService(KBService):
 
         texts = [x.page_content for x in docs]
         metadatas = [x.metadata for x in docs]
-        embeddings = vs.embeddings.embed_documents(texts)
         with self.load_vector_store().acquire() as vs:
+            embeddings = vs.embeddings.embed_documents(texts)
             ids = vs.add_embeddings(text_embeddings=zip(texts, embeddings),
                                     metadatas=metadatas)
             if not kwargs.get("not_refresh_vs_cache"):

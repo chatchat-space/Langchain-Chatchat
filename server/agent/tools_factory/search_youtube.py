@@ -1,5 +1,7 @@
 from langchain_community.tools import YouTubeSearchTool
-from langchain.pydantic_v1 import BaseModel, Field
+from server.pydantic_types import BaseModel, Field
+
+
 def search_youtube(query: str):
     tool = YouTubeSearchTool()
     return tool.run(tool_input=query)

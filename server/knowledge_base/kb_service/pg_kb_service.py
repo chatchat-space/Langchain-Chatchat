@@ -7,9 +7,10 @@ from sqlalchemy import text
 
 from configs import kbs_config
 
-from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
+from server.knowledge_base.kb_service.base import SupportedVSType, KBService, \
     score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
+from server.utils import get_Embeddings
 import shutil
 import sqlalchemy
 from sqlalchemy.engine.base import Engine
@@ -20,7 +21,7 @@ class PGKBService(KBService):
     engine: Engine = sqlalchemy.create_engine(kbs_config.get("pg").get("connection_uri"), pool_size=10)
 
     def _load_pg_vector(self):
-        self.pg_vector = PGVector(embedding_function=EmbeddingsFunAdapter(self.embed_model),
+        self.pg_vector = PGVector(embedding_function=get_Embeddings(self.embed_model),
                                   collection_name=self.kb_name,
                                   distance_strategy=DistanceStrategy.EUCLIDEAN,
                                   connection=PGKBService.engine,
@@ -59,7 +60,7 @@ class PGKBService(KBService):
             shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
         return score_threshold_process(score_threshold, top_k, docs)

@@ -6,9 +6,8 @@ from typing import List
 import uuid
 
 from langchain.agents import tool
-from langchain.pydantic_v1 import Field
+from server.pydantic_types import Field, FieldInfo
 import openai
-from pydantic.fields import FieldInfo
 
 from configs.basic_config import MEDIA_PATH
 from server.utils import MsgType

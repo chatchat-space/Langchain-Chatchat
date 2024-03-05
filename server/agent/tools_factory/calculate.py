@@ -1,4 +1,4 @@
-from langchain.pydantic_v1 import BaseModel, Field
+from server.pydantic_types import BaseModel, Field
 
 def calculate(a: float, b: float, operator: str) -> float:
     if operator == "+":

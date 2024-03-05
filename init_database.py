@@ -2,7 +2,7 @@ import sys
 sys.path.append(".")
 from server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
                                            folder2db, prune_db_docs, prune_folder_files)
-from configs.model_config import NLTK_DATA_PATH, DEFAULT_EMBEDDING_MODEL
+from configs.model_config import DEFAULT_EMBEDDING_MODEL
 from datetime import datetime
 
 

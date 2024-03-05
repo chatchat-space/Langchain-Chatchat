@@ -7,9 +7,10 @@ import os
 from configs import kbs_config
 from server.db.repository import list_file_num_docs_id_by_kb_name_and_file_name
 
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, \
     score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
+from server.utils import get_Embeddings
 
 
 class MilvusKBService(KBService):
@@ -49,7 +50,7 @@ class MilvusKBService(KBService):
         return SupportedVSType.MILVUS
 
     def _load_milvus(self):
-        self.milvus = Milvus(embedding_function=EmbeddingsFunAdapter(self.embed_model),
+        self.milvus = Milvus(embedding_function=(self.embed_model),
                              collection_name=self.kb_name,
                              connection_args=kbs_config.get("milvus"),
                              index_params=kbs_config.get("milvus_kwargs")["index_params"],
@@ -66,7 +67,7 @@ class MilvusKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         self._load_milvus()
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         docs = self.milvus.similarity_search_with_score_by_vector(embeddings, top_k)
         return score_threshold_process(score_threshold, top_k, docs)
