@@ -74,7 +74,7 @@ async def list_models() -> Dict:
         try:
             client = get_OpenAIClient(name, is_async=True)
             models = await client.models.list()
-            models = models.dict(exclude=["data", "object"])
+            models = models.dict(exclude={"data":..., "object":...})
             for x in models:
                 models[x]["platform_name"] = name
             return models
