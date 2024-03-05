@@ -16,10 +16,8 @@ from langchain.output_parsers import OutputFixingParser
 from langchain.schema import AgentAction, AgentFinish, OutputParserException
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
-from langchain.pydantic_v1 import Field
+from server.pydantic_types import Field, typing, model_schema
 
-from pydantic import typing
-from pydantic.schema import model_schema
 
 logger = logging.getLogger(__name__)
 

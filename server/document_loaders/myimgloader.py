@@ -1,5 +1,5 @@
 from typing import List
-from langchain.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 from server.document_loaders.ocr import get_ocr
 
 

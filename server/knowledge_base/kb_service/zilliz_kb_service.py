@@ -3,9 +3,10 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import Zilliz
 from configs import kbs_config
-from server.knowledge_base.kb_service.base import KBService, SupportedVSType, EmbeddingsFunAdapter, \
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType, \
     score_threshold_process
 from server.knowledge_base.utils import KnowledgeFile
+from server.utils import get_Embeddings
 
 
 class ZillizKBService(KBService):
@@ -46,7 +47,7 @@ class ZillizKBService(KBService):
 
     def _load_zilliz(self):
         zilliz_args = kbs_config.get("zilliz")
-        self.zilliz = Zilliz(embedding_function=EmbeddingsFunAdapter(self.embed_model),
+        self.zilliz = Zilliz(embedding_function=get_Embeddings(self.embed_model),
                              collection_name=self.kb_name, connection_args=zilliz_args)
 
     def do_init(self):
@@ -59,7 +60,7 @@ class ZillizKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         self._load_zilliz()
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
         return score_threshold_process(score_threshold, top_k, docs)

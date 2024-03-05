@@ -1,5 +1,5 @@
 from urllib.parse import urlencode
-from langchain.pydantic_v1 import BaseModel, Field
+from server.pydantic_types import BaseModel, Field
 
 from server.knowledge_base.kb_doc_api import search_docs
 from configs import TOOL_CONFIG

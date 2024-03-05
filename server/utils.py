@@ -3,11 +3,11 @@ from pathlib import Path
 import asyncio
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.pydantic_v1 import BaseModel, Field
 from langchain.embeddings.base import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
 import httpx
+import openai
 from typing import (
     Optional,
     Callable,
@@ -22,8 +22,10 @@ from typing import (
 )
 import logging
 
-from configs import logger, log_verbose, HTTPX_DEFAULT_TIMEOUT, DEFAULT_EMBEDDING_MODEL, TEMPERATURE
-from server.minx_chat_openai import MinxChatOpenAI
+from configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
+                     DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE)
+from server.pydantic_types import BaseModel, Field
+from server.minx_chat_openai import MinxChatOpenAI # TODO: still used?
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -38,6 +40,14 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     finally:
         # Signal the aiter to stop.
         event.set()
+
+
+def get_config_platforms() -> Dict[str, Dict]:
+    import importlib
+    from configs import model_config
+    importlib.reload(model_config)
+
+    return {m["platform_name"]: m for m in model_config.MODEL_PLATFORMS}
 
 
 def get_config_models(
@@ -88,40 +98,54 @@ def get_config_models(
     return result
 
 
-def get_model_info(model_name: str, platform_name: str = None) -> Dict:
+def get_model_info(model_name: str = None, platform_name: str = None, multiple: bool = False) -> Dict:
     '''
     获取配置的模型信息，主要是 api_base_url, api_key
+    如果指定 multiple=True，则返回所有重名模型；否则仅返回第一个
     '''
     result = get_config_models(model_name=model_name, platform_name=platform_name)
     if len(result) > 0:
-        return list(result.values())[0]
+        if multiple:
+            return result
+        else:
+            return list(result.values())[0]
     else:
         return {}
 
 
 def get_ChatOpenAI(
-        model_name: str,
+        model_name: str = DEFAULT_LLM_MODEL,
         temperature: float = TEMPERATURE,
         max_tokens: int = None,
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
+        local_wrap: bool = True, # use local wrapped api
         **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
-    try:
-        model = ChatOpenAI(
+    params = dict(
             streaming=streaming,
             verbose=verbose,
             callbacks=callbacks,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
-            openai_api_key=model_info.get("api_key"),
-            openai_api_base=model_info.get("api_base_url"),
-            openai_proxy=model_info.get("api_proxy"),
             **kwargs
-        )
+    )
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        model = ChatOpenAI(**params)
     except Exception as e:
         logger.error(f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True)
         model = None
@@ -136,41 +160,100 @@ def get_OpenAI(
         echo: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
+        local_wrap: bool = True, # use local wrapped api
         **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
     model_info = get_model_info(model_name)
-    model = OpenAI(
+    params = dict(
         streaming=streaming,
         verbose=verbose,
         callbacks=callbacks,
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        openai_api_key=model_info.get("api_key"),
-        openai_api_base=model_info.get("api_base_url"),
-        openai_proxy=model_info.get("api_proxy"),
         echo=echo,
         **kwargs
     )
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        model = OpenAI(**params)
+    except Exception as e:
+        logger.error(f"failed to create OpenAI for model: {model_name}.", exc_info=True)
+        model = None
     return model
 
 
-def get_Embeddings(embed_model: str = DEFAULT_EMBEDDING_MODEL) -> Embeddings:
+def get_Embeddings(
+    embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    local_wrap: bool = True, # use local wrapped api
+) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
     from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
 
     model_info = get_model_info(model_name=embed_model)
+    params = dict(model=embed_model)
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        if model_info.get("platform_type") == "openai":
+            return OpenAIEmbeddings(**params)
+        else:
+            return LocalAIEmbeddings(**params)
+    except Exception as e:
+        logger.error(f"failed to create Embeddings for model: {embed_model}.", exc_info=True)
+
+
+def get_OpenAIClient(
+        platform_name: str=None,
+        model_name: str=None,
+        is_async: bool=True,
+) -> Union[openai.Client, openai.AsyncClient]:
+    '''
+    construct an openai Client for specified platform or model
+    '''
+    if platform_name is None:
+        platform_name = get_model_info(model_name=model_name, platform_name=platform_name)["platform_name"]
+    platform_info = get_config_platforms().get(platform_name)
+    assert platform_info, f"cannot find configured platform: {platform_name}"
     params = {
-        "model": embed_model,
-        "base_url": model_info.get("api_base_url"),
-        "api_key": model_info.get("api_key"),
-        "openai_proxy": model_info.get("api_proxy"),
+        "base_url": platform_info.get("api_base_url"),
+        "api_key": platform_info.get("api_key"),
     }
-    if model_info.get("platform_type") == "openai":
-        return OpenAIEmbeddings(**params)
+    httpx_params = {}
+    if api_proxy := platform_info.get("api_proxy"):
+        httpx_params = {
+            "proxies": api_proxy,
+            "transport": httpx.HTTPTransport(local_address="0.0.0.0"),
+        }
+
+    if is_async:
+        if httpx_params:
+            params["http_client"] = httpx.AsyncClient(**httpx_params)
+        return openai.AsyncClient(**params)
     else:
-        return LocalAIEmbeddings(**params)
+        if httpx_params:
+            params["http_client"] = httpx.Client(**httpx_params)
+        return openai.Client(**params)
 
 
 class MsgType:
@@ -281,7 +364,7 @@ def iter_over_async(ait, loop=None):
 
 def MakeFastAPIOffline(
         app: FastAPI,
-        static_dir=Path(__file__).parent / "static",
+        static_dir=Path(__file__).parent / "api_server" / "static",
         static_url="/static-offline-docs",
         docs_url: Optional[str] = "/docs",
         redoc_url: Optional[str] = "/redoc",

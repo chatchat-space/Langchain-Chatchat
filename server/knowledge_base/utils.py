@@ -12,7 +12,7 @@ from configs import (
 )
 import importlib
 from server.text_splitter import zh_title_enhance as func_zh_title_enhance
-import langchain.document_loaders
+import langchain_community.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
@@ -136,7 +136,7 @@ class JSONLinesLoader(JSONLoader):
         self._json_lines = True
 
 
-langchain.document_loaders.JSONLinesLoader = JSONLinesLoader
+langchain_community.document_loaders.JSONLinesLoader = JSONLinesLoader
 
 
 def get_LoaderClass(file_extension):
@@ -155,13 +155,13 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
                            "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
             document_loaders_module = importlib.import_module("server.document_loaders")
         else:
-            document_loaders_module = importlib.import_module("langchain.document_loaders")
+            document_loaders_module = importlib.import_module("langchain_community.document_loaders")
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
         msg = f"为文件{file_path}查找加载器{loader_name}时出错：{e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
-        document_loaders_module = importlib.import_module("langchain.document_loaders")
+        document_loaders_module = importlib.import_module("langchain_community.document_loaders")
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
     if loader_name == "UnstructuredFileLoader":

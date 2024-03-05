@@ -1,11 +1,11 @@
 ## 指定制定列的csv文件加载器
 
-from langchain.document_loaders import CSVLoader
+from langchain_community.document_loaders import CSVLoader
 import csv
 from io import TextIOWrapper
 from typing import Dict, List, Optional
 from langchain.docstore.document import Document
-from langchain.document_loaders.helpers import detect_file_encodings
+from langchain_community.document_loaders.helpers import detect_file_encodings
 
 
 class FilteredCSVLoader(CSVLoader):

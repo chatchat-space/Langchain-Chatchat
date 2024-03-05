@@ -1,4 +1,4 @@
-from langchain.pydantic_v1 import BaseModel, Field
+from server.pydantic_types import BaseModel, Field
 from langchain.utilities.bing_search import BingSearchAPIWrapper
 from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
 from configs import TOOL_CONFIG

@@ -76,25 +76,34 @@ LLM_MODEL_CONFIG = {
     },
 }
 
-# 可以通过 loom/xinference/oneapi/fatchat 启动模型服务，然后将其 URL 和 KEY 配置过来即可。
+# 可以通过 loom/xinference/oneapi/fastchat 启动模型服务，然后将其 URL 和 KEY 配置过来即可。
+#   - platform_name 可以任意填写，不要重复即可
+#   - platform_type 可选：openai, xinference, oneapi, fastchat。以后可能根据平台类型做一些功能区分
+#   - 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
+
 MODEL_PLATFORMS = [
-    {
-        "platform_name": "openai-api",
-        "platform_type": "openai",
-        "llm_models": [
-            "gpt-3.5-turbo",
-        ],
-        "embed_models": [],
-        "image_models": [],
-        "multimodal_models": [],
-        "api_base_url": "https://api.openai.com/v1",
-        "api_key": "sk-",
-        "api_proxy": "",
-    },
+    # {
+    #     "platform_name": "openai-api",
+    #     "platform_type": "openai",
+    #     "api_base_url": "https://api.openai.com/v1",
+    #     "api_key": "sk-",
+    #     "api_proxy": "",
+    #     "api_concurrencies": 5,
+    #     "llm_models": [
+    #         "gpt-3.5-turbo",
+    #     ],
+    #     "embed_models": [],
+    #     "image_models": [],
+    #     "multimodal_models": [],
+    # },
 
     {
         "platform_name": "xinference",
         "platform_type": "xinference",
+        "api_base_url": "http://127.0.0.1:9997/v1",
+        "api_key": "EMPTY",
+        "api_concurrencies": 5,
+        # 注意：这里填写的是 xinference 部署的模型 UID，而非模型名称
         "llm_models": [
             "chatglm3-6b",
         ],
@@ -107,40 +116,38 @@ MODEL_PLATFORMS = [
         "multimodal_models": [
             "qwen-vl",
         ],
-        "api_base_url": "http://127.0.0.1:9997/v1",
-        "api_key": "EMPTY",
     },
 
-    {
-        "platform_name": "oneapi",
-        "platform_type": "oneapi",
-        "api_key": "",
-        "llm_models": [
-            "qwen-turbo",
-            "qwen-plus",
-            "chatglm_turbo",
-            "chatglm_std",
-        ],
-        "embed_models": [],
-        "image_models": [],
-        "multimodal_models": [],
-        "api_base_url": "http://127.0.0.1:3000/v1",
-        "api_key": "sk-xxx",
-    },
+    # {
+    #     "platform_name": "oneapi",
+    #     "platform_type": "oneapi",
+    #     "api_base_url": "http://127.0.0.1:3000/v1",
+    #     "api_key": "",
+    #     "api_concurrencies": 5,
+    #     "llm_models": [
+    #         "qwen-turbo",
+    #         "qwen-plus",
+    #         "chatglm_turbo",
+    #         "chatglm_std",
+    #     ],
+    #     "embed_models": [],
+    #     "image_models": [],
+    #     "multimodal_models": [],
+    # },
 
-    {
-        "platform_name": "loom",
-        "platform_type": "loom",
-        "api_key": "",
-        "llm_models": [
-            "chatglm3-6b",
-        ],
-        "embed_models": [],
-        "image_models": [],
-        "multimodal_models": [],
-        "api_base_url": "http://127.0.0.1:7860/v1",
-        "api_key": "EMPTY",
-    },
+    # {
+    #     "platform_name": "loom",
+    #     "platform_type": "loom",
+    #     "api_base_url": "http://127.0.0.1:7860/v1",
+    #     "api_key": "",
+    #     "api_concurrencies": 5,
+    #     "llm_models": [
+    #         "chatglm3-6b",
+    #     ],
+    #     "embed_models": [],
+    #     "image_models": [],
+    #     "multimodal_models": [],
+    # },
 ]
 
 LOOM_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "loom.yaml")
