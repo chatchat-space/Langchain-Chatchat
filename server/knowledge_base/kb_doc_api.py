@@ -40,7 +40,8 @@ def search_docs(
         elif file_name or metadata:
             data = kb.list_docs(file_name=file_name, metadata=metadata)
             for d in data:
-                del d.metadata['vector']
+                if "vector" in d.metadata:
+                    del d.metadata["vector"]
     return data
 
 
