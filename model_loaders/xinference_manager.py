@@ -208,10 +208,10 @@ st.divider()
 st.markdown(text)
 st.divider()
 
-cols = st.columns([3, 1])
-local_path = cols[0].text_input("本地模型绝对路径：")
+local_path = st.text_input("本地模型绝对路径：")
+cols = st.columns(3)
 
-if cols[1].button("设置模型缓存"):
+if cols[0].button("设置模型缓存"):
     if os.path.isabs(local_path) and os.path.isdir(local_path):
         cur_spec.model_uri = local_path
         if os.path.isdir(cache_dir):
@@ -238,7 +238,7 @@ if cols[1].button("删除模型缓存"):
     if os.path.isdir(cache_dir):
         os.rmdir(cache_dir)
 
-if cols[1].button("注册为自定义模型"):
+if cols[2].button("注册为自定义模型"):
     if os.path.isabs(local_path) and os.path.isdir(local_path):
         cur_spec.model_uri = local_path
         cur_spec.model_revision = None
