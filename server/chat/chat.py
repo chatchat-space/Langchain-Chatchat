@@ -3,7 +3,7 @@ import json
 from typing import AsyncIterable, List
 
 from fastapi import Body
-from fastapi.responses import StreamingResponse
+from sse_starlette import EventSourceResponse
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import AIMessage, HumanMessage
 
