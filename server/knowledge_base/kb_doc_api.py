@@ -39,6 +39,9 @@ def search_docs(
             data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
         elif file_name or metadata:
             data = kb.list_docs(file_name=file_name, metadata=metadata)
+            for d in data:
+                if "vector" in d.metadata:
+                    del d.metadata["vector"]
     return data
 
 
