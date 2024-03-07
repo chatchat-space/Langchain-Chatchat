@@ -40,7 +40,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        special_tokens = ["Action", "<|observation|>"]
+        special_tokens = ["\nAction:", "\nObservation:", "<|observation|>"]
         for stoken in special_tokens:
             if stoken in token:
                 before_action = token.split(stoken)[0]
@@ -134,7 +134,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         """Run when tool errors."""
         data = {
             "status": AgentStatus.tool_end,
-            "text": error,
+            "text": str(error),
         }
         # self.done.clear()
         self.queue.put_nowait(dumps(data))
