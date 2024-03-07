@@ -118,22 +118,39 @@ MODEL_PLATFORMS = [
         ],
     },
 
-    # {
-    #     "platform_name": "oneapi",
-    #     "platform_type": "oneapi",
-    #     "api_base_url": "http://127.0.0.1:3000/v1",
-    #     "api_key": "",
-    #     "api_concurrencies": 5,
-    #     "llm_models": [
-    #         "qwen-turbo",
-    #         "qwen-plus",
-    #         "chatglm_turbo",
-    #         "chatglm_std",
-    #     ],
-    #     "embed_models": [],
-    #     "image_models": [],
-    #     "multimodal_models": [],
-    # },
+    {
+        "platform_name": "oneapi",
+        "platform_type": "oneapi",
+        "api_base_url": "http://127.0.0.1:3000/v1",
+        "api_key": "sk-",
+        "api_concurrencies": 5,
+        "llm_models": [
+            # 智谱 API
+            "chatglm_pro",
+            "chatglm_turbo",
+            "chatglm_std",
+            "chatglm_lite",
+            # 千问 API
+            "qwen-turbo",
+            "qwen-plus",
+            "qwen-max",
+            "qwen-max-longcontext",
+            # 千帆 API
+            "ERNIE-Bot",
+            "ERNIE-Bot-turbo",
+            "ERNIE-Bot-4",
+            # 星火 API
+            "SparkDesk",
+        ],
+        "embed_models": [
+            # 千问 API
+            "text-embedding-v1",
+            # 千帆 API
+            "Embedding-V1",
+        ],
+        "image_models": [],
+        "multimodal_models": [],
+    },
 
     # {
     #     "platform_name": "loom",

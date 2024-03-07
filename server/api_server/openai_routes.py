@@ -65,30 +65,29 @@ async def openai_request(method, body):
 
 
 @openai_router.get("/models")
-async def list_models() -> Dict:
+async def list_models() -> List:
     '''
     整合所有平台的模型列表。
-    由于 openai sdk 不支持重名模型，对于重名模型，只返回其中响应速度最快的一个。在请求其它接口时会自动按照模型忙闲状态进行调度。
     '''
-    async def task(name: str):
+    async def task(name: str, config: Dict):
         try:
             client = get_OpenAIClient(name, is_async=True)
             models = await client.models.list()
-            models = models.dict(exclude={"data":..., "object":...})
-            for x in models:
-                models[x]["platform_name"] = name
-            return models
+            if config.get("platform_type") == "xinference":
+                models = models.dict(exclude={"data":..., "object":...})
+                for x in models:
+                    models[x]["platform_name"] = name
+                return [{**v, "id": k} for k, v in models.items()]
+            elif config.get("platform_type") == "oneapi":
+                return [{**x.dict(), "platform_name": name} for x in models.data]
         except Exception:
             logger.error(f"failed request to platform: {name}", exc_info=True)
             return {}
 
-    result = {}
-    tasks = [asyncio.create_task(task(name)) for name in get_config_platforms()]
+    result = []
+    tasks = [asyncio.create_task(task(name, config)) for name, config in get_config_platforms().items()]
     for t in asyncio.as_completed(tasks):
-        for n, v in (await t).items():
-            if n not in result:
-                result[n] = v
-
+        result += (await t)
     return result
 
 
