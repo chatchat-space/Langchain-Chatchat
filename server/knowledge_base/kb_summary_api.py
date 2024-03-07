@@ -51,11 +51,13 @@ def recreate_summary_vector_store(
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                local_wrap=True,
             )
             reduce_llm = get_ChatOpenAI(
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                local_wrap=True,
             )
             # 文本摘要适配器
             summary = SummaryAdapter.form_summary(llm=llm,
@@ -131,11 +133,13 @@ def summary_file_to_vector_store(
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                local_wrap=True,
             )
             reduce_llm = get_ChatOpenAI(
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                local_wrap=True,
             )
             # 文本摘要适配器
             summary = SummaryAdapter.form_summary(llm=llm,
@@ -196,11 +200,13 @@ def summary_doc_ids_to_vector_store(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
+            local_wrap=True,
         )
         reduce_llm = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
+            local_wrap=True,
         )
         # 文本摘要适配器
         summary = SummaryAdapter.form_summary(llm=llm,

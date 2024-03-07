@@ -37,7 +37,8 @@ async def completion(query: str = Body(..., description="用户输入", examples
             temperature=temperature,
             max_tokens=max_tokens,
             callbacks=[callback],
-            echo=echo
+            echo=echo,
+            local_wrap=True,
         )
 
         prompt_template = get_prompt_template("completion", prompt_name)

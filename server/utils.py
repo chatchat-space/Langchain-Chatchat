@@ -120,7 +120,7 @@ def get_ChatOpenAI(
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = True, # use local wrapped api
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
@@ -160,7 +160,7 @@ def get_OpenAI(
         echo: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = True, # use local wrapped api
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
@@ -196,7 +196,7 @@ def get_OpenAI(
 
 def get_Embeddings(
     embed_model: str = DEFAULT_EMBEDDING_MODEL,
-    local_wrap: bool = True, # use local wrapped api
+    local_wrap: bool = False, # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
     from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154

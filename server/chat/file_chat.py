@@ -124,6 +124,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             temperature=temperature,
             max_tokens=max_tokens,
             callbacks=[callback],
+            local_wrap=True,
         )
         embed_func = get_Embeddings()
         embeddings = await embed_func.aembed_query(query)

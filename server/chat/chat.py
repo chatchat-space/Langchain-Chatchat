@@ -35,6 +35,7 @@ def create_models_from_config(configs, callbacks, stream):
                 max_tokens=params.get('max_tokens', 1000),
                 callbacks=callbacks,
                 streaming=stream,
+                local_wrap=True,
             )
             models[model_type] = model_instance
             prompt_name = params.get('prompt_name', 'default')

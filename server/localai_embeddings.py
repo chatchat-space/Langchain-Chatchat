@@ -27,6 +27,8 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
+from server.utils import run_in_thread_pool
+
 
 logger = logging.getLogger(__name__)
 
@@ -316,8 +318,14 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
-        # call _embedding_func for each text
-        return [self._embedding_func(text, engine=self.deployment) for text in texts]
+        # call _embedding_func for each text with multithreads
+        def task(seq, text):
+            return (seq, self._embedding_func(text, engine=self.deployment))
+
+        params = [{"seq": i, "text": text} for i, text in enumerate(texts)]
+        result = list(run_in_thread_pool(func=task, params=params))
+        result = sorted(result, key=lambda x: x[0])
+        return [x[1] for x in result]
 
     async def aembed_documents(
         self, texts: List[str], chunk_size: Optional[int] = 0
