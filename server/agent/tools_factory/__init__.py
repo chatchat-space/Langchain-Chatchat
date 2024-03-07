@@ -1,5 +1,5 @@
 from .search_local_knowledgebase import search_local_knowledgebase, SearchKnowledgeInput
-from .calculate import calculate, CalculatorInput
+from .calculate import calculate
 from .weather_check import weather_check, WeatherInput
 from .shell import shell, ShellInput
 from .search_internet import search_internet, SearchInternetInput
