@@ -27,7 +27,7 @@ def agents_registry(
         agent = create_structured_glm3_chat_agent(llm=llm, tools=tools)
         # pass
     elif "qwen" in llm.model_name.lower():
-        agent = create_structured_qwen_chat_agent(llm=llm, tools=tools)
+        return create_structured_qwen_chat_agent(llm=llm, tools=tools, callbacks=callbacks)
     else:
         if prompt is not None:
             prompt = ChatPromptTemplate.from_messages([SystemMessage(content=prompt)])

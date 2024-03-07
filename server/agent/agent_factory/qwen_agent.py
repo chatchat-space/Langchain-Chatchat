@@ -1,25 +1,47 @@
 from __future__ import annotations
 
+from functools import partial
 import json
 import logging
 from operator import itemgetter
 import re
-from typing import List, Sequence, Union
+from typing import List, Sequence, Union, Tuple, Any
 
+from langchain_core.callbacks import Callbacks
 from langchain_core.runnables import Runnable, RunnablePassthrough
+from langchain.agents.agent import RunnableAgent, AgentExecutor
 from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
-from langchain.callbacks.base import BaseCallbackHandler
 from langchain.prompts.chat import BaseChatPromptTemplate
 from langchain.schema import (AgentAction, AgentFinish, OutputParserException,
                               HumanMessage, SystemMessage, AIMessage)
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
-from langchain.tools.render import format_tool_to_openai_function
-
 from server.utils import get_prompt_template
 
 
 logger = logging.getLogger(__name__)
+
+
+# langchain's AgentRunnable use .stream to make sure .stream_log working.
+# but qwen model cannot do tool call with streaming.
+# patch it to make qwen lcel agent working
+def _plan_without_stream(
+    self: RunnableAgent,
+    intermediate_steps: List[Tuple[AgentAction, str]],
+    callbacks: Callbacks = None,
+    **kwargs: Any,
+) -> Union[AgentAction, AgentFinish]:
+    inputs = {**kwargs, **{"intermediate_steps": intermediate_steps}}
+    return self.runnable.invoke(inputs, config={"callbacks": callbacks})
+
+async def _aplan_without_stream(
+    self: RunnableAgent,
+    intermediate_steps: List[Tuple[AgentAction, str]],
+    callbacks: Callbacks = None,
+    **kwargs: Any,
+) -> Union[AgentAction, AgentFinish]:
+    inputs = {**kwargs, **{"intermediate_steps": intermediate_steps}}
+    return await self.runnable.ainvoke(inputs, config={"callbacks": callbacks})
 
 
 class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
@@ -42,8 +64,16 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
         else:
             kwargs["agent_scratchpad"] = ""
         # Create a tools variable from the list of tools provided
-        # kwargs["tools"] = "\n".join([f"{tool.name}: {tool.description}. Parameters: {tool.args_schema.dict()}" for tool in self.tools])
-        kwargs["tools"] = "\n".join([str(format_tool_to_openai_function(tool)) for tool in self.tools])
+        tools = []
+        for t in self.tools:
+            desc = re.sub(r"\n+", " ", t.description)
+            text = (f"{t.name}: Call this tool to interact with the {t.name} API. What is the {t.name} API useful for?"
+                    f" {desc}"
+                    f" Parameters: {t.args}"
+            )
+            tools.append(text)
+        kwargs["tools"] = "\n\n".join(tools)
+        # kwargs["tools"] = "\n".join([str(format_tool_to_openai_function(tool)) for tool in self.tools])
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         formatted = self.template.format(**kwargs)
@@ -90,8 +120,9 @@ class QwenChatAgentOutputParserLC(StructuredChatOutputParser):
 def create_structured_qwen_chat_agent(
         llm: BaseLanguageModel,
         tools: Sequence[BaseTool],
+        callbacks: Sequence[Callbacks],
         use_custom_prompt: bool = True,
-) -> Runnable:
+) -> AgentExecutor:
     if use_custom_prompt:
         prompt = "qwen"
         output_parser = QwenChatAgentOutputParserCustom()
@@ -99,17 +130,22 @@ def create_structured_qwen_chat_agent(
         prompt = "structured-chat-agent"
         output_parser = QwenChatAgentOutputParserLC()
 
+    tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
+
     template = get_prompt_template("action_model", prompt)
     prompt = QwenChatAgentPromptTemplate(input_variables=["input", "intermediate_steps"],
                                         template=template,
                                         tools=tools)
-
     agent = (
         RunnablePassthrough.assign(
             agent_scratchpad=itemgetter("intermediate_steps")
         )
         | prompt
-        | llm.bind(stop="\nObservation:")
+        | llm.bind(stop=["<|endoftext|>", "<|im_start|>", "<|im_end|>", "\nObservation:"])
         | output_parser
     )
-    return agent
+    executor = AgentExecutor(agent=agent, tools=tools, callbacks=callbacks)
+    executor.agent.__dict__["plan"] = partial(_plan_without_stream, executor.agent)
+    executor.agent.__dict__["aplan"] = partial(_aplan_without_stream, executor.agent)
+
+    return executor
