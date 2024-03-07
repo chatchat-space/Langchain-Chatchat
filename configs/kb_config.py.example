@@ -1,5 +1,8 @@
 import os
 
+from configs.basic_config import DATA_PATH
+
+
 # 默认使用的知识库
 DEFAULT_KNOWLEDGE_BASE = "samples"
 
@@ -30,7 +33,14 @@ DEFAULT_SEARCH_ENGINE = "duckduckgo"
 # 搜索引擎匹配结题数量
 SEARCH_ENGINE_TOP_K = 3
 
+# 是否开启中文标题加强，以及标题增强的相关配置
+# 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；
+# 然后将文本与往上一级的标题进行拼合，实现文本信息的增强。
 ZH_TITLE_ENHANCE = False
+
+# PDF OCR 控制：只对宽高超过页面一定比例（图片宽/页面宽，图片高/页面高）的图片进行 OCR。
+# 这样可以避免 PDF 中一些小图片的干扰，提高非扫描版 PDF 处理速度
+PDF_OCR_THRESHOLD = (0.6, 0.6)
 
 # 每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。
 KB_INFO = {
@@ -41,7 +51,7 @@ KB_INFO = {
 # 通常情况下不需要更改以下内容
 
 # 知识库默认存储路径
-KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
+KB_ROOT_PATH = os.path.join(DATA_PATH, "knowledge_base")
 if not os.path.exists(KB_ROOT_PATH):
     os.mkdir(KB_ROOT_PATH)
 
@@ -78,7 +88,12 @@ kbs_config = {
         "index_name": "test_index",
         "user": "",
         "password": ""
-    }
+    },
+    "milvus_kwargs":{
+        "search_params":{"metric_type": "L2"}, #在此处增加search_params
+        "index_params":{"metric_type": "L2","index_type": "HNSW"} # 在此处增加index_params
+    },
+    "chromadb": {}
 }
 
 # TextSplitter配置项，如果你不明白其中的含义，就不要修改。
