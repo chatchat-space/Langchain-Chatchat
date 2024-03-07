@@ -1,23 +1,15 @@
-from server.pydantic_types import BaseModel, Field
+from langchain.agents import tool
 
-def calculate(a: float, b: float, operator: str) -> float:
-    if operator == "+":
-        return a + b
-    elif operator == "-":
-        return a - b
-    elif operator == "*":
-        return a * b
-    elif operator == "/":
-        if b != 0:
-            return a / b
-        else:
-            return float('inf')
-    elif operator == "^":
-        return a ** b
-    else:
-        raise ValueError("Unsupported operator")
 
-class CalculatorInput(BaseModel):
-    a: float = Field(description="first number")
-    b: float = Field(description="second number")
-    operator: str = Field(description="operator to use (e.g., +, -, *, /, ^)")
+@tool
+def calculate(text: str) -> float:
+    '''
+    Useful to answer questions about simple calculations.
+    translate user question to a math expression that can be evaluated by numexpr.
+    '''
+    import numexpr
+
+    try:
+        return str(numexpr.evaluate(text))
+    except Exception as e:
+        return f"wrong: {e}"
