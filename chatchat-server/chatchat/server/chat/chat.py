@@ -7,7 +7,7 @@ import uuid
 from fastapi import Body
 from sse_starlette.sse import EventSourceResponse
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
 
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
@@ -136,11 +136,17 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                           history=history,
                                           history_len=history_len,
                                           metadata=metadata)
+
+        _history = [History.from_data(h) for h in history]
+        chat_history = [h.to_msg_tuple() for h in _history]
+
+        history_message = convert_to_messages(chat_history)
+
         task = asyncio.create_task(wrap_done(
             full_chain.ainvoke(
                 {
                     "input": query,
-                    "chat_history": [],
+                    "chat_history": history_message,
                 }
             ), callback.done))
 
