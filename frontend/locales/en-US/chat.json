@@ -1,0 +1,120 @@
+{
+  "ModelSwitch": {
+    "title": "Model"
+  },
+  "agentDefaultMessage": "Hello, I'm **{{name}}**. You can start chatting with me right away, or go to [Agent Settings](/chat/settings#session={{id}}) to complete my information.",
+  "agentDefaultMessageWithSystemRole": "Hello, I'm **{{name}}**, {{systemRole}}. Let's start chatting!",
+  "backToBottom": "Back to bottom",
+  "clearCurrentMessages": "Clear current session messages",
+  "confirmClearCurrentMessages": "You are about to clear the current session messages. Once cleared, they cannot be retrieved. Please confirm your action.",
+  "confirmRemoveSessionItemAlert": "You are about to delete this agent. Once deleted, it cannot be retrieved. Please confirm your action.",
+  "defaultAgent": "Default Agent",
+  "defaultList": "Default List",
+  "defaultSession": "Default Agent",
+  "duplicateTitle": "{{title}} Copy",
+  "historyRange": "History Range",
+  "inbox": {
+    "defaultMessage": "Hello, I'm your virtual agent. You can ask me anything, and I'll do my best to answer you. If you need a more professional or customized agent, click on `+` to create a custom agent.",
+    "desc": "Activate the brain cluster and spark creative thinking. Your virtual agent is here to communicate with you about everything.",
+    "title": "Just Chat"
+  },
+  "input": {
+    "more": "more",
+    "onlyAdd": "Only add message",
+    "send": "Send",
+    "sendWithCmdEnter": "Press {{meta}} + Enter to send",
+    "sendWithEnter": "Press Enter to send",
+    "stop": "Stop",
+    "warp": "New Line"
+  },
+  "messageAction": {
+    "delAndRegenerate": "Delete and Regenerate",
+    "regenerate": "Regenerate"
+  },
+  "newAgent": "New Agent",
+  "noDescription": "No description available",
+  "pin": "Pin",
+  "pinOff": "Unpin",
+  "regenerate": "Regenerate",
+  "roleAndArchive": "Role and Archive",
+  "searchAgentPlaceholder": "Search agents and conversations...",
+  "sendPlaceholder": "Type your message here...",
+  "sessionGroup": {
+    "config": "Group Management",
+    "confirmRemoveGroupAlert": "This group is about to be deleted. After deletion, the agents in this group will be moved to the default list. Please confirm your operation.",
+    "createGroup": "Add New Group",
+    "createSuccess": "Created successfully",
+    "inputPlaceholder": "Please enter group name...",
+    "moveGroup": "Move to Group",
+    "newGroup": "New Group",
+    "rename": "Rename Group",
+    "renameSuccess": "Renamed successfully",
+    "tooLong": "Group name length should be between 1-20"
+  },
+  "shareModal": {
+    "download": "Download Screenshot",
+    "imageType": "Image Format",
+    "screenshot": "Screenshot",
+    "settings": "Export Settings",
+    "shareToShareGPT": "Generate ShareGPT Sharing Link",
+    "withBackground": "Include Background Image",
+    "withFooter": "Include Footer",
+    "withPluginInfo": "Include Plugin Information",
+    "withSystemRole": "Include Agent Role Setting"
+  },
+  "stt": {
+    "action": "Voice Input",
+    "loading": "Recognizing...",
+    "prettifying": "Polishing..."
+  },
+  "temp": "Temporary",
+  "tokenDetails": {
+    "chats": "Chat Messages",
+    "rest": "Remaining",
+    "systemRole": "Role Settings",
+    "tools": "Plugin Settings",
+    "total": "Total Available",
+    "used": "Total Used"
+  },
+  "tokenTag": {
+    "overload": "Exceeded Limit",
+    "remained": "Remaining",
+    "used": "Used"
+  },
+  "topic": {
+    "actions": {
+      "autoRename": "Auto Rename",
+      "duplicate": "Create Copy",
+      "export": "Export Topic"
+    },
+    "confirmRemoveAll": "You are about to delete all topics. Once deleted, they cannot be recovered. Please proceed with caution.",
+    "confirmRemoveTopic": "You are about to delete this topic. Once deleted, it cannot be recovered. Please proceed with caution.",
+    "confirmRemoveUnstarred": "You are about to delete unstarred topics. Once deleted, they cannot be recovered. Please proceed with caution.",
+    "defaultTitle": "Default Topic",
+    "guide": {
+      "desc": "Click the button on the left to save the current session as a historical topic and start a new session.",
+      "title": "Topic List"
+    },
+    "openNewTopic": "Open New Topic",
+    "removeAll": "Remove All Topics",
+    "removeUnstarred": "Remove Unstarred Topics",
+    "saveCurrentMessages": "Save current session as topic",
+    "searchPlaceholder": "Search topics...",
+    "title": "Topic List"
+  },
+  "translate": {
+    "action": "Translate",
+    "clear": "Clear Translation"
+  },
+  "tts": {
+    "action": "Text-to-Speech",
+    "clear": "Clear Speech"
+  },
+  "updateAgent": "Update Agent Information",
+  "upload": {
+    "actionTooltip": "Upload Image",
+    "disabled": "The current model does not support visual recognition. Please switch models to use this feature.",
+    "dragDesc": "Drag and drop files here, support uploading multiple images. Hold down Shift to send images directly.",
+    "dragTitle": "Upload Image"
+  }
+}
