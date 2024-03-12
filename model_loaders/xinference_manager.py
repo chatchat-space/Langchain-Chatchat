@@ -190,7 +190,9 @@ if os.path.isdir(cache_dir):
             meta = json.load(fp)
         revision = meta.get("revision", meta.get("model_revision"))
     except:
-        revision = ""
+        revision = None
+    if revision is None:
+        revision = "None"
     if cur_spec.model_revision and cur_spec.model_revision != revision:
         revision += " (与 XF 内置版本号不一致)"
     else:
@@ -218,6 +220,7 @@ if cols[0].button("设置模型缓存"):
             os.rmdir(cache_dir)
         if model_type == "LLM":
             cache_methods[model_type](cur_family, cur_spec, model_quant)
+            xf_llm.llm_family._generate_meta_file(meta_file, cur_family, cur_spec, model_quant)
         else:
             cache_methods[model_type](cur_spec)
         if cur_spec.model_revision:
