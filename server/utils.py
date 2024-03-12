@@ -8,7 +8,7 @@ from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
                      MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed,ProcessPoolExecutor
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 import httpx
@@ -545,6 +545,24 @@ def run_in_thread_pool(
     '''
     tasks = []
     with ThreadPoolExecutor() as pool:
+        for kwargs in params:
+            thread = pool.submit(func, **kwargs)
+            tasks.append(thread)
+
+        for obj in as_completed(tasks):
+            yield obj.result()
+
+def run_in_process_pool(
+        func: Callable,
+        params: List[Dict] = [],
+) -> Generator:
+    '''
+    在进程池中批量运行任务，并将运行结果以生成器的形式返回。
+    任务函数请全部使用关键字参数。
+    '''
+    tasks = []
+
+    with ProcessPoolExecutor() as pool:
         for kwargs in params:
             thread = pool.submit(func, **kwargs)
             tasks.append(thread)
