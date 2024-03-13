@@ -6,9 +6,9 @@ from chromadb.api.types import (GetResult, QueryResult)
 from langchain.docstore.document import Document
 
 from configs import SCORE_THRESHOLD
-from server.knowledge_base.kb_service.base import (EmbeddingsFunAdapter,
-                                                   KBService, SupportedVSType)
+from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
+from server.utils import get_Embeddings
 
 
 def _get_result_to_documents(get_result: GetResult) -> List[Document]:
@@ -75,7 +75,7 @@ class ChromaKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD) -> List[
         Tuple[Document, float]]:
-        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         query_result: QueryResult = self.collection.query(query_embeddings=embeddings, n_results=top_k)
         return _results_to_docs_and_scores(query_result)

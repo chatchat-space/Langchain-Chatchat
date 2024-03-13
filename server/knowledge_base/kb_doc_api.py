@@ -1,7 +1,7 @@
 import os
 import urllib
 from fastapi import File, Form, Body, Query, UploadFile
-from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
+from configs import (DEFAULT_VS_TYPE, DEFAULT_EMBEDDING_MODEL,
                      VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
                      CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
                      logger, log_verbose, )
@@ -10,7 +10,6 @@ from server.knowledge_base.utils import (validate_kb_name, list_files_from_folde
                                          files2docs_in_thread, KnowledgeFile)
 from fastapi.responses import FileResponse
 from sse_starlette import EventSourceResponse
-from pydantic import Json
 import json
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_file_repository import get_file_detail
@@ -43,22 +42,6 @@ def search_docs(
                 if "vector" in d.metadata:
                     del d.metadata["vector"]
     return data
-
-
-def update_docs_by_id(
-        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
-        docs: Dict[str, Document] = Body(..., description="要更新的文档内容，形如：{id: Document, ...}")
-) -> BaseResponse:
-    '''
-    按照文档 ID 更新文档内容
-    '''
-    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
-    if kb is None:
-        return BaseResponse(code=500, msg=f"指定的知识库 {knowledge_base_name} 不存在")
-    if kb.update_doc_by_ids(docs=docs):
-        return BaseResponse(msg=f"文档更新成功")
-    else:
-        return BaseResponse(msg=f"文档更新失败")
 
 
 def list_files(
@@ -139,8 +122,7 @@ def upload_docs(
         chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
-        docs: Json = Form({}, description="自定义的docs，需要转为json字符串",
-                          examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+        docs: str = Form("", description="自定义的docs，需要转为json字符串"),
         not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
 ) -> BaseResponse:
     """
@@ -153,6 +135,7 @@ def upload_docs(
     if kb is None:
         return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
 
+    docs = json.loads(docs) if docs else {}
     failed_files = {}
     file_names = list(docs.keys())
 
@@ -241,8 +224,7 @@ def update_docs(
         chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
         override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
-        docs: Json = Body({}, description="自定义的docs，需要转为json字符串",
-                          examples=[{"test.txt": [Document(page_content="custom doc")]}]),
+        docs: str = Body("", description="自定义的docs，需要转为json字符串"),
         not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ) -> BaseResponse:
     """
@@ -257,6 +239,7 @@ def update_docs(
 
     failed_files = {}
     kb_files = []
+    docs = json.loads(docs) if docs else {}
 
     # 生成需要加载docs的文件列表
     for file_name in file_names:
@@ -351,7 +334,7 @@ def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body(DEFAULT_VS_TYPE),
-        embed_model: str = Body(EMBEDDING_MODEL),
+        embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
         chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),

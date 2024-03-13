@@ -3,7 +3,7 @@ from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name
 from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_base_repository import list_kbs_from_db
-from configs import EMBEDDING_MODEL, logger, log_verbose
+from configs import DEFAULT_EMBEDDING_MODEL, logger, log_verbose
 from fastapi import Body
 
 
@@ -14,7 +14,7 @@ def list_kbs():
 
 def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
               vector_store_type: str = Body("faiss"),
-              embed_model: str = Body(EMBEDDING_MODEL),
+              embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
               ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):

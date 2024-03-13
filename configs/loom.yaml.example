@@ -1,0 +1,26 @@
+log_path: "logs"
+log_level: "DEBUG"
+
+api_server:
+  host: "127.0.0.1"
+  port: 8000
+
+publish_server:
+  host: "127.0.0.1"
+  port: 8001
+
+subscribe_server:
+  host: "127.0.0.1"
+  port: 8002
+
+openai_plugins_folder:
+  - "openai_plugins"
+openai_plugins_load_folder:
+  - "configs"
+
+
+plugins:
+  - openai:
+      name: "openai"
+  - zhipuai:
+      name: "zhipuai"

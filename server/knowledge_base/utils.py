@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 from configs import (
     KB_ROOT_PATH,
     CHUNK_SIZE,
@@ -7,19 +8,19 @@ from configs import (
     logger,
     log_verbose,
     text_splitter_dict,
-    LLM_MODELS,
     TEXT_SPLITTER_NAME,
 )
 import importlib
-from text_splitter import zh_title_enhance as func_zh_title_enhance
-import langchain.document_loaders
+from server.text_splitter import zh_title_enhance as func_zh_title_enhance
+import langchain_community.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
 from server.utils import run_in_thread_pool, run_in_process_pool
 import json
-from typing import List, Union,Dict, Tuple, Generator
+from typing import List, Union, Dict, Tuple, Generator
 import chardet
+from langchain_community.document_loaders import JSONLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -123,27 +124,26 @@ def _new_json_dumps(obj, **kwargs):
     kwargs["ensure_ascii"] = False
     return _origin_json_dumps(obj, **kwargs)
 
+
 if json.dumps is not _new_json_dumps:
     _origin_json_dumps = json.dumps
     json.dumps = _new_json_dumps
 
 
-class JSONLinesLoader(langchain.document_loaders.JSONLoader):
-    '''
-    行式 Json 加载器，要求文件扩展名为 .jsonl
-    '''
+class JSONLinesLoader(JSONLoader):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._json_lines = True
 
 
-langchain.document_loaders.JSONLinesLoader = JSONLinesLoader
+langchain_community.document_loaders.JSONLinesLoader = JSONLinesLoader
 
 
 def get_LoaderClass(file_extension):
     for LoaderClass, extensions in LOADER_DICT.items():
         if file_extension in extensions:
             return LoaderClass
+
 
 def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     '''
@@ -153,15 +153,15 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     try:
         if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
                            "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
-            document_loaders_module = importlib.import_module('document_loaders')
+            document_loaders_module = importlib.import_module("server.document_loaders")
         else:
-            document_loaders_module = importlib.import_module('langchain.document_loaders')
+            document_loaders_module = importlib.import_module("langchain_community.document_loaders")
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
         msg = f"为文件{file_path}查找加载器{loader_name}时出错：{e}"
         logger.error(f'{e.__class__.__name__}: {msg}',
                      exc_info=e if log_verbose else None)
-        document_loaders_module = importlib.import_module('langchain.document_loaders')
+        document_loaders_module = importlib.import_module("langchain_community.document_loaders")
         DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
 
     if loader_name == "UnstructuredFileLoader":
@@ -186,11 +186,11 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     return loader
 
 
+@lru_cache()
 def make_text_splitter(
-        splitter_name: str = TEXT_SPLITTER_NAME,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        llm_model: str = LLM_MODELS[0],
+        splitter_name,
+        chunk_size,
+        chunk_overlap
 ):
     """
     根据参数获取特定的分词器
@@ -204,10 +204,10 @@ def make_text_splitter(
         else:
 
             try:  ## 优先使用用户自定义的text_splitter
-                text_splitter_module = importlib.import_module('text_splitter')
+                text_splitter_module = importlib.import_module("server.text_splitter")
                 TextSplitter = getattr(text_splitter_module, splitter_name)
             except:  ## 否则使用langchain的text_splitter
-                text_splitter_module = importlib.import_module('langchain.text_splitter')
+                text_splitter_module = importlib.import_module("langchain.text_splitter")
                 TextSplitter = getattr(text_splitter_module, splitter_name)
 
             if text_splitter_dict[splitter_name]["source"] == "tiktoken":  ## 从tiktoken加载
@@ -225,10 +225,6 @@ def make_text_splitter(
                         chunk_overlap=chunk_overlap
                     )
             elif text_splitter_dict[splitter_name]["source"] == "huggingface":  ## 从huggingface加载
-                if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "":
-                    config = get_model_worker_config(llm_model)
-                    text_splitter_dict[splitter_name]["tokenizer_name_or_path"] = \
-                        config.get("model_path")
 
                 if text_splitter_dict[splitter_name]["tokenizer_name_or_path"] == "gpt2":
                     from transformers import GPT2TokenizerFast

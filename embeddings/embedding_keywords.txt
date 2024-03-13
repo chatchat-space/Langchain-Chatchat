@@ -1,3 +1,0 @@
-Langchain-Chatchat
-数据科学与大数据技术
-人工智能与先进计算

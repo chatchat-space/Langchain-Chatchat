@@ -1,4 +1,8 @@
 import streamlit as st
+from streamlit_antd_components.utils import ParseItems
+
+# from webui_pages.loom_view_client import build_providers_embedding_plugins_name, find_menu_items_by_index, \
+#     set_llm_select, set_embed_select, get_select_embed_endpoint
 from webui_pages.utils import *
 from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
@@ -6,12 +10,15 @@ import pandas as pd
 from server.knowledge_base.utils import get_file_path, LOADER_DICT
 from server.knowledge_base.kb_service.base import get_kb_details, get_kb_file_details
 from typing import Literal, Dict, Tuple
-from configs import (kbs_config,
-                     EMBEDDING_MODEL, DEFAULT_VS_TYPE,
+from configs import (kbs_config, DEFAULT_VS_TYPE,
                      CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
-from server.utils import list_embed_models, list_online_embed_models
+from server.utils import get_config_models
+
+import streamlit_antd_components as sac
 import os
 import time
+
+# SENTENCE_SIZE = 100
 
 cell_renderer = JsCode("""function(params) {if(params.value==true){return '✓'}else{return '×'}}""")
 
@@ -96,27 +103,23 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 key="kb_info",
             )
 
-            cols = st.columns(2)
+            col0, _ = st.columns([3, 1])
 
             vs_types = list(kbs_config.keys())
-            vs_type = cols[0].selectbox(
+            vs_type = col0.selectbox(
                 "向量库类型",
                 vs_types,
                 index=vs_types.index(DEFAULT_VS_TYPE),
                 key="vs_type",
             )
 
-            if is_lite:
-                embed_models = list_online_embed_models()
-            else:
-                embed_models = list_embed_models() + list_online_embed_models()
-
-            embed_model = cols[1].selectbox(
-                "Embedding 模型",
-                embed_models,
-                index=embed_models.index(EMBEDDING_MODEL),
-                key="embed_model",
-            )
+            col1, _ = st.columns([3, 1])
+            with col1:
+                embed_models = list(get_config_models(model_type="embed"))
+                index = 0
+                if DEFAULT_EMBEDDING_MODEL in embed_models:
+                    index = embed_models.index(DEFAULT_EMBEDDING_MODEL)
+                embed_model = st.selectbox("Embeddings模型", embed_models, index)
 
             submit_create_kb = st.form_submit_button(
                 "新建",
@@ -129,6 +132,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 st.error(f"知识库名称不能为空！")
             elif kb_name in kb_list:
                 st.error(f"名为 {kb_name} 的知识库已经存在！")
+            elif embed_model is None:
+                st.error(f"请选择Embedding模型！")
             else:
                 ret = api.create_knowledge_base(
                     knowledge_base_name=kb_name,

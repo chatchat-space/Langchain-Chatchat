@@ -1,9 +1,0 @@
-streamlit==1.30.0
-streamlit-option-menu==0.3.12
-streamlit-antd-components==0.3.1
-streamlit-chatbox==1.1.11
-streamlit-modal==0.1.0
-streamlit-aggrid==0.3.4.post3
-httpx==0.26.0
-httpx_sse==0.4.0
-watchdog==3.0.0

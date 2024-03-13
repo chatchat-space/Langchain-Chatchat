@@ -1,12 +1,6 @@
-import pydantic
-from pydantic import BaseModel
-from typing import List
 from fastapi import FastAPI
 from pathlib import Path
 import asyncio
-from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
-                     MODEL_PATH, MODEL_ROOT_PATH, ONLINE_LLM_MODEL, logger, log_verbose,
-                     FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 import sys
 import multiprocessing as mp
@@ -14,22 +8,25 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
 import httpx
+import openai
 from typing import (
-    TYPE_CHECKING,
-    Literal,
     Optional,
     Callable,
     Generator,
     Dict,
+    List,
     Any,
     Awaitable,
     Union,
-    Tuple
+    Tuple,
+    Literal,
 )
 import logging
-import torch
 
-from server.minx_chat_openai import MinxChatOpenAI
+from configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
+                     DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE)
+from server.pydantic_types import BaseModel, Field
+from server.minx_chat_openai import MinxChatOpenAI # TODO: still used?
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -46,31 +43,113 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         event.set()
 
 
+def get_config_platforms() -> Dict[str, Dict]:
+    import importlib
+    from configs import model_config
+    importlib.reload(model_config)
+
+    return {m["platform_name"]: m for m in model_config.MODEL_PLATFORMS}
+
+
+def get_config_models(
+    model_name: str = None,
+    model_type: Literal["llm", "embed", "image", "multimodal"] = None,
+    platform_name: str = None,
+) -> Dict[str, Dict]:
+    '''
+    获取配置的模型列表，返回值为:
+    {model_name: {
+        "platform_name": xx,
+        "platform_type": xx,
+        "model_type": xx,
+        "model_name": xx,
+        "api_base_url": xx,
+        "api_key": xx,
+        "api_proxy": xx,
+    }}
+    '''
+    import importlib
+    from configs import model_config
+    importlib.reload(model_config)
+
+    result = {}
+    for m in model_config.MODEL_PLATFORMS:
+        if platform_name is not None and platform_name != m.get("platform_name"):
+            continue
+        if model_type is not None and f"{model_type}_models" not in m:
+            continue
+
+        if model_type is None:
+            model_types = ["llm_models", "embed_models", "image_models", "multimodal_models"]
+        else:
+            model_types = [f"{model_type}_models"]
+
+        for m_type in model_types:
+            for m_name in m.get(m_type, []):
+                if model_name is None or model_name == m_name:
+                    result[m_name] = {
+                        "platform_name": m.get("platform_name"),
+                        "platform_type": m.get("platform_type"),
+                        "model_type": m_type.split("_")[0],
+                        "model_name": m_name,
+                        "api_base_url": m.get("api_base_url"),
+                        "api_key": m.get("api_key"),
+                        "api_proxy": m.get("api_proxy"),
+                    }
+    return result
+
+
+def get_model_info(model_name: str = None, platform_name: str = None, multiple: bool = False) -> Dict:
+    '''
+    获取配置的模型信息，主要是 api_base_url, api_key
+    如果指定 multiple=True，则返回所有重名模型；否则仅返回第一个
+    '''
+    result = get_config_models(model_name=model_name, platform_name=platform_name)
+    if len(result) > 0:
+        if multiple:
+            return result
+        else:
+            return list(result.values())[0]
+    else:
+        return {}
+
+
 def get_ChatOpenAI(
-        model_name: str,
-        temperature: float,
+        model_name: str = DEFAULT_LLM_MODEL,
+        temperature: float = TEMPERATURE,
         max_tokens: int = None,
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> ChatOpenAI:
-    config = get_model_worker_config(model_name)
-    if model_name == "openai-api":
-        model_name = config.get("model_name")
-    ChatOpenAI._get_encoding_model = MinxChatOpenAI.get_encoding_model
-    model = ChatOpenAI(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        openai_proxy=config.get("openai_proxy"),
-        **kwargs
+    model_info = get_model_info(model_name)
+    params = dict(
+            streaming=streaming,
+            verbose=verbose,
+            callbacks=callbacks,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
     )
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        model = ChatOpenAI(**params)
+    except Exception as e:
+        logger.error(f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True)
+        model = None
     return model
 
 
@@ -82,31 +161,113 @@ def get_OpenAI(
         echo: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> OpenAI:
-    config = get_model_worker_config(model_name)
-    if model_name == "openai-api":
-        model_name = config.get("model_name")
-    model = OpenAI(
+    # TODO: 从API获取模型信息
+    model_info = get_model_info(model_name)
+    params = dict(
         streaming=streaming,
         verbose=verbose,
         callbacks=callbacks,
-        openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        openai_proxy=config.get("openai_proxy"),
         echo=echo,
         **kwargs
     )
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        model = OpenAI(**params)
+    except Exception as e:
+        logger.error(f"failed to create OpenAI for model: {model_name}.", exc_info=True)
+        model = None
     return model
 
 
+def get_Embeddings(
+    embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    local_wrap: bool = False, # use local wrapped api
+) -> Embeddings:
+    from langchain_community.embeddings.openai import OpenAIEmbeddings
+    from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
+
+    model_info = get_model_info(model_name=embed_model)
+    params = dict(model=embed_model)
+    try:
+        if local_wrap:
+            params.update(
+                openai_api_base = f"{api_address()}/v1",
+                openai_api_key = "EMPTY",
+            )
+        else:
+            params.update(
+                openai_api_base=model_info.get("api_base_url"),
+                openai_api_key=model_info.get("api_key"),
+                openai_proxy=model_info.get("api_proxy"),
+            )
+        if model_info.get("platform_type") == "openai":
+            return OpenAIEmbeddings(**params)
+        else:
+            return LocalAIEmbeddings(**params)
+    except Exception as e:
+        logger.error(f"failed to create Embeddings for model: {embed_model}.", exc_info=True)
+
+
+def get_OpenAIClient(
+        platform_name: str=None,
+        model_name: str=None,
+        is_async: bool=True,
+) -> Union[openai.Client, openai.AsyncClient]:
+    '''
+    construct an openai Client for specified platform or model
+    '''
+    if platform_name is None:
+        platform_name = get_model_info(model_name=model_name, platform_name=platform_name)["platform_name"]
+    platform_info = get_config_platforms().get(platform_name)
+    assert platform_info, f"cannot find configured platform: {platform_name}"
+    params = {
+        "base_url": platform_info.get("api_base_url"),
+        "api_key": platform_info.get("api_key"),
+    }
+    httpx_params = {}
+    if api_proxy := platform_info.get("api_proxy"):
+        httpx_params = {
+            "proxies": api_proxy,
+            "transport": httpx.HTTPTransport(local_address="0.0.0.0"),
+        }
+
+    if is_async:
+        if httpx_params:
+            params["http_client"] = httpx.AsyncClient(**httpx_params)
+        return openai.AsyncClient(**params)
+    else:
+        if httpx_params:
+            params["http_client"] = httpx.Client(**httpx_params)
+        return openai.Client(**params)
+
+
+class MsgType:
+    TEXT = 1
+    IMAGE = 2
+    AUDIO = 3
+    VIDEO = 4
+
+
 class BaseResponse(BaseModel):
-    code: int = pydantic.Field(200, description="API status code")
-    msg: str = pydantic.Field("success", description="API status message")
-    data: Any = pydantic.Field(None, description="API data")
+    code: int = Field(200, description="API status code")
+    msg: str = Field("success", description="API status message")
+    data: Any = Field(None, description="API data")
 
     class Config:
         schema_extra = {
@@ -118,7 +279,7 @@ class BaseResponse(BaseModel):
 
 
 class ListResponse(BaseResponse):
-    data: List[str] = pydantic.Field(..., description="List of names")
+    data: List[str] = Field(..., description="List of names")
 
     class Config:
         schema_extra = {
@@ -131,10 +292,10 @@ class ListResponse(BaseResponse):
 
 
 class ChatMessage(BaseModel):
-    question: str = pydantic.Field(..., description="Question text")
-    response: str = pydantic.Field(..., description="Response text")
-    history: List[List[str]] = pydantic.Field(..., description="History text")
-    source_documents: List[str] = pydantic.Field(
+    question: str = Field(..., description="Question text")
+    response: str = Field(..., description="Response text")
+    history: List[List[str]] = Field(..., description="History text")
+    source_documents: List[str] = Field(
         ..., description="List of source documents and their scores"
     )
 
@@ -163,26 +324,6 @@ class ChatMessage(BaseModel):
                 ],
             }
         }
-
-
-def torch_gc():
-    try:
-        import torch
-        if torch.cuda.is_available():
-            # with torch.cuda.device(DEVICE):
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
-        elif torch.backends.mps.is_available():
-            try:
-                from torch.mps import empty_cache
-                empty_cache()
-            except Exception as e:
-                msg = ("如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，"
-                       "以支持及时清理 torch 产生的内存占用。")
-                logger.error(f'{e.__class__.__name__}: {msg}',
-                             exc_info=e if log_verbose else None)
-    except Exception:
-        ...
 
 
 def run_async(cor):
@@ -224,7 +365,7 @@ def iter_over_async(ait, loop=None):
 
 def MakeFastAPIOffline(
         app: FastAPI,
-        static_dir=Path(__file__).parent / "static",
+        static_dir=Path(__file__).parent / "api_server" / "static",
         static_url="/static-offline-docs",
         docs_url: Optional[str] = "/docs",
         redoc_url: Optional[str] = "/redoc",
@@ -301,127 +442,40 @@ def MakeFastAPIOffline(
 
 
 # 从model_config中获取模型信息
+# TODO: 移出模型加载后，这些功能需要删除或改变实现
 
-def list_embed_models() -> List[str]:
-    '''
-    get names of configured embedding models
-    '''
-    return list(MODEL_PATH["embed_model"])
-
-
-def list_config_llm_models() -> Dict[str, Dict]:
-    '''
-    get configured llm models with different types.
-    return {config_type: {model_name: config}, ...}
-    '''
-    workers = FSCHAT_MODEL_WORKERS.copy()
-    workers.pop("default", None)
-
-    return {
-        "local": MODEL_PATH["llm_model"].copy(),
-        "online": ONLINE_LLM_MODEL.copy(),
-        "worker": workers,
-    }
+# def list_embed_models() -> List[str]:
+#     '''
+#     get names of configured embedding models
+#     '''
+#     return list(MODEL_PATH["embed_model"])
 
 
-def get_model_path(model_name: str, type: str = None) -> Optional[str]:
-    if type in MODEL_PATH:
-        paths = MODEL_PATH[type]
-    else:
-        paths = {}
-        for v in MODEL_PATH.values():
-            paths.update(v)
+# def get_model_path(model_name: str, type: str = None) -> Optional[str]:
+#     if type in MODEL_PATH:
+#         paths = MODEL_PATH[type]
+#     else:
+#         paths = {}
+#         for v in MODEL_PATH.values():
+#             paths.update(v)
 
-    if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
-        path = Path(path_str)
-        if path.is_dir():  # 任意绝对路径
-            return str(path)
+#     if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
+#         path = Path(path_str)
+#         if path.is_dir():  # 任意绝对路径
+#             return str(path)
 
-        root_path = Path(MODEL_ROOT_PATH)
-        if root_path.is_dir():
-            path = root_path / model_name
-            if path.is_dir():  # use key, {MODEL_ROOT_PATH}/chatglm-6b
-                return str(path)
-            path = root_path / path_str
-            if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
-                return str(path)
-            path = root_path / path_str.split("/")[-1]
-            if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
-                return str(path)
-        return path_str  # THUDM/chatglm06b
-
-
-# 从server_config中获取服务信息
-
-def get_model_worker_config(model_name: str = None) -> dict:
-    '''
-    加载model worker的配置项。
-    优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
-    '''
-    from configs.model_config import ONLINE_LLM_MODEL, MODEL_PATH
-    from configs.server_config import FSCHAT_MODEL_WORKERS
-    from server import model_workers
-
-    config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    config.update(ONLINE_LLM_MODEL.get(model_name, {}).copy())
-    config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}).copy())
-
-    if model_name in ONLINE_LLM_MODEL:
-        config["online_api"] = True
-        if provider := config.get("provider"):
-            try:
-                config["worker_class"] = getattr(model_workers, provider)
-            except Exception as e:
-                msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
-                logger.error(f'{e.__class__.__name__}: {msg}',
-                             exc_info=e if log_verbose else None)
-    # 本地模型
-    if model_name in MODEL_PATH["llm_model"]:
-        path = get_model_path(model_name)
-        config["model_path"] = path
-        if path and os.path.isdir(path):
-            config["model_path_exists"] = True
-        config["device"] = llm_device(config.get("device"))
-    return config
-
-
-def get_all_model_worker_configs() -> dict:
-    result = {}
-    model_names = set(FSCHAT_MODEL_WORKERS.keys())
-    for name in model_names:
-        if name != "default":
-            result[name] = get_model_worker_config(name)
-    return result
-
-
-def fschat_controller_address() -> str:
-    from configs.server_config import FSCHAT_CONTROLLER
-
-    host = FSCHAT_CONTROLLER["host"]
-    if host == "0.0.0.0":
-        host = "127.0.0.1"
-    port = FSCHAT_CONTROLLER["port"]
-    return f"http://{host}:{port}"
-
-
-def fschat_model_worker_address(model_name: str = LLM_MODELS[0]) -> str:
-    if model := get_model_worker_config(model_name):
-        host = model["host"]
-        if host == "0.0.0.0":
-            host = "127.0.0.1"
-        port = model["port"]
-        return f"http://{host}:{port}"
-    return ""
-
-
-def fschat_openai_api_address() -> str:
-    from configs.server_config import FSCHAT_OPENAI_API
-
-    host = FSCHAT_OPENAI_API["host"]
-    if host == "0.0.0.0":
-        host = "127.0.0.1"
-    port = FSCHAT_OPENAI_API["port"]
-    return f"http://{host}:{port}/v1"
+#         root_path = Path(MODEL_ROOT_PATH)
+#         if root_path.is_dir():
+#             path = root_path / model_name
+#             if path.is_dir():  # use key, {MODEL_ROOT_PATH}/chatglm-6b
+#                 return str(path)
+#             path = root_path / path_str
+#             if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
+#                 return str(path)
+#             path = root_path / path_str.split("/")[-1]
+#             if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
+#                 return str(path)
+#         return path_str  # THUDM/chatglm06b
 
 
 def api_address() -> str:
@@ -445,18 +499,19 @@ def webui_address() -> str:
 def get_prompt_template(type: str, name: str) -> Optional[str]:
     '''
     从prompt_config中加载模板内容
-    type: "llm_chat","agent_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
+    type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
     '''
 
     from configs import prompt_config
     import importlib
-    importlib.reload(prompt_config)
-    return prompt_config.PROMPT_TEMPLATES[type].get(name)
+    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
+    return prompt_config.PROMPT_TEMPLATES.get(type, {}).get(name)
 
 
 def set_httpx_config(
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
         proxy: Union[str, Dict] = None,
+        unused_proxies: List[str] = [],
 ):
     '''
     设置httpx默认timeout。httpx默认timeout是5秒，在请求LLM回答时不够用。
@@ -494,11 +549,7 @@ def set_httpx_config(
         "http://localhost",
     ]
     # do not use proxy for user deployed fastchat servers
-    for x in [
-        fschat_controller_address(),
-        fschat_model_worker_address(),
-        fschat_openai_api_address(),
-    ]:
+    for x in unused_proxies:
         host = ":".join(x.split(":")[:2])
         if host not in no_proxy:
             no_proxy.append(host)
@@ -509,32 +560,6 @@ def set_httpx_config(
 
     import urllib.request
     urllib.request.getproxies = _get_proxies
-
-
-def detect_device() -> Literal["cuda", "mps", "cpu"]:
-    try:
-        import torch
-        if torch.cuda.is_available():
-            return "cuda"
-        if torch.backends.mps.is_available():
-            return "mps"
-    except:
-        pass
-    return "cpu"
-
-
-def llm_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
-    device = device or LLM_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
-        device = detect_device()
-    return device
-
-
-def embedding_device(device: str = None) -> Literal["cuda", "mps", "cpu"]:
-    device = device or EMBEDDING_DEVICE
-    if device not in ["cuda", "mps", "cpu"]:
-        device = detect_device()
-    return device
 
 
 def run_in_thread_pool(
@@ -584,6 +609,7 @@ def get_httpx_client(
         use_async: bool = False,
         proxies: Union[str, Dict] = None,
         timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        unused_proxies: List[str] = [],
         **kwargs,
 ) -> Union[httpx.Client, httpx.AsyncClient]:
     '''
@@ -595,11 +621,7 @@ def get_httpx_client(
         "all://localhost": None,
     }
     # do not use proxy for user deployed fastchat servers
-    for x in [
-        fschat_controller_address(),
-        fschat_model_worker_address(),
-        fschat_openai_api_address(),
-    ]:
+    for x in unused_proxies:
         host = ":".join(x.split(":")[:2])
         default_proxies.update({host: None})
 
@@ -644,56 +666,11 @@ def get_server_configs() -> Dict:
     '''
     获取configs中的原始配置项，供前端使用
     '''
-    from configs.kb_config import (
-        DEFAULT_KNOWLEDGE_BASE,
-        DEFAULT_SEARCH_ENGINE,
-        DEFAULT_VS_TYPE,
-        CHUNK_SIZE,
-        OVERLAP_SIZE,
-        SCORE_THRESHOLD,
-        VECTOR_SEARCH_TOP_K,
-        SEARCH_ENGINE_TOP_K,
-        ZH_TITLE_ENHANCE,
-        text_splitter_dict,
-        TEXT_SPLITTER_NAME,
-    )
-    from configs.model_config import (
-        LLM_MODELS,
-        HISTORY_LEN,
-        TEMPERATURE,
-    )
-    from configs.prompt_config import PROMPT_TEMPLATES
-
     _custom = {
-        "controller_address": fschat_controller_address(),
-        "openai_api_address": fschat_openai_api_address(),
         "api_address": api_address(),
     }
 
     return {**{k: v for k, v in locals().items() if k[0] != "_"}, **_custom}
-
-
-def list_online_embed_models() -> List[str]:
-    from server import model_workers
-
-    ret = []
-    for k, v in list_config_llm_models()["online"].items():
-        if provider := v.get("provider"):
-            worker_class = getattr(model_workers, provider, None)
-            if worker_class is not None and worker_class.can_embedding():
-                ret.append(k)
-    return ret
-
-
-def load_local_embeddings(model: str = None, device: str = embedding_device()):
-    '''
-    从缓存中加载embeddings，可以避免多线程时竞争加载。
-    '''
-    from server.knowledge_base.kb_cache.base import embeddings_pool
-    from configs import EMBEDDING_MODEL
-
-    model = model or EMBEDDING_MODEL
-    return embeddings_pool.load_embeddings(model=model, device=device)
 
 
 def get_temp_dir(id: str = None) -> Tuple[str, str]:
@@ -701,12 +678,14 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     创建一个临时目录，返回（路径，文件夹名称）
     '''
     from configs.basic_config import BASE_TEMP_DIR
-    import tempfile
+    import uuid
 
     if id is not None:  # 如果指定的临时目录已存在，直接返回
         path = os.path.join(BASE_TEMP_DIR, id)
         if os.path.isdir(path):
             return path, id
 
-    path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
-    return path, os.path.basename(path)
+    id = uuid.uuid4().hex
+    path = os.path.join(BASE_TEMP_DIR, id)
+    os.mkdir(path)
+    return path, id

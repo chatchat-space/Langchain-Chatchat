@@ -8,8 +8,7 @@ from typing import Optional, Sequence
 from langchain_core.documents import Document
 from langchain.callbacks.manager import Callbacks
 from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
-from llama_index.bridge.pydantic import Field, PrivateAttr
-
+from pydantic import Field, PrivateAttr
 
 class LangchainReranker(BaseDocumentCompressor):
     """Document compressor that uses `Cohere Rerank API`."""
@@ -109,14 +108,13 @@ if __name__ == "__main__":
                          RERANKER_MODEL,
                          RERANKER_MAX_LENGTH,
                          MODEL_PATH)
-    from server.utils import embedding_device
 
     if USE_RERANKER:
         reranker_model_path = MODEL_PATH["reranker"].get(RERANKER_MODEL, "BAAI/bge-reranker-large")
         print("-----------------model path------------------")
         print(reranker_model_path)
         reranker_model = LangchainReranker(top_n=3,
-                                           device=embedding_device(),
+                                           device="cpu",
                                            max_length=RERANKER_MAX_LENGTH,
                                            model_name_or_path=reranker_model_path
                                            )
