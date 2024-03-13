@@ -3,7 +3,7 @@ import urllib
 from fastapi import File, Form, Body, Query, UploadFile
 from configs import (DEFAULT_VS_TYPE, EMBEDDING_MODEL,
                      VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                     CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
+                     CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE, QA_SPLITTER_NAME,
                      logger, log_verbose, )
 from server.utils import BaseResponse, ListResponse, run_in_thread_pool
 from server.knowledge_base.utils import (validate_kb_name, list_files_from_folder, get_file_path,
@@ -142,6 +142,7 @@ def upload_docs(
         docs: Json = Form({}, description="自定义的docs，需要转为json字符串",
                           examples=[{"test.txt": [Document(page_content="custom doc")]}]),
         not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
+        is_QA: bool = Form(False, description="是否是问答类型知识库，如果是，会启用自定义的QA分词器"),
 ) -> BaseResponse:
     """
     API接口：上传文件，并/或向量化
@@ -176,6 +177,7 @@ def upload_docs(
             zh_title_enhance=zh_title_enhance,
             docs=docs,
             not_refresh_vs_cache=True,
+            is_QA=is_QA
         )
         failed_files.update(result.data["failed_files"])
         if not not_refresh_vs_cache:
@@ -244,6 +246,7 @@ def update_docs(
         docs: Json = Body({}, description="自定义的docs，需要转为json字符串",
                           examples=[{"test.txt": [Document(page_content="custom doc")]}]),
         not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
+        is_QA: bool = Body(False, description="是否是问答类型知识库，如果是，会启用自定义的QA分词器")
 ) -> BaseResponse:
     """
     更新知识库文档
@@ -266,7 +269,10 @@ def update_docs(
             continue
         if file_name not in docs:
             try:
-                kb_files.append(KnowledgeFile(filename=file_name, knowledge_base_name=knowledge_base_name))
+                if is_QA:
+                    kb_files.append(KnowledgeFile(filename=file_name, knowledge_base_name=knowledge_base_name, text_splitter_name=QA_SPLITTER_NAME))
+                else:
+                    kb_files.append(KnowledgeFile(filename=file_name, knowledge_base_name=knowledge_base_name))
             except Exception as e:
                 msg = f"加载文档 {file_name} 时出错：{e}"
                 logger.error(f'{e.__class__.__name__}: {msg}',

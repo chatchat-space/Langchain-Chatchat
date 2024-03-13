@@ -120,6 +120,10 @@ text_splitter_dict = {
         "source": "huggingface",   # 选择tiktoken则使用openai的方法
         "tokenizer_name_or_path": "",
     },
+    "QATextSplitter": {
+        "source": "huggingface",   # 选择tiktoken则使用openai的方法
+        "tokenizer_name_or_path": "",
+    },
     "SpacyTextSplitter": {
         "source": "huggingface",
         "tokenizer_name_or_path": "gpt2",
@@ -141,6 +145,8 @@ text_splitter_dict = {
 
 # TEXT_SPLITTER 名称
 TEXT_SPLITTER_NAME = "ChineseRecursiveTextSplitter"
+# QA_SPLITTER 名称
+QA_SPLITTER_NAME = "QATextSplitter"
 
 # Embedding模型定制词语的词表文件
 EMBEDDING_KEYWORD_FILE = "embedding_keywords.txt"

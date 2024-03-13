@@ -148,6 +148,25 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                                  [i for ls in LOADER_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
+        
+        is_QA = st.toggle("是否是问答类型文档", 
+                          value=False,
+                          help='''
+                            问答类型文档会启用问答分词器，文件暂时仅支持json，具体请参考如下格式：
+                            ```json
+                            [
+                                {
+                                    "问题": "问题1",
+                                    "答案": "答案1"
+                                },
+                                {
+                                    "问题": "问题2",
+                                    "答案": "答案2"
+                                }
+                            ]
+                            ```
+                          ''')
+        
         kb_info = st.text_area("请输入知识库介绍:", value=st.session_state["selected_kb_info"], max_chars=None,
                                key=None,
                                help=None, on_change=None, args=None, kwargs=None)
@@ -156,17 +175,20 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             st.session_state["selected_kb_info"] = kb_info
             api.update_kb_info(kb, kb_info)
 
-        # with st.sidebar:
-        with st.expander(
-                "文件处理配置",
-                expanded=True,
-        ):
-            cols = st.columns(3)
-            chunk_size = cols[0].number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
-            chunk_overlap = cols[1].number_input("相邻文本重合长度：", 0, chunk_size, OVERLAP_SIZE)
-            cols[2].write("")
-            cols[2].write("")
-            zh_title_enhance = cols[2].checkbox("开启中文标题加强", ZH_TITLE_ENHANCE)
+        chunk_size = CHUNK_SIZE
+        chunk_overlap = OVERLAP_SIZE
+        zh_title_enhance = ZH_TITLE_ENHANCE
+        if not is_QA: 
+            with st.expander(
+                    "文件处理配置",
+                    expanded=True,
+            ):
+                cols = st.columns(3)
+                chunk_size = cols[0].number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
+                chunk_overlap = cols[1].number_input("相邻文本重合长度：", 0, chunk_size, OVERLAP_SIZE)
+                cols[2].write("")
+                cols[2].write("")
+                zh_title_enhance = cols[2].checkbox("开启中文标题加强", ZH_TITLE_ENHANCE)
 
         if st.button(
                 "添加文件到知识库",
@@ -178,7 +200,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                                      override=True,
                                      chunk_size=chunk_size,
                                      chunk_overlap=chunk_overlap,
-                                     zh_title_enhance=zh_title_enhance)
+                                     zh_title_enhance=zh_title_enhance,
+                                     is_QA=is_QA)
             if msg := check_success_msg(ret):
                 st.toast(msg, icon="✔")
             elif msg := check_error_msg(ret):
