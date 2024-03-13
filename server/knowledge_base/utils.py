@@ -16,7 +16,7 @@ import langchain_community.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from pathlib import Path
-from server.utils import run_in_thread_pool
+from server.utils import run_in_thread_pool, run_in_process_pool
 import json
 from typing import List, Union, Dict, Tuple, Generator
 import chardet
@@ -353,6 +353,16 @@ class KnowledgeFile:
         return os.path.getsize(self.filepath)
 
 
+def files2docs_in_thread_file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
+    try:
+        return True, (file.kb_name, file.filename, file.file2text(**kwargs))
+    except Exception as e:
+        msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
+        return False, (file.kb_name, file.filename, msg)
+
+
 def files2docs_in_thread(
         files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
         chunk_size: int = CHUNK_SIZE,
@@ -365,14 +375,6 @@ def files2docs_in_thread(
     生成器返回值为 status, (kb_name, file_name, docs | error)
     '''
 
-    def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
-        try:
-            return True, (file.kb_name, file.filename, file.file2text(**kwargs))
-        except Exception as e:
-            msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
-            logger.error(f'{e.__class__.__name__}: {msg}',
-                         exc_info=e if log_verbose else None)
-            return False, (file.kb_name, file.filename, msg)
 
     kwargs_list = []
     for i, file in enumerate(files):
@@ -395,7 +397,7 @@ def files2docs_in_thread(
         except Exception as e:
             yield False, (kb_name, filename, str(e))
 
-    for result in run_in_thread_pool(func=file2docs, params=kwargs_list):
+    for result in run_in_process_pool(func=files2docs_in_thread_file2docs, params=kwargs_list):
         yield result
 
 
