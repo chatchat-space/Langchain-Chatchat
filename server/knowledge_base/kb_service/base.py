@@ -95,8 +95,6 @@ class KBService(ABC):
         """
         if docs:
             custom_docs = True
-            for doc in docs:
-                doc.metadata.setdefault("source", kb_file.filename)
         else:
             docs = kb_file.file2text()
             custom_docs = False
@@ -105,6 +103,7 @@ class KBService(ABC):
             # 将 metadata["source"] 改为相对路径
             for doc in docs:
                 try:
+                    doc.metadata.setdefault("source", kb_file.filename)
                     source = doc.metadata.get("source", "")
                     if os.path.isabs(source):
                         rel_path = Path(source).relative_to(self.doc_path)
