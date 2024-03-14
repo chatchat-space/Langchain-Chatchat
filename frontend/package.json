@@ -1,6 +1,6 @@
 {
   "name": "@Chatchat/chat",
-  "version": "0.133.1",
+  "version": "3.0.0",
   "description": "Lobe Chat - an open-source, high-performance chatbot framework that supports speech synthesis, multimodal, and extensible Function Call plugin system. Supports one-click free deployment of your private ChatGPT/LLM web application.",
   "keywords": [
     "framework",
@@ -14,13 +14,13 @@
     "tts",
     "stt"
   ],
-  "homepage": "https://github.com/lobehub/lobe-chat",
+  "homepage": "https://github.com/chatchat-space/Langchain-Chatchat",
   "bugs": {
-    "url": "https://github.com/lobehub/lobe-chat/issues/new/choose"
+    "url": "https://github.com/chatchat-space/Langchain-Chatchat/issues/new/choose"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lobehub/lobe-chat.git"
+    "url": "https://github.com/chatchat-space/Langchain-Chatchat.git"
   },
   "license": "MIT",
   "author": "Chatchat <i@chatchat.com>",
