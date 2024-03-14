@@ -127,6 +127,9 @@ FSCHAT_MODEL_WORKERS = {
     "gemini-api": {
         "port": 21010,
     },
+    "claude-api": {
+        "port": 21011,
+    },
 }
 
 FSCHAT_CONTROLLER = {
