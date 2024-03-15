@@ -449,7 +449,7 @@ def run_webui(started_event: mp.Event = None, run_mode: str = None):
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
-    cmd = ["streamlit", "run", "login.py",
+    cmd = ["streamlit", "run", "webui.py",
             "--server.address", host,
             "--server.port", str(port),
             "--theme.base", "light",
