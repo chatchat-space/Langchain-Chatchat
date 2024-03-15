@@ -53,6 +53,15 @@ ONLINE_LLM_MODEL = {
         "provider": "ChatGLMWorker",
     },
 
+    # 增加使用本地 Ollama 模型
+    "ollama": {
+        "model_name": "qwen:7b",
+        "api_base_url": "http://127.0.0.1:11434",
+        "version": "Qwen1.5",
+        "max_tokens": 2048,
+        "provider": "OllamaWorker",
+    },
+
     # 具体注册及api key获取请前往 https://api.minimax.chat/
     "minimax-api": {
         "group_id": "",

@@ -98,6 +98,9 @@ FSCHAT_MODEL_WORKERS = {
     },
 
     # 以下配置可以不用修改，在model_config中设置启动的模型
+    "ollama": {
+        "port": 31001,
+    },
     "zhipu-api": {
         "port": 21001,
     },
