@@ -58,6 +58,7 @@ class ApiModelParams(ApiConfigParams):
     模型配置参数
     '''
     model_name: Optional[str] = None
+    api_url: Optional[str] = None
     version: Optional[str] = None
     version_url: Optional[str] = None
     api_version: Optional[str] = None # for azure

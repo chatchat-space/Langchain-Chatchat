@@ -39,7 +39,7 @@ class OllamaWorker(ApiModelWorker):
         }
   #      url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
   #      url = "http://127.0.0.1:11434/v1/chat/completions"
-        url = params.api_base_url + "/v1/chat/completions"
+        url = params.api_url + "/chat/completions"
 
         response = requests.post(url, headers=headers, json=data)
         # for chunk in response.iter_lines():
