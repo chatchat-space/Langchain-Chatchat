@@ -62,7 +62,7 @@ class FilteredCSVLoader(CSVLoader):
             content = []
             for col in self.columns_to_read:
                 if col in row:
-                    content.append(str(row[col]))
+                    content.append(f'{col}:{str(row[col])}')
                 else:
                     raise ValueError(f"Column '{self.columns_to_read[0]}' not found in CSV file.")
             content = '\n'.join(content)
