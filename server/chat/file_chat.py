@@ -1,5 +1,6 @@
 from fastapi import Body, File, Form, UploadFile
-from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
+
 from configs import (VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
 from server.utils import (wrap_done, get_ChatOpenAI, get_Embeddings,
                           BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)

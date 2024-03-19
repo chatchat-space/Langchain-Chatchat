@@ -1,0 +1,20 @@
+{%- if not add_generation_prompt is defined -%}
+    {%- set add_generation_prompt = false -%}
+{%- endif -%}
+{%- if messages[0]['role'] == 'system' -%}
+    {%- set loop_messages = messages[1:] -%}
+    {%- set system_message = messages[0]['content'] -%}
+{%- else -%}
+    {%- set loop_messages = messages -%}
+    {%- set system_message = 'You are an AI assistant whose name is InternLM (书生·浦语).\\n- InternLM (书生·浦语) is a conversational language model that is developed by Shanghai AI Laboratory (上海人工智能实验室). It is designed to be helpful, honest, and harmless.\\n- InternLM (书生·浦语) can understand and communicate fluently in the language chosen by the user such as English and 中文.' -%}
+{%- endif -%}
+{{ '<s>' + '[UNUSED_TOKEN_146]' + 'system' + '\\n' + system_message + '[UNUSED_TOKEN_145]' + '\\n' }}
+{%- for message in loop_messages -%}
+    {{ '[UNUSED_TOKEN_146]' + message['role'] + '\\n' + message['content']}}
+    {%- if (loop.last and add_generation_prompt) or not loop.last -%}
+        {{ '[UNUSED_TOKEN_145]' + '\\n' }}
+    {%- endif -%}
+{%- endfor -%}
+{%- if add_generation_prompt and messages[-1]['role'] != 'assistant' -%}
+    {{ '[UNUSED_TOKEN_146]' + 'assistant' + '\\n' }}
+{%- endif -%}

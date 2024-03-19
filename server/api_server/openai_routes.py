@@ -88,6 +88,7 @@ async def list_models() -> List:
     tasks = [asyncio.create_task(task(name, config)) for name, config in get_config_platforms().items()]
     for t in asyncio.as_completed(tasks):
         result += (await t)
+
     return result
 
 
