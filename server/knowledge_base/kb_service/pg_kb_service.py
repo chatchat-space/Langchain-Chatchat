@@ -71,11 +71,10 @@ class PGKBService(KBService):
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with Session(PGKBService.engine) as session:
-            filepath = kb_file.filepath.replace('\\', '\\\\')
             session.execute(
                 text(
                     ''' DELETE FROM langchain_pg_embedding WHERE cmetadata::jsonb @> '{"source": "filepath"}'::jsonb;'''.replace(
-                        "filepath", filepath)))
+                        "filepath", self.get_relative_source_path(kb_file.filepath))))
             session.commit()
 
     def do_clear_vs(self):
