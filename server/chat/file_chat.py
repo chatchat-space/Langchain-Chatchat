@@ -1,5 +1,6 @@
 from fastapi import Body, File, Form, UploadFile
 from sse_starlette.sse import EventSourceResponse
+
 from configs import (VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
 from server.utils import (wrap_done, get_ChatOpenAI, get_Embeddings,
                           BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)
@@ -124,6 +125,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             temperature=temperature,
             max_tokens=max_tokens,
             callbacks=[callback],
+            local_wrap=True,
         )
         embed_func = get_Embeddings()
         embeddings = await embed_func.aembed_query(query)

@@ -7,12 +7,7 @@ KB_info_str = '\n'.join([f"{key}: {value}" for key, value in KB_INFO.items()])
 template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 all_tools = [
-    StructuredTool.from_function(
-        func=calculate,
-        name="calculate",
-        description="Useful for when you need to answer questions about simple calculations",
-        args_schema=CalculatorInput,
-    ),
+    calculate,
     StructuredTool.from_function(
         func=arxiv,
         name="arxiv",

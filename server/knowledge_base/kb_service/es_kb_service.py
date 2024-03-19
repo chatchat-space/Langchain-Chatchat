@@ -2,13 +2,13 @@ from typing import List
 import os
 import shutil
 from langchain.schema import Document
-from langchain.vectorstores.elasticsearch import ElasticsearchStore
+from langchain_community.vectorstores.elasticsearch import ElasticsearchStore, ApproxRetrievalStrategy
 from server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from server.knowledge_base.utils import KnowledgeFile
 from server.utils import get_Embeddings
-from elasticsearch import Elasticsearch,BadRequestError
-from configs import logger
-from configs import kbs_config
+from elasticsearch import Elasticsearch, BadRequestError
+from configs import logger, kbs_config, KB_ROOT_PATH
+
 
 class ESKBService(KBService):
 
@@ -53,27 +53,24 @@ class ESKBService(KBService):
 
         try:
             # langchain ES 连接、创建索引
-            if self.user != "" and self.password != "":
-                self.db_init = ElasticsearchStore(
+            params = dict(
                 es_url=f"http://{self.IP}:{self.PORT}",
                 index_name=self.index_name,
                 query_field="context",
                 vector_query_field="dense_vector",
                 embedding=self.embeddings_model,
-                es_user=self.user,
-                es_password=self.password
+                strategy=ApproxRetrievalStrategy(),
+                es_params={
+                    "timeout": 60,
+                }
             )
-            else:
-                logger.warning("ES未配置用户名和密码")
-                self.db_init = ElasticsearchStore(
-                    es_url=f"http://{self.IP}:{self.PORT}",
-                    index_name=self.index_name,
-                    query_field="context",
-                    vector_query_field="dense_vector",
-                    embedding=self.embeddings_model,
+            if self.user != "" and self.password != "":
+                params.update(
+                    es_user=self.user,
+                    es_password=self.password
                 )
+            self.db = ElasticsearchStore(**params)
         except ConnectionError:
-            print("### 初始化 Elasticsearch 失败！")
             logger.error("### 初始化 Elasticsearch 失败！")
             raise ConnectionError
         except Exception as e:
@@ -81,7 +78,7 @@ class ESKBService(KBService):
             raise e
         try:
             # 尝试通过db_init创建索引
-            self.db_init._create_index_if_not_exists(
+            self.db._create_index_if_not_exists(
                                                      index_name=self.index_name,
                                                      dims_length=self.dims_length
                                                      )
@@ -89,8 +86,6 @@ class ESKBService(KBService):
             logger.error("创建索引失败...")
             logger.error(e)
             # raise e
-
-
 
     @staticmethod
     def get_kb_path(knowledge_base_name: str):
@@ -110,46 +105,9 @@ class ESKBService(KBService):
     def vs_type(self) -> str:
         return SupportedVSType.ES
 
-    def _load_es(self, docs, embed_model):
-        # 将docs写入到ES中
-        try:
-            # 连接 + 同时写入文档
-            if self.user != "" and self.password != "":
-                self.db = ElasticsearchStore.from_documents(
-                        documents=docs,
-                        embedding=embed_model,
-                        es_url= f"http://{self.IP}:{self.PORT}",
-                        index_name=self.index_name,
-                        distance_strategy="COSINE",
-                        query_field="context",
-                        vector_query_field="dense_vector",
-                        verify_certs=False,
-                        es_user=self.user,
-                        es_password=self.password
-                    )
-            else:
-                self.db = ElasticsearchStore.from_documents(
-                        documents=docs,
-                        embedding=embed_model,
-                        es_url= f"http://{self.IP}:{self.PORT}",
-                        index_name=self.index_name,
-                        distance_strategy="COSINE",
-                        query_field="context",
-                        vector_query_field="dense_vector",
-                        verify_certs=False)
-        except ConnectionError as ce:
-            print(ce)
-            print("连接到 Elasticsearch 失败！")
-            logger.error("连接到 Elasticsearch 失败！")
-        except Exception as e:
-            logger.error(f"Error 发生 : {e}")
-            print(e)
-
-
-
     def do_search(self, query:str, top_k: int, score_threshold: float):
         # 文本相似性检索
-        docs = self.db_init.similarity_search_with_score(query=query,
+        docs = self.db.similarity_search_with_score(query=query,
                                          k=top_k)
         return docs
 
@@ -200,15 +158,17 @@ class ESKBService(KBService):
                     except Exception as e:
                         logger.error(f"ES Docs Delete Error! {e}")
 
-            # self.db_init.delete(ids=delete_list)
+            # self.db.delete(ids=delete_list)
             #self.es_client_python.indices.refresh(index=self.index_name)
 
 
     def do_add_doc(self, docs: List[Document], **kwargs):
         '''向知识库添加文件'''
+
         print(f"server.knowledge_base.kb_service.es_kb_service.do_add_doc 输入的docs参数长度为:{len(docs)}")
         print("*"*100)
-        self._load_es(docs=docs, embed_model=self.embeddings_model)
+        
+        self.db.add_documents(documents=docs)
         # 获取 id 和 source , 格式：[{"id": str, "metadata": dict}, ...]
         print("写入数据成功.")
         print("*"*100)
@@ -229,8 +189,8 @@ class ESKBService(KBService):
             search_results = self.es_client_python.search(body=query, size=50)
             if len(search_results["hits"]["hits"]) == 0:
                 raise ValueError("召回元素个数为0")
-        info_docs = [{"id":hit["_id"], "metadata": hit["_source"]["metadata"]} for hit in search_results["hits"]["hits"]]
-        return info_docs
+            info_docs = [{"id":hit["_id"], "metadata": hit["_source"]["metadata"]} for hit in search_results["hits"]["hits"]]
+            return info_docs
 
 
     def do_clear_vs(self):

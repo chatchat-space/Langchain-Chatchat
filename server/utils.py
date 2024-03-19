@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from pathlib import Path
 import asyncio
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
+import multiprocessing as mp
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+
 from langchain.embeddings.base import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
@@ -120,7 +123,7 @@ def get_ChatOpenAI(
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = True, # use local wrapped api
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
@@ -160,7 +163,7 @@ def get_OpenAI(
         echo: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = True, # use local wrapped api
+        local_wrap: bool = False, # use local wrapped api
         **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
@@ -196,7 +199,7 @@ def get_OpenAI(
 
 def get_Embeddings(
     embed_model: str = DEFAULT_EMBEDDING_MODEL,
-    local_wrap: bool = True, # use local wrapped api
+    local_wrap: bool = False, # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
     from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
@@ -572,11 +575,36 @@ def run_in_thread_pool(
     tasks = []
     with ThreadPoolExecutor() as pool:
         for kwargs in params:
-            thread = pool.submit(func, **kwargs)
-            tasks.append(thread)
+            tasks.append(pool.submit(func, **kwargs))
 
         for obj in as_completed(tasks):
-            yield obj.result()
+            try:
+                yield obj.result()
+            except Exception as e:
+                logger.error(f"error in sub thread: {e}", exc_info=True)
+
+
+def run_in_process_pool(
+        func: Callable,
+        params: List[Dict] = [],
+) -> Generator:
+    '''
+    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+    '''
+    tasks = []
+    max_workers = None
+    if sys.platform.startswith("win"):
+        max_workers = min(mp.cpu_count(), 60) # max_workers should not exceed 60 on windows
+    with ProcessPoolExecutor(max_workers=max_workers) as pool:
+        for kwargs in params:
+            tasks.append(pool.submit(func, **kwargs))
+
+        for obj in as_completed(tasks):
+            try:
+                yield obj.result()
+            except Exception as e:
+                logger.error(f"error in sub process: {e}", exc_info=True)
 
 
 def get_httpx_client(

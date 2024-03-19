@@ -14,13 +14,14 @@ import importlib
 from server.text_splitter import zh_title_enhance as func_zh_title_enhance
 import langchain_community.document_loaders
 from langchain.docstore.document import Document
-from langchain.text_splitter import TextSplitter
+from langchain.text_splitter import TextSplitter, MarkdownHeaderTextSplitter
 from pathlib import Path
-from server.utils import run_in_thread_pool
+
+from server.utils import run_in_thread_pool, run_in_process_pool
 import json
 from typing import List, Union, Dict, Tuple, Generator
 import chardet
-from langchain_community.document_loaders import JSONLoader
+from langchain_community.document_loaders import JSONLoader, TextLoader
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -86,8 +87,9 @@ def list_files_from_folder(kb_name: str):
     return result
 
 
-LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
+LOADER_DICT = {"UnstructuredHTMLLoader": ['.html', '.htm'],
                "MHTMLLoader": ['.mhtml'],
+               "TextLoader": ['.md'],
                "UnstructuredMarkdownLoader": ['.md'],
                "JSONLoader": [".json"],
                "JSONLinesLoader": [".jsonl"],
@@ -199,8 +201,8 @@ def make_text_splitter(
     try:
         if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
             headers_to_split_on = text_splitter_dict[splitter_name]['headers_to_split_on']
-            text_splitter = langchain.text_splitter.MarkdownHeaderTextSplitter(
-                headers_to_split_on=headers_to_split_on)
+            text_splitter = MarkdownHeaderTextSplitter(
+                headers_to_split_on=headers_to_split_on, strip_headers=False)
         else:
 
             try:  ## 优先使用用户自定义的text_splitter
@@ -292,7 +294,11 @@ class KnowledgeFile:
             loader = get_loader(loader_name=self.document_loader_name,
                                 file_path=self.filepath,
                                 loader_kwargs=self.loader_kwargs)
-            self.docs = loader.load()
+            if isinstance(loader, TextLoader):
+                loader.encoding = "utf8"
+                self.docs = loader.load()
+            else:
+                self.docs = loader.load()
         return self.docs
 
     def docs2texts(
@@ -353,6 +359,16 @@ class KnowledgeFile:
         return os.path.getsize(self.filepath)
 
 
+def files2docs_in_thread_file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
+    try:
+        return True, (file.kb_name, file.filename, file.file2text(**kwargs))
+    except Exception as e:
+        msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
+        logger.error(f'{e.__class__.__name__}: {msg}',
+                     exc_info=e if log_verbose else None)
+        return False, (file.kb_name, file.filename, msg)
+
+
 def files2docs_in_thread(
         files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
         chunk_size: int = CHUNK_SIZE,
@@ -364,15 +380,6 @@ def files2docs_in_thread(
     如果传入参数是Tuple，形式为(filename, kb_name)
     生成器返回值为 status, (kb_name, file_name, docs | error)
     '''
-
-    def file2docs(*, file: KnowledgeFile, **kwargs) -> Tuple[bool, Tuple[str, str, List[Document]]]:
-        try:
-            return True, (file.kb_name, file.filename, file.file2text(**kwargs))
-        except Exception as e:
-            msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
-            logger.error(f'{e.__class__.__name__}: {msg}',
-                         exc_info=e if log_verbose else None)
-            return False, (file.kb_name, file.filename, msg)
 
     kwargs_list = []
     for i, file in enumerate(files):
@@ -395,7 +402,7 @@ def files2docs_in_thread(
         except Exception as e:
             yield False, (kb_name, filename, str(e))
 
-    for result in run_in_thread_pool(func=file2docs, params=kwargs_list):
+    for result in run_in_process_pool(func=files2docs_in_thread_file2docs, params=kwargs_list):
         yield result
 
 
@@ -403,8 +410,12 @@ if __name__ == "__main__":
     from pprint import pprint
 
     kb_file = KnowledgeFile(
-        filename="/home/congyin/Code/Project_Langchain_0814/Langchain-Chatchat/knowledge_base/csv1/content/gm.csv",
+        filename="E:\\LLM\\Data\\Test.md",
         knowledge_base_name="samples")
     # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
+    kb_file.text_splitter_name = "MarkdownHeaderTextSplitter"
     docs = kb_file.file2docs()
     # pprint(docs[-1])
+    texts = kb_file.docs2texts(docs)
+    for text in texts:
+        print(text)
