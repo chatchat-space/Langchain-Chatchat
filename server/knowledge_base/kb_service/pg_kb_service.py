@@ -28,9 +28,9 @@ class PGKBService(KBService):
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         with Session(PGKBService.engine) as session:
-            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE collection_id in :ids")
+            stmt = text("SELECT document, cmetadata FROM langchain_pg_embedding WHERE custom_id = ANY(:ids)")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
-                       session.execute(stmt, {'ids': ids}).fetchall()]
+                      session.execute(stmt, {'ids': ids}).fetchall()]
             return results
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         return super().del_doc_by_ids(ids)
@@ -71,11 +71,10 @@ class PGKBService(KBService):
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with Session(PGKBService.engine) as session:
-            filepath = kb_file.filepath.replace('\\', '\\\\')
             session.execute(
                 text(
                     ''' DELETE FROM langchain_pg_embedding WHERE cmetadata::jsonb @> '{"source": "filepath"}'::jsonb;'''.replace(
-                        "filepath", filepath)))
+                        "filepath", self.get_relative_source_path(kb_file.filepath))))
             session.commit()
 
     def do_clear_vs(self):
