@@ -54,7 +54,8 @@ class MilvusKBService(KBService):
                              collection_name=self.kb_name,
                              connection_args=kbs_config.get("milvus"),
                              index_params=kbs_config.get("milvus_kwargs")["index_params"],
-                             search_params=kbs_config.get("milvus_kwargs")["search_params"]
+                             search_params=kbs_config.get("milvus_kwargs")["search_params"],
+                             auto_id=True
                              )
 
     def do_init(self):
