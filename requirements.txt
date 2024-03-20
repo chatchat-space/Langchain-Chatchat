@@ -31,6 +31,7 @@ pandas~=2.1.4
 pydantic==1.10.14
 httpx[brotli,http2,socks]>=0.25.2
 python-multipart==0.0.9
+
 # optional document loaders
 
 # rapidocr_paddle[gpu]>=1.3.0.post5
@@ -54,4 +55,3 @@ streamlit-antd-components==0.3.1
 streamlit-chatbox==1.1.11
 streamlit-modal==0.1.0
 streamlit-aggrid==0.3.4.post3
-

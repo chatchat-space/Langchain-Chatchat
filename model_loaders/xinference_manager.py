@@ -191,8 +191,10 @@ if os.path.isdir(cache_dir):
         revision = meta.get("revision", meta.get("model_revision"))
     except:
         revision = None
+
     if revision is None:
         revision = "None"
+
     if cur_spec.model_revision and cur_spec.model_revision != revision:
         revision += " (与 XF 内置版本号不一致)"
     else:
