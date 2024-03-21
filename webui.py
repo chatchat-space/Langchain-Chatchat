@@ -3,7 +3,6 @@ from webui_pages.utils import *
 from streamlit_option_menu import option_menu
 from webui_pages.dialogue.dialogue import dialogue_page, chat_box
 from webui_pages.knowledge_base.knowledge_base import knowledge_base_page
-from streamlit_login_auth_ui.widgets import __login__
 import os
 import sys
 from configs import VERSION

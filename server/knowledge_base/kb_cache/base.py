@@ -132,6 +132,11 @@ class EmbeddingsPool(CachePool):
                     embeddings = OpenAIEmbeddings(model=model,
                                                   openai_api_key=get_model_path(model),
                                                   chunk_size=CHUNK_SIZE)
+              elif model == "embed-multilingual-light-v3.0":  # cohere embedding api
+                    from langchain_community.embeddings import CohereEmbeddings
+                    embeddings = CohereEmbeddings(model=model,
+                                                  cohere_api_key=get_model_path(model)
+                                                  )
                 elif 'bge-' in model:
                     from langchain.embeddings import HuggingFaceBgeEmbeddings
                     if 'zh' in model:
