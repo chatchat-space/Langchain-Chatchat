@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from model_providers.core.entities.model_entities import ModelStatus, ModelWithProviderEntity, SimpleModelProviderEntity
 from model_providers.core.entities.provider_entities import CustomConfiguration, SystemConfiguration, SystemConfigurationStatus
-# from model_providers.core.helper import encrypter
+from model_providers.core.helper import encrypter
 from model_providers.core.helper.model_provider_cache import ProviderCredentialsCache, ProviderCredentialsCacheType
 from model_providers.core.model_runtime.entities.model_entities import FetchFrom, ModelType
 from model_providers.core.model_runtime.entities.provider_entities import (
@@ -22,7 +22,7 @@ from model_providers.core.model_runtime.model_providers import model_provider_fa
 from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
 from model_providers.core.model_runtime.model_providers.__base.model_provider import ModelProvider
 from model_providers.extensions.ext_database import db
-from model_providers.models.provider import Provider, ProviderModel, ProviderType, TenantPreferredModelProvider
+from models.provider import Provider, ProviderModel, ProviderType, TenantPreferredModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -172,20 +172,20 @@ class ProviderConfiguration(BaseModel):
                 original_credentials = {}
 
             # encrypt credentials
-            # for key, value in credentials.items():
-            #     if key in provider_credential_secret_variables:
-            #         # if send [__HIDDEN__] in secret input, it will be same as original value
-            #         if value == '[__HIDDEN__]' and key in original_credentials:
-            #             credentials[key] = encrypter.decrypt_token(self.tenant_id, original_credentials[key])
+            for key, value in credentials.items():
+                if key in provider_credential_secret_variables:
+                    # if send [__HIDDEN__] in secret input, it will be same as original value
+                    if value == '[__HIDDEN__]' and key in original_credentials:
+                        credentials[key] = encrypter.decrypt_token(self.tenant_id, original_credentials[key])
 
         credentials = model_provider_factory.provider_credentials_validate(
             self.provider.provider,
             credentials
         )
 
-        # for key, value in credentials.items():
-        #     if key in provider_credential_secret_variables:
-        #         credentials[key] = encrypter.encrypt_token(self.tenant_id, value)
+        for key, value in credentials.items():
+            if key in provider_credential_secret_variables:
+                credentials[key] = encrypter.encrypt_token(self.tenant_id, value)
 
         return provider_record, credentials
 
@@ -315,11 +315,11 @@ class ProviderConfiguration(BaseModel):
                 original_credentials = {}
 
             # decrypt credentials
-            # for key, value in credentials.items():
-            #     if key in provider_credential_secret_variables:
-            #         # if send [__HIDDEN__] in secret input, it will be same as original value
-            #         if value == '[__HIDDEN__]' and key in original_credentials:
-            #             credentials[key] = encrypter.decrypt_token(self.tenant_id, original_credentials[key])
+            for key, value in credentials.items():
+                if key in provider_credential_secret_variables:
+                    # if send [__HIDDEN__] in secret input, it will be same as original value
+                    if value == '[__HIDDEN__]' and key in original_credentials:
+                        credentials[key] = encrypter.decrypt_token(self.tenant_id, original_credentials[key])
 
         credentials = model_provider_factory.model_credentials_validate(
             provider=self.provider.provider,
@@ -328,9 +328,9 @@ class ProviderConfiguration(BaseModel):
             credentials=credentials
         )
 
-        # for key, value in credentials.items():
-        #     if key in provider_credential_secret_variables:
-        #         credentials[key] = encrypter.encrypt_token(self.tenant_id, value)
+        for key, value in credentials.items():
+            if key in provider_credential_secret_variables:
+                credentials[key] = encrypter.encrypt_token(self.tenant_id, value)
 
         return provider_model_record, credentials
 
@@ -481,10 +481,10 @@ class ProviderConfiguration(BaseModel):
         )
 
         # Obfuscate provider credentials
-        # copy_credentials = credentials.copy()
-        # for key, value in copy_credentials.items():
-        #     if key in credential_secret_variables:
-        #         copy_credentials[key] = encrypter.obfuscated_token(value)
+        copy_credentials = credentials.copy()
+        for key, value in copy_credentials.items():
+            if key in credential_secret_variables:
+                copy_credentials[key] = encrypter.obfuscated_token(value)
 
         return copy_credentials
 
