@@ -1,5 +1,6 @@
 import codecs
 import csv
+import json
 from collections import defaultdict
 
 from configs import logger
@@ -19,6 +20,12 @@ from server.utils import BaseResponse, get_ChatOpenAI, get_prompt_template, wrap
 
 QUERY_TEMPLATE = '当前字段的名称是：{column_name},字段取值是：{column_value}，告诉我其对应的标准字段名称和可能的取值，并通过如下格式返回结果\n' \
                  '标准字段名称:标准字段取值'
+QUERY_TEMPLATE_ALL_IN_ONE = '根据输入的字段名称和字段取值，根据要求的输出格式返回匹配的标准字段和一个可能的取值。 \n' \
+                          '输入格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值}] \n' \
+                          '输出格式(JSON)：{"answer": {"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
+                          '"standard_column_name": 输出字段名称, "standard_column_value": 输出字段取值}} \n' \
+                          '注意：1. 输入采用JSON的格式一次输入多个字段 2. 输出要求采用JSON的格式一次返回全部结果 \n' \
+                          '输入：{{input_question}}'
 
 
 def kb_chat_with_csv_file(
@@ -48,7 +55,7 @@ def kb_chat_with_csv_file(
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is None:
         logger.error(f'Can not find {knowledge_base_name}!')
-        # return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[None])
+        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[None])
 
     # Construct queries from CSV file
     input_data_dict = read_file(file)
@@ -56,27 +63,30 @@ def kb_chat_with_csv_file(
 
     # Call knowledge base chat one by one to get the answer
     responses = []
+    input_query = list()
     for col_name, col_val in input_data_dict.items():
         col_val_list = list(col_val)
-        query = QUERY_TEMPLATE.format(column_name=col_name, column_value=col_val_list[0])
-        result = knowledge_base_chat_iterator_mockup(
-            knowledge_base_name,
-            score_threshold,
-            query,
-            top_k,
-            max_tokens,
-            model_name,
-            prompt_name,
-            temperature,
-            request
-        )
-        responses.append(
-            {
-                'src_col_name': col_name,
-                'src_col_val': col_val_list,
-                'result': result
-            }
-        )
+        input_query.append({"src_column_name": col_name, "src_column_value": col_val_list[0]})
+
+    query = QUERY_TEMPLATE_ALL_IN_ONE.replace("{{input_question}}", json.dumps(input_query))
+    result = knowledge_base_chat_iterator(
+        knowledge_base_name,
+        score_threshold,
+        query,
+        top_k,
+        max_tokens,
+        model_name,
+        prompt_name,
+        temperature,
+        request
+    )
+    responses.append(
+        {
+            'src_col_name': col_name,
+            'src_col_val': col_val_list,
+            'result': result
+        }
+    )
     logger.info(f'Final data: {responses}')
     return BaseResponse(data=responses)
 
@@ -91,7 +101,6 @@ def read_file(file):
     csv_reader = csv.DictReader(codecs.iterdecode(file.file, 'utf-8'))
     data = defaultdict(set)
     for row in csv_reader:
-        logger.info(f'{row}')
         for k, v in row.items():
             data[k].add(v)
     file.file.close()
