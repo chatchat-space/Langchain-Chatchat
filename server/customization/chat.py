@@ -22,8 +22,8 @@ QUERY_TEMPLATE = '当前字段的名称是：{column_name},字段取值是：{co
                  '标准字段名称:标准字段取值'
 QUERY_TEMPLATE_ALL_IN_ONE = '根据输入的字段名称和字段取值，根据要求的输出格式返回匹配的标准字段和一个可能的取值。 \n' \
                           '输入格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值}] \n' \
-                          '输出格式(JSON)：{"answer": {"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
-                          '"standard_column_name": 输出字段名称, "standard_column_value": 输出字段取值}} \n' \
+                          '输出格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
+                          '"standard_column_name": 输出字段名称, "standard_column_value": 输出字段取值}] \n' \
                           '注意：1. 输入采用JSON的格式一次输入多个字段 2. 输出要求采用JSON的格式一次返回全部结果 \n' \
                           '输入：{{input_question}}'
 
