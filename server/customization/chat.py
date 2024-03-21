@@ -1,6 +1,7 @@
 import codecs
 import csv
 import json
+import re
 from collections import defaultdict
 
 from configs import logger
@@ -80,6 +81,9 @@ def kb_chat_with_csv_file(
         temperature,
         request
     )
+    match_obj = re.search(r'```json(.*)```', result['answer']['text'], re.S)
+    if match_obj:
+        result['answer_json'] = json.loads(match_obj.group(1))
     responses.append(
         {
             'src_col_name': col_name,
