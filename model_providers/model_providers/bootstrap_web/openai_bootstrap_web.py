@@ -40,7 +40,7 @@ async def create_stream_chat_completion(model_type_instance: LargeLanguageModel,
         response = model_type_instance.invoke(
             model=chat_request.model,
             credentials={
-                'openai_api_key': "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",
+                'openai_api_key': "sk-",
                 'minimax_api_key': os.environ.get('MINIMAX_API_KEY'),
                 'minimax_group_id': os.environ.get('MINIMAX_GROUP_ID')
             },
@@ -189,7 +189,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             response = model_type_instance.invoke(
                 model='gpt-4',
                 credentials={
-                    'openai_api_key': "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",
+                    'openai_api_key': "sk-",
                     'minimax_api_key': os.environ.get('MINIMAX_API_KEY'),
                     'minimax_group_id': os.environ.get('MINIMAX_GROUP_ID')
                 },
