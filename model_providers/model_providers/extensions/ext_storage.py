@@ -6,7 +6,6 @@ from typing import Union
 
 import boto3
 from botocore.exceptions import ClientError
-from flask import Flask
 
 
 class Storage:
@@ -16,21 +15,21 @@ class Storage:
         self.client = None
         self.folder = None
 
-    def init_app(self, app: Flask):
-        self.storage_type = app.config.get('STORAGE_TYPE')
+    def init_config(self, config: dict):
+        self.storage_type = config.get('STORAGE_TYPE')
         if self.storage_type == 's3':
-            self.bucket_name = app.config.get('S3_BUCKET_NAME')
+            self.bucket_name = config.get('S3_BUCKET_NAME')
             self.client = boto3.client(
                 's3',
-                aws_secret_access_key=app.config.get('S3_SECRET_KEY'),
-                aws_access_key_id=app.config.get('S3_ACCESS_KEY'),
-                endpoint_url=app.config.get('S3_ENDPOINT'),
-                region_name=app.config.get('S3_REGION')
+                aws_secret_access_key=config.get('S3_SECRET_KEY'),
+                aws_access_key_id=config.get('S3_ACCESS_KEY'),
+                endpoint_url=config.get('S3_ENDPOINT'),
+                region_name=config.get('S3_REGION')
             )
         else:
-            self.folder = app.config.get('STORAGE_LOCAL_PATH')
+            self.folder = config.get('STORAGE_LOCAL_PATH')
             if not os.path.isabs(self.folder):
-                self.folder = os.path.join(app.root_path, self.folder)
+                self.folder = os.path.join(config.get('root_path'), self.folder)
 
     def save(self, filename, data):
         if self.storage_type == 's3':
@@ -140,5 +139,3 @@ class Storage:
 storage = Storage()
 
 
-def init_app(app: Flask):
-    storage.init_app(app)

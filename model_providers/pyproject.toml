@@ -8,8 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 transformers = "4.31.0"
-Flask-SQLAlchemy = "3.0.5"
-SQLAlchemy = "1.4.28"
+fastapi = "^0.108"
+uvicorn = "0.25.0"
+sse-starlette = "^1.8.2"
 pyyaml = "6.0.1"
 pydantic = "1.10.14"
 redis = "4.5.4"
@@ -18,7 +19,6 @@ openai = "1.13.3"
 tiktoken = "0.5.2"
 pydub = "0.25.1"
 boto3 = "1.28.17"
-
 [tool.poetry.group.test.dependencies]
 # The only dependencies that should be added are
 # dependencies used for running tests (e.g., pytest, freezegun, response).

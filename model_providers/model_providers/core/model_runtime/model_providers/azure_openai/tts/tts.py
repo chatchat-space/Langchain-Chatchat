@@ -3,8 +3,7 @@ import copy
 from functools import reduce
 from io import BytesIO
 from typing import Optional
-
-from flask import Response, stream_with_context
+from fastapi.responses import StreamingResponse
 from openai import AzureOpenAI
 from pydub import AudioSegment
 
@@ -37,15 +36,16 @@ class AzureOpenAIText2SpeechModel(_CommonAzureOpenAI, TTSModel):
         :return: text translated to audio file
         """
         audio_type = self._get_model_audio_type(model, credentials)
-        if not voice or voice not in [d['value'] for d in self.get_tts_model_voices(model=model, credentials=credentials)]:
+        if not voice or voice not in [d['value'] for d in
+                                      self.get_tts_model_voices(model=model, credentials=credentials)]:
             voice = self._get_model_default_voice(model, credentials)
         if streaming:
-            return Response(stream_with_context(self._tts_invoke_streaming(model=model,
-                                                                           credentials=credentials,
-                                                                           content_text=content_text,
-                                                                           tenant_id=tenant_id,
-                                                                           voice=voice)),
-                            status=200, mimetype=f'audio/{audio_type}')
+            return StreamingResponse(self._tts_invoke_streaming(model=model,
+                                                                credentials=credentials,
+                                                                content_text=content_text,
+                                                                tenant_id=tenant_id,
+                                                                voice=voice), media_type='text/event-stream')
+
         else:
             return self._tts_invoke(model=model, credentials=credentials, content_text=content_text, voice=voice)
 
@@ -68,7 +68,7 @@ class AzureOpenAIText2SpeechModel(_CommonAzureOpenAI, TTSModel):
         except Exception as ex:
             raise CredentialsValidateFailedError(str(ex))
 
-    def _tts_invoke(self, model: str, credentials: dict, content_text: str, voice: str) -> Response:
+    def _tts_invoke(self, model: str, credentials: dict, content_text: str, voice: str) -> StreamingResponse:
         """
         _tts_invoke text2speech model
 
@@ -103,7 +103,7 @@ class AzureOpenAIText2SpeechModel(_CommonAzureOpenAI, TTSModel):
                 buffer: BytesIO = BytesIO()
                 combined_segment.export(buffer, format=audio_type)
                 buffer.seek(0)
-                return Response(buffer.read(), status=200, mimetype=f"audio/{audio_type}")
+                return StreamingResponse(buffer, media_type=f"audio/{audio_type}")
         except Exception as ex:
             raise InvokeBadRequestError(str(ex))
 
@@ -159,7 +159,6 @@ class AzureOpenAIText2SpeechModel(_CommonAzureOpenAI, TTSModel):
     def get_customizable_model_schema(self, model: str, credentials: dict) -> Optional[AIModelEntity]:
         ai_model_entity = self._get_ai_model_entity(credentials['base_model_name'], model)
         return ai_model_entity.entity
-
 
     @staticmethod
     def _get_ai_model_entity(base_model_name: str, model: str) -> AzureBaseModel:

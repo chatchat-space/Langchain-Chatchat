@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
-from model_providers.models.provider import ProviderQuotaType
+from models.provider import ProviderQuotaType
 
 
 class QuotaUnit(Enum):

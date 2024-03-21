@@ -3,10 +3,9 @@ from functools import reduce
 from io import BytesIO
 from typing import Optional
 
-from flask import Response, stream_with_context
 from openai import OpenAI
 from pydub import AudioSegment
-
+from fastapi.responses import StreamingResponse
 from model_providers.core.model_runtime.errors.invoke import InvokeBadRequestError
 from model_providers.core.model_runtime.errors.validate import CredentialsValidateFailedError
 from model_providers.core.model_runtime.model_providers.__base.tts_model import TTSModel
@@ -37,12 +36,11 @@ class OpenAIText2SpeechModel(_CommonOpenAI, TTSModel):
         if not voice or voice not in [d['value'] for d in self.get_tts_model_voices(model=model, credentials=credentials)]:
             voice = self._get_model_default_voice(model, credentials)
         if streaming:
-            return Response(stream_with_context(self._tts_invoke_streaming(model=model,
-                                                                           credentials=credentials,
-                                                                           content_text=content_text,
-                                                                           tenant_id=tenant_id,
-                                                                           voice=voice)),
-                            status=200, mimetype=f'audio/{audio_type}')
+            return StreamingResponse(self._tts_invoke_streaming(model=model,
+                                                                credentials=credentials,
+                                                                content_text=content_text,
+                                                                tenant_id=tenant_id,
+                                                                voice=voice), media_type='text/event-stream')
         else:
             return self._tts_invoke(model=model, credentials=credentials, content_text=content_text, voice=voice)
 
@@ -65,7 +63,7 @@ class OpenAIText2SpeechModel(_CommonOpenAI, TTSModel):
         except Exception as ex:
             raise CredentialsValidateFailedError(str(ex))
 
-    def _tts_invoke(self, model: str, credentials: dict, content_text: str, voice: str) -> Response:
+    def _tts_invoke(self, model: str, credentials: dict, content_text: str, voice: str) -> StreamingResponse:
         """
         _tts_invoke text2speech model
 
@@ -100,7 +98,7 @@ class OpenAIText2SpeechModel(_CommonOpenAI, TTSModel):
                 buffer: BytesIO = BytesIO()
                 combined_segment.export(buffer, format=audio_type)
                 buffer.seek(0)
-                return Response(buffer.read(), status=200, mimetype=f"audio/{audio_type}")
+                return StreamingResponse(buffer, media_type=f"audio/{audio_type}")
         except Exception as ex:
             raise InvokeBadRequestError(str(ex))
 
