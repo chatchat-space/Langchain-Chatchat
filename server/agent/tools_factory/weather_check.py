@@ -1,7 +1,7 @@
 """
 简单的单参数输入工具实现，用于查询现在天气的情况
 """
-from server.pydantic_types import BaseModel, Field
+from server.pydantic_v1 import BaseModel, Field
 import requests
 
 def weather(location: str, api_key: str):

@@ -27,7 +27,7 @@ import logging
 
 from configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
                      DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE)
-from server.pydantic_types import BaseModel, Field
+from server.pydantic_v2 import BaseModel, Field
 from server.minx_chat_openai import MinxChatOpenAI # TODO: still used?
 
 
