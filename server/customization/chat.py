@@ -48,6 +48,9 @@ def kb_chat_with_csv_file(
             "default",
             description="使用的prompt模板名称(在configs/prompt_config.py中配置)"
         ),
+        debug: bool = Body(
+            False, description="是否开启debug模式")
+        ,
         request: Request = None,
 ) -> BaseResponse:
     """
@@ -60,7 +63,6 @@ def kb_chat_with_csv_file(
 
     # Construct queries from CSV file
     input_data_dict = read_file(file)
-    logger.info(f'Input data: {input_data_dict}')
 
     # Call knowledge base chat one by one to get the answer
     responses = []
@@ -81,14 +83,14 @@ def kb_chat_with_csv_file(
         temperature,
         request
     )
-    match_obj = re.search(r'```json(.*)```', result['answer']['text'], re.S)
+    match_obj = re.search(r'\n\n(```json)?([^`]*)(```)?', result['answer']['text'], re.S)
     if match_obj:
         result['answer_json'] = json.loads(match_obj.group(1))
     responses.append(
         {
             'src_col_name': col_name,
-            'src_col_val': col_val_list,
-            'result': result
+            'src_col_val': col_val_list[:5],
+            'result': result if debug is True else result['answer_json']
         }
     )
     logger.info(f'Final data: {responses}')
