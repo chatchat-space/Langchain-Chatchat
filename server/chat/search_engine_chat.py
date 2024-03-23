@@ -11,7 +11,7 @@ from langchain.docstore.document import Document
 from fastapi import Body
 from fastapi.concurrency import run_in_threadpool
 from sse_starlette import EventSourceResponse
-from server.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_BaseChatModel
 from server.utils import BaseResponse, get_prompt_template
 from server.chat.utils import History
 from typing import AsyncIterable
@@ -154,7 +154,7 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
-        model = get_ChatOpenAI(
+        model = get_BaseChatModel(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -165,8 +165,14 @@ async def search_engine_chat(query: str = Body(..., description="用户输入", 
         context = "\n".join([doc.page_content for doc in docs])
 
         prompt_template = get_prompt_template("search_engine_chat", prompt_name)
-        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-        chat_prompt = ChatPromptTemplate.from_messages(
+        if model_name =="ollama":
+            prompt_template=prompt_template.replace("{ ", "").replace(" }", "")
+            input_msg = History(role="user", content=prompt_template).to_msg_tuple()
+            chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_tuple() for i in history] + [input_msg])
+        else:
+            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model)

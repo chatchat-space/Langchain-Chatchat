@@ -9,8 +9,9 @@ from configs import (LLM_MODELS, LLM_DEVICE, EMBEDDING_DEVICE,
                      FSCHAT_MODEL_WORKERS, HTTPX_DEFAULT_TIMEOUT)
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI,ChatOllama
+from langchain.llms import OpenAI,Ollama
+from langchain_core.language_models.chat_models import BaseChatModel
 import httpx
 from typing import (
     TYPE_CHECKING,
@@ -43,6 +44,31 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         # Signal the aiter to stop.
         event.set()
 
+def get_BaseChatModel(
+        model_name: str,
+        temperature: float,
+        max_tokens: int = None,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) ->BaseChatModel:
+    model=None
+    if model_name =="ollama":
+            model = get_ChatOllama(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    callbacks=callbacks,
+            )
+    else:
+         model = get_ChatOpenAI(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    callbacks=callbacks,
+        )
+    return model
 
 def get_ChatOpenAI(
         model_name: str,
@@ -71,6 +97,30 @@ def get_ChatOpenAI(
     )
     return model
 
+def get_ChatOllama(
+        model_name: str,
+        temperature: float,
+        max_tokens: int = None,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) -> ChatOllama:
+    config = get_model_worker_config(model_name)
+    if model_name == "ollama":
+        model_name = config.get("model_name")
+    # ChatOllama._get_encoding_model = MinxChatOpenAI.get_encoding_model
+    model = ChatOllama(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        base_url=config.get("api_base_url", "EMPTY"),
+        model=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **kwargs
+    )
+    return model
 
 def get_OpenAI(
         model_name: str,
@@ -100,6 +150,31 @@ def get_OpenAI(
     )
     return model
 
+def get_Ollama(
+        model_name: str,
+        temperature: float,
+        max_tokens: int = None,
+        streaming: bool = True,
+        echo: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) -> Ollama:
+    config = get_model_worker_config(model_name)
+    if model_name == "ollama":
+        model_name = config.get("model_name")
+    model = OpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        base_url=config.get("api_base_url", "EMPTY"),
+        model=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        echo=echo,
+        **kwargs
+    )
+    return model
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="API status code")

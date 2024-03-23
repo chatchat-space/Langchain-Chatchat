@@ -1,7 +1,7 @@
 from fastapi import Body
 from sse_starlette.sse import EventSourceResponse
 from configs import LLM_MODELS, TEMPERATURE
-from server.utils import wrap_done, get_OpenAI
+from server.utils import wrap_done, get_OpenAI,get_Ollama
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable, Optional
@@ -33,13 +33,24 @@ async def completion(query: str = Body(..., description="用户输入", examples
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
-        model = get_OpenAI(
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            callbacks=[callback],
-            echo=echo
-        )
+        if model_name =="ollama":
+            model = get_Ollama(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=[callback],
+                echo=echo
+            )
+        else:
+            model = get_OpenAI(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=[callback],
+                echo=echo
+            )
+
+        
 
         prompt_template = get_prompt_template("completion", prompt_name)
         prompt = PromptTemplate.from_template(prompt_template)

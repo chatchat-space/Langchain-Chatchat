@@ -1,7 +1,7 @@
 from fastapi import Body
 from sse_starlette.sse import EventSourceResponse
 from configs import LLM_MODELS, TEMPERATURE
-from server.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_BaseChatModel
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from typing import AsyncIterable
@@ -50,7 +50,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
-        model = get_ChatOpenAI(
+        model = get_BaseChatModel(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -59,9 +59,15 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
 
         if history: # 优先使用前端传入的历史消息
             history = [History.from_data(h) for h in history]
-            prompt_template = get_prompt_template("llm_chat", prompt_name)
-            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-            chat_prompt = ChatPromptTemplate.from_messages(
+            prompt_template = get_prompt_template("llm_chat",prompt_name)
+            if model_name =="ollama":
+                prompt_template=prompt_template.replace("{ ", "").replace(" }", "")
+                input_msg = History(role="user", content=prompt_template).to_msg_tuple()
+                chat_prompt = ChatPromptTemplate.from_messages(
+                [i.to_msg_tuple() for i in history] + [input_msg])
+            else:
+                input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+                chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
         elif conversation_id and history_len > 0: # 前端要求从数据库取历史消息
             # 使用memory 时必须 prompt 必须含有memory.memory_key 对应的变量
@@ -73,7 +79,11 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                                                 message_limit=history_len)
         else:
             prompt_template = get_prompt_template("llm_chat", prompt_name)
-            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            if model_name =="ollama":
+                prompt_template=prompt_template.replace("{ ", "").replace(" }", "")
+                input_msg = History(role="user", content=prompt_template).to_msg_tuple()
+            else:
+                input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model, memory=memory)

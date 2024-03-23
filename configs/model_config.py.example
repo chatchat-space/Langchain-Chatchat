@@ -124,6 +124,11 @@ ONLINE_LLM_MODEL = {
     "gemini-api": {
         "api_key": "",
         "provider": "GeminiWorker",
+    },
+    # Ollama 文档参考 https://ollama.com/
+    "ollama": {
+        "model_name": "", #Ollama要加载的模型，支持的模型列表请查阅https://ollama.com/library，如qwen:7b
+        "api_base_url": "http://{host}:{port}", #Ollama发布地址，如http://192.168.1.11:11434
     }
 
 }
@@ -311,4 +316,5 @@ SUPPORT_AGENT_MODEL = [
     "chatglm3-6b",
     "internlm2-chat-20b",
     "Orion-14B-Chat-Plugin",
+    "ollama",
 ]

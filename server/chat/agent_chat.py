@@ -10,7 +10,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.agents import LLMSingleActionAgent, AgentExecutor
 from typing import AsyncIterable, Optional, List
 
-from server.utils import wrap_done, get_ChatOpenAI, get_prompt_template
+from server.utils import wrap_done, get_BaseChatModel, get_prompt_template
 from server.knowledge_base.kb_service.base import get_kb_details
 from server.agent.custom_agent.ChatGLM3Agent import initialize_glm3_agent
 from server.agent.tools_select import tools, tool_names
@@ -48,7 +48,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
-        model = get_ChatOpenAI(
+        model = get_BaseChatModel(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -59,7 +59,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
         model_container.DATABASE = {name: details['kb_info'] for name, details in kb_list.items()}
 
         if Agent_MODEL:
-            model_agent = get_ChatOpenAI(
+            model_agent = get_BaseChatModel(
                 model_name=Agent_MODEL,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -83,7 +83,8 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                 memory.chat_memory.add_user_message(message.content)
             else:
                 memory.chat_memory.add_ai_message(message.content)
-        if "chatglm3" in model_container.MODEL.model_name or "zhipu-api" in model_container.MODEL.model_name:
+        #langchain的ollama没有model_name属性，因此需要进行判断是否有该属性
+        if hasattr(model_container.MODEL, 'model_name') and ("chatglm3" in model_container.MODEL.model_name or "zhipu-api" in model_container.MODEL.model_name):
             agent_executor = initialize_glm3_agent(
                 llm=model,
                 tools=tools,
@@ -104,7 +105,7 @@ async def agent_chat(query: str = Body(..., description="用户输入", examples
                                                                 tools=tools,
                                                                 verbose=True,
                                                                 memory=memory,
-                                                                )
+                                                            )
         while True:
             try:
                 task = asyncio.create_task(wrap_done(

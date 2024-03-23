@@ -2,7 +2,7 @@ from fastapi import Body, File, Form, UploadFile
 from sse_starlette.sse import EventSourceResponse
 from configs import (LLM_MODELS, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, TEMPERATURE,
                      CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE)
-from server.utils import (wrap_done, get_ChatOpenAI,
+from server.utils import (wrap_done, get_BaseChatModel,
                         BaseResponse, get_prompt_template, get_temp_dir, run_in_thread_pool)
 from server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from langchain.chains import LLMChain
@@ -118,7 +118,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
-        model = get_ChatOpenAI(
+        model = get_BaseChatModel(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -135,8 +135,14 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             prompt_template = get_prompt_template("knowledge_base_chat", "empty")
         else:
             prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
-        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-        chat_prompt = ChatPromptTemplate.from_messages(
+        if model_name =="ollama":
+            prompt_template=prompt_template.replace("{ ", "").replace(" }", "")
+            input_msg = History(role="user", content=prompt_template).to_msg_tuple()
+            chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_tuple() for i in history] + [input_msg])
+        else:
+           input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+           chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
 
         chain = LLMChain(prompt=chat_prompt, llm=model)
