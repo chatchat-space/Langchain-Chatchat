@@ -24,6 +24,9 @@ class OpenAIBaseInput(BaseModel):
     extra_body: Optional[Dict] = None
     timeout: Optional[float] = None
 
+    class Config:
+        extra = "allow"
+
 
 class OpenAIChatInput(OpenAIBaseInput):
     messages: List[ChatCompletionMessageParam]

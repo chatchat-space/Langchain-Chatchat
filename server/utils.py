@@ -202,6 +202,7 @@ def get_Embeddings(
     local_wrap: bool = False, # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
+    from langchain_community.embeddings import OllamaEmbeddings
     from server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
 
     model_info = get_model_info(model_name=embed_model)
@@ -220,6 +221,10 @@ def get_Embeddings(
             )
         if model_info.get("platform_type") == "openai":
             return OpenAIEmbeddings(**params)
+        elif model_info.get("platform_type") == "ollama":
+            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1',''),
+                                    model=embed_model,
+                                    )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
