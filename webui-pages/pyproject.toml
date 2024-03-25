@@ -1,0 +1,194 @@
+[tool.poetry]
+name = "chatchat-webui-pages"
+version = "0.3.0"
+description = ""
+authors = ["chatchat"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0,!=3.9.7"
+chatchat-model-providers = "^0.3.0"
+chatchat-server = "^0.3.0"
+streamlit = "1.30.0"
+streamlit-option-menu = "0.3.12"
+streamlit-antd-components = "0.3.1"
+streamlit-chatbox = "1.1.11"
+streamlit-modal = "0.1.0"
+streamlit-aggrid = "0.3.4.post3"
+
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+# The only dependencies that should be added are
+# dependencies used for running tests (e.g., pytest, freezegun, response).
+# Any dependencies that do not meet that criteria will be removed.
+pytest = "^7.3.0"
+pytest-cov = "^4.0.0"
+pytest-dotenv = "^0.5.2"
+duckdb-engine = "^0.7.0"
+pytest-watcher = "^0.2.6"
+freezegun = "^1.2.2"
+responses = "^0.22.0"
+pytest-asyncio = "^0.20.3"
+lark = "^1.1.5"
+pandas = "^2.0.0"
+pytest-mock  = "^3.10.0"
+pytest-socket = "^0.6.0"
+syrupy = "^4.0.2"
+chatchat-model-providers = { path = "../model-providers", develop = true }
+chatchat-server = { path = "../chatchat-server", develop = true }
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.1.5"
+
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+setuptools = "^67.6.1"
+chatchat-model-providers = { path = "../model_providers", develop = true }
+chatchat-server = { path = "../chatchat-server", develop = true }
+
+[tool.poetry.extras]
+cli = ["typer"]
+
+# An extra used to be able to add extended testing.
+# Please use new-line on formatting to make it easier to add new packages without
+# merge-conflicts
+extended_testing = [
+    "aleph-alpha-client",
+    "aiosqlite",
+    "assemblyai",
+    "beautifulsoup4",
+    "bibtexparser",
+    "cassio",
+    "chardet",
+    "datasets",
+    "google-cloud-documentai",
+    "esprima",
+    "jq",
+    "pdfminer-six",
+    "pgvector",
+    "pypdf",
+    "pymupdf",
+    "pypdfium2",
+    "tqdm",
+    "lxml",
+    "atlassian-python-api",
+    "mwparserfromhell",
+    "mwxml",
+    "msal",
+    "pandas",
+    "telethon",
+    "psychicapi",
+    "gql",
+    "gradientai",
+    "requests-toolbelt",
+    "html2text",
+    "numexpr",
+    "py-trello",
+    "scikit-learn",
+    "streamlit",
+    "pyspark",
+    "openai",
+    "sympy",
+    "rapidfuzz",
+    "jsonschema",
+    "rank-bm25",
+    "geopandas",
+    "jinja2",
+    "gitpython",
+    "newspaper3k",
+    "nvidia-riva-client",
+    "feedparser",
+    "xata",
+    "xmltodict",
+    "faiss-cpu",
+    "openapi-pydantic",
+    "markdownify",
+    "arxiv",
+    "sqlite-vss",
+    "rapidocr-onnxruntime",
+    "motor",
+    "timescale-vector",
+    "anthropic",
+    "upstash-redis",
+    "rspace_client",
+    "fireworks-ai",
+    "javelin-sdk",
+    "hologres-vector",
+    "praw",
+    "databricks-vectorsearch",
+    "cloudpickle",
+    "dgml-utils",
+    "cohere",
+    "tree-sitter",
+    "tree-sitter-languages",
+    "azure-ai-documentintelligence",
+    "oracle-ads",
+    "zhipuai",
+    "httpx",
+    "elasticsearch",
+    "hdbcli",
+    "oci",
+    "rdflib",
+    "tidb-vector",
+    "cloudpickle",
+    "friendli-client"
+]
+
+[tool.ruff]
+exclude = [
+    "tests/examples/non-utf8-encoding.py",
+    "tests/integration_tests/examples/non-utf8-encoding.py",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+    "T201", # print
+]
+
+[tool.mypy]
+ignore_missing_imports = "True"
+disallow_untyped_defs = "True"
+exclude = ["notebooks", "examples", "example_data"]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# --strict-markers will raise errors on unknown marks.
+# https://docs.pytest.org/en/7.1.x/how-to/mark.html#raising-errors-on-unknown-marks
+#
+# https://docs.pytest.org/en/7.1.x/reference/reference.html
+# --strict-config       any warnings encountered while parsing the `pytest`
+#                       section of the configuration file raise errors.
+#
+# https://github.com/tophat/syrupy
+# --snapshot-warn-unused    Prints a warning on unused snapshots rather than fail the test suite.
+addopts = "--strict-markers --strict-config --durations=5 --snapshot-warn-unused -vv"
+# Registering custom markers.
+# https://docs.pytest.org/en/7.1.x/example/markers.html#registering-markers
+markers = [
+    "requires: mark tests as requiring a specific library",
+    "scheduled: mark tests to run in scheduled testing",
+    "compile: mark placeholder test used to compile integration tests without running them"
+]
+asyncio_mode = "auto"

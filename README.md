@@ -1,4 +1,4 @@
-![](img/logo-long-chatchat-trans-v2.png)
+![](chatchat/img/logo-long-chatchat-trans-v2.png)
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 🌍 [日本語で読む](README_ja.md)
@@ -47,11 +47,11 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 📺 [原理介绍视频](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
-![实现原理图](img/langchain+chatglm.png)
+![实现原理图](chatchat/img/langchain+chatglm.png)
 
 从文档处理角度来看，实现流程如下：
 
-![实现原理图2](img/langchain+chatglm2.png)
+![实现原理图2](chatchat/img/langchain+chatglm2.png)
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
@@ -152,17 +152,17 @@ $ python startup.py -a
 
 1. FastAPI Docs 界面
 
-![](img/fastapi_docs_026.png)
+![](chatchat/img/fastapi_docs_026.png)
 
 2. Web UI 启动界面示例：
 
 - Web UI 对话界面：
 
-![img](img/LLM_success.png)
+![img](chatchat/img/LLM_success.png)
 
 - Web UI 知识库管理页面：
 
-![](img/init_knowledge_base.jpg)
+![](chatchat/img/init_knowledge_base.jpg)
 
 ### 注意
 
@@ -193,12 +193,12 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_96.jpg" alt="二维码" width="300" />
+<img src="chatchat/img/qr_code_96.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
 ### 公众号
 
-<img src="img/official_wechat_mp_account.png" alt="二维码" width="300" />
+<img src="chatchat/img/official_wechat_mp_account.png" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
