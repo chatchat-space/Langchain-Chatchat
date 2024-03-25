@@ -29,7 +29,7 @@ def search_docs(
                                       ge=0, le=1),
         file_name: str = Body("", description="文件名称，支持 sql 通配符"),
         metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
-) -> List[DocumentWithVSId]:
+) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     data = []
     if kb is not None:
@@ -41,7 +41,7 @@ def search_docs(
             for d in data:
                 if "vector" in d.metadata:
                     del d.metadata["vector"]
-    return data
+    return [x.dict() for x in data]
 
 
 def list_files(
