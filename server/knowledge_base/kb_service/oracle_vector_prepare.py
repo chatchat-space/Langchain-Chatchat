@@ -528,11 +528,11 @@ class ORCLVector(VectorStore):
                             cmetadata,
                             custom_id,
                             uuid,
-                            VECTOR_DISTANCE(embedding, to_vector(:1)) as distance
+                            VECTOR_DISTANCE(embedding, to_vector(:1), COSINE) as distance
                         FROM langchain_oracle_embedding
                         WHERE
                             collection_id = :2
-                        ORDER BY distance
+                        ORDER BY distance DESC
                         FETCH FIRST :3 ROWS ONLY
                      """, [embedding, collection_id, k]
         )
