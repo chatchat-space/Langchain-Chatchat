@@ -1,5 +1,5 @@
 from functools import lru_cache
-from server.pydantic_v1 import BaseModel, Field
+from server.pydantic_v2 import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
 from configs import logger, log_verbose
 from typing import List, Tuple, Dict, Union
