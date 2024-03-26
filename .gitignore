@@ -1,15 +1,13 @@
 *.log
 *.log.*
 *.bak
-logs
-/media/
-/data/*
-!/data/knowledge_base/samples
-/data/knowledge_base/samples/vector_store
-!/data/nltk_data
+/chatchat/chatchat/data/*
+!/chatchat/chatchat/data/knowledge_base/samples
+/chatchat/chatchat/data/knowledge_base/samples/vector_store
+!/chatchat/chatchat/data/nltk_data
 
-/configs/*.py
-/configs/loom.yaml
+/chatchat/chatchat/configs/*.py
+/chatchat/chatchat/configs/loom.yaml
 .vscode/
 
 # below are standard python ignore files
@@ -183,3 +181,6 @@ configs/*.py
 
 /knowledge_base/samples/content/202311-D平台项目工作大纲参数，人员中间库表结构说明V1.1(1).docx
 /knowledge_base/samples/content/imi_temeplate.txt
+/chatchat/configs/*.py
+/chatchat/configs/*.yaml
+chatchat/data
