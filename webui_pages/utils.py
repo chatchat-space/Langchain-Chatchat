@@ -606,6 +606,7 @@ class ApiRequest:
             zh_title_enhance=ZH_TITLE_ENHANCE,
             docs: Dict = {},
             not_refresh_vs_cache: bool = False,
+            is_QA:bool = False
     ):
         '''
         对应api.py/knowledge_base/upload_docs接口
@@ -631,6 +632,7 @@ class ApiRequest:
             "zh_title_enhance": zh_title_enhance,
             "docs": docs,
             "not_refresh_vs_cache": not_refresh_vs_cache,
+            "is_QA":is_QA
         }
 
         if isinstance(data["docs"], dict):

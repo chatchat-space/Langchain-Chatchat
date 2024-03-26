@@ -274,6 +274,7 @@ class KnowledgeFile:
             filename: str,
             knowledge_base_name: str,
             loader_kwargs: Dict = {},
+            text_splitter_name: str = TEXT_SPLITTER_NAME,
     ):
         '''
         对应知识库目录中的文件，必须是磁盘上存在的才能进行向量化等操作。
@@ -288,7 +289,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-        self.text_splitter_name = TEXT_SPLITTER_NAME
+        self.text_splitter_name = text_splitter_name
 
     def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
