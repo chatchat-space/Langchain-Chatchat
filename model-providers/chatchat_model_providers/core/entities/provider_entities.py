@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from model_providers.core.model_runtime.entities.model_entities import ModelType
+from chatchat_model_providers.core.model_runtime.entities.model_entities import ModelType
 
 
 class RestrictModel(BaseModel):

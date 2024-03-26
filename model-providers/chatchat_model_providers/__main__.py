@@ -11,7 +11,7 @@ if __name__ == '__main__':
     provider_manager = ModelManager(
         provider_name_to_provider_records_dict={
             'openai': {
-                'openai_api_key': "sk- ",
+                'openai_api_key': "sk-4M9LYF",
             }
         },
         provider_name_to_provider_model_records_dict={}

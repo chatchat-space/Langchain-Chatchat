@@ -7,18 +7,18 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from model_providers.core.entities.model_entities import ModelStatus, ModelWithProviderEntity, SimpleModelProviderEntity
-from model_providers.core.entities.provider_entities import CustomConfiguration
-from model_providers.core.model_runtime.entities.model_entities import FetchFrom, ModelType
-from model_providers.core.model_runtime.entities.provider_entities import (
+from chatchat_model_providers.core.entities.model_entities import ModelStatus, ModelWithProviderEntity, SimpleModelProviderEntity
+from chatchat_model_providers.core.entities.provider_entities import CustomConfiguration
+from chatchat_model_providers.core.model_runtime.entities.model_entities import FetchFrom, ModelType
+from chatchat_model_providers.core.model_runtime.entities.provider_entities import (
     ConfigurateMethod,
     CredentialFormSchema,
     FormType,
     ProviderEntity,
 )
-from model_providers.core.model_runtime.model_providers import model_provider_factory
-from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
-from model_providers.core.model_runtime.model_providers.__base.model_provider import ModelProvider
+from chatchat_model_providers.core.model_runtime.model_providers import model_provider_factory
+from chatchat_model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
+from chatchat_model_providers.core.model_runtime.model_providers.__base.model_provider import ModelProvider
 
 logger = logging.getLogger(__name__)
 

@@ -5,21 +5,21 @@ from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 
-from model_providers.core.entities.model_entities import DefaultModelEntity, DefaultModelProviderEntity
-from model_providers.core.entities.provider_configuration import ProviderConfiguration, ProviderConfigurations, \
+from chatchat_model_providers.core.entities.model_entities import DefaultModelEntity, DefaultModelProviderEntity
+from chatchat_model_providers.core.entities.provider_configuration import ProviderConfiguration, ProviderConfigurations, \
     ProviderModelBundle
-from model_providers.core.entities.provider_entities import (
+from chatchat_model_providers.core.entities.provider_entities import (
     CustomConfiguration,
     CustomModelConfiguration,
     CustomProviderConfiguration,
 )
-from model_providers.core.model_runtime.entities.model_entities import ModelType
-from model_providers.core.model_runtime.entities.provider_entities import (
+from chatchat_model_providers.core.model_runtime.entities.model_entities import ModelType
+from chatchat_model_providers.core.model_runtime.entities.provider_entities import (
     CredentialFormSchema,
     FormType,
     ProviderEntity,
 )
-from model_providers.core.model_runtime.model_providers import model_provider_factory
+from chatchat_model_providers.core.model_runtime.model_providers import model_provider_factory
 
 
 class ProviderManager:
