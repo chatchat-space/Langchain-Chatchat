@@ -129,22 +129,33 @@ class ApiRequest:
         async def ret_async(response, as_json):
             try:
                 async with response as r:
+                    chunk_cache = ''
                     async for chunk in r.aiter_text(None):
                         if not chunk:  # fastchat api yield empty bytes on start and end
                             continue
                         if as_json:
                             try:
                                 if chunk.startswith("data: "):
-                                    data = json.loads(chunk[6:-2])
+                                    data = json.loads(chunk_cache + chunk[6:-2])
                                 elif chunk.startswith(":"):  # skip sse comment line
                                     continue
                                 else:
-                                    data = json.loads(chunk)
+                                    data = json.loads(chunk_cache + chunk)
+
+                                chunk_cache = ''
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
                                 logger.error(f'{e.__class__.__name__}: {msg}',
                                              exc_info=e if log_verbose else None)
+
+                                if chunk.startswith("data: "):
+                                    chunk_cache += chunk[6:-2]
+                                elif chunk.startswith(":"):  # skip sse comment line
+                                    continue
+                                else:
+                                    chunk_cache += chunk
+                                continue
                         else:
                             # print(chunk, end="", flush=True)
                             yield chunk
@@ -165,22 +176,33 @@ class ApiRequest:
         def ret_sync(response, as_json):
             try:
                 with response as r:
+                    chunk_cache = ''
                     for chunk in r.iter_text(None):
                         if not chunk:  # fastchat api yield empty bytes on start and end
                             continue
                         if as_json:
                             try:
                                 if chunk.startswith("data: "):
-                                    data = json.loads(chunk[6:-2])
+                                    data = json.loads(chunk_cache + chunk[6:-2])
                                 elif chunk.startswith(":"):  # skip sse comment line
                                     continue
                                 else:
-                                    data = json.loads(chunk)
+                                    data = json.loads(chunk_cache + chunk)
+
+                                chunk_cache = ''
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
                                 logger.error(f'{e.__class__.__name__}: {msg}',
                                              exc_info=e if log_verbose else None)
+
+                                if chunk.startswith("data: "):
+                                    chunk_cache += chunk[6:-2]
+                                elif chunk.startswith(":"):  # skip sse comment line
+                                    continue
+                                else:
+                                    chunk_cache += chunk
+                                continue
                         else:
                             # print(chunk, end="", flush=True)
                             yield chunk
