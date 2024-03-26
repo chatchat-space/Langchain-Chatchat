@@ -11,7 +11,6 @@ from chatchat_server.knowledge_base.kb_doc_api import (list_files, upload_docs, 
                                             search_docs, update_info)
 from chatchat_server.knowledge_base.kb_summary_api import (summary_file_to_vector_store, recreate_summary_vector_store,
                                                     summary_doc_ids_to_vector_store)
-from chatchat_server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat_server.utils import BaseResponse, ListResponse
 
 
@@ -38,7 +37,7 @@ kb_router.get("/list_files",
         )(list_files)
 
 kb_router.post("/search_docs",
-            response_model=List[DocumentWithVSId],
+            response_model=List[dict],
             summary="搜索知识库"
             )(search_docs)
 

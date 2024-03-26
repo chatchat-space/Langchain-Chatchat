@@ -1,6 +1,6 @@
 import base64
 import os
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 
 def save_base64_audio(base64_audio, file_path):
     audio_data = base64.b64decode(base64_audio)

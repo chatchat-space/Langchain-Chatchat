@@ -151,7 +151,23 @@ MODEL_PLATFORMS = [
         "image_models": [],
         "multimodal_models": [],
     },
-
+    {
+        "platform_name": "ollama",
+        "platform_type": "ollama",
+        "api_base_url": "http://{host}:{port}/v1",
+        "api_key": "sk-",
+        "api_concurrencies": 5,
+        "llm_models": [
+            # Qwen API,其它更多模型请参考https://ollama.com/library
+            "qwen:7b",
+        ],
+        "embed_models": [
+            # 必须升级ollama到0.1.29以上，低版本向量服务有问题
+            "nomic-embed-text"
+        ],
+        "image_models": [],
+        "multimodal_models": [],
+    },
     # {
     #     "platform_name": "loom",
     #     "platform_type": "loom",

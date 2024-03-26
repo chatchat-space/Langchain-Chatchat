@@ -1,6 +1,6 @@
 # Langchain 自带的 Wolfram Alpha API 封装
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 wolfram_alpha_appid = "your key"
 
 

@@ -64,6 +64,7 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
         else:
             kwargs["agent_scratchpad"] = ""
         # Create a tools variable from the list of tools provided
+
         tools = []
         for t in self.tools:
             desc = re.sub(r"\n+", " ", t.description)
@@ -131,11 +132,11 @@ def create_structured_qwen_chat_agent(
         output_parser = QwenChatAgentOutputParserLC()
 
     tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-
     template = get_prompt_template("action_model", prompt)
     prompt = QwenChatAgentPromptTemplate(input_variables=["input", "intermediate_steps"],
                                         template=template,
                                         tools=tools)
+
     agent = (
         RunnablePassthrough.assign(
             agent_scratchpad=itemgetter("intermediate_steps")

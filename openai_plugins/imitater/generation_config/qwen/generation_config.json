@@ -1,0 +1,9 @@
+{
+  "eos_token_id": [151643, 151645],
+  "pad_token_id": 151643,
+  "max_new_tokens": 1024,
+  "do_sample": true,
+  "top_k": 0,
+  "top_p": 0.8,
+  "transformers_version": "4.34.0"
+}

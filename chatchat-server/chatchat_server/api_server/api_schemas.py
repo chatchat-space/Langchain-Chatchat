@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Literal, Optional, Union
 
 from fastapi import UploadFile
-from chatchat_server.pydantic_types import BaseModel, Field, AnyUrl, root_validator
+from chatchat_server.pydantic_v1 import BaseModel, Field, AnyUrl, root_validator
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionToolChoiceOptionParam,
@@ -23,6 +23,9 @@ class OpenAIBaseInput(BaseModel):
     extra_query: Optional[Dict] = None
     extra_body: Optional[Dict] = None
     timeout: Optional[float] = None
+
+    class Config:
+        extra = "allow"
 
 
 class OpenAIChatInput(OpenAIBaseInput):

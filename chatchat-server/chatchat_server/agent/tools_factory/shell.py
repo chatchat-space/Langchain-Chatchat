@@ -1,5 +1,5 @@
 # LangChain 的 Shell 工具
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 from langchain_community.tools import ShellTool
 
 

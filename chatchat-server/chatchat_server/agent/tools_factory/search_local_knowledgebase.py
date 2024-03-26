@@ -1,5 +1,5 @@
 from urllib.parse import urlencode
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 
 from chatchat_server.knowledge_base.kb_doc_api import search_docs
 from configs import TOOL_CONFIG

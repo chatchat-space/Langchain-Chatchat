@@ -88,6 +88,7 @@ async def list_models() -> List:
     tasks = [asyncio.create_task(task(name, config)) for name, config in get_config_platforms().items()]
     for t in asyncio.as_completed(tasks):
         result += (await t)
+
     return result
 
 
@@ -97,7 +98,12 @@ async def create_chat_completions(
     body: OpenAIChatInput,
 ):
     async with acquire_model_client(body.model) as client:
-        return await openai_request(client.chat.completions.create, body)
+        result = await openai_request(client.chat.completions.create, body)
+        # result["related_docs"] = ["doc1"]
+        # result["choices"][0]["message"]["related_docs"] = ["doc1"]
+        # print(result)
+        # breakpoint()
+        return result
 
 
 @openai_router.post("/completions")
@@ -114,9 +120,9 @@ async def create_embeddings(
     request: Request,
     body: OpenAIEmbeddingsInput,
 ):
-    params = body.dict(exclude_unset=True)
+    params = body.model_dump(exclude_unset=True)
     client = get_OpenAIClient(model_name=body.model)
-    return (await client.embeddings.create(**params)).dict()
+    return (await client.embeddings.create(**params)).model_dump()
 
 
 @openai_router.post("/images/generations")

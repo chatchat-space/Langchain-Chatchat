@@ -1,5 +1,5 @@
 # LangChain 的 ArxivQueryRun 工具
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 from langchain.tools.arxiv.tool import ArxivQueryRun
 
 

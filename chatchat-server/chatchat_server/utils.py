@@ -27,7 +27,7 @@ import logging
 
 from configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
                      DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE)
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v2 import BaseModel, Field
 from chatchat_server.minx_chat_openai import MinxChatOpenAI # TODO: still used?
 
 
@@ -202,6 +202,7 @@ def get_Embeddings(
     local_wrap: bool = False, # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
+    from langchain_community.embeddings import OllamaEmbeddings
     from chatchat_server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
 
     model_info = get_model_info(model_name=embed_model)
@@ -220,6 +221,10 @@ def get_Embeddings(
             )
         if model_info.get("platform_type") == "openai":
             return OpenAIEmbeddings(**params)
+        elif model_info.get("platform_type") == "ollama":
+            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1',''),
+                                    model=embed_model,
+                                    )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:

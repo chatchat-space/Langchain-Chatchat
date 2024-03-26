@@ -4,7 +4,7 @@ Method Use cogagent to generate response for a given image and query.
 import base64
 from io import BytesIO
 from PIL import Image, ImageDraw
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 from configs import TOOL_CONFIG
 import re
 from chatchat_server.agent.container import container

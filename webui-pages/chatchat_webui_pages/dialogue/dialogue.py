@@ -205,7 +205,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     # }
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        if parse_command(text=prompt, modal=modal):  # 用户输入自定义命令
+        if parse_command(text=prompt, modal=modal):
             st.rerun()
         else:
             history = get_messages_history(

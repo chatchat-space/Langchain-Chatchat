@@ -1,5 +1,5 @@
 from langchain_community.tools import YouTubeSearchTool
-from chatchat_server.pydantic_types import BaseModel, Field
+from chatchat_server.pydantic_v1 import BaseModel, Field
 
 
 def search_youtube(query: str):
