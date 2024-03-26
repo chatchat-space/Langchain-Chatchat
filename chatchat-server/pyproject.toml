@@ -6,7 +6,7 @@ authors = ["chatchat"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0,!=3.9.7"
+python = ">=3.8.1,<4.0,!=3.9.7"
 chatchat-model-providers = "^0.3.0"
 langchain = "0.1.5"
 langchainhub = "0.1.14"
@@ -35,9 +35,9 @@ strsimpy = ">=0.2.1"
 markdownify = ">=0.11.6"
 tqdm = ">=4.66.1"
 websockets = ">=12.0"
-numpy = ">=1.26.3"
+numpy = "1.24.4"
 pandas = "~2.1.4"
-pydantic = "1.10.14"
+pydantic = "2.6.4"
 httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
 
@@ -194,7 +194,7 @@ omit = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "poetry-plugin-pypi-mirror==0.4.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]

@@ -19,11 +19,11 @@ from chatchat_server.utils import MsgType, get_config_models
 import uuid
 from typing import List, Dict
 
-import streamlit_antd_components as sac
-
 
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
+        "chatchat",
+        "chatchat",
         "img",
         "chatchat_icon_blue_square_v2.png"
     )

@@ -6,13 +6,13 @@ authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0,!=3.9.7"
+python = ">=3.8.1,<4.0,!=3.9.7"
 transformers = "4.31.0"
 fastapi = "^0.109.2"
 uvicorn = ">=0.27.0.post1"
 sse-starlette = "^1.8.2"
 pyyaml = "6.0.1"
-pydantic = "1.10.14"
+pydantic = "2.6.4"
 redis = "4.5.4"
 # modle_runtime
 openai = "1.13.3"
@@ -167,7 +167,7 @@ omit = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "poetry-plugin-pypi-mirror==0.4.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]

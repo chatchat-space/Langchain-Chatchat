@@ -6,7 +6,7 @@ authors = ["chatchat"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0,!=3.9.7"
+python = ">=3.8.1,<4.0,!=3.9.7"
 chatchat-model-providers = "^0.3.0"
 chatchat-server = "^0.3.0"
 streamlit = "1.30.0"
@@ -54,7 +54,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 setuptools = "^67.6.1"
-chatchat-model-providers = { path = "../model_providers", develop = true }
+chatchat-model-providers = { path = "../model-providers", develop = true }
 chatchat-server = { path = "../chatchat-server", develop = true }
 
 [tool.poetry.extras]
@@ -170,7 +170,7 @@ omit = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "poetry-plugin-pypi-mirror==0.4.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
