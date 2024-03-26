@@ -9,7 +9,7 @@ repository = "https://github.com/chatchat-space/Langchain-Chatchat.git"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0,!=3.9.7"
+python = ">=3.8,<4.0,!=3.9.7"
 
 
 [tool.poetry.group.lint.dependencies]
