@@ -53,6 +53,15 @@ ONLINE_LLM_MODEL = {
         "provider": "ChatGLMWorker",
     },
 
+    # 增加使用本地 Ollama 模型
+    "ollama": {
+        "model_name": "qwen:7b",
+        "api_url": "http://127.0.0.1:11434/v1",
+        "version": "Qwen1.5",
+        "max_tokens": 2048,
+        "provider": "OllamaWorker",
+    },
+
     # 具体注册及api key获取请前往 https://api.minimax.chat/
     "minimax-api": {
         "group_id": "",
@@ -164,6 +173,7 @@ MODEL_PATH = {
         "piccolo-large-zh": "sensenova/piccolo-large-zh",
         "nlp_gte_sentence-embedding_chinese-large": "damo/nlp_gte_sentence-embedding_chinese-large",
         "text-embedding-ada-002": "your OPENAI_API_KEY",
+        "embed-multilingual-light-v3.0": "your COHERE_API_KEY",
     },
 
     "llm_model": {

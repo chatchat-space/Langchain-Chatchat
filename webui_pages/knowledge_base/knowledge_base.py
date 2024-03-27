@@ -199,8 +199,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             doc_details = doc_details[[
                 "No", "file_name", "document_loader", "text_splitter", "docs_count", "in_folder", "in_db",
             ]]
-            doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
-            doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
+            #doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
+            #doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
             gb = config_aggrid(
                 doc_details,
                 {

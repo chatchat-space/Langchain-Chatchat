@@ -91,12 +91,15 @@ FSCHAT_MODEL_WORKERS = {
 
     },
     "chatglm3-6b": {
-        "device": "cuda",
+        "device": "cpu",
     },
     "Qwen1.5-0.5B-Chat": {
         "device": "cuda",
     },
     # 以下配置可以不用修改，在model_config中设置启动的模型
+    "ollama": {
+        "port": 31001,
+    },
     "zhipu-api": {
         "port": 21001,
     },
