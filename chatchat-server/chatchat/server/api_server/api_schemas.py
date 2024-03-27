@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Literal, Optional, Union
 
 from fastapi import UploadFile
-from chatchat.server.pydantic_v1 import BaseModel, Field, AnyUrl, root_validator
+from chatchat.server.pydantic_v2 import BaseModel, Field, AnyUrl, root_validator
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionToolChoiceOptionParam,

@@ -1,13 +1,13 @@
 *.log
 *.log.*
 *.bak
-/chatchat/chatchat/data/*
-!/chatchat/chatchat/data/knowledge_base/samples
-/chatchat/chatchat/data/knowledge_base/samples/vector_store
-!/chatchat/chatchat/data/nltk_data
+/chatchat-server/chatchat/data/*
+!/chatchat-server/chatchat/data/knowledge_base/samples
+/chatchat-server/chatchat/data/knowledge_base/samples/vector_store
+!/chatchat-server/chatchat/data/nltk_data
 
-/chatchat/chatchat/configs/*.py
-/chatchat/chatchat/configs/loom.yaml
+/chatchat-server/chatchat/configs/*.py
+/chatchat-server/chatchat/configs/loom.yaml
 .vscode/
 
 # below are standard python ignore files
