@@ -9,3 +9,4 @@ from .baichuan import BaiChuanWorker
 from .azure import AzureWorker
 from .tiangong import TianGongWorker
 from .gemini import GeminiWorker
+from .claude import ClaudeWorker
