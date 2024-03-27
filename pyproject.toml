@@ -14,17 +14,14 @@ python = ">=3.8.1,<4.0,!=3.9.7"
 
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.1.5"
-chatchat-model-providers = { path = "model-providers", develop = true }
-chatchat-server = { path = "chatchat-server", develop = true }
-chatchat-webui-pages = { path = "webui-pages", develop = true }
-chatchat = { path = "chatchat", develop = true }
+model-providers = { path = "model-providers", develop = true }
+chatchat = { path = "chatchat-server", develop = true }
 
 
 
 [tool.poetry.group.dev.dependencies]
-chatchat-model-providers = { path = "model-providers", develop = true }
-chatchat-server = { path = "chatchat-server", develop = true }
-chatchat = { path = "chatchat", develop = true }
+model-providers = { path = "model-providers", develop = true }
+chatchat = { path = "chatchat-server", develop = true }
 ipykernel = "^6.29.2"
 
 [tool.poetry.group.test.dependencies]

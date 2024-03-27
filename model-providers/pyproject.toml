@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chatchat-model-providers"
+name = "model-providers"
 version = "0.3.0"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
