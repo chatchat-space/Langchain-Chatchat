@@ -19,8 +19,15 @@ from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.utils import BaseResponse, get_ChatOpenAI, get_prompt_template, wrap_done, ListResponse
 
 
-QUERY_TEMPLATE = '当前字段的名称是：{column_name},字段取值是：{column_value}，告诉我其对应的标准字段名称和可能的取值，并通过如下格式返回结果\n' \
-                 '标准字段名称:标准字段取值'
+# QUERY_TEMPLATE = '当前字段的名称是：{column_name},字段取值是：{column_value}，告诉我其对应的标准字段名称和可能的取值，并通过如下格式返回结果\n' \
+#                 '标准字段名称:标准字段取值'
+QUERY_TEMPLATE = '根据输入的字段名称和字段取值，根据要求的输出格式返回匹配的标准字段和一个可能的取值。 \n' \
+                          '输入格式(JSON)：{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值} \n' \
+                          '输出格式(JSON)：{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
+                          '"standard_column_name": 输出字段名称, "standard_column_value": 输出字段取值} \n' \
+                          '要求：输出的结果能直接用python的json.loads()加载\n' \
+                          '输入：{{input_question}}'
+
 QUERY_TEMPLATE_ALL_IN_ONE = '根据输入的字段名称和字段取值，根据要求的输出格式返回匹配的标准字段和一个可能的取值。 \n' \
                           '输入格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值}] \n' \
                           '输出格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
@@ -65,49 +72,50 @@ def kb_chat_with_csv_file(
     input_data_dict = read_file(file)
 
     # Call knowledge base chat one by one to get the answer
-    input_query = list()
-    col_names = list()
     for col_name, col_val in input_data_dict.items():
-        col_names.append(col_name)
+        logger.info(f'Start to handle {col_name}...')
         col_val_list = list(col_val)
-        input_query.append({"src_column_name": col_name, "src_column_value": col_val_list[0]})
+        input_query = {"src_column_name": col_name, "src_column_value": col_val_list[0]}
 
-    query = QUERY_TEMPLATE_ALL_IN_ONE.replace("{{input_question}}", json.dumps(input_query))
-    result = knowledge_base_chat_iterator(
-        knowledge_base_name,
-        score_threshold,
-        query,
-        top_k,
-        max_tokens,
-        model_name,
-        prompt_name,
-        temperature,
-        request
-    )
-    result['answer_json'] = None
-    match_obj = re.search(r'\n\n(```json)?([^`]*)(```)?', result['answer']['text'], re.S)
-    logger.info(f'------[result]-----{result}')
-    if match_obj:
-        logger.info(f'-----[matched]----{match_obj.group(2)}')
-        try:
-            result['answer_json'] = json.loads(match_obj.group(2))
-        except:
-            logger.error(f'json failed to load {match_obj.group(2)}')
+        query = QUERY_TEMPLATE_ALL_IN_ONE.replace("{{input_question}}", json.dumps(input_query))
+        result = knowledge_base_chat_iterator(
+            knowledge_base_name,
+            score_threshold,
+            query,
+            top_k,
+            max_tokens,
+            model_name,
+            prompt_name,
+            temperature,
+            request
+        )
+        result['answer_json'] = None
+        match_obj = re.search(r'\n\n(```json)?([^`]*)(```)?', result['answer']['text'], re.S)
+        logger.info(f'------[result]-----{result}')
+        if match_obj:
+            logger.info(f'-----[matched]----{match_obj.group(2)}')
+            try:
+                result['answer_json'] = json.loads(match_obj.group(2))
+            except:
+                logger.error(f'json failed to load {match_obj.group(2)}')
+                pass
+        else:
+            try:
+                result['answer_json'] = json.loads(result['answer']['text'])
+            except:
+                logger.error('json failed to load {result["answer"]["text"]}')
             pass
-    else:
-        try:
-            result['answer_json'] = json.loads(result['answer']['text'])
-        except:
-            logger.error('json failed to load {result["answer"]["text"]}')
-            pass
-    if result['answer_json'] is None:
-        result['answer_json'] = result['answer']['text']
-    response = {
-        'src_col_names': col_names,
-        'result': result if debug is True else result['answer_json']
-    }
-    logger.info(f'Final data: {response}')
-    return BaseResponse(data=response)
+        if result['answer_json'] is None:
+            result['answer_json'] = result['answer']['text']
+        response = {
+            'src_col_name': col_name,
+            'src_col_value': col_val_list[0],
+            'result': result if debug is True else result['answer_json']
+        }
+        responses.append(response)
+        logger.info(f'Finish handling {col_name}')
+    logger.info(f'Final data: {responses}')
+    return BaseResponse(data=responses)
 
 
 def read_file(file):
