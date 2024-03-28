@@ -25,7 +25,7 @@ QUERY_TEMPLATE_ALL_IN_ONE = '根据输入的字段名称和字段取值，根据
                           '输入格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值}] \n' \
                           '输出格式(JSON)：[{"src_column_name": 输入的字段名称, "src_column_value": 输入的字段取值, ' \
                           '"standard_column_name": 输出字段名称, "standard_column_value": 输出字段取值}] \n' \
-                          '注意：1. 输入采用JSON的格式一次输入多个字段 2. 输出要求采用JSON的格式一次返回全部结果 3. 输出的结果能直接用Python的json.loads()加载\n' \
+                          '注意：1. 输入采用JSON的格式一次输入多个字段 2. 输出要求采用JSON的格式一次返回全部结果 3. 输出的结果能直接用python的json.loads()加载\n' \
                           '输入：{{input_question}}'
 
 
@@ -92,18 +92,18 @@ def kb_chat_with_csv_file(
         try:
             result['answer_json'] = json.loads(match_obj.group(2))
         except:
-            logger.error(f'Json failed to load {match_obj.group(2)}')
+            logger.error(f'json failed to load {match_obj.group(2)}')
             pass
     else:
         try:
             result['answer_json'] = json.loads(result['answer']['text'])
         except:
-            logger.error('Json failed to load {result["answer"]["text"]}')
+            logger.error('json failed to load {result["answer"]["text"]}')
             pass
     if result['answer_json'] is None:
         result['answer_json'] = result['answer']['text']
     response = {
-        'src_col_name': col_names,
+        'src_col_names': col_names,
         'result': result if debug is True else result['answer_json']
     }
     logger.info(f'Final data: {response}')
