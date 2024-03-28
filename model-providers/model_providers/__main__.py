@@ -1,6 +1,7 @@
 import os
 from typing import cast, Generator
 
+from model_providers import provider_manager
 from model_providers.core.model_manager import ModelManager
 from model_providers.core.model_runtime.entities.llm_entities import LLMResultChunk, LLMResultChunkDelta
 from model_providers.core.model_runtime.entities.message_entities import UserPromptMessage, AssistantPromptMessage
@@ -8,16 +9,7 @@ from model_providers.core.model_runtime.entities.model_entities import ModelType
 
 if __name__ == '__main__':
     # 基于配置管理器创建的模型实例
-    provider_manager = ModelManager(
-        provider_name_to_provider_records_dict={
-            'openai': {
-                'openai_api_key': "sk-4M9LYF",
-            }
-        },
-        provider_name_to_provider_model_records_dict={}
-    )
 
-    #
     # Invoke model
     model_instance = provider_manager.get_model_instance(provider='openai', model_type=ModelType.LLM, model='gpt-4')
 

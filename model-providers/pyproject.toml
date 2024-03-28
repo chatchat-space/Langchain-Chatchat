@@ -14,6 +14,8 @@ sse-starlette = "^1.8.2"
 pyyaml = "6.0.1"
 pydantic = "2.6.4"
 redis = "4.5.4"
+# config manage
+omegaconf = "2.0.6"
 # modle_runtime
 openai = "1.13.3"
 tiktoken = "0.5.2"
