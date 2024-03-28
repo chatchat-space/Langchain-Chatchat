@@ -1,9 +1,0 @@
-[virtualenvs]
-in-project = true
-
-[installer]
-modern-installation = false
-
-[plugins]
-[plugins.pypi_mirror]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"

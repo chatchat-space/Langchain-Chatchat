@@ -1,37 +1,23 @@
 
+### 加入开发
+#### 依赖管理：Poetry与env/dependency管理方法
+这个项目使用 Poetry 来管理依赖。 
+> 注意：在安装Poetry之前，如果您使用Conda，请创建并激活一个新的Conda env（例如，`conda create-n chatchat python=3.9`）
 
-git mv .\chatchat-server\agent .\chatchat_server\
-git mv .\chatchat-server\api_server .\chatchat_server\
-git mv .\chatchat-server\callback_handler .\chatchat_server\
-git mv .\chatchat-server\chat .\chatchat_server\
-git mv .\chatchat-server\db .\chatchat_server\
-git mv .\chatchat-server\document_loaders .\chatchat_server\
-git mv .\chatchat-server\knowledge_base .\chatchat_server\
-git mv .\chatchat-server\memory .\chatchat_server\
-git mv .\chatchat-server\reranker .\chatchat_server\
-git mv .\chatchat-server\text_splitter .\chatchat_server\
-git mv .\chatchat-server\__init__.py .\chatchat_server\
-git mv .\chatchat-server\api_allinone_stale.py .\chatchat_server\
-git mv .\chatchat-server\llm_api_shutdown.py .\chatchat_server\
-git mv .\chatchat-server\llm_api_stale.py .\chatchat_server\
-git mv .\chatchat-server\localai_embeddings.py .\chatchat_server\
-git mv .\chatchat-server\minx_chat_openai.py .\chatchat_server\
-git mv .\chatchat-server\pydantic_types.py .\chatchat_server\
-git mv .\chatchat-server\utils.py .\chatchat_server\
-git mv .\chatchat-server\webui_allinone_stale.py .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
-git mv .\chatchat-server\ .\chatchat_server\
+Install Poetry: [documentation on how to install it.](https://python-poetry.org/docs/#installing-with-pipx)
+
+> 注意: 如果您使用 Conda 或 Pyenv 作为您的环境/包管理器，在安装Poetry之后， 
+> 使用如下命令使Poetry使用virtualenv python environment (`poetry config virtualenvs.prefer-active-python true`)
+
+#### 本地开发环境安装
+
+- 选择主项目目录
+```
+cd chatchat
+```
+
+- 安装chatchat依赖(for running chatchat lint\tests):
+
+```
+poetry install --with lint,test
+```

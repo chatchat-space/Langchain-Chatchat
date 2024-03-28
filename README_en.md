@@ -1,4 +1,4 @@
-![](chatchat/img/logo-long-chatchat-trans-v2.png)
+![](chatchat-server/chatchat/img/logo-long-chatchat-trans-v2.png)
 
 🌍 [中文文档](README.md)
 🌍 [日本語で読む](README_ja.md)
@@ -53,11 +53,11 @@ to `LLM` to generate an answer.
 
 📺[video introduction](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
-![实现原理图](chatchat/img/langchain+chatglm.png)
+![实现原理图](chatchat-server/chatchat/img/langchain+chatglm.png)
 
 The main process analysis from the aspect of document process:
 
-![实现原理图2](chatchat/img/langchain+chatglm2.png)
+![实现原理图2](chatchat-server/chatchat/img/langchain+chatglm2.png)
 
 🚩 The training or fine-tuning are not involved in the project, but still, one always can improve performance by do
 these.
@@ -147,17 +147,17 @@ $ python startup.py -a
 
 1. FastAPI docs interface
 
-![](chatchat/img/fastapi_docs_026.png)
+![](chatchat-server/chatchat/img/fastapi_docs_026.png)
 
 2. webui page
 
 - Web UI dialog page:
 
-![img](chatchat/img/LLM_success.png)
+![img](chatchat-server/chatchat/img/LLM_success.png)
 
 - Web UI knowledge base management page:
 
-![](chatchat/img/init_knowledge_base.jpg)
+![](chatchat-server/chatchat/img/init_knowledge_base.jpg)
 
 ### Note
 
@@ -192,8 +192,8 @@ please refer to the [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/
 
 ### WeChat Group
 
-<img src="chatchat/img/qr_code_90.jpg" alt="二维码" width="300" height="300" />
+<img src="chatchat-server/chatchat/img/qr_code_90.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat Official Account
 
-<img src="chatchat/img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
+<img src="chatchat-server/chatchat/img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />

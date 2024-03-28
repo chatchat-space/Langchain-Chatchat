@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chatchat-server"
+name = "chatchat"
 version = "0.3.0"
 description = ""
 authors = ["chatchat"]
@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0,!=3.9.7"
-chatchat-model-providers = "^0.3.0"
+model-providers = "^0.3.0"
 langchain = "0.1.5"
 langchainhub = "0.1.14"
 langchain-community = "0.0.17"
@@ -40,6 +40,13 @@ pandas = "~2.1.4"
 pydantic = "2.6.4"
 httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
+# webui
+streamlit = "1.30.0"
+streamlit-option-menu = "0.3.12"
+streamlit-antd-components = "0.3.1"
+streamlit-chatbox = "1.1.11"
+streamlit-modal = "0.1.0"
+streamlit-aggrid = "0.3.4.post3"
 
 
 [tool.poetry.group.test]
@@ -62,7 +69,7 @@ pandas = "^2.0.0"
 pytest-mock  = "^3.10.0"
 pytest-socket = "^0.6.0"
 syrupy = "^4.0.2"
-chatchat-model-providers = { path = "../model-providers", develop = true }
+model-providers = { path = "../model-providers", develop = true }
 
 
 [tool.poetry.group.lint]
@@ -79,7 +86,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
 setuptools = "^67.6.1"
-chatchat-model-providers = { path = "../model-providers", develop = true }
+model-providers = { path = "../model-providers", develop = true }
 
 [tool.poetry.extras]
 cli = ["typer"]

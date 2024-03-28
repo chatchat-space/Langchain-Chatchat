@@ -1,4 +1,4 @@
-![](chatchat/img/logo-long-chatchat-trans-v2.png)
+![](chatchat-server/chatchat/img/logo-long-chatchat-trans-v2.png)
 
 🌍 [中文文档](README.md)
 🌍 [READ THIS IN ENGLISH](README_en.md)
@@ -54,11 +54,11 @@ Q&A）ソリューションを構築することです。
 
 📺[video introduction](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
-![实现原理图](chatchat/img/langchain+chatglm.png)
+![实现原理图](chatchat-server/chatchat/img/langchain+chatglm.png)
 
 文書プロセスの側面からの主なプロセス分析:
 
-![实现原理图2](chatchat/img/langchain+chatglm2.png)
+![实现原理图2](chatchat-server/chatchat/img/langchain+chatglm2.png)
 
 🚩 トレーニングやファインチューニングはプロジェクトには含まれないが、これらを行うことで必ずパフォーマンスを向上させることができます。
 
@@ -144,17 +144,17 @@ $ python startup.py -a
 
 1. FastAPI docs インターフェース
 
-![](chatchat/img/fastapi_docs_026.png)
+![](chatchat-server/chatchat/img/fastapi_docs_026.png)
 
 2. webui ページ
 
 - Web UI ダイアログページ:
 
-![img](chatchat/img/LLM_success.png)
+![img](chatchat-server/chatchat/img/LLM_success.png)
 
 - Web UI ナレッジベースマネジメントページ:
 
-![](chatchat/img/init_knowledge_base.jpg)
+![](chatchat-server/chatchat/img/init_knowledge_base.jpg)
 
 ### 注
 
@@ -185,8 +185,8 @@ $ python startup.py -a
 
 ### WeChat グループ
 
-<img src="chatchat/img/qr_code_90.jpg" alt="二维码" width="300" height="300" />
+<img src="chatchat-server/chatchat/img/qr_code_90.jpg" alt="二维码" width="300" height="300" />
 
 ### WeChat 公式アカウント
 
-<img src="chatchat/img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
+<img src="chatchat-server/chatchat/img/official_wechat_mp_account.png" alt="图片" width="900" height="300" />
