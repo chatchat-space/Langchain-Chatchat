@@ -72,6 +72,7 @@ def kb_chat_with_csv_file(
     input_data_dict = read_file(file)
 
     # Call knowledge base chat one by one to get the answer
+    responses = list()
     for col_name, col_val in input_data_dict.items():
         logger.info(f'Start to handle {col_name}...')
         col_val_list = list(col_val)
