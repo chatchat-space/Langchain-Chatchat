@@ -1,11 +1,12 @@
 # LangChain 的 Shell 工具
-from chatchat.server.pydantic_v1 import BaseModel, Field
-from langchain_community.tools import ShellTool
+from langchain.tools.shell import ShellTool
+
+from chatchat.server.pydantic_v1 import Field
+from .tools_registry import regist_tool
 
 
-def shell(query: str):
+@regist_tool
+def shell(query: str = Field(description="The command to execute")):
+    '''Use Shell to execute system shell commands'''
     tool = ShellTool()
     return tool.run(tool_input=query)
-
-class ShellInput(BaseModel):
-    query: str = Field(description="The command to execute")

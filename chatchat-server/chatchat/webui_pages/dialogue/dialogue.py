@@ -1,5 +1,6 @@
 import base64
 
+from chatchat.server.utils import get_tool_config
 import streamlit as st
 from streamlit_antd_components.utils import ParseItems
 
@@ -13,7 +14,7 @@ from datetime import datetime
 import os
 import re
 import time
-from chatchat.configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, MODEL_PLATFORMS, TOOL_CONFIG)
+from chatchat.configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, MODEL_PLATFORMS)
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.utils import MsgType, get_config_models
 import uuid
@@ -157,12 +158,12 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             import importlib
             importlib.reload(model_config_py)
 
-            tools = list(TOOL_CONFIG.keys())
+            tools = get_tool_config()
             with st.expander("工具栏"):
                 for tool in tools:
-                    is_selected = st.checkbox(tool, value=TOOL_CONFIG[tool]["use"], key=tool)
+                    is_selected = st.checkbox(tool, value=tools[tool]["use"], key=tool)
                     if is_selected:
-                        selected_tool_configs[tool] = TOOL_CONFIG[tool]
+                        selected_tool_configs[tool] = tools[tool]
 
         if llm_model is not None:
             chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})

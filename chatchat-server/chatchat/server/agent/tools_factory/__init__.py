@@ -1,12 +1,12 @@
-from .search_local_knowledgebase import search_local_knowledgebase, SearchKnowledgeInput
+from .search_local_knowledgebase import search_local_knowledgebase
 from .calculate import calculate
-from .weather_check import weather_check, WeatherInput
-from .shell import shell, ShellInput
-from .search_internet import search_internet, SearchInternetInput
-from .wolfram import wolfram, WolframInput
-from .search_youtube import search_youtube, YoutubeInput
-from .arxiv import arxiv, ArxivInput
+from .weather_check import weather_check
+from .shell import shell
+from .search_internet import search_internet
+from .wolfram import wolfram
+from .search_youtube import search_youtube
+from .arxiv import arxiv
 from .text2image import text2images
 
-from .vision_factory import *
-from .audio_factory import *
+from .vqa_processor import vqa_processor
+from .aqa_processor import aqa_processor

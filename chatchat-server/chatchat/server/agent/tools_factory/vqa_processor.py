@@ -4,8 +4,9 @@ Method Use cogagent to generate response for a given image and query.
 import base64
 from io import BytesIO
 from PIL import Image, ImageDraw
-from chatchat.server.pydantic_v1 import BaseModel, Field
-from chatchat.configs import TOOL_CONFIG
+from chatchat.server.pydantic_v1 import Field
+from chatchat.server.utils import get_tool_config
+from .tools_registry import regist_tool
 import re
 from chatchat.server.agent.container import container
 
@@ -98,8 +99,11 @@ def vqa_run(model, tokenizer, image_base_64, query, history=[], device="cuda", m
     return response
 
 
-def vqa_processor(query: str):
-    tool_config = TOOL_CONFIG["vqa_processor"]
+@regist_tool
+def vqa_processor(query: str = Field(description="The question of the image in English")):
+    '''use this tool to get answer for image question'''
+
+    tool_config = get_tool_config("vqa_processor")
     if container.metadata["images"]:
         image_base64 = container.metadata["images"][0]
         ans = vqa_run(model=container.vision_model,
@@ -118,7 +122,3 @@ def vqa_processor(query: str):
         return ans
     else:
         return "No Image, Please Try Again"
-
-
-class VQAInput(BaseModel):
-    query: str = Field(description="The question of the image in English")

@@ -5,8 +5,9 @@ from PIL import Image
 from typing import List
 import uuid
 
-from langchain.agents import tool
-from chatchat.server.pydantic_v1 import Field, FieldInfo
+from chatchat.server.pydantic_v1 import Field
+from chatchat.server.utils import get_tool_config
+from .tools_registry import regist_tool
 import openai
 
 from chatchat.configs.basic_config import MEDIA_PATH
@@ -25,7 +26,7 @@ def get_image_model_config() -> dict:
             return config
 
 
-@tool(return_direct=True)
+@regist_tool(return_direct=True)
 def text2images(
     prompt: str,
     n: int = Field(1, description="需生成图片的数量"),
@@ -33,13 +34,6 @@ def text2images(
     height: int = Field(512, description="生成图片的高度"),
 ) -> List[str]:
     '''根据用户的描述生成图片'''
-    # workaround before langchain uprading
-    if isinstance(n, FieldInfo):
-        n = n.default
-    if isinstance(width, FieldInfo):
-        width = width.default
-    if isinstance(height, FieldInfo):
-        height = height.default
 
     model_config = get_image_model_config()
     assert model_config is not None, "请正确配置文生图模型"

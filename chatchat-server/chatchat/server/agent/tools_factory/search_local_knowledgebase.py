@@ -1,8 +1,14 @@
 from urllib.parse import urlencode
-from chatchat.server.pydantic_v1 import BaseModel, Field
-
+from chatchat.server.utils import get_tool_config
+from chatchat.server.pydantic_v1 import Field
+from .tools_registry import regist_tool
 from chatchat.server.knowledge_base.kb_doc_api import search_docs
-from chatchat.configs import TOOL_CONFIG
+from chatchat.configs import KB_INFO
+
+
+template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool. The 'database' should be one of the above [{key}]."
+KB_info_str = '\n'.join([f"{key}: {value}" for key, value in KB_INFO.items()])
+template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 
 def search_knowledgebase(query: str, database: str, config: dict):
@@ -29,11 +35,11 @@ def search_knowledgebase(query: str, database: str, config: dict):
     return context
 
 
-class SearchKnowledgeInput(BaseModel):
-    database: str = Field(description="Database for Knowledge Search")
-    query: str = Field(description="Query for Knowledge Search")
-
-
-def search_local_knowledgebase(database: str, query: str):
-    tool_config = TOOL_CONFIG["search_local_knowledgebase"]
+@regist_tool(description=template_knowledge)
+def search_local_knowledgebase(
+    database: str = Field(description="Database for Knowledge Search"),
+    query: str = Field(description="Query for Knowledge Search"),
+):
+    ''''''
+    tool_config = get_tool_config("search_local_knowledgebase")
     return search_knowledgebase(query=query, database=database, config=tool_config)
