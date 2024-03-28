@@ -7,6 +7,7 @@ import multiprocessing as mp
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 
 from langchain_core.embeddings import Embeddings
+from langchain.tools import BaseTool
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
 import httpx
@@ -277,7 +278,7 @@ class BaseResponse(BaseModel):
     data: Any = Field(None, description="API data")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "code": 200,
                 "msg": "success",
@@ -289,7 +290,7 @@ class ListResponse(BaseResponse):
     data: List[str] = Field(..., description="List of names")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "code": 200,
                 "msg": "success",
@@ -307,7 +308,7 @@ class ChatMessage(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "question": "工伤保险如何办理？",
                 "response": "根据已知信息，可以总结如下：\n\n1. 参保单位为员工缴纳工伤保险费，以保障员工在发生工伤时能够获得相应的待遇。\n"
@@ -696,3 +697,25 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     path = os.path.join(BASE_TEMP_DIR, id)
     os.mkdir(path)
     return path, id
+
+
+def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
+    import importlib
+    from chatchat.server.agent import tools_factory
+    importlib.reload(tools_factory)
+
+    if name is None:
+        return tools_factory.tools_registry._TOOLS_REGISTRY
+    else:
+        return tools_factory.tools_registry._TOOLS_REGISTRY.get(name)
+
+
+def get_tool_config(name: str = None) -> Dict:
+    import importlib
+    from chatchat.configs import model_config
+    importlib.reload(model_config)
+
+    if name is None:
+        return model_config.TOOL_CONFIG
+    else:
+        return model_config.TOOL_CONFIG.get(name, {})

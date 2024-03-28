@@ -1,11 +1,19 @@
 """
 简单的单参数输入工具实现，用于查询现在天气的情况
 """
-from chatchat.server.pydantic_v1 import BaseModel, Field
+from chatchat.server.pydantic_v1 import Field
+from chatchat.server.utils import get_tool_config
+from .tools_registry import regist_tool
 import requests
 
-def weather(location: str, api_key: str):
-    url = f"https://api.seniverse.com/v3/weather/now.json?key={api_key}&location={location}&language=zh-Hans&unit=c"
+
+@regist_tool
+def weather_check(city: str = Field(description="City name,include city and county,like '厦门'")):
+    '''Use this tool to check the weather at a specific city'''
+
+    tool_config = get_tool_config("weather_check")
+    api_key = tool_config.get("api_key")
+    url = f"https://api.seniverse.com/v3/weather/now.json?key={api_key}&location={city}&language=zh-Hans&unit=c"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -17,9 +25,3 @@ def weather(location: str, api_key: str):
     else:
         raise Exception(
             f"Failed to retrieve weather: {response.status_code}")
-
-
-def weather_check(location: str):
-    return weather(location, "S8vrB4U_-c5mvAMiK")
-class WeatherInput(BaseModel):
-    location: str = Field(description="City name,include city and county,like '厦门'")

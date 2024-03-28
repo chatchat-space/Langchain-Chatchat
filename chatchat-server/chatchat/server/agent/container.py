@@ -1,4 +1,5 @@
-from chatchat.configs import TOOL_CONFIG, logger
+from chatchat.configs import logger
+from chatchat.server.utils import get_tool_config
 
 
 class ModelContainer:
@@ -11,36 +12,38 @@ class ModelContainer:
         self.audio_tokenizer = None
         self.audio_model = None
 
-        if TOOL_CONFIG["vqa_processor"]["use"]:
+        vqa_config = get_tool_config("vqa_processor")
+        if vqa_config["use"]:
             try:
                 from transformers import LlamaTokenizer, AutoModelForCausalLM, AutoTokenizer
                 import torch
                 self.vision_tokenizer = LlamaTokenizer.from_pretrained(
-                    TOOL_CONFIG["vqa_processor"]["tokenizer_path"],
+                    vqa_config["tokenizer_path"],
                     trust_remote_code=True)
                 self.vision_model = AutoModelForCausalLM.from_pretrained(
-                    pretrained_model_name_or_path=TOOL_CONFIG["vqa_processor"]["model_path"],
+                    pretrained_model_name_or_path=vqa_config["model_path"],
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True,
                     trust_remote_code=True
-                ).to(TOOL_CONFIG["vqa_processor"]["device"]).eval()
+                ).to(vqa_config["device"]).eval()
             except Exception as e:
                 logger.error(e, exc_info=True)
 
-        if TOOL_CONFIG["aqa_processor"]["use"]:
+        aqa_config = get_tool_config("vqa_processor")
+        if aqa_config["use"]:
             try:
                 from transformers import LlamaTokenizer, AutoModelForCausalLM, AutoTokenizer
                 import torch
                 self.audio_tokenizer = AutoTokenizer.from_pretrained(
-                    TOOL_CONFIG["aqa_processor"]["tokenizer_path"],
+                    aqa_config["tokenizer_path"],
                     trust_remote_code=True
                 )
                 self.audio_model = AutoModelForCausalLM.from_pretrained(
-                    pretrained_model_name_or_path=TOOL_CONFIG["aqa_processor"]["model_path"],
+                    pretrained_model_name_or_path=aqa_config["model_path"],
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True,
                     trust_remote_code=True).to(
-                    TOOL_CONFIG["aqa_processor"]["device"]
+                    aqa_config["device"]
                 ).eval()
             except Exception as e:
                 logger.error(e, exc_info=True)

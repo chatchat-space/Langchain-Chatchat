@@ -11,10 +11,9 @@ from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
 from chatchat.server.agent.agent_factory.agents_registry import agents_registry
-from chatchat.server.agent.tools_factory.tools_registry import all_tools
 from chatchat.server.agent.container import container
 
-from chatchat.server.utils import wrap_done, get_ChatOpenAI, get_prompt_template, MsgType
+from chatchat.server.utils import wrap_done, get_ChatOpenAI, get_prompt_template, MsgType, get_tool
 from chatchat.server.chat.utils import History
 from chatchat.server.memory.conversation_db_buffer_memory import ConversationBufferDBMemory
 from chatchat.server.db.repository import add_message_to_db
@@ -127,6 +126,7 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
         callbacks = [callback]
         models, prompts = create_models_from_config(callbacks=callbacks, configs=chat_model_config,
                                                     stream=stream)
+        all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]
         tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
         full_chain = create_models_chains(prompts=prompts,

@@ -1,6 +1,6 @@
 import os
 
-from chatchat.configs.basic_config import DATA_PATH
+from .basic_config import DATA_PATH
 
 
 # 默认使用的知识库
@@ -51,7 +51,7 @@ KB_INFO = {
 # 通常情况下不需要更改以下内容
 
 # 知识库默认存储路径
-KB_ROOT_PATH = os.path.join(DATA_PATH, "data/knowledge_base")
+KB_ROOT_PATH = os.path.join(DATA_PATH, "knowledge_base")
 if not os.path.exists(KB_ROOT_PATH):
     os.mkdir(KB_ROOT_PATH)
 

@@ -23,4 +23,3 @@ API_SERVER = {
     "host": DEFAULT_BIND_HOST,
     "port": 7861,
 }
-

@@ -1,8 +1,9 @@
-from langchain.agents import tool
+from chatchat.server.pydantic_v1 import Field
+from .tools_registry import regist_tool
 
 
-@tool
-def calculate(text: str) -> float:
+@regist_tool
+def calculate(text: str = Field(description="a math expression")) -> float:
     '''
     Useful to answer questions about simple calculations.
     translate user question to a math expression that can be evaluated by numexpr.

@@ -1,12 +1,15 @@
-from chatchat.server.pydantic_v1 import BaseModel, Field
+from typing import List, Dict
+
 from langchain.utilities.bing_search import BingSearchAPIWrapper
 from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
-from chatchat.configs import TOOL_CONFIG
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from typing import List, Dict
 from langchain.docstore.document import Document
-from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 from markdownify import markdownify
+from strsimpy.normalized_levenshtein import NormalizedLevenshtein
+
+from chatchat.server.utils import get_tool_config
+from chatchat.server.pydantic_v1 import Field
+from .tools_registry import regist_tool
 
 
 def bing_search(text, config):
@@ -90,10 +93,10 @@ def search_engine(query: str,
     for doc in docs:
         context += doc + "\n"
     return context
-def search_internet(query: str):
-    tool_config = TOOL_CONFIG["search_internet"]
+
+
+@regist_tool
+def search_internet(query: str = Field(description="query for Internet search")):
+    '''Use this tool to use bing search engine to search the internet and get information.'''
+    tool_config = get_tool_config("search_internet")
     return search_engine(query=query, config=tool_config)
-
-class SearchInternetInput(BaseModel):
-    query: str = Field(description="query for Internet search")
-
