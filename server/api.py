@@ -16,6 +16,7 @@ from server.chat.chat import chat
 from server.chat.search_engine_chat import search_engine_chat
 from server.chat.completion import completion
 from server.chat.feedback import chat_feedback
+from server.customization.chat import kb_chat_with_csv_file
 from server.embeddings_api import embed_texts_endpoint
 from server.llm_api import (list_running_models, list_config_models,
                             change_llm_model, stop_llm_model,
@@ -158,6 +159,11 @@ def mount_knowledge_routes(app: FastAPI):
     app.post("/chat/agent_chat",
              tags=["Chat"],
              summary="与agent对话")(agent_chat)
+
+    app.post("/customization/chat/kb_chat_with_csv_file",
+             tags=["Chat"],
+             response_model=BaseResponse,
+             summary="使用上传的数据文件，基于现有知识库对话")(kb_chat_with_csv_file)
 
     # Tag: Knowledge Base Management
     app.get("/knowledge_base/list_knowledge_bases",
