@@ -1,7 +1,7 @@
 import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from pydantic.v1 import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, root_validator
 from typing_extensions import Literal
 
 
