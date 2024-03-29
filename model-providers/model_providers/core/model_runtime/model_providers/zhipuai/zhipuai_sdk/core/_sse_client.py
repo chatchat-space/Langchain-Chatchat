@@ -16,16 +16,15 @@ if TYPE_CHECKING:
 
 
 class StreamResponse(Generic[ResponseT]):
-
     response: httpx.Response
     _cast_type: type[ResponseT]
 
     def __init__(
-            self,
-            *,
-            cast_type: type[ResponseT],
-            response: httpx.Response,
-            client: HttpClient,
+        self,
+        *,
+        cast_type: type[ResponseT],
+        response: httpx.Response,
+        client: HttpClient,
     ) -> None:
         self.response = response
         self._cast_type = cast_type
@@ -39,7 +38,6 @@ class StreamResponse(Generic[ResponseT]):
         yield from self._stream_chunks
 
     def __stream__(self) -> Iterator[ResponseT]:
-
         sse_line_parser = SSELineParser()
         iterator = sse_line_parser.iter_lines(self.response.iter_lines())
 
@@ -56,18 +54,20 @@ class StreamResponse(Generic[ResponseT]):
                         json_data=data["error"],
                     )
 
-                yield self._data_process_func(data=data, cast_type=self._cast_type, response=self.response)
+                yield self._data_process_func(
+                    data=data, cast_type=self._cast_type, response=self.response
+                )
         for sse in iterator:
             pass
 
 
 class Event:
     def __init__(
-            self,
-            event: str | None = None,
-            data: str | None = None,
-            id: str | None = None,
-            retry: int | None = None
+        self,
+        event: str | None = None,
+        data: str | None = None,
+        id: str | None = None,
+        retry: int | None = None,
     ):
         self._event = event
         self._data = data
@@ -79,18 +79,23 @@ class Event:
         return f"Event(event={self._event}, data={self._data} ,data_length={data_len}, id={self._id}, retry={self._retry}"
 
     @property
-    def event(self): return self._event
+    def event(self):
+        return self._event
 
     @property
-    def data(self): return self._data
+    def data(self):
+        return self._data
 
-    def json_data(self): return json.loads(self._data)
+    def json_data(self):
+        return json.loads(self._data)
 
     @property
-    def id(self): return self._id
+    def id(self):
+        return self._id
 
     @property
-    def retry(self): return self._retry
+    def retry(self):
+        return self._retry
 
 
 class SSELineParser:
@@ -107,18 +112,20 @@ class SSELineParser:
 
     def iter_lines(self, lines: Iterator[str]) -> Iterator[Event]:
         for line in lines:
-            line = line.rstrip('\n')
+            line = line.rstrip("\n")
             if not line:
-                if self._event is None and \
-                        not self._data and \
-                        self._id is None and \
-                        self._retry is None:
+                if (
+                    self._event is None
+                    and not self._data
+                    and self._id is None
+                    and self._retry is None
+                ):
                     continue
                 sse_event = Event(
                     event=self._event,
-                    data='\n'.join(self._data),
+                    data="\n".join(self._data),
                     id=self._id,
-                    retry=self._retry
+                    retry=self._retry,
                 )
                 self._event = None
                 self._data = []
@@ -134,7 +141,7 @@ class SSELineParser:
 
         field, _p, value = line.partition(":")
 
-        if value.startswith(' '):
+        if value.startswith(" "):
             value = value[1:]
         if field == "data":
             self._data.append(value)

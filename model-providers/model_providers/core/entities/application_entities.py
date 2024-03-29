@@ -5,7 +5,9 @@ from pydantic import BaseModel
 
 from model_providers.core.entities.provider_configuration import ProviderModelBundle
 from model_providers.core.file.file_obj import FileObj
-from model_providers.core.model_runtime.entities.message_entities import PromptMessageRole
+from model_providers.core.model_runtime.entities.message_entities import (
+    PromptMessageRole,
+)
 from model_providers.core.model_runtime.entities.model_entities import AIModelEntity
 
 
@@ -13,6 +15,7 @@ class ModelConfigEntity(BaseModel):
     """
     Model Config Entity.
     """
+
     provider: str
     model: str
     model_schema: AIModelEntity
@@ -27,6 +30,7 @@ class AdvancedChatMessageEntity(BaseModel):
     """
     Advanced Chat Message Entity.
     """
+
     text: str
     role: PromptMessageRole
 
@@ -35,6 +39,7 @@ class AdvancedChatPromptTemplateEntity(BaseModel):
     """
     Advanced Chat Prompt Template Entity.
     """
+
     messages: list[AdvancedChatMessageEntity]
 
 
@@ -47,6 +52,7 @@ class AdvancedCompletionPromptTemplateEntity(BaseModel):
         """
         Role Prefix Entity.
         """
+
         user: str
         assistant: str
 
@@ -64,11 +70,12 @@ class PromptTemplateEntity(BaseModel):
         Prompt Type.
         'simple', 'advanced'
         """
-        SIMPLE = 'simple'
-        ADVANCED = 'advanced'
+
+        SIMPLE = "simple"
+        ADVANCED = "advanced"
 
         @classmethod
-        def value_of(cls, value: str) -> 'PromptType':
+        def value_of(cls, value: str) -> "PromptType":
             """
             Get value of given mode.
 
@@ -78,18 +85,21 @@ class PromptTemplateEntity(BaseModel):
             for mode in cls:
                 if mode.value == value:
                     return mode
-            raise ValueError(f'invalid prompt type value {value}')
+            raise ValueError(f"invalid prompt type value {value}")
 
     prompt_type: PromptType
     simple_prompt_template: Optional[str] = None
     advanced_chat_prompt_template: Optional[AdvancedChatPromptTemplateEntity] = None
-    advanced_completion_prompt_template: Optional[AdvancedCompletionPromptTemplateEntity] = None
+    advanced_completion_prompt_template: Optional[
+        AdvancedCompletionPromptTemplateEntity
+    ] = None
 
 
 class ExternalDataVariableEntity(BaseModel):
     """
     External Data Variable Entity.
     """
+
     variable: str
     type: str
     config: dict[str, Any] = {}
@@ -105,11 +115,12 @@ class DatasetRetrieveConfigEntity(BaseModel):
         Dataset Retrieve Strategy.
         'single' or 'multiple'
         """
-        SINGLE = 'single'
-        MULTIPLE = 'multiple'
+
+        SINGLE = "single"
+        MULTIPLE = "multiple"
 
         @classmethod
-        def value_of(cls, value: str) -> 'RetrieveStrategy':
+        def value_of(cls, value: str) -> "RetrieveStrategy":
             """
             Get value of given mode.
 
@@ -119,7 +130,7 @@ class DatasetRetrieveConfigEntity(BaseModel):
             for mode in cls:
                 if mode.value == value:
                     return mode
-            raise ValueError(f'invalid retrieve strategy value {value}')
+            raise ValueError(f"invalid retrieve strategy value {value}")
 
     query_variable: Optional[str] = None  # Only when app mode is completion
 
@@ -134,6 +145,7 @@ class DatasetEntity(BaseModel):
     """
     Dataset Config Entity.
     """
+
     dataset_ids: list[str]
     retrieve_config: DatasetRetrieveConfigEntity
 
@@ -142,6 +154,7 @@ class SensitiveWordAvoidanceEntity(BaseModel):
     """
     Sensitive Word Avoidance Entity.
     """
+
     type: str
     config: dict[str, Any] = {}
 
@@ -150,6 +163,7 @@ class TextToSpeechEntity(BaseModel):
     """
     Sensitive Word Avoidance Entity.
     """
+
     enabled: bool
     voice: Optional[str] = None
     language: Optional[str] = None
@@ -159,6 +173,7 @@ class FileUploadEntity(BaseModel):
     """
     File Upload Entity.
     """
+
     image_config: Optional[dict[str, Any]] = None
 
 
@@ -166,6 +181,7 @@ class AgentToolEntity(BaseModel):
     """
     Agent Tool Entity.
     """
+
     provider_type: Literal["builtin", "api"]
     provider_id: str
     tool_name: str
@@ -176,6 +192,7 @@ class AgentPromptEntity(BaseModel):
     """
     Agent Prompt Entity.
     """
+
     first_prompt: str
     next_iteration: str
 
@@ -189,6 +206,7 @@ class AgentScratchpadUnit(BaseModel):
         """
         Action Entity.
         """
+
         action_name: str
         action_input: Union[dict, str]
 
@@ -208,8 +226,9 @@ class AgentEntity(BaseModel):
         """
         Agent Strategy.
         """
-        CHAIN_OF_THOUGHT = 'chain-of-thought'
-        FUNCTION_CALLING = 'function-calling'
+
+        CHAIN_OF_THOUGHT = "chain-of-thought"
+        FUNCTION_CALLING = "function-calling"
 
     provider: str
     model: str
@@ -223,6 +242,7 @@ class AppOrchestrationConfigEntity(BaseModel):
     """
     App Orchestration Config Entity.
     """
+
     model_config: ModelConfigEntity
     prompt_template: PromptTemplateEntity
     external_data_variables: list[ExternalDataVariableEntity] = []
@@ -244,13 +264,14 @@ class InvokeFrom(Enum):
     """
     Invoke From.
     """
-    SERVICE_API = 'service-api'
-    WEB_APP = 'web-app'
-    EXPLORE = 'explore'
-    DEBUGGER = 'debugger'
+
+    SERVICE_API = "service-api"
+    WEB_APP = "web-app"
+    EXPLORE = "explore"
+    DEBUGGER = "debugger"
 
     @classmethod
-    def value_of(cls, value: str) -> 'InvokeFrom':
+    def value_of(cls, value: str) -> "InvokeFrom":
         """
         Get value of given mode.
 
@@ -260,7 +281,7 @@ class InvokeFrom(Enum):
         for mode in cls:
             if mode.value == value:
                 return mode
-        raise ValueError(f'invalid invoke from value {value}')
+        raise ValueError(f"invalid invoke from value {value}")
 
     def to_source(self) -> str:
         """
@@ -269,21 +290,22 @@ class InvokeFrom(Enum):
         :return: source
         """
         if self == InvokeFrom.WEB_APP:
-            return 'web_app'
+            return "web_app"
         elif self == InvokeFrom.DEBUGGER:
-            return 'dev'
+            return "dev"
         elif self == InvokeFrom.EXPLORE:
-            return 'explore_app'
+            return "explore_app"
         elif self == InvokeFrom.SERVICE_API:
-            return 'api'
+            return "api"
 
-        return 'dev'
+        return "dev"
 
 
 class ApplicationGenerateEntity(BaseModel):
     """
     Application Generate Entity.
     """
+
     task_id: str
     tenant_id: str
 

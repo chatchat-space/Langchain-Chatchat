@@ -1,60 +1,58 @@
 import asyncio
-import os
-from typing import Optional, Any, Dict
-
-from fastapi import (APIRouter,
-                     FastAPI,
-                     HTTPException,
-                     Response,
-                     Request,
-                     status
-                     )
-import logging
-from model_providers.core.bootstrap import OpenAIBootstrapBaseWeb
 import json
-import pprint
-import tiktoken
-from model_providers.core.bootstrap.openai_protocol import ChatCompletionRequest, EmbeddingsRequest, \
-    ChatCompletionResponse, ModelList, EmbeddingsResponse, ChatCompletionStreamResponse, FunctionAvailable
-from uvicorn import Config, Server
-from fastapi.middleware.cors import CORSMiddleware
+import logging
 import multiprocessing as mp
+import os
+import pprint
 import threading
+from typing import Any, Dict, Optional
+
+import tiktoken
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette import EventSourceResponse
+from uvicorn import Config, Server
 
-from model_providers.core.model_runtime.entities.message_entities import UserPromptMessage
+from model_providers.core.bootstrap import OpenAIBootstrapBaseWeb
+from model_providers.core.bootstrap.openai_protocol import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatCompletionStreamResponse,
+    EmbeddingsRequest,
+    EmbeddingsResponse,
+    FunctionAvailable,
+    ModelList,
+)
+from model_providers.core.model_runtime.entities.message_entities import (
+    UserPromptMessage,
+)
 from model_providers.core.model_runtime.entities.model_entities import ModelType
-from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
-from model_providers.core.model_runtime.model_providers.__base.large_language_model import LargeLanguageModel
-from model_providers.core.utils.generic import dictify, jsonify
-
 from model_providers.core.model_runtime.model_providers import model_provider_factory
+from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
+from model_providers.core.model_runtime.model_providers.__base.large_language_model import (
+    LargeLanguageModel,
+)
+from model_providers.core.utils.generic import dictify, jsonify
 
 logger = logging.getLogger(__name__)
 
 
-async def create_stream_chat_completion(model_type_instance: LargeLanguageModel, chat_request: ChatCompletionRequest):
+async def create_stream_chat_completion(
+    model_type_instance: LargeLanguageModel, chat_request: ChatCompletionRequest
+):
     try:
-
-
         response = model_type_instance.invoke(
             model=chat_request.model,
             credentials={
-                'openai_api_key': "sk-",
-                'minimax_api_key': os.environ.get('MINIMAX_API_KEY'),
-                'minimax_group_id': os.environ.get('MINIMAX_GROUP_ID')
+                "openai_api_key": "sk-",
+                "minimax_api_key": os.environ.get("MINIMAX_API_KEY"),
+                "minimax_group_id": os.environ.get("MINIMAX_GROUP_ID"),
             },
-            prompt_messages=[
-                UserPromptMessage(
-                    content='北京今天的天气怎么样'
-                )
-            ],
-            model_parameters={
-                **chat_request.to_model_parameters_dict()
-            },
+            prompt_messages=[UserPromptMessage(content="北京今天的天气怎么样")],
+            model_parameters={**chat_request.to_model_parameters_dict()},
             stop=chat_request.stop,
             stream=chat_request.stream,
-            user="abc-123"
+            user="abc-123",
         )
         return response
 
@@ -81,7 +79,9 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         host = cfg.get("host", "127.0.0.1")
         port = cfg.get("port", 20000)
 
-        logger.info(f"Starting openai Bootstrap Server Lifecycle at endpoint: http://{host}:{port}")
+        logger.info(
+            f"Starting openai Bootstrap Server Lifecycle at endpoint: http://{host}:{port}"
+        )
         return cls(host=host, port=port)
 
     def serve(self, logging_conf: Optional[dict] = None):
@@ -140,8 +140,12 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
     async def list_models(self, request: Request):
         pass
 
-    async def create_embeddings(self, request: Request, embeddings_request: EmbeddingsRequest):
-        logger.info(f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}")
+    async def create_embeddings(
+        self, request: Request, embeddings_request: EmbeddingsRequest
+    ):
+        logger.info(
+            f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
+        )
         if os.environ["API_KEY"] is None:
             authorization = request.headers.get("Authorization")
             authorization = authorization.split("Bearer ")[-1]
@@ -171,42 +175,41 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         )
         return EmbeddingsResponse(**dictify(response))
 
-    async def create_chat_completion(self, request: Request, chat_request: ChatCompletionRequest):
-        logger.info(f"Received chat completion request: {pprint.pformat(chat_request.dict())}")
+    async def create_chat_completion(
+        self, request: Request, chat_request: ChatCompletionRequest
+    ):
+        logger.info(
+            f"Received chat completion request: {pprint.pformat(chat_request.dict())}"
+        )
         if os.environ["API_KEY"] is None:
             authorization = request.headers.get("Authorization")
             authorization = authorization.split("Bearer ")[-1]
         else:
             authorization = os.environ["API_KEY"]
-        model_provider_factory.get_providers(provider_name='openai')
-        provider_instance = model_provider_factory.get_provider_instance('openai')
+        model_provider_factory.get_providers(provider_name="openai")
+        provider_instance = model_provider_factory.get_provider_instance("openai")
         model_type_instance = provider_instance.get_model_instance(ModelType.LLM)
         if chat_request.stream:
             generator = create_stream_chat_completion(model_type_instance, chat_request)
             return EventSourceResponse(generator, media_type="text/event-stream")
         else:
-
             response = model_type_instance.invoke(
-                model='gpt-4',
+                model="gpt-4",
                 credentials={
-                    'openai_api_key': "sk-",
-                    'minimax_api_key': os.environ.get('MINIMAX_API_KEY'),
-                    'minimax_group_id': os.environ.get('MINIMAX_GROUP_ID')
+                    "openai_api_key": "sk-",
+                    "minimax_api_key": os.environ.get("MINIMAX_API_KEY"),
+                    "minimax_group_id": os.environ.get("MINIMAX_GROUP_ID"),
                 },
-                prompt_messages=[
-                    UserPromptMessage(
-                        content='北京今天的天气怎么样'
-                    )
-                ],
+                prompt_messages=[UserPromptMessage(content="北京今天的天气怎么样")],
                 model_parameters={
-                    'temperature': 0.7,
-                    'top_p': 1.0,
-                    'top_k': 1,
-                    'plugin_web_search': True,
+                    "temperature": 0.7,
+                    "top_p": 1.0,
+                    "top_k": 1,
+                    "plugin_web_search": True,
                 },
-                stop=['you'],
+                stop=["you"],
                 stream=False,
-                user="abc-123"
+                user="abc-123",
             )
 
             chat_response = ChatCompletionResponse(**dictify(response))
@@ -215,15 +218,19 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
 
 
 def run(
-        cfg: Dict, logging_conf: Optional[dict] = None,
-        started_event: mp.Event = None,
+    cfg: Dict,
+    logging_conf: Optional[dict] = None,
+    started_event: mp.Event = None,
 ):
     logging.config.dictConfig(logging_conf)  # type: ignore
     try:
         import signal
+
         # 跳过键盘中断，使用xoscar的信号处理
         signal.signal(signal.SIGINT, lambda *_: None)
-        api = RESTFulOpenAIBootstrapBaseWeb.from_config(cfg=cfg.get("run_openai_api", {}))
+        api = RESTFulOpenAIBootstrapBaseWeb.from_config(
+            cfg=cfg.get("run_openai_api", {})
+        )
         api.set_app_event(started_event=started_event)
         api.serve(logging_conf=logging_conf)
 

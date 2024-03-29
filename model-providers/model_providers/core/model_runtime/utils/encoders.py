@@ -4,7 +4,14 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from decimal import Decimal
 from enum import Enum
-from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
+from ipaddress import (
+    IPv4Address,
+    IPv4Interface,
+    IPv4Network,
+    IPv6Address,
+    IPv6Interface,
+    IPv6Network,
+)
 from pathlib import Path, PurePath
 from re import Pattern
 from types import GeneratorType
@@ -78,7 +85,7 @@ ENCODERS_BY_TYPE: dict[type[Any], Callable[[Any], Any]] = {
 
 
 def generate_encoders_by_class_tuples(
-    type_encoder_map: dict[Any, Callable[[Any], Any]]
+    type_encoder_map: dict[Any, Callable[[Any], Any]],
 ) -> dict[Callable[[Any], Any], tuple[Any, ...]]:
     encoders_by_class_tuples: dict[Callable[[Any], Any], tuple[Any, ...]] = defaultdict(
         tuple
@@ -153,7 +160,7 @@ def jsonable_encoder(
     if isinstance(obj, str | int | float | type(None)):
         return obj
     if isinstance(obj, Decimal):
-        return format(obj, 'f')
+        return format(obj, "f")
     if isinstance(obj, dict):
         encoded_dict = {}
         allowed_keys = set(obj.keys())

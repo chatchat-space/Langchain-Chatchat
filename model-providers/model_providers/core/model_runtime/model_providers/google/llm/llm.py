@@ -5,10 +5,19 @@ from typing import Optional, Union
 import google.api_core.exceptions as exceptions
 import google.generativeai as genai
 import google.generativeai.client as client
-from google.generativeai.types import ContentType, GenerateContentResponse, HarmBlockThreshold, HarmCategory
+from google.generativeai.types import (
+    ContentType,
+    GenerateContentResponse,
+    HarmBlockThreshold,
+    HarmCategory,
+)
 from google.generativeai.types.content_types import to_part
 
-from model_providers.core.model_runtime.entities.llm_entities import LLMResult, LLMResultChunk, LLMResultChunkDelta
+from model_providers.core.model_runtime.entities.llm_entities import (
+    LLMResult,
+    LLMResultChunk,
+    LLMResultChunkDelta,
+)
 from model_providers.core.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
     PromptMessage,
@@ -26,8 +35,12 @@ from model_providers.core.model_runtime.errors.invoke import (
     InvokeRateLimitError,
     InvokeServerUnavailableError,
 )
-from model_providers.core.model_runtime.errors.validate import CredentialsValidateFailedError
-from model_providers.core.model_runtime.model_providers.__base.large_language_model import LargeLanguageModel
+from model_providers.core.model_runtime.errors.validate import (
+    CredentialsValidateFailedError,
+)
+from model_providers.core.model_runtime.model_providers.__base.large_language_model import (
+    LargeLanguageModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +55,17 @@ if you are not sure about the structure.
 
 
 class GoogleLargeLanguageModel(LargeLanguageModel):
-
-    def _invoke(self, model: str, credentials: dict,
-                prompt_messages: list[PromptMessage], model_parameters: dict,
-                tools: Optional[list[PromptMessageTool]] = None, stop: Optional[list[str]] = None,
-                stream: bool = True, user: Optional[str] = None) \
-            -> Union[LLMResult, Generator]:
+    def _invoke(
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        model_parameters: dict,
+        tools: Optional[list[PromptMessageTool]] = None,
+        stop: Optional[list[str]] = None,
+        stream: bool = True,
+        user: Optional[str] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
 
@@ -62,10 +80,17 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: full response or stream response chunk generator result
         """
         # invoke model
-        return self._generate(model, credentials, prompt_messages, model_parameters, stop, stream, user)
+        return self._generate(
+            model, credentials, prompt_messages, model_parameters, stop, stream, user
+        )
 
-    def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
-                       tools: Optional[list[PromptMessageTool]] = None) -> int:
+    def get_num_tokens(
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        tools: Optional[list[PromptMessageTool]] = None,
+    ) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -89,8 +114,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         messages = messages.copy()  # don't mutate the original list
 
         text = "".join(
-            self._convert_one_message_to_text(message)
-            for message in messages
+            self._convert_one_message_to_text(message) for message in messages
         )
 
         return text.rstrip()
@@ -106,16 +130,23 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
 
         try:
             ping_message = PromptMessage(content="ping", role="system")
-            self._generate(model, credentials, [ping_message], {"max_tokens_to_sample": 5})
+            self._generate(
+                model, credentials, [ping_message], {"max_tokens_to_sample": 5}
+            )
 
         except Exception as ex:
             raise CredentialsValidateFailedError(str(ex))
 
-
-    def _generate(self, model: str, credentials: dict,
-                  prompt_messages: list[PromptMessage], model_parameters: dict,
-                  stop: Optional[list[str]] = None, stream: bool = True,
-                  user: Optional[str] = None) -> Union[LLMResult, Generator]:
+    def _generate(
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        model_parameters: dict,
+        stop: Optional[list[str]] = None,
+        stream: bool = True,
+        user: Optional[str] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
 
@@ -129,14 +160,14 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: full response or stream response chunk generator result
         """
         config_kwargs = model_parameters.copy()
-        config_kwargs['max_output_tokens'] = config_kwargs.pop('max_tokens_to_sample', None)
+        config_kwargs["max_output_tokens"] = config_kwargs.pop(
+            "max_tokens_to_sample", None
+        )
 
         if stop:
             config_kwargs["stop_sequences"] = stop
 
-        google_model = genai.GenerativeModel(
-            model_name=model
-        )
+        google_model = genai.GenerativeModel(model_name=model)
 
         history = []
 
@@ -146,13 +177,12 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
             content = self._format_message_to_glm_content(last_msg)
             history.append(content)
         else:
-            for msg in prompt_messages:     # makes message roles strictly alternating
+            for msg in prompt_messages:  # makes message roles strictly alternating
                 content = self._format_message_to_glm_content(msg)
                 if history and history[-1]["role"] == content["role"]:
                     history[-1]["parts"].extend(content["parts"])
                 else:
                     history.append(content)
-
 
         # Create a new ClientManager with tenant's API key
         new_client_manager = client._ClientManager()
@@ -161,7 +191,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
 
         google_model._client = new_custom_client
 
-        safety_settings={
+        safety_settings = {
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
             HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
@@ -170,20 +200,27 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
 
         response = google_model.generate_content(
             contents=history,
-            generation_config=genai.types.GenerationConfig(
-                **config_kwargs
-            ),
+            generation_config=genai.types.GenerationConfig(**config_kwargs),
             stream=stream,
-            safety_settings=safety_settings
+            safety_settings=safety_settings,
         )
 
         if stream:
-            return self._handle_generate_stream_response(model, credentials, response, prompt_messages)
+            return self._handle_generate_stream_response(
+                model, credentials, response, prompt_messages
+            )
 
-        return self._handle_generate_response(model, credentials, response, prompt_messages)
+        return self._handle_generate_response(
+            model, credentials, response, prompt_messages
+        )
 
-    def _handle_generate_response(self, model: str, credentials: dict, response: GenerateContentResponse,
-                                  prompt_messages: list[PromptMessage]) -> LLMResult:
+    def _handle_generate_response(
+        self,
+        model: str,
+        credentials: dict,
+        response: GenerateContentResponse,
+        prompt_messages: list[PromptMessage],
+    ) -> LLMResult:
         """
         Handle llm response
 
@@ -194,16 +231,18 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: llm response
         """
         # transform assistant message to prompt message
-        assistant_prompt_message = AssistantPromptMessage(
-            content=response.text
-        )
+        assistant_prompt_message = AssistantPromptMessage(content=response.text)
 
         # calculate num tokens
         prompt_tokens = self.get_num_tokens(model, credentials, prompt_messages)
-        completion_tokens = self.get_num_tokens(model, credentials, [assistant_prompt_message])
+        completion_tokens = self.get_num_tokens(
+            model, credentials, [assistant_prompt_message]
+        )
 
         # transform usage
-        usage = self._calc_response_usage(model, credentials, prompt_tokens, completion_tokens)
+        usage = self._calc_response_usage(
+            model, credentials, prompt_tokens, completion_tokens
+        )
 
         # transform response
         result = LLMResult(
@@ -215,8 +254,13 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
 
         return result
 
-    def _handle_generate_stream_response(self, model: str, credentials: dict, response: GenerateContentResponse,
-                                         prompt_messages: list[PromptMessage]) -> Generator:
+    def _handle_generate_stream_response(
+        self,
+        model: str,
+        credentials: dict,
+        response: GenerateContentResponse,
+        prompt_messages: list[PromptMessage],
+    ) -> Generator:
         """
         Handle llm stream response
 
@@ -232,28 +276,29 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
             index += 1
 
             assistant_prompt_message = AssistantPromptMessage(
-                content=content if content else '',
+                content=content if content else "",
             )
 
             if not response._done:
-
                 # transform assistant message to prompt message
                 yield LLMResultChunk(
                     model=model,
                     prompt_messages=prompt_messages,
                     delta=LLMResultChunkDelta(
-                        index=index,
-                        message=assistant_prompt_message
-                    )
+                        index=index, message=assistant_prompt_message
+                    ),
                 )
             else:
-
                 # calculate num tokens
                 prompt_tokens = self.get_num_tokens(model, credentials, prompt_messages)
-                completion_tokens = self.get_num_tokens(model, credentials, [assistant_prompt_message])
+                completion_tokens = self.get_num_tokens(
+                    model, credentials, [assistant_prompt_message]
+                )
 
                 # transform usage
-                usage = self._calc_response_usage(model, credentials, prompt_tokens, completion_tokens)
+                usage = self._calc_response_usage(
+                    model, credentials, prompt_tokens, completion_tokens
+                )
 
                 yield LLMResultChunk(
                     model=model,
@@ -262,8 +307,8 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
                         index=index,
                         message=assistant_prompt_message,
                         finish_reason=chunk.candidates[0].finish_reason,
-                        usage=usage
-                    )
+                        usage=usage,
+                    ),
                 )
 
     def _convert_one_message_to_text(self, message: PromptMessage) -> str:
@@ -302,21 +347,23 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         """
 
         parts = []
-        if (isinstance(message.content, str)):
+        if isinstance(message.content, str):
             parts.append(to_part(message.content))
         else:
             for c in message.content:
                 if c.type == PromptMessageContentType.TEXT:
                     parts.append(to_part(c.data))
                 else:
-                    metadata, data = c.data.split(',', 1)
-                    mime_type = metadata.split(';', 1)[0].split(':')[1]
-                    blob = {"inline_data":{"mime_type":mime_type,"data":data}}
+                    metadata, data = c.data.split(",", 1)
+                    mime_type = metadata.split(";", 1)[0].split(":")[1]
+                    blob = {"inline_data": {"mime_type": mime_type, "data": data}}
                     parts.append(blob)
 
         glm_content = {
-            "role": "user" if message.role in (PromptMessageRole.USER, PromptMessageRole.SYSTEM) else "model",
-            "parts": parts
+            "role": "user"
+            if message.role in (PromptMessageRole.USER, PromptMessageRole.SYSTEM)
+            else "model",
+            "parts": parts,
         }
 
         return glm_content
@@ -332,25 +379,23 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: Invoke emd = genai.GenerativeModel(model)rror mapping
         """
         return {
-            InvokeConnectionError: [
-                exceptions.RetryError
-            ],
+            InvokeConnectionError: [exceptions.RetryError],
             InvokeServerUnavailableError: [
                 exceptions.ServiceUnavailable,
                 exceptions.InternalServerError,
                 exceptions.BadGateway,
                 exceptions.GatewayTimeout,
-                exceptions.DeadlineExceeded
+                exceptions.DeadlineExceeded,
             ],
             InvokeRateLimitError: [
                 exceptions.ResourceExhausted,
-                exceptions.TooManyRequests
+                exceptions.TooManyRequests,
             ],
             InvokeAuthorizationError: [
                 exceptions.Unauthenticated,
                 exceptions.PermissionDenied,
                 exceptions.Unauthenticated,
-                exceptions.Forbidden
+                exceptions.Forbidden,
             ],
             InvokeBadRequestError: [
                 exceptions.BadRequest,
@@ -366,5 +411,5 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
                 exceptions.PreconditionFailed,
                 exceptions.RequestRangeNotSatisfiable,
                 exceptions.Cancelled,
-            ]
+            ],
         }
