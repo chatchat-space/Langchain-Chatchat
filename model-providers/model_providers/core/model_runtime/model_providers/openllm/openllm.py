@@ -1,6 +1,8 @@
 import logging
 
-from model_providers.core.model_runtime.model_providers.__base.model_provider import ModelProvider
+from model_providers.core.model_runtime.model_providers.__base.model_provider import (
+    ModelProvider,
+)
 
 logger = logging.getLogger(__name__)
 

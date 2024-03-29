@@ -4,7 +4,10 @@ from abc import ABC, abstractmethod
 
 import yaml
 
-from model_providers.core.model_runtime.entities.model_entities import AIModelEntity, ModelType
+from model_providers.core.model_runtime.entities.model_entities import (
+    AIModelEntity,
+    ModelType,
+)
 from model_providers.core.model_runtime.entities.provider_entities import ProviderEntity
 from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
 
@@ -36,24 +39,26 @@ class ModelProvider(ABC):
             return self.provider_schema
 
         # get dirname of the current path
-        provider_name = self.__class__.__module__.split('.')[-1]
+        provider_name = self.__class__.__module__.split(".")[-1]
 
         # get the path of the model_provider classes
         base_path = os.path.abspath(__file__)
-        current_path = os.path.join(os.path.dirname(os.path.dirname(base_path)), provider_name)
+        current_path = os.path.join(
+            os.path.dirname(os.path.dirname(base_path)), provider_name
+        )
 
         # read provider schema from yaml file
-        yaml_path = os.path.join(current_path, f'{provider_name}.yaml')
+        yaml_path = os.path.join(current_path, f"{provider_name}.yaml")
         yaml_data = {}
         if os.path.exists(yaml_path):
-            with open(yaml_path, encoding='utf-8') as f:
+            with open(yaml_path, encoding="utf-8") as f:
                 yaml_data = yaml.safe_load(f)
 
         try:
             # yaml_data to entity
             provider_schema = ProviderEntity(**yaml_data)
         except Exception as e:
-            raise Exception(f'Invalid provider schema for {provider_name}: {str(e)}')
+            raise Exception(f"Invalid provider schema for {provider_name}: {str(e)}")
 
         # cache schema
         self.provider_schema = provider_schema
@@ -88,37 +93,52 @@ class ModelProvider(ABC):
         :return:
         """
         # get dirname of the current path
-        provider_name = self.__class__.__module__.split('.')[-1]
+        provider_name = self.__class__.__module__.split(".")[-1]
 
         if f"{provider_name}.{model_type.value}" in self.model_instance_map:
             return self.model_instance_map[f"{provider_name}.{model_type.value}"]
 
         # get the path of the model type classes
         base_path = os.path.abspath(__file__)
-        model_type_name = model_type.value.replace('-', '_')
-        model_type_path = os.path.join(os.path.dirname(os.path.dirname(base_path)), provider_name, model_type_name)
-        model_type_py_path = os.path.join(model_type_path, f'{model_type_name}.py')
+        model_type_name = model_type.value.replace("-", "_")
+        model_type_path = os.path.join(
+            os.path.dirname(os.path.dirname(base_path)), provider_name, model_type_name
+        )
+        model_type_py_path = os.path.join(model_type_path, f"{model_type_name}.py")
 
         if not os.path.isdir(model_type_path) or not os.path.exists(model_type_py_path):
-            raise Exception(f'Invalid model type {model_type} for provider {provider_name}')
+            raise Exception(
+                f"Invalid model type {model_type} for provider {provider_name}"
+            )
 
         # Dynamic loading {model_type_name}.py file and find the subclass of AIModel
-        parent_module = '.'.join(self.__class__.__module__.split('.')[:-1])
-        spec = importlib.util.spec_from_file_location(f"{parent_module}.{model_type_name}.{model_type_name}", model_type_py_path)
+        parent_module = ".".join(self.__class__.__module__.split(".")[:-1])
+        spec = importlib.util.spec_from_file_location(
+            f"{parent_module}.{model_type_name}.{model_type_name}", model_type_py_path
+        )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
 
         model_class = None
         for name, obj in vars(mod).items():
-            if (isinstance(obj, type) and issubclass(obj, AIModel) and not obj.__abstractmethods__
-                    and obj != AIModel and obj.__module__ == mod.__name__):
+            if (
+                isinstance(obj, type)
+                and issubclass(obj, AIModel)
+                and not obj.__abstractmethods__
+                and obj != AIModel
+                and obj.__module__ == mod.__name__
+            ):
                 model_class = obj
                 break
 
         if not model_class:
-            raise Exception(f'Missing AIModel Class for model type {model_type} in {model_type_py_path}')
+            raise Exception(
+                f"Missing AIModel Class for model type {model_type} in {model_type_py_path}"
+            )
 
         model_instance_map = model_class()
-        self.model_instance_map[f"{provider_name}.{model_type.value}"] = model_instance_map
+        self.model_instance_map[
+            f"{provider_name}.{model_type.value}"
+        ] = model_instance_map
 
         return model_instance_map

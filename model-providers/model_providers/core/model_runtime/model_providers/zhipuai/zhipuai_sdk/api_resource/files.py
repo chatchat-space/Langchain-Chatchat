@@ -17,17 +17,16 @@ __all__ = ["Files"]
 
 
 class Files(BaseAPI):
-
     def __init__(self, client: ZhipuAI) -> None:
         super().__init__(client)
 
     def create(
-            self,
-            *,
-            file: FileTypes,
-            purpose: str,
-            extra_headers: Headers | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        *,
+        file: FileTypes,
+        purpose: str,
+        extra_headers: Headers | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> FileObject:
         if not is_file_content(file):
             prefix = f"Expected file input `{file!r}`"
@@ -51,14 +50,14 @@ class Files(BaseAPI):
         )
 
     def list(
-            self,
-            *,
-            purpose: str | NotGiven = NOT_GIVEN,
-            limit: int  | NotGiven = NOT_GIVEN,
-            after: str | NotGiven = NOT_GIVEN,
-            order: str | NotGiven = NOT_GIVEN,
-            extra_headers: Headers | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        *,
+        purpose: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
+        after: str | NotGiven = NOT_GIVEN,
+        order: str | NotGiven = NOT_GIVEN,
+        extra_headers: Headers | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ListOfFileObject:
         return self._get(
             "/files",

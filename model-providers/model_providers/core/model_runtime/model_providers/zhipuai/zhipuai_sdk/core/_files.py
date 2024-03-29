@@ -25,7 +25,9 @@ def _transform_file(file: FileTypes) -> HttpxFileTypes:
         else:
             return (file[0], file[1], *file[2:])
     else:
-        raise TypeError(f"Unexpected input file with type {type(file)},Expected FileContent type or tuple type")
+        raise TypeError(
+            f"Unexpected input file with type {type(file)},Expected FileContent type or tuple type"
+        )
 
 
 def make_httpx_files(files: RequestFiles | None) -> HttpxRequestFiles | None:
@@ -37,5 +39,7 @@ def make_httpx_files(files: RequestFiles | None) -> HttpxRequestFiles | None:
     elif isinstance(files, Sequence):
         files = [(key, _transform_file(file)) for key, file in files]
     else:
-        raise TypeError(f"Unexpected input file with type {type(files)}, excepted Mapping or Sequence")
+        raise TypeError(
+            f"Unexpected input file with type {type(files)}, excepted Mapping or Sequence"
+        )
     return files

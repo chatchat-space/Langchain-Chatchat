@@ -5,9 +5,15 @@ from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 
-from model_providers.core.entities.model_entities import DefaultModelEntity, DefaultModelProviderEntity
-from model_providers.core.entities.provider_configuration import ProviderConfiguration, ProviderConfigurations, \
-    ProviderModelBundle
+from model_providers.core.entities.model_entities import (
+    DefaultModelEntity,
+    DefaultModelProviderEntity,
+)
+from model_providers.core.entities.provider_configuration import (
+    ProviderConfiguration,
+    ProviderConfigurations,
+    ProviderModelBundle,
+)
 from model_providers.core.entities.provider_entities import (
     CustomConfiguration,
     CustomModelConfiguration,
@@ -27,11 +33,17 @@ class ProviderManager:
     ProviderManager is a class that manages the model providers includes Hosting and Customize Model Providers.
     """
 
-    def __init__(self,
-                 provider_name_to_provider_records_dict: dict,
-                 provider_name_to_provider_model_records_dict: dict) -> None:
-        self.provider_name_to_provider_records_dict = provider_name_to_provider_records_dict
-        self.provider_name_to_provider_model_records_dict = provider_name_to_provider_model_records_dict
+    def __init__(
+        self,
+        provider_name_to_provider_records_dict: dict,
+        provider_name_to_provider_model_records_dict: dict,
+    ) -> None:
+        self.provider_name_to_provider_records_dict = (
+            provider_name_to_provider_records_dict
+        )
+        self.provider_name_to_provider_model_records_dict = (
+            provider_name_to_provider_model_records_dict
+        )
 
     def get_configurations(self, provider: str) -> ProviderConfigurations:
         """
@@ -80,24 +92,27 @@ class ProviderManager:
         for provider_entity in provider_entities:
             provider_name = provider_entity.provider
 
-            provider_credentials = self.provider_name_to_provider_records_dict.get(provider_entity.provider)
+            provider_credentials = self.provider_name_to_provider_records_dict.get(
+                provider_entity.provider
+            )
             if not provider_credentials:
                 provider_credentials = {}
 
-            provider_model_records = self.provider_name_to_provider_model_records_dict.get(provider_entity.provider)
+            provider_model_records = (
+                self.provider_name_to_provider_model_records_dict.get(
+                    provider_entity.provider
+                )
+            )
             if not provider_model_records:
                 provider_model_records = []
 
             # Convert to custom configuration
             custom_configuration = self._to_custom_configuration(
-                provider_entity,
-                provider_credentials,
-                provider_model_records
+                provider_entity, provider_credentials, provider_model_records
             )
 
             provider_configuration = ProviderConfiguration(
-                provider=provider_entity,
-                custom_configuration=custom_configuration
+                provider=provider_entity, custom_configuration=custom_configuration
             )
 
             provider_configurations[provider_name] = provider_configuration
@@ -105,7 +120,9 @@ class ProviderManager:
         # Return the encapsulated object
         return provider_configurations
 
-    def get_provider_model_bundle(self, provider: str, model_type: ModelType) -> ProviderModelBundle:
+    def get_provider_model_bundle(
+        self, provider: str, model_type: ModelType
+    ) -> ProviderModelBundle:
         """
         Get provider model bundle.
         :param provider: provider name
@@ -125,7 +142,7 @@ class ProviderManager:
         return ProviderModelBundle(
             configuration=provider_configuration,
             provider_instance=provider_instance,
-            model_type_instance=model_type_instance
+            model_type_instance=model_type_instance,
         )
 
     def get_default_model(self, model_type: ModelType) -> Optional[DefaultModelEntity]:
@@ -142,8 +159,7 @@ class ProviderManager:
 
         # get available models from provider_configurations
         available_models = provider_configurations.get_models(
-            model_type=model_type,
-            only_active=True
+            model_type=model_type, only_active=True
         )
 
         if available_models:
@@ -151,8 +167,8 @@ class ProviderManager:
             for available_model in available_models:
                 if available_model.model == "gpt-3.5-turbo-1106":
                     default_model = {
-                        'provider_name': available_model.provider.provider,
-                        'model_name': available_model.model
+                        "provider_name": available_model.provider.provider,
+                        "model_name": available_model.model,
                     }
                     found = True
                     break
@@ -160,11 +176,13 @@ class ProviderManager:
             if not found:
                 available_model = available_models[0]
                 default_model = {
-                    'provider_name': available_model.provider.provider,
-                    'model_name': available_model.model
+                    "provider_name": available_model.provider.provider,
+                    "model_name": available_model.model,
                 }
 
-        provider_instance = model_provider_factory.get_provider_instance(default_model.get('provider_name'))
+        provider_instance = model_provider_factory.get_provider_instance(
+            default_model.get("provider_name")
+        )
         provider_schema = provider_instance.get_provider_schema()
 
         return DefaultModelEntity(
@@ -175,14 +193,16 @@ class ProviderManager:
                 label=provider_schema.label,
                 icon_small=provider_schema.icon_small,
                 icon_large=provider_schema.icon_large,
-                supported_model_types=provider_schema.supported_model_types
-            )
+                supported_model_types=provider_schema.supported_model_types,
+            ),
         )
 
-    def _to_custom_configuration(self,
-                                 provider_entity: ProviderEntity,
-                                 provider_credentials: dict,
-                                 provider_model_records: list[dict]) -> CustomConfiguration:
+    def _to_custom_configuration(
+        self,
+        provider_entity: ProviderEntity,
+        provider_credentials: dict,
+        provider_model_records: list[dict],
+    ) -> CustomConfiguration:
         """
         Convert to custom configuration.
 
@@ -194,7 +214,8 @@ class ProviderManager:
         # Get provider credential secret variables
         provider_credential_secret_variables = self._extract_secret_variables(
             provider_entity.provider_credential_schema.credential_form_schemas
-            if provider_entity.provider_credential_schema else []
+            if provider_entity.provider_credential_schema
+            else []
         )
 
         for variable in provider_credential_secret_variables:
@@ -210,38 +231,43 @@ class ProviderManager:
         # Get provider model credential secret variables
         model_credential_secret_variables = self._extract_secret_variables(
             provider_entity.model_credential_schema.credential_form_schemas
-            if provider_entity.model_credential_schema else []
+            if provider_entity.model_credential_schema
+            else []
         )
 
         # Get custom provider model credentials
         custom_model_configurations = []
         for provider_model_record in provider_model_records:
-            if not provider_model_record.get('model_credentials'):
+            if not provider_model_record.get("model_credentials"):
                 continue
 
             provider_model_credentials = {}
             for variable in model_credential_secret_variables:
-                if variable in provider_model_record.get('model_credentials'):
+                if variable in provider_model_record.get("model_credentials"):
                     try:
-                        provider_model_credentials[variable] = provider_model_record.get('model_credentials').get(
-                            variable)
+                        provider_model_credentials[
+                            variable
+                        ] = provider_model_record.get("model_credentials").get(variable)
                     except ValueError:
                         pass
 
             custom_model_configurations.append(
                 CustomModelConfiguration(
-                    model=provider_model_record.get('model_name'),
-                    model_type=ModelType.value_of(provider_model_record.get('model_type')),
-                    credentials=provider_model_credentials
+                    model=provider_model_record.get("model_name"),
+                    model_type=ModelType.value_of(
+                        provider_model_record.get("model_type")
+                    ),
+                    credentials=provider_model_credentials,
                 )
             )
 
         return CustomConfiguration(
-            provider=custom_provider_configuration,
-            models=custom_model_configurations
+            provider=custom_provider_configuration, models=custom_model_configurations
         )
 
-    def _extract_secret_variables(self, credential_form_schemas: list[CredentialFormSchema]) -> list[str]:
+    def _extract_secret_variables(
+        self, credential_form_schemas: list[CredentialFormSchema]
+    ) -> list[str]:
         """
         Extract secret input form variables.
 

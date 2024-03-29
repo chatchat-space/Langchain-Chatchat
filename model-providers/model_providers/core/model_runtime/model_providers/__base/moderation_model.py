@@ -10,11 +10,12 @@ class ModerationModel(AIModel):
     """
     Model class for moderation model.
     """
+
     model_type: ModelType = ModelType.MODERATION
 
-    def invoke(self, model: str, credentials: dict,
-               text: str, user: Optional[str] = None) \
-            -> bool:
+    def invoke(
+        self, model: str, credentials: dict, text: str, user: Optional[str] = None
+    ) -> bool:
         """
         Invoke moderation model
 
@@ -32,9 +33,9 @@ class ModerationModel(AIModel):
             raise self._transform_invoke_error(e)
 
     @abstractmethod
-    def _invoke(self, model: str, credentials: dict,
-                text: str, user: Optional[str] = None) \
-            -> bool:
+    def _invoke(
+        self, model: str, credentials: dict, text: str, user: Optional[str] = None
+    ) -> bool:
         """
         Invoke large language model
 
@@ -45,4 +46,3 @@ class ModerationModel(AIModel):
         :return: false if text is safe, true otherwise
         """
         raise NotImplementedError
-

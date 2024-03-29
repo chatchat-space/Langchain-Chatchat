@@ -2,11 +2,22 @@ import time
 from typing import Optional
 
 from model_providers.core.model_runtime.entities.model_entities import PriceType
-from model_providers.core.model_runtime.entities.text_embedding_entities import EmbeddingUsage, TextEmbeddingResult
-from model_providers.core.model_runtime.errors.validate import CredentialsValidateFailedError
-from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import TextEmbeddingModel
-from model_providers.core.model_runtime.model_providers.zhipuai._common import _CommonZhipuaiAI
-from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk._client import ZhipuAI
+from model_providers.core.model_runtime.entities.text_embedding_entities import (
+    EmbeddingUsage,
+    TextEmbeddingResult,
+)
+from model_providers.core.model_runtime.errors.validate import (
+    CredentialsValidateFailedError,
+)
+from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import (
+    TextEmbeddingModel,
+)
+from model_providers.core.model_runtime.model_providers.zhipuai._common import (
+    _CommonZhipuaiAI,
+)
+from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk._client import (
+    ZhipuAI,
+)
 
 
 class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
@@ -14,9 +25,13 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
     Model class for ZhipuAI text embedding model.
     """
 
-    def _invoke(self, model: str, credentials: dict,
-                texts: list[str], user: Optional[str] = None) \
-            -> TextEmbeddingResult:
+    def _invoke(
+        self,
+        model: str,
+        credentials: dict,
+        texts: list[str],
+        user: Optional[str] = None,
+    ) -> TextEmbeddingResult:
         """
         Invoke text embedding model
 
@@ -27,16 +42,16 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
         :return: embeddings result
         """
         credentials_kwargs = self._to_credential_kwargs(credentials)
-        client = ZhipuAI(
-            api_key=credentials_kwargs['api_key']
-        )
+        client = ZhipuAI(api_key=credentials_kwargs["api_key"])
 
         embeddings, embedding_used_tokens = self.embed_documents(model, client, texts)
 
         return TextEmbeddingResult(
             embeddings=embeddings,
-            usage=self._calc_response_usage(model, credentials_kwargs, embedding_used_tokens),
-            model=model
+            usage=self._calc_response_usage(
+                model, credentials_kwargs, embedding_used_tokens
+            ),
+            model=model,
         )
 
     def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
@@ -68,20 +83,20 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
         try:
             # transform credentials to kwargs for model instance
             credentials_kwargs = self._to_credential_kwargs(credentials)
-            client = ZhipuAI(
-                api_key=credentials_kwargs['api_key']
-            )
+            client = ZhipuAI(api_key=credentials_kwargs["api_key"])
 
             # call embedding model
             self.embed_documents(
                 model=model,
                 client=client,
-                texts=['ping'],
+                texts=["ping"],
             )
         except Exception as ex:
             raise CredentialsValidateFailedError(str(ex))
 
-    def embed_documents(self, model: str, client: ZhipuAI, texts: list[str]) -> tuple[list[list[float]], int]:
+    def embed_documents(
+        self, model: str, client: ZhipuAI, texts: list[str]
+    ) -> tuple[list[list[float]], int]:
         """Call out to ZhipuAI's embedding endpoint.
 
         Args:
@@ -112,7 +127,9 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
         """
         return self.embed_documents([text])[0]
 
-    def _calc_response_usage(self, model: str,credentials: dict, tokens: int) -> EmbeddingUsage:
+    def _calc_response_usage(
+        self, model: str, credentials: dict, tokens: int
+    ) -> EmbeddingUsage:
         """
         Calculate response usage
 
@@ -125,7 +142,7 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
             model=model,
             credentials=credentials,
             price_type=PriceType.INPUT,
-            tokens=tokens
+            tokens=tokens,
         )
 
         # transform usage
@@ -136,7 +153,7 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
             price_unit=input_price_info.unit,
             total_price=input_price_info.total_amount,
             currency=input_price_info.currency,
-            latency=time.perf_counter() - self.started_at
+            latency=time.perf_counter() - self.started_at,
         )
 
         return usage

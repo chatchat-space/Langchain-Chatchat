@@ -18,19 +18,19 @@ class Images(BaseAPI):
         super().__init__(client)
 
     def generations(
-            self,
-            *,
-            prompt: str,
-            model: str | NotGiven = NOT_GIVEN,
-            n: Optional[int] | NotGiven = NOT_GIVEN,
-            quality: Optional[str] | NotGiven = NOT_GIVEN,
-            response_format: Optional[str] | NotGiven = NOT_GIVEN,
-            size: Optional[str] | NotGiven = NOT_GIVEN,
-            style: Optional[str] | NotGiven = NOT_GIVEN,
-            user: str | NotGiven = NOT_GIVEN,
-            extra_headers: Headers | None = None,
-            disable_strict_validation: Optional[bool] | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        *,
+        prompt: str,
+        model: str | NotGiven = NOT_GIVEN,
+        n: Optional[int] | NotGiven = NOT_GIVEN,
+        quality: Optional[str] | NotGiven = NOT_GIVEN,
+        response_format: Optional[str] | NotGiven = NOT_GIVEN,
+        size: Optional[str] | NotGiven = NOT_GIVEN,
+        style: Optional[str] | NotGiven = NOT_GIVEN,
+        user: str | NotGiven = NOT_GIVEN,
+        extra_headers: Headers | None = None,
+        disable_strict_validation: Optional[bool] | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ImagesResponded:
         _cast_type = ImagesResponded
         if disable_strict_validation:

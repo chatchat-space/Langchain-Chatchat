@@ -16,29 +16,29 @@ class Storage:
         self.folder = None
 
     def init_config(self, config: dict):
-        self.storage_type = config.get('STORAGE_TYPE')
-        if self.storage_type == 's3':
-            self.bucket_name = config.get('S3_BUCKET_NAME')
+        self.storage_type = config.get("STORAGE_TYPE")
+        if self.storage_type == "s3":
+            self.bucket_name = config.get("S3_BUCKET_NAME")
             self.client = boto3.client(
-                's3',
-                aws_secret_access_key=config.get('S3_SECRET_KEY'),
-                aws_access_key_id=config.get('S3_ACCESS_KEY'),
-                endpoint_url=config.get('S3_ENDPOINT'),
-                region_name=config.get('S3_REGION')
+                "s3",
+                aws_secret_access_key=config.get("S3_SECRET_KEY"),
+                aws_access_key_id=config.get("S3_ACCESS_KEY"),
+                endpoint_url=config.get("S3_ENDPOINT"),
+                region_name=config.get("S3_REGION"),
             )
         else:
-            self.folder = config.get('STORAGE_LOCAL_PATH')
+            self.folder = config.get("STORAGE_LOCAL_PATH")
             if not os.path.isabs(self.folder):
-                self.folder = os.path.join(config.get('root_path'), self.folder)
+                self.folder = os.path.join(config.get("root_path"), self.folder)
 
     def save(self, filename, data):
-        if self.storage_type == 's3':
+        if self.storage_type == "s3":
             self.client.put_object(Bucket=self.bucket_name, Key=filename, Body=data)
         else:
-            if not self.folder or self.folder.endswith('/'):
+            if not self.folder or self.folder.endswith("/"):
                 filename = self.folder + filename
             else:
-                filename = self.folder + '/' + filename
+                filename = self.folder + "/" + filename
 
             folder = os.path.dirname(filename)
             os.makedirs(folder, exist_ok=True)
@@ -53,20 +53,22 @@ class Storage:
             return self.load_once(filename)
 
     def load_once(self, filename: str) -> bytes:
-        if self.storage_type == 's3':
+        if self.storage_type == "s3":
             try:
                 with closing(self.client) as client:
-                    data = client.get_object(Bucket=self.bucket_name, Key=filename)['Body'].read()
+                    data = client.get_object(Bucket=self.bucket_name, Key=filename)[
+                        "Body"
+                    ].read()
             except ClientError as ex:
-                if ex.response['Error']['Code'] == 'NoSuchKey':
+                if ex.response["Error"]["Code"] == "NoSuchKey":
                     raise FileNotFoundError("File not found")
                 else:
                     raise
         else:
-            if not self.folder or self.folder.endswith('/'):
+            if not self.folder or self.folder.endswith("/"):
                 filename = self.folder + filename
             else:
-                filename = self.folder + '/' + filename
+                filename = self.folder + "/" + filename
 
             if not os.path.exists(filename):
                 raise FileNotFoundError("File not found")
@@ -78,22 +80,24 @@ class Storage:
 
     def load_stream(self, filename: str) -> Generator:
         def generate(filename: str = filename) -> Generator:
-            if self.storage_type == 's3':
+            if self.storage_type == "s3":
                 try:
                     with closing(self.client) as client:
-                        response = client.get_object(Bucket=self.bucket_name, Key=filename)
-                        for chunk in response['Body'].iter_chunks():
+                        response = client.get_object(
+                            Bucket=self.bucket_name, Key=filename
+                        )
+                        for chunk in response["Body"].iter_chunks():
                             yield chunk
                 except ClientError as ex:
-                    if ex.response['Error']['Code'] == 'NoSuchKey':
+                    if ex.response["Error"]["Code"] == "NoSuchKey":
                         raise FileNotFoundError("File not found")
                     else:
                         raise
             else:
-                if not self.folder or self.folder.endswith('/'):
+                if not self.folder or self.folder.endswith("/"):
                     filename = self.folder + filename
                 else:
-                    filename = self.folder + '/' + filename
+                    filename = self.folder + "/" + filename
 
                 if not os.path.exists(filename):
                     raise FileNotFoundError("File not found")
@@ -105,14 +109,14 @@ class Storage:
         return generate()
 
     def download(self, filename, target_filepath):
-        if self.storage_type == 's3':
+        if self.storage_type == "s3":
             with closing(self.client) as client:
                 client.download_file(self.bucket_name, filename, target_filepath)
         else:
-            if not self.folder or self.folder.endswith('/'):
+            if not self.folder or self.folder.endswith("/"):
                 filename = self.folder + filename
             else:
-                filename = self.folder + '/' + filename
+                filename = self.folder + "/" + filename
 
             if not os.path.exists(filename):
                 raise FileNotFoundError("File not found")
@@ -120,7 +124,7 @@ class Storage:
             shutil.copyfile(filename, target_filepath)
 
     def exists(self, filename):
-        if self.storage_type == 's3':
+        if self.storage_type == "s3":
             with closing(self.client) as client:
                 try:
                     client.head_object(Bucket=self.bucket_name, Key=filename)
@@ -128,14 +132,12 @@ class Storage:
                 except:
                     return False
         else:
-            if not self.folder or self.folder.endswith('/'):
+            if not self.folder or self.folder.endswith("/"):
                 filename = self.folder + filename
             else:
-                filename = self.folder + '/' + filename
+                filename = self.folder + "/" + filename
 
             return os.path.exists(filename)
 
 
 storage = Storage()
-
-

@@ -1,6 +1,7 @@
 import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field, root_validator
 from typing_extensions import Literal
 
@@ -86,13 +87,15 @@ class ChatCompletionRequest(BaseModel):
     top_k: Optional[float] = None
     n: int = 1
     max_tokens: Optional[int] = None
-    stop: Optional[list[str]] = None,
+    stop: Optional[list[str]] = (None,)
     stream: Optional[bool] = False
 
     def to_model_parameters_dict(self, *args, **kwargs):
         # 调用父类的to_dict方法，并排除tools字段
         helper.dump_model
-        return super().dict(exclude={'tools','messages','functions','function_call'}, *args, **kwargs)
+        return super().dict(
+            exclude={"tools", "messages", "functions", "function_call"}, *args, **kwargs
+        )
 
 
 class ChatCompletionResponseChoice(BaseModel):

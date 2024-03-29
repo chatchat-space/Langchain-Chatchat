@@ -10,10 +10,7 @@ class EnhanceTongyi(Tongyi):
     @property
     def _default_params(self) -> dict[str, Any]:
         """Get the default parameters for calling OpenAI API."""
-        normal_params = {
-            "top_p": self.top_p,
-            "api_key": self.dashscope_api_key
-        }
+        normal_params = {"top_p": self.top_p, "api_key": self.dashscope_api_key}
 
         return {**normal_params, **self.model_kwargs}
 
@@ -34,14 +31,14 @@ class EnhanceTongyi(Tongyi):
             if len(prompts) > 1:
                 raise ValueError("Cannot stream results with multiple prompts.")
             params["stream"] = True
-            text = ''
+            text = ""
             for stream_resp in stream_generate_with_retry(
                 self, prompt=prompts[0], **params
             ):
                 if not generations:
                     current_text = stream_resp["output"]["text"]
                 else:
-                    current_text = stream_resp["output"]["text"][len(text):]
+                    current_text = stream_resp["output"]["text"][len(text) :]
 
                 text = stream_resp["output"]["text"]
 

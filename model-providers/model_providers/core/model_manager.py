@@ -2,23 +2,40 @@ from collections.abc import Generator
 from typing import IO, Optional, Union, cast
 
 from model_providers.core.entities.provider_configuration import ProviderModelBundle
-from model_providers.errors.error import ProviderTokenNotInitError
 from model_providers.core.model_runtime.callbacks.base_callback import Callback
 from model_providers.core.model_runtime.entities.llm_entities import LLMResult
-from model_providers.core.model_runtime.entities.message_entities import PromptMessage, PromptMessageTool
+from model_providers.core.model_runtime.entities.message_entities import (
+    PromptMessage,
+    PromptMessageTool,
+)
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.model_runtime.entities.rerank_entities import RerankResult
-from model_providers.core.model_runtime.entities.text_embedding_entities import TextEmbeddingResult
-from model_providers.core.model_runtime.model_providers.__base.large_language_model import LargeLanguageModel
-from model_providers.core.model_runtime.model_providers.__base.moderation_model import ModerationModel
-from model_providers.core.model_runtime.model_providers.__base.rerank_model import RerankModel
-from model_providers.core.model_runtime.model_providers.__base.speech2text_model import Speech2TextModel
-from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import TextEmbeddingModel
+from model_providers.core.model_runtime.entities.text_embedding_entities import (
+    TextEmbeddingResult,
+)
+from model_providers.core.model_runtime.model_providers.__base.large_language_model import (
+    LargeLanguageModel,
+)
+from model_providers.core.model_runtime.model_providers.__base.moderation_model import (
+    ModerationModel,
+)
+from model_providers.core.model_runtime.model_providers.__base.rerank_model import (
+    RerankModel,
+)
+from model_providers.core.model_runtime.model_providers.__base.speech2text_model import (
+    Speech2TextModel,
+)
+from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import (
+    TextEmbeddingModel,
+)
 from model_providers.core.model_runtime.model_providers.__base.tts_model import TTSModel
 from model_providers.core.provider_manager import ProviderManager
+from model_providers.errors.error import ProviderTokenNotInitError
 
 
-def _fetch_credentials_from_bundle(provider_model_bundle: ProviderModelBundle, model: str) -> dict:
+def _fetch_credentials_from_bundle(
+    provider_model_bundle: ProviderModelBundle, model: str
+) -> dict:
     """
     Fetch credentials from provider model bundle
     :param provider_model_bundle: provider model bundle
@@ -26,12 +43,13 @@ def _fetch_credentials_from_bundle(provider_model_bundle: ProviderModelBundle, m
     :return:
     """
     credentials = provider_model_bundle.configuration.get_current_credentials(
-        model_type=provider_model_bundle.model_type_instance.model_type,
-        model=model
+        model_type=provider_model_bundle.model_type_instance.model_type, model=model
     )
 
     if credentials is None:
-        raise ProviderTokenNotInitError(f"Model {model} credentials is not initialized.")
+        raise ProviderTokenNotInitError(
+            f"Model {model} credentials is not initialized."
+        )
 
     return credentials
 
@@ -48,10 +66,16 @@ class ModelInstance:
         self.credentials = _fetch_credentials_from_bundle(provider_model_bundle, model)
         self.model_type_instance = self._provider_model_bundle.model_type_instance
 
-    def invoke_llm(self, prompt_messages: list[PromptMessage], model_parameters: Optional[dict] = None,
-                   tools: Optional[list[PromptMessageTool]] = None, stop: Optional[list[str]] = None,
-                   stream: bool = True, user: Optional[str] = None, callbacks: list[Callback] = None) \
-            -> Union[LLMResult, Generator]:
+    def invoke_llm(
+        self,
+        prompt_messages: list[PromptMessage],
+        model_parameters: Optional[dict] = None,
+        tools: Optional[list[PromptMessageTool]] = None,
+        stop: Optional[list[str]] = None,
+        stream: bool = True,
+        user: Optional[str] = None,
+        callbacks: list[Callback] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
 
@@ -77,11 +101,12 @@ class ModelInstance:
             stop=stop,
             stream=stream,
             user=user,
-            callbacks=callbacks
+            callbacks=callbacks,
         )
 
-    def invoke_text_embedding(self, texts: list[str], user: Optional[str] = None) \
-            -> TextEmbeddingResult:
+    def invoke_text_embedding(
+        self, texts: list[str], user: Optional[str] = None
+    ) -> TextEmbeddingResult:
         """
         Invoke large language model
 
@@ -94,16 +119,17 @@ class ModelInstance:
 
         self.model_type_instance = cast(TextEmbeddingModel, self.model_type_instance)
         return self.model_type_instance.invoke(
-            model=self.model,
-            credentials=self.credentials,
-            texts=texts,
-            user=user
+            model=self.model, credentials=self.credentials, texts=texts, user=user
         )
 
-    def invoke_rerank(self, query: str, docs: list[str], score_threshold: Optional[float] = None,
-                      top_n: Optional[int] = None,
-                      user: Optional[str] = None) \
-            -> RerankResult:
+    def invoke_rerank(
+        self,
+        query: str,
+        docs: list[str],
+        score_threshold: Optional[float] = None,
+        top_n: Optional[int] = None,
+        user: Optional[str] = None,
+    ) -> RerankResult:
         """
         Invoke rerank model
 
@@ -125,11 +151,10 @@ class ModelInstance:
             docs=docs,
             score_threshold=score_threshold,
             top_n=top_n,
-            user=user
+            user=user,
         )
 
-    def invoke_moderation(self, text: str, user: Optional[str] = None) \
-            -> bool:
+    def invoke_moderation(self, text: str, user: Optional[str] = None) -> bool:
         """
         Invoke moderation model
 
@@ -142,14 +167,10 @@ class ModelInstance:
 
         self.model_type_instance = cast(ModerationModel, self.model_type_instance)
         return self.model_type_instance.invoke(
-            model=self.model,
-            credentials=self.credentials,
-            text=text,
-            user=user
+            model=self.model, credentials=self.credentials, text=text, user=user
         )
 
-    def invoke_speech2text(self, file: IO[bytes], user: Optional[str] = None) \
-            -> str:
+    def invoke_speech2text(self, file: IO[bytes], user: Optional[str] = None) -> str:
         """
         Invoke large language model
 
@@ -162,14 +183,17 @@ class ModelInstance:
 
         self.model_type_instance = cast(Speech2TextModel, self.model_type_instance)
         return self.model_type_instance.invoke(
-            model=self.model,
-            credentials=self.credentials,
-            file=file,
-            user=user
+            model=self.model, credentials=self.credentials, file=file, user=user
         )
 
-    def invoke_tts(self, content_text: str, tenant_id: str, voice: str, streaming: bool, user: Optional[str] = None) \
-            -> str:
+    def invoke_tts(
+        self,
+        content_text: str,
+        tenant_id: str,
+        voice: str,
+        streaming: bool,
+        user: Optional[str] = None,
+    ) -> str:
         """
         Invoke large language tts model
 
@@ -191,7 +215,7 @@ class ModelInstance:
             user=user,
             tenant_id=tenant_id,
             voice=voice,
-            streaming=streaming
+            streaming=streaming,
         )
 
     def get_tts_voices(self, language: str) -> list:
@@ -206,21 +230,24 @@ class ModelInstance:
 
         self.model_type_instance = cast(TTSModel, self.model_type_instance)
         return self.model_type_instance.get_tts_model_voices(
-            model=self.model,
-            credentials=self.credentials,
-            language=language
+            model=self.model, credentials=self.credentials, language=language
         )
 
 
 class ModelManager:
-    def __init__(self,
-                 provider_name_to_provider_records_dict: dict,
-                 provider_name_to_provider_model_records_dict: dict) -> None:
+    def __init__(
+        self,
+        provider_name_to_provider_records_dict: dict,
+        provider_name_to_provider_model_records_dict: dict,
+    ) -> None:
         self._provider_manager = ProviderManager(
             provider_name_to_provider_records_dict=provider_name_to_provider_records_dict,
-            provider_name_to_provider_model_records_dict=provider_name_to_provider_model_records_dict)
+            provider_name_to_provider_model_records_dict=provider_name_to_provider_model_records_dict,
+        )
 
-    def get_model_instance(self, provider: str, model_type: ModelType, model: str) -> ModelInstance:
+    def get_model_instance(
+        self, provider: str, model_type: ModelType, model: str
+    ) -> ModelInstance:
         """
         Get model instance
         :param provider: provider name
@@ -231,8 +258,7 @@ class ModelManager:
         if not provider:
             return self.get_default_model_instance(model_type)
         provider_model_bundle = self._provider_manager.get_provider_model_bundle(
-            provider=provider,
-            model_type=model_type
+            provider=provider, model_type=model_type
         )
 
         return ModelInstance(provider_model_bundle, model)
@@ -253,5 +279,5 @@ class ModelManager:
         return self.get_model_instance(
             provider=default_model_entity.provider.provider,
             model_type=model_type,
-            model=default_model_entity.model
+            model=default_model_entity.model,
         )
