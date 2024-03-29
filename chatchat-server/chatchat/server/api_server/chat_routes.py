@@ -99,7 +99,7 @@ async def chat_completions(
                 "status": None,
             }
             header = [{**extra_json,
-                       "content": f"知识库参考资料：\n\n{tool_result}\n\n",
+                       "content": f"{tool_result}",
                        "tool_output":tool_result.data,
                        "is_ref": True,
                        }]

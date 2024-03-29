@@ -52,4 +52,4 @@ def search_local_knowledgebase(
     ''''''
     tool_config = get_tool_config("search_local_knowledgebase")
     ret = search_knowledgebase(query=query, database=database, config=tool_config)
-    return BaseToolOutput(ret, database=database)
+    return KBToolOutput(ret, database=database)
