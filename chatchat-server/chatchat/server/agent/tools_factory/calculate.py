@@ -1,8 +1,8 @@
 from chatchat.server.pydantic_v1 import Field
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 
 
-@regist_tool
+@regist_tool(title="数学计算器")
 def calculate(text: str = Field(description="a math expression")) -> float:
     '''
     Useful to answer questions about simple calculations.
@@ -11,6 +11,8 @@ def calculate(text: str = Field(description="a math expression")) -> float:
     import numexpr
 
     try:
-        return str(numexpr.evaluate(text))
+        ret = str(numexpr.evaluate(text))
     except Exception as e:
-        return f"wrong: {e}"
+        ret = f"wrong: {e}"
+
+    return BaseToolOutput(ret)

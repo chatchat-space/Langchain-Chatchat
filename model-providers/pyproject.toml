@@ -191,3 +191,14 @@ markers = [
     "compile: mark placeholder test used to compile integration tests without running them"
 ]
 asyncio_mode = "auto"
+
+
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,*.pdf,*.yaml,*.ipynb,poetry.lock,*.min.js,*.css,package-lock.json,example_data,_dist,examples,*.trig,*.json,*.md,*.html,*.txt,*.csv'
+# Ignore latin etc
+ignore-regex = '.*(Stati Uniti|Tense=Pres).*'
+# whats is a typo but used frequently in queries so kept as is
+# aapply - async apply
+# unsecure - typo but part of API, decided to not bother for now
+ignore-words-list = 'momento,collison,ned,foor,reworkd,parth,whats,aapply,mysogyny,unsecure,damon,crate,aadd,symbl,precesses,accademia,nin'

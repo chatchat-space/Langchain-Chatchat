@@ -88,7 +88,9 @@ FileTypes = Union[
     FileContent,  # file content
     tuple[str, FileContent],  # (filename, file)
     tuple[str, FileContent, str],  # (filename, file , content_type)
-    tuple[str, FileContent, str, Mapping[str, str]],  # (filename, file , content_type, headers)
+    tuple[
+        str, FileContent, str, Mapping[str, str]
+    ],  # (filename, file , content_type, headers)
 ]
 
 RequestFiles = Union[Mapping[str, FileTypes], Sequence[tuple[str, FileTypes]]]
@@ -100,7 +102,11 @@ HttpxFileTypes = Union[
     FileContent,  # file content
     tuple[str, HttpxFileContent],  # (filename, file)
     tuple[str, HttpxFileContent, str],  # (filename, file , content_type)
-    tuple[str, HttpxFileContent, str, Mapping[str, str]],  # (filename, file , content_type, headers)
+    tuple[
+        str, HttpxFileContent, str, Mapping[str, str]
+    ],  # (filename, file , content_type, headers)
 ]
 
-HttpxRequestFiles = Union[Mapping[str, HttpxFileTypes], Sequence[tuple[str, HttpxFileTypes]]]
+HttpxRequestFiles = Union[
+    Mapping[str, HttpxFileTypes], Sequence[tuple[str, HttpxFileTypes]]
+]

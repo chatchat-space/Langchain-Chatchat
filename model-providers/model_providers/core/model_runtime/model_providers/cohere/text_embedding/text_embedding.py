@@ -6,7 +6,10 @@ import numpy as np
 from cohere.responses import Tokens
 
 from model_providers.core.model_runtime.entities.model_entities import PriceType
-from model_providers.core.model_runtime.entities.text_embedding_entities import EmbeddingUsage, TextEmbeddingResult
+from model_providers.core.model_runtime.entities.text_embedding_entities import (
+    EmbeddingUsage,
+    TextEmbeddingResult,
+)
 from model_providers.core.model_runtime.errors.invoke import (
     InvokeAuthorizationError,
     InvokeBadRequestError,
@@ -15,8 +18,12 @@ from model_providers.core.model_runtime.errors.invoke import (
     InvokeRateLimitError,
     InvokeServerUnavailableError,
 )
-from model_providers.core.model_runtime.errors.validate import CredentialsValidateFailedError
-from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import TextEmbeddingModel
+from model_providers.core.model_runtime.errors.validate import (
+    CredentialsValidateFailedError,
+)
+from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import (
+    TextEmbeddingModel,
+)
 
 
 class CohereTextEmbeddingModel(TextEmbeddingModel):
@@ -24,9 +31,13 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
     Model class for Cohere text embedding model.
     """
 
-    def _invoke(self, model: str, credentials: dict,
-                texts: list[str], user: Optional[str] = None) \
-            -> TextEmbeddingResult:
+    def _invoke(
+        self,
+        model: str,
+        credentials: dict,
+        texts: list[str],
+        user: Optional[str] = None,
+    ) -> TextEmbeddingResult:
         """
         Invoke text embedding model
 
@@ -47,13 +58,11 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
 
         for i, text in enumerate(texts):
             tokenize_response = self._tokenize(
-                model=model,
-                credentials=credentials,
-                text=text
+                model=model, credentials=credentials, text=text
             )
 
             for j in range(0, tokenize_response.length, context_size):
-                tokens += [tokenize_response.token_strings[j: j + context_size]]
+                tokens += [tokenize_response.token_strings[j : j + context_size]]
                 indices += [i]
 
         batched_embeddings = []
@@ -64,7 +73,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             embeddings_batch, embedding_used_tokens = self._embedding_invoke(
                 model=model,
                 credentials=credentials,
-                texts=["".join(token) for token in tokens[i: i + max_chunks]]
+                texts=["".join(token) for token in tokens[i : i + max_chunks]],
             )
 
             used_tokens += embedding_used_tokens
@@ -80,9 +89,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             _result = results[i]
             if len(_result) == 0:
                 embeddings_batch, embedding_used_tokens = self._embedding_invoke(
-                    model=model,
-                    credentials=credentials,
-                    texts=[" "]
+                    model=model, credentials=credentials, texts=[" "]
                 )
 
                 used_tokens += embedding_used_tokens
@@ -93,16 +100,10 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
 
         # calc usage
         usage = self._calc_response_usage(
-            model=model,
-            credentials=credentials,
-            tokens=used_tokens
+            model=model, credentials=credentials, tokens=used_tokens
         )
 
-        return TextEmbeddingResult(
-            embeddings=embeddings,
-            usage=usage,
-            model=model
-        )
+        return TextEmbeddingResult(embeddings=embeddings, usage=usage, model=model)
 
     def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
         """
@@ -116,13 +117,11 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         if len(texts) == 0:
             return 0
 
-        full_text = ' '.join(texts)
+        full_text = " ".join(texts)
 
         try:
             response = self._tokenize(
-                model=model,
-                credentials=credentials,
-                text=full_text
+                model=model, credentials=credentials, text=full_text
             )
         except Exception as e:
             raise self._transform_invoke_error(e)
@@ -141,12 +140,9 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             return Tokens([], [], {})
 
         # initialize client
-        client = cohere.Client(credentials.get('api_key'))
+        client = cohere.Client(credentials.get("api_key"))
 
-        response = client.tokenize(
-            text=text,
-            model=model
-        )
+        response = client.tokenize(text=text, model=model)
 
         return response
 
@@ -160,15 +156,13 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         """
         try:
             # call embedding model
-            self._embedding_invoke(
-                model=model,
-                credentials=credentials,
-                texts=['ping']
-            )
+            self._embedding_invoke(model=model, credentials=credentials, texts=["ping"])
         except Exception as ex:
             raise CredentialsValidateFailedError(str(ex))
 
-    def _embedding_invoke(self, model: str, credentials: dict, texts: list[str]) -> tuple[list[list[float]], int]:
+    def _embedding_invoke(
+        self, model: str, credentials: dict, texts: list[str]
+    ) -> tuple[list[list[float]], int]:
         """
         Invoke embedding model
 
@@ -178,18 +172,20 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         :return: embeddings and used tokens
         """
         # initialize client
-        client = cohere.Client(credentials.get('api_key'))
+        client = cohere.Client(credentials.get("api_key"))
 
         # call embedding model
         response = client.embed(
             texts=texts,
             model=model,
-            input_type='search_document' if len(texts) > 1 else 'search_query'
+            input_type="search_document" if len(texts) > 1 else "search_query",
         )
 
-        return response.embeddings, response.meta['billed_units']['input_tokens']
+        return response.embeddings, response.meta["billed_units"]["input_tokens"]
 
-    def _calc_response_usage(self, model: str, credentials: dict, tokens: int) -> EmbeddingUsage:
+    def _calc_response_usage(
+        self, model: str, credentials: dict, tokens: int
+    ) -> EmbeddingUsage:
         """
         Calculate response usage
 
@@ -203,7 +199,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             model=model,
             credentials=credentials,
             price_type=PriceType.INPUT,
-            tokens=tokens
+            tokens=tokens,
         )
 
         # transform usage
@@ -214,7 +210,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             price_unit=input_price_info.unit,
             total_price=input_price_info.total_amount,
             currency=input_price_info.currency,
-            latency=time.perf_counter() - self.started_at
+            latency=time.perf_counter() - self.started_at,
         )
 
         return usage
@@ -230,14 +226,12 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         :return: Invoke error mapping
         """
         return {
-            InvokeConnectionError: [
-                cohere.CohereConnectionError
-            ],
+            InvokeConnectionError: [cohere.CohereConnectionError],
             InvokeServerUnavailableError: [],
             InvokeRateLimitError: [],
             InvokeAuthorizationError: [],
             InvokeBadRequestError: [
                 cohere.CohereAPIError,
                 cohere.CohereError,
-            ]
+            ],
         }

@@ -1,11 +1,13 @@
 from abc import abstractmethod
 from collections import deque
+
 from fastapi import Request
 
 
 class Bootstrap:
 
     """最大的任务队列"""
+
     _MAX_ONGOING_TASKS: int = 1
 
     """任务队列"""
@@ -37,7 +39,6 @@ class Bootstrap:
 
 
 class OpenAIBootstrapBaseWeb(Bootstrap):
-
     def __init__(self):
         super().__init__()
 
@@ -46,9 +47,13 @@ class OpenAIBootstrapBaseWeb(Bootstrap):
         pass
 
     @abstractmethod
-    async def create_embeddings(self, request: Request, embeddings_request: EmbeddingsRequest):
+    async def create_embeddings(
+        self, request: Request, embeddings_request: EmbeddingsRequest
+    ):
         pass
 
     @abstractmethod
-    async def create_chat_completion(self, request: Request, chat_request: ChatCompletionRequest):
+    async def create_chat_completion(
+        self, request: Request, chat_request: ChatCompletionRequest
+    ):
         pass

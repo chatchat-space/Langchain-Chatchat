@@ -17,7 +17,10 @@ __all__ = [
 
 
 class ZhipuAIError(Exception):
-    def __init__(self, message: str, ) -> None:
+    def __init__(
+        self,
+        message: str,
+    ) -> None:
         super().__init__(message)
 
 
@@ -68,15 +71,16 @@ class APIResponseValidationError(APIResponseError):
     response: httpx.Response
 
     def __init__(
-            self,
-            response: httpx.Response,
-            json_data: object | None, *,
-            message: str | None = None
+        self,
+        response: httpx.Response,
+        json_data: object | None,
+        *,
+        message: str | None = None,
     ) -> None:
         super().__init__(
             message=message or "Data returned by API invalid for expected schema.",
             request=response.request,
-            json_data=json_data
+            json_data=json_data,
         )
         self.response = response
         self.status_code = response.status_code

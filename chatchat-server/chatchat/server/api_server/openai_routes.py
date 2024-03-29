@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from typing import Dict, Tuple, AsyncGenerator
+from typing import Dict, Tuple, AsyncGenerator, Iterable
 
 from fastapi import APIRouter, Request
 from openai import AsyncClient
@@ -19,7 +19,7 @@ openai_router = APIRouter(prefix="/v1", tags=["OpenAI 兼容平台整合接口"]
 
 
 @asynccontextmanager
-async def acquire_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
+async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
     '''
     对重名模型进行调度，依次选择：空闲的模型 -> 当前访问数最少的模型
     '''
@@ -49,19 +49,47 @@ async def acquire_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
         semaphore.release()
 
 
-async def openai_request(method, body):
+async def openai_request(method, body, extra_json: Dict={}, header: Iterable=[], tail: Iterable=[]):
     '''
-    helper function to make openai request
+    helper function to make openai request with extra fields
     '''
     async def generator():
-        async for chunk in await method(**params):
-            yield {"data": chunk.json()}
+        for x in header:
+            if isinstance(x, str):
+                x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
+            elif isinstance(x, dict):
+                x = OpenAIChatOutput.model_validate(x)
+            else:
+                raise RuntimeError(f"unsupported value: {header}")
+            for k, v in extra_json.items():
+                setattr(x, k, v)
+            yield x.model_dump_json()
 
-    params = body.dict(exclude_unset=True)
+        async for chunk in await method(**params):
+            for k, v in extra_json.items():
+                setattr(chunk, k, v)
+            yield chunk.model_dump_json()
+
+        for x in tail:
+            if isinstance(x, str):
+                x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
+            elif isinstance(x, dict):
+                x = OpenAIChatOutput.model_validate(x)
+            else:
+                raise RuntimeError(f"unsupported value: {tail}")
+            for k, v in extra_json.items():
+                setattr(x, k, v)
+            yield x.model_dump_json()
+
+    params = body.model_dump(exclude_unset=True)
+
     if hasattr(body, "stream") and body.stream:
         return EventSourceResponse(generator())
     else:
-        return (await method(**params)).dict()
+        result = await method(**params)
+        for k, v in extra_json.items():
+            setattr(result, k, v)
+        return result.model_dump()
 
 
 @openai_router.get("/models")
@@ -74,12 +102,12 @@ async def list_models() -> List:
             client = get_OpenAIClient(name, is_async=True)
             models = await client.models.list()
             if config.get("platform_type") == "xinference":
-                models = models.dict(exclude={"data":..., "object":...})
+                models = models.model_dump(exclude={"data":..., "object":...})
                 for x in models:
                     models[x]["platform_name"] = name
                 return [{**v, "id": k} for k, v in models.items()]
             elif config.get("platform_type") == "oneapi":
-                return [{**x.dict(), "platform_name": name} for x in models.data]
+                return [{**x.model_dump(), "platform_name": name} for x in models.data]
         except Exception:
             logger.error(f"failed request to platform: {name}", exc_info=True)
             return {}
@@ -97,12 +125,8 @@ async def create_chat_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         result = await openai_request(client.chat.completions.create, body)
-        # result["related_docs"] = ["doc1"]
-        # result["choices"][0]["message"]["related_docs"] = ["doc1"]
-        # print(result)
-        # breakpoint()
         return result
 
 
@@ -111,7 +135,7 @@ async def create_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.completions.create, body)
 
 
@@ -130,7 +154,7 @@ async def create_image_generations(
     request: Request,
     body: OpenAIImageGenerationsInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.images.generate, body)
 
 
@@ -139,7 +163,7 @@ async def create_image_variations(
     request: Request,
     body: OpenAIImageVariationsInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.images.create_variation, body)
 
 
@@ -148,7 +172,7 @@ async def create_image_edit(
     request: Request,
     body: OpenAIImageEditsInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.images.edit, body)
 
     
@@ -157,7 +181,7 @@ async def create_audio_translations(
     request: Request,
     body: OpenAIAudioTranslationsInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.audio.translations.create, body)
 
 
@@ -166,7 +190,7 @@ async def create_audio_transcriptions(
     request: Request,
     body: OpenAIAudioTranscriptionsInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.audio.transcriptions.create, body)
 
 
@@ -175,7 +199,7 @@ async def create_audio_speech(
     request: Request,
     body: OpenAIAudioSpeechInput,
 ):
-    async with acquire_model_client(body.model) as client:
+    async with get_model_client(body.model) as client:
         return await openai_request(client.audio.speech.create, body)
 
 

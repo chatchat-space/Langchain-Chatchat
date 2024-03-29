@@ -35,10 +35,10 @@ class ClientRequestParam:
 
     @classmethod
     def construct(  # type: ignore
-            cls,
-            _fields_set: set[str] | None = None,
-            **values: Unpack[UserRequestInput],
-    ) -> ClientRequestParam :
+        cls,
+        _fields_set: set[str] | None = None,
+        **values: Unpack[UserRequestInput],
+    ) -> ClientRequestParam:
         kwargs: dict[str, Any] = {
             key: remove_notgiven_indict(value) for key, value in values.items()
         }
@@ -48,4 +48,3 @@ class ClientRequestParam:
         return client
 
     model_construct = construct
-

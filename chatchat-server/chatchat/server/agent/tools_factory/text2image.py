@@ -7,7 +7,7 @@ import uuid
 
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 import openai
 
 from chatchat.configs.basic_config import MEDIA_PATH
@@ -26,7 +26,7 @@ def get_image_model_config() -> dict:
             return config
 
 
-@regist_tool(return_direct=True)
+@regist_tool(title="文生图", return_direct=True)
 def text2images(
     prompt: str,
     n: int = Field(1, description="需生成图片的数量"),
@@ -56,7 +56,7 @@ def text2images(
         with open(os.path.join(MEDIA_PATH, filename), "wb") as fp:
             fp.write(base64.b64decode(x.b64_json))
         images.append(filename)
-    return json.dumps({"message_type": MsgType.IMAGE, "images": images})
+    return BaseToolOutput({"message_type": MsgType.IMAGE, "images": images}, format="json")
 
 
 if __name__ == "__main__":

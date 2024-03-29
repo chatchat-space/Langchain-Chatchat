@@ -7,7 +7,12 @@ import httpx
 from ...core._base_api import BaseAPI
 from ...core._base_type import NOT_GIVEN, Headers, NotGiven
 from ...core._http_client import make_user_request_input
-from ...types.fine_tuning import FineTuningJob, FineTuningJobEvent, ListOfFineTuningJob, job_create_params
+from ...types.fine_tuning import (
+    FineTuningJob,
+    FineTuningJobEvent,
+    ListOfFineTuningJob,
+    job_create_params,
+)
 
 if TYPE_CHECKING:
     from ..._client import ZhipuAI
@@ -16,21 +21,20 @@ __all__ = ["Jobs"]
 
 
 class Jobs(BaseAPI):
-
     def __init__(self, client: ZhipuAI) -> None:
         super().__init__(client)
 
     def create(
-            self,
-            *,
-            model: str,
-            training_file: str,
-            hyperparameters: job_create_params.Hyperparameters | NotGiven = NOT_GIVEN,
-            suffix: Optional[str] | NotGiven = NOT_GIVEN,
-            request_id: Optional[str] | NotGiven = NOT_GIVEN,
-            validation_file: Optional[str] | NotGiven = NOT_GIVEN,
-            extra_headers: Headers | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        *,
+        model: str,
+        training_file: str,
+        hyperparameters: job_create_params.Hyperparameters | NotGiven = NOT_GIVEN,
+        suffix: Optional[str] | NotGiven = NOT_GIVEN,
+        request_id: Optional[str] | NotGiven = NOT_GIVEN,
+        validation_file: Optional[str] | NotGiven = NOT_GIVEN,
+        extra_headers: Headers | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> FineTuningJob:
         return self._post(
             "/fine_tuning/jobs",
@@ -49,11 +53,11 @@ class Jobs(BaseAPI):
         )
 
     def retrieve(
-            self,
-            fine_tuning_job_id: str,
-            *,
-            extra_headers: Headers | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        fine_tuning_job_id: str,
+        *,
+        extra_headers: Headers | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> FineTuningJob:
         return self._get(
             f"/fine_tuning/jobs/{fine_tuning_job_id}",
@@ -64,12 +68,12 @@ class Jobs(BaseAPI):
         )
 
     def list(
-            self,
-            *,
-            after: str | NotGiven = NOT_GIVEN,
-            limit: int | NotGiven = NOT_GIVEN,
-            extra_headers: Headers | None = None,
-            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        self,
+        *,
+        after: str | NotGiven = NOT_GIVEN,
+        limit: int | NotGiven = NOT_GIVEN,
+        extra_headers: Headers | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> ListOfFineTuningJob:
         return self._get(
             "/fine_tuning/jobs",
@@ -93,7 +97,6 @@ class Jobs(BaseAPI):
         extra_headers: Headers | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
     ) -> FineTuningJobEvent:
-
         return self._get(
             f"/fine_tuning/jobs/{fine_tuning_job_id}/events",
             cast_type=FineTuningJobEvent,

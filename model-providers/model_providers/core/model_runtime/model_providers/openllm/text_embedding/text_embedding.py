@@ -6,7 +6,10 @@ from requests import post
 from requests.exceptions import ConnectionError, InvalidSchema, MissingSchema
 
 from model_providers.core.model_runtime.entities.model_entities import PriceType
-from model_providers.core.model_runtime.entities.text_embedding_entities import EmbeddingUsage, TextEmbeddingResult
+from model_providers.core.model_runtime.entities.text_embedding_entities import (
+    EmbeddingUsage,
+    TextEmbeddingResult,
+)
 from model_providers.core.model_runtime.errors.invoke import (
     InvokeAuthorizationError,
     InvokeBadRequestError,
@@ -15,17 +18,26 @@ from model_providers.core.model_runtime.errors.invoke import (
     InvokeRateLimitError,
     InvokeServerUnavailableError,
 )
-from model_providers.core.model_runtime.errors.validate import CredentialsValidateFailedError
-from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import TextEmbeddingModel
+from model_providers.core.model_runtime.errors.validate import (
+    CredentialsValidateFailedError,
+)
+from model_providers.core.model_runtime.model_providers.__base.text_embedding_model import (
+    TextEmbeddingModel,
+)
 
 
 class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
     """
     Model class for OpenLLM text embedding model.
     """
-    def _invoke(self, model: str, credentials: dict,
-                texts: list[str], user: Optional[str] = None) \
-            -> TextEmbeddingResult:
+
+    def _invoke(
+        self,
+        model: str,
+        credentials: dict,
+        texts: list[str],
+        user: Optional[str] = None,
+    ) -> TextEmbeddingResult:
         """
         Invoke text embedding model
 
@@ -35,16 +47,13 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
         :param user: unique user id
         :return: embeddings result
         """
-        server_url = credentials['server_url']
+        server_url = credentials["server_url"]
         if not server_url:
-            raise CredentialsValidateFailedError('server_url is required')
-        
-        headers = {
-            'Content-Type': 'application/json',
-            'accept': 'application/json'
-        }
+            raise CredentialsValidateFailedError("server_url is required")
 
-        url = f'{server_url}/v1/embeddings'
+        headers = {"Content-Type": "application/json", "accept": "application/json"}
+
+        url = f"{server_url}/v1/embeddings"
 
         data = texts
         try:
@@ -54,7 +63,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
             raise InvokeAuthorizationError(f"Invalid server URL: {e}")
         except Exception as e:
             raise InvokeConnectionError(str(e))
-        
+
         if response.status_code != 200:
             if response.status_code == 400:
                 raise InvokeBadRequestError(response.text)
@@ -62,21 +71,21 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
                 raise InvokeAuthorizationError(response.text)
             elif response.status_code == 500:
                 raise InvokeServerUnavailableError(response.text)
-        
+
         try:
             resp = response.json()[0]
-            embeddings = resp['embeddings']
-            total_tokens = resp['num_tokens']
+            embeddings = resp["embeddings"]
+            total_tokens = resp["num_tokens"]
         except KeyError as e:
-            raise InvokeServerUnavailableError(f"Failed to convert response to json: {e} with text: {response.text}")
+            raise InvokeServerUnavailableError(
+                f"Failed to convert response to json: {e} with text: {response.text}"
+            )
 
-        usage = self._calc_response_usage(model=model, credentials=credentials, tokens=total_tokens)
-
-        result = TextEmbeddingResult(
-            model=model,
-            embeddings=embeddings,
-            usage=usage
+        usage = self._calc_response_usage(
+            model=model, credentials=credentials, tokens=total_tokens
         )
+
+        result = TextEmbeddingResult(model=model, embeddings=embeddings, usage=usage)
 
         return result
 
@@ -104,9 +113,9 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
         :return:
         """
         try:
-            self._invoke(model=model, credentials=credentials, texts=['ping'])
+            self._invoke(model=model, credentials=credentials, texts=["ping"])
         except InvokeAuthorizationError:
-            raise CredentialsValidateFailedError('Invalid server_url')
+            raise CredentialsValidateFailedError("Invalid server_url")
 
     @property
     def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
@@ -119,24 +128,16 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
         :return: Invoke error mapping
         """
         return {
-            InvokeConnectionError: [
-                InvokeConnectionError
-            ],
-            InvokeServerUnavailableError: [
-                InvokeServerUnavailableError
-            ],
-            InvokeRateLimitError: [
-                InvokeRateLimitError
-            ],
-            InvokeAuthorizationError: [
-                InvokeAuthorizationError
-            ],
-            InvokeBadRequestError: [
-                KeyError
-            ]
+            InvokeConnectionError: [InvokeConnectionError],
+            InvokeServerUnavailableError: [InvokeServerUnavailableError],
+            InvokeRateLimitError: [InvokeRateLimitError],
+            InvokeAuthorizationError: [InvokeAuthorizationError],
+            InvokeBadRequestError: [KeyError],
         }
-    
-    def _calc_response_usage(self, model: str, credentials: dict, tokens: int) -> EmbeddingUsage:
+
+    def _calc_response_usage(
+        self, model: str, credentials: dict, tokens: int
+    ) -> EmbeddingUsage:
         """
         Calculate response usage
 
@@ -150,7 +151,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
             model=model,
             credentials=credentials,
             price_type=PriceType.INPUT,
-            tokens=tokens
+            tokens=tokens,
         )
 
         # transform usage
@@ -161,7 +162,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
             price_unit=input_price_info.unit,
             total_price=input_price_info.total_amount,
             currency=input_price_info.currency,
-            latency=time.perf_counter() - self.started_at
+            latency=time.perf_counter() - self.started_at,
         )
 
         return usage

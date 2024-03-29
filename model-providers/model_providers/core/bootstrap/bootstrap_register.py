@@ -5,6 +5,7 @@ class BootstrapRegister:
     """
     注册管理器
     """
+
     mapping = {
         "bootstrap": {},
     }
@@ -48,4 +49,3 @@ class BootstrapRegister:
 
 
 bootstrap_register = BootstrapRegister()
-

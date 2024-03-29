@@ -1,7 +1,6 @@
 import json
 from typing import TYPE_CHECKING, Any, Dict
 
-
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
@@ -18,4 +17,3 @@ def jsonify(data: "BaseModel") -> str:
         return json.dumps(data.model_dump(exclude_unset=True), ensure_ascii=False)
     except Exception:  # pydantic v1
         return data.json(exclude_unset=True, ensure_ascii=False)
-

@@ -9,7 +9,7 @@ from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
 from chatchat.server.utils import get_tool_config
 from chatchat.server.pydantic_v1 import Field
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 
 
 def bing_search(text, config):
@@ -95,8 +95,8 @@ def search_engine(query: str,
     return context
 
 
-@regist_tool
+@regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
     '''Use this tool to use bing search engine to search the internet and get information.'''
     tool_config = get_tool_config("search_internet")
-    return search_engine(query=query, config=tool_config)
+    return BaseToolOutput(search_engine(query=query, config=tool_config))

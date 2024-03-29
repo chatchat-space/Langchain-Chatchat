@@ -92,7 +92,8 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
             s = s[-1]
             return AgentFinish({"output": s}, log=text)
         else:
-            raise OutputParserException(f"Could not parse LLM output: {text}")
+            return AgentFinish({"output": text}, log=text)
+            # raise OutputParserException(f"Could not parse LLM output: {text}")
 
     @property
     def _type(self) -> str:

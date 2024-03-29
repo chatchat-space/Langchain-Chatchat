@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, Request, Body
 
 from chatchat.configs import logger
-from chatchat.server.utils import BaseResponse, get_tool
+from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
 
 
 tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
@@ -14,20 +14,24 @@ tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
 @tool_router.get("/", response_model=BaseResponse)
 async def list_tools():
     tools = get_tool()
-    data = {t.name: {"name": t.name, "description": t.description, "args": t.args} for t in tools}
+    data = {t.name: {
+                "name": t.name,
+                "title": t.title,
+                "description": t.description,
+                "args": t.args,
+                "config": get_tool_config(t.name),
+            } for t in tools.values()}
     return {"data": data}
 
 
 @tool_router.post("/call", response_model=BaseResponse)
 async def call_tool(
     name: str = Body(examples=["calculate"]),
-    kwargs: dict = Body({}, examples=[{"a":1,"b":2,"operator":"+"}]),
+    tool_input: dict = Body({}, examples=[{"text": "3+5/2"}]),
 ):
-    tools = get_tool()
-
-    if tool := tools.get(name):
+    if tool := get_tool(name):
         try:
-            result = await tool.ainvoke(kwargs)
+            result = await tool.ainvoke(tool_input)
             return {"data": result}
         except Exception:
             msg = f"failed to call tool '{name}'"

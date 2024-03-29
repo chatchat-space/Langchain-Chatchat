@@ -7,9 +7,16 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from model_providers.core.entities.model_entities import ModelStatus, ModelWithProviderEntity, SimpleModelProviderEntity
+from model_providers.core.entities.model_entities import (
+    ModelStatus,
+    ModelWithProviderEntity,
+    SimpleModelProviderEntity,
+)
 from model_providers.core.entities.provider_entities import CustomConfiguration
-from model_providers.core.model_runtime.entities.model_entities import FetchFrom, ModelType
+from model_providers.core.model_runtime.entities.model_entities import (
+    FetchFrom,
+    ModelType,
+)
 from model_providers.core.model_runtime.entities.provider_entities import (
     ConfigurateMethod,
     CredentialFormSchema,
@@ -18,7 +25,9 @@ from model_providers.core.model_runtime.entities.provider_entities import (
 )
 from model_providers.core.model_runtime.model_providers import model_provider_factory
 from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
-from model_providers.core.model_runtime.model_providers.__base.model_provider import ModelProvider
+from model_providers.core.model_runtime.model_providers.__base.model_provider import (
+    ModelProvider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +36,16 @@ class ProviderConfiguration(BaseModel):
     """
     Model class for provider configuration.
     """
+
     provider: ProviderEntity
     custom_configuration: CustomConfiguration
 
     def __init__(self, **data):
         super().__init__(**data)
 
-    def get_current_credentials(self, model_type: ModelType, model: str) -> Optional[dict]:
+    def get_current_credentials(
+        self, model_type: ModelType, model: str
+    ) -> Optional[dict]:
         """
         Get current credentials.
 
@@ -43,7 +55,10 @@ class ProviderConfiguration(BaseModel):
         """
         if self.custom_configuration.models:
             for model_configuration in self.custom_configuration.models:
-                if model_configuration.model_type == model_type and model_configuration.model == model:
+                if (
+                    model_configuration.model_type == model_type
+                    and model_configuration.model == model
+                ):
                     return model_configuration.credentials
 
         if self.custom_configuration.provider:
@@ -69,8 +84,9 @@ class ProviderConfiguration(BaseModel):
         copy_credentials = credentials.copy()
         return copy_credentials
 
-    def get_custom_model_credentials(self, model_type: ModelType, model: str, obfuscated: bool = False) \
-            -> Optional[dict]:
+    def get_custom_model_credentials(
+        self, model_type: ModelType, model: str, obfuscated: bool = False
+    ) -> Optional[dict]:
         """
         Get custom model credentials.
 
@@ -83,7 +99,10 @@ class ProviderConfiguration(BaseModel):
             return None
 
         for model_configuration in self.custom_configuration.models:
-            if model_configuration.model_type == model_type and model_configuration.model == model:
+            if (
+                model_configuration.model_type == model_type
+                and model_configuration.model == model
+            ):
                 credentials = model_configuration.credentials
                 if not obfuscated:
                     return credentials
@@ -113,9 +132,9 @@ class ProviderConfiguration(BaseModel):
         # Get model instance of LLM
         return provider_instance.get_model_instance(model_type)
 
-    def get_provider_model(self, model_type: ModelType,
-                           model: str,
-                           only_active: bool = False) -> Optional[ModelWithProviderEntity]:
+    def get_provider_model(
+        self, model_type: ModelType, model: str, only_active: bool = False
+    ) -> Optional[ModelWithProviderEntity]:
         """
         Get provider model.
         :param model_type: model type
@@ -131,8 +150,9 @@ class ProviderConfiguration(BaseModel):
 
         return None
 
-    def get_provider_models(self, model_type: Optional[ModelType] = None,
-                            only_active: bool = False) -> list[ModelWithProviderEntity]:
+    def get_provider_models(
+        self, model_type: Optional[ModelType] = None, only_active: bool = False
+    ) -> list[ModelWithProviderEntity]:
         """
         Get provider models.
         :param model_type: model type
@@ -148,18 +168,19 @@ class ProviderConfiguration(BaseModel):
             model_types = provider_instance.get_provider_schema().supported_model_types
 
         provider_models = self._get_custom_provider_models(
-            model_types=model_types,
-            provider_instance=provider_instance
+            model_types=model_types, provider_instance=provider_instance
         )
         if only_active:
-            provider_models = [m for m in provider_models if m.status == ModelStatus.ACTIVE]
+            provider_models = [
+                m for m in provider_models if m.status == ModelStatus.ACTIVE
+            ]
 
         # resort provider_models
         return sorted(provider_models, key=lambda x: x.model_type.value)
 
-    def _get_custom_provider_models(self,
-                                    model_types: list[ModelType],
-                                    provider_instance: ModelProvider) -> list[ModelWithProviderEntity]:
+    def _get_custom_provider_models(
+        self, model_types: list[ModelType], provider_instance: ModelProvider
+    ) -> list[ModelWithProviderEntity]:
         """
         Get custom provider models.
 
@@ -189,7 +210,9 @@ class ProviderConfiguration(BaseModel):
                         model_properties=m.model_properties,
                         deprecated=m.deprecated,
                         provider=SimpleModelProviderEntity(self.provider),
-                        status=ModelStatus.ACTIVE if credentials else ModelStatus.NO_CONFIGURE
+                        status=ModelStatus.ACTIVE
+                        if credentials
+                        else ModelStatus.NO_CONFIGURE,
                     )
                 )
 
@@ -199,15 +222,13 @@ class ProviderConfiguration(BaseModel):
                 continue
 
             try:
-                custom_model_schema = (
-                    provider_instance.get_model_instance(model_configuration.model_type)
-                    .get_customizable_model_schema_from_credentials(
-                        model_configuration.model,
-                        model_configuration.credentials
-                    )
+                custom_model_schema = provider_instance.get_model_instance(
+                    model_configuration.model_type
+                ).get_customizable_model_schema_from_credentials(
+                    model_configuration.model, model_configuration.credentials
                 )
             except Exception as ex:
-                logger.warning(f'get custom model schema failed, {ex}')
+                logger.warning(f"get custom model schema failed, {ex}")
                 continue
 
             if not custom_model_schema:
@@ -223,7 +244,7 @@ class ProviderConfiguration(BaseModel):
                     model_properties=custom_model_schema.model_properties,
                     deprecated=custom_model_schema.deprecated,
                     provider=SimpleModelProviderEntity(self.provider),
-                    status=ModelStatus.ACTIVE
+                    status=ModelStatus.ACTIVE,
                 )
             )
 
@@ -234,16 +255,18 @@ class ProviderConfigurations(BaseModel):
     """
     Model class for provider configuration dict.
     """
+
     configurations: dict[str, ProviderConfiguration] = {}
 
     def __init__(self):
         super().__init__()
 
-    def get_models(self,
-                   provider: Optional[str] = None,
-                   model_type: Optional[ModelType] = None,
-                   only_active: bool = False) \
-            -> list[ModelWithProviderEntity]:
+    def get_models(
+        self,
+        provider: Optional[str] = None,
+        model_type: Optional[ModelType] = None,
+        only_active: bool = False,
+    ) -> list[ModelWithProviderEntity]:
         """
         Get available models.
 
@@ -278,7 +301,9 @@ class ProviderConfigurations(BaseModel):
             if provider and provider_configuration.provider.provider != provider:
                 continue
 
-            all_models.extend(provider_configuration.get_provider_models(model_type, only_active))
+            all_models.extend(
+                provider_configuration.get_provider_models(model_type, only_active)
+            )
 
         return all_models
 
@@ -310,6 +335,7 @@ class ProviderModelBundle(BaseModel):
     """
     Provider model bundle.
     """
+
     configuration: ProviderConfiguration
     provider_instance: ModelProvider
     model_type_instance: AIModel
