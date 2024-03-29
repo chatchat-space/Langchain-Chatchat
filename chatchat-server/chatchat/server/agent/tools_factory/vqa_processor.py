@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image, ImageDraw
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 import re
 from chatchat.server.agent.container import container
 
@@ -99,7 +99,7 @@ def vqa_run(model, tokenizer, image_base_64, query, history=[], device="cuda", m
     return response
 
 
-@regist_tool
+@regist_tool(title="图片对话")
 def vqa_processor(query: str = Field(description="The question of the image in English")):
     '''use this tool to get answer for image question'''
 
@@ -119,6 +119,8 @@ def vqa_processor(query: str = Field(description="The question of the image in E
         # end_marker = "Grounded Operation:"
         # ans = extract_between_markers(ans, start_marker, end_marker)
 
-        return ans
+        ret = ans
     else:
-        return "No Image, Please Try Again"
+        ret = "No Image, Please Try Again"
+
+    return BaseToolOutput(ret)

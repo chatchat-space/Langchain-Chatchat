@@ -3,11 +3,11 @@
 """
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 import requests
 
 
-@regist_tool
+@regist_tool(title="天气查询")
 def weather_check(city: str = Field(description="City name,include city and county,like '厦门'")):
     '''Use this tool to check the weather at a specific city'''
 
@@ -21,7 +21,7 @@ def weather_check(city: str = Field(description="City name,include city and coun
             "temperature": data["results"][0]["now"]["temperature"],
             "description": data["results"][0]["now"]["text"],
         }
-        return weather
+        return BaseToolOutput(weather)
     else:
         raise Exception(
             f"Failed to retrieve weather: {response.status_code}")

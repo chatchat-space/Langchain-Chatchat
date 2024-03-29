@@ -50,6 +50,14 @@ class ApiRequest:
                                             timeout=self.timeout)
         return self._client
 
+    def _check_url(self, url: str) -> str:
+        '''
+        新版 httpx 强制要求 url 以 / 结尾，否则会返回 307
+        '''
+        if not url.endswith("/"):
+            url = url + "/"
+        return url
+
     def get(
             self,
             url: str,
@@ -58,6 +66,7 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any,
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
+        url = self._check_url(url)
         while retry > 0:
             try:
                 if stream:
@@ -79,6 +88,7 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
+        url = self._check_url(url)
         while retry > 0:
             try:
                 # print(kwargs)
@@ -101,6 +111,7 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
+        url = self._check_url(url)
         while retry > 0:
             try:
                 if stream:
@@ -638,6 +649,27 @@ class ApiRequest:
         resp = self.post("/chat/feedback", json=data)
         return self._get_response_value(resp)
 
+    def list_tools(self) -> Dict:
+        '''
+        列出所有工具
+        '''
+        resp = self.get("/tools")
+        return self._get_response_value(resp, as_json=True, value_func=lambda r: r.get("data", {}))
+
+    def call_tool(
+            self,
+            name: str,
+            tool_input: Dict = {},
+    ):
+        '''
+        调用工具
+        '''
+        data = {
+            "name": name,
+            "tool_input": tool_input,
+        }
+        resp = self.post("/tools/call", json=data)
+        return self._get_response_value(resp, as_json=True, value_func=lambda r: r.get("data"))
 
 class AsyncApiRequest(ApiRequest):
     def __init__(self, base_url: str = api_address(), timeout: float = HTTPX_DEFAULT_TIMEOUT):

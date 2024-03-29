@@ -65,7 +65,6 @@ class FaissKBService(KBService):
         embed_func = get_Embeddings(self.embed_model)
         embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            embeddings = vs.embeddings.embed_query(query)
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
