@@ -92,7 +92,7 @@ class ChatCompletionRequest(BaseModel):
 
     def to_model_parameters_dict(self, *args, **kwargs):
         # 调用父类的to_dict方法，并排除tools字段
-        helper.dump_model
+
         return super().dict(
             exclude={"tools", "messages", "functions", "function_call"}, *args, **kwargs
         )

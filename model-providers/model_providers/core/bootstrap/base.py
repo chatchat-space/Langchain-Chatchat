@@ -3,9 +3,11 @@ from collections import deque
 
 from fastapi import Request
 
+from model_providers.core.bootstrap.openai_protocol import ChatCompletionRequest, EmbeddingsRequest
+from model_providers.core.model_manager import ModelManager
+
 
 class Bootstrap:
-
     """最大的任务队列"""
 
     _MAX_ONGOING_TASKS: int = 1
@@ -39,21 +41,31 @@ class Bootstrap:
 
 
 class OpenAIBootstrapBaseWeb(Bootstrap):
+    _provider_manager: ModelManager
+
     def __init__(self):
         super().__init__()
 
+    @property
+    def provider_manager(self) -> ModelManager:
+        return self._provider_manager
+
+    @provider_manager.setter
+    def provider_manager(self, provider_manager: ModelManager):
+        self._provider_manager = provider_manager
+
     @abstractmethod
-    async def list_models(self, request: Request):
+    async def list_models(self, provider: str, request: Request):
         pass
 
     @abstractmethod
     async def create_embeddings(
-        self, request: Request, embeddings_request: EmbeddingsRequest
+            self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
         pass
 
     @abstractmethod
     async def create_chat_completion(
-        self, request: Request, chat_request: ChatCompletionRequest
+            self, provider: str, request: Request, chat_request: ChatCompletionRequest
     ):
         pass
