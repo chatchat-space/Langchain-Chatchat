@@ -11,7 +11,7 @@ from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
 tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
 
 
-@tool_router.get("/", response_model=BaseResponse)
+@tool_router.get("", response_model=BaseResponse)
 async def list_tools():
     tools = get_tool()
     data = {t.name: {
