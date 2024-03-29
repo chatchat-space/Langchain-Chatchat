@@ -8,6 +8,7 @@ from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get
 from chatchat.server.utils import get_Embeddings
 from langchain.docstore.document import Document
 from typing import List, Dict, Optional, Tuple
+from chatchat.server.file_rag.utils import get_Retriever
 
 
 class FaissKBService(KBService):
@@ -62,10 +63,15 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   ) -> List[Tuple[Document, float]]:
-        embed_func = get_Embeddings(self.embed_model)
-        embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
+            retriever = get_Retriever("vectorstore").from_vectorstore(
+                vs,
+                top_k=top_k,
+                score_threshold=score_threshold,
+            )
+            docs = retriever.get_relevant_documents(query)
+
+            # docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
         return docs
 
     def do_add_doc(self,

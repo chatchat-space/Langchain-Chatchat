@@ -49,7 +49,9 @@ def search_local_knowledgebase(
     database: str = Field(description="Database for Knowledge Search", choices=list_kbs().data),
     query: str = Field(description="Query for Knowledge Search"),
 ):
-    ''''''
+    """
+    本地知识库检索
+    """
     tool_config = get_tool_config("search_local_knowledgebase")
     ret = search_knowledgebase(query=query, database=database, config=tool_config)
     return KBToolOutput(ret, database=database)
