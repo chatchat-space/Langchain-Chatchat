@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import re
+import json
+import time
 from typing import Dict, List, Literal, Optional, Union
 
 from fastapi import UploadFile
-from chatchat.server.pydantic_v2 import BaseModel, Field, AnyUrl, root_validator
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionToolChoiceOptionParam,
@@ -12,8 +12,10 @@ from openai.types.chat import (
     completion_create_params,
 )
 
-from chatchat.configs import DEFAULT_LLM_MODEL, TEMPERATURE, LLM_MODEL_CONFIG
-
+from chatchat.configs import DEFAULT_LLM_MODEL, TEMPERATURE
+from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from chatchat.server.pydantic_v2 import BaseModel, Field, AnyUrl
+from chatchat.server.utils import MsgType
 
 class OpenAIBaseInput(BaseModel):
     user: Optional[str] = None
@@ -21,7 +23,7 @@ class OpenAIBaseInput(BaseModel):
     # The extra values given here take precedence over values defined on the client or passed to this method.
     extra_headers: Optional[Dict] = None
     extra_query: Optional[Dict] = None
-    extra_body: Optional[Dict] = None
+    extra_json: Optional[Dict] = Field(None, alias="extra_body")
     timeout: Optional[float] = None
 
     class Config:
@@ -44,8 +46,8 @@ class OpenAIChatInput(OpenAIBaseInput):
     stop: Union[Optional[str], List[str]] = None
     stream: Optional[bool] = None
     temperature: Optional[float] = TEMPERATURE
-    tool_choice: Optional[ChatCompletionToolChoiceOptionParam] = None
-    tools: List[ChatCompletionToolParam] = None
+    tool_choice: Optional[Union[ChatCompletionToolChoiceOptionParam, str]] = None
+    tools: List[Union[ChatCompletionToolParam, str]] = None
     top_logprobs: Optional[int] = None
     top_p: Optional[float] = None
 
@@ -98,3 +100,62 @@ class OpenAIAudioSpeechInput(OpenAIBaseInput):
     voice: str
     response_format: Optional[Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]] = None
     speed: Optional[float] = None
+
+
+class OpenAIBaseOutput(BaseModel):
+    id: Optional[str] = None
+    content: Optional[str] = None
+    model: Optional[str] = None
+    object: Literal["chat.completion", "chat.completion.chunk"] = "chat.completion.chunk"
+    role: Literal["assistant"] = "assistant"
+    finish_reason: Optional[str] = None
+    created: int = Field(default_factory=lambda : int(time.time()))
+    tool_calls: List[Dict] = []
+
+    status: Optional[int] = None # AgentStatus
+    message_type: int = MsgType.TEXT
+    message_id: Optional[str] = None # id in database table
+    is_ref: bool = False # wheather show in seperated expander
+
+    class Config:
+        extra = "allow"
+
+    def model_dump(self) -> dict:
+        result = {
+            "id": self.id,
+            "object": self.object,
+            "model": self.model,
+            "created": self.created,
+
+            "status": self.status,
+            "message_type": self.message_type,
+            "message_id": self.message_id,
+            "is_ref": self.is_ref,
+            **(self.model_extra or {}),
+        }
+
+        if self.object == "chat.completion.chunk":
+            result["choices"] = [{
+                "delta": {
+                    "content": self.content,
+                    "tool_calls": self.tool_calls,
+                },
+                "role": self.role,
+            }]
+        elif self.object == "chat.completion":
+            result["choices"] = [{
+                "message": {
+                    "role": self.role,
+                    "content": self.content,
+                    "finish_reason": self.finish_reason,
+                    "tool_calls": self.tool_calls,
+                }
+            }]
+        return result
+
+    def model_dump_json(self):
+        return json.dumps(self.model_dump(), ensure_ascii=False)
+
+
+class OpenAIChatOutput(OpenAIBaseOutput):
+    ...

@@ -102,7 +102,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             metadata: Optional[Dict[str, Any]] = None,
             **kwargs: Any,
     ) -> None:
-       pass
+       data = {
+           "run_id": str(run_id),
+           "status": AgentStatus.tool_start,
+           "tool": serialized["name"],
+           "tool_input": input_str,
+       }
+       self.queue.put_nowait(dumps(data))
 
 
     async def on_tool_end(
@@ -116,6 +122,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     ) -> None:
         """Run when tool ends running."""
         data = {
+            "run_id": str(run_id),
             "status": AgentStatus.tool_end,
             "tool_output": output,
         }
@@ -133,8 +140,10 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
     ) -> None:
         """Run when tool errors."""
         data = {
+            "run_id": str(run_id),
             "status": AgentStatus.tool_end,
-            "text": str(error),
+            "tool_output": str(error),
+            "is_error": True,
         }
         # self.done.clear()
         self.queue.put_nowait(dumps(data))

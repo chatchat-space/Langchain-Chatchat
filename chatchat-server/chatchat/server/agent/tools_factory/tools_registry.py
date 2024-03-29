@@ -1,14 +1,21 @@
+import json
 import re
 from typing import Any, Union, Dict, Tuple, Callable, Optional, Type
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
 
-from chatchat.server.pydantic_v1 import BaseModel
+from chatchat.server.pydantic_v1 import BaseModel, Extra
+
+
+__all__ = ["regist_tool", "BaseToolOutput"]
 
 
 _TOOLS_REGISTRY = {}
 
+
+# patch BaseTool to support extra fields e.g. a title
+BaseTool.Config.extra = Extra.allow
 
 ################################### TODO: workaround to langchain #15855
 # patch BaseTool to support tool parameters defined using pydantic Field
@@ -60,6 +67,7 @@ BaseTool._to_args_and_kwargs = _new_to_args_and_kwargs
 
 def regist_tool(
     *args: Any,
+    title: str = "",
     description: str = "",
     return_direct: bool = False,
     args_schema: Optional[Type[BaseModel]] = None,
@@ -70,9 +78,10 @@ def regist_tool(
     add tool to regstiry automatically
     '''
     def _parse_tool(t: BaseTool):
-        nonlocal description
+        nonlocal description, title
 
         _TOOLS_REGISTRY[t.name] = t
+
         # change default description
         if not description:
             if t.func is not None:
@@ -80,6 +89,10 @@ def regist_tool(
             elif t.coroutine is not None:
                 description = t.coroutine.__doc__ 
         t.description = " ".join(re.split(r"\n+\s*", description))
+        # set a default title for human
+        if not title:
+            title = "".join([x.capitalize() for x in t.name.split("_")])
+        t.title = title
 
     def wrapper(def_func: Callable) -> BaseTool:
         partial_ = tool(*args,
@@ -101,3 +114,30 @@ def regist_tool(
                 )
         _parse_tool(t)
         return t
+
+
+class BaseToolOutput:
+    '''
+    LLM 要求 Tool 的输出为 str，但 Tool 用在别处时希望它正常返回结构化数据。
+    只需要将 Tool 返回值用该类封装，能同时满足两者的需要。
+    基类简单的将返回值字符串化，或指定 format="json" 将其转为 json。
+    用户也可以继承该类定义自己的转换方法。
+    '''
+    def __init__(
+        self,
+        data: Any,
+        format: str="",
+        data_alias: str="",
+        **extras: Any,
+    ) -> None:
+        self.data = data
+        self.format = format
+        self.extras = extras
+        if data_alias:
+            setattr(self, data_alias, property(lambda obj: obj.data))
+    
+    def __str__(self) -> str:
+        if self.format == "json":
+            return json.dumps(self.data, ensure_ascii=False, indent=2)
+        else:
+            return str(self.data)

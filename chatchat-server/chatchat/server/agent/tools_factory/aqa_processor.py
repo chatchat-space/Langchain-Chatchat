@@ -1,7 +1,7 @@
 import base64
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 
 
 def save_base64_audio(base64_audio, file_path):
@@ -16,8 +16,8 @@ def aqa_run(model, tokenizer, query):
     return response
 
 
-@regist_tool
-def aqa_processor(query: str = Field(description="The question of the image in English")):
+@regist_tool(title="音频问答")
+def aqa_processor(query: str = Field(description="The question of the audio in English")):
     '''use this tool to get answer for audio question'''
 
     from chatchat.server.agent.container import container
@@ -28,6 +28,8 @@ def aqa_processor(query: str = Field(description="The question of the image in E
             "audio": file_path,
             "text": query,
         }
-        return aqa_run(tokenizer=container.audio_tokenizer, query=query_input, model=container.audio_model)
+        ret = aqa_run(tokenizer=container.audio_tokenizer, query=query_input, model=container.audio_model)
     else:
-        return "No Audio, Please Try Again"
+        ret = "No Audio, Please Try Again"
+    
+    return BaseToolOutput(ret)

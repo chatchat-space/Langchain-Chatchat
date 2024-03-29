@@ -96,11 +96,7 @@ class ESKBService(KBService):
         return os.path.join(ESKBService.get_kb_path(knowledge_base_name), "vector_store")
 
     def do_create_kb(self):
-        if os.path.exists(self.doc_path):
-            if not os.path.exists(os.path.join(self.kb_path, "vector_store")):
-                os.makedirs(os.path.join(self.kb_path, "vector_store"))
-            else:
-                logger.warning("directory `vector_store` already exists.")
+        ...
 
     def vs_type(self) -> str:
         return SupportedVSType.ES

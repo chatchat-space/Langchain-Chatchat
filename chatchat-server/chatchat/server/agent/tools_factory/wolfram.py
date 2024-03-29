@@ -2,7 +2,7 @@
 
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool
+from .tools_registry import regist_tool, BaseToolOutput
 
 
 @regist_tool
@@ -13,4 +13,4 @@ def wolfram(query: str = Field(description="The formula to be calculated")):
 
     wolfram = WolframAlphaAPIWrapper(wolfram_alpha_appid=get_tool_config("wolfram").get("appid"))
     ans = wolfram.run(query)
-    return ans
+    return BaseToolOutput(ans)

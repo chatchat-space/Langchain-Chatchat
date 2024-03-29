@@ -1,24 +1,25 @@
 import base64
-
-from chatchat.server.utils import get_tool_config
-import streamlit as st
-from streamlit_antd_components.utils import ParseItems
-
-from chatchat.webui_pages.dialogue.utils import process_files
-# from chatchat.webui_pages.loom_view_client import build_providers_model_plugins_name, find_menu_items_by_index, set_llm_select, \
-#     get_select_model_endpoint
-from chatchat.webui_pages.utils import *
-from streamlit_chatbox import *
-from streamlit_modal import Modal
-from datetime import datetime
+import uuid
 import os
 import re
 import time
+from typing import List, Dict
+
+import streamlit as st
+from streamlit_antd_components.utils import ParseItems
+
+import openai
+from streamlit_chatbox import *
+from streamlit_modal import Modal
+from datetime import datetime
+
 from chatchat.configs import (LLM_MODEL_CONFIG, SUPPORT_AGENT_MODELS, MODEL_PLATFORMS)
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.utils import MsgType, get_config_models
-import uuid
-from typing import List, Dict
+from chatchat.server.utils import get_tool_config
+from chatchat.webui_pages.utils import *
+from chatchat.webui_pages.dialogue.utils import process_files
+
 
 img_dir = (Path(__file__).absolute().parent.parent.parent)
 
@@ -121,69 +122,66 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.write("\n\n".join(cmds))
 
     with st.sidebar:
-        conv_names = list(st.session_state["conversation_ids"].keys())
-        index = 0
+        tab1, tab2 = st.tabs(["对话设置", "模型设置"])
 
-        if st.session_state.get("cur_conv_name") in conv_names:
-            index = conv_names.index(st.session_state.get("cur_conv_name"))
-        conversation_name = st.selectbox("当前会话", conv_names, index=index)
-        chat_box.use_chat_name(conversation_name)
-        conversation_id = st.session_state["conversation_ids"][conversation_name]
+        with tab1:
+            use_agent = st.checkbox("启用Agent", True, help="请确保选择的模型具备Agent能力")
+            # 选择工具
+            tools = api.list_tools()
+            if use_agent:
+                selected_tools = st.multiselect("选择工具", list(tools), format_func=lambda x: tools[x]["title"])
+            else:
+                selected_tool = st.selectbox("选择工具", list(tools), format_func=lambda x: tools[x]["title"])
+                selected_tools = [selected_tool]
+            selected_tool_configs = {name: tool["config"] for name, tool in tools.items() if name in selected_tools}
 
-        platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
-        platform = st.selectbox("选择模型平台", platforms)
-        llm_models = list(get_config_models(model_type="llm", platform_name=None if platform=="所有" else platform))
-        llm_model = st.selectbox("选择LLM模型", llm_models)
+            # 当不启用Agent时，手动生成工具参数
+            # TODO: 需要更精细的控制控件
+            tool_input = {}
+            if not use_agent and len(selected_tools) == 1:
+                with st.expander("工具参数", True):
+                    for k, v in tools[selected_tools[0]]["args"].items():
+                        if choices := v.get("choices", v.get("enum")):
+                            tool_input[k] = st.selectbox(v["title"], choices)
+                        else:
+                            if v["type"] == "integer":
+                                tool_input[k] = st.slider(v["title"], value=v.get("default"))
+                            elif v["type"] == "number":
+                                tool_input[k] = st.slider(v["title"], value=v.get("default"), step=0.1)
+                            else:
+                                tool_input[k] = st.text_input(v["title"], v.get("default"))
 
-        #  传入后端的内容
-        chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
-        tool_use = True
-        for key in LLM_MODEL_CONFIG:
-            if key == 'llm_model':
-                continue
-            if key == 'action_model':
-                first_key = next(iter(LLM_MODEL_CONFIG[key]))
-                if first_key not in SUPPORT_AGENT_MODELS:
-                    st.warning("不支持Agent的模型，无法执行任何工具调用")
-                    tool_use = False
-                    continue
-            if LLM_MODEL_CONFIG[key]:
-                first_key = next(iter(LLM_MODEL_CONFIG[key]))
-                chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
 
-        # 选择工具
-        selected_tool_configs = {}
-        if tool_use:
-            from chatchat.configs import model_config as model_config_py
-            import importlib
-            importlib.reload(model_config_py)
+            uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
+            files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
+        
+        with tab2:
+            # 会话
+            conv_names = list(st.session_state["conversation_ids"].keys())
+            index = 0
+            if st.session_state.get("cur_conv_name") in conv_names:
+                index = conv_names.index(st.session_state.get("cur_conv_name"))
+            conversation_name = st.selectbox("当前会话", conv_names, index=index)
+            chat_box.use_chat_name(conversation_name)
+            conversation_id = st.session_state["conversation_ids"][conversation_name]
 
-            tools = get_tool_config()
-            with st.expander("工具栏"):
-                for tool in tools:
-                    is_selected = st.checkbox(tool, value=tools[tool]["use"], key=tool)
-                    if is_selected:
-                        selected_tool_configs[tool] = tools[tool]
+            # 模型
+            platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
+            platform = st.selectbox("选择模型平台", platforms)
+            llm_models = list(get_config_models(model_type="llm", platform_name=None if platform=="所有" else platform))
+            llm_model = st.selectbox("选择LLM模型", llm_models)
 
-        if llm_model is not None:
-            chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
+            #  传入后端的内容
+            chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
+            for key in LLM_MODEL_CONFIG:
+                if LLM_MODEL_CONFIG[key]:
+                    first_key = next(iter(LLM_MODEL_CONFIG[key]))
+                    chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
 
-        uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
-        files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
-        # print(len(files_upload["audios"])) if files_upload else None
+            if llm_model is not None:
+                chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
 
-        # if dialogue_mode == "文件对话":
-        #     with st.expander("文件对话配置", True):
-        #         files = st.file_uploader("上传知识文件：",
-        #                                  [i for ls in LOADER_DICT.values() for i in ls],
-        #                                  accept_multiple_files=True,
-        #                                  )
-        #         kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
-        #         score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
-        #         if st.button("开始上传", disabled=len(files) == 0):
-        #             st.session_state["file_chat_id"] = upload_temp_docs(files, api)
     # Display chat messages from history on app rerun
-
     chat_box.output_messages()
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
 
@@ -228,50 +226,85 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
             chat_box.ai_say("正在思考...")
             text = ""
-            text_action = ""
-            element_index = 0
+            started = False
 
-            for d in api.chat_chat(query=prompt,
-                                   metadata=files_upload,
-                                   history=history,
-                                   chat_model_config=chat_model_config,
-                                   conversation_id=conversation_id,
-                                   tool_config=selected_tool_configs,
-                                   ):
-                message_id = d.get("message_id", "")
+            client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE")
+            messages = history + [{"role": "user", "content": prompt}]
+            tools = list(selected_tool_configs)
+            if len(selected_tools) == 1:
+                tool_choice = selected_tools[0]
+            else:
+                tool_choice = None
+            # 如果 tool_input 中有空的字段，设为用户输入
+            for k in tool_input:
+                if tool_input[k] in [None, ""]:
+                    tool_input[k] = prompt
+
+            extra_body = dict(
+                            metadata=files_upload,
+                            chat_model_config=chat_model_config,
+                            conversation_id=conversation_id,
+                            tool_input = tool_input,
+                            )
+            for d in client.chat.completions.create(
+                    messages=messages,
+                    model=llm_model,
+                    stream=True,
+                    tools=tools,
+                    tool_choice=tool_choice,
+                    extra_body=extra_body,
+                ):
+                print("\n\n", d.status, "\n", d, "\n\n")
+                message_id = d.message_id
                 metadata = {
                     "message_id": message_id,
                 }
-                print(d)
-                if d["status"] == AgentStatus.error:
-                    st.error(d["text"])
-                elif d["status"] == AgentStatus.agent_action:
-                    formatted_data = {
-                        "Function": d["tool_name"],
-                        "function_input": d["tool_input"]
-                    }
-                    element_index += 1
-                    formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                    chat_box.insert_msg(
-                        Markdown(title="Function call", in_expander=True, expanded=True, state="running"))
-                    text = """\n```{}\n```\n""".format(formatted_json)
-                    chat_box.update_msg(Markdown(text), element_index=element_index)
-                elif d["status"] == AgentStatus.tool_end:
-                    text += """\n```\nObservation:\n{}\n```\n""".format(d["tool_output"])
-                    chat_box.update_msg(Markdown(text), element_index=element_index, expanded=False, state="complete")
-                elif d["status"] == AgentStatus.llm_new_token:
-                    text += d["text"]
-                    chat_box.update_msg(text, streaming=True, element_index=element_index, metadata=metadata)
-                elif d["status"] == AgentStatus.llm_end:
-                    chat_box.update_msg(text, streaming=False, element_index=element_index, metadata=metadata)
-                elif d["status"] == AgentStatus.agent_finish:
-                    if d["message_type"] == MsgType.IMAGE:
-                        for url in json.loads(d["text"]).get("images", []):
-                            url = f"{api.base_url}/media/{url}"
-                            chat_box.insert_msg(Image(url))
-                        chat_box.update_msg(element_index=element_index, expanded=False, state="complete")
+
+                if d.status == AgentStatus.error:
+                    st.error(d.choices[0].delta.content)
+                elif d.status == AgentStatus.llm_start:
+                    if not started:
+                        started = True
                     else:
-                        chat_box.insert_msg(Markdown(d["text"], expanded=True))
+                        chat_box.insert_msg("正在解读工具输出结果...")
+                    text = d.choices[0].delta.content or ""
+                elif d.status == AgentStatus.llm_new_token:
+                    text += d.choices[0].delta.content or ""
+                    chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True, metadata=metadata)
+                elif d.status == AgentStatus.llm_end:
+                    text += d.choices[0].delta.content or ""
+                    chat_box.update_msg(text.replace("\n", "\n\n"), streaming=False, metadata=metadata)
+                # tool 的输出与 llm 输出重复了
+                # elif d.status == AgentStatus.tool_start:
+                #     formatted_data = {
+                #         "Function": d.choices[0].delta.tool_calls[0].function.name,
+                #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+                #     }
+                #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                #     text = """\n```{}\n```\n""".format(formatted_json)
+                #     chat_box.insert_msg( # TODO: insert text directly not shown
+                #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
+                # elif d.status == AgentStatus.tool_end:
+                #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
+                #     if d.message_type == MsgType.IMAGE:
+                #         for url in json.loads(tool_output).get("images", []):
+                #             url = f"{api.base_url}/media/{url}"
+                #             chat_box.insert_msg(Image(url))
+                #         chat_box.update_msg(expanded=False, state="complete")
+                #     else:
+                #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
+                #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
+                elif d.status == AgentStatus.agent_finish:
+                    text = d.choices[0].delta.content or ""
+                    chat_box.update_msg(text.replace("\n", "\n\n"))
+                elif d.status == None: # not agent chat
+                    if getattr(d, "is_ref", False):
+                        chat_box.insert_msg(Markdown(d.choices[0].delta.content or "", in_expander=True, state="complete", title="参考资料"))
+                        chat_box.insert_msg("")
+                    else:
+                        text += d.choices[0].delta.content or ""
+                        chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True, metadata=metadata)
+            chat_box.update_msg(text, streaming=False, metadata=metadata)
 
             if os.path.exists("tmp/image.jpg"):
                 with open("tmp/image.jpg", "rb") as image_file:
@@ -313,8 +346,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         st.rerun()
 
     now = datetime.now()
-    with st.sidebar:
-
+    with tab1:
         cols = st.columns(2)
         export_btn = cols[0]
         if cols[1].button(
@@ -333,3 +365,5 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         mime="text/markdown",
         use_container_width=True,
     )
+
+    # st.write(chat_box.history)
