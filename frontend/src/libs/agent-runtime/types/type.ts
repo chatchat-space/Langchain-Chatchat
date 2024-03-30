@@ -34,4 +34,5 @@ export enum ModelProvider {
   Perplexity = 'perplexity',
   Tongyi = 'tongyi',
   ZhiPu = 'zhipu',
+  Knowledge = 'knowledge',
 }

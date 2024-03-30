@@ -12,3 +12,4 @@ export { LobePerplexityAI } from './perplexity';
 export * from './types';
 export { AgentRuntimeError } from './utils/createError';
 export { LobeZhipuAI } from './zhipu';
+export { LobeKnowledgeAI } from './knowledge';
