@@ -21,6 +21,7 @@ import {
   LobeRuntimeAI,
   LobeZhipuAI,
   ModelProvider,
+  LobeKnowledgeAI,
 } from '@/libs/agent-runtime';
 import { TraceClient } from '@/libs/traces';
 
@@ -167,6 +168,11 @@ class AgentRuntime {
         runtimeModel = this.initMistral(payload);
         break;
       }
+
+      case ModelProvider.Knowledge: {
+        runtimeModel = this.initKnowledge(payload);
+        break;
+      }
     }
 
     return new AgentRuntime(runtimeModel);
@@ -267,6 +273,13 @@ class AgentRuntime {
     const apiKey = apiKeyManager.pick(payload?.apiKey || MISTRAL_API_KEY);
 
     return new LobeMistralAI({ apiKey });
+  }
+
+  private static initKnowledge(payload: JWTPayload) {
+    const { KNOWLEDGE_PROXY_URL } = getServerConfig();
+    const baseURL = payload?.endpoint || KNOWLEDGE_PROXY_URL;
+
+    return new LobeKnowledgeAI({ baseURL });
   }
 }
 

@@ -34,6 +34,9 @@ export const AgentRuntimeErrorType = {
 
   InvalidAnthropicAPIKey: 'InvalidAnthropicAPIKey',
   AnthropicBizError: 'AnthropicBizError',
+
+  InvalidKnowledgeArgs: 'InvalidKnowledgeArgs',
+  KnowledgeBizError: 'KnowledgeBizError',
 } as const;
 
 export type ILobeAgentRuntimeErrorType =
