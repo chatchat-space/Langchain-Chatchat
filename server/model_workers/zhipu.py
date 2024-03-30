@@ -39,6 +39,8 @@ def generate_token(apikey: str, exp_seconds: int):
 
 
 class ChatGLMWorker(ApiModelWorker):
+    DEFAULT_EMBED_MODEL = "embedding-2"
+    
     def __init__(
             self,
             *,
