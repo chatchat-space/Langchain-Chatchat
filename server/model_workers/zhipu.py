@@ -84,7 +84,29 @@ class ChatGLMWorker(ApiModelWorker):
             #             yield {"error_code": 0, "text": text}
 
 
+    def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
+        params.load_config(self.model_names[0])
+        token = generate_token(params.api_key, 60)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+        i = 0
+        batch_size = 1
+        result = []
+        while i < len(params.texts):
+            data = {
+                "model": params.embed_model or self.DEFAULT_EMBED_MODEL,
+                "input": "".join(params.texts[i: i + batch_size])
+            }
+            url = "https://open.bigmodel.cn/api/paas/v4/embeddings"
+            response = requests.post(url, headers=headers, json=data)
+            ans = response.json()
+            result.append(ans["data"][0]["embedding"])
+            i += batch_size
 
+        return {"code": 200, "data": result}
+        
     def get_embeddings(self, params):
         print("embedding")
         print(params)
