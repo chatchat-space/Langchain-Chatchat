@@ -6,15 +6,14 @@ import { Flexbox } from 'react-layout-kit';
 import AppLayoutDesktop from '@/layout/AppLayout.desktop';
 import { SidebarTabKey } from '@/store/global/initialState';
 
-
 export default memo(({ children }: PropsWithChildren) => {
   return (
-    <AppLayoutDesktop sidebarKey={SidebarTabKey.Chat}>
+    <AppLayoutDesktop sidebarKey={SidebarTabKey.Knowledge}>
       <Flexbox
         flex={1}
         height={'100%'}
         id={'lobe-conversion-container'}
-        style={{ position: 'relative' }}
+        style={{ paddingLeft: 20, paddingRight: 20, position: 'relative' }}
       >
         {children}
       </Flexbox>
