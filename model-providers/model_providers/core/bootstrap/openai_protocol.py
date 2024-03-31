@@ -22,7 +22,7 @@ class Finish(str, Enum):
 
 class ModelCard(BaseModel):
     id: str
-    object: Literal["model"] = "model"
+    object: Literal["text-generation","embeddings","reranking", "speech2text", "moderation", "tts", "text2img"] = "llm"
     created: int = Field(default_factory=lambda: int(time.time()))
     owned_by: Literal["owner"] = "owner"
 
