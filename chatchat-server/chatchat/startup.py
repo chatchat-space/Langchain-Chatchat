@@ -64,8 +64,11 @@ def run_webui(started_event: mp.Event = None, run_mode: str = None):
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
-
-    st_exe = os.path.join(os.path.dirname(sys.executable),"scripts","streamlit")
+    # 判断系统是否为Windows
+    if sys.platform == "win32":
+        st_exe = os.path.join(os.path.dirname(sys.executable), "Scripts", "streamlit")
+    else:
+        st_exe = os.path.join(os.path.dirname(sys.executable),"streamlit")
     script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webui.py')
     cmd = [st_exe, "run", script_dir,
            "--server.address", host,

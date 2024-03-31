@@ -30,13 +30,13 @@ pathlib = "~1.0.1"
 pytest = "~7.4.3"
 pyjwt = "2.8.0"
 elasticsearch = "*"
-numexpr = ">=2.8.8"
+numexpr = ">=1" #test
 strsimpy = ">=0.2.1"
 markdownify = ">=0.11.6"
 tqdm = ">=4.66.1"
 websockets = ">=12.0"
 numpy = "1.24.4"
-pandas = "~2.1.4"
+pandas = "~1" # test
 pydantic = "2.6.4"
 httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
