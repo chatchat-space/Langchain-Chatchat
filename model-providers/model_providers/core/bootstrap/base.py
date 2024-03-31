@@ -3,7 +3,10 @@ from collections import deque
 
 from fastapi import Request
 
-from model_providers.core.bootstrap.openai_protocol import ChatCompletionRequest, EmbeddingsRequest
+from model_providers.core.bootstrap.openai_protocol import (
+    ChatCompletionRequest,
+    EmbeddingsRequest,
+)
 from model_providers.core.model_manager import ModelManager
 
 
@@ -60,12 +63,12 @@ class OpenAIBootstrapBaseWeb(Bootstrap):
 
     @abstractmethod
     async def create_embeddings(
-            self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
+        self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
         pass
 
     @abstractmethod
     async def create_chat_completion(
-            self, provider: str, request: Request, chat_request: ChatCompletionRequest
+        self, provider: str, request: Request, chat_request: ChatCompletionRequest
     ):
         pass

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
@@ -72,7 +72,6 @@ class ModelType(Enum):
             return "text2img"
         else:
             raise ValueError(f"invalid model type {self}")
-
 
 
 class FetchFrom(Enum):

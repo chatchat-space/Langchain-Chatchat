@@ -1,7 +1,6 @@
 import logging
-
-import time
 import os
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ def get_log_file(log_path: str, sub_dir: str):
 
 
 def get_config_dict(
-        log_level: str, log_file_path: str, log_backup_count: int, log_max_bytes: int
+    log_level: str, log_file_path: str, log_backup_count: int, log_max_bytes: int
 ) -> dict:
     # for windows, the path should be a raw string.
     log_file_path = (

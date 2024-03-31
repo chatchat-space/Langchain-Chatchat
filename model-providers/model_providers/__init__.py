@@ -1,8 +1,10 @@
-from model_providers.bootstrap_web.openai_bootstrap_web import RESTFulOpenAIBootstrapBaseWeb
+from omegaconf import DictConfig, OmegaConf
+
+from model_providers.bootstrap_web.openai_bootstrap_web import (
+    RESTFulOpenAIBootstrapBaseWeb,
+)
 from model_providers.core.bootstrap import OpenAIBootstrapBaseWeb
 from model_providers.core.model_manager import ModelManager
-
-from omegaconf import OmegaConf, DictConfig
 
 
 def _to_custom_provide_configuration(cfg: DictConfig):
@@ -34,8 +36,8 @@ def _to_custom_provide_configuration(cfg: DictConfig):
     provider_name_to_provider_model_records_dict = {}
 
     for key, item in cfg.items():
-        model_credential = item.get('model_credential')
-        provider_credential = item.get('provider_credential')
+        model_credential = item.get("model_credential")
+        provider_credential = item.get("provider_credential")
         # 转换omegaconf对象为基本属性
         if model_credential:
             model_credential = OmegaConf.to_container(model_credential)
@@ -44,13 +46,17 @@ def _to_custom_provide_configuration(cfg: DictConfig):
             provider_credential = OmegaConf.to_container(provider_credential)
             provider_name_to_provider_records_dict[key] = provider_credential
 
-    return provider_name_to_provider_records_dict, provider_name_to_provider_model_records_dict
+    return (
+        provider_name_to_provider_records_dict,
+        provider_name_to_provider_model_records_dict,
+    )
 
 
 class BootstrapWebBuilder:
     """
     创建一个模型实例创建工具
     """
+
     _model_providers_cfg_path: str
     _host: str
     _port: int
@@ -68,20 +74,26 @@ class BootstrapWebBuilder:
         return self
 
     def build(self) -> OpenAIBootstrapBaseWeb:
-        assert self._model_providers_cfg_path is not None and self._host is not None and self._port is not None
+        assert (
+            self._model_providers_cfg_path is not None
+            and self._host is not None
+            and self._port is not None
+        )
         # 读取配置文件
         cfg = OmegaConf.load(self._model_providers_cfg_path)
         # 转换配置文件
-        provider_name_to_provider_records_dict, provider_name_to_provider_model_records_dict = _to_custom_provide_configuration(
-            cfg)
+        (
+            provider_name_to_provider_records_dict,
+            provider_name_to_provider_model_records_dict,
+        ) = _to_custom_provide_configuration(cfg)
         # 创建模型管理器
-        provider_manager = ModelManager(provider_name_to_provider_records_dict,
-                                        provider_name_to_provider_model_records_dict)
+        provider_manager = ModelManager(
+            provider_name_to_provider_records_dict,
+            provider_name_to_provider_model_records_dict,
+        )
         # 创建web服务
-        restful = RESTFulOpenAIBootstrapBaseWeb.from_config(cfg={
-            "host": self._host,
-            "port": self._port
-
-        })
+        restful = RESTFulOpenAIBootstrapBaseWeb.from_config(
+            cfg={"host": self._host, "port": self._port}
+        )
         restful.provider_manager = provider_manager
         return restful

@@ -21,13 +21,17 @@ from model_providers.core.bootstrap.openai_protocol import (
     EmbeddingsRequest,
     EmbeddingsResponse,
     FunctionAvailable,
-    ModelList, ModelCard,
+    ModelCard,
+    ModelList,
 )
-from model_providers.core.model_manager import ModelManager, ModelInstance
+from model_providers.core.model_manager import ModelInstance, ModelManager
 from model_providers.core.model_runtime.entities.message_entities import (
     UserPromptMessage,
 )
-from model_providers.core.model_runtime.entities.model_entities import ModelType, AIModelEntity
+from model_providers.core.model_runtime.entities.model_entities import (
+    AIModelEntity,
+    ModelType,
+)
 from model_providers.core.utils.generic import dictify, jsonify
 
 logger = logging.getLogger(__name__)
@@ -115,24 +119,31 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         llm_models: list[AIModelEntity] = []
         for model_type in ModelType.__members__.values():
             try:
-                provider_model_bundle = self._provider_manager.provider_manager.get_provider_model_bundle(
-                    provider=provider, model_type=model_type
+                provider_model_bundle = (
+                    self._provider_manager.provider_manager.get_provider_model_bundle(
+                        provider=provider, model_type=model_type
+                    )
                 )
-                llm_models.extend(provider_model_bundle.model_type_instance.predefined_models())
+                llm_models.extend(
+                    provider_model_bundle.model_type_instance.predefined_models()
+                )
             except Exception as e:
-                logger.error(f"Error while fetching models for provider: {provider}, model_type: {model_type}")
+                logger.error(
+                    f"Error while fetching models for provider: {provider}, model_type: {model_type}"
+                )
                 logger.error(e)
 
         # models list[AIModelEntity]转换称List[ModelCard]
 
-        models_list = [ModelCard(id=model.model, object=model.model_type.to_origin_model_type()) for model in llm_models]
+        models_list = [
+            ModelCard(id=model.model, object=model.model_type.to_origin_model_type())
+            for model in llm_models
+        ]
 
-        return ModelList(
-            data=models_list
-        )
+        return ModelList(data=models_list)
 
     async def create_embeddings(
-            self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
+        self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
@@ -142,7 +153,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         return EmbeddingsResponse(**dictify(response))
 
     async def create_chat_completion(
-            self, provider: str, request: Request, chat_request: ChatCompletionRequest
+        self, provider: str, request: Request, chat_request: ChatCompletionRequest
     ):
         logger.info(
             f"Received chat completion request: {pprint.pformat(chat_request.dict())}"
@@ -180,9 +191,9 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
 
 
 def run(
-        cfg: Dict,
-        logging_conf: Optional[dict] = None,
-        started_event: mp.Event = None,
+    cfg: Dict,
+    logging_conf: Optional[dict] = None,
+    started_event: mp.Event = None,
 ):
     logging.config.dictConfig(logging_conf)  # type: ignore
     try:

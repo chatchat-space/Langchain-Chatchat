@@ -1,11 +1,16 @@
 """Configuration for unit tests."""
-from importlib import util
-from typing import Dict, Sequence, List
 import logging
+from importlib import util
+from typing import Dict, List, Sequence
+
 import pytest
 from pytest import Config, Function, Parser
 
-from model_providers.core.utils.utils import get_config_dict, get_timestamp_ms, get_log_file
+from model_providers.core.utils.utils import (
+    get_config_dict,
+    get_log_file,
+    get_timestamp_ms,
+)
 
 
 def pytest_addoption(parser: Parser) -> None:

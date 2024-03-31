@@ -253,9 +253,11 @@ class ProviderManager:
 
             custom_model_configurations.append(
                 CustomModelConfiguration(
-                    model=provider_model_record.get('model'),
-                    model_type=ModelType.value_of(provider_model_record.get('model_type')),
-                    credentials=provider_model_credentials
+                    model=provider_model_record.get("model"),
+                    model_type=ModelType.value_of(
+                        provider_model_record.get("model_type")
+                    ),
+                    credentials=provider_model_credentials,
                 )
             )
 
