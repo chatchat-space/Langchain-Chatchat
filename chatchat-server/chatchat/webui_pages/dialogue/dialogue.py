@@ -254,19 +254,21 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                     tool_choice=tool_choice,
                     extra_body=extra_body,
                 ):
-                print("\n\n", d.status, "\n", d, "\n\n")
+                # print("\n\n", d.status, "\n", d, "\n\n")
                 message_id = d.message_id
                 metadata = {
                     "message_id": message_id,
                 }
 
+                # clear initial message
+                if not started:
+                    chat_box.update_msg("", streaming=False)
+                    started = True
+
                 if d.status == AgentStatus.error:
                     st.error(d.choices[0].delta.content)
                 elif d.status == AgentStatus.llm_start:
-                    if not started:
-                        started = True
-                    else:
-                        chat_box.insert_msg("正在解读工具输出结果...")
+                    chat_box.insert_msg("正在解读工具输出结果...")
                     text = d.choices[0].delta.content or ""
                 elif d.status == AgentStatus.llm_new_token:
                     text += d.choices[0].delta.content or ""

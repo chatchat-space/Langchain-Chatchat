@@ -50,14 +50,6 @@ class ApiRequest:
                                             timeout=self.timeout)
         return self._client
 
-    def _check_url(self, url: str) -> str:
-        '''
-        新版 httpx 强制要求 url 以 / 结尾，否则会返回 307
-        '''
-        if not url.endswith("/"):
-            url = url + "/"
-        return url
-
     def get(
             self,
             url: str,
@@ -66,7 +58,6 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any,
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
-        url = self._check_url(url)
         while retry > 0:
             try:
                 if stream:
@@ -88,7 +79,6 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
-        url = self._check_url(url)
         while retry > 0:
             try:
                 # print(kwargs)
@@ -111,7 +101,6 @@ class ApiRequest:
             stream: bool = False,
             **kwargs: Any
     ) -> Union[httpx.Response, Iterator[httpx.Response], None]:
-        url = self._check_url(url)
         while retry > 0:
             try:
                 if stream:

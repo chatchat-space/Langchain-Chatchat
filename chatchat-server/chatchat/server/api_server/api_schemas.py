@@ -13,7 +13,7 @@ from openai.types.chat import (
 )
 
 from chatchat.configs import DEFAULT_LLM_MODEL, TEMPERATURE
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from chatchat.server.callback_handler.agent_callback_handler import AgentStatus # noaq
 from chatchat.server.pydantic_v2 import BaseModel, Field, AnyUrl
 from chatchat.server.utils import MsgType
 
@@ -100,6 +100,11 @@ class OpenAIAudioSpeechInput(OpenAIBaseInput):
     voice: str
     response_format: Optional[Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]] = None
     speed: Optional[float] = None
+
+
+# class OpenAIFileInput(OpenAIBaseInput):
+#     file: UploadFile # FileTypes
+#     purpose: Literal["fine-tune", "assistants"] = "assistants"
 
 
 class OpenAIBaseOutput(BaseModel):
