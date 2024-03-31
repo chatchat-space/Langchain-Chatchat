@@ -28,6 +28,23 @@ class PromptMessageRole(Enum):
                 return mode
         raise ValueError(f"invalid prompt message type value {value}")
 
+    def to_origin_role(self) -> str:
+        """
+        Get origin role from prompt message role.
+
+        :return: origin role
+        """
+        if self == self.SYSTEM:
+            return "system"
+        elif self == self.USER:
+            return "user"
+        elif self == self.ASSISTANT:
+            return "assistant"
+        elif self == self.TOOL:
+            return "tool"
+        else:
+            raise ValueError(f"invalid role {self}")
+
 
 class PromptMessageTool(BaseModel):
     """
