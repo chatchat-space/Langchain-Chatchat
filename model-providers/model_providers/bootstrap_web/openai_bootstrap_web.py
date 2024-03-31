@@ -398,14 +398,16 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             _convert_to_message(message) for message in chat_request.messages
         ]
 
-        tools = [
-            PromptMessageTool(
-                name=f.function.name,
-                description=f.function.description,
-                parameters=f.function.parameters,
-            )
-            for f in chat_request.tools
-        ]
+        tools = []
+        if chat_request.tools:
+            tools = [
+                PromptMessageTool(
+                    name=f.function.name,
+                    description=f.function.description,
+                    parameters=f.function.parameters,
+                )
+                for f in chat_request.tools
+            ]
         if chat_request.functions:
             tools.extend(
                 [

@@ -140,11 +140,11 @@ class ChatCompletionRequest(BaseModel):
     tools: Optional[List[FunctionAvailable]] = None
     functions: Optional[List[FunctionDefinition]] = None
     function_call: Optional[FunctionCallDefinition] = None
-    temperature: Optional[float] = None
-    top_p: Optional[float] = None
+    temperature: Optional[float] = 0.75
+    top_p: Optional[float] = 0.75
     top_k: Optional[float] = None
     n: int = 1
-    max_tokens: Optional[int] = None
+    max_tokens: Optional[int] = 256
     stop: Optional[list[str]] = None
     stream: Optional[bool] = False
 

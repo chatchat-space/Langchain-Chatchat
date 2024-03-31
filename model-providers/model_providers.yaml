@@ -24,6 +24,6 @@ xinference:
       model_type: 'llm'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'gpt-3.5-turbo'
+        model_uid: 'chatglm3-6b'
 
 
