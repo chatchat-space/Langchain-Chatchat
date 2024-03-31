@@ -212,7 +212,7 @@ class ProviderManager:
         :return:
         """
         # Get provider credential secret variables
-        provider_credential_secret_variables = self._extract_secret_variables(
+        provider_credential_secret_variables = self._extract_variables(
             provider_entity.provider_credential_schema.credential_form_schemas
             if provider_entity.provider_credential_schema
             else []
@@ -229,7 +229,7 @@ class ProviderManager:
         )
 
         # Get provider model credential secret variables
-        model_credential_secret_variables = self._extract_secret_variables(
+        model_credential_variables = self._extract_variables(
             provider_entity.model_credential_schema.credential_form_schemas
             if provider_entity.model_credential_schema
             else []
@@ -242,7 +242,7 @@ class ProviderManager:
                 continue
 
             provider_model_credentials = {}
-            for variable in model_credential_secret_variables:
+            for variable in model_credential_variables:
                 if variable in provider_model_record.get("model_credentials"):
                     try:
                         provider_model_credentials[
@@ -265,18 +265,17 @@ class ProviderManager:
             provider=custom_provider_configuration, models=custom_model_configurations
         )
 
-    def _extract_secret_variables(
+    def _extract_variables(
         self, credential_form_schemas: list[CredentialFormSchema]
     ) -> list[str]:
         """
-        Extract secret input form variables.
+        Extract input form variables.
 
         :param credential_form_schemas:
         :return:
         """
-        secret_input_form_variables = []
+        input_form_variables = []
         for credential_form_schema in credential_form_schemas:
-            if credential_form_schema.type == FormType.SECRET_INPUT:
-                secret_input_form_variables.append(credential_form_schema.variable)
+            input_form_variables.append(credential_form_schema.variable)
 
-        return secret_input_form_variables
+        return input_form_variables

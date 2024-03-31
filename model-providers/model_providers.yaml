@@ -20,9 +20,10 @@ openai:
 
 xinference:
   model_credential:
-    - model: 'gpt-3.5-turbo'
+    - model: 'chatglm3-6b'
       model_type: 'llm'
-      credential:
-        openai_api_key: ''
-        openai_organization: ''
-        openai_api_base: ''
+      model_credentials:
+        server_url: 'http://127.0.0.1:9997/'
+        model_uid: 'gpt-3.5-turbo'
+
+
