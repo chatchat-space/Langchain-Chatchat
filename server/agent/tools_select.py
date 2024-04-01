@@ -29,7 +29,7 @@ tools = [
     Tool.from_function(
         func=search_knowledgebase_complex,
         name="search_knowledgebase_complex",
-        description="Use Use this tool to search local knowledgebase and get information",
+        description="Use this tool to search local knowledgebase and get information",
         args_schema=KnowledgeSearchInput,
     ),
     Tool.from_function(
@@ -47,7 +47,7 @@ tools = [
     Tool.from_function(
         func=search_youtube,
         name="search_youtube",
-        description="use this tools to search youtube videos",
+        description="use this tool to search youtube videos",
         args_schema=YoutubeInput,
     ),
 ]
