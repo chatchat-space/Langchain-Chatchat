@@ -100,7 +100,7 @@ MODEL_PLATFORMS = [
     {
         "platform_name": "xinference",
         "platform_type": "xinference",
-        "api_base_url": "http://127.0.0.1:9997/v1",
+        "api_base_url": "http://127.0.0.1:20000/xinference/v1",
         "api_key": "EMPTY",
         "api_concurrencies": 5,
         # 注意：这里填写的是 xinference 部署的模型 UID，而非模型名称
@@ -185,7 +185,9 @@ MODEL_PLATFORMS = [
     # },
 ]
 
-LOOM_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "loom.yaml")
+MODEL_PROVIDERS_CFG_PATH_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model_providers.yaml")
+MODEL_PROVIDERS_CFG_HOST = "127.0.0.1"
+MODEL_PROVIDERS_CFG_PORT = 20000
 
 # 工具配置项
 TOOL_CONFIG = {

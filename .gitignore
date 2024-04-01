@@ -184,3 +184,4 @@ configs/*.py
 /chatchat/configs/*.py
 /chatchat/configs/*.yaml
 chatchat/data
+/chatchat-server/chatchat/configs/model_providers.yaml

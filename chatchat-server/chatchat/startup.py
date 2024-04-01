@@ -88,16 +88,6 @@ def run_webui(started_event: mp.Event = None, run_mode: str = None):
     p.wait()
 
 
-def run_loom(started_event: mp.Event = None):
-    from chatchat.configs import LOOM_CONFIG
-
-    cmd = ["python", "-m", "loom_core.openai_plugins.deploy.local",
-           "-f", LOOM_CONFIG
-           ]
-
-    p = subprocess.Popen(cmd)
-    started_event.set()
-    p.wait()
 
 
 def parse_args() -> argparse.ArgumentParser:
@@ -221,14 +211,6 @@ async def start_main_server():
     def process_count():
         return len(processes)
 
-    loom_started = manager.Event()
-    # process = Process(
-    #     target=run_loom,
-    #     name=f"run_loom Server",
-    #     kwargs=dict(started_event=loom_started),
-    #     daemon=True,
-    # )
-    # processes["run_loom"] = process
     api_started = manager.Event()
     if args.api:
         process = Process(
@@ -254,11 +236,6 @@ async def start_main_server():
     else:
         try:
             # 保证任务收到SIGINT后，能够正常退出
-            if p := processes.get("run_loom"):
-                p.start()
-                p.name = f"{p.name} ({p.pid})"
-                loom_started.wait()  # 等待Loom启动完成
-
             if p := processes.get("api"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
