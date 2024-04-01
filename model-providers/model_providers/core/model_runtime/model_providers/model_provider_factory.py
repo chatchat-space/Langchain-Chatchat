@@ -1,7 +1,7 @@
 import importlib
 import logging
 import os
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -49,7 +49,9 @@ class ModelProviderFactory:
         if init_cache:
             self.get_providers()
 
-    def get_providers(self, provider_name: str = "") -> list[ProviderEntity]:
+    def get_providers(
+        self, provider_name: Union[str, set] = ""
+    ) -> list[ProviderEntity]:
         """
         Get all providers
         :return: list of providers
@@ -60,20 +62,36 @@ class ModelProviderFactory:
         # traverse all model_provider_extensions
         providers = []
         for name, model_provider_extension in model_provider_extensions.items():
-            if provider_name in (name, ""):
-                # get model_provider instance
-                model_provider_instance = model_provider_extension.provider_instance
+            if isinstance(provider_name, str):
+                if provider_name in (name, ""):
+                    # get model_provider instance
+                    model_provider_instance = model_provider_extension.provider_instance
 
-                # get provider schema
-                provider_schema = model_provider_instance.get_provider_schema()
+                    # get provider schema
+                    provider_schema = model_provider_instance.get_provider_schema()
 
-                for model_type in provider_schema.supported_model_types:
-                    # get predefined models for given model type
-                    models = model_provider_instance.models(model_type)
-                    if models:
-                        provider_schema.models.extend(models)
+                    for model_type in provider_schema.supported_model_types:
+                        # get predefined models for given model type
+                        models = model_provider_instance.models(model_type)
+                        if models:
+                            provider_schema.models.extend(models)
 
-                providers.append(provider_schema)
+                    providers.append(provider_schema)
+            elif isinstance(provider_name, set):
+                if name in provider_name:
+                    # get model_provider instance
+                    model_provider_instance = model_provider_extension.provider_instance
+
+                    # get provider schema
+                    provider_schema = model_provider_instance.get_provider_schema()
+
+                    for model_type in provider_schema.supported_model_types:
+                        # get predefined models for given model type
+                        models = model_provider_instance.models(model_type)
+                        if models:
+                            provider_schema.models.extend(models)
+
+                    providers.append(provider_schema)
 
         # return providers
         return providers

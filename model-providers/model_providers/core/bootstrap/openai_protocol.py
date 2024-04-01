@@ -13,16 +13,74 @@ class Role(str, Enum):
     FUNCTION = "function"
     TOOL = "tool"
 
+    @classmethod
+    def value_of(cls, origin_role: str) -> "Role":
+        if origin_role == "user":
+            return cls.USER
+        elif origin_role == "assistant":
+            return cls.ASSISTANT
+        elif origin_role == "system":
+            return cls.SYSTEM
+        elif origin_role == "function":
+            return cls.FUNCTION
+        elif origin_role == "tool":
+            return cls.TOOL
+        else:
+            raise ValueError(f"invalid origin role {origin_role}")
+
+    def to_origin_role(self) -> str:
+        if self == self.USER:
+            return "user"
+        elif self == self.ASSISTANT:
+            return "assistant"
+        elif self == self.SYSTEM:
+            return "system"
+        elif self == self.FUNCTION:
+            return "function"
+        elif self == self.TOOL:
+            return "tool"
+        else:
+            raise ValueError(f"invalid role {self}")
+
 
 class Finish(str, Enum):
     STOP = "stop"
     LENGTH = "length"
     TOOL = "tool_calls"
 
+    @classmethod
+    def value_of(cls, origin_finish: str) -> "Finish":
+        if origin_finish == "stop":
+            return cls.STOP
+        elif origin_finish == "length":
+            return cls.LENGTH
+        elif origin_finish == "tool_calls":
+            return cls.TOOL
+        else:
+            raise ValueError(f"invalid origin finish {origin_finish}")
+
+    def to_origin_finish(self) -> str:
+        if self == self.STOP:
+            return "stop"
+        elif self == self.LENGTH:
+            return "length"
+        elif self == self.TOOL:
+            return "tool_calls"
+        else:
+            raise ValueError(f"invalid finish {self}")
+
 
 class ModelCard(BaseModel):
     id: str
-    object: Literal["model"] = "model"
+    object: Literal[
+        "text-generation",
+        "embeddings",
+        "reranking",
+        "speech2text",
+        "moderation",
+        "tts",
+        "text2img",
+    ] = "llm"
     created: int = Field(default_factory=lambda: int(time.time()))
     owned_by: Literal["owner"] = "owner"
 
@@ -82,17 +140,17 @@ class ChatCompletionRequest(BaseModel):
     tools: Optional[List[FunctionAvailable]] = None
     functions: Optional[List[FunctionDefinition]] = None
     function_call: Optional[FunctionCallDefinition] = None
-    temperature: Optional[float] = None
-    top_p: Optional[float] = None
+    temperature: Optional[float] = 0.75
+    top_p: Optional[float] = 0.75
     top_k: Optional[float] = None
     n: int = 1
-    max_tokens: Optional[int] = None
-    stop: Optional[list[str]] = (None,)
+    max_tokens: Optional[int] = 256
+    stop: Optional[list[str]] = None
     stream: Optional[bool] = False
 
     def to_model_parameters_dict(self, *args, **kwargs):
         # 调用父类的to_dict方法，并排除tools字段
-        helper.dump_model
+
         return super().dict(
             exclude={"tools", "messages", "functions", "function_call"}, *args, **kwargs
         )

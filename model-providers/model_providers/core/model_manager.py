@@ -245,6 +245,10 @@ class ModelManager:
             provider_name_to_provider_model_records_dict=provider_name_to_provider_model_records_dict,
         )
 
+    @property
+    def provider_manager(self) -> ProviderManager:
+        return self._provider_manager
+
     def get_model_instance(
         self, provider: str, model_type: ModelType, model: str
     ) -> ModelInstance:

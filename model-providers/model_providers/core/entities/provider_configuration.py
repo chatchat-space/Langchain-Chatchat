@@ -66,6 +66,16 @@ class ProviderConfiguration(BaseModel):
         else:
             return None
 
+    def is_custom_configuration_available(self) -> bool:
+        """
+        Check custom configuration available.
+        :return:
+        """
+        return (
+            self.custom_configuration.provider is not None
+            or len(self.custom_configuration.models) > 0
+        )
+
     def get_custom_credentials(self, obfuscated: bool = False) -> Optional[dict]:
         """
         Get custom credentials.

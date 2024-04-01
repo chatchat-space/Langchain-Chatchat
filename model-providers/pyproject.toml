@@ -14,6 +14,8 @@ sse-starlette = "^1.8.2"
 pyyaml = "6.0.1"
 pydantic = "2.6.4"
 redis = "4.5.4"
+# config manage
+omegaconf = "2.0.6"
 # modle_runtime
 openai = "1.13.3"
 tiktoken = "0.5.2"
@@ -24,18 +26,14 @@ boto3 = "1.28.17"
 # dependencies used for running tests (e.g., pytest, freezegun, response).
 # Any dependencies that do not meet that criteria will be removed.
 pytest = "^7.3.0"
-pytest-cov = "^4.0.0"
-pytest-dotenv = "^0.5.2"
-duckdb-engine = "^0.7.0"
-pytest-watcher = "^0.2.6"
 freezegun = "^1.2.2"
-responses = "^0.22.0"
-pytest-asyncio = "^0.20.3"
-lark = "^1.1.5"
-pandas = "^2.0.0"
-pytest-mock  = "^3.10.0"
-pytest-socket = "^0.6.0"
+pytest-mock = "^3.10.0"
 syrupy = "^4.0.2"
+pytest-watcher = "^0.3.4"
+pytest-asyncio = "^0.21.1"
+grandalf = "^0.8"
+pytest-profiling = "^1.7.0"
+responses = "^0.25.0"
 
 
 
@@ -45,12 +43,6 @@ optional = true
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.1.5"
 
-
-[tool.poetry.group.codespell]
-optional = true
-
-[tool.poetry.group.codespell.dependencies]
-codespell = "^2.2.0"
 
 
 [tool.poetry.group.dev]
@@ -186,7 +178,7 @@ build-backend = "poetry.core.masonry.api"
 #
 # https://github.com/tophat/syrupy
 # --snapshot-warn-unused    Prints a warning on unused snapshots rather than fail the test suite.
-addopts = "--strict-markers --strict-config --durations=5 --snapshot-warn-unused -vv"
+addopts = "--strict-markers --strict-config --durations=5 --snapshot-warn-unused -svv"
 # Registering custom markers.
 # https://docs.pytest.org/en/7.1.x/example/markers.html#registering-markers
 markers = [
