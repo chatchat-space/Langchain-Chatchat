@@ -87,7 +87,18 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
         if s := re.findall(r"\nAction:\s*(.+)\nAction\sInput:\s*(.+)", text, flags=re.DOTALL):
             s = s[-1]
-            return AgentAction(tool=s[0].strip(), tool_input=json.loads(s[1]), log=text)
+            json_string: str=s[1]
+            json_input=None
+            try:
+                json_input=json.loads(json_string)
+            except:
+                # ollama部署的qwen，返回的json键值可能为单引号，可能缺少最后的引号和括号
+                if not json_string.endswith("\"}"):
+                    print("尝试修复格式不正确的json输出:"+json_string)
+                    json_string=(json_string+"\"}").replace("'","\"");
+                    print("修复后的json:"+json_string)
+                    json_input=json.loads(json_string)  
+            return AgentAction(tool=s[0].strip(), tool_input=json_input, log=text)
         elif s := re.findall(r"\nFinal\sAnswer:\s*(.+)", text, flags=re.DOTALL):
             s = s[-1]
             return AgentFinish({"output": s}, log=text)
