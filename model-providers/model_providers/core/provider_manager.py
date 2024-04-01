@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from json import JSONDecodeError
-from typing import Optional
+from typing import Optional, Union
 
 from sqlalchemy.exc import IntegrityError
 
@@ -45,7 +45,7 @@ class ProviderManager:
             provider_name_to_provider_model_records_dict
         )
 
-    def get_configurations(self, provider: str) -> ProviderConfigurations:
+    def get_configurations(self, provider: Union[str, set]) -> ProviderConfigurations:
         """
         Get model provider configurations.
 
@@ -155,7 +155,7 @@ class ProviderManager:
 
         default_model = {}
         # Get provider configurations
-        provider_configurations = self.get_configurations()
+        provider_configurations = self.get_configurations(provider="openai")
 
         # get available models from provider_configurations
         available_models = provider_configurations.get_models(

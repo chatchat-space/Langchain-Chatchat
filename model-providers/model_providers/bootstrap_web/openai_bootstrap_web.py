@@ -24,6 +24,10 @@ from sse_starlette import EventSourceResponse
 from uvicorn import Config, Server
 
 from model_providers.bootstrap_web.common import create_stream_chunk
+from model_providers.bootstrap_web.entities.model_provider_entities import (
+    ProviderListResponse,
+    ProviderModelTypeResponse,
+)
 from model_providers.core.bootstrap import OpenAIBootstrapBaseWeb
 from model_providers.core.bootstrap.openai_protocol import (
     ChatCompletionMessage,
@@ -302,6 +306,18 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         )
 
         self._router.add_api_route(
+            "/workspaces/current/model-providers",
+            self.workspaces_model_providers,
+            response_model=ProviderListResponse,
+            methods=["GET"],
+        )
+        self._router.add_api_route(
+            "/workspaces/current/models/model-types/{model_type}",
+            self.workspaces_model_types,
+            response_model=ProviderModelTypeResponse,
+            methods=["GET"],
+        )
+        self._router.add_api_route(
             "/{provider}/v1/models",
             self.list_models,
             response_model=ModelList,
@@ -344,6 +360,14 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         async def on_startup():
             if started_event is not None:
                 started_event.set()
+
+    async def workspaces_model_providers(self, request: Request):
+        provider_list = self.get_provider_list(model_type=request.get("model_type"))
+        return ProviderListResponse(data=provider_list)
+
+    async def workspaces_model_types(self, model_type: str, request: Request):
+        models_by_model_type = self.get_models_by_model_type(model_type=model_type)
+        return ProviderModelTypeResponse(data=models_by_model_type)
 
     async def list_models(self, provider: str, request: Request):
         logger.info(f"Received list_models request for provider: {provider}")
