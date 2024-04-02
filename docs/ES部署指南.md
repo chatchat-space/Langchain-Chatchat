@@ -20,7 +20,14 @@ docker pull docker.elastic.co/kibana/kibana:{version}
 docker run --name kibana --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:{version}
 ```
 
-### 第3步：核心代码
+## 第3步：源代码中添加elasticsearch库
+```shell
+1.注意旧版本的elasticsearch对_search是POST,elasticsearch需要GET请求
+
+pip install elasticsearch==8.13.0
+```
+
+### 第4步：核心代码
 ```shell
 1. 核心代码路径
 server/knowledge_base/kb_service/es_kb_service.py
