@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from sse_starlette import EventSourceResponse
 from pydantic import Json
 import json
-from server.knowledge_base.kb_service.base import KBServiceFactory
+from server.knowledge_base.kb_service.base import KBServiceFactory, get_kb_file_details
 from server.db.repository.knowledge_file_repository import get_file_detail
 from langchain.docstore.document import Document
 from server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -74,6 +74,17 @@ def list_files(
     else:
         all_doc_names = kb.list_files()
         return ListResponse(data=all_doc_names)
+
+
+def list_files_detail(
+        knowledge_base_name: str
+) -> BaseResponse:
+    if not validate_kb_name(knowledge_base_name):
+        return ListResponse(code=403, msg="Don't attack me", data=[])
+
+    knowledge_base_name = urllib.parse.unquote(knowledge_base_name)
+    result = get_kb_file_details(knowledge_base_name)
+    return BaseResponse(data=result)
 
 
 def _save_files_in_thread(files: List[UploadFile],
