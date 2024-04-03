@@ -160,9 +160,13 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: full response or stream response chunk generator result
         """
         config_kwargs = model_parameters.copy()
-        config_kwargs["max_output_tokens"] = config_kwargs.pop(
+        config_kwargs.pop(
             "max_tokens_to_sample", None
         )
+        # https://github.com/google/generative-ai-python/issues/170
+        # config_kwargs["max_output_tokens"] = config_kwargs.pop(
+        #     "max_tokens_to_sample", None
+        # )
 
         if stop:
             config_kwargs["stop_sequences"] = stop
