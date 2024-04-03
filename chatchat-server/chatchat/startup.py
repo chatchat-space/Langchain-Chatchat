@@ -1,4 +1,5 @@
 import asyncio
+import multiprocessing
 from contextlib import asynccontextmanager
 import multiprocessing as mp
 import os
@@ -6,6 +7,7 @@ import subprocess
 import sys
 from multiprocessing import Process
 
+from chatchat.model_loaders.init_server import init_server
 
 # 设置numexpr最大线程数，默认为CPU核心数
 try:
@@ -23,7 +25,7 @@ from chatchat.configs import (
     DEFAULT_EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     API_SERVER,
-    WEBUI_SERVER,
+    WEBUI_SERVER, MODEL_PROVIDERS_CFG_PATH_CONFIG, MODEL_PROVIDERS_CFG_HOST, MODEL_PROVIDERS_CFG_PORT
 )
 from chatchat.server.utils import FastAPI
 from chatchat.server.knowledge_base.migrate import create_tables
@@ -38,15 +40,34 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
         if started_event is not None:
             started_event.set()
         yield
+
     app.router.lifespan_context = lifespan
 
 
-def run_api_server(started_event: mp.Event = None, run_mode: str = None):
+def run_init_server(
+        model_platforms_shard: Dict,
+        started_event: mp.Event = None,
+        run_mode: str = None,
+        model_providers_cfg_path: str = MODEL_PROVIDERS_CFG_PATH_CONFIG,
+        provider_host: str = MODEL_PROVIDERS_CFG_HOST,
+        provider_port: int = MODEL_PROVIDERS_CFG_PORT):
+    init_server(model_platforms_shard=model_platforms_shard,
+                started_event=started_event,
+                model_providers_cfg_path=model_providers_cfg_path,
+                provider_host=provider_host,
+                provider_port=provider_port)
+
+
+def run_api_server(model_platforms_shard: Dict,
+                   started_event: mp.Event = None,
+                   run_mode: str = None):
     from chatchat.server.api_server.server_app import create_app
     import uvicorn
     from chatchat.server.utils import set_httpx_config
+    from chatchat.configs import MODEL_PLATFORMS
+    MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
+    logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
-
     app = create_app(run_mode=run_mode)
     _set_app_event(app, started_event)
 
@@ -56,48 +77,65 @@ def run_api_server(started_event: mp.Event = None, run_mode: str = None):
     uvicorn.run(app, host=host, port=port)
 
 
-def run_webui(started_event: mp.Event = None, run_mode: str = None):
+def run_webui(model_platforms_shard: Dict,
+              started_event: mp.Event = None, run_mode: str = None):
     import sys
     from chatchat.server.utils import set_httpx_config
-
+    from chatchat.configs import MODEL_PLATFORMS
+    MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
+    logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
-    # 判断系统是否为Windows
-    if sys.platform == "win32":
-        st_exe = os.path.join(os.path.dirname(sys.executable), "Scripts", "streamlit")
-    else:
-        st_exe = os.path.join(os.path.dirname(sys.executable),"streamlit")
+
     script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webui.py')
-    cmd = [st_exe, "run", script_dir,
-           "--server.address", host,
-           "--server.port", str(port),
-           "--theme.base", "light",
-           "--theme.primaryColor", "#165dff",
-           "--theme.secondaryBackgroundColor", "#f5f5f5",
-           "--theme.textColor", "#000000",
-           ]
+
+    flag_options = {'server_address': host,
+                    'server_port': port,
+                    'theme_base': 'light',
+                    'theme_primaryColor': '#165dff',
+                    'theme_secondaryBackgroundColor': '#f5f5f5',
+                    'theme_textColor': '#000000',
+                    'global_disableWatchdogWarning': None,
+                    'global_disableWidgetStateDuplicationWarning': None,
+                    'global_showWarningOnDirectExecution': None,
+                    'global_developmentMode': None, 'global_logLevel': None, 'global_unitTest': None,
+                    'global_suppressDeprecationWarnings': None, 'global_minCachedMessageSize': None,
+                    'global_maxCachedMessageAge': None, 'global_storeCachedForwardMessagesInMemory': None,
+                    'global_dataFrameSerialization': None, 'logger_level': None, 'logger_messageFormat': None,
+                    'logger_enableRich': None, 'client_caching': None, 'client_displayEnabled': None,
+                    'client_showErrorDetails': None, 'client_toolbarMode': None, 'client_showSidebarNavigation': None,
+                    'runner_magicEnabled': None, 'runner_installTracer': None, 'runner_fixMatplotlib': None,
+                    'runner_postScriptGC': None, 'runner_fastReruns': None,
+                    'runner_enforceSerializableSessionState': None, 'runner_enumCoercion': None,
+                    'server_folderWatchBlacklist': None, 'server_fileWatcherType': None, 'server_headless': None,
+                    'server_runOnSave': None, 'server_allowRunOnSave': None, 'server_scriptHealthCheckEnabled': None,
+                    'server_baseUrlPath': None, 'server_enableCORS': None, 'server_enableXsrfProtection': None,
+                    'server_maxUploadSize': None, 'server_maxMessageSize': None, 'server_enableArrowTruncation': None,
+                    'server_enableWebsocketCompression': None, 'server_enableStaticServing': None,
+                    'browser_serverAddress': None, 'browser_gatherUsageStats': None, 'browser_serverPort': None,
+                    'server_sslCertFile': None, 'server_sslKeyFile': None, 'ui_hideTopBar': None,
+                    'ui_hideSidebarNav': None, 'magic_displayRootDocString': None,
+                    'magic_displayLastExprIfNoSemicolon': None, 'deprecation_showfileUploaderEncoding': None,
+                    'deprecation_showImageFormat': None, 'deprecation_showPyplotGlobalUse': None,
+                    'theme_backgroundColor': None, 'theme_font': None}
+
+    args = []
     if run_mode == "lite":
-        cmd += [
+        args += [
             "--",
             "lite",
         ]
-    p = subprocess.Popen(cmd)
+
+    try:
+        # for streamlit >= 1.12.1
+        from streamlit.web import bootstrap
+    except ImportError:
+        from streamlit import bootstrap
+
+    bootstrap.run(script_dir, False, args, flag_options)
     started_event.set()
-    p.wait()
-
-
-def run_loom(started_event: mp.Event = None):
-    from chatchat.configs import LOOM_CONFIG
-
-    cmd = ["python", "-m", "loom_core.openai_plugins.deploy.local",
-           "-f", LOOM_CONFIG
-           ]
-
-    p = subprocess.Popen(cmd)
-    started_event.set()
-    p.wait()
 
 
 def parse_args() -> argparse.ArgumentParser:
@@ -106,13 +144,13 @@ def parse_args() -> argparse.ArgumentParser:
         "-a",
         "--all-webui",
         action="store_true",
-        help="run fastchat's controller/openai_api/model_worker servers, run api.py and webui.py",
+        help="run model_providers servers,run api.py and webui.py",
         dest="all_webui",
     )
     parser.add_argument(
         "--all-api",
         action="store_true",
-        help="run fastchat's controller/openai_api/model_worker servers, run api.py",
+        help="run model_providers  servers, run api.py",
         dest="all_api",
     )
 
@@ -156,11 +194,18 @@ def dump_server_info(after_start=False, args=None):
 
     print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
 
-    print(f"当前Embbedings模型： {DEFAULT_EMBEDDING_MODEL}")
+    print(f"默认选用的 Embedding 名称： {DEFAULT_EMBEDDING_MODEL}")
 
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
+        if args.api:
+            print(
+                f"    Chatchat Model providers Server: model_providers_cfg_path_config:{MODEL_PROVIDERS_CFG_PATH_CONFIG}\n"
+                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n"
+                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n")
+
+            print(f"    Chatchat Api Server: {api_address()}")
         if args.webui:
             print(f"    Chatchat WEBUI Server: {webui_address()}")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
@@ -193,21 +238,16 @@ async def start_main_server():
     args, parser = parse_args()
 
     if args.all_webui:
-        args.openai_api = True
-        args.model_worker = True
         args.api = True
         args.api_worker = True
         args.webui = True
 
     elif args.all_api:
-        args.openai_api = True
-        args.model_worker = True
         args.api = True
         args.api_worker = True
         args.webui = False
 
     if args.lite:
-        args.model_worker = False
         run_mode = "lite"
 
     dump_server_info(args=args)
@@ -216,25 +256,29 @@ async def start_main_server():
         logger.info(f"正在启动服务：")
         logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
 
-    processes = {"online_api": {}, "model_worker": {}}
+    processes = {}
 
     def process_count():
         return len(processes)
 
-    loom_started = manager.Event()
-    # process = Process(
-    #     target=run_loom,
-    #     name=f"run_loom Server",
-    #     kwargs=dict(started_event=loom_started),
-    #     daemon=True,
-    # )
-    # processes["run_loom"] = process
+    # 定义全局配置变量,使用 Manager 创建共享字典
+    model_platforms_shard = manager.dict()
+    model_providers_started = manager.Event()
+    if args.api:
+        process = Process(
+            target=run_init_server,
+            name=f"Model providers Server",
+            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=model_providers_started,
+                        run_mode=run_mode),
+            daemon=True,
+        )
+        processes["model_providers"] = process
     api_started = manager.Event()
     if args.api:
         process = Process(
             target=run_api_server,
             name=f"API Server",
-            kwargs=dict(started_event=api_started, run_mode=run_mode),
+            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=api_started, run_mode=run_mode),
             daemon=True,
         )
         processes["api"] = process
@@ -244,7 +288,7 @@ async def start_main_server():
         process = Process(
             target=run_webui,
             name=f"WEBUI Server",
-            kwargs=dict(started_event=webui_started, run_mode=run_mode),
+            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=webui_started, run_mode=run_mode),
             daemon=True,
         )
         processes["webui"] = process
@@ -254,10 +298,10 @@ async def start_main_server():
     else:
         try:
             # 保证任务收到SIGINT后，能够正常退出
-            if p := processes.get("run_loom"):
+            if p := processes.get("model_providers"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"
-                loom_started.wait()  # 等待Loom启动完成
+                model_providers_started.wait()  # 等待model_providers启动完成
 
             if p := processes.get("api"):
                 p.start()
@@ -295,6 +339,8 @@ async def start_main_server():
 
 
 if __name__ == "__main__":
+    # 添加这行代码
+    multiprocessing.freeze_support()
     create_tables()
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()

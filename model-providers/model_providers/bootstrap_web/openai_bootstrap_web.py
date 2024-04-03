@@ -45,6 +45,7 @@ from model_providers.core.bootstrap.openai_protocol import (
     Role,
     UsageInfo,
 )
+from model_providers.core.bootstrap.providers_wapper import ProvidersWrapper
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
     LLMResultChunk,
@@ -111,7 +112,7 @@ def _convert_prompt_message_to_dict(message: PromptMessage) -> dict:
 
 
 def _create_template_from_message_type(
-    message_type: str, template: Union[str, list]
+        message_type: str, template: Union[str, list]
 ) -> PromptMessage:
     """Create a message prompt template from a message type and template string.
 
@@ -170,7 +171,7 @@ def _create_template_from_message_type(
 
 
 def _convert_to_message(
-    message: MessageLikeRepresentation,
+        message: MessageLikeRepresentation,
 ) -> Union[PromptMessage]:
     """Instantiate a message from a variety of message formats.
 
@@ -212,7 +213,7 @@ def _convert_to_message(
 
 
 async def _stream_openai_chat_completion(
-    response: Generator,
+        response: Generator,
 ) -> AsyncGenerator[str, None]:
     request_id, model = None, None
     for chunk in response:
@@ -362,11 +363,14 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 started_event.set()
 
     async def workspaces_model_providers(self, request: Request):
-        provider_list = self.get_provider_list(model_type=request.get("model_type"))
+
+        provider_list = ProvidersWrapper(provider_manager=self._provider_manager.provider_manager).get_provider_list(
+            model_type=request.get("model_type"))
         return ProviderListResponse(data=provider_list)
 
     async def workspaces_model_types(self, model_type: str, request: Request):
-        models_by_model_type = self.get_models_by_model_type(model_type=model_type)
+        models_by_model_type = ProvidersWrapper(
+            provider_manager=self._provider_manager.provider_manager).get_models_by_model_type(model_type=model_type)
         return ProviderModelTypeResponse(data=models_by_model_type)
 
     async def list_models(self, provider: str, request: Request):
@@ -399,7 +403,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         return ModelList(data=models_list)
 
     async def create_embeddings(
-        self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
+            self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
@@ -409,7 +413,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         return EmbeddingsResponse(**dictify(response))
 
     async def create_chat_completion(
-        self, provider: str, request: Request, chat_request: ChatCompletionRequest
+            self, provider: str, request: Request, chat_request: ChatCompletionRequest
     ):
         logger.info(
             f"Received chat completion request: {pprint.pformat(chat_request.dict())}"
@@ -469,9 +473,9 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
 
 
 def run(
-    cfg: Dict,
-    logging_conf: Optional[dict] = None,
-    started_event: mp.Event = None,
+        cfg: Dict,
+        logging_conf: Optional[dict] = None,
+        started_event: mp.Event = None,
 ):
     logging.config.dictConfig(logging_conf)  # type: ignore
     try:
