@@ -27,9 +27,10 @@ from typing import (
 import logging
 
 from chatchat.configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
-                     DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE)
+                              DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE,
+                              MODEL_PLATFORMS)
 from chatchat.server.pydantic_v2 import BaseModel, Field
-from chatchat.server.minx_chat_openai import MinxChatOpenAI # TODO: still used?
+from chatchat.server.minx_chat_openai import MinxChatOpenAI  # TODO: still used?
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -47,17 +48,18 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
 
 
 def get_config_platforms() -> Dict[str, Dict]:
-    import importlib
-    from chatchat.configs import model_config
-    importlib.reload(model_config)
+    # import importlib
+    # 不能支持重载
+    # from chatchat.configs import model_config
+    # importlib.reload(model_config)
 
-    return {m["platform_name"]: m for m in model_config.MODEL_PLATFORMS}
+    return {m["platform_name"]: m for m in MODEL_PLATFORMS}
 
 
 def get_config_models(
-    model_name: str = None,
-    model_type: Literal["llm", "embed", "image", "multimodal"] = None,
-    platform_name: str = None,
+        model_name: str = None,
+        model_type: Literal["llm", "embed", "image", "multimodal"] = None,
+        platform_name: str = None,
 ) -> Dict[str, Dict]:
     '''
     获取配置的模型列表，返回值为:
@@ -71,12 +73,13 @@ def get_config_models(
         "api_proxy": xx,
     }}
     '''
-    import importlib
-    from chatchat.configs import model_config
-    importlib.reload(model_config)
+    # import importlib
+    # 不能支持重载
+    # from chatchat.configs import model_config
+    # importlib.reload(model_config)
 
     result = {}
-    for m in model_config.MODEL_PLATFORMS:
+    for m in MODEL_PLATFORMS:
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
         if model_type is not None and f"{model_type}_models" not in m:
@@ -124,24 +127,24 @@ def get_ChatOpenAI(
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = False, # use local wrapped api
+        local_wrap: bool = False,  # use local wrapped api
         **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
     params = dict(
-            streaming=streaming,
-            verbose=verbose,
-            callbacks=callbacks,
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **kwargs
     )
     try:
         if local_wrap:
             params.update(
-                openai_api_base = f"{api_address()}/v1",
-                openai_api_key = "EMPTY",
+                openai_api_base=f"{api_address()}/v1",
+                openai_api_key="EMPTY",
             )
         else:
             params.update(
@@ -164,7 +167,7 @@ def get_OpenAI(
         echo: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
-        local_wrap: bool = False, # use local wrapped api
+        local_wrap: bool = False,  # use local wrapped api
         **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
@@ -182,8 +185,8 @@ def get_OpenAI(
     try:
         if local_wrap:
             params.update(
-                openai_api_base = f"{api_address()}/v1",
-                openai_api_key = "EMPTY",
+                openai_api_base=f"{api_address()}/v1",
+                openai_api_key="EMPTY",
             )
         else:
             params.update(
@@ -199,20 +202,20 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-    embed_model: str = DEFAULT_EMBEDDING_MODEL,
-    local_wrap: bool = False, # use local wrapped api
+        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings.openai import OpenAIEmbeddings
     from langchain_community.embeddings import OllamaEmbeddings
-    from chatchat.server.localai_embeddings import LocalAIEmbeddings # TODO: fork of lc pr #17154
+    from chatchat.server.localai_embeddings import LocalAIEmbeddings  # TODO: fork of lc pr #17154
 
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
     try:
         if local_wrap:
             params.update(
-                openai_api_base = f"{api_address()}/v1",
-                openai_api_key = "EMPTY",
+                openai_api_base=f"{api_address()}/v1",
+                openai_api_key="EMPTY",
             )
         else:
             params.update(
@@ -223,7 +226,7 @@ def get_Embeddings(
         if model_info.get("platform_type") == "openai":
             return OpenAIEmbeddings(**params)
         elif model_info.get("platform_type") == "ollama":
-            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1',''),
+            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1', ''),
                                     model=embed_model,
                                     )
         else:
@@ -233,9 +236,9 @@ def get_Embeddings(
 
 
 def get_OpenAIClient(
-        platform_name: str=None,
-        model_name: str=None,
-        is_async: bool=True,
+        platform_name: str = None,
+        model_name: str = None,
+        is_async: bool = True,
 ) -> Union[openai.Client, openai.AsyncClient]:
     '''
     construct an openai Client for specified platform or model
@@ -601,7 +604,7 @@ def run_in_process_pool(
     tasks = []
     max_workers = None
     if sys.platform.startswith("win"):
-        max_workers = min(mp.cpu_count(), 60) # max_workers should not exceed 60 on windows
+        max_workers = min(mp.cpu_count(), 60)  # max_workers should not exceed 60 on windows
     with ProcessPoolExecutor(max_workers=max_workers) as pool:
         for kwargs in params:
             tasks.append(pool.submit(func, **kwargs))
