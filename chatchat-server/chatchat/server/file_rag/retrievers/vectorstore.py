@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from chatchat.server.file_rag.retrievers.base import BaseRetrieverService
 from langchain.vectorstores import VectorStore
 from langchain_core.retrievers import BaseRetriever
@@ -18,7 +20,7 @@ class VectorstoreRetrieverService(BaseRetrieverService):
     def from_vectorstore(
             vectorstore: VectorStore,
             top_k: int,
-            score_threshold: int or float,
+            score_threshold: int | float,
     ):
         retriever = vectorstore.as_retriever(
             search_type="similarity_score_threshold",
