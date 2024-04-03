@@ -532,13 +532,13 @@ class ORCLVector(VectorStore):
                         FROM langchain_oracle_embedding
                         WHERE
                             collection_id = :2
-                        ORDER BY distance DESC
+                        ORDER BY distance
                         FETCH FIRST :3 ROWS ONLY
                      """, [embedding, collection_id, k]
         )
         end_time = datetime.now()  # get the current time
         time_diff = end_time - start_time
-        print("######Oracle AI Vector Search,VECTOR_DISTANCE(embedding, to_vector(:1)) as distance:", time_diff," k:",k, " collection_id:",collection_id) 
+        print("######Oracle AI Vector Search,VECTOR_DISTANCE(embedding, to_vector(:1), COSINE) as distance:", time_diff," k:",k, " collection_id:",collection_id) 
         results = cursor.fetchall()
         json_results = []
         for result in results:
