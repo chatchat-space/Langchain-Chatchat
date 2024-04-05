@@ -82,9 +82,12 @@ class ChromaKBService(KBService):
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         doc_infos = []
-        data = self._docs_to_embeddings(docs)
-        ids = [str(uuid.uuid1()) for _ in range(len(data["texts"]))]
-        for _id, text, embedding, metadata in zip(ids, data["texts"], data["embeddings"], data["metadatas"]):
+        embed_func = EmbeddingsFunAdapter(self.embed_model)
+        texts = [doc.page_content for doc in docs]
+        metadatas = [doc.metadata for doc in docs]
+        embeddings = embed_func.embed_documents(texts=texts)
+        ids = [str(uuid.uuid1()) for _ in range(len(texts))]
+        for _id, text, embedding, metadata in zip(ids, texts, embeddings, metadatas):
             self.collection.add(ids=_id, embeddings=embedding, metadatas=metadata, documents=text)
             doc_infos.append({"id": _id, "metadata": metadata})
         return doc_infos
