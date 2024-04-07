@@ -1,5 +1,4 @@
-from typing import Optional, List
-
+from typing import List, Optional
 
 from model_providers.bootstrap_web.entities.model_provider_entities import (
     CustomConfigurationResponse,
@@ -9,10 +8,8 @@ from model_providers.bootstrap_web.entities.model_provider_entities import (
     ProviderWithModelsResponse,
     SystemConfigurationResponse,
 )
-
 from model_providers.core.entities.model_entities import ModelStatus
 from model_providers.core.entities.provider_entities import ProviderType
-
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.provider_manager import ProviderManager
 
@@ -22,7 +19,7 @@ class ProvidersWrapper:
         self.provider_manager = provider_manager
 
     def get_provider_list(
-            self, model_type: Optional[str] = None
+        self, model_type: Optional[str] = None
     ) -> List[ProviderResponse]:
         """
         get provider list.
@@ -38,8 +35,8 @@ class ProvidersWrapper:
             self.provider_manager.provider_name_to_provider_model_records_dict.keys()
         )
         # Get all provider configurations of the current workspace
-        provider_configurations = (
-            self.provider_manager.get_configurations(provider=provider)
+        provider_configurations = self.provider_manager.get_configurations(
+            provider=provider
         )
 
         provider_responses = []
@@ -47,8 +44,8 @@ class ProvidersWrapper:
             if model_type:
                 model_type_entity = ModelType.value_of(model_type)
                 if (
-                        model_type_entity
-                        not in provider_configuration.provider.supported_model_types
+                    model_type_entity
+                    not in provider_configuration.provider.supported_model_types
                 ):
                     continue
 
@@ -78,7 +75,7 @@ class ProvidersWrapper:
         return provider_responses
 
     def get_models_by_model_type(
-            self, model_type: str
+        self, model_type: str
     ) -> List[ProviderWithModelsResponse]:
         """
         get models by model type.
@@ -94,8 +91,8 @@ class ProvidersWrapper:
             self.provider_manager.provider_name_to_provider_model_records_dict.keys()
         )
         # Get all provider configurations of the current workspace
-        provider_configurations = (
-            self.provider_manager.get_configurations(provider=provider)
+        provider_configurations = self.provider_manager.get_configurations(
+            provider=provider
         )
 
         # Get provider available models

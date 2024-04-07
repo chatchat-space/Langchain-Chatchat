@@ -13,7 +13,12 @@ from google.generativeai.types import (
     HarmBlockThreshold,
     HarmCategory,
 )
-from google.generativeai.types.content_types import to_part, FunctionDeclaration, Tool, FunctionLibrary
+from google.generativeai.types.content_types import (
+    FunctionDeclaration,
+    FunctionLibrary,
+    Tool,
+    to_part,
+)
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
@@ -58,15 +63,15 @@ if you are not sure about the structure.
 
 class GoogleLargeLanguageModel(LargeLanguageModel):
     def _invoke(
-            self,
-            model: str,
-            credentials: dict,
-            prompt_messages: list[PromptMessage],
-            model_parameters: dict,
-            tools: Optional[list[PromptMessageTool]] = None,
-            stop: Optional[list[str]] = None,
-            stream: bool = True,
-            user: Optional[str] = None,
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        model_parameters: dict,
+        tools: Optional[list[PromptMessageTool]] = None,
+        stop: Optional[list[str]] = None,
+        stream: bool = True,
+        user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
@@ -83,15 +88,22 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         """
         # invoke model
         return self._generate(
-            model, credentials, prompt_messages, model_parameters, tools, stop, stream, user
+            model,
+            credentials,
+            prompt_messages,
+            model_parameters,
+            tools,
+            stop,
+            stream,
+            user,
         )
 
     def get_num_tokens(
-            self,
-            model: str,
-            credentials: dict,
-            prompt_messages: list[PromptMessage],
-            tools: Optional[list[PromptMessageTool]] = None,
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        tools: Optional[list[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -140,15 +152,15 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
             raise CredentialsValidateFailedError(str(ex))
 
     def _generate(
-            self,
-            model: str,
-            credentials: dict,
-            prompt_messages: list[PromptMessage],
-            model_parameters: dict,
-            tools: Optional[list[PromptMessageTool]] = None,
-            stop: Optional[list[str]] = None,
-            stream: bool = True,
-            user: Optional[str] = None,
+        self,
+        model: str,
+        credentials: dict,
+        prompt_messages: list[PromptMessage],
+        model_parameters: dict,
+        tools: Optional[list[PromptMessageTool]] = None,
+        stop: Optional[list[str]] = None,
+        stream: bool = True,
+        user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
@@ -163,9 +175,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         :return: full response or stream response chunk generator result
         """
         config_kwargs = model_parameters.copy()
-        config_kwargs.pop(
-            "max_tokens_to_sample", None
-        )
+        config_kwargs.pop("max_tokens_to_sample", None)
         # https://github.com/google/generative-ai-python/issues/170
         # config_kwargs["max_output_tokens"] = config_kwargs.pop(
         #     "max_tokens_to_sample", None
@@ -206,11 +216,15 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         }
         tools_one = []
         for tool in tools:
-            one_tool = Tool(function_declarations=[FunctionDeclaration(name=tool.name,
-                                                                       description=tool.description,
-                                                                       parameters=tool.parameters
-                                                                       )
-                                                   ])
+            one_tool = Tool(
+                function_declarations=[
+                    FunctionDeclaration(
+                        name=tool.name,
+                        description=tool.description,
+                        parameters=tool.parameters,
+                    )
+                ]
+            )
             tools_one.append(one_tool)
 
         response = google_model.generate_content(
@@ -231,11 +245,11 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         )
 
     def _handle_generate_response(
-            self,
-            model: str,
-            credentials: dict,
-            response: GenerateContentResponse,
-            prompt_messages: list[PromptMessage],
+        self,
+        model: str,
+        credentials: dict,
+        response: GenerateContentResponse,
+        prompt_messages: list[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -262,7 +276,9 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
             tool_calls.append(function_call)
 
         # transform assistant message to prompt message
-        assistant_prompt_message = AssistantPromptMessage(content=part.text, tool_calls=tool_calls)
+        assistant_prompt_message = AssistantPromptMessage(
+            content=part.text, tool_calls=tool_calls
+        )
 
         # calculate num tokens
         prompt_tokens = self.get_num_tokens(model, credentials, prompt_messages)
@@ -286,11 +302,11 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         return result
 
     def _handle_generate_stream_response(
-            self,
-            model: str,
-            credentials: dict,
-            response: GenerateContentResponse,
-            prompt_messages: list[PromptMessage],
+        self,
+        model: str,
+        credentials: dict,
+        response: GenerateContentResponse,
+        prompt_messages: list[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -446,7 +462,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         }
 
     def _extract_response_function_call(
-            self, response_function_call: Union[FunctionCall, FunctionResponse]
+        self, response_function_call: Union[FunctionCall, FunctionResponse]
     ) -> AssistantPromptMessage.ToolCall:
         """
         Extract function call from response
@@ -471,7 +487,9 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
                     arguments=str(map_composite_dict),
                 )
             else:
-                raise ValueError(f"Unsupported response_function_call type: {type(response_function_call)}")
+                raise ValueError(
+                    f"Unsupported response_function_call type: {type(response_function_call)}"
+                )
 
             tool_call = AssistantPromptMessage.ToolCall(
                 id=response_function_call.name, type="function", function=function
