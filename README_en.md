@@ -64,7 +64,7 @@ these.
 
 🌐 [AutoDL image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) is supported, and in `0.2.10` the codes are update to v0.2.10.
 
-🐳 [Docker image](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7) is supported to 0.2.7
+🐳 [Docker image](ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10) is supported to 0.2.10
 
 ## Pain Points Addressed
 

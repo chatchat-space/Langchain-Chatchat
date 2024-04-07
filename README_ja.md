@@ -65,7 +65,7 @@ Q&A）ソリューションを構築することです。
 🌐 [AutoDL イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)がサポートされ、`0.2.10` では v0.2.10
 にアップデートされました。
 
-🐳 [Docker イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7)
+🐳 [Docker イメージ](ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10)
 
 ## ペインポイントへの対応
 
