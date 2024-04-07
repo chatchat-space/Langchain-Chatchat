@@ -86,6 +86,22 @@ class ChineseRecursiveTextSplitter(RecursiveCharacterTextSplitter):
         return [re.sub(r"\n{2,}", "\n", chunk.strip()) for chunk in final_chunks if chunk.strip()!=""]
 
 
+class ATOMChineseRecursiveTextSplitter(ChineseRecursiveTextSplitter):
+    def __init__(
+            self,
+            separators: Optional[List[str]] = None,
+            keep_separator: bool = True,
+            is_separator_regex: bool = True,
+            **kwargs: Any,
+    ) -> None:
+        super(ATOMChineseRecursiveTextSplitter, self).__init__(
+            separators=["\n\n\n"],
+            keep_separator=keep_separator,
+            is_separator_regex=is_separator_regex,
+            ** kwargs
+        )
+
+
 if __name__ == "__main__":
     text_splitter = ChineseRecursiveTextSplitter(
         keep_separator=True,
