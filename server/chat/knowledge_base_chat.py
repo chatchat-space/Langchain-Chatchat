@@ -9,7 +9,7 @@ from configs import (LLM_MODELS,
                      RERANKER_MODEL,
                      RERANKER_MAX_LENGTH,
                      MODEL_PATH)
-from server.utils import wrap_done, get_ChatOpenAI
+from server.utils import wrap_done, get_ChatOpenAI, recognize_with_ner, get_search_query
 from server.utils import BaseResponse, get_prompt_template
 from langchain.chains import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
@@ -41,6 +41,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                                       {"role": "assistant",
                                        "content": "虎头虎脑"}]]
                               ),
+                              enable_ner: bool = Body(False, description="是否开启命名实体识别"),
                               stream: bool = Body(False, description="流式输出"),
                               model_name: str = Body(LLM_MODELS[0], description="LLM 模型名称。"),
                               temperature: float = Body(TEMPERATURE, description="LLM 采样温度", ge=0.0, le=1.0),
@@ -64,6 +65,7 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             query: str,
             top_k: int,
             history: Optional[List[History]],
+            enable_ner: bool,
             model_name: str = model_name,
             prompt_name: str = prompt_name,
     ) -> AsyncIterable[str]:
@@ -78,8 +80,10 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
             max_tokens=max_tokens,
             callbacks=[callback],
         )
+        if enable_ner is True:
+            search_query = get_search_query(query)
         docs = await run_in_threadpool(search_docs,
-                                       query=query,
+                                       query=search_query,
                                        knowledge_base_name=knowledge_base_name,
                                        top_k=top_k,
                                        score_threshold=score_threshold)
@@ -143,5 +147,5 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
                              ensure_ascii=False)
         await task
 
-    return EventSourceResponse(knowledge_base_chat_iterator(query, top_k, history,model_name,prompt_name))
+    return EventSourceResponse(knowledge_base_chat_iterator(query, top_k, history, enable_ner, model_name, prompt_name))
 

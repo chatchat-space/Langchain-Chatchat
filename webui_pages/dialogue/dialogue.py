@@ -224,6 +224,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
         prompt_template_name = st.session_state.prompt_template_select
         temperature = st.slider("Temperature：", 0.0, 2.0, TEMPERATURE, 0.05)
         history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
+        enable_ner = st.checkbox("开启命名实体识别", False)
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -375,6 +376,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
                                                  top_k=kb_top_k,
                                                  score_threshold=score_threshold,
                                                  history=history,
+                                                 enable_ner=enable_ner,
                                                  model=llm_model,
                                                  prompt_name=prompt_template_name,
                                                  temperature=temperature):

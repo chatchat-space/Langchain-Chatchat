@@ -683,3 +683,29 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
 
     path = tempfile.mkdtemp(dir=BASE_TEMP_DIR)
     return path, os.path.basename(path)
+
+
+def get_search_query(query):
+    search_query_template = "疾病:{{disease}};症状:{{symbols}}"
+    result = recognize_with_ner(query)
+    diseases, symbols = result['dis'], result['sym']
+    search_query = search_query_template.replace(
+        "{{disease}}", ','.join(diseases)).replace("{{symbols}}", ','.join(symbols))
+    return search_query
+
+
+def recognize_with_ner(query):
+    from modelscope.pipelines import pipeline
+    from modelscope.utils.constant import Tasks
+    ner_pipeline = pipeline(
+        Tasks.named_entity_recognition,
+        'damo/nlp_raner_named-entity-recognition_chinese-base-cmeee'
+    )
+    result = ner_pipeline(query)
+    dis, sym = set(), set()
+    for l in result:
+        if l['type'] == 'dis':
+            dis.add(l['span'])
+        elif l['type'] == 'sym':
+            sym.add(l['span'])
+    return {'dis': list(dis), 'sym': list(sym)}

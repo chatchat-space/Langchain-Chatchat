@@ -69,3 +69,5 @@ httpx==0.26.0
 httpx_sse==0.4.0
 watchdog==3.0.0
 pyjwt==2.8.0
+
+modelscope=1.13.3
