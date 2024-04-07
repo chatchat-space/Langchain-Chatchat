@@ -3,11 +3,15 @@ import asyncio
 import logging
 
 from model_providers import BootstrapWebBuilder
-from model_providers.core.utils.utils import get_config_dict, get_log_file, get_timestamp_ms
+from model_providers.core.utils.utils import (
+    get_config_dict,
+    get_log_file,
+    get_timestamp_ms,
+)
 
 logger = logging.getLogger(__name__)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model-providers",
@@ -26,9 +30,7 @@ if __name__ == '__main__':
         )
         boot = (
             BootstrapWebBuilder()
-            .model_providers_cfg_path(
-                model_providers_cfg_path=args.model_providers
-            )
+            .model_providers_cfg_path(model_providers_cfg_path=args.model_providers)
             .host(host="127.0.0.1")
             .port(port=20000)
             .build()
@@ -36,10 +38,8 @@ if __name__ == '__main__':
         boot.set_app_event(started_event=None)
         boot.serve(logging_conf=logging_conf)
 
-
         async def pool_join_thread():
             await boot.join()
-
 
         asyncio.run(pool_join_thread())
     except SystemExit:
