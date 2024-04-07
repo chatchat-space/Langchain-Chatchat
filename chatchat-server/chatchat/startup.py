@@ -82,7 +82,8 @@ def run_webui(model_platforms_shard: Dict,
     import sys
     from chatchat.server.utils import set_httpx_config
     from chatchat.configs import MODEL_PLATFORMS
-    MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
+    if model_platforms_shard.get('provider_platforms'):
+        MODEL_PLATFORMS.extend(model_platforms_shard.get('provider_platforms'))
     logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
 
@@ -241,14 +242,18 @@ async def start_main_server():
         args.api = True
         args.api_worker = True
         args.webui = True
-
     elif args.all_api:
         args.api = True
         args.api_worker = True
         args.webui = False
-
+    elif args.api:
+        args.api = True
+        args.api_worker = False
+        args.webui = False
     if args.lite:
-        run_mode = "lite"
+        args.api = True
+        args.api_worker = False
+        args.webui = True
 
     dump_server_info(args=args)
 
@@ -316,8 +321,11 @@ async def start_main_server():
             dump_server_info(after_start=True, args=args)
 
             # 等待所有进程退出
-            if p := processes.get("webui"):
-                p.join()
+            while processes:
+                for p in processes.values():
+                    p.join(2)
+                    if not p.is_alive():
+                        processes.pop(p.name)
         except Exception as e:
             logger.error(e)
             logger.warning("Caught KeyboardInterrupt! Setting stop event...")
