@@ -67,6 +67,14 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
 ```
 
+🌲 本次更新后同时支持DockerHub、阿里云、腾讯云镜像源：
+
+```shell
+docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
+```
+
 🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，_
 _仅仅是入门教程，能够基础运行__。
 如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
