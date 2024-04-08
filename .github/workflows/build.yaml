@@ -3,7 +3,7 @@ name: build
 on:
   push:
     branches:
-      - "main"
+      - "feat/gitAction"
 
 env:
   DOCKERHUB_USERNAME: lyzhang1999
