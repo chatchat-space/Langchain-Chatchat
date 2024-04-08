@@ -20,8 +20,8 @@ import {
   LobePerplexityAI,
   LobeRuntimeAI,
   LobeZhipuAI,
+  LobeChatChatAI,
   ModelProvider,
-  LobeKnowledgeAI,
 } from '@/libs/agent-runtime';
 import { TraceClient } from '@/libs/traces';
 
@@ -169,8 +169,8 @@ class AgentRuntime {
         break;
       }
 
-      case ModelProvider.Knowledge: {
-        runtimeModel = this.initKnowledge(payload);
+      case ModelProvider.ChatChat: {
+        runtimeModel = this.initChatChat(payload);
         break;
       }
     }
@@ -275,11 +275,11 @@ class AgentRuntime {
     return new LobeMistralAI({ apiKey });
   }
 
-  private static initKnowledge(payload: JWTPayload) {
+  private static initChatChat(payload: JWTPayload) {
     const { KNOWLEDGE_PROXY_URL } = getServerConfig();
     const baseURL = payload?.endpoint || KNOWLEDGE_PROXY_URL;
 
-    return new LobeKnowledgeAI({ baseURL });
+    return new LobeChatChatAI({ baseURL });
   }
 }
 

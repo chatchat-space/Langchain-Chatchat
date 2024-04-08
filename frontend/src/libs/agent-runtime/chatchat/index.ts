@@ -13,13 +13,13 @@ import { Stream } from 'openai/streaming';
 const DEFAULT_BASE_URL = 'http://localhost:7861/v1';
 
 
-export class LobeKnowledgeAI implements LobeRuntimeAI {
+export class LobeChatChatAI implements LobeRuntimeAI {
   private client: OpenAI;
 
   baseURL: string;
 
-  constructor({ apiKey = 'knowledge', baseURL = DEFAULT_BASE_URL, ...res }: ClientOptions) {
-    if (!baseURL) throw AgentRuntimeError.createError(AgentRuntimeErrorType.InvalidKnowledgeArgs);
+  constructor({ apiKey = 'chatChat', baseURL = DEFAULT_BASE_URL, ...res }: ClientOptions) {
+    if (!baseURL) throw AgentRuntimeError.createError(AgentRuntimeErrorType.InvalidChatChatArgs);
 
     this.client = new OpenAI({ apiKey, baseURL, ...res });
     this.baseURL = baseURL;
@@ -31,7 +31,7 @@ export class LobeKnowledgeAI implements LobeRuntimeAI {
         payload as unknown as (OpenAI.ChatCompletionCreateParamsStreaming | OpenAI.ChatCompletionCreateParamsNonStreaming),
       );
 
-      if (LobeKnowledgeAI.isStream(response)) {
+      if (LobeChatChatAI.isStream(response)) {
   
         const [prod, debug] = response.tee();
   
@@ -48,7 +48,7 @@ export class LobeKnowledgeAI implements LobeRuntimeAI {
           console.debug(JSON.stringify(response));
         }
 
-        const stream = LobeKnowledgeAI.createChatCompletionStream(response?.choices[0].message.content || '');
+        const stream = LobeChatChatAI.createChatCompletionStream(response?.choices[0].message.content || '');
 
         return new StreamingTextResponse(stream);
       }
@@ -65,8 +65,8 @@ export class LobeKnowledgeAI implements LobeRuntimeAI {
             throw AgentRuntimeError.chat({
               endpoint: desensitizedEndpoint,
               error: error as any,
-              errorType: AgentRuntimeErrorType.InvalidKnowledgeArgs,
-              provider: ModelProvider.Knowledge,
+              errorType: AgentRuntimeErrorType.InvalidChatChatArgs,
+              provider: ModelProvider.ChatChat,
             });
           }
 
@@ -78,13 +78,13 @@ export class LobeKnowledgeAI implements LobeRuntimeAI {
 
       const { errorResult, RuntimeError } = handleOpenAIError(error);
 
-      const errorType = RuntimeError || AgentRuntimeErrorType.OllamaBizError;
+      const errorType = RuntimeError || AgentRuntimeErrorType.ChatChatBizError;
 
       throw AgentRuntimeError.chat({
         endpoint: desensitizedEndpoint,
         error: errorResult,
         errorType,
-        provider: ModelProvider.Knowledge,
+        provider: ModelProvider.ChatChat,
       });
     }
   }
