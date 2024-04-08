@@ -5,7 +5,7 @@ import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatStreamCallbacks } from '@/libs/agent-runtime';
 
 import * as debugStreamModule from '../utils/debugStream';
-import { LobeKnowledgeAI } from './index';
+import { LobeChatChatAI } from './index';
 
 const provider = 'knowledge';
 const defaultBaseURL = 'http://localhost:7861/v1';
@@ -15,10 +15,10 @@ const invalidErrorType = 'InvalidKnowledgeArgs';
 // Mock the console.error to avoid polluting test output
 vi.spyOn(console, 'error').mockImplementation(() => {});
 
-let instance: LobeKnowledgeAI;
+let instance: LobeChatChatAI;
 
 beforeEach(() => {
-  instance = new LobeKnowledgeAI({ apiKey: 'knowledge', baseURL: defaultBaseURL });
+  instance = new LobeChatChatAI({ apiKey: 'knowledge', baseURL: defaultBaseURL });
 
   // 使用 vi.spyOn 来模拟 chat.completions.create 方法
   vi.spyOn(instance['client'].chat.completions, 'create').mockResolvedValue(
@@ -30,7 +30,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('LobeKnowledgeAI', () => {
+describe('LobeChatChatAI', () => {
 
   describe('init', ()=>{
     it('should init with default baseURL', () => {
