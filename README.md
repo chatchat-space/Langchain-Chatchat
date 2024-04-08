@@ -59,10 +59,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 版本所使用代码已更新至本项目 `v0.2.10` 版本。
 
-<<<<<<< HEAD
-🐳 [Docker 镜像](ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10) 已经更新到 ```0.2.10``` 版本。
-=======
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10) 已经更新到 ```0.2.10``` 版本。
+🐳 [Docker 镜像](isafetech/chatchat:0.2.10) 已经更新到 ```0.2.10``` 版本。
 
 🌲 本次更新后同时支持DockerHub、阿里云、腾讯云镜像源：
 
