@@ -65,7 +65,15 @@ Q&A）ソリューションを構築することです。
 🌐 [AutoDL イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.5)がサポートされ、`0.2.10` では v0.2.10
 にアップデートされました。
 
-🐳 [Docker イメージ](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7)
+🐳 [Docker イメージ](isafetech/chatchat:0.2.10)
+
+🌲 今回のアップデートにより、DockerHub、阿里雲、騰訊のクラウドにも対応しました。より広範なクラウド環境で利用可能となりました。
+
+```shell
+docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
+```
 
 ## ペインポイントへの対応
 
