@@ -57,9 +57,12 @@ jobs:
           cd /mnt
           df -h
           sudo git clone https://huggingface.co/THUDM/chatglm3-6b
+          sudo ls /mnt/chatglm3-6b
           df -h
           sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+          sudo ls /mnt/bge-large-zh-v1.5
           df -h
+          pwd
 
       - name: Login to Tencent Cloud Container Registry
         uses: docker/login-action@v2
