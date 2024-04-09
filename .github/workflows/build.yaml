@@ -17,6 +17,8 @@ jobs:
           df -h
           rm -rf /opt/hostedtoolcache
           wget https://github.com/apache/flink/blob/02d30ace69dc18555a5085eccf70ee884e73a16e/tools/azure-pipelines/free_disk_space.sh
+          cat free_disk_space.sh
+          chmod +x free_disk_space.sh
           bash free_disk_space.sh
           df -h
       - name: Checkout
