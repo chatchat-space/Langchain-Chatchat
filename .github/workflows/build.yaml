@@ -34,6 +34,9 @@ jobs:
           # deleting 15GB
           rm -rf /usr/share/dotnet/
           df -h
+          rm -rf /opt/hostedtoolcache
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set outputs
@@ -49,12 +52,17 @@ jobs:
 #          username: ${{ env.DOCKERHUB_USERNAME }}
 ##          password: ${{ secrets.DOCKERHUB_TOKEN }}
 #          password: junxiezy@930117
+
       - name: Clone model
         run: |
           git lfs install
           cd ..
+          df -h
           git clone https://huggingface.co/THUDM/chatglm3-6b
+          df -h
           git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+          df -h
+
       - name: Login to Tencent Cloud Container Registry
         uses: docker/login-action@v2
         with:
@@ -63,6 +71,7 @@ jobs:
 #          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
+
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
         with:
