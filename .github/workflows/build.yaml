@@ -32,8 +32,6 @@ jobs:
           df -h
           echo "Removing large directories"
           # deleting 15GB
-          rm -rf /usr/share/dotnet/
-          df -h
           rm -rf /opt/hostedtoolcache
           df -h
 
@@ -56,7 +54,7 @@ jobs:
       - name: Clone model
         run: |
           git lfs install
-          cd ..
+          cd /mnt
           df -h
           git clone https://huggingface.co/THUDM/chatglm3-6b
           df -h
