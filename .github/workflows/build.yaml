@@ -71,9 +71,15 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
 
+      - name: Print current working directory
+        run: |
+          pwd
+          ls
+          ls ..
+          ls ../..
+
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
-        run: pwd
         with:
           context: docker
           push: true
