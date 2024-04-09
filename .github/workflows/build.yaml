@@ -6,7 +6,7 @@ on:
       - "feat/gitAction"
 
 env:
-  DOCKERHUB_USERNAME: lyzhang1999
+  DOCKERHUB_USERNAME: 100018410921
 
 jobs:
   docker:
@@ -25,21 +25,23 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: junxiezy@930117
       - name: Build backend and push
         uses: docker/build-push-action@v3
         with:
           context: backend
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ env.DOCKERHUB_USERNAME }}/backend:${{ steps.vars.outputs.sha_short }}
-      - name: Build frontend and push
-        uses: docker/build-push-action@v3
-        with:
-          context: frontend
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ env.DOCKERHUB_USERNAME }}/frontend:${{ steps.vars.outputs.sha_short }}
+#          tags: ${{ env.DOCKERHUB_USERNAME }}/backend:${{ steps.vars.outputs.sha_short }}
+          tags: test
+#      - name: Build frontend and push
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: frontend
+#          push: true
+#          platforms: linux/amd64,linux/arm64
+#          tags: ${{ env.DOCKERHUB_USERNAME }}/frontend:${{ steps.vars.outputs.sha_short }}
       # - name: Update helm values.yaml
       #   uses: fjogeleit/yaml-update-action@main
       #   with:
