@@ -76,12 +76,13 @@ jobs:
           pwd
           echo "ls" && ls
           echo "ls .." && ls ..
-          echo "ls ../.." && ls ../..
 
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
         with:
-          context: docker
+#          context: docker
+          context: .
+          dockerfile: docker/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
 #          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
