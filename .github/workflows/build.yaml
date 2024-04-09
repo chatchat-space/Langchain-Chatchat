@@ -21,11 +21,25 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      - name: Login to Docker Hub
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ env.DOCKERHUB_USERNAME }}
+##          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#          password: junxiezy@930117
+      - name: Download files and clone repository
+        run: |
+          git lfs install
+          cd ..
+          git clone https://huggingface.co/THUDM/chatglm3-6b
+          git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+      - name: Login to Tencent Cloud Container Registry
         uses: docker/login-action@v2
         with:
+          registry: ccr.ccs.tencentyun.com
+#          username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+#          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
           username: ${{ env.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_TOKEN }}
           password: junxiezy@930117
       - name: Build backend and push
         uses: docker/build-push-action@v3
@@ -34,14 +48,17 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
 #          tags: ${{ env.DOCKERHUB_USERNAME }}/backend:${{ steps.vars.outputs.sha_short }}
-          tags: test
-#      - name: Build frontend and push
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: frontend
-#          push: true
-#          platforms: linux/amd64,linux/arm64
-#          tags: ${{ env.DOCKERHUB_USERNAME }}/frontend:${{ steps.vars.outputs.sha_short }}
+#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+      - name: Build backend and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          dockerfile: docker/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
       # - name: Update helm values.yaml
       #   uses: fjogeleit/yaml-update-action@main
       #   with:
