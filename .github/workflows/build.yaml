@@ -12,6 +12,13 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Delete huge unnecessary tools folder
+        run: |
+          df -h
+          rm -rf /opt/hostedtoolcache
+          wget https://github.com/apache/flink/blob/02d30ace69dc18555a5085eccf70ee884e73a16e/tools/azure-pipelines/free_disk_space.sh
+          bash free_disk_space.sh
+          df -h
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set outputs
@@ -27,7 +34,7 @@ jobs:
 #          username: ${{ env.DOCKERHUB_USERNAME }}
 ##          password: ${{ secrets.DOCKERHUB_TOKEN }}
 #          password: junxiezy@930117
-      - name: Download files and clone repository
+      - name: Clone model
         run: |
           git lfs install
           cd ..
@@ -41,16 +48,7 @@ jobs:
 #          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
-      - name: Build backend and push
-        uses: docker/build-push-action@v3
-        with:
-          context: backend
-          push: true
-          platforms: linux/amd64,linux/arm64
-#          tags: ${{ env.DOCKERHUB_USERNAME }}/backend:${{ steps.vars.outputs.sha_short }}
-#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
-      - name: Build backend and push
+      - name: Build chatchat and push
         uses: docker/build-push-action@v3
         with:
           context: .
