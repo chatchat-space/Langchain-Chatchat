@@ -37,6 +37,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
@@ -55,14 +56,11 @@ jobs:
         run: |
           git lfs install
           cd /mnt
-          df -h
           sudo git clone https://huggingface.co/THUDM/chatglm3-6b
           sudo ls /mnt/chatglm3-6b
-          df -h
           sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
           sudo ls /mnt/bge-large-zh-v1.5
           df -h
-          pwd
 
       - name: Login to Tencent Cloud Container Registry
         uses: docker/login-action@v2
@@ -73,6 +71,9 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
 
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
         with:
@@ -82,15 +83,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
 #          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
           tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
-      # - name: Update helm values.yaml
-      #   uses: fjogeleit/yaml-update-action@main
-      #   with:
-      #     valueFile: 'helm/values.yaml'
-      #     commitChange: true
-      #     branch: main
-      #     message: 'Update Image Version to ${{ steps.vars.outputs.sha_short }}'
-      #     changes: |
-      #       {
-      #         "backend.tag": "${{ steps.vars.outputs.sha_short }}",
-      #         "frontend.tag": "${{ steps.vars.outputs.sha_short }}"
-      #       }
