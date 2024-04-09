@@ -71,8 +71,8 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
 
-      - name: Checkout
-        uses: actions/checkout@v3
+#      - name: Checkout
+#        uses: actions/checkout@v3
 
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
