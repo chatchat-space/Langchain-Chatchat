@@ -2,7 +2,7 @@ import { GlobalCommonState, initialCommonState } from './slices/common/initialSt
 import { GlobalPreferenceState, initialPreferenceState } from './slices/preference/initialState';
 import { GlobalSettingsState, initialSettingsState } from './slices/settings/initialState';
 
-export { SettingsTabs, SidebarTabKey } from './slices/common/initialState';
+export { KnowledgeTabs, SettingsTabs, SidebarTabKey } from './slices/common/initialState';
 
 export type GlobalState = GlobalCommonState & GlobalSettingsState & GlobalPreferenceState;
 

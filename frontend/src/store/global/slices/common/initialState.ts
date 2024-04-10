@@ -15,6 +15,11 @@ export enum SettingsTabs {
   TTS = 'tts',
 }
 
+export enum KnowledgeTabs {
+  Base = 'base',
+  Config = 'config',
+}
+
 export interface Guide {
   // Topic 引导
   topic?: boolean;
