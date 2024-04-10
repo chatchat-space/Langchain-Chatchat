@@ -15,12 +15,6 @@ jobs:
       # https://github.com/apache/flink/blob/02d30ace69dc18555a5085eccf70ee884e73a16e/tools/azure-pipelines/free_disk_space.sh
       - name: Delete huge unnecessary tools folder
         run: |
-          echo "=============================================================================="
-          echo "Freeing up disk space on CI system"
-          echo "=============================================================================="
-
-#          echo "Listing 100 largest packages"
-#          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
           df -h
           echo "Removing large packages"
           sudo apt-get remove -y '^dotnet-.*'
