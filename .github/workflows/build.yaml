@@ -56,11 +56,11 @@ jobs:
           cd /mnt/bge-large-zh-v1.5
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
           
-          tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
-          tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
-          mv /mnt/chatglm3-6b.tar.gz .
-          mv /mnt/bge-large-zh-v1.5.tar.gz .
-          rm -f /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
+          sudo tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
+          sudo tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
+          sudo mv /mnt/chatglm3-6b.tar.gz .
+          sudo mv /mnt/bge-large-zh-v1.5.tar.gz .
+          sudo rm -f /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
           
           df -h
 
