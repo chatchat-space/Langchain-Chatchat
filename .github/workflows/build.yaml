@@ -42,14 +42,26 @@ jobs:
 
       - name: Clone model
         run: |
-          git lfs install
-          cd /mnt
-          sudo git clone https://huggingface.co/THUDM/chatglm3-6b
+          
+          sudo mkdir -p /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
+          cd /mnt/chatglm3-6b
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00004-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00005-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors
           sudo du -sh /mnt/chatglm3-6b
+          sudo du -sh /mnt/chatglm3-6b/*
           sudo ls /mnt/chatglm3-6b
-          sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+          
+          cd /mnt/bge-large-zh-v1.5
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin
           sudo du -sh /mnt/bge-large-zh-v1.5
+          sudo du -sh /mnt/bge-large-zh-v1.5/*
           sudo ls /mnt/bge-large-zh-v1.5
+          
           df -h
 
 #      - name: Login to Docker Hub
