@@ -58,6 +58,9 @@ jobs:
           
           sudo tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
           sudo tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
+          
+          sudo du -sh /mnt/*.tar.gz
+          
           sudo mv /mnt/chatglm3-6b.tar.gz .
           sudo mv /mnt/bge-large-zh-v1.5.tar.gz .
           sudo rm -f /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
