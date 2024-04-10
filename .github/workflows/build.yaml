@@ -23,7 +23,6 @@ jobs:
           sudo apt-get remove -y azure-cli google-chrome-stable firefox powershell mono-devel
           sudo apt-get autoremove -y
           sudo apt-get clean
-          df -h
           echo "Removing large directories"
           # deleting 15GB
           rm -rf /opt/hostedtoolcache
@@ -57,6 +56,12 @@ jobs:
           cd /mnt/bge-large-zh-v1.5
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
           
+          tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
+          tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
+          mv /mnt/chatglm3-6b.tar.gz .
+          mv /mnt/bge-large-zh-v1.5.tar.gz .
+          rm -f /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
+          
           df -h
 
 #      - name: Login to Docker Hub
@@ -69,22 +74,21 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ccr.ccs.tencentyun.com
-#          username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
-#          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
 
-#      - name: Build chatchat and push
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: .
-#          dockerfile: Dockerfile
-#          push: true
-#          platforms: linux/amd64,linux/arm64
-##          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
-
-      - name: Build and push Docker image
+      - name: Show runner disk
         run: |
-          docker build --volume /mnt:/mnt -t ccr.ccs.tencentyun.com/chatchat/chatchat:latest -f Dockerfile .
-          docker push ccr.ccs.tencentyun.com/chatchat/chatchat:latest
+          df -h
+
+      - name: Build chatchat and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          dockerfile: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
