@@ -19,8 +19,8 @@ jobs:
           echo "Freeing up disk space on CI system"
           echo "=============================================================================="
 
-          echo "Listing 100 largest packages"
-          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
+#          echo "Listing 100 largest packages"
+#          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
           df -h
           echo "Removing large packages"
           sudo apt-get remove -y '^dotnet-.*'
@@ -51,8 +51,10 @@ jobs:
           git lfs install
           cd /mnt
           sudo git clone https://huggingface.co/THUDM/chatglm3-6b
+          sudo du -sh /mnt/chatglm3-6b
           sudo ls /mnt/chatglm3-6b
           sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+          sudo du -sh /mnt/bge-large-zh-v1.5
           sudo ls /mnt/bge-large-zh-v1.5
           df -h
 
