@@ -42,7 +42,6 @@ jobs:
 
       - name: Clone model
         run: |
-          
           sudo mkdir -p /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
           cd /mnt/chatglm3-6b
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
@@ -62,6 +61,11 @@ jobs:
           sudo du -sh /mnt/bge-large-zh-v1.5/*
           sudo ls /mnt/bge-large-zh-v1.5
           
+          sudo tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
+          sudo tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
+          sudo rm -rf /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
+          sudo ls /mnt/
+          
           df -h
 
 #      - name: Login to Docker Hub
@@ -78,20 +82,6 @@ jobs:
 #          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
-
-      - name: Print current working directory
-        run: |
-          pwd
-          echo "ls" && ls
-          echo "ls .." && ls ..
-
-      - name: Copy files from /mnt to project directory
-        run: |
-          df -h
-          cp -r /mnt/chatglm3-6b ./chatglm3-6b
-          df -h
-          cp -r /mnt/bge-large-zh-v1.5 ./bge-large-zh-v1.5
-          df -h
 
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
