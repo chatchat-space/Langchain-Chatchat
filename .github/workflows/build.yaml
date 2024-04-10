@@ -31,8 +31,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          path: /mnt/
 
       - name: Set outputs
         id: vars
@@ -44,9 +42,9 @@ jobs:
 
       - name: Clone model
         run: |
-          sudo mkdir -p /mnt/Langchain-Chatchat/chatglm3-6b /mnt/Langchain-Chatchat/bge-large-zh-v1.5
+          sudo mkdir -p /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
           
-          cd /mnt/Langchain-Chatchat/chatglm3-6b
+          sudo cd /mnt/chatglm3-6b
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors &> /dev/null
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors &> /dev/null
@@ -55,10 +53,9 @@ jobs:
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors &> /dev/null
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
           
-          cd /mnt/Langchain-Chatchat/bge-large-zh-v1.5
+          sudo cd /mnt/bge-large-zh-v1.5
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
           
-          sudo du -sh /mnt/Langchain-Chatchat/*
           df -h
 
 #      - name: Login to Docker Hub
@@ -76,12 +73,17 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: junxiezy@930117
 
-      - name: Build chatchat and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          dockerfile: Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+#      - name: Build chatchat and push
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: .
+#          dockerfile: Dockerfile
+#          push: true
+#          platforms: linux/amd64,linux/arm64
+##          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+
+      - name: Build and push Docker image
+        run: |
+          docker build --volume /mnt:/mnt -t ccr.ccs.tencentyun.com/chatchat/chatchat:latest -f Dockerfile .
+          docker push ccr.ccs.tencentyun.com/chatchat/chatchat:latest

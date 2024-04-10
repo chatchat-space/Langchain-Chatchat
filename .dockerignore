@@ -1,1 +1,11 @@
 .idea
+Dockerfile
+.dockerignore
+.gitignore
+.gitmodules
+README.md
+README_en.md
+README_ja.md
+requirements_api.txt
+requirements_lite.txt
+requirements_webui.txt
