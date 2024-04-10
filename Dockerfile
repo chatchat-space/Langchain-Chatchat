@@ -9,6 +9,7 @@ ENV llmname=chatglm3-6b
 
 # Commands
 WORKDIR /
+
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     apt-get update -y && \
@@ -17,19 +18,19 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python3 && \
-    mkdir -p /data/model/Langchain-Chatchat
+    mkdir -p /chatchat/Langchain-Chatchat && \
+    mv chatglm3-6b /chatchat/ && \
+    mv bge-large-zh-v1.5 /chatchat/
 
 # Copy the application files
-#COPY /mnt/chatglm3-6b /data/model/chatglm3-6b
-ADD /mnt/chatglm3-6b.tar.gz /data/model/
-#COPY /mnt/bge-large-zh-v1.5 /data/model/bge-large-zh-v1.5
-ADD /mnt/bge-large-zh-v1.5.tar.gz /data/model/
-COPY ./* /data/model/Langchain-Chatchat/
+COPY ./* /chatchat/Langchain-Chatchat/
 
 # Install dependencies from requirements.txt
-RUN pip3 install -r /data/model/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip3 install -r /chatchat/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    python3 /chatchat/Langchain-Chatchat/init_database.py --recreate-vs && \
+    python3 /chatchat/Langchain-Chatchat/copy_config_example.py && \
+    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' model_config.py
 
-RUN python3 /data/model/Langchain-Chatchat/init_database.py --recreate-vs
 EXPOSE 22 7861 8501
-WORKDIR /data/model/Langchain-Chatchat
-ENTRYPOINT ["python3", "/data/model/Langchain-Chatchat/startup.py", "-a"]
+WORKDIR /chatchat/Langchain-Chatchat/
+ENTRYPOINT ["python3", "/chatchat/Langchain-Chatchat/startup.py", "-a"]
