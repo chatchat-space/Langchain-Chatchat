@@ -77,6 +77,14 @@ jobs:
           echo "ls" && ls
           echo "ls .." && ls ..
 
+      - name: Copy files from /mnt to project directory
+        run: |
+          df -h
+          cp -r /mnt/chatglm3-6b ./chatglm3-6b
+          df -h
+          cp -r /mnt/bge-large-zh-v1.5 ./bge-large-zh-v1.5
+          df -h
+
       - name: Build chatchat and push
         uses: docker/build-push-action@v3
         with:
