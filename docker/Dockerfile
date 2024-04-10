@@ -22,7 +22,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 COPY /mnt/chatglm3-6b /data/model/chatglm3-6b
 COPY /mnt/bge-large-zh-v1.5 /data/model/bge-large-zh-v1.5
 #COPY ../Langchain-Chatchat /data/model/Langchain-Chatchat
-COPY . /data/model/Langchain-Chatchat
+COPY ../../Langchain-Chatchat /data/model/Langchain-Chatchat
 
 # Install dependencies from requirements.txt
 RUN pip3 install -r /data/model/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
