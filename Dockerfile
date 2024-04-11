@@ -21,7 +21,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     mkdir -p /chatchat/Langchain-Chatchat && \
 
 # Copy the application files
-ADD chatglm3-6b.tar.gz /chatchat/
+#ADD chatglm3-6b.tar.gz /chatchat/
 ADD bge-large-zh-v1.5.tar.gz /chatchat/
 COPY ./* /chatchat/Langchain-Chatchat/
 
