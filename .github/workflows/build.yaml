@@ -1,14 +1,11 @@
 name: build
-
 on:
   push:
     branches:
       - "feat/gitAction"
-
 env:
   DOCKERHUB_USERNAME: 100018410921
   TZ: Asia/Shanghai
-
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -18,7 +15,6 @@ jobs:
     steps:
       - name: Display disk space usage before optimization
         run: df -hT
-
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
         with:
@@ -39,7 +35,6 @@ jobs:
           npm_prune: "True"
           npm_clean: "True"
           os_swap: "True"
-
       - name: Free up disk space
         uses: easimon/maximize-build-space@master
         with:
@@ -50,7 +45,6 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-
       - name: Remove unnecessary tools and files
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -67,46 +61,34 @@ jobs:
           sudo rm -rf /etc/apt/sources.list.d/* /usr/local/lib/android /opt/ghc /usr/share/dotnet /usr/local/graalvm /usr/local/.ghcup \
           /usr/local/share/powershell /usr/local/share/chromium /usr/local/lib/node_modules
           sudo timedatectl set-timezone "$TZ"
-
       - name: Display disk space usage after optimization
         run: df -hT
-
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#
-#      - name: Set outputs
-#        id: vars
-#        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v2
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v2
-
-#      - name: Clone model
-#        run: |
-#          df -h
-#          sudo mkdir -p /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
-#
-#          cd /mnt/chatglm3-6b
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00004-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00005-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors &> /dev/null
-#          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
-#
-#          cd /mnt/bge-large-zh-v1.5
-#          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
-#
-#          sudo tar -zcf /mnt/chatglm3-6b.tar.gz /mnt/chatglm3-6b
-#          sudo tar -zcf /mnt/bge-large-zh-v1.5.tar.gz /mnt/bge-large-zh-v1.5
-#
-#          sudo mv /mnt/chatglm3-6b.tar.gz ${{ github.workspace }}/
-#          sudo mv /mnt/bge-large-zh-v1.5.tar.gz ${{ github.workspace }}/
-#          sudo rm -rf /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
-#
-#          du -sh ${{ github.workspace }}/*.tar.gz
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Clone model
+        run: |
+          sudo mkdir -p $GITHUB_WORKSPACE/chatglm3-6b $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          cd $GITHUB_WORKSPACE/chatglm3-6b
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00004-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00005-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
+          cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
+          sudo tar -zcf $GITHUB_WORKSPACE/chatglm3-6b.tar.gz $GITHUB_WORKSPACE/chatglm3-6b
+          sudo tar -zcf $GITHUB_WORKSPACE/bge-large-zh-v1.5.tar.gz $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          sudo rm -rf $GITHUB_WORKSPACE/chatglm3-6b $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          du -sh ${{ github.workspace }}/*
           
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v2
@@ -115,18 +97,18 @@ jobs:
 ##          password: ${{ secrets.DOCKERHUB_TOKEN }}
 #          password: junxiezy@930117
 
-#      - name: Login to Tencent Cloud Container Registry
-#        uses: docker/login-action@v2
-#        with:
-#          registry: ccr.ccs.tencentyun.com
-#          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
-#          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
-#          username: ${{ env.DOCKERHUB_USERNAME }}
-#          password: junxiezy@930117
+      - name: Login to Tencent Cloud Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ccr.ccs.tencentyun.com
+          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: junxiezy@930117
 
       - name: Show runner disk
         run: |
-          df -h
+          df -hT
 
 #      - name: Build chatchat and push
 #        uses: docker/build-push-action@v3
