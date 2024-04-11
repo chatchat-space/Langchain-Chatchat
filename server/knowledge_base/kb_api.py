@@ -1,3 +1,6 @@
+import os
+import stat
+import shutil
 import urllib
 from server.utils import BaseResponse, ListResponse
 from server.knowledge_base.utils import validate_kb_name
@@ -5,6 +8,12 @@ from server.knowledge_base.kb_service.base import KBServiceFactory
 from server.db.repository.knowledge_base_repository import list_kbs_from_db
 from configs import EMBEDDING_MODEL, logger, log_verbose
 from fastapi import Body
+
+
+def remove_readonly(func: callable, path: str, _):
+    """修复删除知识库文件夹时的权限问题"""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def list_kbs():
@@ -55,6 +64,7 @@ def delete_kb(
         status = kb.clear_vs()
         status = kb.drop_kb()
         if status:
+            shutil.rmtree(kb.kb_path, onerror=remove_readonly)
             return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
     except Exception as e:
         msg = f"删除知识库时出现意外： {e}"
