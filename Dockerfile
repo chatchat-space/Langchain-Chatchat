@@ -18,7 +18,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python3 && \
-    mkdir -p /chatchat/Langchain-Chatchat && \
+    mkdir -p /chatchat/Langchain-Chatchat
 
 # Copy the application files
 #ADD chatglm3-6b.tar.gz /chatchat/
