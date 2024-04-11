@@ -85,10 +85,6 @@ jobs:
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
           cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
-
-          du -sh $GITHUB_WORKSPACE/chatglm3-6b
-          du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5
-          du -sh $GITHUB_WORKSPACE/*
           
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v2
@@ -110,12 +106,12 @@ jobs:
         run: |
           df -hT
 
-#      - name: Build chatchat and push
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: .
-#          dockerfile: Dockerfile
-#          push: true
-#          platforms: linux/amd64,linux/arm64
-#          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+      - name: Build chatchat and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          dockerfile: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
