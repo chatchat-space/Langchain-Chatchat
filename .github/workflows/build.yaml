@@ -61,9 +61,11 @@ jobs:
           
           sudo du -sh /mnt/*.tar.gz
           
-          sudo mv /mnt/chatglm3-6b.tar.gz .
-          sudo mv /mnt/bge-large-zh-v1.5.tar.gz .
+          sudo mv /mnt/chatglm3-6b.tar.gz ${{ github.workspace }}/
+          sudo mv /mnt/bge-large-zh-v1.5.tar.gz ${{ github.workspace }}/
           sudo rm -rf /mnt/chatglm3-6b /mnt/bge-large-zh-v1.5
+          
+          du -sh ${{ github.workspace }}/*.tar.gz
           
           df -h
 
