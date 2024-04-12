@@ -29,7 +29,7 @@ COPY * $HOME/Langchain-Chatchat/
 RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
     python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
     python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
-    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' model_config.py
+    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py
 
 EXPOSE 22 7861 8501
 WORKDIR $HOME/Langchain-Chatchat/
