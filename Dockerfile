@@ -33,12 +33,14 @@ COPY ./* $HOME/Langchain-Chatchat/
 #    python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
 #    python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
 #    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py
+WORKDIR $HOME/Langchain-Chatchat
+
 RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.tuna.tsinghua.edu.cn/simple && \
-    pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
-    python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
-    python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
-    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py
+    pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+RUN python3 init_database.py --recreate-vs && \
+    python3 copy_config_example.py && \
+    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' model_config.py
 
 EXPOSE 22 7861 8501
-WORKDIR $HOME/Langchain-Chatchat/
-ENTRYPOINT ["python3", "$HOME/Langchain-Chatchat/startup.py", "-a"]
+ENTRYPOINT ["python3", "startup.py", "-a"]

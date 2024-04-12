@@ -120,3 +120,6 @@ jobs:
 #          platforms: linux/amd64,linux/arm64
           platforms: linux/amd64
           tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+
+      - name: Show runner disk
+        run: df -hT
