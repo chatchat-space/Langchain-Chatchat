@@ -35,15 +35,10 @@ jobs:
           npm_prune: "True"
           npm_clean: "True"
           os_swap: "True"
-
-      - name: Show runner disk
-        run: |
-          df -hT
-
       - name: Free up disk space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 2048
+          root-reserve-mb: 61440 # 给 / 预留 60GB 空间
           swap-size-mb: 1
           remove-dotnet: 'true'
           remove-android: 'true'
