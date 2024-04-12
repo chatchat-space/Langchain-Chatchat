@@ -115,6 +115,7 @@ jobs:
         run: |
           docker pull "nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04"
           docker pull "nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04"
+          docker images
           df -hT
 
 #      - name: Build chatchat and push
