@@ -73,7 +73,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Set outputs
         id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -118,5 +118,4 @@ jobs:
           dockerfile: Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
