@@ -1,5 +1,6 @@
 # Base Image
-FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+#FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
 # Labels
 LABEL maintainer=chatchat
@@ -12,13 +13,13 @@ WORKDIR /
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
-#    apt-get update -y && \
+    apt-get update -y && \
 #    apt-get install -y --no-install-recommends python3.11 python3-pip curl libgl1 libglib2.0-0 && \
     apt-get install -y --no-install-recommends python3.11 python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-#    rm -f /usr/bin/python3 && \
-#    ln -s /usr/bin/python3.11 /usr/bin/python3 && \
+    rm -f /usr/bin/python3 && \
+    ln -s /usr/bin/python3.11 /usr/bin/python3 && \
     mkdir -p $HOME/Langchain-Chatchat
 
 # Copy the application files
