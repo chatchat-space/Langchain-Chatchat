@@ -29,7 +29,12 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 COPY ./* $HOME/Langchain-Chatchat/
 
 # Install dependencies from requirements.txt
-RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+#RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+#    python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
+#    python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
+#    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py
+RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
     python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
     python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
     sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py

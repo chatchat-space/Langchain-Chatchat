@@ -117,5 +117,6 @@ jobs:
           context: .
           dockerfile: Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
+#          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
