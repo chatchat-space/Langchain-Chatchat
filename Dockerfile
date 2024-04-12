@@ -28,6 +28,8 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 #RUN rm -rf bge-large-zh-v1.5 chatglm3-6b
 COPY ./* $HOME/Langchain-Chatchat/
 
+RUN ls $HOME/Langchain-Chatchat/
+
 # Install dependencies from requirements.txt
 #RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
 #    python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
@@ -38,9 +40,10 @@ WORKDIR $HOME/Langchain-Chatchat
 RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.tuna.tsinghua.edu.cn/simple && \
     pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-RUN python3 init_database.py --recreate-vs && \
-    python3 copy_config_example.py && \
+RUN python3 copy_config_example.py && \
     sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' model_config.py
+
+RUN python3 init_database.py --recreate-vs
 
 EXPOSE 22 7861 8501
 ENTRYPOINT ["python3", "startup.py", "-a"]

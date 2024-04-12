@@ -122,4 +122,6 @@ jobs:
           tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
 
       - name: Show runner disk
-        run: df -hT
+        run: |
+          df -hT
+          docker images
