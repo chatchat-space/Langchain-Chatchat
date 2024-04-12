@@ -43,7 +43,7 @@ RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.org/simple && 
     pip3 install -r requirements.txt -i https://pypi.org/simple
 
 RUN python3 copy_config_example.py && \
-    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' model_config.py
+    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' configs/model_config.py
 
 RUN python3 init_database.py --recreate-vs
 
