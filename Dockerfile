@@ -18,11 +18,11 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python3 && \
-    mkdir -p /chatchat/Langchain-Chatchat && \
-    mv chatglm3-6b $HOME/ && \
-    mv bge-large-zh-v1.5 $HOME/
+    mkdir -p /chatchat/Langchain-Chatchat
 
 # Copy the application files
+COPY bge-large-zh-v1.5 $HOME/
+COPY chatglm3-6b $HOME/
 COPY * $HOME/Langchain-Chatchat/
 
 # Install dependencies from requirements.txt
