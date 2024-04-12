@@ -1,5 +1,6 @@
-import { EditOutlined, EllipsisOutlined, SettingOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Card, Skeleton } from 'antd';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 const { Meta } = Card;
@@ -8,32 +9,27 @@ interface KnowLedgeCardProps {
   intro: string;
   name: string;
 }
-const App: React.FC = (props: KnowLedgeCardProps) => {
+const KnowledgeCard: React.FC = (props: KnowLedgeCardProps) => {
   const [loading, setLoading] = useState(false);
   const { name, intro } = props;
-  const onChange = (checked: boolean) => {
-    setLoading(!checked);
+  const router = useRouter();
+  const handleCardEditClick = () => {
+    router.push('/knowledge/1/base');
   };
-
   return (
     <Card
       actions={[
-        <SettingOutlined key="setting" />,
-        <EditOutlined key="edit" />,
-        <EllipsisOutlined key="ellipsis" />,
+        <EditOutlined key="edit" onClick={handleCardEditClick} />,
+        <DeleteOutlined key="ellipsis" />,
       ]}
       bordered={false}
       style={{ marginTop: 16, width: 300 }}
     >
       <Skeleton active avatar loading={loading}>
-        <Meta
-          // avatar={<Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=2" />}
-          description={intro}
-          title={name}
-        />
+        <Meta description={intro} title={name} />
       </Skeleton>
     </Card>
   );
 };
 
-export default App;
+export default KnowledgeCard;

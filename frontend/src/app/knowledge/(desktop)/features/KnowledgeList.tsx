@@ -3,14 +3,13 @@ import React, { memo } from 'react';
 import KnowledgeCard from './KnowledgeCard';
 
 const list = [
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
-  { intro: 'aaaaa', name: '321' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
+  { intro: '知识库简介', name: '知识库名称' },
 ];
 
 const RenderList = memo(() =>

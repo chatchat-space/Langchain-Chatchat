@@ -2,9 +2,10 @@
 
 import { Card, List } from 'antd';
 import { createStyles } from 'antd-style';
+import dynamic from 'next/dynamic';
 import React, { memo, useState } from 'react';
 
-import ModalSegment from './features/ModalSegment';
+const ModalSegment = dynamic(() => import('./features/ModalSegment'));
 
 const data = [
   {
@@ -42,7 +43,11 @@ const useStyle = createStyles(({ css, token }) => ({
 
 const App = memo(() => {
   const { styles } = useStyle();
-  const [isShowModal, setModal] = useState();
+  const [isModalOpen, toggleOpen] = useState(false);
+  console.log(toggleOpen);
+  const handleSegmentCardClick = () => {
+    toggleOpen(true);
+  };
   return (
     <>
       <List
@@ -55,14 +60,14 @@ const App = memo(() => {
         }}
         renderItem={() => (
           <List.Item>
-            <Card className={styles.card} onClick={() => console.log(1)}>
+            <Card className={styles.card} onClick={handleSegmentCardClick}>
               Card content
             </Card>
           </List.Item>
         )}
         size="large"
       />
-      <ModalSegment />
+      <ModalSegment open={isModalOpen} toggleOpen={toggleOpen} />
     </>
   );
 });

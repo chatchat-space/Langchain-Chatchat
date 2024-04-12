@@ -4,25 +4,6 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
 
-// export const imageTypeOptions: SegmentedProps['options'] = [
-//   {
-//     label: 'JPG',
-//     value: ImageType.JPG,
-//   },
-//   {
-//     label: 'PNG',
-//     value: ImageType.PNG,
-//   },
-//   {
-//     label: 'SVG',
-//     value: ImageType.SVG,
-//   },
-//   {
-//     label: 'WEBP',
-//     value: ImageType.WEBP,
-//   },
-// ];
-
 const DEFAULT_FIELD_VALUE = {
   // imageType: ImageType.JPG,
   withBackground: true,
@@ -30,8 +11,10 @@ const DEFAULT_FIELD_VALUE = {
   withPluginInfo: false,
   withSystemRole: false,
 };
-
-const CreateKnowledgeBase = memo<ModalProps>(({ onClose, open }) => {
+interface ModalCreateKnowledgeProps extends ModalProps {
+  toggleModal: (open: boolean) => void;
+}
+const CreateKnowledgeBase = memo<ModalCreateKnowledgeProps>(({ toggleModal, open }) => {
   const { t } = useTranslation('chat');
 
   return (
@@ -39,8 +22,8 @@ const CreateKnowledgeBase = memo<ModalProps>(({ onClose, open }) => {
       allowFullscreen
       centered={false}
       maxHeight={false}
-      onCancel={onClose}
-      onOk={onClose}
+      onCancel={() => toggleModal(false)}
+      onOk={() => toggleModal(false)}
       open={open}
       title="创建知识库"
     >

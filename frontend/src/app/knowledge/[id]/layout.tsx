@@ -1,6 +1,5 @@
 'use client';
 
-import { createStyles } from 'antd-style';
 import { PropsWithChildren, memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
 
@@ -9,16 +8,12 @@ import { SidebarTabKey } from '@/store/global/initialState';
 
 import KnowledgeTabs from './tabs';
 
-const useStyles = createStyles(({ stylish, token, css }) => ({
-  container: {
-    paddingLeft: 20,
-    paddingRight: 20,
-    position: 'relative',
-  },
-}));
-
-export default memo(({ children, params }: PropsWithChildren) => {
+interface LayoutProps extends PropsWithChildren {
+  params: Record<string, string>;
+}
+export default memo<LayoutProps>(({ children, params }) => {
   console.log(params);
+
   return (
     <AppLayoutDesktop sidebarKey={SidebarTabKey.Knowledge}>
       <Flexbox direction="horizontal" flex={1} gap={40} height={'100%'}>
@@ -32,6 +27,7 @@ export default memo(({ children, params }: PropsWithChildren) => {
             <Center>图标占位</Center>
             <Center>知识库名称</Center>
           </Flexbox>
+
           <KnowledgeTabs params={params} />
         </Flexbox>
         <Flexbox padding={40} width={'100%'}>

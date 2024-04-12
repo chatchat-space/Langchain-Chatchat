@@ -5,6 +5,11 @@ import React, { memo } from 'react';
 
 const { Dragger } = Upload;
 
+type ModalAddFileProps = {
+  open: boolean;
+  setModalOpen: (open: boolean) => void;
+};
+
 const props: UploadProps = {
   action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
   multiple: true,
@@ -25,9 +30,9 @@ const props: UploadProps = {
   },
 };
 
-const ModalAddFile = memo(() => {
+const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen }) => {
   return (
-    <Modal open title="添加文件">
+    <Modal onCancel={() => setModalOpen(false)} open={open} title="添加文件">
       <Dragger {...props}>
         <p className="ant-upload-drag-icon">
           <InboxOutlined />

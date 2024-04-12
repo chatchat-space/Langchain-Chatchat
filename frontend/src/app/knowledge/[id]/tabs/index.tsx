@@ -1,27 +1,35 @@
 import { Settings2, Webhook } from 'lucide-react';
-import Link from 'next/link';
-import { memo } from 'react';
-
-import { KnowledgeTabs } from '@/store/global/initialState';
+import { useRouter } from 'next/navigation';
+import { memo, useState } from 'react';
 
 import Item from './TabItem';
+
+export enum KnowledgeTabs {
+  Base = 'base',
+  Config = 'config',
+}
 
 export interface KnowledgeTabsProps {
   activeTab?: KnowledgeTabs;
   params: Record<string, string>;
 }
 
-const KnowledgeTabsBox = memo<KnowledgeTabsProps>(({ activeTab, params }) => {
+const KnowledgeTabsBox = memo<KnowledgeTabsProps>(({ params }) => {
   console.log(params);
+  const [activeTab, setActiveTab] = useState<KnowledgeTabs>(KnowledgeTabs.Base);
   const items = [
     { icon: Webhook, label: '知识库', value: KnowledgeTabs.Base },
     { icon: Settings2, label: '配置', value: KnowledgeTabs.Config },
   ];
-
+  const router = useRouter();
+  const handleTabClick = (value: KnowledgeTabs) => {
+    setActiveTab(value);
+    router.push(`/knowledge/${params.id}/${value}`);
+  };
   return items.map(({ value, icon, label }) => (
-    <Link aria-label={label} href={`/knowledge/${params.id}/${value}`} key={value}>
+    <div aria-label={label} key={value} onClick={() => handleTabClick(value)}>
       <Item active={activeTab === value} hoverable icon={icon} label={label} />
-    </Link>
+    </div>
   ));
 });
 
