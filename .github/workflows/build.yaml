@@ -35,6 +35,11 @@ jobs:
           npm_prune: "True"
           npm_clean: "True"
           os_swap: "True"
+
+      - name: Show runner disk
+        run: |
+          df -hT
+
       - name: Free up disk space
         uses: easimon/maximize-build-space@master
         with:
@@ -45,6 +50,11 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
+
+      - name: Show runner disk
+        run: |
+          df -hT
+
       - name: Remove unnecessary tools and files
         env:
           DEBIAN_FRONTEND: noninteractive
