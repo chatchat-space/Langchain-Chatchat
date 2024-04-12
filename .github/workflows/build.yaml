@@ -55,7 +55,6 @@ jobs:
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
           sudo timedatectl set-timezone "$TZ"
-          docker rmi `docker images -q`
 
       - name: Free up disk space
         uses: easimon/maximize-build-space@master
