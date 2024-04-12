@@ -111,12 +111,18 @@ jobs:
       - name: Show runner disk
         run: df -hT
 
-      - name: Build chatchat and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          dockerfile: Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
+      - name: Show images size
+        run: |
+          docker pull "nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04"
+          docker pull "nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04"
+          df -hT
+
+#      - name: Build chatchat and push
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: .
+#          dockerfile: Dockerfile
+#          push: true
+#          platforms: linux/amd64,linux/arm64
+#          # tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:test
