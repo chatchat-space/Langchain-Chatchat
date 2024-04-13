@@ -26,24 +26,26 @@ export class LobeChatChatAI implements LobeRuntimeAI {
   }
 
   async chat(payload: ChatStreamPayload, options?: ChatCompetitionOptions) {
+
+    console.log('payload---', payload)
     try {
       const response = await this.client.chat.completions.create(
         payload as unknown as (OpenAI.ChatCompletionCreateParamsStreaming | OpenAI.ChatCompletionCreateParamsNonStreaming),
       );
 
       if (LobeChatChatAI.isStream(response)) {
-  
+
         const [prod, debug] = response.tee();
-  
+
         if (process.env.DEBUG_OLLAMA_CHAT_COMPLETION === '1') {
-            debugStream(debug.toReadableStream()).catch(console.error);
-          }
-        
+          debugStream(debug.toReadableStream()).catch(console.error);
+        }
+
         return new StreamingTextResponse(OpenAIStream(prod, options?.callback), {
           headers: options?.headers,
         });
       } else {
-  
+
         if (process.env.DEBUG_OLLAMA_CHAT_COMPLETION === '1') {
           console.debug(JSON.stringify(response));
         }
@@ -93,18 +95,18 @@ export class LobeChatChatAI implements LobeRuntimeAI {
     return typeof Stream !== 'undefined' && (obj instanceof Stream || obj instanceof ReadableStream);
   }
 
- 
+
   // 创建一个类型为 Stream<string> 的流
   static createChatCompletionStream(text: string): ReadableStream<string> {
 
-      const stream = new ReadableStream({
-          start(controller) {
-              controller.enqueue(text);
-              controller.close();
-          },
-      });
-  
-      return stream;
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(text);
+        controller.close();
+      },
+    });
+
+    return stream;
   }
 
 }

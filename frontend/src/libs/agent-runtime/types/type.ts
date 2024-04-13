@@ -25,7 +25,7 @@ export enum ModelProvider {
   Anthropic = 'anthropic',
   Azure = 'azure',
   Bedrock = 'bedrock',
-  ChatChat = 'chatChat',
+  ChatChat = 'chatchat',
   ChatGLM = 'chatglm',
   Google = 'google',
   Mistral = 'mistral',

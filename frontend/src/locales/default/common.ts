@@ -111,6 +111,7 @@ export default {
     openai: 'OpenAI',
     perplexity: 'Perplexity',
     zhipu: '智谱AI',
+    chatchat: 'ChatChat',
   },
   noDescription: '暂无描述',
   oauth: 'SSO 登录',
