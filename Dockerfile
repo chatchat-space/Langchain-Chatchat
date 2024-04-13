@@ -17,10 +17,10 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python3 && \
-    mkdir -p $HOME/Langchain-Chatchat
+    mkdir -p $HOME/Langchain-Chatchat $HOME/bge-large-zh-v1.5 $HOME/chatglm3-6b
 
 # Copy the application files
-COPY bge-large-zh-v1.5 $HOME/
+COPY bge-large-zh-v1.5 $HOME/bge-large-zh-v1.5
 #COPY chatglm3-6b $HOME/
 COPY . $HOME/Langchain-Chatchat/
 
