@@ -111,17 +111,23 @@ jobs:
       - name: Show runner disk
         run: df -hT
 
-      - name: Build chatchat and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          dockerfile: Dockerfile
-          push: true
-#          platforms: linux/amd64,linux/arm64
-          platforms: linux/amd64
-          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+#      - name: Build chatchat and push
+#        uses: docker/build-push-action@v3
+#        with:
+#          context: .
+#          dockerfile: Dockerfile
+#          push: true
+##          platforms: linux/amd64,linux/arm64
+#          platforms: linux/amd64
+#          tags: ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
+
+      - name: Docker build
+        run: docker build -t ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
 
       - name: Show runner disk
         run: |
-          df -hT
           docker images
+          df -hT
+
+      - name: Docker push
+        run: docker push ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
