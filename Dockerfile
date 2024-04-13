@@ -22,6 +22,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 # Copy the application files
 COPY bge-large-zh-v1.5 $HOME/bge-large-zh-v1.5
 COPY chatglm3-6b $HOME/chatglm3-6b
+RUN rm -rf bge-large-zh-v1.5 chatglm3-6b
 COPY . $HOME/Langchain-Chatchat/
 
 RUN ls /chatchat
