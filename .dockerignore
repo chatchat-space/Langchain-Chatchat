@@ -1,4 +1,5 @@
 .idea
+# Langchain-Chatchat
 Dockerfile
 .dockerignore
 .gitignore
@@ -9,4 +10,7 @@ README_ja.md
 requirements_api.txt
 requirements_lite.txt
 requirements_webui.txt
+# bge-large-zh-v1.5
+bge-large-zh-v1.5/README.md
+# chatglm3-6b
 chatglm3-6b

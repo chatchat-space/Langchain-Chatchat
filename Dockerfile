@@ -12,7 +12,7 @@ WORKDIR /
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     apt-get update -y && \
-    apt-get install -y --no-install-recommends python3.11 python3-pip curl libgl1 libglib2.0-0 && \
+    apt-get install -y --no-install-recommends python3.11 python3-pip curl libgl1 libglib2.0-0 jq && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/bin/python3 && \
@@ -21,24 +21,19 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 
 # Copy the application files
 COPY bge-large-zh-v1.5 $HOME/bge-large-zh-v1.5
-#COPY chatglm3-6b $HOME/
+COPY chatglm3-6b $HOME/chatglm3-6b
 COPY . $HOME/Langchain-Chatchat/
 
 RUN ls /chatchat
 RUN du -sh /chatchat/*
 RUN ls /chatchat/bge-large-zh-v1.5
 RUN du -sh /chatchat/bge-large-zh-v1.5/*
-#RUN ls $HOME/chatglm3-6b
+RUN ls $HOME/chatglm3-6b
 RUN du -sh /chatchat/Langchain-Chatchat/*
 
-# Install dependencies from requirements.txt
-#RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
-#    python3 $HOME/Langchain-Chatchat/init_database.py --recreate-vs && \
-#    python3 $HOME/Langchain-Chatchat/copy_config_example.py && \
-#    sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' $HOME/Langchain-Chatchat/model_config.py
 WORKDIR $HOME/Langchain-Chatchat
 
-#RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.org/simple
+# Install dependencies from requirements.txt
 RUN pip3 install -r requirements.txt -i https://pypi.org/simple && \
     python3 copy_config_example.py && \
     sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' configs/model_config.py && \
