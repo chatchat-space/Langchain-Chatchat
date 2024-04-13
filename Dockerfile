@@ -24,9 +24,12 @@ COPY bge-large-zh-v1.5 $HOME/
 #COPY chatglm3-6b $HOME/
 COPY . $HOME/Langchain-Chatchat/
 
-RUN du -sh $HOME/bge-large-zh-v1.5/*
+RUN ls /chatchat
+RUN du -sh /chatchat/*
+RUN ls /chatchat/bge-large-zh-v1.5
+RUN du -sh /chatchat/bge-large-zh-v1.5/*
 #RUN ls $HOME/chatglm3-6b
-RUN du -sh $HOME/Langchain-Chatchat/*
+RUN du -sh /chatchat/Langchain-Chatchat/*
 
 # Install dependencies from requirements.txt
 #RUN pip3 install -r $HOME/Langchain-Chatchat/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
