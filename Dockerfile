@@ -20,11 +20,11 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     mkdir -p $HOME/Langchain-Chatchat
 
 # Copy the application files
-#COPY bge-large-zh-v1.5 $HOME/
+COPY bge-large-zh-v1.5 $HOME/
 #COPY chatglm3-6b $HOME/
 COPY . $HOME/Langchain-Chatchat/
 
-#RUN ls $HOME/bge-large-zh-v1.5
+RUN ls $HOME/bge-large-zh-v1.5
 #RUN ls $HOME/chatglm3-6b
 RUN ls $HOME/Langchain-Chatchat/
 
@@ -36,9 +36,8 @@ RUN ls $HOME/Langchain-Chatchat/
 WORKDIR $HOME/Langchain-Chatchat
 
 #RUN pip3 install torch==2.1.2 torchvision==0.16.2 -i https://pypi.org/simple
-RUN pip3 install -r requirements.txt -i https://pypi.org/simple
-
-RUN python3 copy_config_example.py && \
+RUN pip3 install -r requirements.txt -i https://pypi.org/simple && \
+    python3 copy_config_example.py && \
     sed -i 's|MODEL_ROOT_PATH = ""|MODEL_ROOT_PATH = "/chatchat"|' configs/model_config.py && \
     python3 init_database.py --recreate-vs
 
