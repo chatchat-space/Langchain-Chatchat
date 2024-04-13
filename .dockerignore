@@ -9,5 +9,4 @@ README_ja.md
 requirements_api.txt
 requirements_lite.txt
 requirements_webui.txt
-bge-large-zh-v1.5
 chatglm3-6b
