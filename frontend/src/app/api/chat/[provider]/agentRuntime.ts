@@ -276,8 +276,8 @@ class AgentRuntime {
   }
 
   private static initChatChat(payload: JWTPayload) {
-    const { KNOWLEDGE_PROXY_URL } = getServerConfig();
-    const baseURL = payload?.endpoint || KNOWLEDGE_PROXY_URL;
+    const { CHATCHAT_PROXY_URL } = getServerConfig();
+    const baseURL = payload?.endpoint || CHATCHAT_PROXY_URL;
 
     return new LobeChatChatAI({ baseURL });
   }
