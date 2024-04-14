@@ -82,16 +82,20 @@ jobs:
         run: |
           git lfs install
           sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
-          du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5/*
-          sudo mkdir -p $GITHUB_WORKSPACE/chatglm3-6b
-          cd $GITHUB_WORKSPACE/chatglm3-6b
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00004-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00005-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors &> /dev/null
-          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
+          sudo git clone https://huggingface.co/THUDM/chatglm3-6b
+          sudo rm -f $GITHUB_WORKSPACE/chatglm3-6b/pytorch_model-*.bin
+          du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5/*       
+          du -sh $GITHUB_WORKSPACE/chatglm3-6b/*
+
+      - name: Show runner disk
+        run: df -hT
+
+      - name: Docker build
+        run: docker build -t uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
+
+      - name: Show images size
+        run: |
+          docker images
 
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v2
@@ -99,30 +103,6 @@ jobs:
 #          username: ${{ env.DOCKERHUB_USERNAME }}
 ##          password: ${{ secrets.DOCKERHUB_TOKEN }}
 #          password: junxiezy@930117
-
-
-
-      - name: Show runner disk
-        run: df -hT
-
-#      - name: Build chatchat and push
-#        uses: docker/build-push-action@v3
-#        with:
-#          context: .
-#          dockerfile: Dockerfile
-#          push: true
-##          platforms: linux/amd64,linux/arm64
-#          platforms: linux/amd64
-#          tags: uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
-
-      - name: Docker build
-        run: docker build -t uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
-
-      - name: Show runner disk
-        run: |
-          docker images
-          df -hT
-
       - name: Login to Tencent Cloud Container Registry
         uses: docker/login-action@v2
         with:
