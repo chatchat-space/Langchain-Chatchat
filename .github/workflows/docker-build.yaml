@@ -5,6 +5,7 @@ on:
       - "feat/gitAction"
 env:
   TZ: Asia/Shanghai
+  Release: v0.2.10
 jobs:
   docker-build:
     runs-on: ubuntu-latest
@@ -12,6 +13,12 @@ jobs:
       deviceName: ${{ env.DEVICE_NAME }}
       fileDate: ${{ env.FILE_DATE }}
     steps:
+      - name: Get latest release
+        id: get_version
+        run: |
+          VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
+          echo $GITHUB_ENV
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
         with:
@@ -80,12 +87,10 @@ jobs:
             repo: context.repo.repo
             });
             return response.data.tag_name;
+
       - name: Set image tag
         id: imageTag
-        run: echo "::set-output name=image_tag::${{ steps.release.outputs.result }}-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
-#      - name: Set outputs
-#        id: vars
-#        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
+        run: echo "::set-output name=image_tag::$Release-$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
