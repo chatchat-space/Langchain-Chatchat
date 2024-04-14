@@ -125,7 +125,9 @@ jobs:
         run: df -hT
 
       - name: Docker build
-        run: docker build -t uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
+        run: |
+          docker build -t uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
+          docker tag uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
 
       - name: Show images size
         run: |
@@ -147,4 +149,6 @@ jobs:
           password: junxiezy@930117
 
       - name: Docker push
-        run: docker push uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker push uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
+          docker push ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
