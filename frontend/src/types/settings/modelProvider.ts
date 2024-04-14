@@ -70,6 +70,12 @@ export interface MistralConfig {
   enabled: boolean;
 }
 
+export interface ChatChatConfig {
+  customModelName?: string;
+  enabled?: boolean;
+  endpoint?: string;
+}
+
 export interface GlobalLLMConfig {
   anthropic: AnthropicConfig;
   azure: AzureOpenAIConfig;
@@ -81,6 +87,7 @@ export interface GlobalLLMConfig {
   openAI: OpenAIConfig;
   perplexity: PerplexityConfig;
   zhipu: ZhiPuConfig;
+  chatchat: ChatChatConfig;
 }
 
 export type GlobalLLMProviderKey = keyof GlobalLLMConfig;

@@ -46,6 +46,9 @@ declare global {
 
       // Ollama Provider;
       OLLAMA_PROXY_URL?: string;
+
+      // ChatChat
+      CHATCHAT_PROXY_URL?: string;
     }
   }
 }
@@ -114,5 +117,7 @@ export const getProviderConfig = () => {
 
     ENABLE_OLLAMA: !!process.env.OLLAMA_PROXY_URL,
     OLLAMA_PROXY_URL: process.env.OLLAMA_PROXY_URL || '',
+
+    CHATCHAT_PROXY_URL: process.env.CHATCHAT_PROXY_URL || '',
   };
 };
