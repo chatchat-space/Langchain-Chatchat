@@ -85,6 +85,7 @@ jobs:
           sudo git clone https://huggingface.co/THUDM/chatglm3-6b
           sudo rm -f $GITHUB_WORKSPACE/chatglm3-6b/pytorch_model-*.bin
           du -sh $GITHUB_WORKSPACE
+          du -sh $GITHUB_WORKSPACE/*
           du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5/*       
           du -sh $GITHUB_WORKSPACE/chatglm3-6b/*
 
