@@ -35,9 +35,6 @@ const Tools = memo(() => {
   const list = useToolStore(pluginSelectors.installedPluginMetaList, isEqual);
   const builtinList = useToolStore(builtinToolSelectors.metaList, isEqual);
 
-  console.log('builtinList--', builtinList)
-  console.log('list--', list)
-
   const enablePluginCount = useSessionStore(
     (s) =>
       agentSelectors
