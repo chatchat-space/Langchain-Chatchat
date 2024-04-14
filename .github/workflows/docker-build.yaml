@@ -75,11 +75,11 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo
+            const response = await github.rest.repos.getLatestRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo
             });
-            return release.tag_name;
+            return response.data.tag_name;
       - name: Set image tag
         id: imageTag
         run: echo "::set-output name=image_tag::${{ steps.release.outputs.result }}-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
