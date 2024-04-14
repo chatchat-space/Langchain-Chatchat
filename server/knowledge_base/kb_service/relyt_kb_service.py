@@ -19,7 +19,7 @@ class RelytKBService(KBService):
         self.relyt = Relyt(
             embedding_function=embedding_func,
             embedding_dimension=len(sample_embedding),
-            connection_string=kbs_config.get("pgrs").get("connection_uri"),
+            connection_string=kbs_config.get("relyt").get("connection_uri"),
             collection_name=self.kb_name,
         )
 
