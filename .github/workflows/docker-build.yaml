@@ -4,7 +4,6 @@ on:
     branches:
       - "feat/gitAction"
 env:
-  DOCKERHUB_USERNAME: 100018410921
   TZ: Asia/Shanghai
 jobs:
   docker-build:
@@ -69,11 +68,24 @@ jobs:
       - name: Show runner disk
         run: df -hT
 
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Get release version
+        id: release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const releases = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return release.tag_name;
+      - name: Set image tag
+        id: imageTag
+        run: echo "::set-output name=image_tag::${{ steps.release.outputs.result }}-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+#      - name: Set outputs
+#        id: vars
+#        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -126,38 +138,21 @@ jobs:
 
       - name: Docker build
         run: |
-          docker build -t uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} -f Dockerfile .
-          docker tag uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }} ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
-
+          docker build -t uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }} -f Dockerfile .
       - name: Show images size
         run: |
           docker images
-
+      - name: Login to Tencent CCR
+        uses: docker/login-action@v2
+        with:
+          registry: uswccr.ccs.tencentyun.com
+          username: ${{ secrets.CCR_REGISTRY_USERNAME }}
+          password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
+      - name: Docker push
+        run: docker push uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v2
 #        with:
 #          username: ${{ env.DOCKERHUB_USERNAME }}
 ##          password: ${{ secrets.DOCKERHUB_TOKEN }}
 #          password: junxiezy@930117
-      - name: Login to Tencent Cloud Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: uswccr.ccs.tencentyun.com
-          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
-          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: junxiezy@930117
-
-      - name: Docker push
-        run: docker push uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
-
-      - name: Login to Tencent Cloud Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ccr.ccs.tencentyun.com
-          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
-          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: junxiezy@930117
-      - name: Docker push CCR
-        run: docker push ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
