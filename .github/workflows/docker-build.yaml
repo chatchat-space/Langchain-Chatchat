@@ -5,7 +5,6 @@ on:
       - "feat/gitAction"
 env:
   TZ: Asia/Shanghai
-  Release: v0.2.10
 jobs:
   docker-build:
     runs-on: ubuntu-latest
@@ -18,7 +17,10 @@ jobs:
         run: |
           VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
           echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
-          echo $GITHUB_ENV
+          echo $RELEASE_VERSION
+          sleep 3600
+
+
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
         with:
@@ -77,20 +79,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Get release version
-        id: release
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const response = await github.rest.repos.getLatestRelease({
-            owner: context.repo.owner,
-            repo: context.repo.repo
-            });
-            return response.data.tag_name;
-
       - name: Set image tag
         id: imageTag
-        run: echo "::set-output name=image_tag::$Release-$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
+        run: echo "::set-output name=image_tag::$RELEASE_VERSION-$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
