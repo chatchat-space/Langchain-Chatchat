@@ -2,15 +2,16 @@ name: docker-build
 on:
   push:
     branches:
+      - master
       - "feat/gitAction"
+  pull_request:
+    branches:
+      - master
 env:
   TZ: Asia/Shanghai
 jobs:
   docker-build:
     runs-on: ubuntu-latest
-    outputs:
-      deviceName: ${{ env.DEVICE_NAME }}
-      fileDate: ${{ env.FILE_DATE }}
     steps:
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
