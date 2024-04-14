@@ -18,9 +18,6 @@ jobs:
           VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
           echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
           echo $RELEASE_VERSION
-          sleep 3600
-
-
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
         with:
