@@ -80,10 +80,40 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Clone model
         run: |
-          git lfs install
-          sudo git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
-          sudo git clone https://huggingface.co/THUDM/chatglm3-6b
-          sudo rm -f $GITHUB_WORKSPACE/chatglm3-6b/pytorch_model-*.bin $GITHUB_WORKSPACE/chatglm3-6b/README.md $GITHUB_WORKSPACE/bge-large-zh-v1.5/README.md 
+          sudo mkdir -p $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          sudo cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/tree/main/1_Pooling &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/.gitattributes &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/config_sentence_transformers.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/modules.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/pytorch_model.bin &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/sentence_bert_config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/special_tokens_map.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/tokenizer.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/tokenizer_config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/vocab.txt &> /dev/null
+          
+          sudo mkdir -p $GITHUB_WORKSPACE/chatglm3-6b
+          sudo cd $GITHUB_WORKSPACE/chatglm3-6b
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/config.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/configuration_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00001-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00002-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00003-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00004-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00005-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00006-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00007-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model.safetensors.index.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/modeling_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/pytorch_model.bin.index.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/quantization.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/special_tokens_map.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/tokenization_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/tokenizer.model &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/tokenizer_config.json &> /dev/null
+          
           du -sh $GITHUB_WORKSPACE
           du -sh $GITHUB_WORKSPACE/*
           du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5/*       
