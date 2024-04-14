@@ -149,8 +149,15 @@ jobs:
           password: junxiezy@930117
 
       - name: Docker push
-        run: |
-          docker push uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
+        run: docker push uswccr.ccs.tencentyun.com/tcr-cloud/chatchat:${{ steps.vars.outputs.sha_short }}
 
+      - name: Login to Tencent Cloud Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ccr.ccs.tencentyun.com
+          # username: ${{ secrets.TENCENT_REGISTRY_USERNAME }}
+          # password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: junxiezy@930117
       - name: Docker push CCR
         run: docker push ccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.vars.outputs.sha_short }}
