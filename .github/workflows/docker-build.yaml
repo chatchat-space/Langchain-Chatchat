@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - "feat/gitAction"
   pull_request:
     branches:
       - master
@@ -39,8 +38,6 @@ jobs:
         run: |
           sudo apt-get remove -y '^dotnet-.*' '^llvm-.*' 'php.*' azure-cli google-chrome-stable firefox powershell mono-devel
           sudo apt-get autoremove --purge -y
-          sudo apt-get clean
-          rm -rf /opt/hostedtoolcache
           sudo find /var/log -name "*.gz" -type f -delete
           sudo rm -rf /var/cache/apt/archives
           sudo rm -rf /tmp/*
@@ -54,6 +51,8 @@ jobs:
           sudo -E apt-get -qq install libfuse-dev $(curl -fsSL git.io/depends-ubuntu-2204)
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
+          sudo apt-get clean
+          rm -rf /opt/hostedtoolcache
           sudo timedatectl set-timezone "$TZ"
       - name: Free Up Disk Space
         uses: easimon/maximize-build-space@master
@@ -65,8 +64,6 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-      - name: Show Runner Disk
-        run: df -hT
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Get Latest Release
