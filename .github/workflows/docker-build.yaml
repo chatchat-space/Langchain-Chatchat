@@ -81,7 +81,7 @@ jobs:
       - name: Clone model
         run: |
           sudo mkdir -p $GITHUB_WORKSPACE/bge-large-zh-v1.5
-          sudo cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/tree/main/1_Pooling &> /dev/null
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/.gitattributes &> /dev/null
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/config.json &> /dev/null
@@ -95,7 +95,7 @@ jobs:
           sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/vocab.txt &> /dev/null
           
           sudo mkdir -p $GITHUB_WORKSPACE/chatglm3-6b
-          sudo cd $GITHUB_WORKSPACE/chatglm3-6b
+          cd $GITHUB_WORKSPACE/chatglm3-6b
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/config.json &> /dev/null
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/configuration_chatglm.py &> /dev/null
           sudo wget https://huggingface.co/THUDM/chatglm3-6b/blob/main/model-00001-of-00007.safetensors &> /dev/null
