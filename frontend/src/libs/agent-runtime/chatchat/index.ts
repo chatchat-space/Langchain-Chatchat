@@ -27,7 +27,6 @@ export class LobeChatChatAI implements LobeRuntimeAI {
 
   async chat(payload: ChatStreamPayload, options?: ChatCompetitionOptions) {
 
-    console.log('payload---', payload)
     try {
       const response = await this.client.chat.completions.create(
         payload as unknown as (OpenAI.ChatCompletionCreateParamsStreaming | OpenAI.ChatCompletionCreateParamsNonStreaming),

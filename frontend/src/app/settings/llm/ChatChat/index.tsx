@@ -18,10 +18,6 @@ const ChatChatProvider = memo(() => {
   const { t } = useTranslation('setting');
   const theme = useTheme();
 
-  console.log('----ttt---1-', t('llm.ChatChat.endpoint.title'))
-  console.log('----ttt---2-', t('llm.Ollama.endpoint.title'))
-  console.log('----ttt---3-', t)
-
   return (
     <ProviderConfig
       configItems={[
