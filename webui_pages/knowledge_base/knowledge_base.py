@@ -108,6 +108,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
 
             if is_lite:
                 embed_models = list_online_embed_models()
+                if EMBEDDING_MODEL not in embed_models:
+                    embed_models.append(EMBEDDING_MODEL)
             else:
                 embed_models = list_embed_models() + list_online_embed_models()
 
