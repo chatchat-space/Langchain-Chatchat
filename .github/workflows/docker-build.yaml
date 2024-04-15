@@ -125,10 +125,14 @@ jobs:
           docker build -t uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }} -f Dockerfile .
       - name: Show Images Size
         run: docker images
-      - name: show CCR info
+      - shell: bash
+        env:
+          CCRUSER: ${{ secrets.CCR_REGISTRY_USERNAME }}
+          CCRPASS: ${{ secrets.CCR_REGISTRY_PASSWORD }}
         run: |
-          echo "user:"${{ secrets.CCR_REGISTRY_USERNAME }}
-          echo "pass:"${{ secrets.CCR_REGISTRY_PASSWORD }}
+          echo "user:$CCRUSER"
+          echo "pass:$CCRPASS"
+
       - name: Login To Tencent CCR
         uses: docker/login-action@v2
         with:
