@@ -1,16 +1,13 @@
 name: docker-build
 on:
-  push:
-    branches:
-      - master
   pull_request:
-    branches:
-      - master
+    types: [ closed ]
 env:
   TZ: Asia/Shanghai
 jobs:
   docker-build:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     steps:
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
@@ -125,14 +122,6 @@ jobs:
           docker build -t uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }} -f Dockerfile .
       - name: Show Images Size
         run: docker images
-      - shell: bash
-        env:
-          CCRUSER: ${{ secrets.CCR_REGISTRY_USERNAME }}
-          CCRPASS: ${{ secrets.CCR_REGISTRY_PASSWORD }}
-        run: |
-          echo "user:$CCRUSER"
-          echo "pass:$CCRPASS"
-
       - name: Login To Tencent CCR
         uses: docker/login-action@v2
         with:
