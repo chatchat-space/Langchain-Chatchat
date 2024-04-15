@@ -15,7 +15,7 @@ from model_providers.core.model_runtime.model_providers.__base.text_embedding_mo
 from model_providers.core.model_runtime.model_providers.zhipuai._common import (
     _CommonZhipuaiAI,
 )
-from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk._client import (
+from zhipuai import (
     ZhipuAI,
 )
 

@@ -24,13 +24,13 @@ from model_providers.core.model_runtime.model_providers.__base.large_language_mo
 from model_providers.core.model_runtime.model_providers.zhipuai._common import (
     _CommonZhipuaiAI,
 )
-from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk._client import (
+from zhipuai import (
     ZhipuAI,
 )
-from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk.types.chat.chat_completion import (
+from zhipuai.types.chat.chat_completion import (
     Completion,
 )
-from model_providers.core.model_runtime.model_providers.zhipuai.zhipuai_sdk.types.chat.chat_completion_chunk import (
+from zhipuai.types.chat.chat_completion_chunk import (
     ChatCompletionChunk,
 )
 from model_providers.core.model_runtime.utils import helper
