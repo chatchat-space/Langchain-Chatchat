@@ -1,7 +1,6 @@
 import json
 import logging
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Dict, Generator, List, Optional, Type, Union
 
 import google.api_core.exceptions as exceptions
 import google.generativeai as genai
@@ -66,10 +65,10 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -102,8 +101,8 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -118,7 +117,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
 
         return self._get_num_tokens_by_gpt2(prompt)
 
-    def _convert_messages_to_prompt(self, messages: list[PromptMessage]) -> str:
+    def _convert_messages_to_prompt(self, messages: List[PromptMessage]) -> str:
         """
         Format a list of messages into a full prompt for the Google model
 
@@ -155,10 +154,10 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -249,7 +248,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: GenerateContentResponse,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -306,7 +305,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: GenerateContentResponse,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -416,7 +415,7 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         return glm_content
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the ermd = genai.GenerativeModel(model)ror type thrown to the caller
@@ -472,8 +471,6 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         """
         tool_call = None
         if response_function_call:
-            from google.protobuf import json_format
-
             if isinstance(response_function_call, FunctionCall):
                 map_composite_dict = dict(response_function_call.args.items())
                 function = AssistantPromptMessage.ToolCall.ToolCallFunction(

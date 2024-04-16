@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import requests
@@ -35,7 +35,7 @@ class HuggingfaceHubTextEmbeddingModel(_CommonHuggingfaceHub, TextEmbeddingModel
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         client = InferenceClient(token=credentials["huggingfacehub_api_token"])
@@ -62,7 +62,7 @@ class HuggingfaceHubTextEmbeddingModel(_CommonHuggingfaceHub, TextEmbeddingModel
             embeddings=self._mean_pooling(embeddings), usage=usage, model=model
         )
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         num_tokens = 0
         for text in texts:
             num_tokens += self._get_num_tokens_by_gpt2(text)
@@ -132,12 +132,12 @@ class HuggingfaceHubTextEmbeddingModel(_CommonHuggingfaceHub, TextEmbeddingModel
         return entity
 
     # https://huggingface.co/docs/api-inference/detailed_parameters#feature-extraction-task
-    # Returned values are a list of floats, or a list[list[floats]]
+    # Returned values are a list of floats, or aList[List[floats]]
     # (depending on if you sent a string or a list of string,
     # and if the automatic reduction, usually mean_pooling for instance was applied for you or not.
     # This should be explained on the model's README.)
     @staticmethod
-    def _mean_pooling(embeddings: list) -> list[float]:
+    def _mean_pooling(embeddings: list) -> List[float]:
         # If automatic reduction by giving model, no need to mean_pooling.
         # For example one: List[List[float]]
         if not isinstance(embeddings[0][0], list):

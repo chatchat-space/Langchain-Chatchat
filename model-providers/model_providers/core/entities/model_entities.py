@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -31,7 +31,7 @@ class SimpleModelProviderEntity(BaseModel):
     label: I18nObject
     icon_small: Optional[I18nObject] = None
     icon_large: Optional[I18nObject] = None
-    supported_model_types: list[ModelType]
+    supported_model_types: List[ModelType]
 
     def __init__(self, provider_entity: ProviderEntity) -> None:
         """
@@ -66,7 +66,7 @@ class DefaultModelProviderEntity(BaseModel):
     label: I18nObject
     icon_small: Optional[I18nObject] = None
     icon_large: Optional[I18nObject] = None
-    supported_model_types: list[ModelType]
+    supported_model_types: List[ModelType]
 
 
 class DefaultModelEntity(BaseModel):

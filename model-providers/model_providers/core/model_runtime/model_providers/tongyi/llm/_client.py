@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms import Tongyi
@@ -8,7 +8,7 @@ from langchain.schema import Generation, LLMResult
 
 class EnhanceTongyi(Tongyi):
     @property
-    def _default_params(self) -> dict[str, Any]:
+    def _default_params(self) -> Dict[str, Any]:
         """Get the default parameters for calling OpenAI API."""
         normal_params = {"top_p": self.top_p, "api_key": self.dashscope_api_key}
 
@@ -16,13 +16,13 @@ class EnhanceTongyi(Tongyi):
 
     def _generate(
         self,
-        prompts: list[str],
-        stop: Optional[list[str]] = None,
+        prompts: List[str],
+        stop: Optional[List[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> LLMResult:
         generations = []
-        params: dict[str, Any] = {
+        params: Dict[str, Any] = {
             **{"model": self.model_name},
             **self._default_params,
             **kwargs,

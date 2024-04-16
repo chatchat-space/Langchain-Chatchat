@@ -1,7 +1,7 @@
 import json
 import time
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 from urllib.parse import urljoin
 
 import numpy as np
@@ -40,7 +40,7 @@ class OAICompatEmbeddingModel(_CommonOAI_API_Compat, TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -131,7 +131,7 @@ class OAICompatEmbeddingModel(_CommonOAI_API_Compat, TextEmbeddingModel):
             embeddings=batched_embeddings, usage=usage, model=model
         )
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Approximate number of tokens for given messages using GPT2 tokenizer
 

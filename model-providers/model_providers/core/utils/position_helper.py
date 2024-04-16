@@ -1,8 +1,6 @@
 import logging
 import os
-from collections import OrderedDict
-from collections.abc import Callable
-from typing import Any, AnyStr
+from typing import Any, AnyStr, Callable, Dict, List, OrderedDict
 
 import yaml
 
@@ -10,7 +8,7 @@ import yaml
 def get_position_map(
     folder_path: AnyStr,
     file_name: str = "_position.yaml",
-) -> dict[str, int]:
+) -> Dict[str, int]:
     """
     Get the mapping from name to index from a YAML file
     :param folder_path:
@@ -37,10 +35,10 @@ def get_position_map(
 
 
 def sort_by_position_map(
-    position_map: dict[str, int],
-    data: list[Any],
+    position_map: Dict[str, int],
+    data: List[Any],
     name_func: Callable[[Any], str],
-) -> list[Any]:
+) -> List[Any]:
     """
     Sort the objects by the position map.
     If the name of the object is not in the position map, it will be put at the end.
@@ -56,8 +54,8 @@ def sort_by_position_map(
 
 
 def sort_to_dict_by_position_map(
-    position_map: dict[str, int],
-    data: list[Any],
+    position_map: Dict[str, int],
+    data: List[Any],
     name_func: Callable[[Any], str],
 ) -> OrderedDict[str, Any]:
     """

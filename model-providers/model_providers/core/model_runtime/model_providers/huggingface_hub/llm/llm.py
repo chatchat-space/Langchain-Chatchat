@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Generator, List, Optional, Union
 
 from huggingface_hub import InferenceClient
 from huggingface_hub.hf_api import HfApi
@@ -44,10 +43,10 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -81,8 +80,8 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         prompt = self._convert_messages_to_prompt(prompt_messages)
         return self._get_num_tokens_by_gpt2(prompt)
@@ -161,7 +160,7 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
         return entity
 
     @staticmethod
-    def _get_customizable_model_parameter_rules() -> list[ParameterRule]:
+    def _get_customizable_model_parameter_rules() -> List[ParameterRule]:
         temperature_rule_dict = PARAMETER_RULE_TEMPLATE.get(
             DefaultParameterName.TEMPERATURE
         ).copy()
@@ -253,7 +252,7 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         response: Generator,
     ) -> Generator:
         index = -1
@@ -300,7 +299,7 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         response: any,
     ) -> LLMResult:
         if isinstance(response, str):
@@ -355,7 +354,7 @@ class HuggingfaceHubLargeLanguageModel(_CommonHuggingfaceHub, LargeLanguageModel
 
         return model_info.pipeline_tag
 
-    def _convert_messages_to_prompt(self, messages: list[PromptMessage]) -> str:
+    def _convert_messages_to_prompt(self, messages: List[PromptMessage]) -> str:
         messages = messages.copy()  # don't mutate the original list
 
         text = "".join(

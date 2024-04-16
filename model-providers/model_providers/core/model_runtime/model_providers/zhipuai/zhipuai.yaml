@@ -29,3 +29,12 @@ provider_credential_schema:
       placeholder:
         zh_Hans: 在此输入您的 APIKey
         en_US: Enter your APIKey
+    - variable: api_base
+      label:
+        zh_Hans: API Base
+        en_US: API Base
+      type: text-input
+      required: false
+      placeholder:
+        zh_Hans: 在此输入您的 API Base
+        en_US: Enter your API Base

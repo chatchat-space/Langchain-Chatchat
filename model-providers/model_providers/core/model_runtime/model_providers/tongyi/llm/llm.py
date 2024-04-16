@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Optional, Union
+from typing import Dict, List, Optional, Type, Union
 
 from dashscope import get_tokenizer
 from dashscope.api_entities.dashscope_response import DashScopeAPIResponse
@@ -50,10 +50,10 @@ class TongyiLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -79,14 +79,14 @@ class TongyiLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-        callbacks: list[Callback] = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+        callbacks: List[Callback] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         Wrapper for code block mode
         """
@@ -174,8 +174,8 @@ if you are not sure about the structure.
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -220,9 +220,9 @@ if you are not sure about the structure.
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -289,7 +289,7 @@ if you are not sure about the structure.
         model: str,
         credentials: dict,
         response: DashScopeAPIResponse,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -326,7 +326,7 @@ if you are not sure about the structure.
         model: str,
         credentials: dict,
         responses: Generator,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -412,7 +412,7 @@ if you are not sure about the structure.
 
         return message_text
 
-    def _convert_messages_to_prompt(self, messages: list[PromptMessage]) -> str:
+    def _convert_messages_to_prompt(self, messages: List[PromptMessage]) -> str:
         """
         Format a list of messages into a full prompt for the Anthropic model
 
@@ -429,8 +429,8 @@ if you are not sure about the structure.
         return text.rstrip()
 
     def _convert_prompt_messages_to_tongyi_messages(
-        self, prompt_messages: list[PromptMessage]
-    ) -> list[dict]:
+        self, prompt_messages: List[PromptMessage]
+    ) -> List[dict]:
         """
         Convert prompt messages to tongyi messages
 
@@ -466,7 +466,7 @@ if you are not sure about the structure.
         return tongyi_messages
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

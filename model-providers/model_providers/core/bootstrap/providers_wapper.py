@@ -112,7 +112,7 @@ class ProvidersWrapper:
             provider_models[model.provider.provider].append(model)
 
         # convert to ProviderWithModelsResponse list
-        providers_with_models: list[ProviderWithModelsResponse] = []
+        providers_with_models: List[ProviderWithModelsResponse] = []
         for provider, models in provider_models.items():
             if not models:
                 continue

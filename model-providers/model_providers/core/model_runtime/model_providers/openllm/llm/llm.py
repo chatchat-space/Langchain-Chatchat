@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from typing import Dict, Generator, List, Type, Union
 
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
 from model_providers.core.model_runtime.entities.llm_entities import (
@@ -54,13 +54,13 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         return self._generate(
             model,
             credentials,
@@ -105,13 +105,13 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         return self._num_tokens_from_messages(prompt_messages, tools)
 
     def _num_tokens_from_messages(
-        self, messages: list[PromptMessage], tools: list[PromptMessageTool]
+        self, messages: List[PromptMessage], tools: List[PromptMessageTool]
     ) -> int:
         """
         Calculate num tokens for OpenLLM model
@@ -124,13 +124,13 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         client = OpenLLMGenerate()
         response = client.generate(
             model_name=model,
@@ -183,7 +183,7 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: OpenLLMGenerateMessage,
     ) -> LLMResult:
@@ -206,7 +206,7 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Generator[OpenLLMGenerateMessage, None, None],
     ) -> Generator[LLMResultChunk, None, None]:
@@ -249,7 +249,7 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         """
         used to define customizable model schema
         """
@@ -298,7 +298,7 @@ class OpenLLMLargeLanguageModel(LargeLanguageModel):
         return entity
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

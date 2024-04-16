@@ -1,3 +1,5 @@
+from typing import Dict, List, Type
+
 import openai
 from httpx import Timeout
 
@@ -29,7 +31,7 @@ class _CommonAzureOpenAI:
         return credentials_kwargs
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         return {
             InvokeConnectionError: [openai.APIConnectionError, openai.APITimeoutError],
             InvokeServerUnavailableError: [openai.InternalServerError],

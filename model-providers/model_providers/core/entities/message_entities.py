@@ -47,12 +47,12 @@ class ImagePromptMessageFile(PromptMessageFile):
 
 
 class LCHumanMessageWithFiles(HumanMessage):
-    # content: Union[str, list[Union[str, Dict]]]
+    # content: Union[str,List[Union[str, Dict]]]
     content: str
-    files: list[PromptMessageFile]
+    files: List[PromptMessageFile]
 
 
-def lc_messages_to_prompt_messages(messages: list[BaseMessage]) -> list[PromptMessage]:
+def lc_messages_to_prompt_messages(messages: List[BaseMessage]) -> List[PromptMessage]:
     prompt_messages = []
     for message in messages:
         if isinstance(message, HumanMessage):
@@ -109,8 +109,8 @@ def lc_messages_to_prompt_messages(messages: list[BaseMessage]) -> list[PromptMe
 
 
 def prompt_messages_to_lc_messages(
-    prompt_messages: list[PromptMessage],
-) -> list[BaseMessage]:
+    prompt_messages: List[PromptMessage],
+) -> List[BaseMessage]:
     messages = []
     for prompt_message in prompt_messages:
         if isinstance(prompt_message, UserPromptMessage):

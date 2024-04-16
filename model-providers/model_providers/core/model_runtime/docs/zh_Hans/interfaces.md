@@ -80,7 +80,7 @@ class XinferenceProvider(Provider):
 
   ```python
   @property
-  def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+  def _invoke_error_mapping(self) -> Dict[type[InvokeError],List[type[Exception]]]:
       """
       Map model invoke error to unified error
       The key is the error type thrown to the caller
@@ -95,7 +95,7 @@ class XinferenceProvider(Provider):
   
     ```python
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[type[InvokeError],List[type[Exception]]]:
         return {
             InvokeConnectionError: [
               InvokeConnectionError
@@ -127,8 +127,8 @@ class XinferenceProvider(Provider):
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              prompt_messages: list[PromptMessage], model_parameters: dict,
-              tools: Optional[list[PromptMessageTool]] = None, stop: Optional[list[str]] = None,
+              prompt_messages:List[PromptMessage], model_parameters: dict,
+              tools: Optional[List[PromptMessageTool]] = None, stop: Optional[List[str]] = None,
               stream: bool = True, user: Optional[str] = None) \
           -> Union[LLMResult, Generator]:
       """
@@ -189,8 +189,8 @@ class XinferenceProvider(Provider):
   若模型未提供预计算 tokens 接口，可直接返回 0。
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
-                     tools: Optional[list[PromptMessageTool]] = None) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, prompt_messages:List[PromptMessage],
+                     tools: Optional[List[PromptMessageTool]] = None) -> int:
       """
       Get number of tokens for given prompt messages
 
@@ -232,7 +232,7 @@ class XinferenceProvider(Provider):
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              texts: list[str], user: Optional[str] = None) \
+              texts:List[str], user: Optional[str] = None) \
           -> TextEmbeddingResult:
       """
       Invoke large language model
@@ -266,7 +266,7 @@ class XinferenceProvider(Provider):
 - 预计算 tokens
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, texts:List[str]) -> int:
       """
       Get number of tokens for given prompt messages
 
@@ -289,7 +289,7 @@ class XinferenceProvider(Provider):
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              query: str, docs: list[str], score_threshold: Optional[float] = None, top_n: Optional[int] = None,
+              query: str, docs:List[str], score_threshold: Optional[float] = None, top_n: Optional[int] = None,
               user: Optional[str] = None) \
           -> RerankResult:
       """
@@ -538,7 +538,7 @@ class PromptMessage(ABC, BaseModel):
     Model class for prompt message.
     """
     role: PromptMessageRole  # 消息角色
-    content: Optional[str | list[PromptMessageContent]] = None  # 支持两种类型，字符串和内容列表，内容列表是为了满足多模态的需要，可详见 PromptMessageContent 说明。
+    content: Optional[str |List[PromptMessageContent]] = None  # 支持两种类型，字符串和内容列表，内容列表是为了满足多模态的需要，可详见 PromptMessageContent 说明。
     name: Optional[str] = None  # 名称，可选。
 ```
 
@@ -579,7 +579,7 @@ class AssistantPromptMessage(PromptMessage):
         function: ToolCallFunction  # 工具调用信息
 
     role: PromptMessageRole = PromptMessageRole.ASSISTANT
-    tool_calls: list[ToolCall] = []  # 模型回复的工具调用结果（仅当传入 tools，并且模型认为需要调用工具时返回）
+    tool_calls:List[ToolCall] = []  # 模型回复的工具调用结果（仅当传入 tools，并且模型认为需要调用工具时返回）
 ```
 
 其中 `tool_calls` 为调用模型传入 `tools` 后，由模型返回的 `tool call` 列表。
@@ -633,7 +633,7 @@ class LLMResult(BaseModel):
     Model class for llm result.
     """
     model: str  # 实际使用模型
-    prompt_messages: list[PromptMessage]  # prompt 消息列表
+    prompt_messages:List[PromptMessage]  # prompt 消息列表
     message: AssistantPromptMessage  # 回复消息
     usage: LLMUsage  # 使用的 tokens 及费用信息
     system_fingerprint: Optional[str] = None  # 请求指纹，可参考 OpenAI 该参数定义
@@ -664,7 +664,7 @@ class LLMResultChunk(BaseModel):
     Model class for llm result chunk.
     """
     model: str  # 实际使用模型
-    prompt_messages: list[PromptMessage]  # prompt 消息列表
+    prompt_messages:List[PromptMessage]  # prompt 消息列表
     system_fingerprint: Optional[str] = None  # 请求指纹，可参考 OpenAI 该参数定义
     delta: LLMResultChunkDelta  # 每个迭代存在变化的内容
 ```
@@ -700,7 +700,7 @@ class TextEmbeddingResult(BaseModel):
     Model class for text embedding result.
     """
     model: str  # 实际使用模型
-    embeddings: list[list[float]]  # embedding 向量列表，对应传入的 texts 列表
+    embeddings:List[List[float]]  # embedding 向量列表，对应传入的 texts 列表
     usage: EmbeddingUsage  # 使用信息
 ```
 
@@ -730,7 +730,7 @@ class RerankResult(BaseModel):
     Model class for rerank result.
     """
     model: str  # 实际使用模型
-    docs: list[RerankDocument]  # 重排后的分段列表	
+    docs:List[RerankDocument]  # 重排后的分段列表	
 ```
 
 ### RerankDocument

@@ -3,7 +3,7 @@ import logging
 import re
 from collections.abc import Generator
 from decimal import Decimal
-from typing import Optional, Union, cast
+from typing import Dict, List, Optional, Type, Union, cast
 from urllib.parse import urljoin
 
 import requests
@@ -63,10 +63,10 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -97,8 +97,8 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -159,9 +159,9 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -258,7 +258,7 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         credentials: dict,
         completion_type: LLMMode,
         response: requests.Response,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm completion response
@@ -310,7 +310,7 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         credentials: dict,
         completion_type: LLMMode,
         response: requests.Response,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm completion stream response
@@ -462,7 +462,7 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
 
         return message_dict
 
-    def _num_tokens_from_messages(self, messages: list[PromptMessage]) -> int:
+    def _num_tokens_from_messages(self, messages: List[PromptMessage]) -> int:
         """
         Calculate num tokens.
 
@@ -700,7 +700,7 @@ class OllamaLargeLanguageModel(LargeLanguageModel):
         return entity
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

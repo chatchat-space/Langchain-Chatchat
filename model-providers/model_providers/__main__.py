@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-providers",
         type=str,
-        default="D:\\project\\Langchain-Chatchat\\model-providers\\model_providers.yaml",
+        default="/mnt/d/project/Langchain-Chatchat/model-providers/model_providers.yaml",
         help="run model_providers servers",
         dest="model_providers",
     )
@@ -36,7 +36,8 @@ if __name__ == "__main__":
             .build()
         )
         boot.set_app_event(started_event=None)
-        boot.serve(logging_conf=logging_conf)
+        boot.logging_conf(logging_conf=logging_conf)
+        boot.run()
 
         async def pool_join_thread():
             await boot.join()

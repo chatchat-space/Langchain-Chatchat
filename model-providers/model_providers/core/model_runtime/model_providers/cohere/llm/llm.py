@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Generator
-from typing import Optional, Union, cast
+from typing import Dict, List, Optional, Type, Union, cast
 
 import cohere
 from cohere.responses import Chat, Generations
@@ -55,10 +55,10 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -103,8 +103,8 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -171,9 +171,9 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -216,7 +216,7 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Generations,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -256,7 +256,7 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: StreamingGenerations,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -317,9 +317,9 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -377,8 +377,8 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Chat,
-        prompt_messages: list[PromptMessage],
-        stop: Optional[list[str]] = None,
+        prompt_messages: List[PromptMessage],
+        stop: Optional[List[str]] = None,
     ) -> LLMResult:
         """
         Handle llm chat response
@@ -429,8 +429,8 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: StreamingChat,
-        prompt_messages: list[PromptMessage],
-        stop: Optional[list[str]] = None,
+        prompt_messages: List[PromptMessage],
+        stop: Optional[List[str]] = None,
     ) -> Generator:
         """
         Handle llm chat stream response
@@ -517,8 +517,8 @@ class CohereLargeLanguageModel(LargeLanguageModel):
                 index += 1
 
     def _convert_prompt_messages_to_message_and_chat_histories(
-        self, prompt_messages: list[PromptMessage]
-    ) -> tuple[str, list[dict]]:
+        self, prompt_messages: List[PromptMessage]
+    ) -> tuple[str, List[dict]]:
         """
         Convert prompt messages to message and chat histories
         :param prompt_messages: prompt messages
@@ -586,7 +586,7 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         return response.length
 
     def _num_tokens_from_messages(
-        self, model: str, credentials: dict, messages: list[PromptMessage]
+        self, model: str, credentials: dict, messages: List[PromptMessage]
     ) -> int:
         """Calculate num tokens Cohere model."""
         messages = [self._convert_prompt_message_to_dict(m) for m in messages]
@@ -650,7 +650,7 @@ class CohereLargeLanguageModel(LargeLanguageModel):
         return entity
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

@@ -160,8 +160,8 @@ In `llm.py`, create an Anthropic LLM class, which we name `AnthropicLargeLanguag
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              prompt_messages: list[PromptMessage], model_parameters: dict,
-              tools: Optional[list[PromptMessageTool]] = None, stop: Optional[list[str]] = None,
+              prompt_messages:List[PromptMessage], model_parameters: dict,
+              tools: Optional[List[PromptMessageTool]] = None, stop: Optional[List[str]] = None,
               stream: bool = True, user: Optional[str] = None) \
           -> Union[LLMResult, Generator]:
       """
@@ -184,8 +184,8 @@ In `llm.py`, create an Anthropic LLM class, which we name `AnthropicLargeLanguag
   If the model does not provide a pre-calculated tokens interface, you can directly return 0.
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
-                   tools: Optional[list[PromptMessageTool]] = None) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, prompt_messages:List[PromptMessage],
+                   tools: Optional[List[PromptMessageTool]] = None) -> int:
     """
     Get number of tokens for given prompt messages
 
@@ -226,7 +226,7 @@ In `llm.py`, create an Anthropic LLM class, which we name `AnthropicLargeLanguag
 
   ```python
   @property
-  def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+  def _invoke_error_mapping(self) -> Dict[type[InvokeError],List[type[Exception]]]:
       """
       Map model invoke error to unified error
       The key is the error type thrown to the caller

@@ -18,6 +18,8 @@ from typing import (
     cast,
 )
 
+import tiktoken
+import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette import EventSourceResponse
@@ -67,7 +69,12 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._port = port
         self._router = APIRouter()
         self._app = FastAPI()
+        self._logging_conf = None
+        self._server = None
         self._server_thread = None
+
+    def logging_conf(self,logging_conf: Optional[dict] = None):
+        self._logging_conf = logging_conf
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -79,7 +86,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         )
         return cls(host=host, port=port)
 
-    def serve(self, logging_conf: Optional[dict] = None):
+    def run(self):
         self._app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -125,18 +132,29 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._app.include_router(self._router)
 
         config = Config(
-            app=self._app, host=self._host, port=self._port, log_config=logging_conf
+            app=self._app, host=self._host, port=self._port, log_config=self._logging_conf
         )
-        server = Server(config)
+        self._server = Server(config)
 
         def run_server():
-            server.run()
+            self._server.shutdown_timeout = 2  # 设置为2秒
+
+            self._server.run()
 
         self._server_thread = threading.Thread(target=run_server)
         self._server_thread.start()
 
-    async def join(self):
-        await self._server_thread.join()
+    def destroy(self):
+
+        logger.info("Shutting down server")
+        self._server.should_exit = True  # 设置退出标志
+        self._server.shutdown()  # 停止服务器
+
+        self.join()
+
+    def join(self):
+        self._server_thread.join()
+
 
     def set_app_event(self, started_event: mp.Event = None):
         @self._app.on_event("startup")
@@ -159,7 +177,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
     async def list_models(self, provider: str, request: Request):
         logger.info(f"Received list_models request for provider: {provider}")
         # 返回ModelType所有的枚举
-        llm_models: list[AIModelEntity] = []
+        llm_models: List[AIModelEntity] = []
         for model_type in ModelType.__members__.values():
             try:
                 provider_model_bundle = (
@@ -176,7 +194,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 )
                 logger.error(e)
 
-        # models list[AIModelEntity]转换称List[ModelCard]
+        # modelsList[AIModelEntity]转换称List[ModelCard]
 
         models_list = [
             ModelCard(id=model.model, object=model.model_type.to_origin_model_type())
@@ -191,16 +209,41 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
         )
-        model_instance = self._provider_manager.get_model_instance(
-            provider=provider,
-            model_type=ModelType.TEXT_EMBEDDING,
-            model=embeddings_request.model,
-        )
-        texts = embeddings_request.input
-        if isinstance(texts, str):
-            texts = [texts]
-        response = model_instance.invoke_text_embedding(texts=texts, user="abc-123")
-        return await openai_embedding_text(response)
+        try:
+            model_instance = self._provider_manager.get_model_instance(
+                provider=provider,
+                model_type=ModelType.TEXT_EMBEDDING,
+                model=embeddings_request.model,
+            )
+
+            # 判断embeddings_request.input是否为list
+            input = ''
+            if isinstance(embeddings_request.input, list):
+                tokens = embeddings_request.input
+                try:
+                    encoding = tiktoken.encoding_for_model(embeddings_request.model)
+                except KeyError:
+                    logger.warning("Warning: model not found. Using cl100k_base encoding.")
+                    model = "cl100k_base"
+                    encoding = tiktoken.get_encoding(model)
+                for i, token in enumerate(tokens):
+                    text = encoding.decode(token)
+                    input += text
+
+            else:
+                input = embeddings_request.input
+
+            response = model_instance.invoke_text_embedding(texts=[input], user="abc-123")
+            return await openai_embedding_text(response)
+
+        except ValueError as e:
+            logger.error(f"Error while creating embeddings: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        except InvokeError as e:
+            logger.error(f"Error while creating embeddings: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
 
     async def create_chat_completion(
         self, provider: str, request: Request, chat_request: ChatCompletionRequest
@@ -254,9 +297,11 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             else:
                 return await openai_chat_completion(response)
         except ValueError as e:
+            logger.error(f"Error while creating chat completion: {str(e)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         except InvokeError as e:
+            logger.error(f"Error while creating chat completion: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             )
@@ -273,10 +318,11 @@ def run(
             cfg=cfg.get("run_openai_api", {})
         )
         api.set_app_event(started_event=started_event)
-        api.serve(logging_conf=logging_conf)
+        api.logging_conf(logging_conf=logging_conf)
+        api.run()
 
         async def pool_join_thread():
-            await api.join()
+            api.join()
 
         asyncio.run(pool_join_thread())
     except SystemExit:

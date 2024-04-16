@@ -11,11 +11,11 @@ class MinimaxMessage:
 
     role: str = Role.USER.value
     content: str
-    usage: dict[str, int] = None
+    usage: Dict[str, int] = None
     stop_reason: str = ""
-    function_call: dict[str, Any] = None
+    function_call: Dict[str, Any] = None
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         if self.function_call and self.role == MinimaxMessage.Role.ASSISTANT.value:
             return {
                 "sender_type": "BOT",

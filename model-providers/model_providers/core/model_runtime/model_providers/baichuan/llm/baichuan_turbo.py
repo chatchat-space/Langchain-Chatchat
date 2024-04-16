@@ -1,8 +1,7 @@
-from collections.abc import Generator
 from enum import Enum
 from hashlib import md5
 from json import dumps, loads
-from typing import Any, Union
+from typing import Any, Dict, Generator, List, Union
 
 from requests import post
 
@@ -25,10 +24,10 @@ class BaichuanMessage:
 
     role: str = Role.USER.value
     content: str
-    usage: dict[str, int] = None
+    usage: Dict[str, int] = None
     stop_reason: str = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "role": self.role,
             "content": self.content,
@@ -112,9 +111,9 @@ class BaichuanModel:
         self,
         model: str,
         stream: bool,
-        messages: list[BaichuanMessage],
-        parameters: dict[str, Any],
-    ) -> dict[str, Any]:
+        messages: List[BaichuanMessage],
+        parameters: Dict[str, Any],
+    ) -> Dict[str, Any]:
         if (
             model == "baichuan2-turbo"
             or model == "baichuan2-turbo-192k"
@@ -165,7 +164,7 @@ class BaichuanModel:
         else:
             raise BadRequestError(f"Unknown model: {model}")
 
-    def _build_headers(self, model: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _build_headers(self, model: str, data: Dict[str, Any]) -> Dict[str, Any]:
         if (
             model == "baichuan2-turbo"
             or model == "baichuan2-turbo-192k"
@@ -187,8 +186,8 @@ class BaichuanModel:
         self,
         model: str,
         stream: bool,
-        messages: list[BaichuanMessage],
-        parameters: dict[str, Any],
+        messages: List[BaichuanMessage],
+        parameters: Dict[str, Any],
         timeout: int,
     ) -> Union[Generator, BaichuanMessage]:
         if (

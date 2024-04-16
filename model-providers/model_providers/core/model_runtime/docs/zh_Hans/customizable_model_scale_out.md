@@ -126,8 +126,8 @@ provider_credential_schema:
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              prompt_messages: list[PromptMessage], model_parameters: dict,
-              tools: Optional[list[PromptMessageTool]] = None, stop: Optional[list[str]] = None,
+              prompt_messages:List[PromptMessage], model_parameters: dict,
+              tools: Optional[List[PromptMessageTool]] = None, stop: Optional[List[str]] = None,
               stream: bool = True, user: Optional[str] = None) \
           -> Union[LLMResult, Generator]:
       """
@@ -166,8 +166,8 @@ provider_credential_schema:
   若模型未提供预计算 tokens 接口，可直接返回 0。
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
-                   tools: Optional[list[PromptMessageTool]] = None) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, prompt_messages:List[PromptMessage],
+                   tools: Optional[List[PromptMessageTool]] = None) -> int:
     """
     Get number of tokens for given prompt messages
 
@@ -283,7 +283,7 @@ provider_credential_schema:
 
   ```python
   @property
-  def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+  def _invoke_error_mapping(self) -> Dict[type[InvokeError],List[type[Exception]]]:
       """
       Map model invoke error to unified error
       The key is the error type thrown to the caller

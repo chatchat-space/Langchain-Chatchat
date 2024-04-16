@@ -3,8 +3,7 @@ import os
 import re
 import time
 from abc import abstractmethod
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Generator, List, Optional, Union
 
 from model_providers.core.model_runtime.callbacks.base_callback import Callback
 from model_providers.core.model_runtime.callbacks.logging_callback import (
@@ -47,13 +46,13 @@ class LargeLanguageModel(AIModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: Optional[dict] = None,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
@@ -170,13 +169,13 @@ class LargeLanguageModel(AIModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Code block mode wrapper, ensure the response is a code block with output markdown quote
@@ -290,7 +289,7 @@ if you are not sure about the structure.
     def _code_block_mode_stream_processor(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         input_generator: Generator[LLMResultChunk, None, None],
     ) -> Generator[LLMResultChunk, None, None]:
         """
@@ -428,13 +427,13 @@ if you are not sure about the structure.
         model: str,
         result: Generator,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Generator:
         """
         Invoke result generator
@@ -498,10 +497,10 @@ if you are not sure about the structure.
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -525,8 +524,8 @@ if you are not sure about the structure.
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -539,7 +538,7 @@ if you are not sure about the structure.
         """
         raise NotImplementedError
 
-    def enforce_stop_tokens(self, text: str, stop: list[str]) -> str:
+    def enforce_stop_tokens(self, text: str, stop: List[str]) -> str:
         """Cut off the text as soon as any stop words occur."""
         return re.split("|".join(stop), text, maxsplit=1)[0]
 
@@ -575,7 +574,7 @@ if you are not sure about the structure.
             index += 1
             time.sleep(0.01)
 
-    def get_parameter_rules(self, model: str, credentials: dict) -> list[ParameterRule]:
+    def get_parameter_rules(self, model: str, credentials: dict) -> List[ParameterRule]:
         """
         Get parameter rules
 
@@ -658,13 +657,13 @@ if you are not sure about the structure.
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> None:
         """
         Trigger before invoke callbacks
@@ -706,13 +705,13 @@ if you are not sure about the structure.
         chunk: LLMResultChunk,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> None:
         """
         Trigger new chunk callbacks
@@ -755,13 +754,13 @@ if you are not sure about the structure.
         model: str,
         result: LLMResult,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> None:
         """
         Trigger after invoke callbacks
@@ -805,13 +804,13 @@ if you are not sure about the structure.
         model: str,
         ex: Exception,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> None:
         """
         Trigger invoke error callbacks
@@ -911,7 +910,7 @@ if you are not sure about the structure.
                         f"Model Parameter {parameter_name} should be less than or equal to {parameter_rule.max}."
                     )
             elif parameter_rule.type == ParameterType.FLOAT:
-                if not isinstance(parameter_value, float | int):
+                if not isinstance(parameter_value, (float, int)):
                     raise ValueError(
                         f"Model Parameter {parameter_name} should be float."
                     )

@@ -1,6 +1,6 @@
 import time
 from json import JSONDecodeError, dumps
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 from requests import post
 
@@ -34,7 +34,7 @@ class JinaTextEmbeddingModel(TextEmbeddingModel):
     """
 
     api_base: str = "https://api.jina.ai/v1/embeddings"
-    models: list[str] = [
+    models: List[str] = [
         "jina-embeddings-v2-base-en",
         "jina-embeddings-v2-small-en",
         "jina-embeddings-v2-base-zh",
@@ -45,7 +45,7 @@ class JinaTextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -113,7 +113,7 @@ class JinaTextEmbeddingModel(TextEmbeddingModel):
 
         return result
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -142,7 +142,7 @@ class JinaTextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError("Invalid api key")
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         return {
             InvokeConnectionError: [InvokeConnectionError],
             InvokeServerUnavailableError: [InvokeServerUnavailableError],

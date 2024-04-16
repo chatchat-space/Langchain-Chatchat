@@ -1,7 +1,7 @@
 import base64
 import copy
 import time
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import tiktoken
@@ -35,7 +35,7 @@ class AzureOpenAITextEmbeddingModel(_CommonAzureOpenAI, TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         base_model_name = credentials["base_model_name"]
@@ -51,7 +51,7 @@ class AzureOpenAITextEmbeddingModel(_CommonAzureOpenAI, TextEmbeddingModel):
         context_size = self._get_context_size(model, credentials)
         max_chunks = self._get_max_chunks(model, credentials)
 
-        embeddings: list[list[float]] = [[] for _ in range(len(texts))]
+        embeddings: List[List[float]] = [[] for _ in range(len(texts))]
         tokens = []
         indices = []
         used_tokens = 0
@@ -81,8 +81,8 @@ class AzureOpenAITextEmbeddingModel(_CommonAzureOpenAI, TextEmbeddingModel):
             used_tokens += embedding_used_tokens
             batched_embeddings += embeddings_batch
 
-        results: list[list[list[float]]] = [[] for _ in range(len(texts))]
-        num_tokens_in_batch: list[list[int]] = [[] for _ in range(len(texts))]
+        results: List[List[list[float]]] = [[] for _ in range(len(texts))]
+        num_tokens_in_batch: List[List[int]] = [[] for _ in range(len(texts))]
         for i in range(len(indices)):
             results[indices[i]].append(batched_embeddings[i])
             num_tokens_in_batch[indices[i]].append(len(tokens[i]))
@@ -112,7 +112,7 @@ class AzureOpenAITextEmbeddingModel(_CommonAzureOpenAI, TextEmbeddingModel):
             embeddings=embeddings, usage=usage, model=base_model_name
         )
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         if len(texts) == 0:
             return 0
 
@@ -168,9 +168,9 @@ class AzureOpenAITextEmbeddingModel(_CommonAzureOpenAI, TextEmbeddingModel):
     def _embedding_invoke(
         model: str,
         client: AzureOpenAI,
-        texts: Union[list[str], str],
+        texts: Union[List[str], str],
         extra_model_kwargs: dict,
-    ) -> tuple[list[list[float]], int]:
+    ) -> tuple[List[list[float]], int]:
         response = client.embeddings.create(
             input=texts,
             model=model,

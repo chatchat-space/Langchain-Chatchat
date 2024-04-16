@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Generator, Optional, Union
 
 from replicate import Client as ReplicateClient
 from replicate.exceptions import ReplicateError
@@ -43,10 +42,10 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -86,8 +85,8 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         prompt = self._convert_messages_to_prompt(prompt_messages)
         return self._get_num_tokens_by_gpt2(prompt)
@@ -167,7 +166,7 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
     @classmethod
     def _get_customizable_model_parameter_rules(
         cls, model: str, credentials: dict
-    ) -> list[ParameterRule]:
+    ) -> List[ParameterRule]:
         version = credentials["model_version"]
 
         client = ReplicateClient(
@@ -215,8 +214,8 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
         model: str,
         credentials: dict,
         prediction: Prediction,
-        stop: list[str],
-        prompt_messages: list[PromptMessage],
+        stop: List[str],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         index = -1
         current_completion: str = ""
@@ -281,8 +280,8 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
         model: str,
         credentials: dict,
         prediction: Prediction,
-        stop: list[str],
-        prompt_messages: list[PromptMessage],
+        stop: List[str],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         current_completion: str = ""
         stop_condition_reached = False
@@ -332,7 +331,7 @@ class ReplicateLargeLanguageModel(_CommonReplicate, LargeLanguageModel):
         elif param_type == "string":
             return "string"
 
-    def _convert_messages_to_prompt(self, messages: list[PromptMessage]) -> str:
+    def _convert_messages_to_prompt(self, messages: List[PromptMessage]) -> str:
         messages = messages.copy()  # don't mutate the original list
 
         text = "".join(

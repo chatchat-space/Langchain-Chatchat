@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from openai import OpenAI
 from openai.types import ModerationCreateResponse
@@ -82,7 +82,7 @@ class OpenAIModerationModel(_CommonOpenAI, ModerationModel):
             raise CredentialsValidateFailedError(str(ex))
 
     def _moderation_invoke(
-        self, model: str, client: OpenAI, texts: list[str]
+        self, model: str, client: OpenAI, texts: List[str]
     ) -> ModerationCreateResponse:
         """
         Invoke moderation model

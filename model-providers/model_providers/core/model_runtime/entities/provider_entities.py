@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -48,7 +48,7 @@ class FormOption(BaseModel):
 
     label: I18nObject
     value: str
-    show_on: list[FormShowOnObject] = []
+    show_on: List[FormShowOnObject] = []
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -66,10 +66,10 @@ class CredentialFormSchema(BaseModel):
     type: FormType
     required: bool = True
     default: Optional[str] = None
-    options: Optional[list[FormOption]] = None
+    options: Optional[List[FormOption]] = None
     placeholder: Optional[I18nObject] = None
     max_length: int = 0
-    show_on: list[FormShowOnObject] = []
+    show_on: List[FormShowOnObject] = []
 
 
 class ProviderCredentialSchema(BaseModel):
@@ -77,7 +77,7 @@ class ProviderCredentialSchema(BaseModel):
     Model class for provider credential schema.
     """
 
-    credential_form_schemas: list[CredentialFormSchema]
+    credential_form_schemas: List[CredentialFormSchema]
 
 
 class FieldModelSchema(BaseModel):
@@ -91,7 +91,7 @@ class ModelCredentialSchema(BaseModel):
     """
 
     model: FieldModelSchema
-    credential_form_schemas: list[CredentialFormSchema]
+    credential_form_schemas: List[CredentialFormSchema]
 
 
 class SimpleProviderEntity(BaseModel):
@@ -103,8 +103,8 @@ class SimpleProviderEntity(BaseModel):
     label: I18nObject
     icon_small: Optional[I18nObject] = None
     icon_large: Optional[I18nObject] = None
-    supported_model_types: list[ModelType]
-    models: list[AIModelEntity] = []
+    supported_model_types: List[ModelType]
+    models: List[AIModelEntity] = []
 
 
 class ProviderHelpEntity(BaseModel):
@@ -128,9 +128,9 @@ class ProviderEntity(BaseModel):
     icon_large: Optional[I18nObject] = None
     background: Optional[str] = None
     help: Optional[ProviderHelpEntity] = None
-    supported_model_types: list[ModelType]
-    configurate_methods: list[ConfigurateMethod]
-    models: list[ProviderModel] = []
+    supported_model_types: List[ModelType]
+    configurate_methods: List[ConfigurateMethod]
+    models: List[ProviderModel] = []
     provider_credential_schema: Optional[ProviderCredentialSchema] = None
     model_credential_schema: Optional[ModelCredentialSchema] = None
 

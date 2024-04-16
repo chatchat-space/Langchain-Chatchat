@@ -145,7 +145,7 @@ class ChatCompletionRequest(BaseModel):
     top_k: Optional[float] = None
     n: int = 1
     max_tokens: Optional[int] = 256
-    stop: Optional[list[str]] = None
+    stop: Optional[List[str]] = None
     stream: Optional[bool] = False
 
     def to_model_parameters_dict(self, *args, **kwargs):

@@ -1,3 +1,5 @@
+from typing import Dict, List, Type
+
 from model_providers.core.model_runtime.errors.invoke import (
     InvokeAuthorizationError,
     InvokeBadRequestError,
@@ -22,12 +24,17 @@ class _CommonZhipuaiAI:
             else credentials["zhipuai_api_key"]
             if "zhipuai_api_key" in credentials
             else None,
+            "api_base": credentials["api_base"]
+            if "api_base" in credentials
+            else credentials["zhipuai_api_base"]
+            if "zhipuai_api_base" in credentials
+            else None,
         }
 
         return credentials_kwargs
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

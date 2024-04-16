@@ -35,7 +35,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -51,7 +51,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         context_size = self._get_context_size(model, credentials)
         max_chunks = self._get_max_chunks(model, credentials)
 
-        embeddings: list[list[float]] = [[] for _ in range(len(texts))]
+        embeddings: List[List[float]] = [[] for _ in range(len(texts))]
         tokens = []
         indices = []
         used_tokens = 0
@@ -79,8 +79,8 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             used_tokens += embedding_used_tokens
             batched_embeddings += embeddings_batch
 
-        results: list[list[list[float]]] = [[] for _ in range(len(texts))]
-        num_tokens_in_batch: list[list[int]] = [[] for _ in range(len(texts))]
+        results: List[List[list[float]]] = [[] for _ in range(len(texts))]
+        num_tokens_in_batch: List[List[int]] = [[] for _ in range(len(texts))]
         for i in range(len(indices)):
             results[indices[i]].append(batched_embeddings[i])
             num_tokens_in_batch[indices[i]].append(len(tokens[i]))
@@ -105,7 +105,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
 
         return TextEmbeddingResult(embeddings=embeddings, usage=usage, model=model)
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -161,8 +161,8 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError(str(ex))
 
     def _embedding_invoke(
-        self, model: str, credentials: dict, texts: list[str]
-    ) -> tuple[list[list[float]], int]:
+        self, model: str, credentials: dict, texts: List[str]
+    ) -> tuple[List[list[float]], int]:
         """
         Invoke embedding model
 
@@ -216,7 +216,7 @@ class CohereTextEmbeddingModel(TextEmbeddingModel):
         return usage
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

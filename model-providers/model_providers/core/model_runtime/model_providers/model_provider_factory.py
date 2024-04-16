@@ -1,7 +1,7 @@
 import importlib
 import logging
 import os
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -42,7 +42,7 @@ class ModelProviderExtension(BaseModel):
 class ModelProviderFactory:
     # init cache provider by default
     init_cache: bool = False
-    model_provider_extensions: dict[str, ModelProviderExtension] = None
+    model_provider_extensions: Dict[str, ModelProviderExtension] = None
 
     def __init__(self, init_cache: bool = False) -> None:
         # for cache in memory
@@ -51,7 +51,7 @@ class ModelProviderFactory:
 
     def get_providers(
         self, provider_name: Union[str, set] = ""
-    ) -> list[ProviderEntity]:
+    ) -> List[ProviderEntity]:
         """
         Get all providers
         :return: list of providers
@@ -159,8 +159,8 @@ class ModelProviderFactory:
         self,
         provider: Optional[str] = None,
         model_type: Optional[ModelType] = None,
-        provider_configs: Optional[list[ProviderConfig]] = None,
-    ) -> list[SimpleProviderEntity]:
+        provider_configs: Optional[List[ProviderConfig]] = None,
+    ) -> List[SimpleProviderEntity]:
         """
         Get all models for given model type
 
@@ -234,7 +234,7 @@ class ModelProviderFactory:
 
         return model_provider_instance
 
-    def _get_model_provider_map(self) -> dict[str, ModelProviderExtension]:
+    def _get_model_provider_map(self) -> Dict[str, ModelProviderExtension]:
         if self.model_provider_extensions:
             return self.model_provider_extensions
 
@@ -254,7 +254,7 @@ class ModelProviderFactory:
         position_map = get_position_map(model_providers_path)
 
         # traverse all model_provider_dir_paths
-        model_providers: list[ModelProviderExtension] = []
+        model_providers: List[ModelProviderExtension] = []
         for model_provider_dir_path in model_provider_dir_paths:
             # get model_provider dir name
             model_provider_name = os.path.basename(model_provider_dir_path)

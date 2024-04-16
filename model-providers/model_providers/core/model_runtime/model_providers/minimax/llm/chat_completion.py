@@ -1,6 +1,5 @@
-from collections.abc import Generator
 from json import dumps, loads
-from typing import Any, Union
+from typing import Any, Dict, Generator, List, Union
 
 from requests import Response, post
 
@@ -27,10 +26,10 @@ class MinimaxChatCompletion:
         model: str,
         api_key: str,
         group_id: str,
-        prompt_messages: list[MinimaxMessage],
+        prompt_messages: List[MinimaxMessage],
         model_parameters: dict,
-        tools: list[dict[str, Any]],
-        stop: list[str] | None,
+        tools: List[Dict[str, Any]],
+        stop: Union[List[str], None],
         stream: bool,
         user: str,
     ) -> Union[MinimaxMessage, Generator[MinimaxMessage, None, None]]:

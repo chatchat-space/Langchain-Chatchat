@@ -1,5 +1,5 @@
 from collections.abc import Generator, Iterator
-from typing import cast
+from typing import Dict, List, Union, cast
 
 from openai import (
     APIConnectionError,
@@ -81,13 +81,13 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         invoke LLM
 
@@ -168,8 +168,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         """
         get number of tokens
@@ -181,8 +181,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
     def _num_tokens_from_messages(
         self,
-        messages: list[PromptMessage],
-        tools: list[PromptMessageTool],
+        messages: List[PromptMessage],
+        tools: List[PromptMessageTool],
         is_completion_model: bool = False,
     ) -> int:
         def tokens(text: str):
@@ -240,7 +240,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
         return num_tokens
 
-    def _num_tokens_for_tools(self, tools: list[PromptMessageTool]) -> int:
+    def _num_tokens_for_tools(self, tools: List[PromptMessageTool]) -> int:
         """
         Calculate num tokens for tool calling
 
@@ -284,7 +284,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
         return num_tokens
 
-    def _convert_prompt_message_to_text(self, message: list[PromptMessage]) -> str:
+    def _convert_prompt_message_to_text(self, message: List[PromptMessage]) -> str:
         """
         convert prompt message to text
         """
@@ -337,7 +337,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         """
         used to define customizable model schema
         """
@@ -412,14 +412,14 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
         extra_model_kwargs: XinferenceModelExtraParameter,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         generate text from LLM
 
@@ -525,8 +525,10 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
 
     def _extract_response_tool_calls(
         self,
-        response_tool_calls: list[ChatCompletionMessageToolCall | ChoiceDeltaToolCall],
-    ) -> list[AssistantPromptMessage.ToolCall]:
+        response_tool_calls: Union[
+            List[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]
+        ],
+    ) -> List[AssistantPromptMessage.ToolCall]:
         """
         Extract tool calls from response
 
@@ -551,7 +553,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         return tool_calls
 
     def _extract_response_function_call(
-        self, response_function_call: FunctionCall | ChoiceDeltaFunctionCall
+        self, response_function_call: Union[FunctionCall, ChoiceDeltaFunctionCall]
     ) -> AssistantPromptMessage.ToolCall:
         """
         Extract function call from response
@@ -576,8 +578,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool],
+        prompt_messages: List[PromptMessage],
+        tools: List[PromptMessageTool],
         resp: ChatCompletion,
     ) -> LLMResult:
         """
@@ -633,8 +635,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool],
+        prompt_messages: List[PromptMessage],
+        tools: List[PromptMessageTool],
         resp: Iterator[ChatCompletionChunk],
     ) -> Generator:
         """
@@ -721,8 +723,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool],
+        prompt_messages: List[PromptMessage],
+        tools: List[PromptMessageTool],
         resp: Completion,
     ) -> LLMResult:
         """
@@ -765,8 +767,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool],
+        prompt_messages: List[PromptMessage],
+        tools: List[PromptMessageTool],
         resp: Iterator[Completion],
     ) -> Generator:
         """
@@ -834,7 +836,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
                 full_response += delta.text
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

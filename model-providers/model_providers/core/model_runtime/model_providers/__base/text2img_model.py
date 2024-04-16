@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import IO, Optional
+from typing import IO, List, Optional
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel
@@ -19,7 +19,7 @@ class Text2ImageModel(AIModel):
         prompt: str,
         model_parameters: dict,
         user: Optional[str] = None,
-    ) -> list[IO[bytes]]:
+    ) -> List[IO[bytes]]:
         """
         Invoke Text2Image model
 
@@ -44,7 +44,7 @@ class Text2ImageModel(AIModel):
         prompt: str,
         model_parameters: dict,
         user: Optional[str] = None,
-    ) -> list[IO[bytes]]:
+    ) -> List[IO[bytes]]:
         """
         Invoke Text2Image model
 

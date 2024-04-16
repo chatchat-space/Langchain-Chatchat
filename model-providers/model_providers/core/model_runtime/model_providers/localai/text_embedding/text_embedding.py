@@ -1,6 +1,6 @@
 import time
 from json import JSONDecodeError, dumps
-from typing import Optional
+from typing import Dict, List, Optional, Type, Union
 
 from requests import post
 from yarl import URL
@@ -42,7 +42,7 @@ class LocalAITextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -121,7 +121,7 @@ class LocalAITextEmbeddingModel(TextEmbeddingModel):
 
         return result
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -138,7 +138,7 @@ class LocalAITextEmbeddingModel(TextEmbeddingModel):
 
     def _get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         """
         Get customizable model schema
 
@@ -177,7 +177,7 @@ class LocalAITextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError(f"Invalid credentials: {e}")
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         return {
             InvokeConnectionError: [InvokeConnectionError],
             InvokeServerUnavailableError: [InvokeServerUnavailableError],

@@ -1,6 +1,6 @@
 import base64
 import time
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import tiktoken
@@ -31,7 +31,7 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -58,7 +58,7 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
         context_size = self._get_context_size(model, credentials)
         max_chunks = self._get_max_chunks(model, credentials)
 
-        embeddings: list[list[float]] = [[] for _ in range(len(texts))]
+        embeddings: List[List[float]] = [[] for _ in range(len(texts))]
         tokens = []
         indices = []
         used_tokens = 0
@@ -89,8 +89,8 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
             used_tokens += embedding_used_tokens
             batched_embeddings += embeddings_batch
 
-        results: list[list[list[float]]] = [[] for _ in range(len(texts))]
-        num_tokens_in_batch: list[list[int]] = [[] for _ in range(len(texts))]
+        results: List[List[List[float]]] = [[] for _ in range(len(texts))]
+        num_tokens_in_batch: List[List[int]] = [[] for _ in range(len(texts))]
         for i in range(len(indices)):
             results[indices[i]].append(batched_embeddings[i])
             num_tokens_in_batch[indices[i]].append(len(tokens[i]))
@@ -118,7 +118,7 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
 
         return TextEmbeddingResult(embeddings=embeddings, usage=usage, model=model)
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -167,9 +167,9 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
         self,
         model: str,
         client: OpenAI,
-        texts: Union[list[str], str],
+        texts: Union[List[str], str],
         extra_model_kwargs: dict,
-    ) -> tuple[list[list[float]], int]:
+    ) -> Tuple[List[List[float]], int]:
         """
         Invoke embedding model
 

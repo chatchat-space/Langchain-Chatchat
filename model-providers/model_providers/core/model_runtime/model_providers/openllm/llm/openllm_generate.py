@@ -20,10 +20,10 @@ class OpenLLMGenerateMessage:
 
     role: str = Role.USER.value
     content: str
-    usage: dict[str, int] = None
+    usage: Dict[str, int] = None
     stop_reason: str = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "role": self.role,
             "content": self.content,
@@ -40,9 +40,9 @@ class OpenLLMGenerate:
         server_url: str,
         model_name: str,
         stream: bool,
-        model_parameters: dict[str, Any],
-        stop: list[str],
-        prompt_messages: list[OpenLLMGenerateMessage],
+        model_parameters: Dict[str, Any],
+        stop: List[str],
+        prompt_messages: List[OpenLLMGenerateMessage],
         user: str,
     ) -> Union[Generator[OpenLLMGenerateMessage, None, None], OpenLLMGenerateMessage]:
         if not server_url:

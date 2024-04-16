@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import cast
+from typing import Dict, Generator, List, Type, Union, cast
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
@@ -49,13 +48,13 @@ class BaichuanLarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         return self._generate(
             model=model,
             credentials=credentials,
@@ -71,14 +70,14 @@ class BaichuanLarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         return self._num_tokens_from_messages(prompt_messages)
 
     def _num_tokens_from_messages(
         self,
-        messages: list[PromptMessage],
+        messages: List[PromptMessage],
     ) -> int:
         """Calculate num tokens for baichuan model"""
 
@@ -149,13 +148,13 @@ class BaichuanLarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         if tools is not None and len(tools) > 0:
             raise InvokeBadRequestError("Baichuan model doesn't support tools")
 
@@ -195,7 +194,7 @@ class BaichuanLarguageModel(LargeLanguageModel):
     def _handle_chat_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: BaichuanMessage,
     ) -> LLMResult:
@@ -216,7 +215,7 @@ class BaichuanLarguageModel(LargeLanguageModel):
     def _handle_chat_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Generator[BaichuanMessage, None, None],
     ) -> Generator:
@@ -258,7 +257,7 @@ class BaichuanLarguageModel(LargeLanguageModel):
                 )
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

@@ -50,7 +50,7 @@ class SystemConfigurationResponse(BaseModel):
 
     enabled: bool
     current_quota_type: Optional[ProviderQuotaType] = None
-    quota_configurations: list[QuotaConfiguration] = []
+    quota_configurations: List[QuotaConfiguration] = []
 
 
 class ProviderResponse(BaseModel):
@@ -65,8 +65,8 @@ class ProviderResponse(BaseModel):
     icon_large: Optional[I18nObject] = None
     background: Optional[str] = None
     help: Optional[ProviderHelpEntity] = None
-    supported_model_types: list[ModelType]
-    configurate_methods: list[ConfigurateMethod]
+    supported_model_types: List[ModelType]
+    configurate_methods: List[ConfigurateMethod]
     provider_credential_schema: Optional[ProviderCredentialSchema] = None
     model_credential_schema: Optional[ModelCredentialSchema] = None
     preferred_provider_type: ProviderType
@@ -114,7 +114,7 @@ class ProviderWithModelsResponse(BaseModel):
     icon_small: Optional[I18nObject] = None
     icon_large: Optional[I18nObject] = None
     status: CustomConfigurationStatus
-    models: list[ModelResponse]
+    models: List[ModelResponse]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

@@ -1,6 +1,6 @@
 import time
 from abc import abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 from model_providers.core.model_runtime.entities.model_entities import (
     ModelPropertyKey,
@@ -23,7 +23,7 @@ class TextEmbeddingModel(AIModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -47,7 +47,7 @@ class TextEmbeddingModel(AIModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -62,7 +62,7 @@ class TextEmbeddingModel(AIModel):
         raise NotImplementedError
 
     @abstractmethod
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 

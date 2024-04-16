@@ -1,6 +1,6 @@
 import time
 from json import dumps
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 from requests import post
 from requests.exceptions import ConnectionError, InvalidSchema, MissingSchema
@@ -35,7 +35,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -89,7 +89,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
 
         return result
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -118,7 +118,7 @@ class OpenLLMTextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError("Invalid server_url")
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

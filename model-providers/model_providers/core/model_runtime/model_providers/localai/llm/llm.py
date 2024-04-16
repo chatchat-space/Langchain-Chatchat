@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import cast
+from typing import Dict, Generator, List, Type, Union, cast
 
 from httpx import Timeout
 from openai import (
@@ -64,13 +63,13 @@ class LocalAILarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         return self._generate(
             model=model,
             credentials=credentials,
@@ -86,14 +85,14 @@ class LocalAILarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         # tools is not supported yet
         return self._num_tokens_from_messages(prompt_messages, tools=tools)
 
     def _num_tokens_from_messages(
-        self, messages: list[PromptMessage], tools: list[PromptMessageTool]
+        self, messages: List[PromptMessage], tools: List[PromptMessageTool]
     ) -> int:
         """
         Calculate num tokens for baichuan model
@@ -156,7 +155,7 @@ class LocalAILarguageModel(LargeLanguageModel):
 
         return num_tokens
 
-    def _num_tokens_for_tools(self, tools: list[PromptMessageTool]) -> int:
+    def _num_tokens_for_tools(self, tools: List[PromptMessageTool]) -> int:
         """
         Calculate num tokens for tool calling
 
@@ -224,7 +223,7 @@ class LocalAILarguageModel(LargeLanguageModel):
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         completion_model = None
         if credentials["completion_type"] == "chat_completion":
             completion_model = LLMMode.CHAT.value
@@ -286,13 +285,13 @@ class LocalAILarguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         kwargs = self._to_client_kwargs(credentials)
         # init model client
         client = OpenAI(**kwargs)
@@ -414,7 +413,7 @@ class LocalAILarguageModel(LargeLanguageModel):
         return message_dict
 
     def _convert_prompt_message_to_completion_prompts(
-        self, messages: list[PromptMessage]
+        self, messages: List[PromptMessage]
     ) -> str:
         """
         Convert PromptMessage to completion prompts
@@ -438,7 +437,7 @@ class LocalAILarguageModel(LargeLanguageModel):
     def _handle_completion_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Completion,
     ) -> LLMResult:
@@ -489,10 +488,10 @@ class LocalAILarguageModel(LargeLanguageModel):
     def _handle_chat_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: ChatCompletion,
-        tools: list[PromptMessageTool],
+        tools: List[PromptMessageTool],
     ) -> LLMResult:
         """
         Handle llm chat response
@@ -547,10 +546,10 @@ class LocalAILarguageModel(LargeLanguageModel):
     def _handle_completion_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Stream[Completion],
-        tools: list[PromptMessageTool],
+        tools: List[PromptMessageTool],
     ) -> Generator:
         full_response = ""
 
@@ -613,10 +612,10 @@ class LocalAILarguageModel(LargeLanguageModel):
     def _handle_chat_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Stream[ChatCompletionChunk],
-        tools: list[PromptMessageTool],
+        tools: List[PromptMessageTool],
     ) -> Generator:
         full_response = ""
 
@@ -691,8 +690,8 @@ class LocalAILarguageModel(LargeLanguageModel):
                 full_response += delta.delta.content
 
     def _extract_response_tool_calls(
-        self, response_function_calls: list[FunctionCall]
-    ) -> list[AssistantPromptMessage.ToolCall]:
+        self, response_function_calls: List[FunctionCall]
+    ) -> List[AssistantPromptMessage.ToolCall]:
         """
         Extract tool calls from response
 
@@ -714,7 +713,7 @@ class LocalAILarguageModel(LargeLanguageModel):
         return tool_calls
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

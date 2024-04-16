@@ -1,6 +1,6 @@
 from decimal import Decimal
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -158,9 +158,9 @@ class ProviderModel(BaseModel):
     model: str
     label: I18nObject
     model_type: ModelType
-    features: Optional[list[ModelFeature]] = None
+    features: Optional[List[ModelFeature]] = None
     fetch_from: FetchFrom
-    model_properties: dict[ModelPropertyKey, Any]
+    model_properties: Dict[ModelPropertyKey, Any]
     deprecated: bool = False
 
     class Config:
@@ -182,7 +182,7 @@ class ParameterRule(BaseModel):
     min: Optional[float] = None
     max: Optional[float] = None
     precision: Optional[int] = None
-    options: list[str] = []
+    options: List[str] = []
 
 
 class PriceConfig(BaseModel):
@@ -201,7 +201,7 @@ class AIModelEntity(ProviderModel):
     Model class for AI model.
     """
 
-    parameter_rules: list[ParameterRule] = []
+    parameter_rules: List[ParameterRule] = []
     pricing: Optional[PriceConfig] = None
 
 

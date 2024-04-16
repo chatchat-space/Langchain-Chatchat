@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from decimal import Decimal
-from typing import Optional
+from typing import Dict, List, Optional, Type
 from urllib.parse import urljoin
 
 import numpy as np
@@ -48,7 +48,7 @@ class OllamaEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -123,7 +123,7 @@ class OllamaEmbeddingModel(TextEmbeddingModel):
             embeddings=batched_embeddings, usage=usage, model=model
         )
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Approximate number of tokens for given messages using GPT2 tokenizer
 
@@ -211,7 +211,7 @@ class OllamaEmbeddingModel(TextEmbeddingModel):
         return usage
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

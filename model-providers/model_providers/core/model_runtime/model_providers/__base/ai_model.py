@@ -1,7 +1,7 @@
 import decimal
 import os
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 import yaml
 
@@ -35,7 +35,7 @@ class AIModel(ABC):
     """
 
     model_type: ModelType
-    model_schemas: list[AIModelEntity] = None
+    model_schemas: List[AIModelEntity] = None
     started_at: float = 0
 
     @abstractmethod
@@ -51,7 +51,7 @@ class AIModel(ABC):
 
     @property
     @abstractmethod
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller
@@ -133,7 +133,7 @@ class AIModel(ABC):
             currency=price_config.currency,
         )
 
-    def predefined_models(self) -> list[AIModelEntity]:
+    def predefined_models(self) -> List[AIModelEntity]:
         """
         Get all predefined models for given provider.
 

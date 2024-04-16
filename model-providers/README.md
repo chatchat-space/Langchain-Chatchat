@@ -42,3 +42,39 @@ make format
 make format_diff
 ```
 当你对项目的一部分进行了更改,并希望确保更改的部分格式正确,而不影响代码库的其他部分时,这个命令特别有用。
+
+
+
+### 开始使用
+
+当项目安装完成，配置这个`model_providers.yaml`文件，即可完成平台加载
+> 注意: 在您配置平台之前，请确认平台依赖完整，例如智谱平台，您需要安装智谱sdk `pip install zhipuai`
+
+model_providers包含了不同平台提供的 全局配置`provider_credential`,和模型配置`model_credential`
+不同平台所加载的配置有所不同，关于如何配置这个文件
+
+请查看包`model_providers.core.model_runtime.model_providers`下方的平台 `yaml`文件
+例如`zhipuai.yaml`，这里给出了`provider_credential_schema`,其中包含了一个变量`api_key`
+
+要加载智谱平台，操作如下
+
+- 安装sdk
+```shell
+$ pip install zhipuai
+```
+
+- 编辑`model_providers.yaml`
+
+```yaml
+
+zhipuai:
+
+  provider_credential:
+    api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.2'
+```
+
+- `model-providers`可以运行pytest 测试
+```shell
+  poetry run pytest tests/server_unit_test/test_init_server.py
+
+```

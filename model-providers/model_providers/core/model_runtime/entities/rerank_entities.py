@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 
@@ -17,4 +19,4 @@ class RerankResult(BaseModel):
     """
 
     model: str
-    docs: list[RerankDocument]
+    docs: List[RerankDocument]

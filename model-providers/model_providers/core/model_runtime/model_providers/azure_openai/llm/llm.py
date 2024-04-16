@@ -1,7 +1,6 @@
 import copy
 import logging
-from collections.abc import Generator
-from typing import Optional, Union, cast
+from typing import Generator, List, Optional, Union, cast
 
 import tiktoken
 from openai import AzureOpenAI, Stream
@@ -60,10 +59,10 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -102,8 +101,8 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         model_mode = self._get_ai_model_entity(
             credentials.get("base_model_name"), model
@@ -176,9 +175,9 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -215,7 +214,7 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Completion,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         assistant_text = response.choices[0].text
 
@@ -257,7 +256,7 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Stream[Completion],
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         full_text = ""
         for chunk in response:
@@ -321,10 +320,10 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -381,8 +380,8 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: ChatCompletion,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> LLMResult:
         assistant_message = response.choices[0].message
         # assistant_message_tool_calls = assistant_message.tool_calls
@@ -435,8 +434,8 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Stream[ChatCompletionChunk],
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> Generator:
         index = 0
         full_assistant_content = ""
@@ -545,8 +544,10 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
 
     @staticmethod
     def _extract_response_tool_calls(
-        response_tool_calls: list[ChatCompletionMessageToolCall | ChoiceDeltaToolCall],
-    ) -> list[AssistantPromptMessage.ToolCall]:
+        response_tool_calls: List[
+            Union[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]
+        ],
+    ) -> List[AssistantPromptMessage.ToolCall]:
         tool_calls = []
         if response_tool_calls:
             for response_tool_call in response_tool_calls:
@@ -566,7 +567,7 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
 
     @staticmethod
     def _extract_response_function_call(
-        response_function_call: FunctionCall | ChoiceDeltaFunctionCall,
+        response_function_call: Union[FunctionCall, ChoiceDeltaFunctionCall],
     ) -> AssistantPromptMessage.ToolCall:
         tool_call = None
         if response_function_call:
@@ -651,7 +652,7 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
         self,
         credentials: dict,
         text: str,
-        tools: Optional[list[PromptMessageTool]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         try:
             encoding = tiktoken.encoding_for_model(credentials["base_model_name"])
@@ -668,8 +669,8 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
     def _num_tokens_from_messages(
         self,
         credentials: dict,
-        messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """Calculate num tokens for gpt-3.5-turbo and gpt-4 with tiktoken package.
 
@@ -743,7 +744,7 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
 
     @staticmethod
     def _num_tokens_for_tools(
-        encoding: tiktoken.Encoding, tools: list[PromptMessageTool]
+        encoding: tiktoken.Encoding, tools: List[PromptMessageTool]
     ) -> int:
         num_tokens = 0
         for tool in tools:

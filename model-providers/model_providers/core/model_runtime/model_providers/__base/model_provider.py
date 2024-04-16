@@ -1,6 +1,7 @@
 import importlib
 import os
 from abc import ABC, abstractmethod
+from typing import Dict, List
 
 import yaml
 
@@ -14,7 +15,7 @@ from model_providers.core.model_runtime.model_providers.__base.ai_model import A
 
 class ModelProvider(ABC):
     provider_schema: ProviderEntity = None
-    model_instance_map: dict[str, AIModel] = {}
+    model_instance_map: Dict[str, AIModel] = {}
 
     @abstractmethod
     def validate_provider_credentials(self, credentials: dict) -> None:
@@ -65,7 +66,7 @@ class ModelProvider(ABC):
 
         return provider_schema
 
-    def models(self, model_type: ModelType) -> list[AIModelEntity]:
+    def models(self, model_type: ModelType) -> List[AIModelEntity]:
         """
         Get all models for given model type
 

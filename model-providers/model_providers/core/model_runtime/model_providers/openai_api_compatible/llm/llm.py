@@ -2,7 +2,7 @@ import json
 import logging
 from collections.abc import Generator
 from decimal import Decimal
-from typing import Optional, Union, cast
+from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
 
 import requests
@@ -61,10 +61,10 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -98,8 +98,8 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -282,10 +282,10 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -384,7 +384,7 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: requests.Response,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -516,7 +516,7 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         model: str,
         credentials: dict,
         response: requests.Response,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         response_json = response.json()
 
@@ -649,7 +649,7 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         return message_dict
 
     def _num_tokens_from_string(
-        self, model: str, text: str, tools: Optional[list[PromptMessageTool]] = None
+        self, model: str, text: str, tools: Optional[List[PromptMessageTool]] = None
     ) -> int:
         """
         Approximate num tokens for model with gpt2 tokenizer.
@@ -669,8 +669,8 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
     def _num_tokens_from_messages(
         self,
         model: str,
-        messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Approximate num tokens with GPT2 tokenizer.
@@ -722,7 +722,7 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
 
         return num_tokens
 
-    def _num_tokens_for_tools(self, tools: list[PromptMessageTool]) -> int:
+    def _num_tokens_for_tools(self, tools: List[PromptMessageTool]) -> int:
         """
         Calculate num tokens for tool calling with tiktoken package.
 
@@ -769,8 +769,8 @@ class OAIAPICompatLargeLanguageModel(_CommonOAI_API_Compat, LargeLanguageModel):
         return num_tokens
 
     def _extract_response_tool_calls(
-        self, response_tool_calls: list[dict]
-    ) -> list[AssistantPromptMessage.ToolCall]:
+        self, response_tool_calls: List[dict]
+    ) -> List[AssistantPromptMessage.ToolCall]:
         """
         Extract tool calls from response
 

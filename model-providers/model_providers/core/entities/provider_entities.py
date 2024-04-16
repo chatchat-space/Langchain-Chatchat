@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -68,7 +68,7 @@ class QuotaConfiguration(BaseModel):
     quota_limit: int
     quota_used: int
     is_valid: bool
-    restrict_models: list[RestrictModel] = []
+    restrict_models: List[RestrictModel] = []
 
 
 class SystemConfiguration(BaseModel):
@@ -78,7 +78,7 @@ class SystemConfiguration(BaseModel):
 
     enabled: bool
     current_quota_type: Optional[ProviderQuotaType] = None
-    quota_configurations: list[QuotaConfiguration] = []
+    quota_configurations: List[QuotaConfiguration] = []
     credentials: Optional[dict] = None
 
 
@@ -106,4 +106,4 @@ class CustomConfiguration(BaseModel):
     """
 
     provider: Optional[CustomProviderConfiguration] = None
-    models: list[CustomModelConfiguration] = []
+    models: List[CustomModelConfiguration] = []

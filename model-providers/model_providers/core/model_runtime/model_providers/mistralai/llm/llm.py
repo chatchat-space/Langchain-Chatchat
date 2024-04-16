@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Generator, List, Optional, Union
 
 from model_providers.core.model_runtime.entities.llm_entities import LLMResult
 from model_providers.core.model_runtime.entities.message_entities import (
@@ -16,10 +15,10 @@ class MistralAILargeLanguageModel(OAIAPICompatLargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:

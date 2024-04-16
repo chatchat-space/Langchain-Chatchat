@@ -1,7 +1,6 @@
 import base64
 import mimetypes
-from collections.abc import Generator
-from typing import Optional, Union, cast
+from typing import Dict, Generator, List, Optional, Type, Union, cast
 
 import anthropic
 import requests
@@ -63,10 +62,10 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -92,9 +91,9 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -158,13 +157,13 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Code block mode wrapper for invoking large language model
@@ -203,12 +202,12 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
+        user: Union[str, None] = None,
         response_format: str = "JSON",
     ) -> None:
         """
@@ -251,8 +250,8 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -297,7 +296,7 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Message,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm chat response
@@ -345,7 +344,7 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: Stream[MessageStreamEvent],
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm chat stream response
@@ -424,8 +423,8 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         return credentials_kwargs
 
     def _convert_prompt_messages(
-        self, prompt_messages: list[PromptMessage]
-    ) -> tuple[str, list[dict]]:
+        self, prompt_messages: List[PromptMessage]
+    ) -> tuple[str, List[dict]]:
         """
         Convert prompt messages to dict list and system
         """
@@ -560,7 +559,7 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         return message_text
 
     def _convert_messages_to_prompt_anthropic(
-        self, messages: list[PromptMessage]
+        self, messages: List[PromptMessage]
     ) -> str:
         """
         Format a list of messages into a full prompt for the Anthropic model
@@ -583,7 +582,7 @@ class AnthropicLargeLanguageModel(LargeLanguageModel):
         return text.rstrip()
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

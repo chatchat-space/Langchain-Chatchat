@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 import cohere
 
@@ -32,7 +32,7 @@ class CohereRerankModel(RerankModel):
         model: str,
         credentials: dict,
         query: str,
-        docs: list[str],
+        docs: List[str],
         score_threshold: Optional[float] = None,
         top_n: Optional[int] = None,
         user: Optional[str] = None,
@@ -99,7 +99,7 @@ class CohereRerankModel(RerankModel):
             raise CredentialsValidateFailedError(str(ex))
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

@@ -1,9 +1,7 @@
 import json
 from collections import defaultdict
 from json import JSONDecodeError
-from typing import Optional, Union
-
-from sqlalchemy.exc import IntegrityError
+from typing import List, Optional, Union
 
 from model_providers.core.entities.model_entities import (
     DefaultModelEntity,
@@ -201,7 +199,7 @@ class ProviderManager:
         self,
         provider_entity: ProviderEntity,
         provider_credentials: dict,
-        provider_model_records: list[dict],
+        provider_model_records: List[dict],
     ) -> CustomConfiguration:
         """
         Convert to custom configuration.
@@ -266,8 +264,8 @@ class ProviderManager:
         )
 
     def _extract_variables(
-        self, credential_form_schemas: list[CredentialFormSchema]
-    ) -> list[str]:
+        self, credential_form_schemas: List[CredentialFormSchema]
+    ) -> List[str]:
         """
         Extract input form variables.
 
