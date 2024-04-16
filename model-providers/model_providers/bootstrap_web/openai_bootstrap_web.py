@@ -18,6 +18,7 @@ from typing import (
     cast,
 )
 
+import tiktoken
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -208,16 +209,39 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
         )
-        model_instance = self._provider_manager.get_model_instance(
-            provider=provider,
-            model_type=ModelType.TEXT_EMBEDDING,
-            model=embeddings_request.model,
-        )
-        texts = embeddings_request.input
-        if isinstance(texts, str):
-            texts = [texts]
-        response = model_instance.invoke_text_embedding(texts=texts, user="abc-123")
-        return await openai_embedding_text(response)
+        try:
+            model_instance = self._provider_manager.get_model_instance(
+                provider=provider,
+                model_type=ModelType.TEXT_EMBEDDING,
+                model=embeddings_request.model,
+            )
+
+            # 判断embeddings_request.input是否为list
+            input = ''
+            if isinstance(embeddings_request.input, list):
+                tokens = embeddings_request.input
+                try:
+                    encoding = tiktoken.encoding_for_model(embeddings_request.model)
+                except KeyError:
+                    logger.warning("Warning: model not found. Using cl100k_base encoding.")
+                    model = "cl100k_base"
+                    encoding = tiktoken.get_encoding(model)
+                for i, token in enumerate(tokens):
+                    text = encoding.decode(token)
+                    input += text
+
+            else:
+                input = embeddings_request.input
+
+            response = model_instance.invoke_text_embedding(texts=[input], user="abc-123")
+            return await openai_embedding_text(response)
+
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        except InvokeError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
 
     async def create_chat_completion(
         self, provider: str, request: Request, chat_request: ChatCompletionRequest

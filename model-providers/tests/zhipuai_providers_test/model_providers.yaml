@@ -1,4 +1,4 @@
 zhipuai:
   provider_credential:
-    api_key: 'e6a98ef1c54484c2afeac1ae8cef93ef.1'
-    api_base: 'https://test.bigmodel.cn/stage-api/paas/v4'
+    api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.1'
+#    api_base: 'https://test.bigmodel.cn/stage-api/paas/v4'

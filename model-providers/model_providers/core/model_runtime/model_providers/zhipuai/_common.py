@@ -25,7 +25,7 @@ class _CommonZhipuaiAI:
             if "zhipuai_api_key" in credentials
             else None,
             "api_base": credentials["api_base"]
-            if "api_key" in credentials
+            if "api_base" in credentials
             else credentials["zhipuai_api_base"]
             if "zhipuai_api_base" in credentials
             else None,
