@@ -120,11 +120,13 @@ ONLINE_LLM_MODEL = {
         "secret_key": "",
         "provider": "TianGongWorker",
     },
+
     # Gemini API https://makersuite.google.com/app/apikey
     "gemini-api": {
         "api_key": "",
         "provider": "GeminiWorker",
-    }
+    },
+
     # Claude API : https://www.anthropic.com/api
     # Available models: 
     # Claude 3 Opus:    claude-3-opus-20240229 

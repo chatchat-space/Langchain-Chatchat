@@ -1,13 +1,14 @@
 name: docker-build
 on:
-  pull_request:
-    types: [ closed ]
+  push:
+    branches:
+      - master
 env:
   TZ: Asia/Shanghai
 jobs:
   docker-build:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     steps:
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
