@@ -1,0 +1,5 @@
+openai:
+  provider_credential:
+    openai_api_key: 'sk-'
+    openai_organization: ''
+    openai_api_base: ''

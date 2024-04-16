@@ -44,8 +44,8 @@ def init_server(model_platforms_shard: Dict,
 
         provider_platforms = init_provider_platforms(boot.provider_manager.provider_manager)
         model_platforms_shard['provider_platforms'] = provider_platforms
-
-        boot.serve(logging_conf=logging_conf)
+        boot.logging_conf(logging_conf=logging_conf)
+        boot.run()
 
         async def pool_join_thread():
             await boot.join()

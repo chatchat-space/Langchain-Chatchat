@@ -36,7 +36,8 @@ if __name__ == "__main__":
             .build()
         )
         boot.set_app_event(started_event=None)
-        boot.serve(logging_conf=logging_conf)
+        boot.logging_conf(logging_conf=logging_conf)
+        boot.run()
 
         async def pool_join_thread():
             await boot.join()

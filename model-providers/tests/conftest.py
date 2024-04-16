@@ -6,6 +6,7 @@ from typing import Dict, List, Sequence
 import pytest
 from pytest import Config, Function, Parser
 
+from model_providers import BootstrapWebBuilder
 from model_providers.core.utils.utils import (
     get_config_dict,
     get_log_file,
@@ -102,3 +103,41 @@ def logging_conf() -> dict:
         122,
         111,
     )
+
+@pytest.fixture
+def providers_file(request) -> str:
+    from pathlib import Path
+    import os
+    # 当前执行目录
+    # 获取当前测试文件的路径
+    test_file_path = Path(str(request.fspath)).parent
+    print("test_file_path:",test_file_path)
+    return os.path.join(test_file_path,"model_providers.yaml")
+
+
+@pytest.fixture
+@pytest.mark.requires("fastapi")
+def init_server(logging_conf: dict, providers_file: str) -> None:
+    try:
+        boot = (
+            BootstrapWebBuilder()
+            .model_providers_cfg_path(
+                model_providers_cfg_path=providers_file
+            )
+            .host(host="127.0.0.1")
+            .port(port=20000)
+            .build()
+        )
+        boot.set_app_event(started_event=None)
+        boot.logging_conf(logging_conf=logging_conf)
+        boot.run()
+
+        try:
+            yield f"http://127.0.0.1:20000"
+        finally:
+            print("")
+            boot.destroy()
+
+    except SystemExit:
+
+        raise

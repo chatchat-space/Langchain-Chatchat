@@ -18,6 +18,7 @@ from typing import (
     cast,
 )
 
+import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette import EventSourceResponse
@@ -67,7 +68,12 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._port = port
         self._router = APIRouter()
         self._app = FastAPI()
+        self._logging_conf = None
+        self._server = None
         self._server_thread = None
+
+    def logging_conf(self,logging_conf: Optional[dict] = None):
+        self._logging_conf = logging_conf
 
     @classmethod
     def from_config(cls, cfg=None):
@@ -79,7 +85,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         )
         return cls(host=host, port=port)
 
-    def serve(self, logging_conf: Optional[dict] = None):
+    def run(self):
         self._app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -125,18 +131,29 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._app.include_router(self._router)
 
         config = Config(
-            app=self._app, host=self._host, port=self._port, log_config=logging_conf
+            app=self._app, host=self._host, port=self._port, log_config=self._logging_conf
         )
-        server = Server(config)
+        self._server = Server(config)
 
         def run_server():
-            server.run()
+            self._server.shutdown_timeout = 2  # 设置为2秒
+
+            self._server.run()
 
         self._server_thread = threading.Thread(target=run_server)
         self._server_thread.start()
 
-    async def join(self):
-        await self._server_thread.join()
+    def destroy(self):
+
+        logger.info("Shutting down server")
+        self._server.should_exit = True  # 设置退出标志
+        self._server.shutdown()  # 停止服务器
+
+        self.join()
+
+    def join(self):
+        self._server_thread.join()
+
 
     def set_app_event(self, started_event: mp.Event = None):
         @self._app.on_event("startup")
@@ -273,10 +290,11 @@ def run(
             cfg=cfg.get("run_openai_api", {})
         )
         api.set_app_event(started_event=started_event)
-        api.serve(logging_conf=logging_conf)
+        api.logging_conf(logging_conf=logging_conf)
+        api.run()
 
         async def pool_join_thread():
-            await api.join()
+            api.join()
 
         asyncio.run(pool_join_thread())
     except SystemExit:
