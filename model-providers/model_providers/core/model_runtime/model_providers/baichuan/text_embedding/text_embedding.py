@@ -47,7 +47,7 @@ class BaichuanTextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -93,8 +93,8 @@ class BaichuanTextEmbeddingModel(TextEmbeddingModel):
         return result
 
     def embedding(
-        self, model: str, api_key, texts: list[str], user: Optional[str] = None
-    ) -> tuple[list[list[float]], int]:
+        self, model: str, api_key, texts: List[str], user: Optional[str] = None
+    ) -> tuple[List[list[float]], int]:
         """
         Embed given texts
 
@@ -154,7 +154,7 @@ class BaichuanTextEmbeddingModel(TextEmbeddingModel):
 
         return [data["embedding"] for data in embeddings], usage["total_tokens"]
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -183,7 +183,7 @@ class BaichuanTextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError("Invalid api key")
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         return {
             InvokeConnectionError: [],
             InvokeServerUnavailableError: [InternalServerError],

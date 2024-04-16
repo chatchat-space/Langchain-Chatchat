@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, List, Optional, Type, Union
 
 from xinference_client.client.restful.restful_client import (
     Client,
@@ -41,7 +41,7 @@ class XinferenceRerankModel(RerankModel):
         model: str,
         credentials: dict,
         query: str,
-        docs: list[str],
+        docs: List[str],
         score_threshold: Optional[float] = None,
         top_n: Optional[int] = None,
         user: Optional[str] = None,
@@ -133,7 +133,7 @@ class XinferenceRerankModel(RerankModel):
             raise CredentialsValidateFailedError(str(ex))
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller
@@ -152,7 +152,7 @@ class XinferenceRerankModel(RerankModel):
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         """
         used to define customizable model schema
         """

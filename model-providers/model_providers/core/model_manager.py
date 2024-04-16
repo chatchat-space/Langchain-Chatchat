@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import IO, Optional, Union, cast
+from typing import IO, Generator, List, Optional, Union, cast
 
 from model_providers.core.entities.provider_configuration import ProviderModelBundle
 from model_providers.core.model_runtime.callbacks.base_callback import Callback
@@ -68,13 +67,13 @@ class ModelInstance:
 
     def invoke_llm(
         self,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: Optional[dict] = None,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Invoke large language model
@@ -105,7 +104,7 @@ class ModelInstance:
         )
 
     def invoke_text_embedding(
-        self, texts: list[str], user: Optional[str] = None
+        self, texts: List[str], user: Optional[str] = None
     ) -> TextEmbeddingResult:
         """
         Invoke large language model
@@ -125,7 +124,7 @@ class ModelInstance:
     def invoke_rerank(
         self,
         query: str,
-        docs: list[str],
+        docs: List[str],
         score_threshold: Optional[float] = None,
         top_n: Optional[int] = None,
         user: Optional[str] = None,

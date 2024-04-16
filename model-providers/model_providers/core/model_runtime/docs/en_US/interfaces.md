@@ -71,7 +71,7 @@ All models need to uniformly implement the following 2 methods:
 
   ```python
   @property
-  def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+  def _invoke_error_mapping(self) -> Dict[type[InvokeError],List[type[Exception]]]:
       """
       Map model invoke error to unified error
       The key is the error type thrown to the caller
@@ -95,8 +95,8 @@ Inherit the `__base.large_language_model.LargeLanguageModel` base class and impl
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              prompt_messages: list[PromptMessage], model_parameters: dict,
-              tools: Optional[list[PromptMessageTool]] = None, stop: Optional[List[str]] = None,
+              prompt_messages:List[PromptMessage], model_parameters: dict,
+              tools: Optional[List[PromptMessageTool]] = None, stop: Optional[List[str]] = None,
               stream: bool = True, user: Optional[str] = None) \
           -> Union[LLMResult, Generator]:
       """
@@ -157,8 +157,8 @@ Inherit the `__base.large_language_model.LargeLanguageModel` base class and impl
   If the model does not provide a pre-calculated tokens interface, you can directly return 0.
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, prompt_messages: list[PromptMessage],
-                     tools: Optional[list[PromptMessageTool]] = None) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, prompt_messages:List[PromptMessage],
+                     tools: Optional[List[PromptMessageTool]] = None) -> int:
       """
       Get number of tokens for given prompt messages
 
@@ -196,7 +196,7 @@ Inherit the `__base.text_embedding_model.TextEmbeddingModel` base class and impl
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              texts: list[str], user: Optional[str] = None) \
+              texts:List[str], user: Optional[str] = None) \
           -> TextEmbeddingResult:
       """
       Invoke large language model
@@ -230,7 +230,7 @@ Inherit the `__base.text_embedding_model.TextEmbeddingModel` base class and impl
 - Pre-calculating Tokens
 
   ```python
-  def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+  def get_num_tokens(self, model: str, credentials: dict, texts:List[str]) -> int:
       """
       Get number of tokens for given prompt messages
 
@@ -251,7 +251,7 @@ Inherit the `__base.rerank_model.RerankModel` base class and implement the follo
 
   ```python
   def _invoke(self, model: str, credentials: dict,
-              query: str, docs: list[str], score_threshold: Optional[float] = None, top_n: Optional[int] = None,
+              query: str, docs:List[str], score_threshold: Optional[float] = None, top_n: Optional[int] = None,
               user: Optional[str] = None) \
           -> RerankResult:
       """
@@ -498,7 +498,7 @@ class PromptMessage(ABC, BaseModel):
     Model class for prompt message.
     """
     role: PromptMessageRole
-    content: Optional[str | list[PromptMessageContent]] = None  # Supports two types: string and content list. The content list is designed to meet the needs of multimodal inputs. For more details, see the PromptMessageContent explanation.
+    content: Optional[str |List[PromptMessageContent]] = None  # Supports two types: string and content list. The content list is designed to meet the needs of multimodal inputs. For more details, see the PromptMessageContent explanation.
     name: Optional[str] = None
 ```
 
@@ -539,7 +539,7 @@ class AssistantPromptMessage(PromptMessage):
         function: ToolCallFunction  # tool call information
 
     role: PromptMessageRole = PromptMessageRole.ASSISTANT
-    tool_calls: list[ToolCall] = []  # The result of tool invocation in response from the model (returned only when tools are input and the model deems it necessary to invoke a tool).
+    tool_calls:List[ToolCall] = []  # The result of tool invocation in response from the model (returned only when tools are input and the model deems it necessary to invoke a tool).
 ```
 
 Where `tool_calls` are the list of `tool calls` returned by the model after invoking the model with the `tools` input.
@@ -593,7 +593,7 @@ class LLMResult(BaseModel):
     Model class for llm result.
     """
     model: str  # Actual used modele
-    prompt_messages: list[PromptMessage]  # prompt messages
+    prompt_messages:List[PromptMessage]  # prompt messages
     message: AssistantPromptMessage  # response message
     usage: LLMUsage  # usage info
     system_fingerprint: Optional[str] = None  # request fingerprint, refer to OpenAI definition
@@ -624,7 +624,7 @@ class LLMResultChunk(BaseModel):
     Model class for llm result chunk.
     """
     model: str  # Actual used modele
-    prompt_messages: list[PromptMessage]  # prompt messages
+    prompt_messages:List[PromptMessage]  # prompt messages
     system_fingerprint: Optional[str] = None  # request fingerprint, refer to OpenAI definition
     delta: LLMResultChunkDelta
 ```
@@ -660,7 +660,7 @@ class TextEmbeddingResult(BaseModel):
     Model class for text embedding result.
     """
     model: str  # Actual model used
-    embeddings: list[list[float]]  # List of embedding vectors, corresponding to the input texts list
+    embeddings:List[List[float]]  # List of embedding vectors, corresponding to the input texts list
     usage: EmbeddingUsage  # Usage information
 ```
 
@@ -690,7 +690,7 @@ class RerankResult(BaseModel):
     Model class for rerank result.
     """
     model: str  # Actual model used
-    docs: list[RerankDocument]  # Reranked document list	
+    docs:List[RerankDocument]  # Reranked document list	
 ```
 
 ### RerankDocument

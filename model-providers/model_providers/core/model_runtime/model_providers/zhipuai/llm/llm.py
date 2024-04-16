@@ -1,5 +1,14 @@
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Generator, List, Optional, Union
+
+from zhipuai import (
+    ZhipuAI,
+)
+from zhipuai.types.chat.chat_completion import (
+    Completion,
+)
+from zhipuai.types.chat.chat_completion_chunk import (
+    ChatCompletionChunk,
+)
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
@@ -24,15 +33,6 @@ from model_providers.core.model_runtime.model_providers.__base.large_language_mo
 from model_providers.core.model_runtime.model_providers.zhipuai._common import (
     _CommonZhipuaiAI,
 )
-from zhipuai import (
-    ZhipuAI,
-)
-from zhipuai.types.chat.chat_completion import (
-    Completion,
-)
-from zhipuai.types.chat.chat_completion_chunk import (
-    ChatCompletionChunk,
-)
 from model_providers.core.model_runtime.utils import helper
 
 GLM_JSON_MODE_PROMPT = """You should always follow the instructions and output a valid JSON object.
@@ -53,10 +53,10 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -91,8 +91,8 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         )
 
     # def _transform_json_prompts(self, model: str, credentials: dict,
-    #                             prompt_messages: list[PromptMessage], model_parameters: dict,
-    #                             tools: list[PromptMessageTool] | None = None, stop: list[str] | None = None,
+    #                             prompt_messages:List[PromptMessage], model_parameters: dict,
+    #                             tools:List[PromptMessageTool] | None = None, stop:List[str] | None = None,
     #                             stream: bool = True, user: str | None = None) \
     #                         -> None:
     #     """
@@ -126,8 +126,8 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -172,10 +172,10 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         self,
         model: str,
         credentials_kwargs: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -205,7 +205,7 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
                 prompt_messages = prompt_messages[1:]
 
         # resolve zhipuai model not support system message and user message, assistant message must be in sequence
-        new_prompt_messages: list[PromptMessage] = []
+        new_prompt_messages: List[PromptMessage] = []
         for prompt_message in prompt_messages:
             copy_prompt_message = prompt_message.copy()
             if copy_prompt_message.role in [
@@ -375,9 +375,9 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        tools: Optional[list[PromptMessageTool]],
+        tools: Optional[List[PromptMessageTool]],
         response: Completion,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -388,7 +388,7 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         :return: llm response
         """
         text = ""
-        assistant_tool_calls: list[AssistantPromptMessage.ToolCall] = []
+        assistant_tool_calls: List[AssistantPromptMessage.ToolCall] = []
         for choice in response.choices:
             if choice.message.tool_calls:
                 for tool_call in choice.message.tool_calls:
@@ -430,9 +430,9 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        tools: Optional[list[PromptMessageTool]],
+        tools: Optional[List[PromptMessageTool]],
         responses: Generator[ChatCompletionChunk, None, None],
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -454,7 +454,7 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
             ):
                 continue
 
-            assistant_tool_calls: list[AssistantPromptMessage.ToolCall] = []
+            assistant_tool_calls: List[AssistantPromptMessage.ToolCall] = []
             for tool_call in delta.delta.tool_calls or []:
                 if tool_call.type == "function":
                     assistant_tool_calls.append(
@@ -531,8 +531,8 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
 
     def _convert_messages_to_prompt(
         self,
-        messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> str:
         """
         :param messages: List of PromptMessage to combine.

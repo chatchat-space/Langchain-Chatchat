@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Optional
 
 import dashscope
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydub import AudioSegment
 
 from model_providers.core.model_runtime.errors.invoke import InvokeBadRequestError

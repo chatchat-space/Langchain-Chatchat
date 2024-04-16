@@ -1,5 +1,4 @@
-from collections.abc import Generator
-from typing import Optional, Union, cast
+from typing import Dict, Generator, List, Optional, Type, Union, cast
 
 from model_providers.core.model_runtime.callbacks.base_callback import Callback
 from model_providers.core.model_runtime.entities.llm_entities import (
@@ -59,13 +58,13 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         return self._generate(
             model=model,
             credentials=credentials,
@@ -81,13 +80,13 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
-        callbacks: list[Callback] = None,
+        callbacks: List[Callback] = None,
     ) -> Union[LLMResult, Generator]:
         """
         Code block mode wrapper for invoking large language model
@@ -140,12 +139,12 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
+        user: Union[str, None] = None,
         response_format: str = "JSON",
     ) -> None:
         """
@@ -187,15 +186,15 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         # tools is not supported yet
         return self._num_tokens_from_messages(prompt_messages)
 
     def _num_tokens_from_messages(
         self,
-        messages: list[PromptMessage],
+        messages: List[PromptMessage],
     ) -> int:
         """Calculate num tokens for baichuan model"""
 
@@ -234,13 +233,13 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         instance = ErnieBotModel(
             api_key=credentials["api_key"],
             secret_key=credentials["secret_key"],
@@ -304,7 +303,7 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: ErnieMessage,
     ) -> LLMResult:
@@ -325,7 +324,7 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Generator[ErnieMessage, None, None],
     ) -> Generator:
@@ -367,7 +366,7 @@ class ErnieBotLargeLanguageModel(LargeLanguageModel):
                 )
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

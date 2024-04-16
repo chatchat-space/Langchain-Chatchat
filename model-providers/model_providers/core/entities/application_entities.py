@@ -21,9 +21,9 @@ class ModelConfigEntity(BaseModel):
     model_schema: AIModelEntity
     mode: str
     provider_model_bundle: ProviderModelBundle
-    credentials: dict[str, Any] = {}
-    parameters: dict[str, Any] = {}
-    stop: list[str] = []
+    credentials: Dict[str, Any] = {}
+    parameters: Dict[str, Any] = {}
+    stop: List[str] = []
 
 
 class AdvancedChatMessageEntity(BaseModel):
@@ -40,7 +40,7 @@ class AdvancedChatPromptTemplateEntity(BaseModel):
     Advanced Chat Prompt Template Entity.
     """
 
-    messages: list[AdvancedChatMessageEntity]
+    messages: List[AdvancedChatMessageEntity]
 
 
 class AdvancedCompletionPromptTemplateEntity(BaseModel):
@@ -102,7 +102,7 @@ class ExternalDataVariableEntity(BaseModel):
 
     variable: str
     type: str
-    config: dict[str, Any] = {}
+    config: Dict[str, Any] = {}
 
 
 class DatasetRetrieveConfigEntity(BaseModel):
@@ -146,7 +146,7 @@ class DatasetEntity(BaseModel):
     Dataset Config Entity.
     """
 
-    dataset_ids: list[str]
+    dataset_ids: List[str]
     retrieve_config: DatasetRetrieveConfigEntity
 
 
@@ -156,7 +156,7 @@ class SensitiveWordAvoidanceEntity(BaseModel):
     """
 
     type: str
-    config: dict[str, Any] = {}
+    config: Dict[str, Any] = {}
 
 
 class TextToSpeechEntity(BaseModel):
@@ -185,7 +185,7 @@ class AgentToolEntity(BaseModel):
     provider_type: Literal["builtin", "api"]
     provider_id: str
     tool_name: str
-    tool_parameters: dict[str, Any] = {}
+    tool_parameters: Dict[str, Any] = {}
 
 
 class AgentPromptEntity(BaseModel):
@@ -234,7 +234,7 @@ class AgentEntity(BaseModel):
     model: str
     strategy: Strategy
     prompt: Optional[AgentPromptEntity] = None
-    tools: list[AgentToolEntity] = None
+    tools: List[AgentToolEntity] = None
     max_iteration: int = 5
 
 
@@ -245,7 +245,7 @@ class AppOrchestrationConfigEntity(BaseModel):
 
     model_config: ModelConfigEntity
     prompt_template: PromptTemplateEntity
-    external_data_variables: list[ExternalDataVariableEntity] = []
+    external_data_variables: List[ExternalDataVariableEntity] = []
     agent: Optional[AgentEntity] = None
 
     # features
@@ -319,13 +319,13 @@ class ApplicationGenerateEntity(BaseModel):
     app_orchestration_config_entity: AppOrchestrationConfigEntity
 
     conversation_id: Optional[str] = None
-    inputs: dict[str, str]
+    inputs: Dict[str, str]
     query: Optional[str] = None
-    files: list[FileObj] = []
+    files: List[FileObj] = []
     user_id: str
     # extras
     stream: bool
     invoke_from: InvokeFrom
 
     # extra parameters, like: auto_generate_conversation_name
-    extras: dict[str, Any] = {}
+    extras: Dict[str, Any] = {}

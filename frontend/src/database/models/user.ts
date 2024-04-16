@@ -18,7 +18,7 @@ class _UserModel extends BaseModel {
 
     const list = (await this.table.toArray()) as (DB_User & { id: number })[];
 
-    return list[0];
+    returnList[0];
   };
 
   create = async (user: DB_User) => {

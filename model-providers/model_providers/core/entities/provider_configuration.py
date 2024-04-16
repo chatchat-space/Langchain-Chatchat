@@ -1,9 +1,8 @@
 import datetime
 import json
 import logging
-from collections.abc import Iterator
 from json import JSONDecodeError
-from typing import Optional
+from typing import Dict, Iterator, List, Optional
 
 from pydantic import BaseModel
 
@@ -162,7 +161,7 @@ class ProviderConfiguration(BaseModel):
 
     def get_provider_models(
         self, model_type: Optional[ModelType] = None, only_active: bool = False
-    ) -> list[ModelWithProviderEntity]:
+    ) -> List[ModelWithProviderEntity]:
         """
         Get provider models.
         :param model_type: model type
@@ -189,8 +188,8 @@ class ProviderConfiguration(BaseModel):
         return sorted(provider_models, key=lambda x: x.model_type.value)
 
     def _get_custom_provider_models(
-        self, model_types: list[ModelType], provider_instance: ModelProvider
-    ) -> list[ModelWithProviderEntity]:
+        self, model_types: List[ModelType], provider_instance: ModelProvider
+    ) -> List[ModelWithProviderEntity]:
         """
         Get custom provider models.
 
@@ -266,7 +265,7 @@ class ProviderConfigurations(BaseModel):
     Model class for provider configuration dict.
     """
 
-    configurations: dict[str, ProviderConfiguration] = {}
+    configurations: Dict[str, ProviderConfiguration] = {}
 
     def __init__(self):
         super().__init__()
@@ -276,7 +275,7 @@ class ProviderConfigurations(BaseModel):
         provider: Optional[str] = None,
         model_type: Optional[ModelType] = None,
         only_active: bool = False,
-    ) -> list[ModelWithProviderEntity]:
+    ) -> List[ModelWithProviderEntity]:
         """
         Get available models.
 
@@ -317,7 +316,7 @@ class ProviderConfigurations(BaseModel):
 
         return all_models
 
-    def to_list(self) -> list[ProviderConfiguration]:
+    def to_list(self) -> List[ProviderConfiguration]:
         """
         Convert to list.
 

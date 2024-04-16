@@ -68,7 +68,7 @@ class QueueRetrieverResourcesEvent(AppQueueEvent):
     """
 
     event = QueueEvent.RETRIEVER_RESOURCES
-    retriever_resources: list[dict]
+    retriever_resources: List[dict]
 
 
 class AnnotationReplyEvent(AppQueueEvent):

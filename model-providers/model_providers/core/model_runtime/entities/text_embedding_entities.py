@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import List
 
 from pydantic import BaseModel
 
@@ -25,5 +26,5 @@ class TextEmbeddingResult(BaseModel):
     """
 
     model: str
-    embeddings: list[list[float]]
+    embeddings: List[List[float]]
     usage: EmbeddingUsage

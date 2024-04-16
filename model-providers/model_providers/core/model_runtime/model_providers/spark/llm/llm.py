@@ -1,6 +1,6 @@
 import threading
 from collections.abc import Generator
-from typing import Optional, Union
+from typing import Dict, List, Optional, Type, Union
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
@@ -37,10 +37,10 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -66,8 +66,8 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
+        prompt_messages: List[PromptMessage],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -109,9 +109,9 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -171,13 +171,12 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         client: SparkLLMClient,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
 
         :param model: model name
-        :param response: response
         :param prompt_messages: prompt messages
         :return: llm response
         """
@@ -222,7 +221,7 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         client: SparkLLMClient,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -300,7 +299,7 @@ class SparkLargeLanguageModel(LargeLanguageModel):
 
         return message_text
 
-    def _convert_messages_to_prompt(self, messages: list[PromptMessage]) -> str:
+    def _convert_messages_to_prompt(self, messages: List[PromptMessage]) -> str:
         """
         Format a list of messages into a full prompt for the Anthropic model
 
@@ -317,7 +316,7 @@ class SparkLargeLanguageModel(LargeLanguageModel):
         return text.rstrip()
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

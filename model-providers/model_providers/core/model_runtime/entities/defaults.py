@@ -1,8 +1,10 @@
+from typing import Dict
+
 from model_providers.core.model_runtime.entities.model_entities import (
     DefaultParameterName,
 )
 
-PARAMETER_RULE_TEMPLATE: dict[DefaultParameterName, dict] = {
+PARAMETER_RULE_TEMPLATE: Dict[DefaultParameterName, dict] = {
     DefaultParameterName.TEMPERATURE: {
         "label": {
             "en_US": "Temperature",

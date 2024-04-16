@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-providers",
         type=str,
-        default="D:\\project\\Langchain-Chatchat\\model-providers\\model_providers.yaml",
+        default="/mnt/d/project/Langchain-Chatchat/model-providers/model_providers.yaml",
         help="run model_providers servers",
         dest="model_providers",
     )

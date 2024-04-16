@@ -1,5 +1,9 @@
 import time
-from typing import Optional
+from typing import List, Optional, Tuple
+
+from zhipuai import (
+    ZhipuAI,
+)
 
 from model_providers.core.model_runtime.entities.model_entities import PriceType
 from model_providers.core.model_runtime.entities.text_embedding_entities import (
@@ -15,9 +19,6 @@ from model_providers.core.model_runtime.model_providers.__base.text_embedding_mo
 from model_providers.core.model_runtime.model_providers.zhipuai._common import (
     _CommonZhipuaiAI,
 )
-from zhipuai import (
-    ZhipuAI,
-)
 
 
 class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
@@ -29,7 +30,7 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -54,7 +55,7 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
             model=model,
         )
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -95,8 +96,8 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
             raise CredentialsValidateFailedError(str(ex))
 
     def embed_documents(
-        self, model: str, client: ZhipuAI, texts: list[str]
-    ) -> tuple[list[list[float]], int]:
+        self, model: str, client: ZhipuAI, texts: List[str]
+    ) -> Tuple[List[List[float]], int]:
         """Call out to ZhipuAI's embedding endpoint.
 
         Args:
@@ -115,17 +116,6 @@ class ZhipuAITextEmbeddingModel(_CommonZhipuaiAI, TextEmbeddingModel):
             embedding_used_tokens += response.usage.total_tokens
 
         return [list(map(float, e)) for e in embeddings], embedding_used_tokens
-
-    def embed_query(self, text: str) -> list[float]:
-        """Call out to ZhipuAI's embedding endpoint.
-
-        Args:
-            text: The text to embed.
-
-        Returns:
-            Embeddings for the text.
-        """
-        return self.embed_documents([text])[0]
 
     def _calc_response_usage(
         self, model: str, credentials: dict, tokens: int

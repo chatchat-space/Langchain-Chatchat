@@ -58,13 +58,13 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         return self._generate(
             model,
             credentials,
@@ -110,13 +110,13 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: list[PromptMessageTool] | None = None,
+        prompt_messages: List[PromptMessage],
+        tools: Union[List[PromptMessageTool], None] = None,
     ) -> int:
         return self._num_tokens_from_messages(prompt_messages, tools)
 
     def _num_tokens_from_messages(
-        self, messages: list[PromptMessage], tools: list[PromptMessageTool]
+        self, messages: List[PromptMessage], tools: List[PromptMessageTool]
     ) -> int:
         """
         Calculate num tokens for minimax model
@@ -137,13 +137,13 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: list[PromptMessageTool] | None = None,
-        stop: list[str] | None = None,
+        tools: Union[List[PromptMessageTool], None] = None,
+        stop: Union[List[str], None] = None,
         stream: bool = True,
-        user: str | None = None,
-    ) -> LLMResult | Generator:
+        user: Union[str, None] = None,
+    ) -> Union[LLMResult, Generator]:
         """
         use MinimaxChatCompletionPro as the type of client, anyway,  MinimaxChatCompletion has the same interface
         """
@@ -227,7 +227,7 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: MinimaxMessage,
     ) -> LLMResult:
@@ -250,7 +250,7 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
     def _handle_chat_generate_stream_response(
         self,
         model: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         credentials: dict,
         response: Generator[MinimaxMessage, None, None],
     ) -> Generator[LLMResultChunk, None, None]:
@@ -319,7 +319,7 @@ class MinimaxLargeLanguageModel(LargeLanguageModel):
                 )
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

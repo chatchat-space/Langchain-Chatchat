@@ -1,7 +1,6 @@
 import json
 import logging
-from collections.abc import Generator
-from typing import Optional, Union
+from typing import Dict, Generator, List, Optional, Type, Union
 
 import boto3
 from botocore.config import Config
@@ -48,10 +47,10 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        tools: Optional[list[PromptMessageTool]] = None,
-        stop: Optional[list[str]] = None,
+        tools: Optional[List[PromptMessageTool]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -77,8 +76,8 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        messages: list[PromptMessage] | str,
-        tools: Optional[list[PromptMessageTool]] = None,
+        messages: Union[List[PromptMessage], str],
+        tools: Optional[List[PromptMessageTool]] = None,
     ) -> int:
         """
         Get number of tokens for given prompt messages
@@ -99,7 +98,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         return self._get_num_tokens_by_gpt2(prompt)
 
     def _convert_messages_to_prompt(
-        self, model_prefix: str, messages: list[PromptMessage]
+        self, model_prefix: str, messages: List[PromptMessage]
     ) -> str:
         """
         Format a list of messages into a full prompt for the Google model
@@ -190,7 +189,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         return message_text
 
     def _convert_messages_to_prompt(
-        self, messages: list[PromptMessage], model_prefix: str
+        self, messages: List[PromptMessage], model_prefix: str
     ) -> str:
         """
         Format a list of messages into a full prompt for the Anthropic, Amazon and Llama models
@@ -216,9 +215,9 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
     def _create_payload(
         self,
         model_prefix: str,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
     ):
         """
@@ -282,9 +281,9 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         self,
         model: str,
         credentials: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
         model_parameters: dict,
-        stop: Optional[list[str]] = None,
+        stop: Optional[List[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
@@ -356,7 +355,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> LLMResult:
         """
         Handle llm response
@@ -436,7 +435,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
         model: str,
         credentials: dict,
         response: dict,
-        prompt_messages: list[PromptMessage],
+        prompt_messages: List[PromptMessage],
     ) -> Generator:
         """
         Handle llm stream response
@@ -551,7 +550,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
                 )
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the ermd = genai.GenerativeModel(model)ror type thrown to the caller
@@ -570,7 +569,7 @@ class BedrockLargeLanguageModel(LargeLanguageModel):
 
     def _map_client_to_invoke_error(
         self, error_code: str, error_msg: str
-    ) -> type[InvokeError]:
+    ) -> Type[InvokeError]:
         """
         Map client error to invoke error
 

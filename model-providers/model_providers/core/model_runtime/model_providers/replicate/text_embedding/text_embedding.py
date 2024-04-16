@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Optional
+from typing import List, Optional
 
 from replicate import Client as ReplicateClient
 
@@ -31,7 +31,7 @@ class ReplicateEmbeddingModel(_CommonReplicate, TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         client = ReplicateClient(
@@ -52,7 +52,7 @@ class ReplicateEmbeddingModel(_CommonReplicate, TextEmbeddingModel):
 
         return TextEmbeddingResult(model=model, embeddings=embeddings, usage=usage)
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         num_tokens = 0
         for text in texts:
             num_tokens += self._get_num_tokens_by_gpt2(text)
@@ -124,8 +124,8 @@ class ReplicateEmbeddingModel(_CommonReplicate, TextEmbeddingModel):
         client: ReplicateClient,
         replicate_model_version: str,
         text_input_key: str,
-        texts: list[str],
-    ) -> list[list[float]]:
+        texts: List[str],
+    ) -> List[List[float]]:
         if text_input_key in ("text", "inputs"):
             embeddings = []
             for text in texts:

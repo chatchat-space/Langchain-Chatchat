@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from model_providers.core.model_runtime.entities.provider_entities import (
     CredentialFormSchema,
@@ -8,7 +8,7 @@ from model_providers.core.model_runtime.entities.provider_entities import (
 
 class CommonValidator:
     def _validate_and_filter_credential_form_schemas(
-        self, credential_form_schemas: list[CredentialFormSchema], credentials: dict
+        self, credential_form_schemas: List[CredentialFormSchema], credentials: dict
     ) -> dict:
         need_validate_credential_form_schema_map = {}
         for credential_form_schema in credential_form_schemas:

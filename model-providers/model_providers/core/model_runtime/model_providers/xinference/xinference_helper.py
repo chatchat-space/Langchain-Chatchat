@@ -1,5 +1,6 @@
 from threading import Lock
 from time import time
+from typing import List
 
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError, MissingSchema, Timeout
@@ -10,7 +11,7 @@ from yarl import URL
 class XinferenceModelExtraParameter:
     model_format: str
     model_handle_type: str
-    model_ability: list[str]
+    model_ability: List[str]
     max_tokens: int = 512
     context_length: int = 2048
     support_function_call: bool = False
@@ -19,7 +20,7 @@ class XinferenceModelExtraParameter:
         self,
         model_format: str,
         model_handle_type: str,
-        model_ability: list[str],
+        model_ability: List[str],
         support_function_call: bool,
         max_tokens: int,
         context_length: int,
@@ -115,7 +116,7 @@ class XinferenceHelper:
             model_handle_type = "chat"
         else:
             raise NotImplementedError(
-                f"xinference model handle type {model_handle_type} is not supported"
+                f"xinference model handle type {response_json.get('model_type')} is not supported"
             )
 
         support_function_call = "tools" in model_ability

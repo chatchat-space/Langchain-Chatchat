@@ -159,7 +159,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
     async def list_models(self, provider: str, request: Request):
         logger.info(f"Received list_models request for provider: {provider}")
         # 返回ModelType所有的枚举
-        llm_models: list[AIModelEntity] = []
+        llm_models: List[AIModelEntity] = []
         for model_type in ModelType.__members__.values():
             try:
                 provider_model_bundle = (
@@ -176,7 +176,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 )
                 logger.error(e)
 
-        # models list[AIModelEntity]转换称List[ModelCard]
+        # modelsList[AIModelEntity]转换称List[ModelCard]
 
         models_list = [
             ModelCard(id=model.model, object=model.model_type.to_origin_model_type())

@@ -1,3 +1,5 @@
+from typing import Dict, List, Type
+
 from model_providers.core.model_runtime.errors.invoke import InvokeError
 
 
@@ -11,7 +13,7 @@ class _CommonTongyi:
         return credentials_kwargs
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         """
         Map model invoke error to unified error
         The key is the error type thrown to the caller

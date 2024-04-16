@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from typing import Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -110,7 +110,7 @@ class PromptMessage(ABC, BaseModel):
     """
 
     role: PromptMessageRole
-    content: Optional[str | list[PromptMessageContent]] = None
+    content: Optional[Union[str, List[PromptMessageContent]]] = None
     name: Optional[str] = None
 
 
@@ -145,7 +145,7 @@ class AssistantPromptMessage(PromptMessage):
         function: ToolCallFunction
 
     role: PromptMessageRole = PromptMessageRole.ASSISTANT
-    tool_calls: list[ToolCall] = []
+    tool_calls: List[ToolCall] = []
 
 
 class SystemPromptMessage(PromptMessage):

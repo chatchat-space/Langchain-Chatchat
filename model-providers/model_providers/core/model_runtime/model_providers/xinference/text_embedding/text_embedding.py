@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Dict, List, Optional, Type, Union
 
 from xinference_client.client.restful.restful_client import (
     Client,
@@ -46,7 +46,7 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
         self,
         model: str,
         credentials: dict,
-        texts: list[str],
+        texts: List[str],
         user: Optional[str] = None,
     ) -> TextEmbeddingResult:
         """
@@ -116,7 +116,7 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
 
         return result
 
-    def get_num_tokens(self, model: str, credentials: dict, texts: list[str]) -> int:
+    def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:
         """
         Get number of tokens for given prompt messages
 
@@ -167,7 +167,7 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
             raise CredentialsValidateFailedError(e)
 
     @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
+    def _invoke_error_mapping(self) -> Dict[Type[InvokeError], List[Type[Exception]]]:
         return {
             InvokeConnectionError: [InvokeConnectionError],
             InvokeServerUnavailableError: [InvokeServerUnavailableError],
@@ -210,7 +210,7 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
-    ) -> AIModelEntity | None:
+    ) -> Union[AIModelEntity, None]:
         """
         used to define customizable model schema
         """

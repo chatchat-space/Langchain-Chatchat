@@ -1,6 +1,6 @@
 import time
 from abc import abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.model_runtime.entities.rerank_entities import RerankResult
@@ -19,7 +19,7 @@ class RerankModel(AIModel):
         model: str,
         credentials: dict,
         query: str,
-        docs: list[str],
+        docs: List[str],
         score_threshold: Optional[float] = None,
         top_n: Optional[int] = None,
         user: Optional[str] = None,
@@ -51,7 +51,7 @@ class RerankModel(AIModel):
         model: str,
         credentials: dict,
         query: str,
-        docs: list[str],
+        docs: List[str],
         score_threshold: Optional[float] = None,
         top_n: Optional[int] = None,
         user: Optional[str] = None,
