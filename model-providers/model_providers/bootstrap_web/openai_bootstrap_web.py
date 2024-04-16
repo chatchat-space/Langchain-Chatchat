@@ -237,8 +237,10 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             return await openai_embedding_text(response)
 
         except ValueError as e:
+            logger.error(f"Error while creating embeddings: {str(e)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except InvokeError as e:
+            logger.error(f"Error while creating embeddings: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             )
@@ -295,9 +297,11 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             else:
                 return await openai_chat_completion(response)
         except ValueError as e:
+            logger.error(f"Error while creating chat completion: {str(e)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         except InvokeError as e:
+            logger.error(f"Error while creating chat completion: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
             )
