@@ -65,7 +65,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 ```shell
 docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
-docker run -d --gpus all -p 80:8501 ccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 uswccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
 ```
 
