@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Generator
+from typing import Generator, List, Optional, Union
 
 from huggingface_hub import InferenceClient
 from huggingface_hub.hf_api import HfApi

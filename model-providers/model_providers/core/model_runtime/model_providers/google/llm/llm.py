@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional, Union, Generator, List, Dict, Type
+from typing import Dict, Generator, List, Optional, Type, Union
 
 import google.api_core.exceptions as exceptions
 import google.generativeai as genai
@@ -471,7 +471,6 @@ class GoogleLargeLanguageModel(LargeLanguageModel):
         """
         tool_call = None
         if response_function_call:
-
             if isinstance(response_function_call, FunctionCall):
                 map_composite_dict = dict(response_function_call.args.items())
                 function = AssistantPromptMessage.ToolCall.ToolCallFunction(

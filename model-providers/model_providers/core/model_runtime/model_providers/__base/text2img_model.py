@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import IO, Optional, List
+from typing import IO, List, Optional
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.model_runtime.model_providers.__base.ai_model import AIModel

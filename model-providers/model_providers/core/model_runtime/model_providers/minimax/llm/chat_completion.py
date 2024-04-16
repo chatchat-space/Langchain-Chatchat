@@ -1,5 +1,5 @@
 from json import dumps, loads
-from typing import Any, Union, Generator, List, Dict
+from typing import Any, Dict, Generator, List, Union
 
 from requests import Response, post
 

@@ -2,7 +2,7 @@ import json
 import logging
 from collections.abc import Generator
 from decimal import Decimal
-from typing import Optional, Union, cast, List
+from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
 
 import requests

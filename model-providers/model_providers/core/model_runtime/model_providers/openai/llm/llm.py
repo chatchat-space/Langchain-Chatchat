@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Generator
-from typing import Optional, Union, cast, List
+from typing import List, Optional, Union, cast
 
 import tiktoken
 from openai import OpenAI, Stream
@@ -851,7 +851,9 @@ class OpenAILargeLanguageModel(_CommonOpenAI, LargeLanguageModel):
 
     def _extract_response_tool_calls(
         self,
-        response_tool_calls: List[Union[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]],
+        response_tool_calls: List[
+            Union[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]
+        ],
     ) -> List[AssistantPromptMessage.ToolCall]:
         """
         Extract tool calls from response

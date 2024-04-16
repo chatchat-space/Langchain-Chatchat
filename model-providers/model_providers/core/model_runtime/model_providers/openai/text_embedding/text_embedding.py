@@ -1,6 +1,6 @@
 import base64
 import time
-from typing import Optional, Union, List, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import tiktoken

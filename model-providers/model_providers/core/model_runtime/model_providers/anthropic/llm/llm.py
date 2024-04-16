@@ -1,6 +1,6 @@
 import base64
 import mimetypes
-from typing import Optional, Union, cast, Generator, List, Dict, Type
+from typing import Dict, Generator, List, Optional, Type, Union, cast
 
 import anthropic
 import requests

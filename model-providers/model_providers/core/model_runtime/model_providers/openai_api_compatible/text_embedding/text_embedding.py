@@ -1,7 +1,7 @@
 import json
 import time
 from decimal import Decimal
-from typing import Optional, List
+from typing import List, Optional
 from urllib.parse import urljoin
 
 import numpy as np

@@ -3,7 +3,7 @@ import logging
 import re
 from collections.abc import Generator
 from decimal import Decimal
-from typing import Optional, Union, cast, List, Dict, Type
+from typing import Dict, List, Optional, Type, Union, cast
 from urllib.parse import urljoin
 
 import requests

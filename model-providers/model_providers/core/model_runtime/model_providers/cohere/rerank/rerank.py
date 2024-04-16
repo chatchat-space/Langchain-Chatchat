@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Type
+from typing import Dict, List, Optional, Type
 
 import cohere
 

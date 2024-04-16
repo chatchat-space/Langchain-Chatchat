@@ -1,7 +1,7 @@
 from enum import Enum
 from hashlib import md5
 from json import dumps, loads
-from typing import Any, Union, Dict, List, Generator
+from typing import Any, Dict, Generator, List, Union
 
 from requests import post
 

@@ -1,7 +1,7 @@
 import base64
 import copy
 import time
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import numpy as np
 import tiktoken

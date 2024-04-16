@@ -1,4 +1,4 @@
-from typing import List, Union, Type, Dict, Generator
+from typing import Dict, Generator, List, Type, Union
 
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
 from model_providers.core.model_runtime.entities.llm_entities import (

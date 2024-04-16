@@ -1,4 +1,4 @@
-from typing import Dict, Type, List
+from typing import Dict, List, Type
 
 import openai
 from httpx import Timeout

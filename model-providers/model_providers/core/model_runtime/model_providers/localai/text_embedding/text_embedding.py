@@ -1,6 +1,6 @@
 import time
 from json import JSONDecodeError, dumps
-from typing import Optional, List, Union, Dict, Type
+from typing import Dict, List, Optional, Type, Union
 
 from requests import post
 from yarl import URL

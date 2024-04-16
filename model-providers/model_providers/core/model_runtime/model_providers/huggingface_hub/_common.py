@@ -1,4 +1,4 @@
-from typing import Dict, Type, List
+from typing import Dict, List, Type
 
 from huggingface_hub.utils import BadRequestError, HfHubHTTPError
 

@@ -1,4 +1,4 @@
-from typing import cast, List, Union, Dict, Type, Generator
+from typing import Dict, Generator, List, Type, Union, cast
 
 from httpx import Timeout
 from openai import (

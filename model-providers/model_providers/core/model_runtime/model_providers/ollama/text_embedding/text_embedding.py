@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from decimal import Decimal
-from typing import Optional, List, Dict, Type
+from typing import Dict, List, Optional, Type
 from urllib.parse import urljoin
 
 import numpy as np

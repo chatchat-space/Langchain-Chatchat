@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Generator
+from typing import Generator, List, Optional, Union
 
 from model_providers.core.model_runtime.entities.llm_entities import LLMResult
 from model_providers.core.model_runtime.entities.message_entities import (

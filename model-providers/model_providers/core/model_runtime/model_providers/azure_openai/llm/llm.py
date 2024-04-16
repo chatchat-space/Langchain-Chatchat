@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Optional, Union, cast, List, Generator
+from typing import Generator, List, Optional, Union, cast
 
 import tiktoken
 from openai import AzureOpenAI, Stream
@@ -544,7 +544,9 @@ class AzureOpenAILargeLanguageModel(_CommonAzureOpenAI, LargeLanguageModel):
 
     @staticmethod
     def _extract_response_tool_calls(
-        response_tool_calls: List[Union[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]],
+        response_tool_calls: List[
+            Union[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]
+        ],
     ) -> List[AssistantPromptMessage.ToolCall]:
         tool_calls = []
         if response_tool_calls:
