@@ -70,7 +70,7 @@ these.
 
 ```shell
 docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
-docker run -d --gpus all -p 80:8501 uswccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 uswccr.ccs.tencentyun.com/chatchat/chatchat:v0.2.10-20240417-7da7636
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
 ```
 
