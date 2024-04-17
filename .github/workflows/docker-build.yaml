@@ -151,5 +151,5 @@ jobs:
       - name: Push README.md
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAT }}
           branch: ${{ github.ref }}
