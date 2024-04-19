@@ -114,7 +114,7 @@ $ pip install -r requirements_webui.txt
 请注意，LangChain-Chatchat `0.2.x` 系列是针对 Langchain `0.0.x` 系列版本的，如果你使用的是 Langchain `0.1.x`
 系列版本，需要降级您的`Langchain`版本。
 
-### 2， 模型下载
+### 2. 模型下载
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding
 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
