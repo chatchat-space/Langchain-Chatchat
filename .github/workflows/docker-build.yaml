@@ -142,14 +142,15 @@ jobs:
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Update README.md
         run: |
+          git config --global user.email "docker-build@github.com"
+          git config --global user.name "Docker Build"
           sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README.md
           sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README_en.md
           sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README_ja.md
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git add .
           git commit -am "feat:update docker image:tag"
       - name: Push README.md
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GH_PAT }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
