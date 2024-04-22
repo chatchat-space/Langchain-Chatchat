@@ -2,7 +2,7 @@
 ### 加入开发
 #### 依赖管理：Poetry与env/dependency管理方法
 这个项目使用 Poetry 来管理依赖。 
-> 注意：在安装Poetry之前，如果您使用Conda，请创建并激活一个新的Conda env（例如，`conda create-n chatchat python=3.9`）
+> 注意：在安装Poetry之前，如果您使用Conda，请创建并激活一个新的Conda env（例如，`conda create -n chatchat python=3.9`）
 
 Install Poetry: [documentation on how to install it.](https://python-poetry.org/docs/#installing-with-pipx)
 
