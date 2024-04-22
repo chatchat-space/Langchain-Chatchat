@@ -10,7 +10,7 @@
 ### ⚠️ 重要提示
 
 `0.2.10`将会是`0.2.x`系列的最后一个版本，`0.2.x`系列版本将会停止更新和技术支持，全力研发具有更强应用性的 `Langchain-Chatchat 0.3.x`。
-`0.2.10` 的后续 bug 修复将会直接推送到`master`分支，而不在进行版本更新。
+`0.2.10` 的后续 bug 修复将会直接推送到`master`分支，而不再进行版本更新。
 
 ---
 
@@ -59,12 +59,14 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 版本所使用代码已更新至本项目 `v0.2.10` 版本。
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7) 已经更新到 ```0.2.7``` 版本。
+🐳 [Docker 镜像](isafetech/chatchat:0.2.10) 已经更新到 ```0.2.10``` 版本。
 
-🌲 一行命令运行 Docker ：
+🌲 本次更新后同时支持DockerHub、阿里云、腾讯云镜像源：
 
 ```shell
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7
+docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 uswccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
+docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
 ```
 
 🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，_
@@ -112,7 +114,7 @@ $ pip install -r requirements_webui.txt
 请注意，LangChain-Chatchat `0.2.x` 系列是针对 Langchain `0.0.x` 系列版本的，如果你使用的是 Langchain `0.1.x`
 系列版本，需要降级您的`Langchain`版本。
 
-### 2， 模型下载
+### 2. 模型下载
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding
 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
@@ -193,7 +195,7 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_99.jpg" alt="二维码" width="300" />
+<img src="img/qr_code_104.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
