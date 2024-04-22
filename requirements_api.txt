@@ -50,7 +50,7 @@ pyjwt==2.8.0
 # duckduckgo-search~=3.9.9
 # metaphor-python~=0.1.23
 
-# volcengine>=1.0.119
+# volcengine>=1.0.134
 # pymilvus==2.3.6
 # psycopg2==2.9.9
 # pgvector>=0.2.4
