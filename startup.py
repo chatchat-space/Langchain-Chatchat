@@ -474,7 +474,8 @@ def parse_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "-a",
         "--all-webui",
-        action="store_true",
+        default=True,
+        # action="store_true",
         help="run fastchat's controller/openai_api/model_worker servers, run api.py and webui.py",
         dest="all_webui",
     )
@@ -552,7 +553,8 @@ def parse_args() -> argparse.ArgumentParser:
     parser.add_argument(
         "-i",
         "--lite",
-        action="store_true",
+        default=True,
+        # action="store_true",
         help="以Lite模式运行：仅支持在线API的LLM对话、搜索引擎对话",
         dest="lite",
     )
