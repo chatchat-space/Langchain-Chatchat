@@ -60,9 +60,10 @@ class LANXINWorker(ApiModelWorker):
         params_uid = {'requestId': str(uuid.uuid4())}
 
         data = {
-            'prompt': params.messages[-1]['content'],
+            'messages': params.messages,
             'model': 'vivo-BlueLM-TB',
             'sessionId': str(uuid.uuid4()),
+            'systemPrompt': '',
             'extra': {
                 'temperature': 0.9
             }
