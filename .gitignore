@@ -6,7 +6,6 @@ logs
 !/knowledge_base/samples
 /knowledge_base/samples/vector_store
 
-/configs/*.py
 .vscode/
 
 # below are standard python ignore files

@@ -105,7 +105,7 @@ if __name__ == "__main__":
     from server.utils import MakeFastAPIOffline
     from fastchat.serve.model_worker import app
 
-    worker = ChatGLMWorker(
+    worker = LANXINWorker(
         controller_addr="http://127.0.0.1:20001",
         worker_addr="http://127.0.0.1:21001",
     )
