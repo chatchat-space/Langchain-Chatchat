@@ -3,11 +3,10 @@ import multiprocessing
 from contextlib import asynccontextmanager
 import multiprocessing as mp
 import os
-import subprocess
+import logging
 import sys
 from multiprocessing import Process
-
-from chatchat.model_loaders.init_server import init_server
+logger = logging.getLogger()
 
 # 设置numexpr最大线程数，默认为CPU核心数
 try:
@@ -18,20 +17,9 @@ try:
 except:
     pass
 
-from chatchat.configs import (
-    LOG_PATH,
-    log_verbose,
-    logger,
-    DEFAULT_EMBEDDING_MODEL,
-    TEXT_SPLITTER_NAME,
-    API_SERVER,
-    WEBUI_SERVER, MODEL_PROVIDERS_CFG_PATH_CONFIG, MODEL_PROVIDERS_CFG_HOST, MODEL_PROVIDERS_CFG_PORT
-)
-from chatchat.server.utils import FastAPI
-from chatchat.server.knowledge_base.migrate import create_tables
+from fastapi import FastAPI
 import argparse
 from typing import List, Dict
-from chatchat.configs import VERSION
 
 
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
@@ -48,9 +36,20 @@ def run_init_server(
         model_platforms_shard: Dict,
         started_event: mp.Event = None,
         run_mode: str = None,
-        model_providers_cfg_path: str = MODEL_PROVIDERS_CFG_PATH_CONFIG,
-        provider_host: str = MODEL_PROVIDERS_CFG_HOST,
-        provider_port: int = MODEL_PROVIDERS_CFG_PORT):
+        model_providers_cfg_path: str = None,
+        provider_host: str = None,
+        provider_port: int = None):
+    from chatchat.model_loaders.init_server import init_server
+    from chatchat.configs import (MODEL_PROVIDERS_CFG_PATH_CONFIG,
+                                  MODEL_PROVIDERS_CFG_HOST,
+                                  MODEL_PROVIDERS_CFG_PORT)
+    if model_providers_cfg_path is None:
+        model_providers_cfg_path = MODEL_PROVIDERS_CFG_PATH_CONFIG
+    if provider_host is None:
+        provider_host = MODEL_PROVIDERS_CFG_HOST
+    if provider_port is None:
+        provider_port = MODEL_PROVIDERS_CFG_PORT
+
     init_server(model_platforms_shard=model_platforms_shard,
                 started_event=started_event,
                 model_providers_cfg_path=model_providers_cfg_path,
@@ -64,7 +63,7 @@ def run_api_server(model_platforms_shard: Dict,
     from chatchat.server.api_server.server_app import create_app
     import uvicorn
     from chatchat.server.utils import set_httpx_config
-    from chatchat.configs import MODEL_PLATFORMS
+    from chatchat.configs import MODEL_PLATFORMS, API_SERVER
     MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
     logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
@@ -81,7 +80,7 @@ def run_webui(model_platforms_shard: Dict,
               started_event: mp.Event = None, run_mode: str = None):
     import sys
     from chatchat.server.utils import set_httpx_config
-    from chatchat.configs import MODEL_PLATFORMS
+    from chatchat.configs import MODEL_PLATFORMS, WEBUI_SERVER
     if model_platforms_shard.get('provider_platforms'):
         MODEL_PLATFORMS.extend(model_platforms_shard.get('provider_platforms'))
     logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
@@ -184,7 +183,7 @@ def dump_server_info(after_start=False, args=None):
     import platform
     import langchain
     from chatchat.server.utils import api_address, webui_address
-
+    from chatchat.configs import VERSION, TEXT_SPLITTER_NAME, DEFAULT_EMBEDDING_MODEL
     print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print(f"操作系统：{platform.platform()}.")
@@ -216,6 +215,7 @@ def dump_server_info(after_start=False, args=None):
 async def start_main_server():
     import time
     import signal
+    from chatchat.configs import LOG_PATH
 
     def handler(signalname):
         """
@@ -346,9 +346,13 @@ async def start_main_server():
                 logger.info("Process status: %s", p)
 
 
-if __name__ == "__main__":
+def main():
     # 添加这行代码
+    cwd = os.getcwd()
+    sys.path.append(cwd)
     multiprocessing.freeze_support()
+    print("cwd:"+cwd)
+    from chatchat.server.knowledge_base.migrate import create_tables
     create_tables()
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()
@@ -360,3 +364,7 @@ if __name__ == "__main__":
 
         asyncio.set_event_loop(loop)
     loop.run_until_complete(start_main_server())
+
+
+if __name__ == "__main__":
+    main()
