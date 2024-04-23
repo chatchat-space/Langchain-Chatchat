@@ -42,3 +42,24 @@ make format
 make format_diff
 ```
 当你对项目的一部分进行了更改,并希望确保更改的部分格式正确,而不影响代码库的其他部分时,这个命令特别有用。
+
+
+### 开始使用
+
+环境配置完成后，启动步骤为先启动chatchat-server，然后启动chatchat-frontend。
+
+#### 启动chatchat-server
+- 初始化依赖
+```shell
+cd chatchat-server/chatchat
+python copy_config_example.py
+```
+- 初始化仓库
+```shell
+cd chatchat-server/chatchat
+python init_database.py
+```
+- 启动服务
+```shell
+python chatchat-server/chatchat/startup.py -a
+```
