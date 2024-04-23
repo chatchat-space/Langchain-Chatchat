@@ -46,9 +46,30 @@ make format_diff
 
 ### 开始使用
 
-环境配置完成后，启动步骤为先启动chatchat-server，然后启动chatchat-frontend。
+> 环境配置完成后，启动步骤为先启动chatchat-server，然后启动chatchat-frontend。
+> chatchat可通过pypi安装一键启动，您也可以选择使用源码启动。
 
-#### 启动chatchat-server
+#### pypi安装一键启动
+- 安装chatchat
+```shell
+pip install chatchat
+```
+- 复制配置文件
+
+ ```shell
+cd chatchat-server/chatchat
+python copy_config_example.py
+```
+ 
+- 启动服务
+```shell
+cd chatchat-server/
+python -m chatchat.startup -a
+```
+
+
+
+#### 源码启动chatchat-server
 - 初始化依赖
 ```shell
 cd chatchat-server/chatchat
