@@ -31,6 +31,13 @@ class ApiConfigParams(BaseModel):
     APISecret: Optional[str] = None # for xinghuo
     is_v2: bool = False # for xinghuo
 
+    # app_id: Optional[str] = None # for vivo
+    # app_key: Optional[str] = None # for vivo
+    # method: Optional[str] = None # for vivo
+    # uri: Optional[str] = None # for vivo
+    # domain: Optional[str] = None # for vivo
+
+
     worker_name: Optional[str] = None
 
     class Config:
