@@ -5,6 +5,9 @@ description = ""
 authors = ["chatchat"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+chatchat = 'chatchat.startup:main'
+
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.12,!=3.9.7"
 model-providers = "^0.3.0"

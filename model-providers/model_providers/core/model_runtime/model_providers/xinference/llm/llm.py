@@ -526,7 +526,8 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
     def _extract_response_tool_calls(
         self,
         response_tool_calls: Union[
-            List[ChatCompletionMessageToolCall, ChoiceDeltaToolCall]
+            List[ChatCompletionMessageToolCall],
+            List[ChoiceDeltaToolCall]
         ],
     ) -> List[AssistantPromptMessage.ToolCall]:
         """
