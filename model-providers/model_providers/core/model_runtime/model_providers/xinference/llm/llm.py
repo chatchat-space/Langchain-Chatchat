@@ -1,5 +1,5 @@
 from collections.abc import Generator, Iterator
-from typing import Dict, List, Union, cast
+from typing import Dict, List, Union, cast, Type
 
 from openai import (
     APIConnectionError,
