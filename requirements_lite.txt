@@ -30,7 +30,7 @@ youtube-search~=2.1.2
 duckduckgo-search~=3.9.9
 metaphor-python~=0.1.23
 watchdog~=3.0.0
-# volcengine>=1.0.119
+# volcengine>=1.0.134
 # pymilvus>=2.3.4
 # psycopg2==2.9.9
 # pgvector>=0.2.4
