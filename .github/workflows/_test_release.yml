@@ -2,6 +2,8 @@ name: test-release
 
 on:
   workflow_call:
+    branches:
+      - dev
     inputs:
       working-directory:
         required: true
