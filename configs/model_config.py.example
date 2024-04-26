@@ -8,6 +8,24 @@ MODEL_ROOT_PATH = ""
 # 选用的 Embedding 名称
 EMBEDDING_MODEL = "bge-large-zh-v1.5"
 
+# 是否embedding使用openai like的api接口
+EMBEDDING_MODEL_USE_OPENAI = True
+# 这里tiktoken设置为false，并设置tiktoken model name为本地的hungginface的路径，可以使用指定的模型的tokenizer来切分。
+# 如果想使用openai tiktoken，则设置tiktoken enable为True。
+
+# chunk_size 设置单词请求的最大batch
+# embedding_ctx_length 设置单个batch的token的最大长度，需要小于等于模型限制的最大值
+EMBEDDING_MODEL_OPENAI = {
+    "model_name": "bge-large-zh-v1.5",
+    "api_base_url": "http://host:port/v1",
+    "api_key": "123",
+    "openai_proxy": "",
+    "tiktoken_enabled": False,
+    "tiktoken_model_name": "bge-large-zh-v1.5",
+    "chunk_size": 20,
+    "embedding_ctx_length": 256,
+}
+
 # Embedding 模型运行设备。设为 "auto" 会自动检测(会有警告)，也可手动设定为 "cuda","mps","cpu","xpu" 其中之一。
 EMBEDDING_DEVICE = "auto"
 
