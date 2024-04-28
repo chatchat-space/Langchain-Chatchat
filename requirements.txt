@@ -43,7 +43,7 @@ llama-index==0.9.35
 # beautifulsoup4==4.12.2
 # pysrt==1.1.2
 # dashscope==1.13.6 # qwen
-# volcengine==1.0.119 # fangzhou
+# volcengine==1.0.134 # fangzhou
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.3.6
 # psycopg2==2.9.9
