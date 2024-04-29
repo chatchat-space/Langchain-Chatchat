@@ -100,7 +100,7 @@ kbs_config = {
         "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat",
     },
     "relyt": {
-        "connection_uri": "postgresql+psycopg://postgres:postgres@127.0.0.1:7000/langchain_chatchat",
+        "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat",
     },
     "es": {
         "host": "127.0.0.1",

@@ -1,8 +1,8 @@
 from typing import List, Dict
 
 from langchain.schema import Document
-from langchain_community.vectorstores.relyt import Relyt
-from sqlalchemy import text
+from langchain_community.vectorstores.pgvecto_rs import PGVecto_rs
+from sqlalchemy import text, create_engine
 from sqlalchemy.orm import Session
 
 from configs import kbs_config
@@ -15,39 +15,71 @@ class RelytKBService(KBService):
 
     def _load_relyt_vector(self):
         embedding_func = EmbeddingsFunAdapter(self.embed_model)
-        sample_embedding = embedding_func.embed_query("Hello pgvecto_rs!")
-        self.relyt = Relyt(
-            embedding_function=embedding_func,
-            embedding_dimension=len(sample_embedding),
-            connection_string=kbs_config.get("relyt").get("connection_uri"),
+        sample_embedding = embedding_func.embed_query("Hello relyt!")
+        self.relyt = PGVecto_rs(
+            embedding=embedding_func,
+            dimension=len(sample_embedding),
+            db_url=kbs_config.get("relyt").get("connection_uri"),
             collection_name=self.kb_name,
         )
+        self.engine = create_engine(kbs_config.get("relyt").get("connection_uri"))
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
-        with Session(self.relyt.engine) as session:
-            stmt = text(f"SELECT document, metadata FROM {self.kb_name} WHERE id = ANY(:ids)")
+        ids_str = ', '.join([f"{id}" for id in ids])
+        with Session(self.engine) as session:
+            stmt = text(f"SELECT text, meta FROM collection_{self.kb_name} WHERE id in (:ids)")
             results = [Document(page_content=row[0], metadata=row[1]) for row in
-                      session.execute(stmt, {'ids': ids}).fetchall()]
+                      session.execute(stmt, {'ids': ids_str}).fetchall()]
             return results
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
-        with Session(self.relyt.engine) as session:
-            stmt = text(f"DELETE FROM {self.kb_name} WHERE id = ANY(:ids)")
-            session.execute(stmt, {'ids': ids})
+        ids_str = ', '.join([f"{id}" for id in ids])
+        with Session(self.engine) as session:
+            stmt = text(f"DELETE FROM collection_{self.kb_name} WHERE id in (:ids)")
+            session.execute(stmt, {'ids': ids_str})
             session.commit()
         return True
 
     def do_init(self):
         self._load_relyt_vector()
+        self.do_create_kb()
 
     def do_create_kb(self):
-        pass
+        index_name = f"idx_{self.kb_name}_embedding"
+        with self.engine.connect() as conn:
+            with conn.begin():
+                index_query = text(
+                    f"""
+                        SELECT 1
+                        FROM pg_indexes
+                        WHERE indexname = '{index_name}';
+                    """)
+                result = conn.execute(index_query).scalar()
+                if not result:
+                    index_statement = text(
+                        f"""
+                            CREATE INDEX {index_name}
+                            ON collection_{self.kb_name}
+                            USING vectors (embedding vector_l2_ops)
+                            WITH (options = $$
+                            optimizing.optimizing_threads = 30
+                            segment.max_growing_segment_size = 2000
+                            segment.max_sealed_segment_size = 30000000
+                            [indexing.hnsw]
+                            m=30
+                            ef_construction=500
+                            $$);
+                        """)
+                    conn.execute(index_statement)
 
     def vs_type(self) -> str:
         return SupportedVSType.RELYT
 
     def do_drop_kb(self):
-        self.relyt.delete_collection()
+        drop_statement = text(f"DROP TABLE IF EXISTS collection_{self.kb_name};")
+        with self.engine.connect() as conn:
+            with conn.begin():
+                conn.execute(drop_statement)
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         docs = self.relyt.similarity_search_with_score(query, top_k)
@@ -62,8 +94,8 @@ class RelytKBService(KBService):
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         filepath = self.get_relative_source_path(kb_file.filepath)
-        stmt = f"DELETE FROM {self.kb_name} WHERE metadata->>'source'='{filepath}'; "
-        with Session(self.relyt.engine) as session:
+        stmt = f"DELETE FROM collection_{self.kb_name} WHERE meta->>'source'='{filepath}'; "
+        with Session(self.engine) as session:
             session.execute(text(stmt))
             session.commit()
 
