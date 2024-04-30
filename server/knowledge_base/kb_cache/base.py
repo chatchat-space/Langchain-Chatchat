@@ -150,6 +150,9 @@ class EmbeddingsPool(CachePool):
                         embeddings.query_instruction = ""
                 else:
                     from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+                    if device == "npu":
+                        import torch_npu
+                        torch_npu.npu.set_device("npu:0")
                     embeddings = HuggingFaceEmbeddings(model_name=get_model_path(model),
                                                        model_kwargs={'device': device})
                 item.obj = embeddings
