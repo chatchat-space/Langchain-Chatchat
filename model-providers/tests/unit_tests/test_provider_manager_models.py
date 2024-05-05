@@ -12,12 +12,11 @@ from model_providers.core.provider_manager import ProviderManager
 logger = logging.getLogger(__name__)
 
 
-def test_provider_manager_models(logging_conf: dict) -> None:
+def test_provider_manager_models(logging_conf: dict, providers_file: str) -> None:
     logging.config.dictConfig(logging_conf)  # type: ignore
     # 读取配置文件
     cfg = OmegaConf.load(
-        "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/model-providers"
-        "/model_providers.yaml"
+        providers_file
     )
     # 转换配置文件
     (
