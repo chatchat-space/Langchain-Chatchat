@@ -95,7 +95,7 @@ def create_structured_glm3_chat_agent(
             "parameters": parameters
         }
         tools_json.append(simplified_config_langchain)
-    tools = "\n".join([str(tool) for tool in tools_json])
+    tools = "\n".join([json.dumps(tool, indent=4, ensure_ascii=False) for tool in tools_json])
 
     prompt = ChatPromptTemplate(
         input_variables=["input", "agent_scratchpad"],

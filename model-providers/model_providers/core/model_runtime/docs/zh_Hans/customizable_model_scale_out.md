@@ -6,10 +6,6 @@
 
 需要注意的是，对于自定义模型，每一个模型的接入都需要填写一个完整的供应商凭据。
 
-而不同于预定义模型，自定义供应商接入时永远会拥有如下两个参数，不需要在供应商yaml中定义。
-
-![Alt text](images/index/image-3.png)
-
 
 在前文中，我们已经知道了供应商无需实现`validate_provider_credential`，Runtime会自行根据用户在此选择的模型类型和模型名称调用对应的模型层的`validate_credentials`来进行验证。
 
@@ -294,4 +290,4 @@ provider_credential_schema:
       """
   ```
 
-接口方法说明见：[Interfaces](./interfaces.md)，具体实现可参考：[llm.py](https://github.com/langgenius/dify-runtime/blob/main/lib/model_providers/anthropic/llm/llm.py)。
+接口方法说明见：[Interfaces](./interfaces.md)，具体实现可参考代码 
