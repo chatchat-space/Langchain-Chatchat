@@ -1,5 +1,7 @@
 ## 增加新供应商
 
+> 如果你完成了下面步骤，即可在`model_providers.yaml`中配置对应供应商
+
 供应商支持三种模型配置方式：
 
 - `predefined-model  ` 预定义模型
@@ -10,7 +12,7 @@
 
   用户需要新增每个模型的凭据配置，如Xinference，它同时支持 LLM 和 Text Embedding，但是每个模型都有唯一的**model_uid**，如果想要将两者同时接入，就需要为每个模型配置一个**model_uid**。
 
-- `fetch-from-remote` 从远程获取
+- `fetch-from-remote` 从远程获取（Dify没有实现，我们也不会实现）
 
   与 `predefined-model` 配置方式一致，只需要配置统一的供应商凭据即可，模型通过凭据信息从供应商获取。
 

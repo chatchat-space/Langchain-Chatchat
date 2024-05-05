@@ -1,5 +1,7 @@
 ## Adding a New Provider
 
+> If you have completed the following steps, you can configure the corresponding supplier in the `model_providers.yaml` file.
+
 Providers support three types of model configuration methods:
 
 - `predefined-model` Predefined model
@@ -10,7 +12,7 @@ Providers support three types of model configuration methods:
 
   Users need to add credential configurations for each model.
 
-- `fetch-from-remote` Fetch from remote
+- `fetch-from-remote` Fetch from a remote source (Dify has not implemented this, and we do not intend to implement it either).
 
   This is consistent with the `predefined-model` configuration method. Only unified provider credentials need to be configured, and models are obtained from the provider through credential information.
 

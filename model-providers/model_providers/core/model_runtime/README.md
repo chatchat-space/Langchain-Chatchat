@@ -1,9 +1,13 @@
 # Model Runtime
 
-This module provides the interface for invoking and authenticating various models, and offers Dify a unified information and credentials form rule for model providers.
+This module is the loading module that unifies Dify's supplier information and credential form. The project has an OpenAI service forwarding capability at the upper layer, which can support the conversion of supplier services to OpenAI EndPoint calls.
 
-- On one hand, it decouples models from upstream and downstream processes, facilitating horizontal expansion for developers,
-- On the other hand, it allows for direct display of providers and models in the frontend interface by simply defining them in the backend, eliminating the need to modify frontend logic.
+On the basis of the original, this module has added `VIewProfileConfig`, `RESTFulProfileServer`, `OpenAIPluginsClient`, and has rewritten the logic for loading supplier configuration, focusing only on the supplier's configuration. The model configuration and calling logic are implemented in this module, providing a separation of model calls for `Chatchat`. The benefits of doing so are:
+- It changes the decoupling method between the model and the upstream and downstream callers.
+- During development, one does not need to pay attention to the specific implementation of the service provider module, but can simply make calls through the OpenAI EndPoint provided by Model Runtime.
+
+> Please note! Because the model configuration storage module has been removed, the ability to operate suppliers and models on the front-end page has been deleted accordingly. Now, it is only possible to configure suppliers and models through a backend yaml file.
+> Only a supplier configuration details interface is provided, and in the future, we will consider providing a model configuration details interface through other means.
 
 ## Features
 
@@ -18,53 +22,41 @@ This module provides the interface for invoking and authenticating various model
 
 - Model provider display
 
-  ![image-20231210143654461](./docs/en_US/images/index/image-20231210143654461.png)
-
   Displays a list of all supported providers, including provider names, icons, supported model types list, predefined model list, configuration method, and credentials form rules, etc. For detailed rule design, see: [Schema](./schema.md).
 
-- Selectable model list display
-
-  ![image-20231210144229650](./docs/en_US/images/index/image-20231210144229650.png)
-
-  After configuring provider/model credentials, the dropdown (application orchestration interface/default model) allows viewing of the available LLM list. Greyed out items represent predefined model lists from providers without configured credentials, facilitating user review of supported models.
-
-  In addition, this list also returns configurable parameter information and rules for LLM, as shown below:
-
-  ![image-20231210144814617](./docs/en_US/images/index/image-20231210144814617.png)	
-
-  These parameters are all defined in the backend, allowing different settings for various parameters supported by different models, as detailed in: [Schema](./docs/en_US/schema.md#ParameterRule).
-
 - Provider/model credential authentication
-
-  ![image-20231210151548521](./docs/en_US/images/index/image-20231210151548521.png)
-
-  ![image-20231210151628992](./docs/en_US/images/index/image-20231210151628992.png)
-
-  The provider list returns configuration information for the credentials form, which can be authenticated through Runtime's interface. The first image above is a provider credential DEMO, and the second is a model credential DEMO.
+  The provider list returns configuration information for the credentials form, which can be authenticated through Runtime's interface. 
 
 ## Structure
 
-![](./docs/en_US/images/index/image-20231210165243632.png)
+![](./docs/en_US/images/index/img.png)
 
 Model Runtime is divided into three layers:
 
-- The outermost layer is the factory method
+- The outermost layer is the OpenAI EndPoint publishing layer
 
-  It provides methods for obtaining all providers, all model lists, getting provider instances, and authenticating provider/model credentials.
+  It provides asynchronous loading configuration `VIewProfileConfig`
+  Supplier service publishing `RESTFulProfileServer`
 
 - The second layer is the provider layer
 
   It provides the current provider's model list, model instance obtaining, provider credential authentication, and provider configuration rule information, **allowing horizontal expansion** to support different providers.
+  For supplier/model credentials, there are two situations:
+  - For centralized suppliers like OpenAI, you need to define authentication credentials like **api_key**.
+  - For locally deployed suppliers like [**Xinference**](https://github.com/xorbitsai/inference), you need to define address credentials like **server_url**. Sometimes you also need to define model type credentials like **model_uid**.
 
 - The bottom layer is the model layer
 
-  It offers direct invocation of various model types, predefined model configuration information, getting predefined/remote model lists, model credential authentication methods. Different models provide additional special methods, like LLM's pre-computed tokens method, cost information obtaining method, etc., **allowing horizontal expansion** for different models under the same provider (within supported model types).
+  It provides direct calls for various model types, predefined model configuration information, obtaining predefined/remote model lists, model credential authentication methods, and different models provide special methods, such as LLM providing pre-computed tokens methods, obtaining cost information methods, etc., **which can be scaled horizontally** for different models under the same supplier (under the supported model types).
+  
+  Here we need to distinguish between model parameters and model credentials first.
 
+  - Model parameters (**defined in this layer**): These are parameters that often need to be changed and adjusted at any time, such as LLM's **max_tokens**, **temperature**, etc. These parameters are adjusted by users on the front-end page, so it is necessary to define the rules of parameters on the backend to facilitate the display and adjustment on the front-end page. In DifyRuntime, their parameter names are generally **model_parameters: Dict[str, any]**.
 
+  - Model credentials (**defined in the supplier layer**): These are parameters that do not often change and generally do not change after configuration, such as **api_key**, **server_url**, etc. In DifyRuntime, their parameter names are generally **credentials: Dict[str, any]**. The credentials of the Provider layer will be directly passed to this layer, and there is no need to define them separately.
 
-## Next Steps
+ 
 
-- Add new provider configuration: [Link](./docs/en_US/provider_scale_out.md)
-- Add new models for existing providers: [Link](./docs/en_US/provider_scale_out.md#AddModel)
-- View YAML configuration rules: [Link](./docs/en_US/schema.md)
-- Implement interface methods: [Link](./docs/en_US/interfaces.md)
+### If you want to implement a custom service provider model capability
+- [Go here 👈🏻](./docs/en_US/interfaces.md)
+- [Details about custom models](./docs/en_US/provider_scale_out.md)
