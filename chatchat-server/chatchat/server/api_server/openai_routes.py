@@ -16,7 +16,7 @@ from openai.types.file_object import FileObject
 from sse_starlette.sse import EventSourceResponse
 
 from .api_schemas import *
-from chatchat.configs import logger, BASE_TEMP_DIR
+from chatchat.configs import logger, BASE_TEMP_DIR, log_verbose
 from chatchat.server.utils import get_model_info, get_config_platforms, get_OpenAIClient
 
 
@@ -126,6 +126,8 @@ async def create_chat_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
+    if log_verbose:
+        print(body)
     async with get_model_client(body.model) as client:
         result = await openai_request(client.chat.completions.create, body)
         return result

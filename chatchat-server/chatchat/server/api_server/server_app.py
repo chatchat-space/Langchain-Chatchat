@@ -1,4 +1,5 @@
 import argparse
+import os
 from typing import Literal
 
 from fastapi import FastAPI, Body
@@ -7,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 import uvicorn
 
-from chatchat.configs import VERSION, MEDIA_PATH
+from chatchat.configs import VERSION, MEDIA_PATH, CHATCHAT_ROOT
 from chatchat.configs.server_config import OPEN_CROSS_DOMAIN
 from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.kb_routes import kb_router
@@ -54,6 +55,10 @@ def create_app(run_mode: str=None):
 
     # 媒体文件
     app.mount("/media", StaticFiles(directory=MEDIA_PATH), name="media")
+
+    # 项目相关图片
+    img_dir = os.path.join(CHATCHAT_ROOT, "img")
+    app.mount("/img", StaticFiles(directory=img_dir), name="img")
 
     return app
 
