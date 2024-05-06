@@ -690,6 +690,14 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
     return ""
 
 
+def get_img_url(file_name: str) -> str:
+    '''
+    image url used in streamlit.
+    absolute local path not working on windows.
+    '''
+    return f"{api_address()}/img/{file_name}"
+
+
 if __name__ == "__main__":
     api = ApiRequest()
     aapi = AsyncApiRequest()

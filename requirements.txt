@@ -49,9 +49,9 @@ python-multipart==0.0.9
 
 # WebUI requirements
 
-streamlit==1.30.0
-streamlit-option-menu==0.3.12
-streamlit-antd-components==0.3.1
-streamlit-chatbox==1.1.11
-streamlit-modal==0.1.0
+streamlit==1.34.0
+streamlit-antd-components==0.3.2
+streamlit-chatbox==1.1.12
 streamlit-aggrid==0.3.4.post3
+streamlit-extras==0.4.2
+# audio-recorder-streamlit==0.0.8

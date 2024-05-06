@@ -202,6 +202,16 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
                 message_id=message_id,
             )
             yield ret.model_dump_json()
+        yield OpenAIChatOutput( # return blank text lastly
+                id=f"chat{uuid.uuid4()}",
+                object="chat.completion.chunk",
+                content="",
+                role="assistant",
+                model=models["llm_model"].model_name,
+                status = data["status"],
+                message_type = data["message_type"],
+                message_id=message_id,            
+        )
         await task
 
     if stream:
