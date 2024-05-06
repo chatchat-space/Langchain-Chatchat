@@ -26,4 +26,12 @@ xinference:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'chatglm3-6b'
 
+ollama:
+  model_credential:
+    - model: 'llama3'
+      model_type: 'llm'
+      model_credentials:
+        base_url: 'http://172.21.80.1:11434'
+
+
 

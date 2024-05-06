@@ -1,7 +1,6 @@
 from chatchat.configs import (
     DEFAULT_EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
-    CHUNK_SIZE, OVERLAP_SIZE,
-    logger, log_verbose
+    CHUNK_SIZE, OVERLAP_SIZE
 )
 from chatchat.server.knowledge_base.utils import (
     get_file_path, list_kbs_from_folder,
