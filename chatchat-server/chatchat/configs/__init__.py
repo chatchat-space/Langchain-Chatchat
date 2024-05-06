@@ -32,12 +32,13 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
 
             file_names = os.listdir(user_config_path)
 
-            if (import_config_mod + ".py",) not in file_names:
+            if import_config_mod + ".py" not in file_names:
                 logger.warning(
                     f"Missing {file_names}.py file in {user_config_path}, Skip."
                 )
                 user_import = False
             if user_import:
+
                 # Dynamic loading {config}.py file
                 py_path = os.path.join(user_config_path, import_config_mod + ".py")
                 spec = importlib.util.spec_from_file_location(
@@ -54,7 +55,10 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
                     "module": module,
                 }
 
-        except ImportError:
+        except ImportError as e:
+            logger.error(
+                f"Failed to load user config from {user_config_path}, Skip.", e
+            )
             pass
     else:
         user_import = False
