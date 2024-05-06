@@ -6,8 +6,6 @@
 /chatchat-server/chatchat/data/knowledge_base/samples/vector_store
 !/chatchat-server/chatchat/data/nltk_data
 
-/chatchat-server/chatchat/configs/*.py
-/chatchat-server/chatchat/configs/loom.yaml
 .vscode/
 
 # below are standard python ignore files
@@ -176,12 +174,9 @@ cython_debug/
 
 # Test File
 test.py
-configs/*.py
 
 
 /knowledge_base/samples/content/202311-D平台项目工作大纲参数，人员中间库表结构说明V1.1(1).docx
 /knowledge_base/samples/content/imi_temeplate.txt
-/chatchat/configs/*.py
-/chatchat/configs/*.yaml
 chatchat/data
 /chatchat-server/chatchat/configs/model_providers.yaml
