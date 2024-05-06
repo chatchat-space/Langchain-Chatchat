@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "model-providers"
-version = "0.3.0"
+version = "0.3.0.20240506"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
