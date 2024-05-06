@@ -1,9 +1,12 @@
 [tool.poetry]
-name = "chatchat"
+name = "langchain-chatchat"
 version = "0.3.0"
 description = ""
 authors = ["chatchat"]
 readme = "README.md"
+packages = [
+    {include = "chatchat"}
+]
 
 [tool.poetry.scripts]
 chatchat = 'chatchat.startup:main'
@@ -241,7 +244,7 @@ ignore-words-list = 'momento,collison,ned,foor,reworkd,parth,whats,aapply,mysogy
 
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "default"
+#[[tool.poetry.source]]
+#name = "tsinghua"
+#url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+#priority = "default"
