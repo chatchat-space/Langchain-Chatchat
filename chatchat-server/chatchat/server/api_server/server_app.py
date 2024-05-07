@@ -9,7 +9,7 @@ from starlette.responses import RedirectResponse
 import uvicorn
 
 from chatchat.configs import VERSION, MEDIA_PATH, CHATCHAT_ROOT
-from chatchat.configs.server_config import OPEN_CROSS_DOMAIN
+from chatchat.configs import OPEN_CROSS_DOMAIN
 from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.kb_routes import kb_router
 from chatchat.server.api_server.openai_routes import openai_router

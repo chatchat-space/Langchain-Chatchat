@@ -1,7 +1,12 @@
 from fastapi import Body
-from chatchat.configs import logger, log_verbose
+from chatchat.configs import log_verbose
 from chatchat.server.utils import BaseResponse
 from chatchat.server.db.repository import feedback_message_to_db
+
+import logging
+
+logger = logging.getLogger()
+
 
 def chat_feedback(message_id: str = Body("", max_length=32, description="聊天记录id"),
             score: int = Body(0, max=100, description="用户评分，满分100，越大表示评价越高"),

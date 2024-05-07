@@ -1,8 +1,11 @@
 from functools import lru_cache
 from chatchat.server.pydantic_v2 import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
-from chatchat.configs import logger, log_verbose
 from typing import List, Tuple, Dict, Union
+
+import logging
+
+logger = logging.getLogger()
 
 
 class History(BaseModel):

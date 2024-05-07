@@ -13,7 +13,7 @@ from chatchat.configs import (
     ZH_TITLE_ENHANCE,
     VECTOR_SEARCH_TOP_K,
     HTTPX_DEFAULT_TIMEOUT,
-    logger, log_verbose,
+    log_verbose,
 )
 import httpx
 import contextlib
@@ -22,7 +22,10 @@ import os
 from io import BytesIO
 from chatchat.server.utils import set_httpx_config, api_address, get_httpx_client
 
-from pprint import pprint
+
+import logging
+
+logger = logging.getLogger()
 
 set_httpx_config()
 

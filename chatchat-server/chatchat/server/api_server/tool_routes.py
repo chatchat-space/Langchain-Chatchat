@@ -4,9 +4,11 @@ from typing import List
 
 from fastapi import APIRouter, Request, Body
 
-from chatchat.configs import logger
 from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
 
+import logging
+
+logger = logging.getLogger()
 
 tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
 

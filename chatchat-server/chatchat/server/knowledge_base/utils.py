@@ -5,7 +5,6 @@ from chatchat.configs import (
     CHUNK_SIZE,
     OVERLAP_SIZE,
     ZH_TITLE_ENHANCE,
-    logger,
     log_verbose,
     text_splitter_dict,
     TEXT_SPLITTER_NAME,
@@ -21,6 +20,10 @@ import json
 from typing import List, Union, Dict, Tuple, Generator
 import chardet
 from langchain_community.document_loaders import JSONLoader, TextLoader
+
+import logging
+
+logger = logging.getLogger()
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:

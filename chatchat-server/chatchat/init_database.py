@@ -2,7 +2,7 @@ import sys
 sys.path.append("chatchat")
 from chatchat.server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
                                            folder2db, prune_db_docs, prune_folder_files)
-from chatchat.configs.model_config import DEFAULT_EMBEDDING_MODEL
+from chatchat.configs import DEFAULT_EMBEDDING_MODEL
 from datetime import datetime
 
 

@@ -13,7 +13,7 @@ from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
 
-from chatchat.configs.model_config import LLM_MODEL_CONFIG
+from chatchat.configs import LLM_MODEL_CONFIG
 from chatchat.server.agent.agent_factory.agents_registry import agents_registry
 from chatchat.server.agent.container import container
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput

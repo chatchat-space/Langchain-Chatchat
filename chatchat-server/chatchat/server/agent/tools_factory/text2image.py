@@ -10,21 +10,21 @@ from chatchat.server.utils import get_tool_config
 from .tools_registry import regist_tool, BaseToolOutput
 import openai
 
-from chatchat.configs.basic_config import MEDIA_PATH
+from chatchat.configs import MEDIA_PATH
 from chatchat.server.utils import MsgType
 
 
 def get_image_model_config() -> dict:
-    from chatchat.configs.model_config import LLM_MODEL_CONFIG, ONLINE_LLM_MODEL
-
-    model = LLM_MODEL_CONFIG.get("image_model")
-    if model:
-        name = list(model.keys())[0]
-        if config := ONLINE_LLM_MODEL.get(name):
-            config = {**list(model.values())[0], **config}
-            config.setdefault("model_name", name)
-            return config
-
+    # from chatchat.configs import LLM_MODEL_CONFIG, ONLINE_LLM_MODEL
+    # TODO ONLINE_LLM_MODEL的配置被删除，此处业务需要修改
+    # model = LLM_MODEL_CONFIG.get("image_model")
+    # if model:
+    #     name = list(model.keys())[0]
+    #     if config := ONLINE_LLM_MODEL.get(name):
+    #         config = {**list(model.values())[0], **config}
+    #         config.setdefault("model_name", name)
+    #         return config
+    pass
 
 @regist_tool(title="文生图", return_direct=True)
 def text2images(

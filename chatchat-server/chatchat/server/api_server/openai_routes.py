@@ -16,8 +16,12 @@ from openai.types.file_object import FileObject
 from sse_starlette.sse import EventSourceResponse
 
 from .api_schemas import *
-from chatchat.configs import logger, BASE_TEMP_DIR, log_verbose
+from chatchat.configs import BASE_TEMP_DIR, log_verbose
 from chatchat.server.utils import get_model_info, get_config_platforms, get_OpenAIClient
+
+import logging
+
+logger = logging.getLogger()
 
 
 DEFAULT_API_CONCURRENCIES = 5 # 默认单个模型最大并发数

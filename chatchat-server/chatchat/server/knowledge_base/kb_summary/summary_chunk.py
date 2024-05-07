@@ -3,7 +3,6 @@ from typing import List, Optional
 from langchain.schema.language_model import BaseLanguageModel
 
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.configs import (logger)
 from langchain.chains import StuffDocumentsChain, LLMChain
 from langchain.prompts import PromptTemplate
 
@@ -13,6 +12,10 @@ from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, 
 
 import sys
 import asyncio
+
+import logging
+
+logger = logging.getLogger()
 
 
 class SummaryAdapter:

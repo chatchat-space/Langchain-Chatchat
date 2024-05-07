@@ -24,13 +24,15 @@ from typing import (
     Tuple,
     Literal,
 )
-import logging
 
-from chatchat.configs import (logger, log_verbose, HTTPX_DEFAULT_TIMEOUT,
+from chatchat.configs import (log_verbose, HTTPX_DEFAULT_TIMEOUT,
                               DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE,
                               MODEL_PLATFORMS)
 from chatchat.server.pydantic_v2 import BaseModel, Field
-from chatchat.server.minx_chat_openai import MinxChatOpenAI  # TODO: still used?
+
+import logging
+
+logger = logging.getLogger()
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -490,7 +492,7 @@ def MakeFastAPIOffline(
 
 
 def api_address() -> str:
-    from chatchat.configs.server_config import API_SERVER
+    from chatchat.configs import API_SERVER
 
     host = API_SERVER["host"]
     if host == "0.0.0.0":
@@ -500,7 +502,7 @@ def api_address() -> str:
 
 
 def webui_address() -> str:
-    from chatchat.configs.server_config import WEBUI_SERVER
+    from chatchat.configs import WEBUI_SERVER
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]

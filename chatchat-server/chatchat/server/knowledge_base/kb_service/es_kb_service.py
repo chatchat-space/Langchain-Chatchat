@@ -7,7 +7,11 @@ from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedV
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
 from elasticsearch import Elasticsearch, BadRequestError
-from chatchat.configs import logger, kbs_config, KB_ROOT_PATH
+from chatchat.configs import kbs_config, KB_ROOT_PATH
+
+import logging
+
+logger = logging.getLogger()
 
 
 class ESKBService(KBService):
