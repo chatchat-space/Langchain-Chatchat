@@ -52,26 +52,28 @@ make format_diff
 #### pypi安装一键启动
 - 安装chatchat
 ```shell
-pip install chatchat
+pip install langchain-chatchat -U
 ```
 - 复制配置文件
 
  ```shell
-cd chatchat-server/chatchat
-python copy_config_example.py
+cd chatchat-server/
+mkdir ~/.config/chatchat/
+cp -r configs ~/.config/chatchat/
+cp -r data ~/.config/chatchat/
+cp -r img ~/.config/chatchat/
 ```
 
 > 当项目安装完成，配置这个`model_providers.yaml`文件，即可完成自定义平台加载
 > 
 > 注意: 在您配置平台之前，请确认平台依赖完整，例如智谱平台，您需要安装智谱sdk `pip install zhipuai`
 > 
-> 详细配置请参考[README.md](..%2Fmodel-providers%2FREADME.md)
+> 详细配置请参考[README.md](../model-providers/README.md)
 
  
 - 启动服务
 ```shell
-cd chatchat-server/
-python -m chatchat.startup -a
+chatchat  -a
 ```
 
 
