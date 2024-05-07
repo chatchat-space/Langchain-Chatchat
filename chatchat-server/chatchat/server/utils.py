@@ -513,10 +513,9 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
     type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
     '''
 
-    from chatchat.configs import prompt_config
-    import importlib
-    importlib.reload(prompt_config)  # TODO: 检查configs/prompt_config.py文件有修改再重新加载
-    return prompt_config.PROMPT_TEMPLATES.get(type, {}).get(name)
+    from chatchat.configs import PROMPT_TEMPLATES
+
+    return PROMPT_TEMPLATES.get(type, {}).get(name)
 
 
 def set_httpx_config(
@@ -704,18 +703,20 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
     from chatchat.server.agent import tools_factory
     importlib.reload(tools_factory)
 
+    from chatchat.server.agent.tools_factory import tools_registry
     if name is None:
-        return tools_factory.tools_registry._TOOLS_REGISTRY
+        return tools_registry._TOOLS_REGISTRY
     else:
-        return tools_factory.tools_registry._TOOLS_REGISTRY.get(name)
+        return tools_registry._TOOLS_REGISTRY.get(name)
 
 
 def get_tool_config(name: str = None) -> Dict:
     import importlib
-    from chatchat.configs import model_config
-    importlib.reload(model_config)
-
+    # TODO 因为使用了变量更新，不支持重载
+    # from chatchat.configs import model_config
+    # importlib.reload(model_config)
+    from chatchat.configs import TOOL_CONFIG
     if name is None:
-        return model_config.TOOL_CONFIG
+        return TOOL_CONFIG
     else:
-        return model_config.TOOL_CONFIG.get(name, {})
+        return TOOL_CONFIG.get(name, {})
