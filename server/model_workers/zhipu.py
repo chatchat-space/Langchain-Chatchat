@@ -1,22 +1,18 @@
-from contextlib import contextmanager
-
 import httpx
 import requests
 from fastchat.conversation import Conversation
-from httpx_sse import EventSource
 
-from server.model_workers.base import *
+from server.model_workers.base import (ApiModelWorker,
+                                       ApiChatParams,
+                                       ApiEmbeddingsParams)
+from server.utils import get_httpx_client
+from configs import logger, log_verbose
 from fastchat import conversation as conv
 import sys
 from typing import List, Dict, Iterator, Literal, Any
 import jwt
+import json
 import time
-
-
-@contextmanager
-def connect_sse(client: httpx.Client, method: str, url: str, **kwargs: Any):
-    with client.stream(method, url, **kwargs) as response:
-        yield EventSource(response)
 
 
 def generate_token(apikey: str, exp_seconds: int):
@@ -58,6 +54,8 @@ class ChatGLMWorker(ApiModelWorker):
 
     def do_chat(self, params: ApiChatParams) -> Iterator[Dict]:
         params.load_config(self.model_names[0])
+        if log_verbose:
+            logger.info(f'{self.__class__.__name__}:params: {params}')
         token = generate_token(params.api_key, 60)
         headers = {
             "Content-Type": "application/json",
@@ -68,24 +66,35 @@ class ChatGLMWorker(ApiModelWorker):
             "messages": params.messages,
             "max_tokens": params.max_tokens,
             "temperature": params.temperature,
-            "stream": False
+            "stream": True
         }
 
         url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-        with httpx.Client(headers=headers) as client:
-            response = client.post(url, json=data)
-            response.raise_for_status()
-            chunk = response.json()
-            print(chunk)
-            yield {"error_code": 0, "text": chunk["choices"][0]["message"]["content"]}
 
-            # with connect_sse(client, "POST", url, json=data) as event_source:
-            #     for sse in event_source.iter_sse():
-            #         chunk = json.loads(sse.data)
-            #         if len(chunk["choices"]) != 0:
-            #             text += chunk["choices"][0]["delta"]["content"]
-            #             yield {"error_code": 0, "text": text}
+        # 非流式输出 (data["stream"] = False) :
+        # with httpx.Client(headers=headers) as client:
+        #     response = client.post(url, json=data)
+        #     response.raise_for_status()
+        #     chunk = response.json()
+        #     print(chunk)
+        #     yield {"error_code": 0, "text": chunk["choices"][0]["message"]["content"]}
 
+        # 流式输出:
+        text = ""
+        with get_httpx_client() as client:
+            with client.stream("POST", url, headers=headers, json=data) as response:
+                for line in response.iter_lines():
+                    if not line.strip() or "[DONE]" in line:
+                        continue
+                    if line.startswith("data: "):
+                        line = line[6:]
+                    resp = json.loads(line)
+                    if choices := resp["choices"]:
+                        if chunk := choices[0].get("delta", {}).get("content"):
+                            text += chunk
+                            yield {"error_code": 0, "text": text}
+                    else:
+                        logger.error(f"请求 清华智谱(ChatGLM) API 时发生错误：{resp}")
 
     def do_embeddings(self, params: ApiEmbeddingsParams) -> Dict:
         embed_model = params.embed_model or self.DEFAULT_EMBED_MODEL
