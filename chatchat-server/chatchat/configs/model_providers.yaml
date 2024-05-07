@@ -32,6 +32,7 @@ ollama:
       model_type: 'llm'
       model_credentials:
         base_url: 'http://172.21.80.1:11434'
+        mode: 'completion'
 
 
 
