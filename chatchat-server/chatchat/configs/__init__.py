@@ -87,16 +87,16 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
 
 CONFIG_IMPORTS = {
 
-    "basic_config.py": _import_config_mod_load("basic_config"),
-    "kb_config.py": _import_config_mod_load("kb_config"),
-    "model_config.py": _import_config_mod_load("model_config"),
-    "prompt_config.py": _import_config_mod_load("prompt_config"),
-    "server_config.py": _import_config_mod_load("server_config"),
+    "_basic_config.py": _import_config_mod_load("_basic_config"),
+    "_kb_config.py": _import_config_mod_load("_kb_config"),
+    "_model_config.py": _import_config_mod_load("_model_config"),
+    "_prompt_config.py": _import_config_mod_load("_prompt_config"),
+    "_server_config.py": _import_config_mod_load("_server_config"),
 }
 
 
 def _import_log_verbose() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     log_verbose = load_mod(basic_config_load.get("module"), "log_verbose")
 
@@ -104,7 +104,7 @@ def _import_log_verbose() -> Any:
 
 
 def _import_chatchat_root() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     CHATCHAT_ROOT = load_mod(basic_config_load.get("module"), "CHATCHAT_ROOT")
 
@@ -112,7 +112,7 @@ def _import_chatchat_root() -> Any:
 
 
 def _import_data_path() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     DATA_PATH = load_mod(basic_config_load.get("module"), "DATA_PATH")
 
@@ -120,7 +120,7 @@ def _import_data_path() -> Any:
 
 
 def _import_nltk_data_path() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     NLTK_DATA_PATH = load_mod(basic_config_load.get("module"), "NLTK_DATA_PATH")
 
@@ -128,7 +128,7 @@ def _import_nltk_data_path() -> Any:
 
 
 def _import_log_format() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     LOG_FORMAT = load_mod(basic_config_load.get("module"), "LOG_FORMAT")
 
@@ -136,7 +136,7 @@ def _import_log_format() -> Any:
 
 
 def _import_log_path() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     LOG_PATH = load_mod(basic_config_load.get("module"), "LOG_PATH")
 
@@ -144,7 +144,7 @@ def _import_log_path() -> Any:
 
 
 def _import_media_path() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     MEDIA_PATH = load_mod(basic_config_load.get("module"), "MEDIA_PATH")
 
@@ -152,7 +152,7 @@ def _import_media_path() -> Any:
 
 
 def _import_base_temp_dir() -> Any:
-    basic_config_load = CONFIG_IMPORTS.get("basic_config.py")
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
     BASE_TEMP_DIR = load_mod(basic_config_load.get("module"), "BASE_TEMP_DIR")
 
@@ -160,7 +160,7 @@ def _import_base_temp_dir() -> Any:
 
 
 def _import_default_knowledge_base() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     DEFAULT_KNOWLEDGE_BASE = load_mod(kb_config_load.get("module"), "DEFAULT_KNOWLEDGE_BASE")
 
@@ -168,7 +168,7 @@ def _import_default_knowledge_base() -> Any:
 
 
 def _import_default_vs_type() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     DEFAULT_VS_TYPE = load_mod(kb_config_load.get("module"), "DEFAULT_VS_TYPE")
 
@@ -176,7 +176,7 @@ def _import_default_vs_type() -> Any:
 
 
 def _import_cached_vs_num() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     CACHED_VS_NUM = load_mod(kb_config_load.get("module"), "CACHED_VS_NUM")
 
@@ -184,7 +184,7 @@ def _import_cached_vs_num() -> Any:
 
 
 def _import_cached_memo_vs_num() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     CACHED_MEMO_VS_NUM = load_mod(kb_config_load.get("module"), "CACHED_MEMO_VS_NUM")
 
@@ -192,7 +192,7 @@ def _import_cached_memo_vs_num() -> Any:
 
 
 def _import_chunk_size() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     CHUNK_SIZE = load_mod(kb_config_load.get("module"), "CHUNK_SIZE")
 
@@ -200,7 +200,7 @@ def _import_chunk_size() -> Any:
 
 
 def _import_overlap_size() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     OVERLAP_SIZE = load_mod(kb_config_load.get("module"), "OVERLAP_SIZE")
 
@@ -208,7 +208,7 @@ def _import_overlap_size() -> Any:
 
 
 def _import_vector_search_top_k() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     VECTOR_SEARCH_TOP_K = load_mod(kb_config_load.get("module"), "VECTOR_SEARCH_TOP_K")
 
@@ -216,7 +216,7 @@ def _import_vector_search_top_k() -> Any:
 
 
 def _import_score_threshold() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     SCORE_THRESHOLD = load_mod(kb_config_load.get("module"), "SCORE_THRESHOLD")
 
@@ -224,7 +224,7 @@ def _import_score_threshold() -> Any:
 
 
 def _import_default_search_engine() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     DEFAULT_SEARCH_ENGINE = load_mod(kb_config_load.get("module"), "DEFAULT_SEARCH_ENGINE")
 
@@ -232,7 +232,7 @@ def _import_default_search_engine() -> Any:
 
 
 def _import_search_engine_top_k() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     SEARCH_ENGINE_TOP_K = load_mod(kb_config_load.get("module"), "SEARCH_ENGINE_TOP_K")
 
@@ -240,7 +240,7 @@ def _import_search_engine_top_k() -> Any:
 
 
 def _import_zh_title_enhance() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     ZH_TITLE_ENHANCE = load_mod(kb_config_load.get("module"), "ZH_TITLE_ENHANCE")
 
@@ -248,7 +248,7 @@ def _import_zh_title_enhance() -> Any:
 
 
 def _import_pdf_ocr_threshold() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     PDF_OCR_THRESHOLD = load_mod(kb_config_load.get("module"), "PDF_OCR_THRESHOLD")
 
@@ -256,7 +256,7 @@ def _import_pdf_ocr_threshold() -> Any:
 
 
 def _import_kb_info() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     KB_INFO = load_mod(kb_config_load.get("module"), "KB_INFO")
 
@@ -264,7 +264,7 @@ def _import_kb_info() -> Any:
 
 
 def _import_kb_root_path() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     KB_ROOT_PATH = load_mod(kb_config_load.get("module"), "KB_ROOT_PATH")
 
@@ -272,14 +272,14 @@ def _import_kb_root_path() -> Any:
 
 
 def _import_db_root_path() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     DB_ROOT_PATH = load_mod(kb_config_load.get("module"), "DB_ROOT_PATH")
 
     return DB_ROOT_PATH
 
 def _import_sqlalchemy_database_uri() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     SQLALCHEMY_DATABASE_URI = load_mod(kb_config_load.get("module"), "SQLALCHEMY_DATABASE_URI")
 
@@ -287,7 +287,7 @@ def _import_sqlalchemy_database_uri() -> Any:
 
 
 def _import_kbs_config() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     kbs_config = load_mod(kb_config_load.get("module"), "kbs_config")
 
@@ -295,7 +295,7 @@ def _import_kbs_config() -> Any:
 
 
 def _import_text_splitter_dict() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     text_splitter_dict = load_mod(kb_config_load.get("module"), "text_splitter_dict")
 
@@ -303,7 +303,7 @@ def _import_text_splitter_dict() -> Any:
 
 
 def _import_text_splitter_name() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     TEXT_SPLITTER_NAME = load_mod(kb_config_load.get("module"), "TEXT_SPLITTER_NAME")
 
@@ -311,7 +311,7 @@ def _import_text_splitter_name() -> Any:
 
 
 def _import_embedding_keyword_file() -> Any:
-    kb_config_load = CONFIG_IMPORTS.get("kb_config.py")
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
     EMBEDDING_KEYWORD_FILE = load_mod(kb_config_load.get("module"), "EMBEDDING_KEYWORD_FILE")
 
@@ -319,7 +319,7 @@ def _import_embedding_keyword_file() -> Any:
 
 
 def _import_default_llm_model() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     DEFAULT_LLM_MODEL = load_mod(model_config_load.get("module"), "DEFAULT_LLM_MODEL")
 
@@ -327,7 +327,7 @@ def _import_default_llm_model() -> Any:
 
 
 def _import_default_embedding_model() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     DEFAULT_EMBEDDING_MODEL = load_mod(model_config_load.get("module"), "DEFAULT_EMBEDDING_MODEL")
 
@@ -335,7 +335,7 @@ def _import_default_embedding_model() -> Any:
 
 
 def _import_agent_model() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     Agent_MODEL = load_mod(model_config_load.get("module"), "Agent_MODEL")
 
@@ -343,7 +343,7 @@ def _import_agent_model() -> Any:
 
 
 def _import_history_len() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     HISTORY_LEN = load_mod(model_config_load.get("module"), "HISTORY_LEN")
 
@@ -351,7 +351,7 @@ def _import_history_len() -> Any:
 
 
 def _import_max_tokens() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     MAX_TOKENS = load_mod(model_config_load.get("module"), "MAX_TOKENS")
 
@@ -359,7 +359,7 @@ def _import_max_tokens() -> Any:
 
 
 def _import_temperature() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     TEMPERATURE = load_mod(model_config_load.get("module"), "TEMPERATURE")
 
@@ -367,7 +367,7 @@ def _import_temperature() -> Any:
 
 
 def _import_support_agent_models() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     SUPPORT_AGENT_MODELS = load_mod(model_config_load.get("module"), "SUPPORT_AGENT_MODELS")
 
@@ -375,7 +375,7 @@ def _import_support_agent_models() -> Any:
 
 
 def _import_llm_model_config() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     LLM_MODEL_CONFIG = load_mod(model_config_load.get("module"), "LLM_MODEL_CONFIG")
 
@@ -383,7 +383,7 @@ def _import_llm_model_config() -> Any:
 
 
 def _import_model_platforms() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     MODEL_PLATFORMS = load_mod(model_config_load.get("module"), "MODEL_PLATFORMS")
 
@@ -391,7 +391,7 @@ def _import_model_platforms() -> Any:
 
 
 def _import_model_providers_cfg_path() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     MODEL_PROVIDERS_CFG_PATH_CONFIG = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_PATH_CONFIG")
 
@@ -399,7 +399,7 @@ def _import_model_providers_cfg_path() -> Any:
 
 
 def _import_model_providers_cfg_host() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     MODEL_PROVIDERS_CFG_HOST = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_HOST")
 
@@ -407,7 +407,7 @@ def _import_model_providers_cfg_host() -> Any:
 
 
 def _import_model_providers_cfg_port() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     MODEL_PROVIDERS_CFG_PORT = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_PORT")
 
@@ -415,7 +415,7 @@ def _import_model_providers_cfg_port() -> Any:
 
 
 def _import_tool_config() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("model_config.py")
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
     TOOL_CONFIG = load_mod(model_config_load.get("module"), "TOOL_CONFIG")
 
@@ -423,7 +423,7 @@ def _import_tool_config() -> Any:
 
 
 def _import_prompt_templates() -> Any:
-    prompt_config_load = CONFIG_IMPORTS.get("prompt_config.py")
+    prompt_config_load = CONFIG_IMPORTS.get("_prompt_config.py")
     load_mod = prompt_config_load.get("load_mod")
     PROMPT_TEMPLATES = load_mod(prompt_config_load.get("module"), "PROMPT_TEMPLATES")
 
@@ -431,7 +431,7 @@ def _import_prompt_templates() -> Any:
 
 
 def _import_httpx_default_timeout() -> Any:
-    server_config_load = CONFIG_IMPORTS.get("server_config.py")
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
     HTTPX_DEFAULT_TIMEOUT = load_mod(server_config_load.get("module"), "HTTPX_DEFAULT_TIMEOUT")
 
@@ -439,7 +439,7 @@ def _import_httpx_default_timeout() -> Any:
 
 
 def _import_open_cross_domain() -> Any:
-    server_config_load = CONFIG_IMPORTS.get("server_config.py")
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
     OPEN_CROSS_DOMAIN = load_mod(server_config_load.get("module"), "OPEN_CROSS_DOMAIN")
 
@@ -447,7 +447,7 @@ def _import_open_cross_domain() -> Any:
 
 
 def _import_default_bind_host() -> Any:
-    server_config_load = CONFIG_IMPORTS.get("server_config.py")
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
     DEFAULT_BIND_HOST = load_mod(server_config_load.get("module"), "DEFAULT_BIND_HOST")
 
@@ -455,7 +455,7 @@ def _import_default_bind_host() -> Any:
 
 
 def _import_webui_server() -> Any:
-    server_config_load = CONFIG_IMPORTS.get("server_config.py")
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
     WEBUI_SERVER = load_mod(server_config_load.get("module"), "WEBUI_SERVER")
 
@@ -463,7 +463,7 @@ def _import_webui_server() -> Any:
 
 
 def _import_api_server() -> Any:
-    server_config_load = CONFIG_IMPORTS.get("server_config.py")
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
     API_SERVER = load_mod(server_config_load.get("module"), "API_SERVER")
 
