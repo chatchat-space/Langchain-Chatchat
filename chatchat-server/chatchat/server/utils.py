@@ -246,7 +246,10 @@ def get_OpenAIClient(
     construct an openai Client for specified platform or model
     '''
     if platform_name is None:
-        platform_name = get_model_info(model_name=model_name, platform_name=platform_name)["platform_name"]
+        platform_info = get_model_info(model_name=model_name, platform_name=platform_name)
+        if platform_info is None:
+            raise RuntimeError(f"cannot find configured platform for model: {model_name}")
+        platform_name = platform_info.get("platform_name")
     platform_info = get_config_platforms().get(platform_name)
     assert platform_info, f"cannot find configured platform: {platform_name}"
     params = {

@@ -25,7 +25,10 @@ def agents_registry(
     if "glm3" in llm.model_name.lower():
         # An optimized method of langchain Agent that uses the glm3 series model
         agent = create_structured_glm3_chat_agent(llm=llm, tools=tools)
-        # pass
+
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose, callbacks=callbacks)
+
+        return agent_executor
     elif "qwen" in llm.model_name.lower():
         return create_structured_qwen_chat_agent(llm=llm, tools=tools, callbacks=callbacks)
     else:
@@ -35,6 +38,6 @@ def agents_registry(
             prompt = hub.pull("hwchase17/structured-chat-agent") # default prompt
         agent = create_structured_chat_agent(llm=llm, tools=tools, prompt=prompt)
 
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose, callbacks=callbacks)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose, callbacks=callbacks)
 
-    return agent_executor
+        return agent_executor
