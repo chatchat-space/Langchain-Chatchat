@@ -40,7 +40,7 @@ from model_providers.core.model_runtime.entities.model_entities import (
     FetchFrom,
     I18nObject,
     ModelType,
-    PriceConfig, ModelFeature, ModelPropertyKey, DefaultParameterName, ParameterRule, ParameterType,
+    PriceConfig, ParameterRule, ParameterType, ModelFeature, ModelPropertyKey, DefaultParameterName,
 )
 from model_providers.core.model_runtime.errors.validate import (
     CredentialsValidateFailedError,
@@ -48,7 +48,7 @@ from model_providers.core.model_runtime.errors.validate import (
 from model_providers.core.model_runtime.model_providers.__base.large_language_model import (
     LargeLanguageModel,
 )
-from model_providers.core.model_runtime.model_providers.ollama._common import _CommonOllama
+from model_providers.core.model_runtime.model_providers.deepseek._common import _CommonDeepseek
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ if you are not sure about the structure.
 """
 
 
-class OllamaLargeLanguageModel(_CommonOllama, LargeLanguageModel):
+class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
     """
     Model class for OpenAI large language model.
     """
@@ -1129,8 +1129,6 @@ class OllamaLargeLanguageModel(_CommonOllama, LargeLanguageModel):
         """
         extras = {}
 
-        if "vision_support" in credentials and credentials["vision_support"] == "true":
-            extras["features"] = [ModelFeature.VISION]
 
         entity = AIModelEntity(
             model=model,
@@ -1173,158 +1171,66 @@ class OllamaLargeLanguageModel(_CommonOllama, LargeLanguageModel):
                     max=1,
                 ),
                 ParameterRule(
-                    name="top_k",
-                    label=I18nObject(en_US="Top K"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="Reduces the probability of generating nonsense. "
-                              "A higher value (e.g. 100) will give more diverse answers, "
-                              "while a lower value (e.g. 10) will be more conservative. (Default: 40)"
-                    ),
-                    default=40,
-                    min=1,
-                    max=100,
-                ),
-                ParameterRule(
-                    name="repeat_penalty",
-                    label=I18nObject(en_US="Repeat Penalty"),
+                    name="frequency_penalty",
+                    label=I18nObject(en_US="frequency_penalty"),
                     type=ParameterType.FLOAT,
                     help=I18nObject(
-                        en_US="Sets how strongly to penalize repetitions. "
-                              "A higher value (e.g., 1.5) will penalize repetitions more strongly, "
-                              "while a lower value (e.g., 0.9) will be more lenient. (Default: 1.1)"
+                        en_US="A number between -2.0 and 2.0. If positive, ",
+                        zh_Hans="介于 -2.0 和 2.0 之间的数字。如果该值为正，"
+                                "那么新 token 会根据其在已有文本中的出现频率受到相应的惩罚，"
+                                "降低模型重复相同内容的可能性"
+                    ),
+                    default=0,
+                    min=-2,
+                    max=2,
+                ),
+                ParameterRule(
+                    name="presence_penalty",
+                    label=I18nObject(en_US="presence_penalty"),
+                    type=ParameterType.FLOAT,
+                    help=I18nObject(
+                        en_US="Sets how strongly to presence_penalty. ",
+                        zh_Hans="介于 -2.0 和 2.0 之间的数字。如果该值为正，那么新 token 会根据其是否已在已有文本中出现受到相应的惩罚，从而增加模型谈论新主题的可能性。"
                     ),
                     default=1.1,
                     min=-2,
                     max=2,
                 ),
                 ParameterRule(
-                    name="num_predict",
+                    name="max_tokens",
                     use_template="max_tokens",
-                    label=I18nObject(en_US="Num Predict"),
+                    label=I18nObject(en_US="max_tokens"),
                     type=ParameterType.INT,
                     help=I18nObject(
-                        en_US="Maximum number of tokens to predict when generating text. "
-                              "(Default: 128, -1 = infinite generation, -2 = fill context)"
+                        en_US="Maximum number of tokens to predict when generating text. ",
+                        zh_Hans="限制一次请求中模型生成 completion 的最大 token 数。"
+                                "输入 token 和输出 token 的总长度受模型的上下文长度的限制。"
                     ),
                     default=128,
                     min=-2,
                     max=int(credentials.get("max_tokens", 4096)),
                 ),
                 ParameterRule(
-                    name="mirostat",
-                    label=I18nObject(en_US="Mirostat sampling"),
+                    name="logprobs",
+                    label=I18nObject(en_US="logprobs"),
+                    type=ParameterType.BOOLEAN,
+                    help=I18nObject(
+                        en_US="Whether to return the log probabilities of the tokens. ",
+                        zh_Hans="是否返回所输出 token 的对数概率。如果为 true，则在 message 的 content 中返回每个输出 token 的对数概率。"
+                    ),
+                ),
+                ParameterRule(
+                    name="top_logprobs",
+                    label=I18nObject(en_US="top_logprobs"),
                     type=ParameterType.INT,
                     help=I18nObject(
-                        en_US="Enable Mirostat sampling for controlling perplexity. "
-                              "(default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)"
+                        en_US="the format to return a response in.",
+                        zh_Hans="一个介于 0 到 20 之间的整数 N，指定每个输出位置返回输出概率 top N 的 token，"
+                                "且返回这些 token 的对数概率。指定此参数时，logprobs 必须为 true。"
                     ),
                     default=0,
                     min=0,
-                    max=2,
-                ),
-                ParameterRule(
-                    name="mirostat_eta",
-                    label=I18nObject(en_US="Mirostat Eta"),
-                    type=ParameterType.FLOAT,
-                    help=I18nObject(
-                        en_US="Influences how quickly the algorithm responds to feedback from "
-                              "the generated text. A lower learning rate will result in slower adjustments, "
-                              "while a higher learning rate will make the algorithm more responsive. "
-                              "(Default: 0.1)"
-                    ),
-                    default=0.1,
-                    precision=1,
-                ),
-                ParameterRule(
-                    name="mirostat_tau",
-                    label=I18nObject(en_US="Mirostat Tau"),
-                    type=ParameterType.FLOAT,
-                    help=I18nObject(
-                        en_US="Controls the balance between coherence and diversity of the output. "
-                              "A lower value will result in more focused and coherent text. (Default: 5.0)"
-                    ),
-                    default=5.0,
-                    precision=1,
-                ),
-                ParameterRule(
-                    name="num_ctx",
-                    label=I18nObject(en_US="Size of context window"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="Sets the size of the context window used to generate the next token. "
-                              "(Default: 2048)"
-                    ),
-                    default=2048,
-                    min=1,
-                ),
-                ParameterRule(
-                    name="num_gpu",
-                    label=I18nObject(en_US="Num GPU"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="The number of layers to send to the GPU(s). "
-                              "On macOS it defaults to 1 to enable metal support, 0 to disable."
-                    ),
-                    default=1,
-                    min=0,
-                    max=1,
-                ),
-                ParameterRule(
-                    name="num_thread",
-                    label=I18nObject(en_US="Num Thread"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="Sets the number of threads to use during computation. "
-                              "By default, Ollama will detect this for optimal performance. "
-                              "It is recommended to set this value to the number of physical CPU cores "
-                              "your system has (as opposed to the logical number of cores)."
-                    ),
-                    min=1,
-                ),
-                ParameterRule(
-                    name="repeat_last_n",
-                    label=I18nObject(en_US="Repeat last N"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="Sets how far back for the model to look back to prevent repetition. "
-                              "(Default: 64, 0 = disabled, -1 = num_ctx)"
-                    ),
-                    default=64,
-                    min=-1,
-                ),
-                ParameterRule(
-                    name="tfs_z",
-                    label=I18nObject(en_US="TFS Z"),
-                    type=ParameterType.FLOAT,
-                    help=I18nObject(
-                        en_US="Tail free sampling is used to reduce the impact of less probable tokens "
-                              "from the output. A higher value (e.g., 2.0) will reduce the impact more, "
-                              "while a value of 1.0 disables this setting. (default: 1)"
-                    ),
-                    default=1,
-                    precision=1,
-                ),
-                ParameterRule(
-                    name="seed",
-                    label=I18nObject(en_US="Seed"),
-                    type=ParameterType.INT,
-                    help=I18nObject(
-                        en_US="Sets the random number seed to use for generation. Setting this to "
-                              "a specific number will make the model generate the same text for "
-                              "the same prompt. (Default: 0)"
-                    ),
-                    default=0,
-                ),
-                ParameterRule(
-                    name="format",
-                    label=I18nObject(en_US="Format"),
-                    type=ParameterType.STRING,
-                    help=I18nObject(
-                        en_US="the format to return a response in."
-                              " Currently the only accepted value is json."
-                    ),
-                    options=["json"],
+                    max=20,
                 ),
             ],
             pricing=PriceConfig(

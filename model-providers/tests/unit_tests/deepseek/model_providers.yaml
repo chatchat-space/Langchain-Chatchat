@@ -1,0 +1,11 @@
+
+deepseek:
+  model_credential:
+    - model: 'deepseek-chat'
+      model_type: 'llm'
+      model_credentials:
+        base_url: 'https://api.deepseek.com'
+        api_key: 'sk-dcb625fcbc1e497d80b7b9493b51d758'
+
+
+

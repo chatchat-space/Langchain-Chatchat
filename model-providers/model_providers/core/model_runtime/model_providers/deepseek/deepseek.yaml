@@ -1,6 +1,6 @@
-provider: ollama
+provider: deepseek
 label:
-  en_US: Ollama
+  en_US: Deepseek
 icon_large:
   en_US: icon_l_en.svg
 icon_small:
@@ -8,13 +8,12 @@ icon_small:
 background: "#F9FAFB"
 help:
   title:
-    en_US: How to integrate with Ollama
-    zh_Hans: 如何集成 Ollama
+    en_US: How to integrate with Deepseek
+    zh_Hans: 如何集成 Deepseek
   url:
-    en_US: "ollama"
+    en_US: "deepseek"
 supported_model_types:
   - llm
-  - text-embedding
 configurate_methods:
   - customizable-model
 model_credential_schema:
@@ -26,7 +25,14 @@ model_credential_schema:
       en_US: Enter your model name
       zh_Hans: 输入模型名称
   credential_form_schemas:
-
+    - variable: api_key
+      label:
+        en_US: API Key
+      type: secret-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 API Key
+        en_US: Enter your API Key
     - variable: base_url
       label:
         zh_Hans: API Base

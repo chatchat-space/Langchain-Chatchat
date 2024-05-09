@@ -13,7 +13,7 @@ from model_providers.core.model_runtime.errors.invoke import (
 )
 
 
-class _CommonOllama:
+class _CommonDeepseek:
     def _to_credential_kwargs(self, credentials: dict) -> dict:
         """
         Transform credentials to kwargs for model instance
@@ -22,7 +22,7 @@ class _CommonOllama:
         :return:
         """
         credentials_kwargs = {
-            "openai_api_key": "Empty",
+            "api_key": credentials["api_key"],
             "timeout": Timeout(315.0, read=300.0, write=10.0, connect=5.0),
             "max_retries": 1,
         }

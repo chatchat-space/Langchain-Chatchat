@@ -4,7 +4,7 @@ ollama:
     - model: 'llama3'
       model_type: 'llm'
       model_credentials:
-        openai_api_base: 'http://172.21.80.1:11434'
+        base_url: 'http://172.21.80.1:11434/v1'
 
 
 
