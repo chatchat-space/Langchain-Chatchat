@@ -11,6 +11,7 @@ import { ModelProvider } from '@/libs/agent-runtime';
 import Checker from '../components/Checker';
 import ProviderConfig from '../components/ProviderConfig';
 import { LLMProviderBaseUrlKey, LLMProviderConfigKey } from '../const';
+import ModelSelector from '../components/ModelSeletor';
 
 const providerKey = 'chatchat';
 
@@ -38,6 +39,11 @@ const ChatChatProvider = memo(() => {
           desc: t('llm.ChatChat.customModelName.desc'),
           label: t('llm.ChatChat.customModelName.title'),
           name: [LLMProviderConfigKey, providerKey, 'customModelName'],
+        },
+        {
+          children: <ModelSelector provider={ModelProvider.ChatChat} />,
+          desc: t('llm.selectorModel.desc'),
+          label: t('llm.selectorModel.title'),
         },
         {
           children: <Checker model={'gml-4'} provider={ModelProvider.ChatChat} />,

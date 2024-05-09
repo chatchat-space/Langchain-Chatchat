@@ -36,6 +36,9 @@ export const API_ENDPOINTS = mapWithBasePath({
   // image
   images: '/api/openai/images',
 
+  // models
+  models: (provider: string) => withBasePath(`/api/models/${provider}`),
+
   // TTS & STT
   stt: '/api/openai/stt',
   tts: '/api/openai/tts',

@@ -198,6 +198,13 @@ export default {
       },
     },
 
+    selectorModel: {
+      button: '更新',
+      desc: '选择代理地址所有模型，默认/v1/models获取',
+      pass: '更新成功',
+      title: '更新模型到本地',
+    },
+
     checker: {
       button: '检查',
       desc: '测试 Api Key 与代理地址是否正确填写',
