@@ -7,7 +7,7 @@ from model_providers.core.model_runtime.model_providers.__base.model_provider im
 logger = logging.getLogger(__name__)
 
 
-class OpenAIProvider(ModelProvider):
+class OllamaProvider(ModelProvider):
     def validate_provider_credentials(self, credentials: dict) -> None:
         """
         Validate provider credentials
