@@ -63,6 +63,7 @@ const anthropicAPIKey = (s: GlobalStore) => modelProvider(s).anthropic.apiKey;
 
 const enableChatChat = (s: GlobalStore) => modelProvider(s).chatchat.enabled;
 const chatChatProxyUrl = (s: GlobalStore) => modelProvider(s).chatchat.endpoint;
+const chatChatModels = (s: GlobalStore) => modelProvider(s).chatchat.models || [];
 
 // const azureModelList = (s: GlobalStore): ModelProviderCard => {
 //   const azure = azureConfig(s);
@@ -138,6 +139,12 @@ const modelSelectList = (s: GlobalStore): ModelProviderCard[] => {
 
   const ollamaChatModels = processChatModels(ollamaModelConfig, OllamaProvider.chatModels);
 
+
+  const chatChatModelConfig = parseModelString(
+    currentSettings(s).languageModel.chatchat.customModelName
+  )
+  const chatChatChatModels = processChatModels(chatChatModelConfig, chatChatModels(s))
+
   return [
     {
       ...OpenAIProvider,
@@ -152,7 +159,7 @@ const modelSelectList = (s: GlobalStore): ModelProviderCard[] => {
     { ...PerplexityProvider, enabled: enablePerplexity(s) },
     { ...AnthropicProvider, enabled: enableAnthropic(s) },
     { ...MistralProvider, enabled: enableMistral(s) },
-    { ...ChatChatProvider, enabled: enableChatChat(s) },
+    { ...ChatChatProvider, chatModels: chatChatChatModels, enabled: enableChatChat(s) },
   ];
 };
 
