@@ -30,7 +30,7 @@ def test_provider_manager_models(logging_conf: dict, providers_file: str) -> Non
     )
 
     provider_model_bundle_llm = provider_manager.get_provider_model_bundle(
-        provider="ollama", model_type=ModelType.LLM
+        provider="openai", model_type=ModelType.LLM
     )
     llm_models: List[AIModelEntity] = []
     for model in provider_model_bundle_llm.configuration.custom_configuration.models:
@@ -46,4 +46,3 @@ def test_provider_manager_models(logging_conf: dict, providers_file: str) -> Non
     )
 
     logger.info(f"predefined_models: {llm_models}")
-

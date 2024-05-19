@@ -185,9 +185,17 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                         provider=provider, model_type=model_type
                     )
                 )
+                # 获取预定义模型
                 llm_models.extend(
                     provider_model_bundle.model_type_instance.predefined_models()
                 )
+                # 获取自定义模型
+                for model in provider_model_bundle.configuration.custom_configuration.models:
+
+                    llm_models.append(provider_model_bundle.model_type_instance.get_model_schema(
+                        model=model.model,
+                        credentials=model.credentials,
+                    ))
             except Exception as e:
                 logger.error(
                     f"Error while fetching models for provider: {provider}, model_type: {model_type}"
