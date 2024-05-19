@@ -203,15 +203,23 @@ zhipuai:
 
 - 安装sdk
 ```shell
-$ pip install zhipuai
+$ pip install openai
 ```
 
 - 编辑`model_providers.yaml`
 
 ```yaml
 
-zhipuai:
 
-  provider_credential:
-    api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.2'
+deepseek:
+  model_credential:
+    - model: 'deepseek-chat'
+      model_type: 'llm'
+      model_credentials:
+        base_url: 'https://api.deepseek.com'
+        api_key: 'sk-dcb625fcbc1e497d80b7b9493b51d758'
+
+
+
+
 ```
