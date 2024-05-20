@@ -1,8 +1,7 @@
 import json
 import logging
-from typing import Generator
 from decimal import Decimal
-from typing import List, Optional, Union, cast
+from typing import Generator, List, Optional, Union, cast
 from urllib.parse import urljoin
 
 import requests

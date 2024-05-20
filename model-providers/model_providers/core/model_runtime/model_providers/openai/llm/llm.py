@@ -1,6 +1,5 @@
 import logging
-from typing import Generator
-from typing import List, Optional, Union, cast
+from typing import Generator, List, Optional, Union, cast
 
 import tiktoken
 from openai import OpenAI, Stream

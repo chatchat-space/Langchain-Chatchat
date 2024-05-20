@@ -1,12 +1,12 @@
 from enum import Enum
 from typing import Any
 
-from ..._models import BaseModel
-
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,
     LLMResultChunk,
 )
+
+from ..._models import BaseModel
 
 
 class QueueEvent(Enum):

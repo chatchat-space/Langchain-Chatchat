@@ -73,7 +73,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._server = None
         self._server_thread = None
 
-    def logging_conf(self,logging_conf: Optional[dict] = None):
+    def logging_conf(self, logging_conf: Optional[dict] = None):
         self._logging_conf = logging_conf
 
     @classmethod
@@ -132,7 +132,10 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._app.include_router(self._router)
 
         config = Config(
-            app=self._app, host=self._host, port=self._port, log_config=self._logging_conf
+            app=self._app,
+            host=self._host,
+            port=self._port,
+            log_config=self._logging_conf,
         )
         self._server = Server(config)
 
@@ -145,7 +148,6 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
         self._server_thread.start()
 
     def destroy(self):
-
         logger.info("Shutting down server")
         self._server.should_exit = True  # 设置退出标志
         self._server.shutdown()  # 停止服务器
@@ -154,7 +156,6 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
 
     def join(self):
         self._server_thread.join()
-
 
     def set_app_event(self, started_event: mp.Event = None):
         @self._app.on_event("startup")
@@ -190,12 +191,15 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     provider_model_bundle.model_type_instance.predefined_models()
                 )
                 # 获取自定义模型
-                for model in provider_model_bundle.configuration.custom_configuration.models:
-
-                    llm_models.append(provider_model_bundle.model_type_instance.get_model_schema(
-                        model=model.model,
-                        credentials=model.credentials,
-                    ))
+                for (
+                    model
+                ) in provider_model_bundle.configuration.custom_configuration.models:
+                    llm_models.append(
+                        provider_model_bundle.model_type_instance.get_model_schema(
+                            model=model.model,
+                            credentials=model.credentials,
+                        )
+                    )
             except Exception as e:
                 logger.error(
                     f"Error while fetching models for provider: {provider}, model_type: {model_type}"
@@ -225,13 +229,15 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             )
 
             # 判断embeddings_request.input是否为list
-            input = ''
+            input = ""
             if isinstance(embeddings_request.input, list):
                 tokens = embeddings_request.input
                 try:
                     encoding = tiktoken.encoding_for_model(embeddings_request.model)
                 except KeyError:
-                    logger.warning("Warning: model not found. Using cl100k_base encoding.")
+                    logger.warning(
+                        "Warning: model not found. Using cl100k_base encoding."
+                    )
                     model = "cl100k_base"
                     encoding = tiktoken.get_encoding(model)
                 for i, token in enumerate(tokens):
@@ -241,7 +247,9 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             else:
                 input = embeddings_request.input
 
-            response = model_instance.invoke_text_embedding(texts=[input], user="abc-123")
+            response = model_instance.invoke_text_embedding(
+                texts=[input], user="abc-123"
+            )
             return await openai_embedding_text(response)
 
         except ValueError as e:

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Union, Generic, TypeVar, Callable, cast, overload
 from datetime import date, datetime
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar, Union, cast, overload
 
 import pydantic
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from ._types import StrBytesIntFloat
 
@@ -45,23 +45,49 @@ if TYPE_CHECKING:
 
 else:
     if PYDANTIC_V2:
+        from pydantic.v1.datetime_parse import (
+            parse_date as parse_date,
+        )
+        from pydantic.v1.datetime_parse import (
+            parse_datetime as parse_datetime,
+        )
         from pydantic.v1.typing import (
             get_args as get_args,
-            is_union as is_union,
+        )
+        from pydantic.v1.typing import (
             get_origin as get_origin,
-            is_typeddict as is_typeddict,
+        )
+        from pydantic.v1.typing import (
             is_literal_type as is_literal_type,
         )
-        from pydantic.v1.datetime_parse import parse_date as parse_date, parse_datetime as parse_datetime
+        from pydantic.v1.typing import (
+            is_typeddict as is_typeddict,
+        )
+        from pydantic.v1.typing import (
+            is_union as is_union,
+        )
     else:
+        from pydantic.datetime_parse import (
+            parse_date as parse_date,
+        )
+        from pydantic.datetime_parse import (
+            parse_datetime as parse_datetime,
+        )
         from pydantic.typing import (
             get_args as get_args,
-            is_union as is_union,
+        )
+        from pydantic.typing import (
             get_origin as get_origin,
-            is_typeddict as is_typeddict,
+        )
+        from pydantic.typing import (
             is_literal_type as is_literal_type,
         )
-        from pydantic.datetime_parse import parse_date as parse_date, parse_datetime as parse_datetime
+        from pydantic.typing import (
+            is_typeddict as is_typeddict,
+        )
+        from pydantic.typing import (
+            is_union as is_union,
+        )
 
 
 # refactored config
@@ -204,7 +230,9 @@ if TYPE_CHECKING:
         def __get__(self, instance: object, owner: type[Any] | None = None) -> _T:
             ...
 
-        def __get__(self, instance: object, owner: type[Any] | None = None) -> _T | Self:
+        def __get__(
+            self, instance: object, owner: type[Any] | None = None
+        ) -> _T | Self:
             raise NotImplementedError()
 
         def __set_name__(self, owner: type[Any], name: str) -> None:

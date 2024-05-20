@@ -1,7 +1,6 @@
 import logging
-from typing import Generator
-from typing import List, Optional, Union, cast
 from decimal import Decimal
+from typing import Generator, List, Optional, Union, cast
 
 import tiktoken
 from openai import OpenAI, Stream
@@ -37,10 +36,15 @@ from model_providers.core.model_runtime.entities.message_entities import (
 )
 from model_providers.core.model_runtime.entities.model_entities import (
     AIModelEntity,
+    DefaultParameterName,
     FetchFrom,
     I18nObject,
+    ModelFeature,
+    ModelPropertyKey,
     ModelType,
-    PriceConfig, ParameterRule, ParameterType, ModelFeature, ModelPropertyKey, DefaultParameterName,
+    ParameterRule,
+    ParameterType,
+    PriceConfig,
 )
 from model_providers.core.model_runtime.errors.validate import (
     CredentialsValidateFailedError,
@@ -48,7 +52,9 @@ from model_providers.core.model_runtime.errors.validate import (
 from model_providers.core.model_runtime.model_providers.__base.large_language_model import (
     LargeLanguageModel,
 )
-from model_providers.core.model_runtime.model_providers.deepseek._common import _CommonDeepseek
+from model_providers.core.model_runtime.model_providers.deepseek._common import (
+    _CommonDeepseek,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1117,7 +1123,7 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
         return num_tokens
 
     def get_customizable_model_schema(
-            self, model: str, credentials: dict
+        self, model: str, credentials: dict
     ) -> AIModelEntity:
         """
         Get customizable model schema.
@@ -1128,7 +1134,6 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
         :return: model schema
         """
         extras = {}
-
 
         entity = AIModelEntity(
             model=model,
@@ -1149,8 +1154,8 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     type=ParameterType.FLOAT,
                     help=I18nObject(
                         en_US="The temperature of the model. "
-                              "Increasing the temperature will make the model answer "
-                              "more creatively. (Default: 0.8)"
+                        "Increasing the temperature will make the model answer "
+                        "more creatively. (Default: 0.8)"
                     ),
                     default=0.8,
                     min=0,
@@ -1163,8 +1168,8 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     type=ParameterType.FLOAT,
                     help=I18nObject(
                         en_US="Works together with top-k. A higher value (e.g., 0.95) will lead to "
-                              "more diverse text, while a lower value (e.g., 0.5) will generate more "
-                              "focused and conservative text. (Default: 0.9)"
+                        "more diverse text, while a lower value (e.g., 0.5) will generate more "
+                        "focused and conservative text. (Default: 0.9)"
                     ),
                     default=0.9,
                     min=0,
@@ -1177,8 +1182,8 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     help=I18nObject(
                         en_US="A number between -2.0 and 2.0. If positive, ",
                         zh_Hans="介于 -2.0 和 2.0 之间的数字。如果该值为正，"
-                                "那么新 token 会根据其在已有文本中的出现频率受到相应的惩罚，"
-                                "降低模型重复相同内容的可能性"
+                        "那么新 token 会根据其在已有文本中的出现频率受到相应的惩罚，"
+                        "降低模型重复相同内容的可能性",
                     ),
                     default=0,
                     min=-2,
@@ -1190,7 +1195,7 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     type=ParameterType.FLOAT,
                     help=I18nObject(
                         en_US="Sets how strongly to presence_penalty. ",
-                        zh_Hans="介于 -2.0 和 2.0 之间的数字。如果该值为正，那么新 token 会根据其是否已在已有文本中出现受到相应的惩罚，从而增加模型谈论新主题的可能性。"
+                        zh_Hans="介于 -2.0 和 2.0 之间的数字。如果该值为正，那么新 token 会根据其是否已在已有文本中出现受到相应的惩罚，从而增加模型谈论新主题的可能性。",
                     ),
                     default=1.1,
                     min=-2,
@@ -1204,7 +1209,7 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     help=I18nObject(
                         en_US="Maximum number of tokens to predict when generating text. ",
                         zh_Hans="限制一次请求中模型生成 completion 的最大 token 数。"
-                                "输入 token 和输出 token 的总长度受模型的上下文长度的限制。"
+                        "输入 token 和输出 token 的总长度受模型的上下文长度的限制。",
                     ),
                     default=128,
                     min=-2,
@@ -1216,7 +1221,7 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     type=ParameterType.BOOLEAN,
                     help=I18nObject(
                         en_US="Whether to return the log probabilities of the tokens. ",
-                        zh_Hans="是否返回所输出 token 的对数概率。如果为 true，则在 message 的 content 中返回每个输出 token 的对数概率。"
+                        zh_Hans="是否返回所输出 token 的对数概率。如果为 true，则在 message 的 content 中返回每个输出 token 的对数概率。",
                     ),
                 ),
                 ParameterRule(
@@ -1226,7 +1231,7 @@ class DeepseekLargeLanguageModel(_CommonDeepseek, LargeLanguageModel):
                     help=I18nObject(
                         en_US="the format to return a response in.",
                         zh_Hans="一个介于 0 到 20 之间的整数 N，指定每个输出位置返回输出概率 top N 的 token，"
-                                "且返回这些 token 的对数概率。指定此参数时，logprobs 必须为 true。"
+                        "且返回这些 token 的对数概率。指定此参数时，logprobs 必须为 true。",
                     ),
                     default=0,
                     min=0,

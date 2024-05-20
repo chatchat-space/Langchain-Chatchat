@@ -1,15 +1,15 @@
 from enum import Enum
 from typing import List, Optional
 
-from ...._compat import PYDANTIC_V2, ConfigDict
-from ...._models import BaseModel
-
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
 from model_providers.core.model_runtime.entities.model_entities import (
     AIModelEntity,
     ModelType,
     ProviderModel,
 )
+
+from ...._compat import PYDANTIC_V2, ConfigDict
+from ...._models import BaseModel
 
 
 class ConfigurateMethod(Enum):
@@ -136,10 +136,9 @@ class ProviderEntity(BaseModel):
     model_credential_schema: Optional[ModelCredentialSchema] = None
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()
 

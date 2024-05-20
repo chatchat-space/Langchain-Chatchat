@@ -2,8 +2,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from ...._models import BaseModel
-
 from model_providers.core.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
     PromptMessage,
@@ -12,6 +10,8 @@ from model_providers.core.model_runtime.entities.model_entities import (
     ModelUsage,
     PriceInfo,
 )
+
+from ...._models import BaseModel
 
 
 class LLMMode(Enum):

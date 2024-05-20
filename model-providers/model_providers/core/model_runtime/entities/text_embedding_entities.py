@@ -1,9 +1,9 @@
 from decimal import Decimal
 from typing import List
 
-from ...._models import BaseModel
-
 from model_providers.core.model_runtime.entities.model_entities import ModelUsage
+
+from ...._models import BaseModel
 
 
 class EmbeddingUsage(ModelUsage):

@@ -1,6 +1,4 @@
-from typing import Generator, Iterator
-
-from typing import Dict, List, Union, cast, Type
+from typing import Dict, Generator, Iterator, List, Type, Union, cast
 
 from openai import (
     APIConnectionError,
@@ -527,8 +525,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
     def _extract_response_tool_calls(
         self,
         response_tool_calls: Union[
-            List[ChatCompletionMessageToolCall],
-            List[ChoiceDeltaToolCall]
+            List[ChatCompletionMessageToolCall], List[ChoiceDeltaToolCall]
         ],
     ) -> List[AssistantPromptMessage.ToolCall]:
         """

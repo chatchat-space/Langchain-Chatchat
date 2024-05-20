@@ -1,5 +1,3 @@
-from ....._models import BaseModel
-
 from model_providers.core.model_runtime.entities.defaults import PARAMETER_RULE_TEMPLATE
 from model_providers.core.model_runtime.entities.llm_entities import LLMMode
 from model_providers.core.model_runtime.entities.model_entities import (
@@ -13,6 +11,8 @@ from model_providers.core.model_runtime.entities.model_entities import (
     ParameterRule,
     PriceConfig,
 )
+
+from ....._models import BaseModel
 
 AZURE_OPENAI_API_VERSION = "2024-02-15-preview"
 

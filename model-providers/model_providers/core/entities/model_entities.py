@@ -1,15 +1,15 @@
 from enum import Enum
 from typing import List, Optional
 
-from ..._compat import PYDANTIC_V2, ConfigDict
-from ..._models import BaseModel
-
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
 from model_providers.core.model_runtime.entities.model_entities import (
     ModelType,
     ProviderModel,
 )
 from model_providers.core.model_runtime.entities.provider_entities import ProviderEntity
+
+from ..._compat import PYDANTIC_V2, ConfigDict
+from ..._models import BaseModel
 
 
 class ModelStatus(Enum):
@@ -80,9 +80,8 @@ class DefaultModelEntity(BaseModel):
     provider: DefaultModelProviderEntity
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()

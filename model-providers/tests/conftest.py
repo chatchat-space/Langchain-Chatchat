@@ -104,15 +104,17 @@ def logging_conf() -> dict:
         111,
     )
 
+
 @pytest.fixture
 def providers_file(request) -> str:
-    from pathlib import Path
     import os
+    from pathlib import Path
+
     # 当前执行目录
     # 获取当前测试文件的路径
     test_file_path = Path(str(request.fspath)).parent
-    print("test_file_path:",test_file_path)
-    return os.path.join(test_file_path,"model_providers.yaml")
+    print("test_file_path:", test_file_path)
+    return os.path.join(test_file_path, "model_providers.yaml")
 
 
 @pytest.fixture
@@ -121,9 +123,7 @@ def init_server(logging_conf: dict, providers_file: str) -> None:
     try:
         boot = (
             BootstrapWebBuilder()
-            .model_providers_cfg_path(
-                model_providers_cfg_path=providers_file
-            )
+            .model_providers_cfg_path(model_providers_cfg_path=providers_file)
             .host(host="127.0.0.1")
             .port(port=20000)
             .build()
@@ -139,5 +139,4 @@ def init_server(logging_conf: dict, providers_file: str) -> None:
             boot.destroy()
 
     except SystemExit:
-
         raise

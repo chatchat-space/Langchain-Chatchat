@@ -1,10 +1,10 @@
 from enum import Enum
 from typing import List, Optional
 
+from model_providers.core.model_runtime.entities.model_entities import ModelType
+
 from ..._compat import PYDANTIC_V2, ConfigDict
 from ..._models import BaseModel
-
-from model_providers.core.model_runtime.entities.model_entities import ModelType
 
 
 class ProviderType(Enum):
@@ -59,10 +59,9 @@ class RestrictModel(BaseModel):
     model_type: ModelType
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()
 
@@ -109,10 +108,9 @@ class CustomModelConfiguration(BaseModel):
     credentials: dict
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()
 

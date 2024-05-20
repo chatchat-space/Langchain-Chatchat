@@ -1,27 +1,28 @@
 from __future__ import annotations
 
+import functools
+import inspect
 import os
 import re
-import inspect
-import functools
+from pathlib import Path
 from typing import (
     Any,
-    Tuple,
-    Mapping,
-    TypeVar,
     Callable,
     Iterable,
+    Mapping,
     Sequence,
+    Tuple,
+    TypeVar,
     cast,
     overload,
 )
-from pathlib import Path
-from typing_extensions import TypeGuard
 
 import sniffio
+from typing_extensions import TypeGuard
 
-from .._types import Headers, NotGiven, FileTypes, NotGivenOr, HeadersLike
-from .._compat import parse_date as parse_date, parse_datetime as parse_datetime
+from .._compat import parse_date as parse_date
+from .._compat import parse_datetime as parse_datetime
+from .._types import FileTypes, Headers, HeadersLike, NotGiven, NotGivenOr
 
 _T = TypeVar("_T")
 _TupleT = TypeVar("_TupleT", bound=Tuple[object, ...])
@@ -108,7 +109,9 @@ def _extract_items(
                     item,
                     path,
                     index=index,
-                    flattened_key=flattened_key + "[]" if flattened_key is not None else "[]",
+                    flattened_key=flattened_key + "[]"
+                    if flattened_key is not None
+                    else "[]",
                 )
                 for item in obj
             ]
@@ -261,7 +264,12 @@ def required_args(*variants: Sequence[str]) -> Callable[[CallableT], CallableT]:
             else:  # no break
                 if len(variants) > 1:
                     variations = human_join(
-                        ["(" + human_join([quote(arg) for arg in variant], final="and") + ")" for variant in variants]
+                        [
+                            "("
+                            + human_join([quote(arg) for arg in variant], final="and")
+                            + ")"
+                            for variant in variants
+                        ]
                     )
                     msg = f"Missing required arguments; Expected either {variations} arguments to be given"
                 else:
@@ -376,7 +384,11 @@ def get_required_header(headers: HeadersLike, header: str) -> str:
                 return v
 
     """ to deal with the case where the header looks like Stainless-Event-Id """
-    intercaps_header = re.sub(r"([^\w])(\w)", lambda pat: pat.group(1) + pat.group(2).upper(), header.capitalize())
+    intercaps_header = re.sub(
+        r"([^\w])(\w)",
+        lambda pat: pat.group(1) + pat.group(2).upper(),
+        header.capitalize(),
+    )
 
     for normalized_header in [header, lower_header, header.upper(), intercaps_header]:
         value = headers.get(normalized_header)

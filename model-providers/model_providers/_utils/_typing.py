@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, Iterable, cast
 from collections import abc as _c_abc
-from typing_extensions import Required, Annotated, get_args, get_origin
+from typing import Any, Iterable, TypeVar, cast
 
-from .._types import InheritsGeneric
+from typing_extensions import Annotated, Required, get_args, get_origin
+
 from .._compat import is_union as _is_union
+from .._types import InheritsGeneric
 
 
 def is_annotated_type(typ: type) -> bool:
@@ -49,15 +50,17 @@ def extract_type_arg(typ: type, index: int) -> type:
     try:
         return cast(type, args[index])
     except IndexError as err:
-        raise RuntimeError(f"Expected type {typ} to have a type argument at index {index} but it did not") from err
+        raise RuntimeError(
+            f"Expected type {typ} to have a type argument at index {index} but it did not"
+        ) from err
 
 
 def extract_type_var_from_base(
-        typ: type,
-        *,
-        generic_bases: tuple[type, ...],
-        index: int,
-        failure_message: str | None = None,
+    typ: type,
+    *,
+    generic_bases: tuple[type, ...],
+    index: int,
+    failure_message: str | None = None,
 ) -> type:
     """Given a type like `Foo[T]`, returns the generic type variable `T`.
 
@@ -117,4 +120,7 @@ def extract_type_var_from_base(
 
         return extracted
 
-    raise RuntimeError(failure_message or f"Could not resolve inner type variable at index {index} for {typ}")
+    raise RuntimeError(
+        failure_message
+        or f"Could not resolve inner type variable at index {index} for {typ}"
+    )

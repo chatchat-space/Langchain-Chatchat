@@ -1,5 +1,4 @@
-from typing import Generator
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, Generator, List, Optional, Type, Union
 
 from dashscope import get_tokenizer
 from dashscope.api_entities.dashscope_response import DashScopeAPIResponse

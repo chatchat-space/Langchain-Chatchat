@@ -1,9 +1,6 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
-from ..._compat import PYDANTIC_V2, ConfigDict
-from ..._models import BaseModel
-
 from model_providers.core.entities.model_entities import (
     ModelStatus,
     ModelWithProviderEntity,
@@ -25,6 +22,9 @@ from model_providers.core.model_runtime.entities.provider_entities import (
     ProviderHelpEntity,
     SimpleProviderEntity,
 )
+
+from ..._compat import PYDANTIC_V2, ConfigDict
+from ..._models import BaseModel
 
 
 class CustomConfigurationStatus(Enum):
@@ -74,10 +74,9 @@ class ProviderResponse(BaseModel):
     custom_configuration: CustomConfigurationResponse
     system_configuration: SystemConfigurationResponse
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()
 
@@ -180,10 +179,9 @@ class DefaultModelResponse(BaseModel):
     provider: SimpleProviderEntityResponse
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=()
-        )
+        model_config = ConfigDict(protected_namespaces=())
     else:
+
         class Config:
             protected_namespaces = ()
 

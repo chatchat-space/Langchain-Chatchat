@@ -1,6 +1,5 @@
 import threading
-from typing import Generator
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, Generator, List, Optional, Type, Union
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,

@@ -4,9 +4,6 @@ import logging
 from json import JSONDecodeError
 from typing import Dict, Iterator, List, Optional
 
-from ..._compat import PYDANTIC_V2, ConfigDict
-from ..._models import BaseModel
-
 from model_providers.core.entities.model_entities import (
     ModelStatus,
     ModelWithProviderEntity,
@@ -28,6 +25,9 @@ from model_providers.core.model_runtime.model_providers.__base.ai_model import A
 from model_providers.core.model_runtime.model_providers.__base.model_provider import (
     ModelProvider,
 )
+
+from ..._compat import PYDANTIC_V2, ConfigDict
+from ..._models import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -351,11 +351,9 @@ class ProviderModelBundle(BaseModel):
     model_type_instance: AIModel
 
     if PYDANTIC_V2:
-        model_config = ConfigDict(
-            protected_namespaces=(),
-            arbitrary_types_allowed=True
-        )
+        model_config = ConfigDict(protected_namespaces=(), arbitrary_types_allowed=True)
     else:
+
         class Config:
             protected_namespaces = ()
 

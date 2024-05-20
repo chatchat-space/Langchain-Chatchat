@@ -4,20 +4,20 @@ import io
 import os
 import pathlib
 from typing import overload
-from typing_extensions import TypeGuard
 
 import anyio
+from typing_extensions import TypeGuard
 
 from ._types import (
-    FileTypes,
-    FileContent,
-    RequestFiles,
-    HttpxFileTypes,
     Base64FileInput,
+    FileContent,
+    FileTypes,
     HttpxFileContent,
+    HttpxFileTypes,
     HttpxRequestFiles,
+    RequestFiles,
 )
-from ._utils import is_tuple_t, is_mapping_t, is_sequence_t
+from ._utils import is_mapping_t, is_sequence_t, is_tuple_t
 
 
 def is_base64_file_input(obj: object) -> TypeGuard[Base64FileInput]:
@@ -26,13 +26,20 @@ def is_base64_file_input(obj: object) -> TypeGuard[Base64FileInput]:
 
 def is_file_content(obj: object) -> TypeGuard[FileContent]:
     return (
-        isinstance(obj, bytes) or isinstance(obj, tuple) or isinstance(obj, io.IOBase) or isinstance(obj, os.PathLike)
+        isinstance(obj, bytes)
+        or isinstance(obj, tuple)
+        or isinstance(obj, io.IOBase)
+        or isinstance(obj, os.PathLike)
     )
 
 
 def assert_is_file_content(obj: object, *, key: str | None = None) -> None:
     if not is_file_content(obj):
-        prefix = f"Expected entry at `{key}`" if key is not None else f"Expected file input `{obj!r}`"
+        prefix = (
+            f"Expected entry at `{key}`"
+            if key is not None
+            else f"Expected file input `{obj!r}`"
+        )
         raise RuntimeError(
             f"{prefix} to be bytes, an io.IOBase instance, PathLike or a tuple but received {type(obj)} instead. See https://github.com/openai/openai-python/tree/main#file-uploads"
         ) from None
@@ -57,7 +64,9 @@ def to_httpx_files(files: RequestFiles | None) -> HttpxRequestFiles | None:
     elif is_sequence_t(files):
         files = [(key, _transform_file(file)) for key, file in files]
     else:
-        raise TypeError(f"Unexpected file type input {type(files)}, expected mapping or sequence")
+        raise TypeError(
+            f"Unexpected file type input {type(files)}, expected mapping or sequence"
+        )
 
     return files
 
@@ -73,7 +82,9 @@ def _transform_file(file: FileTypes) -> HttpxFileTypes:
     if is_tuple_t(file):
         return (file[0], _read_file_content(file[1]), *file[2:])
 
-    raise TypeError(f"Expected file types input to be a FileContent type or to be a tuple")
+    raise TypeError(
+        f"Expected file types input to be a FileContent type or to be a tuple"
+    )
 
 
 def _read_file_content(file: FileContent) -> HttpxFileContent:
@@ -101,7 +112,9 @@ async def async_to_httpx_files(files: RequestFiles | None) -> HttpxRequestFiles 
     elif is_sequence_t(files):
         files = [(key, await _async_transform_file(file)) for key, file in files]
     else:
-        raise TypeError("Unexpected file type input {type(files)}, expected mapping or sequence")
+        raise TypeError(
+            "Unexpected file type input {type(files)}, expected mapping or sequence"
+        )
 
     return files
 
@@ -117,7 +130,9 @@ async def _async_transform_file(file: FileTypes) -> HttpxFileTypes:
     if is_tuple_t(file):
         return (file[0], await _async_read_file_content(file[1]), *file[2:])
 
-    raise TypeError(f"Expected file types input to be a FileContent type or to be a tuple")
+    raise TypeError(
+        f"Expected file types input to be a FileContent type or to be a tuple"
+    )
 
 
 async def _async_read_file_content(file: FileContent) -> HttpxFileContent:

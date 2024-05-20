@@ -1,7 +1,6 @@
-from typing import Generator
 from enum import Enum
 from json import dumps, loads
-from typing import Any, Union
+from typing import Any, Generator, Union
 
 from requests import Response, post
 from requests.exceptions import ConnectionError, InvalidSchema, MissingSchema

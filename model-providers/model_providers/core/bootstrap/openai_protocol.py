@@ -1,9 +1,11 @@
 import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from ..._models import BaseModel
+
 from pydantic import Field as FieldInfo
 from typing_extensions import Literal
+
+from ..._models import BaseModel
 
 
 class Role(str, Enum):

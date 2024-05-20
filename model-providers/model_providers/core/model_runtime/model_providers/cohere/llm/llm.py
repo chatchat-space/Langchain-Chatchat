@@ -1,6 +1,5 @@
 import logging
-from typing import Generator
-from typing import Dict, List, Optional, Type, Union, cast
+from typing import Dict, Generator, List, Optional, Type, Union, cast
 
 import cohere
 from cohere.responses import Chat, Generations

@@ -1,5 +1,5 @@
 import enum
-from typing import Any, cast, List
+from typing import Any, List, cast
 
 from langchain.schema import (
     AIMessage,
@@ -8,7 +8,6 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage,
 )
-from ..._models import BaseModel
 
 from model_providers.core.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
@@ -19,6 +18,8 @@ from model_providers.core.model_runtime.entities.message_entities import (
     ToolPromptMessage,
     UserPromptMessage,
 )
+
+from ..._models import BaseModel
 
 
 class PromptMessageFileType(enum.Enum):
