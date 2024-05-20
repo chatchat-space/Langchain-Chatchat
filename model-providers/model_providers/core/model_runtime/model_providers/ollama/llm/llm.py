@@ -652,13 +652,16 @@ class OllamaLargeLanguageModel(_CommonOllama, LargeLanguageModel):
         if user:
             extra_model_kwargs["user"] = user
 
+        extra_body = {
+            **model_parameters,
+            **extra_model_kwargs,
+        }
         # chat model
         response = client.chat.completions.create(
             messages=[self._convert_prompt_message_to_dict(m) for m in prompt_messages],
             model=model,
             stream=stream,
-            **model_parameters,
-            **extra_model_kwargs,
+            extra_body=extra_body
         )
 
         if stream:

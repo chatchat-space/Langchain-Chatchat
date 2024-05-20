@@ -4,7 +4,7 @@ ollama:
     - model: 'llama3'
       model_type: 'llm'
       model_credentials:
-        base_url: 'http://172.21.80.1:11434/v1'
+        base_url: 'http://172.21.192.1:11434/v1'
 
 
 
