@@ -1,6 +1,6 @@
 import os
 import shutil
-from collections.abc import Generator
+from typing import Generator
 from contextlib import closing
 from typing import Union
 

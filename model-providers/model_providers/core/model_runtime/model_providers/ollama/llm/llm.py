@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Generator
+from typing import Generator
 from typing import List, Optional, Union, cast
 from decimal import Decimal
 

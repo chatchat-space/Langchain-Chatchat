@@ -1,4 +1,5 @@
-from collections.abc import Generator, Iterator
+from typing import Generator, Iterator
+
 from typing import Dict, List, Union, cast, Type
 
 from openai import (
@@ -464,7 +465,7 @@ class XinferenceAILargeLanguageModel(LargeLanguageModel):
             ]
 
         if isinstance(
-            xinference_model, RESTfulChatModelHandle | RESTfulChatglmCppChatModelHandle
+            xinference_model, (RESTfulChatModelHandle, RESTfulChatglmCppChatModelHandle)
         ):
             resp = client.chat.completions.create(
                 model=credentials["model_uid"],

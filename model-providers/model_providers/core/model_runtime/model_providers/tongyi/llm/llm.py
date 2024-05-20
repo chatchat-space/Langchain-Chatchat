@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from typing import Generator
 from typing import Dict, List, Optional, Type, Union
 
 from dashscope import get_tokenizer

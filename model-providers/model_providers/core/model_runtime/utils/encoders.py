@@ -15,7 +15,7 @@ from ipaddress import (
 from pathlib import Path, PurePath
 from re import Pattern
 from types import GeneratorType
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Dict, Type, List, Tuple
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -54,7 +54,7 @@ def decimal_encoder(dec_value: Decimal) -> Union[int, float]:
         return float(dec_value)
 
 
-ENCODERS_BY_TYPE: Dict[type[Any], Callable[[Any], Any]] = {
+ENCODERS_BY_TYPE: Dict[Type[Any], Callable[[Any], Any]] = {
     bytes: lambda o: o.decode(),
     Color: str,
     datetime.date: isoformat,
@@ -86,8 +86,8 @@ ENCODERS_BY_TYPE: Dict[type[Any], Callable[[Any], Any]] = {
 
 def generate_encoders_by_class_tuples(
     type_encoder_map: Dict[Any, Callable[[Any], Any]],
-) -> Dict[Callable[[Any], Any], tuple[Any, ...]]:
-    encoders_by_class_tuples: Dict[Callable[[Any], Any], tuple[Any, ...]] = defaultdict(
+) -> Dict[Callable[[Any], Any], Tuple[Any, ...]]:
+    encoders_by_class_tuples: Dict[Callable[[Any], Any], Tuple[Any, ...]] = defaultdict(
         tuple
     )
     for type_, encoder in type_encoder_map.items():
@@ -104,7 +104,7 @@ def jsonable_encoder(
     exclude_unset: bool = False,
     exclude_defaults: bool = False,
     exclude_none: bool = False,
-    custom_encoder: Optional[dict[Any, Callable[[Any], Any]]] = None,
+    custom_encoder: Optional[Dict[Any, Callable[[Any], Any]]] = None,
     sqlalchemy_safe: bool = True,
 ) -> Any:
     custom_encoder = custom_encoder or {}
@@ -192,7 +192,7 @@ def jsonable_encoder(
                 )
                 encoded_dict[encoded_key] = encoded_value
         return encoded_dict
-    if isinstance(obj, list | set | frozenset | GeneratorType | tuple | deque):
+    if isinstance(obj, (list, set, frozenset, GeneratorType, tuple, deque)):
         encoded_list = []
         for item in obj:
             encoded_list.append(
@@ -217,8 +217,7 @@ def jsonable_encoder(
     try:
         data = dict(obj)
     except Exception as e:
-        errors: List[Exception] = []
-        errors.append(e)
+        errors: List[Exception] = [e]
         try:
             data = vars(obj)
         except Exception as e:

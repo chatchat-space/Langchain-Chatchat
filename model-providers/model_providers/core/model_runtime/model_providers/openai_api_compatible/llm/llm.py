@@ -1,6 +1,6 @@
 import json
 import logging
-from collections.abc import Generator
+from typing import Generator
 from decimal import Decimal
 from typing import List, Optional, Union, cast
 from urllib.parse import urljoin
