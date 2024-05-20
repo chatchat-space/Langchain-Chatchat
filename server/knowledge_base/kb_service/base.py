@@ -194,14 +194,14 @@ class KBService(ABC):
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
         '''
         self.del_doc_by_ids(list(docs.keys()))
-        docs = []
+        pending_docs = []
         ids = []
-        for k, v in docs.items():
-            if not v or not v.page_content.strip():
+        for _id, doc in docs.items():
+            if not doc or not doc.page_content.strip():
                 continue
-            ids.append(k)
-            docs.append(v)
-        self.do_add_doc(docs=docs, ids=ids)
+            ids.append(_id)
+            pending_docs.append(doc)
+        self.do_add_doc(docs=pending_docs, ids=ids)
         return True
 
     def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
