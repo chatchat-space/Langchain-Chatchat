@@ -17,7 +17,7 @@ from ._types import (
     HttpxRequestFiles,
     RequestFiles,
 )
-from ._utils import is_mapping_t, is_sequence_t, is_tuple_t
+from ._utils._utils import is_mapping_t, is_sequence_t, is_tuple_t
 
 
 def is_base64_file_input(obj: object) -> TypeGuard[Base64FileInput]:
