@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 
+from ..._compat import PYDANTIC_V2, ConfigDict
 from ..._models import BaseModel
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
@@ -57,6 +58,14 @@ class RestrictModel(BaseModel):
     base_model_name: Optional[str] = None
     model_type: ModelType
 
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
+
 
 class QuotaConfiguration(BaseModel):
     """
@@ -98,6 +107,14 @@ class CustomModelConfiguration(BaseModel):
     model: str
     model_type: ModelType
     credentials: dict
+
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
 
 
 class CustomConfiguration(BaseModel):

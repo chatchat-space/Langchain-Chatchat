@@ -4,6 +4,7 @@ import logging
 from json import JSONDecodeError
 from typing import Dict, Iterator, List, Optional
 
+from ..._compat import PYDANTIC_V2, ConfigDict
 from ..._models import BaseModel
 
 from model_providers.core.entities.model_entities import (
@@ -349,7 +350,13 @@ class ProviderModelBundle(BaseModel):
     provider_instance: ModelProvider
     model_type_instance: AIModel
 
-    class Config:
-        """Configuration for this pydantic object."""
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=(),
+            arbitrary_types_allowed=True
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
 
-        arbitrary_types_allowed = True
+            arbitrary_types_allowed = True

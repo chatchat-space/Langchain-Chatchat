@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
+from ..._compat import PYDANTIC_V2, ConfigDict
 from ..._models import BaseModel
 
 from model_providers.core.entities.model_entities import (
@@ -72,6 +73,13 @@ class ProviderResponse(BaseModel):
     preferred_provider_type: ProviderType
     custom_configuration: CustomConfigurationResponse
     system_configuration: SystemConfigurationResponse
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -170,6 +178,14 @@ class DefaultModelResponse(BaseModel):
     model: str
     model_type: ModelType
     provider: SimpleProviderEntityResponse
+
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
 
 
 class ModelWithProviderEntityResponse(ModelWithProviderEntity):

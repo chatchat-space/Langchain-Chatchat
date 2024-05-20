@@ -2,6 +2,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ...._compat import PYDANTIC_V2, ConfigDict
 from ...._models import BaseModel
 
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
@@ -162,9 +163,13 @@ class ProviderModel(BaseModel):
     fetch_from: FetchFrom
     model_properties: Dict[ModelPropertyKey, Any]
     deprecated: bool = False
-
-    class Config:
-        protected_namespaces = ()
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
 
 
 class ParameterRule(BaseModel):

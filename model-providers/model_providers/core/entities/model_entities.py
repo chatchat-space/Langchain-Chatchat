@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 
+from ..._compat import PYDANTIC_V2, ConfigDict
 from ..._models import BaseModel
 
 from model_providers.core.model_runtime.entities.common_entities import I18nObject
@@ -77,3 +78,11 @@ class DefaultModelEntity(BaseModel):
     model: str
     model_type: ModelType
     provider: DefaultModelProviderEntity
+
+    if PYDANTIC_V2:
+        model_config = ConfigDict(
+            protected_namespaces=()
+        )
+    else:
+        class Config:
+            protected_namespaces = ()
