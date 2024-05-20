@@ -1,7 +1,7 @@
 import os
 
 import orjson
-from pydantic import BaseModel
+from ..._models import BaseModel
 
 
 def json_dumps(o):

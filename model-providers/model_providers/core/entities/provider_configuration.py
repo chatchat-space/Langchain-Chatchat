@@ -4,7 +4,7 @@ import logging
 from json import JSONDecodeError
 from typing import Dict, Iterator, List, Optional
 
-from pydantic import BaseModel
+from ..._models import BaseModel
 
 from model_providers.core.entities.model_entities import (
     ModelStatus,

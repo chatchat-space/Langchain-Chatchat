@@ -136,7 +136,7 @@ def init_server(logging_conf: dict, providers_file: str) -> None:
             yield f"http://127.0.0.1:20000"
         finally:
             print("")
-            # boot.destroy()
+            boot.destroy()
 
     except SystemExit:
 

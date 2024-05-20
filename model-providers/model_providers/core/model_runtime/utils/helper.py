@@ -1,5 +1,5 @@
 import pydantic
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 
 def dump_model(model: BaseModel) -> dict:

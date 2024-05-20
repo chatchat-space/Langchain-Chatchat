@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 
 class I18nObject(BaseModel):

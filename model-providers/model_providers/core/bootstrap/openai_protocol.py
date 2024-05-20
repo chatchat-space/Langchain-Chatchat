@@ -1,8 +1,8 @@
 import time
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-
-from pydantic import BaseModel, Field, root_validator
+from ..._models import BaseModel
+from pydantic import Field as FieldInfo
 from typing_extensions import Literal
 
 
@@ -81,7 +81,7 @@ class ModelCard(BaseModel):
         "tts",
         "text2img",
     ] = "llm"
-    created: int = Field(default_factory=lambda: int(time.time()))
+    created: int = FieldInfo(default_factory=lambda: int(time.time()))
     owned_by: Literal["owner"] = "owner"
 
 
@@ -171,7 +171,7 @@ class ChatCompletionStreamResponseChoice(BaseModel):
 class ChatCompletionResponse(BaseModel):
     id: str
     object: Literal["chat.completion"] = "chat.completion"
-    created: int = Field(default_factory=lambda: int(time.time()))
+    created: int = FieldInfo(default_factory=lambda: int(time.time()))
     model: str
     choices: List[ChatCompletionResponseChoice]
     usage: UsageInfo
@@ -180,7 +180,7 @@ class ChatCompletionResponse(BaseModel):
 class ChatCompletionStreamResponse(BaseModel):
     id: str
     object: Literal["chat.completion.chunk"] = "chat.completion.chunk"
-    created: int = Field(default_factory=lambda: int(time.time()))
+    created: int = FieldInfo(default_factory=lambda: int(time.time()))
     model: str
     choices: List[ChatCompletionStreamResponseChoice]
 

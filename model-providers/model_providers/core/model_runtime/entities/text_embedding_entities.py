@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import List
 
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 from model_providers.core.model_runtime.entities.model_entities import ModelUsage
 

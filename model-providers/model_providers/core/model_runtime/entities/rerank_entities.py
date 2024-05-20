@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 
 class RerankDocument(BaseModel):

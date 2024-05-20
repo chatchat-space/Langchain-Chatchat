@@ -1,5 +1,5 @@
 import enum
-from typing import Any, cast
+from typing import Any, cast, List
 
 from langchain.schema import (
     AIMessage,
@@ -8,7 +8,7 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage,
 )
-from pydantic import BaseModel
+from ..._models import BaseModel
 
 from model_providers.core.model_runtime.entities.message_entities import (
     AssistantPromptMessage,

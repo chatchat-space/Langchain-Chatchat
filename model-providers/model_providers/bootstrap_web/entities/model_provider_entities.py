@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel
+from ..._models import BaseModel
 
 from model_providers.core.entities.model_entities import (
     ModelStatus,

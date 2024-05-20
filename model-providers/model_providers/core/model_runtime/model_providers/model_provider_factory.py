@@ -3,7 +3,7 @@ import logging
 import os
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 from model_providers.core.model_runtime.entities.model_entities import ModelType
 from model_providers.core.model_runtime.entities.provider_entities import (

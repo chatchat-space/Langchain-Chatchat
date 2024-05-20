@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel
+from ..._models import BaseModel
 
 from model_providers.core.model_runtime.entities.llm_entities import (
     LLMResult,

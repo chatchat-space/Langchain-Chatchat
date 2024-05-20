@@ -2,7 +2,7 @@ from abc import ABC
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel
+from ...._models import BaseModel
 
 
 class PromptMessageRole(Enum):
