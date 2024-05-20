@@ -22,7 +22,7 @@ class _CommonOllama:
         :return:
         """
         credentials_kwargs = {
-            "openai_api_key": "Empty",
+            "api_key": "Empty",
             "timeout": Timeout(315.0, read=300.0, write=10.0, connect=5.0),
             "max_retries": 1,
         }
