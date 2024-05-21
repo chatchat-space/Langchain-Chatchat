@@ -40,7 +40,7 @@ def normalize(embeddings: List[List[float]]) -> np.ndarray:
     return np.divide(embeddings, norm)
 
 
-class SupportedVSType:
+class SupportedVSType(Enum):
     FAISS = 'faiss'
     MILVUS = 'milvus'
     DEFAULT = 'default'
