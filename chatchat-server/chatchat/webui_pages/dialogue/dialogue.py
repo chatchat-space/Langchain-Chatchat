@@ -19,7 +19,7 @@ from chatchat.webui_pages.utils import *
 from chatchat.webui_pages.dialogue.utils import process_files
 
 chat_box = ChatBox(
-    assistant_avatar=get_img_url("chatchat_icon_blue_square_v2.png")
+    assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png")
 )
 
 

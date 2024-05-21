@@ -118,6 +118,13 @@ def _import_data_path() -> Any:
 
     return DATA_PATH
 
+def _import_img_dir() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    IMG_DIR = load_mod(basic_config_load.get("module"), "IMG_DIR")
+
+    return IMG_DIR
+
 
 def _import_nltk_data_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
@@ -477,6 +484,8 @@ def __getattr__(name: str) -> Any:
         return _import_chatchat_root()
     elif name == "DATA_PATH":
         return _import_data_path()
+    elif name == "IMG_DIR":
+        return _import_img_dir()
     elif name == "NLTK_DATA_PATH":
         return _import_nltk_data_path()
     elif name == "LOG_FORMAT":

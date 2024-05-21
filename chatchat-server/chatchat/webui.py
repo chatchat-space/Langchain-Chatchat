@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     st.set_page_config(
         "Langchain-Chatchat WebUI",
-        get_img_url("chatchat_icon_blue_square_v2.png"),
+        get_img_base64("chatchat_icon_blue_square_v2.png"),
         initial_sidebar_state="expanded",
         menu_items={
             'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     with st.sidebar:
         st.image(
-            get_img_url('logo-long-chatchat-trans-v2.png'),
+            get_img_base64('logo-long-chatchat-trans-v2.png'),
             use_column_width=True
         )
         st.caption(
