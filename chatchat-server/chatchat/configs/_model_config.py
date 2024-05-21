@@ -69,10 +69,7 @@ LLM_MODEL_CONFIG = {
         "sd-turbo": {
             "size": "256*256",
         }
-    },
-    "multimodal_model": {
-        "qwen-vl": {}
-    },
+    }
 }
 
 # 可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力，启动后下面变量会自动增加相应的平台
@@ -116,7 +113,9 @@ MODEL_PLATFORMS = [
             "Embedding-V1",
         ],
         "image_models": [],
-        "multimodal_models": [],
+        "reranking_models": [],
+        "speech2text_models": [],
+        "tts_models": [],
     },
 
 

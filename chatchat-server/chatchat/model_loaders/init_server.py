@@ -74,7 +74,9 @@ def init_provider_platforms(provider_manager: ProviderManager)-> List[Dict]:
         provider_dict["llm_models"] = []
         provider_dict["embed_models"] = []
         provider_dict["image_models"] = []
-        provider_dict["multimodal_models"] = []
+        provider_dict["reranking_models"] = []
+        provider_dict["speech2text_models"] = []
+        provider_dict["tts_models"] = []
         supported_model_str_types = [model_type.to_origin_model_type() for model_type in
                                      provider.supported_model_types]
 
@@ -93,12 +95,16 @@ def init_provider_platforms(provider_manager: ProviderManager)-> List[Dict]:
             if cur_model_type:
                 if model_type == "text-generation":
                     provider_dict["llm_models"] = cur_model_type
-                elif model_type == "text-embedding":
+                elif model_type == "embeddings":
                     provider_dict["embed_models"] = cur_model_type
                 elif model_type == "text2img":
                     provider_dict["image_models"] = cur_model_type
-                elif model_type == "multimodal":
-                    provider_dict["multimodal_models"] = cur_model_type
+                elif model_type == "reranking":
+                    provider_dict["reranking_models"] = cur_model_type
+                elif model_type == "speech2text":
+                    provider_dict["speech2text_models"] = cur_model_type
+                elif model_type == "tts":
+                    provider_dict["tts_models"] = cur_model_type
                 else:
                     logger.warning(f"Unsupported model type: {model_type}")
 
