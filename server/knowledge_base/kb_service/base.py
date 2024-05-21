@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
+from enum import Enum
 
 from server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
