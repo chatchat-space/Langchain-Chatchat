@@ -699,7 +699,7 @@ def get_img_base64(file_name: str) -> str:
     get_img_base64 used in streamlit.
     absolute local path not working on windows.
     '''
-    image = f"{IMG_DIR}/img/{file_name}"
+    image = f"{IMG_DIR}/{file_name}"
     # 读取图片
     with open(image, "rb") as f:
         buffer = BytesIO(f.read())
