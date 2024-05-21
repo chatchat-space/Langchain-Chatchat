@@ -581,6 +581,7 @@ __all__ = [
     "log_verbose",
     "CHATCHAT_ROOT",
     "DATA_PATH",
+    "IMG_DIR",
     "NLTK_DATA_PATH",
     "LOG_FORMAT",
     "LOG_PATH",

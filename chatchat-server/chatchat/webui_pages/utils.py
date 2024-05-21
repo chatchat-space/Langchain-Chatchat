@@ -14,6 +14,7 @@ from chatchat.configs import (
     VECTOR_SEARCH_TOP_K,
     HTTPX_DEFAULT_TIMEOUT,
     log_verbose,
+    IMG_DIR
 )
 import httpx
 import contextlib
