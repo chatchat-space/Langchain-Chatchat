@@ -20,6 +20,7 @@ import httpx
 import contextlib
 import json
 import os
+import base64
 from io import BytesIO
 from chatchat.server.utils import set_httpx_config, api_address, get_httpx_client
 
