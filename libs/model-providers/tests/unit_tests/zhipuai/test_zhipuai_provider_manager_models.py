@@ -28,22 +28,28 @@ def test_provider_manager_models(logging_conf: dict, providers_file: str) -> Non
         provider_name_to_provider_model_records_dict=provider_name_to_provider_model_records_dict,
     )
 
-    provider_model_bundle_llm = provider_manager.get_provider_model_bundle(
-        provider="zhipuai", model_type=ModelType.LLM
-    )
-    llm_models: List[AIModelEntity] = []
-    for model in provider_model_bundle_llm.configuration.custom_configuration.models:
-        llm_models.append(
-            provider_model_bundle_llm.model_type_instance.get_model_schema(
-                model=model.model,
-                credentials=model.credentials,
+
+    ai_models: List[AIModelEntity] = []
+    for model_type in ModelType.__members__.values():
+        try:
+            provider_model_bundle_llm = provider_manager.get_provider_model_bundle(
+                provider="zhipuai", model_type=model_type
             )
-        )
+            for model in provider_model_bundle_llm.configuration.custom_configuration.models:
+                if model.model_type == model_type:
+                    ai_models.append(
+                        provider_model_bundle_llm.model_type_instance.get_model_schema(
+                            model=model.model,
+                            credentials=model.credentials,
+                        )
+                    )
+        except Exception as e:
+            logger.warning("Error loading model: %s", e)
 
     # 获取预定义模型
-    llm_models.extend(provider_model_bundle_llm.model_type_instance.predefined_models())
+    ai_models.extend(provider_model_bundle_llm.model_type_instance.predefined_models())
 
-    logger.info(f"predefined_models: {llm_models}")
+    logger.info(f"ai_models: {ai_models}")
 
 
 def test_provider_wrapper_models(logging_conf: dict, providers_file: str) -> None:

@@ -39,7 +39,7 @@ def run_init_server(
         model_providers_cfg_path: str = None,
         provider_host: str = None,
         provider_port: int = None):
-    from chatchat.model_loaders.init_server import init_server
+    from chatchat.init_server import init_server
     from chatchat.configs import (MODEL_PROVIDERS_CFG_PATH_CONFIG,
                                   MODEL_PROVIDERS_CFG_HOST,
                                   MODEL_PROVIDERS_CFG_PORT)
