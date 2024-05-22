@@ -24,10 +24,11 @@ def init_server(model_platforms_shard: Dict,
                 log_path: str = "logs"
                 ) -> None:
     logging_conf = get_config_dict(
-        "DEBUG",
+        "INFO",
         get_log_file(log_path=log_path, sub_dir=f"provider_{get_timestamp_ms()}"),
-        122,
-        111,
+
+        1024*1024*1024*3,
+        1024*1024*1024*3,
     )
 
     try:
