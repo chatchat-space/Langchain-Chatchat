@@ -46,6 +46,10 @@ extend-exclude = [
 "cookbook/gymnasium_agent_simulation.ipynb" = ["F821"]
 "docs/docs/integrations/document_loaders/tensorflow_datasets.ipynb" = ["F821"]
 
+[tool.poetry.plugins.dotenv]
+ignore = "false"
+location = ".env"
+
 
 # https://python-poetry.org/docs/repositories/
 [[tool.poetry.source]]

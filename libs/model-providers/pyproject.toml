@@ -205,6 +205,9 @@ ignore-regex = '.*(Stati Uniti|Tense=Pres).*'
 # unsecure - typo but part of API, decided to not bother for now
 ignore-words-list = 'momento,collison,ned,foor,reworkd,parth,whats,aapply,mysogyny,unsecure,damon,crate,aadd,symbl,precesses,accademia,nin'
 
+[tool.poetry.plugins.dotenv]
+ignore = "false"
+location = ".env"
 
 # https://python-poetry.org/docs/repositories/
 [[tool.poetry.source]]
