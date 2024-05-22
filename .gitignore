@@ -1,10 +1,10 @@
 *.log
 *.log.*
 *.bak
-/chatchat-server/chatchat/data/*
-!/chatchat-server/chatchat/data/knowledge_base/samples
-/chatchat-server/chatchat/data/knowledge_base/samples/vector_store
-!/chatchat-server/chatchat/data/nltk_data
+/libs/chatchat-server/chatchat/data/*
+!/libs/chatchat-server/chatchat/data/knowledge_base/samples
+/libs/chatchat-server/chatchat/data/knowledge_base/samples/vector_store
+!/libs/chatchat-server/chatchat/data/nltk_data
 
 .vscode/
 

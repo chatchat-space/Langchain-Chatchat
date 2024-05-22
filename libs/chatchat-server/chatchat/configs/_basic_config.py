@@ -19,6 +19,11 @@ DATA_PATH = os.path.join(CHATCHAT_ROOT, "data")
 if not os.path.exists(DATA_PATH):
     os.mkdir(DATA_PATH)
 
+# 项目相关图片
+IMG_DIR = os.path.join(CHATCHAT_ROOT, "img")
+if not os.path.exists(IMG_DIR):
+    os.mkdir(IMG_DIR)
+
 # nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(DATA_PATH, "nltk_data")
 import nltk
