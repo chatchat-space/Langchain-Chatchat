@@ -14,11 +14,13 @@ from chatchat.configs import (
     VECTOR_SEARCH_TOP_K,
     HTTPX_DEFAULT_TIMEOUT,
     log_verbose,
+    IMG_DIR
 )
 import httpx
 import contextlib
 import json
 import os
+import base64
 from io import BytesIO
 from chatchat.server.utils import set_httpx_config, api_address, get_httpx_client
 
@@ -693,12 +695,17 @@ def check_success_msg(data: Union[str, dict, list], key: str = "msg") -> str:
     return ""
 
 
-def get_img_url(file_name: str) -> str:
+def get_img_base64(file_name: str) -> str:
     '''
-    image url used in streamlit.
+    get_img_base64 used in streamlit.
     absolute local path not working on windows.
     '''
-    return f"{api_address()}/img/{file_name}"
+    image = f"{IMG_DIR}/{file_name}"
+    # 读取图片
+    with open(image, "rb") as f:
+        buffer = BytesIO(f.read())
+        base_str = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{base_str}"
 
 
 if __name__ == "__main__":

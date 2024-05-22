@@ -1,0 +1,40 @@
+openai:
+  model_credential:
+    - model: 'gpt-3.5-turbo'
+      model_type: 'llm'
+      model_credentials:
+        openai_api_key: 'sk-'
+        openai_organization: ''
+        openai_api_base: ''
+    - model: 'gpt-4'
+      model_type: 'llm'
+      model_credentials:
+        openai_api_key: 'sk-'
+        openai_organization: ''
+        openai_api_base: ''
+
+  provider_credential:
+    openai_api_key: 'sk-'
+    openai_organization: ''
+    openai_api_base: ''
+
+xinference:
+  model_credential:
+    - model: 'chatglm3-6b'
+      model_type: 'llm'
+      model_credentials:
+        server_url: 'http://127.0.0.1:9997/'
+        model_uid: 'chatglm3-6b'
+    - model: 'bge-m3'
+      model_type: 'embeddings'
+      model_credentials:
+        server_url: 'http://127.0.0.1:9997/'
+        model_uid: 'bge-m3'
+
+ollama:
+  model_credential:
+    - model: 'llama3'
+      model_type: 'llm'
+      model_credentials:
+        base_url: 'http://172.21.192.1:11434'
+        mode: 'completion'

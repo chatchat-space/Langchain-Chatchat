@@ -60,7 +60,7 @@ def get_config_platforms() -> Dict[str, Dict]:
 
 def get_config_models(
         model_name: str = None,
-        model_type: Literal["llm", "embed", "image", "multimodal"] = None,
+        model_type: Literal["llm", "embed", "image", "reranking","speech2text","tts"] = None,
         platform_name: str = None,
 ) -> Dict[str, Dict]:
     '''
@@ -88,7 +88,14 @@ def get_config_models(
             continue
 
         if model_type is None:
-            model_types = ["llm_models", "embed_models", "image_models", "multimodal_models"]
+            model_types = [
+                "llm_models",
+                "embed_models",
+                "image_models",
+                "reranking_models",
+                "speech2text_models",
+                "tts_models",
+           ]
         else:
             model_types = [f"{model_type}_models"]
 

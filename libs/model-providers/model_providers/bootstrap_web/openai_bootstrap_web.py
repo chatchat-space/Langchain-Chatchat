@@ -228,7 +228,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 model=embeddings_request.model,
             )
 
-            # 判断embeddings_request.input是否为list
+            # 判断embeddings_request.input是否为list[int]
             input = ""
             if isinstance(embeddings_request.input, list):
                 tokens = embeddings_request.input
@@ -241,8 +241,13 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     model = "cl100k_base"
                     encoding = tiktoken.get_encoding(model)
                 for i, token in enumerate(tokens):
-                    text = encoding.decode(token)
-                    input += text
+                    # 判断是否是int
+                    if isinstance(token, int):
+                        text = encoding.decode(token)
+                        input += text
+                    else:
+                        input += token
+
 
             else:
                 input = embeddings_request.input
