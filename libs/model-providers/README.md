@@ -139,7 +139,6 @@ $ pip install zhipuai
 ```yaml
 
 zhipuai:
-
   provider_credential:
     api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.2'
 ```
