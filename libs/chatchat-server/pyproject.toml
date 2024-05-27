@@ -54,6 +54,13 @@ streamlit-chatbox = "1.1.12"
 streamlit-modal = "0.1.0"
 streamlit-aggrid = "0.3.4.post3"
 streamlit-extras = "0.4.2"
+xinference_client = { version = "^0.11.1", optional = true }
+zhipuai = { version = "^2.1.0", optional = true }
+
+[tool.poetry.extras]
+xinference = ["xinference_client"]
+zhipuai = ["zhipuai"]
+
 
 [tool.poetry.group.test]
 optional = true
