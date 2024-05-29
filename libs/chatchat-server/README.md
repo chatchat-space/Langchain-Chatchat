@@ -18,10 +18,13 @@ mkdir -p ~/.config/chatchat/
 cp -r configs ~/.config/chatchat/
 cp -r data ~/.config/chatchat/
 cp -r img ~/.config/chatchat/
-cd ~/.config/chatchat
 ```
 
 > 当配置文件复制完成后，配置拷贝后路径的`model_providers.yaml`文件，即可完成自定义平台加载
+```shell
+cd ~/.config/chatchat
+vim model_providers.yaml
+```
 > 
 > 注意: 在您配置平台之前，请确认平台依赖完整，例如智谱平台，您需要安装智谱sdk `pip install zhipuai`
 > 
@@ -49,14 +52,18 @@ mkdir -p ~/.config/chatchat/
 cp -r configs ~/.config/chatchat/
 cp -r data ~/.config/chatchat/
 cp -r img ~/.config/chatchat/
-cd ~/.config/chatchat
 ```
 
 > 当配置文件复制完成后，配置拷贝后路径的`model_providers.yaml`文件，即可完成自定义平台加载
+```shell
+cd ~/.config/chatchat
+vim model_providers.yaml
+```
 > 
 > 注意: 在您配置平台之前，请确认平台依赖完整，例如智谱平台，您需要安装智谱sdk `pip install zhipuai`
 > 
 > 详细配置请参考[README.md](../model-providers/README.md)
+
 - 初始化仓库
 > 请注意：这个命令会清空数据库，如果您有重要数据，请备份
 ```shell
