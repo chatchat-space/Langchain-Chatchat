@@ -15,7 +15,7 @@ def text(splitter_name):
     from langchain import document_loaders
 
     # 使用DocumentLoader读取文件
-    filepath = "../../knowledge_base/samples/content/test.txt"
+    filepath = "../../knowledge_base/samples/content/test_files/test.txt"
     loader = document_loaders.UnstructuredFileLoader(filepath, autodetect_encoding=True)
     docs = loader.load()
     text_splitter = make_text_splitter(splitter_name, CHUNK_SIZE, OVERLAP_SIZE)
