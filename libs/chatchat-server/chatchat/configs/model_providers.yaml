@@ -25,11 +25,15 @@ xinference:
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'chatglm3-6b'
-    - model: 'bge-m3'
-      model_type: 'embeddings'
+    - model: 'bge-large-zh-v1.5'
+      model_type: 'text-embedding'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'bge-m3'
+        model_uid: 'bge-large-zh-v1.5'
+
+zhipuai:
+  provider_credential:
+    api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.1'
 
 ollama:
   model_credential:
