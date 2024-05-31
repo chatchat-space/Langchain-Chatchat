@@ -44,4 +44,9 @@ export const API_ENDPOINTS = mapWithBasePath({
   tts: '/api/openai/tts',
   edge: '/api/tts/edge-speech',
   microsoft: '/api/tts/microsoft-speech',
+
+  // knowledge
+  knowledgeList: '/api/knowledge/list', 
+  knowledgeAdd: '/api/knowledge/add',
+  knowledgeDel: '/api/knowledge/del'
 });

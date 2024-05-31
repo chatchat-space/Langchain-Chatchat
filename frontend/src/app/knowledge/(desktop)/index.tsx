@@ -4,7 +4,6 @@ import { FloatButton } from 'antd';
 import { Plus } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { memo, useState } from 'react';
-import { Flexbox } from 'react-layout-kit';
 
 import KnowledgeCardList from './features/KnowledgeList';
 // import CreateKnowledgeBase from './features/createKnowledgeBase';
@@ -17,9 +16,7 @@ const DesktopPage = memo(() => {
   return (
     <>
       <Layout>
-        <Flexbox gap={20} horizontal justify="flex-start" wrap="wrap">
-          <KnowledgeCardList />
-        </Flexbox>
+        <KnowledgeCardList />
         <FloatButton icon={<Plus />} onClick={() => setShowModal(true)}>
           新建知识库
         </FloatButton>
