@@ -25,7 +25,7 @@ from chatchat.server.knowledge_base.utils import (
 from typing import List, Union, Dict, Optional, Tuple
 
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-
+from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
 
 class SupportedVSType:
     FAISS = 'faiss'
@@ -325,7 +325,7 @@ class KBServiceFactory:
 
 def get_kb_details() -> List[Dict]:
     kbs_in_folder = list_kbs_from_folder()
-    kbs_in_db = KBService.list_kbs()
+    kbs_in_db:List[KnowledgeBaseSchema] = KBService.list_kbs()
     result = {}
 
     for kb in kbs_in_folder:
@@ -340,15 +340,16 @@ def get_kb_details() -> List[Dict]:
             "in_db": False,
         }
 
-    for kb in kbs_in_db:
-        kb_detail = get_kb_detail(kb)
-        if kb_detail:
-            kb_detail["in_db"] = True
-            if kb in result:
-                result[kb].update(kb_detail)
-            else:
-                kb_detail["in_folder"] = False
-                result[kb] = kb_detail
+    for kb_detail in kbs_in_db:
+        kb_detail=kb_detail.model_dump()
+        kb_name=kb_detail["kb_name"]
+        kb_detail["in_db"] = True
+        if kb_name in result:
+            result[kb_name].update(kb_detail)
+        else:
+            kb_detail["in_folder"] = False
+            result[kb_name] = kb_detail
+            
 
     data = []
     for i, v in enumerate(result.values()):

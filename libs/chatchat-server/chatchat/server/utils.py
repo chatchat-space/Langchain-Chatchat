@@ -302,7 +302,7 @@ class BaseResponse(BaseModel):
 
 
 class ListResponse(BaseResponse):
-    data: List[str] = Field(..., description="List of names")
+    data: List[Any] = Field(..., description="List of data")
 
     class Config:
         json_schema_extra = {
