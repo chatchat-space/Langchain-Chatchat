@@ -49,6 +49,9 @@ declare global {
 
       // ChatChat
       CHATCHAT_PROXY_URL?: string;
+
+      // knowledeg
+      KNOWLEDGE_PROXY_URL?: string;
     }
   }
 }
@@ -76,7 +79,7 @@ export const getProviderConfig = () => {
   if (process.env.OPENAI_FUNCTION_REGIONS) {
     regions = process.env.OPENAI_FUNCTION_REGIONS.split(',');
   }
-
+  
   return {
     CUSTOM_MODELS: process.env.CUSTOM_MODELS,
 
@@ -119,5 +122,6 @@ export const getProviderConfig = () => {
     OLLAMA_PROXY_URL: process.env.OLLAMA_PROXY_URL || '',
 
     CHATCHAT_PROXY_URL: process.env.CHATCHAT_PROXY_URL || '',
+    KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'http://localhost:7861/knowledge_base',
   };
 };
