@@ -2,7 +2,7 @@ import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-de
 import { Card, Skeleton, message, Modal } from 'antd';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useKnowledgeStore } from '@/store/knowledge';
+import { useKnowledgeStore } from '@/store/knowledge'; 
 
 const { Meta } = Card;
 
@@ -11,16 +11,18 @@ interface KnowLedgeCardProps {
   name: string;
 }
 const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) => {
+ 
 
-  const [useFetchKnowledgeDel] = useKnowledgeStore((s) => [
-    s.useFetchKnowledgeDel
+  const [useFetchKnowledgeDel, useFetchKnowledgeList] = useKnowledgeStore((s) => [
+    s.useFetchKnowledgeDel, s.useFetchKnowledgeList
   ]);
+  const { mutate } = useFetchKnowledgeList()
 
   const [loading, setLoading] = useState(false);
   const { name, intro } = props;
   const router = useRouter();
   const handleCardEditClick = () => {
-    router.push('/knowledge/1/base');
+    router.push(`/knowledge/${encodeURIComponent(name)}/base`);
   };
   const delClick = async () => {
     Modal.confirm({
@@ -31,7 +33,8 @@ const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) 
         if (resCode !== 200) {
           message.error(resMsg)
         } else {
-          message.success(resMsg)
+          message.success(resMsg) 
+          mutate()
         }
         return Promise.resolve();
       },

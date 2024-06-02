@@ -1,37 +1,69 @@
 'use client';
 
-import { Button, Table } from 'antd';
+import { Button, Table, message, Spin, Modal } from 'antd';
 import type { TableColumnsType } from 'antd';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { Flexbox } from 'react-layout-kit';
+import { useKnowledgeStore } from '@/store/knowledge';
+import { useRouter } from 'next/navigation';
+import { UndoOutlined, DeleteOutlined, DownloadOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-// import ModalAddFile from './features/ModalAddFile';
 const ModalAddFile = dynamic(() => import('./features/ModalAddFile'));
 interface DataType {
-  address: string;
-  age: number;
-  key: React.Key;
+  id: React.Key;
   name: string;
+  loader: string;
+  splitter: string;
+  source: string;
+  vector: string;
 }
 
-const data: DataType[] = [];
-for (let i = 0; i < 46; i++) {
-  data.push({
-    address: `London, Park Lane no. ${i}`,
-    age: 32,
-    index: i,
-    key: i,
-    name: `Edward King ${i}`,
-  });
-}
+const App: React.FC<{ params: { id: string } }> = ({ params }) => {
+  const router = useRouter();
+  const [
+    filesData,
+    useFetchKnowledgeFilesList,
+    useFetchKnowledgeDownloadDocs,
+    useFetcDelInknowledgeDB,
+    useFetcRebuildVectorDB,
+    useFetchKnowledgeDel
 
-const App: React.FC<{ params }> = ({ params }) => {
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  ] = useKnowledgeStore((s) => [
+    s.filesData,
+    s.useFetchKnowledgeFilesList,
+    s.useFetchKnowledgeDownloadDocs,
+    s.useFetcDelInknowledgeDB,
+    s.useFetcRebuildVectorDB,
+    s.useFetchKnowledgeDel
+  ]);
+  const { isLoading } = useFetchKnowledgeFilesList(params.id);
+
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [delDocsLoading, setDelDocsLoading] = useState(false);
+  const [rebuildVectorDBLoading, setRebuildVectorDBLoading] = useState(false);
+
+  // rebuild progress
+  const [rebuildProgress, setRebuildProgress] = useState("0%");
+
+  // const data: DataType[] = filesData.map((item, i) => ({
+  //   id: i, // item 应该为对象，待提交问题...
+  //   name: item, // item 应该为对象，待提交问题...
+  //   loader: "",
+  //   splitter: "",
+  //   source: "",
+  //   vector: ""
+  // })); 
+  const data = [
+    { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+    { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+  ];
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isShowModal, setModal] = useState(false);
-  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+  const onSelectChange = (newSelectedRowKeys: string[]) => {
     console.log('selectedRowKeys changed:', newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
@@ -42,12 +74,8 @@ const App: React.FC<{ params }> = ({ params }) => {
     },
     {
       dataIndex: 'name',
-      render: (text) => <Link href={`/knowledge/${params.id}/base/2`}>{text}</Link>,
+      render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${rowData.id}`}>{text}</Link>,
       title: '文档名称',
-    },
-    {
-      dataIndex: 'loader',
-      title: '文档加载器',
     },
     {
       dataIndex: 'loader',
@@ -71,40 +99,126 @@ const App: React.FC<{ params }> = ({ params }) => {
     selectedRowKeys,
   };
   const hasSelected = selectedRowKeys.length > 0;
-  console.log(params);
+
+  const download = async () => {
+    setDownloadLoading(true);
+    for (const docName of selectedRowKeys) {
+      await useFetchKnowledgeDownloadDocs(params.id, docName).catch(() => {
+        message.error(`下载 ${docName} 失败`);
+      })
+    }
+    setDownloadLoading(false);
+  };
+  const reAddVectorDB = async () => {
+    console.log('reAddShapeDB: ', selectedRowKeys);
+  }
+  const rebuildVectorDB = async () => {
+    console.log('rebuildVectorDB ');
+    setRebuildVectorDBLoading(true);
+    try {
+      useFetcRebuildVectorDB({
+        "knowledge_base_name": params.id,
+        "allow_empty_kb": true,
+        "vs_type": "faiss",
+        "embed_model": "text-embedding-v1",
+        "chunk_size": 250,
+        "chunk_overlap": 50,
+        "zh_title_enhance": false,
+        "not_refresh_vs_cache": false,
+      }, {
+        onFinish: async () => {
+          message.success(`重建向量库成功`);
+          setRebuildVectorDBLoading(false);
+        },
+        onMessageHandle: (text) => {
+          setRebuildProgress(text)
+        }
+      })
+    } catch (err) {
+      message.error(`请求错误`);
+    }
+    setRebuildVectorDBLoading(false);
+  }
+  const delInVectorDB = async () => {
+    console.log('delInShapeDB: ', selectedRowKeys);
+
+    setSelectedRowKeys([]);
+  }
+  const delInknowledgeDB = async () => {
+    setDelDocsLoading(true);
+    await useFetcDelInknowledgeDB({
+      "knowledge_base_name": params.id,
+      "file_names": [...selectedRowKeys],
+      "delete_content": false,
+      "not_refresh_vs_cache": false
+    }).catch(() => {
+      message.error(`删除失败`);
+    })
+    setDelDocsLoading(false);
+    setSelectedRowKeys([]);
+  }
+  const delKnowledge = async () => {
+    Modal.confirm({
+      title: `确认 ${params.id} 删除吗?`,
+      icon: <ExclamationCircleOutlined />,
+      async onOk() {
+        const { code: resCode, msg: resMsg } = await useFetchKnowledgeDel(params.id)
+        if (resCode !== 200) {
+          message.error(resMsg)
+        } else {
+          message.success(resMsg);
+          router.push('/knowledge')
+        }
+        return Promise.resolve();
+      },
+    });
+
+  }
   return (
     <>
       <Flexbox width={'100%'}>
         <Flexbox direction="horizontal" justify="space-between" style={{ marginBottom: 16 }}>
           <Flexbox direction="horizontal" gap={20}>
-            <Button disabled={!hasSelected} loading={loading} type="default">
+            <Button disabled={!hasSelected} loading={downloadLoading} type="default" onClick={download} icon={<DownloadOutlined />}>
               下载选中文档
             </Button>
-            <Button disabled={!hasSelected} loading={loading} type="default">
+            <Button disabled={!hasSelected} loading={loading} type="default" onClick={reAddVectorDB}>
               重新添加至向量库
             </Button>
-            <Button disabled={!hasSelected} loading={loading} type="default">
+            <Button danger disabled={!hasSelected} loading={loading} type="default" onClick={delInVectorDB} icon={<DeleteOutlined />}>
               向量库删除
             </Button>
-            <Button disabled={!hasSelected} loading={loading} type="default">
+            <Button danger disabled={!hasSelected} loading={delDocsLoading} type="default" onClick={delInknowledgeDB} icon={<DeleteOutlined />}>
               从知识库中删除
             </Button>
           </Flexbox>
-          <div>
-            <Button loading={loading} onClick={() => setModal(true)} type="primary">
+          <Flexbox direction="horizontal" gap={20}>
+            <Button danger loading={loading} onClick={delKnowledge} type="primary" icon={<DeleteOutlined />}>
+              删除知识库
+            </Button>
+            <Button loading={loading} onClick={() => setModal(true)} type="primary" icon={<PlusOutlined />}>
               添加文件
             </Button>
-          </div>
+          </Flexbox>
         </Flexbox>
-        <Table
-          columns={columns}
-          dataSource={data}
-          rowSelection={rowSelection}
-          size="middle"
-          style={{ width: '100%' }}
-        />
-      </Flexbox>
-      <ModalAddFile open={isShowModal} setModalOpen={setModal} />
+        <Spin spinning={rebuildVectorDBLoading} tip={rebuildProgress}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            rowSelection={rowSelection}
+            size="middle"
+            style={{ width: '100%' }}
+            rowKey={"name"}
+            loading={isLoading}
+            footer={() => <div>
+              <Button danger loading={rebuildVectorDBLoading} onClick={rebuildVectorDB} icon={<UndoOutlined />}>
+                依据源文件重建向量库
+              </Button>
+            </div>}
+          />
+        </Spin>
+      </Flexbox >
+      <ModalAddFile open={isShowModal} setModalOpen={setModal} kbName={params.id} />
     </>
   );
 };

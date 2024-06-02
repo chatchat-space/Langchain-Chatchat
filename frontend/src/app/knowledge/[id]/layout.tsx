@@ -12,7 +12,7 @@ interface LayoutProps extends PropsWithChildren {
   params: Record<string, string>;
 }
 export default memo<LayoutProps>(({ children, params }) => {
-  console.log(params);
+  // console.log(params);
 
   return (
     <AppLayoutDesktop sidebarKey={SidebarTabKey.Knowledge}>

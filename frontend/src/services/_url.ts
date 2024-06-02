@@ -48,5 +48,13 @@ export const API_ENDPOINTS = mapWithBasePath({
   // knowledge
   knowledgeList: '/api/knowledge/list', 
   knowledgeAdd: '/api/knowledge/add',
-  knowledgeDel: '/api/knowledge/del'
+  knowledgeDel: '/api/knowledge/del',
+  // knowledge files
+  knowledgeFilesList: '/api/knowledge/listFiles', 
+  knowledgeUploadDocs:  '/api/knowledge/uploadDocs', 
+  knowledgeDownloadDocs:  '/api/knowledge/downloadDocs', 
+  knowledgeDelInknowledgeDB:  '/api/knowledge/deleteDocs', 
+  knowledgeRebuildVectorDB:  '/api/knowledge/rebuildVectorDB', 
+  knowledgeReAddVectorDB:  '/api/knowledge/reAddVectorDB', 
+
 });
