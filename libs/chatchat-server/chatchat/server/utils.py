@@ -710,12 +710,29 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     return path, id
 
 
+# 动态更新知识库信息
+def update_search_local_knowledgebase_tool():
+    import re
+    from chatchat.server.agent.tools_factory import tools_registry
+    from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
+    kbs=list_kbs_from_db()
+    template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool. The 'database' should be one of the above [{key}]."
+    KB_info_str = '\n'.join([f"{kb.kb_name}: {kb.kb_info}" for kb in kbs])
+    KB_name_info_str = '\n'.join([f"{kb.kb_name}" for kb in kbs])
+    template_knowledge = template.format(KB_info=KB_info_str, key=KB_name_info_str)
+
+    search_local_knowledgebase_tool=tools_registry._TOOLS_REGISTRY.get("search_local_knowledgebase")
+    if search_local_knowledgebase_tool:
+        search_local_knowledgebase_tool.description = " ".join(re.split(r"\n+\s*", template_knowledge))
+
+
 def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
     import importlib
     from chatchat.server.agent import tools_factory
     importlib.reload(tools_factory)
 
     from chatchat.server.agent.tools_factory import tools_registry
+    update_search_local_knowledgebase_tool()
     if name is None:
         return tools_registry._TOOLS_REGISTRY
     else:
