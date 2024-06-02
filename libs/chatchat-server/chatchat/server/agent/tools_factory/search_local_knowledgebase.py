@@ -46,7 +46,7 @@ def search_knowledgebase(query: str, database: str, config: dict):
 
 @regist_tool(description=template_knowledge, title="本地知识库")
 def search_local_knowledgebase(
-    database: str = Field(description="Database for Knowledge Search", choices=list_kbs().data),
+    database: str = Field(description="Database for Knowledge Search", choices=[kb.kb_name for kb in list_kbs().data]),
     query: str = Field(description="Query for Knowledge Search"),
 ):
     ''''''

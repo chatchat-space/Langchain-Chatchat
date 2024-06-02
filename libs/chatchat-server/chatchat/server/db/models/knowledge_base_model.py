@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
-
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 from chatchat.server.db.base import Base
 
 
@@ -18,3 +20,16 @@ class KnowledgeBaseModel(Base):
 
     def __repr__(self):
         return f"<KnowledgeBase(id='{self.id}', kb_name='{self.kb_name}',kb_intro='{self.kb_info} vs_type='{self.vs_type}', embed_model='{self.embed_model}', file_count='{self.file_count}', create_time='{self.create_time}')>"
+
+# 创建一个对应的 Pydantic 模型
+class KnowledgeBaseSchema(BaseModel):
+    id: int
+    kb_name: str
+    kb_info: Optional[str]
+    vs_type: Optional[str]
+    embed_model: Optional[str]
+    file_count: Optional[int]
+    create_time: Optional[datetime]
+
+    class Config:
+        from_attributes = True  # 确保可以从 ORM 实例进行验证

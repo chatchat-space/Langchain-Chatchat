@@ -404,7 +404,7 @@ def files2docs_in_thread(
         except Exception as e:
             yield False, (kb_name, filename, str(e))
 
-    for result in run_in_process_pool(func=files2docs_in_thread_file2docs, params=kwargs_list):
+    for result in run_in_thread_pool(func=files2docs_in_thread_file2docs, params=kwargs_list):
         yield result
 
 
