@@ -106,7 +106,7 @@ def clear_conv(name: str = None):
     chat_box.reset_history(name=name or None)
 
 
-@st.cache_data
+# @st.cache_data
 def list_tools(_api: ApiRequest):
     return _api.list_tools()
 

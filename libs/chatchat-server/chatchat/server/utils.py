@@ -724,6 +724,7 @@ def update_search_local_knowledgebase_tool():
     search_local_knowledgebase_tool=tools_registry._TOOLS_REGISTRY.get("search_local_knowledgebase")
     if search_local_knowledgebase_tool:
         search_local_knowledgebase_tool.description = " ".join(re.split(r"\n+\s*", template_knowledge))
+        search_local_knowledgebase_tool.args["database"]["choices"]=[kb.kb_name for kb in kbs]
 
 
 def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
