@@ -284,7 +284,7 @@ async def start_main_server():
             target=run_api_server,
             name=f"API Server",
             kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=api_started, run_mode=run_mode),
-            daemon=True,
+            daemon=False,
         )
         processes["api"] = process
 
