@@ -11,7 +11,7 @@ pip install langchain-chatchat -U
 - 复制配置文件
 > 后面我们会提供一个一键初始化的脚本，现在您可以手动复制配置文件
 > 请注意：这个命令会清空数据库，如果您有重要数据，请备份
- ```shell
+```shell
 cd chatchat-server/chatchat
 mkdir -p ~/.config/chatchat/
 cp -r configs ~/.config/chatchat/
