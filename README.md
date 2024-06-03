@@ -1,4 +1,4 @@
-![](chatchat-server/chatchat/img/logo-long-chatchat-trans-v2.png)
+![](docs/img/logo-long-chatchat-trans-v2.png)
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 🌍 [日本語で読む](README_ja.md)
@@ -191,12 +191,12 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="chatchat-server/chatchat/img/qr_code_96.jpg" alt="二维码" width="300" />
+<img src="docs/img/qr_code_96.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
 ### 公众号
 
-<img src="chatchat-server/chatchat/img/official_wechat_mp_account.png" alt="二维码" width="300" />
+<img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
