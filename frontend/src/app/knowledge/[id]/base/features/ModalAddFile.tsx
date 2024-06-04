@@ -1,22 +1,29 @@
-import { InboxOutlined } from '@ant-design/icons'; 
-import { Form, Modal, Upload, InputNumber, Radio, message } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import { Form, Modal, Upload, InputNumber, Radio, message, Input } from 'antd';
 import React, { memo, useState } from 'react';
 import { useKnowledgeStore } from '@/store/knowledge';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
- 
+import type { KnowledgeUplodDocsParams } from '@/types/knowledge';
+
 type ModalAddFileProps = {
   kbName: string;
   open: boolean;
   setModalOpen: (open: boolean) => void;
+  setSelectedRowKeys: React.Dispatch<React.SetStateAction<string[]>>;
+
+  selectedRowKeys: string[];
+  isRebuildVectorDB?: boolean;
+  initialValue?: KnowledgeUplodDocsParams;
 };
- 
+
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
-const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) => {
+const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedRowKeys, selectedRowKeys, kbName, initialValue, isRebuildVectorDB }) => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [antdFormInstance] = Form.useForm();
-  const [useFetchKnowledgeUploadDocs, useFetchKnowledgeFilesList] = useKnowledgeStore((s) => [
-    s.useFetchKnowledgeUploadDocs, s.useFetchKnowledgeFilesList
+  const [useFetchKnowledgeUploadDocs, useFetchKnowledgeFilesList, useFetcReAddVectorDB] = useKnowledgeStore((s) => [
+    s.useFetchKnowledgeUploadDocs, s.useFetchKnowledgeFilesList,
+    s.useFetcReAddVectorDB
   ]);
   const { mutate } = useFetchKnowledgeFilesList(kbName)
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -41,7 +48,23 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
     const fieldsError = await antdFormInstance.validateFields();
     if (fieldsError.length) return;
     const values = antdFormInstance.getFieldsValue(true);
-    if(!fileList.length){
+
+    if (isRebuildVectorDB) {
+      // Re-add to vector library
+      setConfirmLoading(true);
+      await useFetcReAddVectorDB({
+        ...values,
+        "knowledge_base_name": kbName,
+        "file_names": selectedRowKeys,
+      }).catch(() => {
+        message.error(`更新知识库失败`);
+      })
+      setConfirmLoading(false);
+      setSelectedRowKeys([]);
+      return;
+    }
+
+    if (!fileList.length) {
       message.error('请选择文件')
       return;
     }
@@ -50,13 +73,13 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
     fileList.forEach((file) => {
       formData.append('files', file as FileType);
     });
-    for (const key in values) { 
+    for (const key in values) {
       formData.append(key, values[key]);
     }
-    formData.append('knowledge_base_name',  kbName);
-    
+    formData.append('knowledge_base_name', kbName);
+
     setConfirmLoading(true);
-    const { code: resCode, data: resData, msg: resMsg } = await useFetchKnowledgeUploadDocs(formData)
+    const { code: resCode, msg: resMsg } = await useFetchKnowledgeUploadDocs(formData)
     setConfirmLoading(true);
 
     if (resCode !== 200) {
@@ -67,7 +90,7 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
     mutate();
     setModalOpen(false);
   }
- 
+
 
   const layout = {
     labelCol: { span: 10 },
@@ -77,11 +100,12 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
   return (
     <Modal
       onCancel={() => setModalOpen(false)}
-      open={open} title="添加文件"
+      open={open} 
+      title={isRebuildVectorDB ? "重新添加至向量库" : "添加文件"}
       onOk={onSubmit}
       confirmLoading={confirmLoading}
       width={600}
-    > 
+    >
 
       <Form
         name="validate_other"
@@ -90,34 +114,36 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
           chunk_size: 0,
           chunk_overlap: 0,
           to_vector_store: true,
+          ...initialValue
         }}
         form={antdFormInstance}
       >
- 
-        <div style={{ padding: `24px 0px` }}>
-          <Upload.Dragger {...antdUploadProps}>
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">单击或拖动文件到此区域进行上传</p>
-            <p className="ant-upload-hint">支持单个或批量上传。</p>
-          </Upload.Dragger>
-        </div> 
 
-        <Form.Item name="override" label="覆盖已有文件" {...layout}>
+        {!isRebuildVectorDB && <>
+          <div style={{ padding: `24px 0px` }}>
+            <Upload.Dragger {...antdUploadProps}>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">单击或拖动文件到此区域进行上传</p>
+              <p className="ant-upload-hint">支持单个或批量上传。</p>
+            </Upload.Dragger>
+          </div>
+          <Form.Item name="override" label="覆盖已有文件" {...layout}>
+            <Radio.Group>
+              <Radio value={true}>是</Radio>
+              <Radio value={false}>否</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </>}
+
+        <Form.Item name="to_vector_store" label="进行向量化" {...layout}>
           <Radio.Group>
             <Radio value={true}>是</Radio>
             <Radio value={false}>否</Radio>
           </Radio.Group>
         </Form.Item>
-
-        <Form.Item name="to_vector_store" label="上传文件后是否进行向量化" {...layout}>
-          <Radio.Group>
-            <Radio value={true}>是</Radio>
-            <Radio value={false}>否</Radio>
-          </Radio.Group>
-        </Form.Item>
-        <Form.Item name="zh_title_enhance" label="是否开启中文标题加强" {...layout}>
+        <Form.Item name="zh_title_enhance" label="开启中文标题加强" {...layout}>
           <Radio.Group>
             <Radio value={true}>是</Radio>
             <Radio value={false}>否</Radio>
@@ -130,24 +156,16 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, kbName }) =>
           </Radio.Group>
         </Form.Item>
 
-
-        <Form.Item label="知识库中单段文本最大长度" {...layout} {...layout}>
-          <Form.Item name="chunk_size">
-            <InputNumber min={0} />
-          </Form.Item>
+        <Form.Item name="chunk_size" label="单段文本最大长度" {...layout} {...layout}>
+          <InputNumber min={0}  style={{ width: 200 }} />
         </Form.Item>
 
-        <Form.Item label="知识库中相邻文本重合长度" {...layout} {...layout}>
-          <Form.Item name="chunk_overlap">
-            <InputNumber min={0} />
-          </Form.Item>
+        <Form.Item name="chunk_overlap" label="相邻文本重合长度" {...layout} {...layout}>
+          <InputNumber min={0}  style={{ width: 200 }} />
         </Form.Item>
-        {/* <Form.Item label="自定义的docs">
-          <Form.Item name="docs">
-            <Input />
-          </Form.Item> 
-        </Form.Item> */}
-
+        <Form.Item name="docs" label="自定义的docs" {...layout} {...layout}>
+          <Input style={{ width: 200 }} />
+        </Form.Item>
       </Form>
     </Modal>
   );

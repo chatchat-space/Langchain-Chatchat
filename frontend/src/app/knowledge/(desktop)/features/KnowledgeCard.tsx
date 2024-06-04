@@ -2,19 +2,21 @@ import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-de
 import { Card, Skeleton, message, Modal } from 'antd';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useKnowledgeStore } from '@/store/knowledge'; 
+import { useKnowledgeStore } from '@/store/knowledge';
 
 const { Meta } = Card;
 
 interface KnowLedgeCardProps {
   intro: string;
   name: string;
+  vector_store_type?: string;
+  embed_model?: string;
 }
 const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) => {
- 
 
-  const [useFetchKnowledgeDel, useFetchKnowledgeList] = useKnowledgeStore((s) => [
-    s.useFetchKnowledgeDel, s.useFetchKnowledgeList
+
+  const [useFetchKnowledgeDel, useFetchKnowledgeList, setEditKnowledge] = useKnowledgeStore((s) => [
+    s.useFetchKnowledgeDel, s.useFetchKnowledgeList, s.setEditKnowledge
   ]);
   const { mutate } = useFetchKnowledgeList()
 
@@ -22,6 +24,12 @@ const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) 
   const { name, intro } = props;
   const router = useRouter();
   const handleCardEditClick = () => {
+    setEditKnowledge({
+      knowledge_base_name: props.name,
+      kb_info:  props.intro,
+      vector_store_type: props.vector_store_type,
+      embed_model:props.embed_model,
+    });
     router.push(`/knowledge/${encodeURIComponent(name)}/base`);
   };
   const delClick = async () => {
@@ -33,7 +41,7 @@ const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) 
         if (resCode !== 200) {
           message.error(resMsg)
         } else {
-          message.success(resMsg) 
+          message.success(resMsg)
           mutate()
         }
         return Promise.resolve();

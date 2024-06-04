@@ -27,14 +27,15 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     useFetchKnowledgeFilesList,
     useFetchKnowledgeDownloadDocs,
     useFetcDelInknowledgeDB,
+    useFetcDelInVectorDB,
     useFetcRebuildVectorDB,
     useFetchKnowledgeDel
-
   ] = useKnowledgeStore((s) => [
     s.filesData,
     s.useFetchKnowledgeFilesList,
     s.useFetchKnowledgeDownloadDocs,
     s.useFetcDelInknowledgeDB,
+    s.useFetcDelInVectorDB,
     s.useFetcRebuildVectorDB,
     s.useFetchKnowledgeDel
   ]);
@@ -42,6 +43,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
 
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [delDocsLoading, setDelDocsLoading] = useState(false);
+  const [delVSLoading, setDelVSLoading] = useState(false);
   const [rebuildVectorDBLoading, setRebuildVectorDBLoading] = useState(false);
 
   // rebuild progress
@@ -63,8 +65,8 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isShowModal, setModal] = useState(false);
+  const [isRebuildVectorDB, setIsRebuildVectorDB] = useState(false);
   const onSelectChange = (newSelectedRowKeys: string[]) => {
-    console.log('selectedRowKeys changed:', newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
   const columns: TableColumnsType<DataType> = [
@@ -110,10 +112,10 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     setDownloadLoading(false);
   };
   const reAddVectorDB = async () => {
-    console.log('reAddShapeDB: ', selectedRowKeys);
+    setIsRebuildVectorDB(true);
+    setModal(true)
   }
   const rebuildVectorDB = async () => {
-    console.log('rebuildVectorDB ');
     setRebuildVectorDBLoading(true);
     try {
       useFetcRebuildVectorDB({
@@ -140,8 +142,16 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     setRebuildVectorDBLoading(false);
   }
   const delInVectorDB = async () => {
-    console.log('delInShapeDB: ', selectedRowKeys);
-
+    setDelVSLoading(true);
+    await useFetcDelInVectorDB({
+      "knowledge_base_name": params.id,
+      "file_names": [...selectedRowKeys],
+      "delete_content": false, // 不删除文件
+      "not_refresh_vs_cache": false
+    }).catch(() => {
+      message.error(`删除失败`);
+    })
+    setDelVSLoading(false);
     setSelectedRowKeys([]);
   }
   const delInknowledgeDB = async () => {
@@ -149,7 +159,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     await useFetcDelInknowledgeDB({
       "knowledge_base_name": params.id,
       "file_names": [...selectedRowKeys],
-      "delete_content": false,
+      "delete_content": true,
       "not_refresh_vs_cache": false
     }).catch(() => {
       message.error(`删除失败`);
@@ -185,7 +195,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
             <Button disabled={!hasSelected} loading={loading} type="default" onClick={reAddVectorDB}>
               重新添加至向量库
             </Button>
-            <Button danger disabled={!hasSelected} loading={loading} type="default" onClick={delInVectorDB} icon={<DeleteOutlined />}>
+            <Button danger disabled={!hasSelected} loading={delVSLoading} type="default" onClick={delInVectorDB} icon={<DeleteOutlined />}>
               向量库删除
             </Button>
             <Button danger disabled={!hasSelected} loading={delDocsLoading} type="default" onClick={delInknowledgeDB} icon={<DeleteOutlined />}>
@@ -196,7 +206,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
             <Button danger loading={loading} onClick={delKnowledge} type="primary" icon={<DeleteOutlined />}>
               删除知识库
             </Button>
-            <Button loading={loading} onClick={() => setModal(true)} type="primary" icon={<PlusOutlined />}>
+            <Button loading={loading} onClick={() => { setIsRebuildVectorDB(false); setModal(true) }} type="primary" icon={<PlusOutlined />}>
               添加文件
             </Button>
           </Flexbox>
@@ -218,7 +228,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
           />
         </Spin>
       </Flexbox >
-      <ModalAddFile open={isShowModal} setModalOpen={setModal} kbName={params.id} />
+      <ModalAddFile open={isShowModal} setModalOpen={setModal} kbName={params.id} selectedRowKeys={selectedRowKeys} setSelectedRowKeys={setSelectedRowKeys} isRebuildVectorDB={isRebuildVectorDB} />
     </>
   );
 };

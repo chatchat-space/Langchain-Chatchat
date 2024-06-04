@@ -2,12 +2,14 @@
 import type {
     KnowledgeList, KnowledgeFormFields, Reseponse,
     KnowledgeFilesList, KnowledgeDelDocsParams, KnowledgeDelDocsRes,
-    KnowledgeRebuildVectorParams, KnowledgeRebuildVectorRes
+    KnowledgeRebuildVectorParams, 
+    ReAddVectorDBParams, ReAddVectorDBRes,
+    KnowledgeUplodDocsParams, KnowledgeUplodDocsRes
 } from '@/types/knowledge';
 
 import { fetchSSE, FetchSSEOptions } from '@/utils/fetch';
 import { API_ENDPOINTS } from './_url';
- 
+
 class KnowledgeService {
     getList = async (): Promise<Reseponse<KnowledgeList>> => {
         const res = await fetch(`${API_ENDPOINTS.knowledgeList}`);
@@ -17,6 +19,16 @@ class KnowledgeService {
 
     add = async (formValues: KnowledgeFormFields) => {
         const res = await fetch(`${API_ENDPOINTS.knowledgeAdd}`, {
+            body: JSON.stringify(formValues),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    };
+    update = async (formValues: Partial<KnowledgeFormFields>) => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeUpdate}`, {
             body: JSON.stringify(formValues),
             headers: {
                 'Content-Type': 'application/json',
@@ -69,11 +81,11 @@ class KnowledgeService {
         return res.json();
     };
 
-    rebuildVectorDB = async (params: KnowledgeRebuildVectorParams, opts: 
-        { onFinish: FetchSSEOptions["onFinish"]; onMessageHandle:  FetchSSEOptions["onMessageHandle"] }
-    ) => { 
+    rebuildVectorDB = async (params: KnowledgeRebuildVectorParams, opts:
+        { onFinish: FetchSSEOptions["onFinish"]; onMessageHandle: FetchSSEOptions["onMessageHandle"] }
+    ) => {
         const { onFinish, onMessageHandle } = opts;
-        fetchSSE(async ()=> await fetch(`${API_ENDPOINTS.knowledgeRebuildVectorDB}`, {
+        fetchSSE(async () => await fetch(`${API_ENDPOINTS.knowledgeRebuildVectorDB}`, {
             body: JSON.stringify({
                 ...params,
             }),
@@ -90,16 +102,18 @@ class KnowledgeService {
         })
     };
 
-    // delVectorDocs = async (formData: FormData): Promise<Reseponse<{}>> => {
-    //     // const res = await fetch(`${API_ENDPOINTS.knowledgeUploadDocs}`, {
-    //     //     body: formData,
-    //     //     // headers: {
-    //     //     //     'Content-Type': 'application/json',
-    //     //     // },
-    //     //     method: 'POST',
-    //     // });
-    //     // return res.json();
-    // };
+    delVectorDocs = async (params: KnowledgeDelDocsParams): Promise<Reseponse<KnowledgeDelDocsRes>> => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeDelVectorDB}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    };
 
     downloadDocs = async (kbName: string, docName: string): Promise<Reseponse<{}>> => {
         const queryString = new URLSearchParams({
@@ -111,18 +125,19 @@ class KnowledgeService {
         console.log('res', res)
         const data = await res.json();
         return data;
+    }; 
+    reAddVectorDB = async (params: ReAddVectorDBParams): Promise<Reseponse<ReAddVectorDBRes>> => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeReAddVectorDB}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
     };
-
-    // reAddVectorDB = async (formData: FormData): Promise<Reseponse<{}>> => {
-    //     // const res = await fetch(`${API_ENDPOINTS.knowledgeUploadDocs}`, {
-    //     //     body: formData,
-    //     //     // headers: {
-    //     //     //     'Content-Type': 'application/json',
-    //     //     // },
-    //     //     method: 'POST',
-    //     // });
-    //     // return res.json();
-    // };
 
 
 
