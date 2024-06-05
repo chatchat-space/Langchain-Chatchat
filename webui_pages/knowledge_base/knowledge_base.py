@@ -342,8 +342,10 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                                 cellEditor="agLargeTextCellEditor", cellEditorPopup=True)
             gb.configure_column("to_del", "删除", editable=True, width=50, wrapHeaderText=True,
                                 cellEditor="agCheckboxCellEditor", cellRender="agCheckboxCellRenderer")
+            # 启用分页
+            gb.configure_pagination(enabled=True, paginationAutoPageSize=False, paginationPageSize=10) 
             gb.configure_selection()
-            edit_docs = AgGrid(df, gb.build())
+            edit_docs = AgGrid(df, gb.build(), fit_columns_on_grid_load=True)
 
             if st.button("保存更改"):
                 origin_docs = {
