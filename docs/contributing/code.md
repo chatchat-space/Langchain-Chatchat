@@ -22,7 +22,7 @@ Install Poetry: [documentation on how to install it.](https://python-poetry.org/
 
 - 选择主项目目录
 ```shell
-cd chatchat
+cd  Langchain-Chatchat/libs/chatchat-server/
 ```
 
 - 安装chatchat依赖(for running chatchat lint\tests):
