@@ -17,7 +17,8 @@ const DesktopPage = memo(() => {
     <>
       <Layout>
         <KnowledgeCardList />
-        <FloatButton icon={<Plus />} onClick={() => setShowModal(true)}>
+        <FloatButton
+          icon={<Plus style={{ width: 20 }} />} onClick={() => setShowModal(true)}>
           新建知识库
         </FloatButton>
       </Layout>

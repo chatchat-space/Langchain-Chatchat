@@ -2,18 +2,23 @@
 
 import { PropsWithChildren, memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
-
 import AppLayoutDesktop from '@/layout/AppLayout.desktop';
 import { SidebarTabKey } from '@/store/global/initialState';
-
+import { LeftOutlined } from "@ant-design/icons"
+import { Button } from "antd"
 import KnowledgeTabs from './tabs';
+import { useRouter } from 'next/navigation';
 
 interface LayoutProps extends PropsWithChildren {
   params: Record<string, string>;
 }
 export default memo<LayoutProps>(({ children, params }) => {
-  console.log(params);
-
+  // console.log(params); 
+  const router = useRouter();
+  
+  function goBack(){ 
+    router.push('/knowledge')
+  }
   return (
     <AppLayoutDesktop sidebarKey={SidebarTabKey.Knowledge}>
       <Flexbox direction="horizontal" flex={1} gap={40} height={'100%'}>
@@ -24,8 +29,10 @@ export default memo<LayoutProps>(({ children, params }) => {
           style={{ borderInlineEnd: '1px solid #333333' }}
         >
           <Flexbox padding={10}>
-            <Center>图标占位</Center>
-            <Center>知识库名称</Center>
+            <Center>  
+              <Button onClick={goBack} type="link" icon={<LeftOutlined />}>{params.id}</Button>
+            </Center>
+            {/* <Center>{params.id}</Center> */}
           </Flexbox>
 
           <KnowledgeTabs params={params} />

@@ -9,18 +9,28 @@ const { Meta } = Card;
 interface KnowLedgeCardProps {
   intro: string;
   name: string;
+  vector_store_type?: string;
+  embed_model?: string;
 }
 const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) => {
 
-  const [useFetchKnowledgeDel] = useKnowledgeStore((s) => [
-    s.useFetchKnowledgeDel
+
+  const [useFetchKnowledgeDel, useFetchKnowledgeList, setEditKnowledge] = useKnowledgeStore((s) => [
+    s.useFetchKnowledgeDel, s.useFetchKnowledgeList, s.setEditKnowledge
   ]);
+  const { mutate } = useFetchKnowledgeList()
 
   const [loading, setLoading] = useState(false);
   const { name, intro } = props;
   const router = useRouter();
   const handleCardEditClick = () => {
-    router.push('/knowledge/1/base');
+    setEditKnowledge({
+      knowledge_base_name: props.name,
+      kb_info:  props.intro,
+      vector_store_type: props.vector_store_type,
+      embed_model:props.embed_model,
+    });
+    router.push(`/knowledge/${encodeURIComponent(name)}/base`);
   };
   const delClick = async () => {
     Modal.confirm({
@@ -32,6 +42,7 @@ const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) 
           message.error(resMsg)
         } else {
           message.success(resMsg)
+          mutate()
         }
         return Promise.resolve();
       },

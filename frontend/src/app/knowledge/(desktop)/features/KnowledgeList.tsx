@@ -20,11 +20,6 @@ const useStyles = createStyles(({ css, token, stylish }) => ({
   `,
 }));
 
-// const list = [
-//   { intro: '知识库简介', name: '知识库名称' },
-//   { intro: '知识库简介', name: '知识库名称' }, 
-// ];
-
 const RenderList = memo(() => {
   const { styles } = useStyles();
   const [listData, useFetchKnowledgeList] = useKnowledgeStore((s) => [
@@ -32,11 +27,15 @@ const RenderList = memo(() => {
   ]);
   const { isLoading } = useFetchKnowledgeList();
 
-  const list = listData.map((item) => ({
-    intro: '知识库简介',
-    // 等接口更改...
-    name: item as unknown as string
+  const list = listData.map(({ kb_info, kb_name }) => ({
+    intro: kb_info, 
+    name: kb_name
   }))
+  // const list = [
+  //   { intro: '知识库简介', name: '知识库名称' },
+  //   { intro: '知识库简介', name: '知识库名称' }, 
+  // ];
+  
   if (!isLoading && !listData.length) {
     return <div className={styles.null}>
       <Empty />
