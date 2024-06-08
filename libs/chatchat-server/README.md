@@ -29,6 +29,11 @@ vim model_providers.yaml
 > 
 > 详细配置请参考[README.md](../model-providers/README.md)
 
+- 初始化知识库
+```shell
+chatchat-kb -r
+```
+
 - 启动服务
 ```shell
 chatchat -a

@@ -5,6 +5,11 @@ import os
 from pathlib import Path
 from langchain.docstore.document import Document
 
+from typing import List, Union, Dict, Optional, Tuple
+
+from chatchat.configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
+                     DEFAULT_EMBEDDING_MODEL, KB_INFO, logger)
+from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
 from chatchat.server.db.repository.knowledge_base_repository import (
     add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
     load_kb_from_db, get_kb_detail,
@@ -14,18 +19,12 @@ from chatchat.server.db.repository.knowledge_file_repository import (
     count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db,
     list_docs_from_db,
 )
-
-from chatchat.configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                     DEFAULT_EMBEDDING_MODEL, KB_INFO)
 from chatchat.server.knowledge_base.utils import (
     get_kb_path, get_doc_path, KnowledgeFile,
     list_kbs_from_folder, list_files_from_folder,
 )
-
-from typing import List, Union, Dict, Optional, Tuple
-
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
+from chatchat.server.utils import check_embed_model as _check_embed_model
 
 class SupportedVSType:
     FAISS = 'faiss'
@@ -41,10 +40,11 @@ class KBService(ABC):
 
     def __init__(self,
                  knowledge_base_name: str,
+                 kb_info: str = None,
                  embed_model: str = DEFAULT_EMBEDDING_MODEL,
                  ):
         self.kb_name = knowledge_base_name
-        self.kb_info = KB_INFO.get(knowledge_base_name, f"关于{knowledge_base_name}的知识库")
+        self.kb_info = kb_info or KB_INFO.get(knowledge_base_name, f"关于{knowledge_base_name}的知识库")
         self.embed_model = embed_model
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
@@ -58,6 +58,13 @@ class KBService(ABC):
         保存向量库:FAISS保存到磁盘，milvus保存到数据库。PGVector暂未支持
         '''
         pass
+
+    def check_embed_model(self, error_msg: str) -> bool:
+        if not _check_embed_model(self.embed_model):
+            logger.error(error_msg, exc_info=True)
+            return False
+        else:
+            return True
 
     def create_kb(self):
         """
@@ -93,6 +100,9 @@ class KBService(ABC):
         向知识库添加文件
         如果指定了docs，则不再将文本向量化，并将数据库对应条目标为custom_docs=True
         """
+        if not self.check_embed_model(f"could not add docs because failed to access embed model."):
+            return False
+
         if docs:
             custom_docs = True
         else:
@@ -143,6 +153,9 @@ class KBService(ABC):
         使用content中的文件更新向量库
         如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
         """
+        if not self.check_embed_model(f"could not update docs because failed to access embed model."):
+            return False
+
         if os.path.exists(kb_file.filepath):
             self.delete_doc(kb_file, **kwargs)
             return self.add_doc(kb_file, docs=docs, **kwargs)
@@ -162,6 +175,8 @@ class KBService(ABC):
                     top_k: int = VECTOR_SEARCH_TOP_K,
                     score_threshold: float = SCORE_THRESHOLD,
                     ) ->List[Document]:
+        if not self.check_embed_model(f"could not search docs because failed to access embed model."):
+            return []
         docs = self.do_search(query, top_k, score_threshold)
         return docs
 
@@ -176,6 +191,9 @@ class KBService(ABC):
         传入参数为： {doc_id: Document, ...}
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
         '''
+        if not self.check_embed_model(f"could not update docs because failed to access embed model."):
+            return False
+
         self.del_doc_by_ids(list(docs.keys()))
         docs = []
         ids = []
@@ -282,31 +300,32 @@ class KBServiceFactory:
     def get_service(kb_name: str,
                     vector_store_type: Union[str, SupportedVSType],
                     embed_model: str = DEFAULT_EMBEDDING_MODEL,
+                    kb_info: str = None,
                     ) -> KBService:
         if isinstance(vector_store_type, str):
             vector_store_type = getattr(SupportedVSType, vector_store_type.upper())
+        params = {"knowledge_base_name": kb_name, "embed_model": embed_model, "kb_info": kb_info}
         if SupportedVSType.FAISS == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
-            return FaissKBService(kb_name, embed_model=embed_model)
+            return FaissKBService(**params)
         elif SupportedVSType.PG == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.pg_kb_service import PGKBService
-            return PGKBService(kb_name, embed_model=embed_model)
+            return PGKBService(**params)
         elif SupportedVSType.MILVUS == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
-            return MilvusKBService(kb_name, embed_model=embed_model)
+            return MilvusKBService(**params)
         elif SupportedVSType.ZILLIZ == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
-            return ZillizKBService(kb_name, embed_model=embed_model)
+            return ZillizKBService(**params)
         elif SupportedVSType.DEFAULT == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
-            return MilvusKBService(kb_name,
-                                   embed_model=embed_model)  # other milvus parameters are set in model_config.kbs_config
+            return MilvusKBService(**params)  # other milvus parameters are set in model_config.kbs_config
         elif SupportedVSType.ES == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.es_kb_service import ESKBService
-            return ESKBService(kb_name, embed_model=embed_model)
+            return ESKBService(**params)
         elif SupportedVSType.CHROMADB == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.chromadb_kb_service import ChromaKBService
-            return ChromaKBService(kb_name, embed_model=embed_model)
+            return ChromaKBService(**params)
         elif SupportedVSType.DEFAULT == vector_store_type:  # kb_exists of default kbservice is False, to make validation easier.
             from chatchat.server.knowledge_base.kb_service.default_kb_service import DefaultKBService
             return DefaultKBService(kb_name)

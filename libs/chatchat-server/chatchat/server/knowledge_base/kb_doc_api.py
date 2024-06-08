@@ -1,21 +1,23 @@
+import json
 import os
 import urllib
+from typing import List, Dict
+
 from fastapi import File, Form, Body, Query, UploadFile
+from fastapi.responses import FileResponse
+from langchain.docstore.document import Document
+from sse_starlette import EventSourceResponse
+
 from chatchat.configs import (DEFAULT_VS_TYPE, DEFAULT_EMBEDDING_MODEL,
                      VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
                      CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE,
                      logger, log_verbose, )
-from chatchat.server.utils import BaseResponse, ListResponse, run_in_thread_pool
+from chatchat.server.db.repository.knowledge_file_repository import get_file_detail
 from chatchat.server.knowledge_base.utils import (validate_kb_name, list_files_from_folder, get_file_path,
                                          files2docs_in_thread, KnowledgeFile)
-from fastapi.responses import FileResponse
-from sse_starlette import EventSourceResponse
-import json
-from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
-from chatchat.server.db.repository.knowledge_file_repository import get_file_detail
-from langchain.docstore.document import Document
+from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory, get_kb_file_details
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from typing import List, Dict
+from chatchat.server.utils import BaseResponse, ListResponse, run_in_thread_pool, check_embed_model
 
 
 def search_docs(
@@ -55,8 +57,8 @@ def list_files(
     if kb is None:
         return ListResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}", data=[])
     else:
-        all_doc_names = kb.list_files()
-        return ListResponse(data=all_doc_names)
+        all_docs = get_kb_file_details(knowledge_base_name)
+        return ListResponse(data=all_docs)
 
 
 def _save_files_in_thread(files: List[UploadFile],
@@ -352,38 +354,42 @@ def recreate_vector_store(
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
         else:
-            if kb.exists():
-                kb.clear_vs()
-            kb.create_kb()
-            files = list_files_from_folder(knowledge_base_name)
-            kb_files = [(file, knowledge_base_name) for file in files]
-            i = 0
-            for status, result in files2docs_in_thread(kb_files,
-                                                       chunk_size=chunk_size,
-                                                       chunk_overlap=chunk_overlap,
-                                                       zh_title_enhance=zh_title_enhance):
-                if status:
-                    kb_name, file_name, docs = result
-                    kb_file = KnowledgeFile(filename=file_name, knowledge_base_name=kb_name)
-                    kb_file.splited_docs = docs
-                    yield json.dumps({
-                        "code": 200,
-                        "msg": f"({i + 1} / {len(files)}): {file_name}",
-                        "total": len(files),
-                        "finished": i + 1,
-                        "doc": file_name,
-                    }, ensure_ascii=False)
-                    kb.add_doc(kb_file, not_refresh_vs_cache=True)
-                else:
-                    kb_name, file_name, error = result
-                    msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
-                    logger.error(msg)
-                    yield json.dumps({
-                        "code": 500,
-                        "msg": msg,
-                    })
-                i += 1
-            if not not_refresh_vs_cache:
-                kb.save_vector_store()
+            error_msg = f"could not recreate vector store because failed to access embed model."
+            if not kb.check_embed_model(error_msg):
+                yield {"code": 404, "msg": error_msg}
+            else:
+                if kb.exists():
+                    kb.clear_vs()
+                kb.create_kb()
+                files = list_files_from_folder(knowledge_base_name)
+                kb_files = [(file, knowledge_base_name) for file in files]
+                i = 0
+                for status, result in files2docs_in_thread(kb_files,
+                                                        chunk_size=chunk_size,
+                                                        chunk_overlap=chunk_overlap,
+                                                        zh_title_enhance=zh_title_enhance):
+                    if status:
+                        kb_name, file_name, docs = result
+                        kb_file = KnowledgeFile(filename=file_name, knowledge_base_name=kb_name)
+                        kb_file.splited_docs = docs
+                        yield json.dumps({
+                            "code": 200,
+                            "msg": f"({i + 1} / {len(files)}): {file_name}",
+                            "total": len(files),
+                            "finished": i + 1,
+                            "doc": file_name,
+                        }, ensure_ascii=False)
+                        kb.add_doc(kb_file, not_refresh_vs_cache=True)
+                    else:
+                        kb_name, file_name, error = result
+                        msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
+                        logger.error(msg)
+                        yield json.dumps({
+                            "code": 500,
+                            "msg": msg,
+                        })
+                    i += 1
+                if not not_refresh_vs_cache:
+                    kb.save_vector_store()
 
     return EventSourceResponse(output())
