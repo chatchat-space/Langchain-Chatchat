@@ -227,5 +227,24 @@ TOOL_CONFIG = {
     "text2images": {
         "use": False,
     },
-
+    "text2sql": {
+        "use": False,
+        #mysql连接信息
+        "db_host": "mysql_host",
+        "db_user": "mysql_user",
+        "db_password": "mysql_password",
+        "db_name": "mysql_database_name",
+        #限定返回的行数
+        "top_k":50,
+        #是否返回中间步骤
+        "return_intermediate_steps": True,
+        #如果想指定特定表，请填写表名称，如["sys_user","sys_dept"]，不填写走智能判断应该使用哪些表
+        "table_names":[],
+        #对表名进行额外说明，辅助大模型更好的判断应该使用哪些表，尤其是SQLDatabaseSequentialChain模式下,是根据表名做的预测，很容易误判。
+        "table_comments":{
+            # 如果出现大模型选错表的情况，可尝试根据实际情况填写表名和说明
+            # "tableA":"用户表",
+            # "tanleB":"角色表",
+        }
+    },
 }

@@ -10,3 +10,4 @@ from .text2image import text2images
 
 from .vqa_processor import vqa_processor
 from .aqa_processor import aqa_processor
+from .text2sql import text2sql
