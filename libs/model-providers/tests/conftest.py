@@ -100,9 +100,8 @@ def logging_conf() -> dict:
     return get_config_dict(
         "INFO",
         get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
-
-        1024*1024*1024*3,
-        1024*1024*1024*3,
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
     )
 
 

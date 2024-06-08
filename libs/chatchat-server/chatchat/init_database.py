@@ -1,13 +1,12 @@
 # Description: 初始化数据库，包括创建表、导入数据、更新向量空间等操作
+from datetime import datetime
+import multiprocessing as mp
 from typing import Dict
+
 from chatchat.server.knowledge_base.migrate import (create_tables, reset_tables, import_from_db,
                                            folder2db, prune_db_docs, prune_folder_files)
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, MODEL_PLATFORMS
-import multiprocessing as mp
-import logging
-logger = logging.getLogger(__name__)
+from chatchat.configs import DEFAULT_EMBEDDING_MODEL, MODEL_PLATFORMS, logger
 
-from datetime import datetime
 
 
 def run_init_model_provider(
@@ -34,7 +33,7 @@ def run_init_model_provider(
                 provider_port=provider_port)
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="please specify only one operate method once time.")
@@ -186,3 +185,7 @@ if __name__ == "__main__":
 
         for p in processes.values():
             logger.info("Process status: %s", p)
+
+
+if __name__ == "__main__":
+    main()
