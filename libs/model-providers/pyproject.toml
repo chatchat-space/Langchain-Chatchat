@@ -7,20 +7,19 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.12,!=3.9.7"
-transformers = "4.31.0"
-fastapi = "^0.109.2"
+transformers = "~4.31.0"
+fastapi = "~0.109.2"
 uvicorn = ">=0.27.0.post1"
-sse-starlette = "^1.8.2"
-pyyaml = "6.0.1"
-pydantic = "2.6.4"
-redis = "4.5.4"
+sse-starlette = "~1.8.2"
+pyyaml = "~6.0.1"
+pydantic ="~2.6.4"
 # config manage
-omegaconf = "2.0.6"
+omegaconf = "~2.0.6"
 # modle_runtime
-openai = "1.13.3"
-tiktoken = "0.5.2"
-pydub = "0.25.1"
-boto3 = "1.28.17"
+openai = "~1.13.3"
+tiktoken = "~0.5.2"
+pydub = "~0.25.1"
+boto3 = "~1.28.17"
 
 [tool.poetry.group.test.dependencies]
 # The only dependencies that should be added are
