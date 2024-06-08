@@ -18,7 +18,7 @@ export interface KnowledgeListFields {
     "embed_model": string;
     "file_count": number;
     "create_time": string;
-} 
+}
 export type KnowledgeList = KnowledgeListFields[];
 
 // Knowledge base file list
@@ -31,37 +31,47 @@ export interface KnowledgeDelDocsParams {
     file_names: string[];
     delete_content: boolean;
     not_refresh_vs_cache: boolean;
-} 
-export interface KnowledgeDelDocsRes {} 
+}
+export interface KnowledgeDelDocsRes { }
 
 
 // upload docs
 export interface KnowledgeUplodDocsParams {
-    knowledge_base_name: string; 
+    knowledge_base_name: string;
     files: File[];
     override?: boolean;
     to_vector_store?: string;
     chunk_size?: string;
     chunk_overlap?: string;
     zh_title_enhance?: string;
-    docs?: string;
+    docs?: { file_name: { page_content: string; type?: string; metadata?: string; }[] };
     docsnot_refresh_vs_cache?: string;
-} 
-export interface KnowledgeUplodDocsRes { } 
+}
+export interface KnowledgeUplodDocsRes { }
 
+export interface KnowledgeUpdateDocsParams {
+    "knowledge_base_name": string;
+    "file_names": string[],
+    "override_custom_docs"?: boolean;
+    "chunk_size"?: number;
+    "chunk_overlap"?: number;
+    "zh_title_enhance"?: boolean;
+    "not_refresh_vs_cache"?: boolean;
+    docs?: { file_name: { page_content: string; type?: string; metadata?: string; }[] };
+}
 
 // re add docs
 export interface ReAddVectorDBParams {
     "knowledge_base_name": string,
-    "file_names":string[];
+    "file_names": string[];
     "chunk_size": number;
     "chunk_overlap": number;
     "zh_title_enhance": boolean;
     "override_custom_docs": boolean;
     "docs": string;
     "not_refresh_vs_cache": boolean
-} 
-export interface ReAddVectorDBRes { } 
+}
+export interface ReAddVectorDBRes { }
 
 
 // Rebuild the vector library
@@ -74,7 +84,24 @@ export interface KnowledgeRebuildVectorParams {
     "chunk_overlap": number;
     "zh_title_enhance": boolean;
     "not_refresh_vs_cache": boolean;
-} 
-export interface KnowledgeRebuildVectorRes { } 
+}
+export interface KnowledgeRebuildVectorRes { }
 
 
+// Knowledge file content list
+export interface KnowledgeSearchDocsParams {
+    "query"?: string;
+    "knowledge_base_name": string;
+    "top_k"?: number;
+    "score_threshold"?: number;
+    "file_name": string,
+    "metadata"?: Record<string, string>;
+}
+
+export interface KnowledgeSearchDocsListItem {
+    id?: number;
+    page_content: string;
+    type?: string;
+    metadata?: string;
+}
+export type KnowledgeSearchDocsList = KnowledgeSearchDocsListItem[];

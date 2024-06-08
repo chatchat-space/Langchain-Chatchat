@@ -163,9 +163,9 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
         <Form.Item name="chunk_overlap" label="相邻文本重合长度" {...layout} {...layout}>
           <InputNumber min={0}  style={{ width: 200 }} />
         </Form.Item>
-        <Form.Item name="docs" label="自定义的docs" {...layout} {...layout}>
+        {/* <Form.Item name="docs" label="自定义的docs" {...layout} {...layout}>
           <Input style={{ width: 200 }} />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );

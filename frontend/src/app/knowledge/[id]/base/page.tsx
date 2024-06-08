@@ -49,18 +49,18 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
   // rebuild progress
   const [rebuildProgress, setRebuildProgress] = useState("0%");
 
-  // const data: DataType[] = filesData.map((item, i) => ({
-  //   id: i, // item 应该为对象，待提交问题...
-  //   name: item, // item 应该为对象，待提交问题...
-  //   loader: "",
-  //   splitter: "",
-  //   source: "",
-  //   vector: ""
-  // })); 
-  const data = [
-    { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
-    { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
-  ];
+  const data: DataType[] = filesData.map((item, i) => ({
+    id: i, // item 应该为对象，待提交问题...
+    name: item, // item 应该为对象，待提交问题...
+    loader: "",
+    splitter: "",
+    source: "",
+    vector: ""
+  })); 
+  // const data = [
+  //   { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+  //   { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+  // ];
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,7 +76,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     },
     {
       dataIndex: 'name',
-      render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${rowData.id}`}>{text}</Link>,
+      render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${encodeURIComponent(rowData.name)}`}>{text}</Link>,
       title: '文档名称',
     },
     {

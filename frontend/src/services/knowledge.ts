@@ -4,7 +4,7 @@ import type {
     KnowledgeFilesList, KnowledgeDelDocsParams, KnowledgeDelDocsRes,
     KnowledgeRebuildVectorParams, 
     ReAddVectorDBParams, ReAddVectorDBRes,
-    KnowledgeUplodDocsParams, KnowledgeUplodDocsRes
+    KnowledgeSearchDocsParams, KnowledgeSearchDocsList, KnowledgeUpdateDocsParams
 } from '@/types/knowledge';
 
 import { fetchSSE, FetchSSEOptions } from '@/utils/fetch';
@@ -138,9 +138,31 @@ class KnowledgeService {
         });
         return res.json();
     };
-
-
-
+    // searchDocs = async (params: KnowledgeSearchDocsParams): Promise<Reseponse<KnowledgeSearchDocsList>> => {
+    searchDocs = async (params: KnowledgeSearchDocsParams): Promise<KnowledgeSearchDocsList> => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeSearchDocs}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    }; 
+    updateDocs = async (params: KnowledgeUpdateDocsParams): Promise<Reseponse<{}>> => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeUploadDocs}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    }; 
 }
 
 export const knowledgeService = new KnowledgeService();
