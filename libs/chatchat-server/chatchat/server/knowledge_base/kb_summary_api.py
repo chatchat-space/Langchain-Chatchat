@@ -42,55 +42,59 @@ def recreate_summary_vector_store(
         if not kb.exists() and not allow_empty_kb:
             yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
         else:
-            # 重新创建知识库
-            kb_summary = KBSummaryService(knowledge_base_name, embed_model)
-            kb_summary.drop_kb_summary()
-            kb_summary.create_kb_summary()
+            error_msg = f"could not recreate summary vector store because failed to access embed model."
+            if not kb.check_embed_model(error_msg):
+                yield {"code": 404, "msg": error_msg}
+            else:
+                # 重新创建知识库
+                kb_summary = KBSummaryService(knowledge_base_name, embed_model)
+                kb_summary.drop_kb_summary()
+                kb_summary.create_kb_summary()
 
-            llm = get_ChatOpenAI(
-                model_name=model_name,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                local_wrap=True,
-            )
-            reduce_llm = get_ChatOpenAI(
-                model_name=model_name,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                local_wrap=True,
-            )
-            # 文本摘要适配器
-            summary = SummaryAdapter.form_summary(llm=llm,
-                                                  reduce_llm=reduce_llm,
-                                                  overlap_size=OVERLAP_SIZE)
-            files = list_files_from_folder(knowledge_base_name)
+                llm = get_ChatOpenAI(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    local_wrap=True,
+                )
+                reduce_llm = get_ChatOpenAI(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    local_wrap=True,
+                )
+                # 文本摘要适配器
+                summary = SummaryAdapter.form_summary(llm=llm,
+                                                    reduce_llm=reduce_llm,
+                                                    overlap_size=OVERLAP_SIZE)
+                files = list_files_from_folder(knowledge_base_name)
 
-            i = 0
-            for i, file_name in enumerate(files):
+                i = 0
+                for i, file_name in enumerate(files):
 
-                doc_infos = kb.list_docs(file_name=file_name)
-                docs = summary.summarize(file_description=file_description,
-                                         docs=doc_infos)
+                    doc_infos = kb.list_docs(file_name=file_name)
+                    docs = summary.summarize(file_description=file_description,
+                                            docs=doc_infos)
 
-                status_kb_summary = kb_summary.add_kb_summary(summary_combine_docs=docs)
-                if status_kb_summary:
-                    logger.info(f"({i + 1} / {len(files)}): {file_name} 总结完成")
-                    yield json.dumps({
-                        "code": 200,
-                        "msg": f"({i + 1} / {len(files)}): {file_name}",
-                        "total": len(files),
-                        "finished": i + 1,
-                        "doc": file_name,
-                    }, ensure_ascii=False)
-                else:
+                    status_kb_summary = kb_summary.add_kb_summary(summary_combine_docs=docs)
+                    if status_kb_summary:
+                        logger.info(f"({i + 1} / {len(files)}): {file_name} 总结完成")
+                        yield json.dumps({
+                            "code": 200,
+                            "msg": f"({i + 1} / {len(files)}): {file_name}",
+                            "total": len(files),
+                            "finished": i + 1,
+                            "doc": file_name,
+                        }, ensure_ascii=False)
+                    else:
 
-                    msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
-                    logger.error(msg)
-                    yield json.dumps({
-                        "code": 500,
-                        "msg": msg,
-                    })
-                i += 1
+                        msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
+                        logger.error(msg)
+                        yield json.dumps({
+                            "code": 500,
+                            "msg": msg,
+                        })
+                    i += 1
 
     return EventSourceResponse(output())
 
