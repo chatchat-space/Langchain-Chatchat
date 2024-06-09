@@ -4,7 +4,7 @@ from chatchat.configs import config_workspace as workspace
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="chatchat工作空间配置")
+    parser = argparse.ArgumentParser(description="指令` chatchat-config` 工作空间配置")
     # 只能选择true或false
     parser.add_argument(
         "-v",
