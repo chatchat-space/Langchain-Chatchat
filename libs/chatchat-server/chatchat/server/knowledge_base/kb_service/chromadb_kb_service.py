@@ -9,6 +9,7 @@ from chatchat.configs import SCORE_THRESHOLD
 from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 from chatchat.server.utils import get_Embeddings
+from chatchat.server.file_rag.utils import get_Retriever
 
 
 def _get_result_to_documents(get_result: GetResult) -> List[Document]:
@@ -75,10 +76,13 @@ class ChromaKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD) -> List[
         Tuple[Document, float]]:
-        embed_func = get_Embeddings(self.embed_model)
-        embeddings = embed_func.embed_query(query)
-        query_result: QueryResult = self.collection.query(query_embeddings=embeddings, n_results=top_k)
-        return _results_to_docs_and_scores(query_result)
+        retriever = get_Retriever("vectorstore").from_vectorstore(
+             self.collection,
+             top_k=top_k,
+             score_threshold=score_threshold,
+         )
+        docs = retriever.get_relevant_documents(query)
+        return docs
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         doc_infos = []

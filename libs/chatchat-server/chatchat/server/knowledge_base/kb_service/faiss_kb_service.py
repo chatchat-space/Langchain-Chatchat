@@ -5,9 +5,9 @@ from chatchat.configs import SCORE_THRESHOLD
 from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from chatchat.server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
 from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
-from chatchat.server.utils import get_Embeddings
 from langchain.docstore.document import Document
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
+from chatchat.server.file_rag.utils import get_Retriever
 
 
 class FaissKBService(KBService):
@@ -62,10 +62,13 @@ class FaissKBService(KBService):
                   top_k: int,
                   score_threshold: float = SCORE_THRESHOLD,
                   ) -> List[Tuple[Document, float]]:
-        embed_func = get_Embeddings(self.embed_model)
-        embeddings = embed_func.embed_query(query)
         with self.load_vector_store().acquire() as vs:
-            docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
+            retriever = get_Retriever("ensemble").from_vectorstore(
+                 vs,
+                 top_k=top_k,
+                 score_threshold=score_threshold,
+             )
+            docs = retriever.get_relevant_documents(query)
         return docs
 
     def do_add_doc(self,

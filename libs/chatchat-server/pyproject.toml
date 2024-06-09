@@ -29,6 +29,8 @@ unstructured = "~0.11.0"
 python-magic-bin = {version = "*", platform = "win32"}
 SQLAlchemy = "~2.0.25"
 faiss-cpu = "~1.7.4"
+cutword = "0.1.0"
+rank_bm25 = "0.2.2"
 # accelerate = "~0.24.1"
 # spacy = "~3.7.2"
 PyMuPDF = "~1.23.16"

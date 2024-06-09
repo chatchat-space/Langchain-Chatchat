@@ -15,6 +15,7 @@ import shutil
 import sqlalchemy
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import Session
+from chatchat.server.file_rag.utils import get_Retriever
 
 
 class PGKBService(KBService):
@@ -60,10 +61,13 @@ class PGKBService(KBService):
             shutil.rmtree(self.kb_path)
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
-        embed_func = get_Embeddings(self.embed_model)
-        embeddings = embed_func.embed_query(query)
-        docs = self.pg_vector.similarity_search_with_score_by_vector(embeddings, top_k)
-        return score_threshold_process(score_threshold, top_k, docs)
+        retriever = get_Retriever("vectorstore").from_vectorstore(
+            self.pg_vector,
+            top_k=top_k,
+            score_threshold=score_threshold,
+        )
+        docs = retriever.get_relevant_documents(query)
+        return docs
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         ids = self.pg_vector.add_documents(docs)

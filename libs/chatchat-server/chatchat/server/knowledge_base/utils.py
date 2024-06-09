@@ -10,7 +10,7 @@ from chatchat.configs import (
     TEXT_SPLITTER_NAME,
 )
 import importlib
-from chatchat.server.text_splitter import zh_title_enhance as func_zh_title_enhance
+from chatchat.server.file_rag.text_splitter import zh_title_enhance as func_zh_title_enhance
 import langchain_community.document_loaders
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter, MarkdownHeaderTextSplitter
