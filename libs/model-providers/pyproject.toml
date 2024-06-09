@@ -206,7 +206,7 @@ ignore-words-list = 'momento,collison,ned,foor,reworkd,parth,whats,aapply,mysogy
 
 [tool.poetry.plugins.dotenv]
 ignore = "false"
-location = ".env"
+dotenv = "dotenv:plugin"
 
 # https://python-poetry.org/docs/repositories/
 [[tool.poetry.source]]
