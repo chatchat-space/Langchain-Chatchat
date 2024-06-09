@@ -149,7 +149,7 @@ TOOL_CONFIG = {
     "search_local_knowledgebase": {
         "use": False,
         "top_k": 3,
-        "score_threshold": 1,
+        "score_threshold": 1.0,
         "conclude_prompt": {
             "with_result":
                 '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
