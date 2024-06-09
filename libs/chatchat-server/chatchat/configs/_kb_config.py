@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
 
-# chatchat 项目根目录
-CHATCHAT_ROOT = str(Path(__file__).absolute().parent.parent)
+import sys
+sys.path.append(str(Path(__file__).parent))
+
+from _basic_config import config_workspace
 
 # 用户数据根目录
-DATA_PATH = os.path.join(CHATCHAT_ROOT, "data")
+DATA_PATH = config_workspace.get_config().DATA_PATH
 
 # 默认使用的知识库
 DEFAULT_KNOWLEDGE_BASE = "samples"
