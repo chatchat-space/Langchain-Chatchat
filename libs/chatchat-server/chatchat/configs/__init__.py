@@ -120,6 +120,12 @@ def _import_ConfigWorkSpace() -> Any:
     return ConfigWorkSpace
 
 
+def _import_config_workspace() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    return config_workspace
+
 def _import_log_verbose() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
@@ -513,6 +519,8 @@ def __getattr__(name: str) -> Any:
         return _import_ConfigBasicFactory()
     elif name == "ConfigWorkSpace":
         return _import_ConfigWorkSpace()
+    elif name == "config_workspace":
+        return _import_config_workspace()
     elif name == "log_verbose":
         return _import_log_verbose()
     elif name == "CHATCHAT_ROOT":
@@ -613,6 +621,7 @@ VERSION = "v0.3.0-preview"
 
 __all__ = [
     "VERSION",
+    "config_workspace",
     "log_verbose",
     "CHATCHAT_ROOT",
     "DATA_PATH",
