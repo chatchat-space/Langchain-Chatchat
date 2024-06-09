@@ -25,7 +25,19 @@ langchain-chatchat = { path = "libs/chatchat-server", develop = true }
 ipykernel = "^6.29.2"
 
 [tool.poetry.group.test.dependencies]
-
+pytest = "^7.3.0"
+pytest-cov = "^4.0.0"
+pytest-dotenv = "^0.5.2"
+duckdb-engine = "^0.9.2"
+pytest-watcher = "^0.2.6"
+freezegun = "^1.2.2"
+responses = "^0.22.0"
+pytest-asyncio = "^0.23.2"
+lark = "^1.1.5"
+pytest-mock = "^3.10.0"
+pytest-socket = "^0.6.0"
+syrupy = "^4.0.2"
+requests-mock = "^1.11.0"
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
@@ -48,7 +60,7 @@ extend-exclude = [
 
 [tool.poetry.plugins.dotenv]
 ignore = "false"
-location = ".env"
+dotenv = "dotenv:plugin"
 
 
 # https://python-poetry.org/docs/repositories/
