@@ -9,7 +9,6 @@ def main():
     parser.add_argument(
         "-v",
         "--verbose",
-        default="false",
         choices=["true", "false"],
         help="是否开启详细日志"
     )
