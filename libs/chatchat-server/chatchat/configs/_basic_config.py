@@ -1,36 +1,49 @@
 import os
 import json
+from dataclasses import dataclass
 from pathlib import Path
+import sys
 import logging
+from typing import Any, Optional
+
+from chatchat.configs._core_config import CF
+
+sys.path.append(str(Path(__file__).parent))
+import _core_config as core_config
 
 logger = logging.getLogger()
 
 
-class ConfigBasic:
-    log_verbose: bool
+class ConfigBasic(core_config.Config):
+    log_verbose: Optional[bool] = None
     """是否开启日志详细信息"""
-    CHATCHAT_ROOT: str
+    CHATCHAT_ROOT: Optional[str] = None
     """项目根目录"""
-    DATA_PATH: str
+    DATA_PATH: Optional[str] = None
     """用户数据根目录"""
-    IMG_DIR: str
+    IMG_DIR: Optional[str] = None
     """项目相关图片"""
-    NLTK_DATA_PATH: str
+    NLTK_DATA_PATH: Optional[str] = None
     """nltk 模型存储路径"""
-    LOG_FORMAT: str
+    LOG_FORMAT: Optional[str] = None
     """日志格式"""
-    LOG_PATH: str
+    LOG_PATH: Optional[str] = None
     """日志存储路径"""
-    MEDIA_PATH: str
+    MEDIA_PATH: Optional[str] = None
     """模型生成内容（图片、视频、音频等）保存位置"""
-    BASE_TEMP_DIR: str
+    BASE_TEMP_DIR: Optional[str] = None
     """临时文件目录，主要用于文件对话"""
 
+    @classmethod
+    def class_name(cls) -> str:
+        return cls.__name__
+
     def __str__(self):
-        return f"ConfigBasic(log_verbose={self.log_verbose}, CHATCHAT_ROOT={self.CHATCHAT_ROOT}, DATA_PATH={self.DATA_PATH}, IMG_DIR={self.IMG_DIR}, NLTK_DATA_PATH={self.NLTK_DATA_PATH}, LOG_FORMAT={self.LOG_FORMAT}, LOG_PATH={self.LOG_PATH}, MEDIA_PATH={self.MEDIA_PATH}, BASE_TEMP_DIR={self.BASE_TEMP_DIR})"
+        return self.to_json()
 
 
-class ConfigBasicFactory:
+@dataclass
+class ConfigBasicFactory(core_config.ConfigFactory[ConfigBasic]):
     """Basic config for ChatChat """
 
     def __init__(self):
@@ -109,72 +122,50 @@ class ConfigBasicFactory:
         return config
 
 
-class ConfigWorkSpace:
+class ConfigBasicWorkSpace(core_config.ConfigWorkSpace[ConfigBasicFactory, ConfigBasic]):
     """
     工作空间的配置预设，提供ConfigBasic建造方法产生实例。
-    该类的实例对象用于存储工作空间的配置信息，如工作空间的路径等
-    工作空间的配置信息存储在用户的家目录下的.config/chatchat/workspace/workspace_config.json文件中。
-    注意：不存在则读取默认
     """
-    _config_factory: ConfigBasicFactory = ConfigBasicFactory()
+    config_factory_cls = ConfigBasicFactory
+
+    def _build_config_factory(self, config_json: Any) -> ConfigBasicFactory:
+
+        _config_factory = self.config_factory_cls()
+
+        if config_json.get("log_verbose"):
+            _config_factory.log_verbose(config_json.get("log_verbose"))
+        if config_json.get("DATA_PATH"):
+            _config_factory.data_path(config_json.get("DATA_PATH"))
+        if config_json.get("LOG_FORMAT"):
+            _config_factory.log_format(config_json.get("LOG_FORMAT"))
+
+        return _config_factory
+
+    @classmethod
+    def get_type(cls) -> str:
+        return ConfigBasic.class_name()
 
     def __init__(self):
-        self.workspace = os.path.join(os.path.expanduser("~"), ".config", "chatchat/workspace")
-        if not os.path.exists(self.workspace):
-            os.makedirs(self.workspace, exist_ok=True)
-        self.workspace_config = os.path.join(self.workspace, "workspace_config.json")
-        # 初始化工作空间配置，转换成json格式，实现ConfigBasic的实例化
-
-        config_json = self._load_config()
-
-        if config_json:
-
-            _config_factory = ConfigBasicFactory()
-            if config_json.get("log_verbose"):
-                _config_factory.log_verbose(config_json.get("log_verbose"))
-            if config_json.get("DATA_PATH"):
-                _config_factory.data_path(config_json.get("DATA_PATH"))
-            if config_json.get("LOG_FORMAT"):
-                _config_factory.log_format(config_json.get("LOG_FORMAT"))
-
-            self._config_factory = _config_factory
+        super().__init__()
 
     def get_config(self) -> ConfigBasic:
         return self._config_factory.get_config()
 
     def set_log_verbose(self, verbose: bool):
         self._config_factory.log_verbose(verbose)
-        self._store_config()
+        self.store_config()
 
     def set_data_path(self, path: str):
         self._config_factory.data_path(path)
-        self._store_config()
+        self.store_config()
 
     def set_log_format(self, log_format: str):
         self._config_factory.log_format(log_format)
-        self._store_config()
+        self.store_config()
 
     def clear(self):
         logger.info("Clear workspace config.")
         os.remove(self.workspace_config)
 
-    def _load_config(self):
-        try:
-            with open(self.workspace_config, "r") as f:
-                return json.loads(f.read())
-        except FileNotFoundError:
-            return None
 
-    def _store_config(self):
-        with open(self.workspace_config, "w") as f:
-            config = self._config_factory.get_config()
-            config_json = {
-                "log_verbose": config.log_verbose,
-                "CHATCHAT_ROOT": config.CHATCHAT_ROOT,
-                "DATA_PATH": config.DATA_PATH,
-                "LOG_FORMAT": config.LOG_FORMAT
-            }
-            f.write(json.dumps(config_json, indent=4, ensure_ascii=False))
-
-
-config_workspace: ConfigWorkSpace = ConfigWorkSpace()
+config_basic_workspace: ConfigBasicWorkSpace = ConfigBasicWorkSpace()
