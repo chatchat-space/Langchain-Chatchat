@@ -133,7 +133,7 @@ def run_webui(model_platforms_shard: Dict,
         from streamlit.web import bootstrap
     except ImportError:
         from streamlit import bootstrap
-
+    bootstrap.load_config_options(flag_options=flag_options)
     bootstrap.run(script_dir, False, args, flag_options)
     started_event.set()
 
