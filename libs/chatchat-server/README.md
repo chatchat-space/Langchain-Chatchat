@@ -49,7 +49,7 @@ options:
    - 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
 
 ### 自定义平台加载
-可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力，启动后下面变量会自动增加相应的平台
+可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力
 > 配置*CHATCHAT_ROOT*文件夹configs中的`model_providers.yaml`文件，即可完成自定义平台加载
 ```shell
  
