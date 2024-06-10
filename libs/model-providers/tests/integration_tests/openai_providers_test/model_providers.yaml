@@ -1,0 +1,10 @@
+
+ollama:
+  model_credential:
+    - model: 'llama3'
+      model_type: 'llm'
+      model_credentials:
+        openai_api_base: 'http://172.21.192.1:11434'
+
+
+

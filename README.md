@@ -1,13 +1,11 @@
-![](img/logo-long-chatchat-trans-v2.png)
+![](docs/img/logo-long-chatchat-trans-v2.png)
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 🌍 [日本語で読む](README_ja.md)
 
 📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
 
-基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的检索增强生成(RAG)大模型知识库项目。
-
-⚠️`0.2.10`将会是`0.2.x`系列的最后一个版本，`0.2.x`系列版本将会停止更新和技术支持，全力研发具有更强应用性的 `Langchain-Chatchat 0.3.x`。
+基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的 RAG 与 Agent 应用项目。
 
 ---
 
@@ -44,18 +42,19 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 📺 [原理介绍视频](https://www.bilibili.com/video/BV13M4y1e7cN/?share_source=copy_web&vd_source=e6c5aafe684f30fbe41925d61ca6d514)
 
-![实现原理图](img/langchain+chatglm.png)
+![实现原理图](docs/img/langchain+chatglm.png)
 
 从文档处理角度来看，实现流程如下：
 
-![实现原理图2](img/langchain+chatglm2.png)
+![实现原理图2](docs/img/langchain+chatglm2.png)
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `v13`
-版本所使用代码已更新至本项目 `v0.2.9` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.2.10`
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.6) 已经更新到 ```0.2.7``` 版本。
+版本所使用代码已更新至本项目 `v0.2.10` 版本。
+
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7) 已经更新到 ```0.2.7``` 版本。
 
 🌲 一行命令运行 Docker ：
 
@@ -63,7 +62,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.7
 ```
 
-🧩 本项目有一个非常完整的[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，_
+🧩 本项目有一个非常完整的 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，_
 _仅仅是入门教程，能够基础运行__。
 如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 界面
@@ -74,13 +73,13 @@ _仅仅是入门教程，能够基础运行__。
 本开源方案采用```Apache License```，可以免费商用，无需付费。
 
 我们支持市面上主流的本地大语言模型和Embedding模型，支持开源的本地向量数据库。
-支持列表详见[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+支持列表详见 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ## 快速上手
 
 ### 1. 环境配置
 
-+ 首先，确保你的机器安装了 Python 3.8 - 3.11 (我们强烈推荐使用 Python3.11)。
++ 首先，确保你的机器安装了 Python 3.8 - 3.11 。
 
 ```
 $ python --version
@@ -105,10 +104,10 @@ $ pip install -r requirements_webui.txt
 # 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
 ```
 
-请注意，LangChain-Chatchat `0.2.x` 系列是针对 Langchain `0.0.x` 系列版本的，如果你使用的是 Langchain `0.1.x`
-系列版本，需要降级您的`Langchain`版本。
+请注意，LangChain-Chatchat `0.3.x` 当前版本是针对 Langchain `0.1.x` 系列版本的，如果你使用的是 Langchain `0.2.x`
+版本，需要降级您的 `Langchain` 版本。
 
-### 2， 模型下载
+### 2. 模型启动
 
 如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding
 模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
@@ -134,7 +133,7 @@ $ python copy_config_example.py
 $ python init_database.py --recreate-vs
  ```
 
-### 4. 一键启动
+### 4. 项目一键启动
 
 按照以下命令启动项目
 
@@ -148,22 +147,21 @@ $ python startup.py -a
 
 1. FastAPI Docs 界面
 
-![](img/fastapi_docs_026.png)
+![](docs/img/fastapi_docs_026.png)
 
 2. Web UI 启动界面示例：
 
 - Web UI 对话界面：
 
-![img](img/LLM_success.png)
+![img](docs/img/LLM_success.png)
 
 - Web UI 知识库管理页面：
 
-![](img/init_knowledge_base.jpg)
+![](docs/img/init_knowledge_base.jpg)
 
 ### 注意
 
-以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式
-，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 
 ---
@@ -171,12 +169,11 @@ $ python startup.py -a
 ## 项目里程碑
 
 + `2023年4月`: `Langchain-ChatGLM 0.1.0` 发布，支持基于 ChatGLM-6B 模型的本地知识库问答。
-+ `2023年8月`: `Langchain-ChatGLM` 改名为 `Langchain-Chatchat`，`0.2.0` 发布，使用 `fastchat` 作为模型加载方案，支持更多的模型和数据库。
++ `2023年8月`: `Langchain-ChatGLM` 改名为 `Langchain-Chatchat`，发布 `0.2.0` 版本，使用 `fastchat` 作为模型加载方案，支持更多的模型和数据库。
 + `2023年10月`: `Langchain-Chatchat 0.2.5` 发布，推出 Agent 内容，开源项目在`Founder Park & Zhipu AI & Zilliz`
   举办的黑客马拉松获得三等奖。
 + `2023年12月`: `Langchain-Chatchat` 开源项目获得超过 **20K** stars.
-+ `2024年1月`: `LangChain 0.1.x` 推出，`Langchain-Chatchat 0.2.x` 发布稳定版本`0.2.10`
-  后将停止更新和技术支持，全力研发具有更强应用性的 `Langchain-Chatchat 0.3.x`。
++ `2024年6月`: `Langchain-Chatchat 0.3.0` 发布，带来全新项目架构。
 
 + 🔥 让我们一起期待未来 Chatchat 的故事 ···
 
@@ -189,12 +186,12 @@ $ python startup.py -a
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
-<img src="img/qr_code_87.jpg" alt="二维码" width="300" />
+<img src="docs/img/qr_code_96.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
 ### 公众号
 
-<img src="img/official_wechat_mp_account.png" alt="二维码" width="300" />
+<img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。

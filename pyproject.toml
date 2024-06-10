@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "Chatchat"
+version = "0.3.0"
+description = "Langchain-Chatchat"
+authors = ["chatchat"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/chatchat-space/Langchain-Chatchat.git"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.8.1,<3.12,!=3.9.7"
+
+
+[tool.ruff]
+extend-include = ["*.ipynb"]
+extend-exclude = [
+    "docs/docs/expression_language/why.ipynb"  # TODO: look into why linter errors
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/{cookbook,docs}/*" = [
+    "E402",  # allow imports to appear anywhere in docs
+    "F401",  # allow "imported but unused" example code
+    "F811",  # allow re-importing the same module, so that cells can stay independent
+    "F841",  # allow assignments to variables that are never read -- it's example code
+]
+
+# These files were failing the listed rules at the time ruff was adopted for notebooks.
+# Don't require them to change at once, though we should look into them eventually.
+"cookbook/gymnasium_agent_simulation.ipynb" = ["F821"]
+"docs/docs/integrations/document_loaders/tensorflow_datasets.ipynb" = ["F821"]
+
+[tool.poetry.plugins.dotenv]
+ignore = "false"
+dotenv = "dotenv:plugin"
+
+
+# https://python-poetry.org/docs/repositories/
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "default"
