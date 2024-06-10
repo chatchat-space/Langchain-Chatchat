@@ -1,5 +1,4 @@
-from typing import List, Dict, Optional
-from langchain.embeddings.base import Embeddings
+from typing import List, Dict
 from langchain.schema import Document
 from langchain.vectorstores import Zilliz
 from chatchat.configs import kbs_config
@@ -7,6 +6,7 @@ from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedV
     score_threshold_process
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
+from chatchat.server.file_rag.utils import get_Retriever
 
 
 class ZillizKBService(KBService):
@@ -60,10 +60,13 @@ class ZillizKBService(KBService):
 
     def do_search(self, query: str, top_k: int, score_threshold: float):
         self._load_zilliz()
-        embed_func = get_Embeddings(self.embed_model)
-        embeddings = embed_func.embed_query(query)
-        docs = self.zilliz.similarity_search_with_score_by_vector(embeddings, top_k)
-        return score_threshold_process(score_threshold, top_k, docs)
+        retriever = get_Retriever("vectorstore").from_vectorstore(
+            self.zilliz,
+            top_k=top_k,
+            score_threshold=score_threshold,
+        )
+        docs = retriever.get_relevant_documents(query)
+        return docs
 
     def do_add_doc(self, docs: List[Document], **kwargs) -> List[Dict]:
         for doc in docs:

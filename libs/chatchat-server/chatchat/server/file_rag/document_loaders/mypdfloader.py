@@ -4,7 +4,7 @@ import cv2
 from PIL import Image
 import numpy as np
 from chatchat.configs import PDF_OCR_THRESHOLD
-from chatchat.server.document_loaders.ocr import get_ocr
+from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 import tqdm
 
 

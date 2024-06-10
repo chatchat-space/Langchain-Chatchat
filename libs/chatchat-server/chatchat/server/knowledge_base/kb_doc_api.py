@@ -28,7 +28,7 @@ def search_docs(
                                       description="知识库匹配相关度阈值，取值范围在0-1之间，"
                                                   "SCORE越小，相关度越高，"
                                                   "取到1相当于不筛选，建议设置在0.5左右",
-                                      ge=0, le=1),
+                                      ge=0.0, le=1.0),
         file_name: str = Body("", description="文件名称，支持 sql 通配符"),
         metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
 ) -> List[Dict]:
@@ -37,7 +37,8 @@ def search_docs(
     if kb is not None:
         if query:
             docs = kb.search_docs(query, top_k, score_threshold)
-            data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
+            # data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
+            data = [DocumentWithVSId(**x.dict(), id=x.metadata.get("id")) for x in docs]
         elif file_name or metadata:
             data = kb.list_docs(file_name=file_name, metadata=metadata)
             for d in data:

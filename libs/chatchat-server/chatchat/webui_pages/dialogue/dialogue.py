@@ -24,28 +24,28 @@ chat_box = ChatBox(
 
 
 def save_session():
-    '''save session state to chat context'''
+    """save session state to chat context"""
     chat_box.context_from_session(exclude=["selected_page", "prompt", "cur_conv_name"])
 
 
 def restore_session():
-    '''restore sesstion state from chat context'''
+    """restore sesstion state from chat context"""
     chat_box.context_to_session(exclude=["selected_page", "prompt", "cur_conv_name"])
 
 
 def rerun():
-    '''
+    """
     save chat context before rerun
-    '''
+    """
     save_session()
     st.rerun()
 
 
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
-    '''
+    """
     返回消息历史。
     content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
-    '''
+    """
 
     def filter(msg):
         content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
@@ -66,10 +66,10 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
 
 @st.cache_data
 def upload_temp_docs(files, _api: ApiRequest) -> str:
-    '''
+    """
     将文件上传到临时目录，用于文件对话
     返回临时向量库ID
-    '''
+    """
     return _api.upload_temp_docs(files).get("data", {}).get("id")
 
 
@@ -157,11 +157,13 @@ def dialogue_page(
             tools = list_tools(api)
             tool_names = ["None"] + list(tools)
             if use_agent:
-                # selected_tools = sac.checkbox(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具", check_all=True, key="selected_tools")
+                # selected_tools = sac.checkbox(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
+                # check_all=True, key="selected_tools")
                 selected_tools = st.multiselect("选择工具", list(tools), format_func=lambda x: tools[x]["title"],
                                                 key="selected_tools")
             else:
-                # selected_tool = sac.buttons(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具", key="selected_tool")
+                # selected_tool = sac.buttons(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
+                # key="selected_tool")
                 selected_tool = st.selectbox("选择工具", tool_names,
                                              format_func=lambda x: tools.get(x, {"title": "None"})["title"],
                                              key="selected_tool")
@@ -338,7 +340,7 @@ def dialogue_page(
             elif d.status == AgentStatus.agent_finish:
                 text = d.choices[0].delta.content or ""
                 chat_box.update_msg(text.replace("\n", "\n\n"))
-            elif d.status == None:  # not agent chat
+            elif d.status is None:  # not agent chat
                 if getattr(d, "is_ref", False):
                     chat_box.insert_msg(Markdown(d.choices[0].delta.content or "", in_expander=True, state="complete",
                                                  title="参考资料"))

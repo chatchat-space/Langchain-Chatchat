@@ -8,6 +8,7 @@ from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
 from elasticsearch import Elasticsearch, BadRequestError
 from chatchat.configs import kbs_config, KB_ROOT_PATH
+from chatchat.server.file_rag.utils import get_Retriever
 
 import logging
 
@@ -107,8 +108,12 @@ class ESKBService(KBService):
 
     def do_search(self, query:str, top_k: int, score_threshold: float):
         # 文本相似性检索
-        docs = self.db.similarity_search_with_score(query=query,
-                                         k=top_k)
+        retriever = get_Retriever("vectorstore").from_vectorstore(
+            self.db,
+            top_k=top_k,
+            score_threshold=score_threshold,
+        )
+        docs = retriever.get_relevant_documents(query)
         return docs
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:

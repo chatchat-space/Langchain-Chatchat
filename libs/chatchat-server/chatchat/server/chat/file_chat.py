@@ -63,10 +63,10 @@ def upload_temp_docs(
         chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
 ) -> BaseResponse:
-    '''
+    """
     将文件保存到临时目录，并进行向量化。
     返回临时目录名称作为ID，同时也是临时向量库的ID。
-    '''
+    """
     if prev_id is not None:
         memo_faiss_pool.pop(prev_id)
 
@@ -134,7 +134,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             docs = [x[0] for x in docs]
 
         context = "\n".join([doc.page_content for doc in docs])
-        if len(docs) == 0: ## 如果没有找到相关文档，使用Empty模板
+        if len(docs) == 0:  # 如果没有找到相关文档，使用Empty模板
             prompt_template = get_prompt_template("knowledge_base_chat", "empty")
         else:
             prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
