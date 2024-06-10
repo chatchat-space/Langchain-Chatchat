@@ -137,7 +137,7 @@ model_format = None
 model_quant = None
 
 if model_type == "LLM":
-    cur_family = xf_llm.LLMFamilyV1.model_validate(cur_reg)
+    cur_family = xf_llm.LLMFamilyV1.parse_obj(cur_reg)
     cur_spec = None
     model_formats = []
     for spec in cur_reg["model_specs"]:
