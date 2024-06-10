@@ -42,8 +42,14 @@ options:
 
 ```
 
+### 模型服务配置
+ 如果您已经有了一个openai endpoint的能力的地址，可以在`configs._model_config.py`文件中MODEL_PLATFORMS直接配置
+   - platform_name 可以任意填写，不要重复即可
+   - platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
+   - 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
 
- - 自定义平台加载
+### 自定义平台加载
+可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力
 > 配置*CHATCHAT_ROOT*文件夹configs中的`model_providers.yaml`文件，即可完成自定义平台加载
 ```shell
  
@@ -54,12 +60,20 @@ vim model_providers.yaml
 > 
 > 详细配置请参考[README.md](../model-providers/README.md)
 
-- 初始化知识库
+### 初始化知识库
 ```shell
 chatchat-kb -r
 ```
 
-- 启动服务
+### 启动服务
 ```shell
 chatchat -a
+```
+
+### 模型？
+```text
+chatchat 0.3版本中，为保证平台、模型、及本地服务的兼容，在保证可扩展性的同时，
+我们对模型的加载进行了重新设计. chatchat 0.3之后的版本，我们将分离模型加载和服务启动. 您可以使用提供了`openaiEndpoint`任何服务,
+可以在`configs._model_config.py`文件中MODEL_PLATFORMS直接配置
+ 
 ```
