@@ -121,7 +121,6 @@ extended_testing = [
     "xmltodict",
     "faiss-cpu",
     "openapi-pydantic",
-    "markdownify",
     "arxiv",
     "sqlite-vss",
     "rapidocr-onnxruntime",
