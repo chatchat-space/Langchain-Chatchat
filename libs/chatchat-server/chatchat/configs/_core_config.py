@@ -25,7 +25,7 @@ class Config(BaseModel):
 
     def to_json(self, **kwargs: Any) -> str:
         data = self.to_dict(**kwargs)
-        return json.dumps(data)
+        return json.dumps(data, indent=4, ensure_ascii=False)
 
 
 F = TypeVar("F", bound=Config)

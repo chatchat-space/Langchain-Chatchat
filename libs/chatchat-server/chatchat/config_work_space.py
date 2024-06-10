@@ -1,4 +1,4 @@
-from chatchat.configs import config_workspace as workspace
+from chatchat.configs import config_basic_workspace as workspace
 
 
 def main():
@@ -27,6 +27,11 @@ def main():
         action="store_true",
         help="清除配置"
     )
+    parser.add_argument(
+        "--show",
+        action="store_true",
+        help="显示配置"
+    )
     args = parser.parse_args()
 
     if args.verbose:
@@ -40,7 +45,8 @@ def main():
         workspace.set_log_format(args.format)
     if args.clear:
         workspace.clear()
-    print(workspace.get_config())
+    if args.show:
+        print(workspace.get_config())
 
 
 if __name__ == "__main__":
