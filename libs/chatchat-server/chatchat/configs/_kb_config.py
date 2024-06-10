@@ -4,10 +4,10 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent))
 
-from _basic_config import config_workspace
+from _basic_config import config_basic_workspace
 
 # 用户数据根目录
-DATA_PATH = config_workspace.get_config().DATA_PATH
+DATA_PATH = config_basic_workspace.get_config().DATA_PATH
 
 # 默认使用的知识库
 DEFAULT_KNOWLEDGE_BASE = "samples"

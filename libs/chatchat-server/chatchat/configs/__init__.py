@@ -112,92 +112,95 @@ def _import_ConfigBasicFactory() -> Any:
     return ConfigBasicFactory
 
 
-def _import_ConfigWorkSpace() -> Any:
+def _import_ConfigBasicWorkSpace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    ConfigWorkSpace = load_mod(basic_config_load.get("module"), "ConfigWorkSpace")
+    ConfigBasicWorkSpace = load_mod(basic_config_load.get("module"), "ConfigBasicWorkSpace")
 
-    return ConfigWorkSpace
+    return ConfigBasicWorkSpace
 
 
-def _import_config_workspace() -> Any:
+def _import_config_basic_workspace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
-    return config_workspace
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    return config_basic_workspace
+
 
 def _import_log_verbose() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
-    return config_workspace.get_config().log_verbose
+
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    return config_basic_workspace.get_config().log_verbose
 
 
 def _import_chatchat_root() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
 
-    return config_workspace.get_config().CHATCHAT_ROOT
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+
+    return config_basic_workspace.get_config().CHATCHAT_ROOT
 
 
 def _import_data_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
-    return config_workspace.get_config().DATA_PATH
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    return config_basic_workspace.get_config().DATA_PATH
 
 
 def _import_img_dir() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
 
-    return config_workspace.get_config().IMG_DIR
+    return config_basic_workspace.get_config().IMG_DIR
 
 
 def _import_nltk_data_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
 
-    return config_workspace.get_config().NLTK_DATA_PATH
+    return config_basic_workspace.get_config().NLTK_DATA_PATH
 
 
 def _import_log_format() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
 
-    return config_workspace.get_config().LOG_FORMAT
+    return config_basic_workspace.get_config().LOG_FORMAT
 
 
 def _import_log_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
 
-    return config_workspace.get_config().LOG_PATH
+    return config_basic_workspace.get_config().LOG_PATH
 
 
 def _import_media_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
 
-    return config_workspace.get_config().MEDIA_PATH
+    return config_basic_workspace.get_config().MEDIA_PATH
 
 
 def _import_base_temp_dir() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_workspace = load_mod(basic_config_load.get("module"), "config_workspace")
-    return config_workspace.get_config().BASE_TEMP_DIR
+    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    return config_basic_workspace.get_config().BASE_TEMP_DIR
 
 
 def _import_default_knowledge_base() -> Any:
@@ -517,10 +520,10 @@ def __getattr__(name: str) -> Any:
         return _import_ConfigBasic()
     elif name == "ConfigBasicFactory":
         return _import_ConfigBasicFactory()
-    elif name == "ConfigWorkSpace":
-        return _import_ConfigWorkSpace()
-    elif name == "config_workspace":
-        return _import_config_workspace()
+    elif name == "ConfigBasicWorkSpace":
+        return _import_ConfigBasicWorkSpace()
+    elif name == "config_basic_workspace":
+        return _import_config_basic_workspace()
     elif name == "log_verbose":
         return _import_log_verbose()
     elif name == "CHATCHAT_ROOT":
@@ -621,7 +624,7 @@ VERSION = "v0.3.0-preview"
 
 __all__ = [
     "VERSION",
-    "config_workspace",
+    "config_basic_workspace",
     "log_verbose",
     "CHATCHAT_ROOT",
     "DATA_PATH",
@@ -672,6 +675,6 @@ __all__ = [
 
     "ConfigBasic",
     "ConfigBasicFactory",
-    "ConfigWorkSpace",
+    "ConfigBasicWorkSpace",
 
 ]
