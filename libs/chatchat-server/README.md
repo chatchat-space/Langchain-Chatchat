@@ -22,6 +22,7 @@ options:
     -f FORMAT, --format FORMAT
     日志格式
     --clear               清除配置
+    --show               显示配置
 ``` 
 > 查看配置
 ```shell
