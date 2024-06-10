@@ -95,6 +95,7 @@ class KBFaissPool(_FaissPool):
             embed_model: str = DEFAULT_EMBEDDING_MODEL,
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
+        locked = True
         vector_name = vector_name or embed_model
         cache = self.get((kb_name, vector_name))  # 用元组比拼接字符串好一些
         try:
@@ -103,12 +104,14 @@ class KBFaissPool(_FaissPool):
                 self.set((kb_name, vector_name), item)
                 with item.acquire(msg="初始化"):
                     self.atomic.release()
+                    locked = False
                     logger.info(f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk.")
                     vs_path = get_vs_path(kb_name, vector_name)
 
                     if os.path.isfile(os.path.join(vs_path, "index.faiss")):
                         embeddings = get_Embeddings(embed_model=embed_model)
-                        vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True)
+                        vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True,
+                                                        allow_dangerous_deserialization=True)
                     elif create:
                         # create an empty vector store
                         if not os.path.exists(vs_path):
@@ -121,8 +124,10 @@ class KBFaissPool(_FaissPool):
                     item.finish_loading()
             else:
                 self.atomic.release()
+                locked = False
         except Exception as e:
-            self.atomic.release()
+            if locked: # we don't know exception raised before or after atomic.release
+                self.atomic.release()
             logger.error(e)
             raise RuntimeError(f"向量库 {kb_name} 加载失败。")
         return self.get((kb_name, vector_name))

@@ -20,16 +20,16 @@
 
 xinference:
   model_credential:
-    - model: 'chatglm3-6b'
+    - model: 'glm-4'
       model_type: 'llm'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'chatglm3-6b'
-    - model: 'Qwen1.5-14B-Chat'
+        model_uid: 'glm-4'
+    - model: 'qwen1.5-chat'
       model_type: 'llm'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'Qwen1.5-14B-Chat'
+        model_uid: 'qwen1.5-chat'
     - model: 'bge-large-zh-v1.5'
       model_type: 'embeddings'
       model_credentials:

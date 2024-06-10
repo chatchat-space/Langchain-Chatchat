@@ -244,6 +244,16 @@ def get_Embeddings(
         logger.error(f"failed to create Embeddings for model: {embed_model}.", exc_info=True)
 
 
+def check_embed_model(embed_model: str=DEFAULT_EMBEDDING_MODEL) -> bool:
+    embeddings = get_Embeddings(embed_model=embed_model)
+    try:
+        embeddings.embed_query("this is a test")
+        return True
+    except Exception as e:
+        logger.error(f"failed to access embed model '{embed_model}': {e}", exc_info=True)
+        return False
+
+
 def get_OpenAIClient(
         platform_name: str = None,
         model_name: str = None,
@@ -696,7 +706,7 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     '''
     创建一个临时目录，返回（路径，文件夹名称）
     '''
-    from chatchat.configs.basic_config import BASE_TEMP_DIR
+    from chatchat.configs import BASE_TEMP_DIR
     import uuid
 
     if id is not None:  # 如果指定的临时目录已存在，直接返回

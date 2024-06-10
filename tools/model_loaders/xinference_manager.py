@@ -133,6 +133,8 @@ model_names = list(regs[model_type].keys())
 model_name = cols[1].selectbox("模型名称：", model_names)
 
 cur_reg = regs[model_type][model_name]["reg"]
+model_format = None
+model_quant = None
 
 if model_type == "LLM":
     cur_family = xf_llm.LLMFamilyV1.parse_obj(cur_reg)
@@ -217,7 +219,7 @@ cols = st.columns(3)
 
 if cols[0].button("设置模型缓存"):
     if os.path.isabs(local_path) and os.path.isdir(local_path):
-        cur_spec.model_uri = local_path
+        cur_spec.__dict__["model_uri"] = local_path # embedding spec has no attribute model_uri
         if os.path.isdir(cache_dir):
             os.rmdir(cache_dir)
         if model_type == "LLM":
@@ -250,10 +252,10 @@ if cols[2].button("注册为自定义模型"):
         if model_type == "LLM":
             cur_family.model_name = f"{cur_family.model_name}{model_name_suffix}"
             cur_family.model_family = "other"
-            model_definition = cur_family.json(indent=2, ensure_ascii=False)
+            model_definition = cur_family.model_dump_json(indent=2, ensure_ascii=False)
         else:
             cur_spec.model_name = f"{cur_spec.model_name}{model_name_suffix}"
-            model_definition = cur_spec.json(indent=2, ensure_ascii=False)
+            model_definition = cur_spec.model_dump_json(indent=2, ensure_ascii=False)
         client.register_model(
             model_type=model_type,
             model=model_definition,
@@ -262,4 +264,3 @@ if cols[2].button("注册为自定义模型"):
         st.rerun()
     else:
         st.error("必须输入存在的绝对路径")
-

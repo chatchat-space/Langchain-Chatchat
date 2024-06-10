@@ -15,8 +15,10 @@
 
 Install Poetry: [documentation on how to install it.](https://python-poetry.org/docs/#installing-with-pipx)
 
+> 友情提示 不想安装pipx可以用pip安装poetry，（Tips:如果你没有其它poetry的项目
 > 注意: 如果您使用 Conda 或 Pyenv 作为您的环境/包管理器，在安装Poetry之后，
 > 使用如下命令使 Poetry 使用 virtualenv python environment (`poetry config virtualenvs.prefer-active-python true`)
+
 
 #### 本地开发环境安装
 

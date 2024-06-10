@@ -14,6 +14,7 @@ def list_kbs():
 
 def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
               vector_store_type: str = Body("faiss"),
+              kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
               embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
               ) -> BaseResponse:
     # Create selected knowledge base
@@ -26,7 +27,7 @@ def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
     if kb is not None:
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
 
-    kb = KBServiceFactory.get_service(knowledge_base_name, vector_store_type, embed_model)
+    kb = KBServiceFactory.get_service(knowledge_base_name, vector_store_type, embed_model, kb_info=kb_info)
     try:
         kb.create_kb()
     except Exception as e:

@@ -1,6 +1,6 @@
 from typing import List
 from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
-from chatchat.server.document_loaders.ocr import get_ocr
+from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 
 
 class RapidOCRLoader(UnstructuredFileLoader):
