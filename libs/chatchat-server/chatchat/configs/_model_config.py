@@ -34,9 +34,9 @@ class ConfigModel(core_config.Config):
     MODEL_PROVIDERS_CFG_PATH_CONFIG: Optional[str] = None
     """模型平台配置文件路径"""
     MODEL_PROVIDERS_CFG_HOST: Optional[str] = None
-    """模型平台配置文件host"""
+    """模型平台配置服务host"""
     MODEL_PROVIDERS_CFG_PORT: Optional[int] = None
-    """模型平台配置文件port"""
+    """模型平台配置服务port"""
     TOOL_CONFIG: Optional[Dict[str, Any]] = None
     """工具配置项"""
 
