@@ -85,5 +85,37 @@ def model(**kwargs):
         print(config_model_workspace.get_config())
 
 
+@main.command("server", help="服务配置")
+@click.option("--httpx_default_timeout", type=int, help="httpx默认超时时间")
+@click.option("--open_cross_domain", type=click.Choice(["true", "false"]), help="是否开启跨域")
+@click.option("--default_bind_host", help="默认绑定host")
+@click.option("--webui_server_port", type=int, help="webui服务端口")
+@click.option("--api_server_port", type=int, help="api服务端口")
+@click.option("--clear", is_flag=True, help="清除配置")
+@click.option("--show", is_flag=True, help="显示配置")
+def server(**kwargs):
+
+    if kwargs["httpx_default_timeout"]:
+        config_basic_workspace.set_httpx_default_timeout(httpx_default_timeout=kwargs["httpx_default_timeout"])
+    if kwargs["open_cross_domain"]:
+        if kwargs["open_cross_domain"].lower() == "true":
+            config_basic_workspace.set_open_cross_domain(True)
+        else:
+            config_basic_workspace.set_open_cross_domain(False)
+    if kwargs["default_bind_host"]:
+        config_basic_workspace.set_default_bind_host(default_bind_host=kwargs["default_bind_host"])
+
+    if kwargs["webui_server_port"]:
+        config_basic_workspace.set_webui_server_port(webui_server_port=kwargs["webui_server_port"])
+
+    if kwargs["api_server_port"]:
+        config_basic_workspace.set_api_server_port(api_server_port=kwargs["api_server_port"])
+
+    if kwargs["clear"]:
+        config_model_workspace.clear()
+    if kwargs["show"]:
+        print(config_model_workspace.get_config())
+
+
 if __name__ == "__main__":
     main()
