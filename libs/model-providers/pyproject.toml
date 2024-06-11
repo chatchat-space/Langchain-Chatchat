@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "model-providers"
-version = "0.3.0.20240606"
+version = "0.3.0.20240610"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
@@ -17,7 +17,7 @@ pydantic ="~2.6.4"
 omegaconf = "~2.0.6"
 # modle_runtime
 openai = "~1.13.3"
-tiktoken = "~0.5.2"
+tiktoken = "~0.7.0"
 pydub = "~0.25.1"
 boto3 = "~1.28.17"
 
@@ -113,7 +113,6 @@ extended_testing = [
     "xmltodict",
     "faiss-cpu",
     "openapi-pydantic",
-    "markdownify",
     "arxiv",
     "sqlite-vss",
     "rapidocr-onnxruntime",

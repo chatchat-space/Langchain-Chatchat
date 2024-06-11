@@ -5,6 +5,10 @@
 git clone https://github.com/chatchat-space/Langchain-Chatchat.git
 ```
 
+- 初始化开发环境
+
+> [Code](../../docs/contributing/code.md): 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。
+
 - 关于chatchat-config
 > chatchat-config由ConfigWorkSpace接口提供知识库配置载入存储
 >
@@ -32,10 +36,6 @@ ConfigWorkSpace是一个配置工作空间的抽象类，提供基础的配置�
 >
 > 详细配置请参考[README.md](../model-providers/README.md)
 
-
-- 初始化开发环境
-
-> [Code](../../docs/contributing/code.md): 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。
 
 - 初始化仓库
 > 请注意：这个命令会清空数据库，如果您有重要数据，请备份
