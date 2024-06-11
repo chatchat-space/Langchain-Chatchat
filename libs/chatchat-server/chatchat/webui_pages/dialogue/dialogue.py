@@ -23,14 +23,14 @@ chat_box = ChatBox(
 )
 
 
-def save_session():
+def save_session(conv_name:str=None):
     """save session state to chat context"""
-    chat_box.context_from_session(exclude=["selected_page", "prompt", "cur_conv_name"])
+    chat_box.context_from_session(conv_name, exclude=["selected_page", "prompt", "cur_conv_name"])
 
 
-def restore_session():
+def restore_session(conv_name:str=None):
     """restore sesstion state from chat context"""
-    chat_box.context_to_session(exclude=["selected_page", "prompt", "cur_conv_name"])
+    chat_box.context_to_session(conv_name, exclude=["selected_page", "prompt", "cur_conv_name"])
 
 
 def rerun():
@@ -121,7 +121,13 @@ def dialogue_page(
     ctx.setdefault("llm_model", DEFAULT_LLM_MODEL)
     ctx.setdefault("temperature", TEMPERATURE)
     st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
-    restore_session()
+    st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
+
+    # sac on_change callbacks not working since st>=1.34
+    if st.session_state.cur_conv_name != st.session_state.last_conv_name:
+        save_session(st.session_state.last_conv_name)
+        restore_session(st.session_state.cur_conv_name)
+        st.session_state.last_conv_name = st.session_state.cur_conv_name
 
     # st.write(chat_box.cur_chat_name)
     # st.write(st.session_state)
@@ -195,7 +201,12 @@ def dialogue_page(
             # 会话
             cols = st.columns(3)
             conv_names = chat_box.get_chat_names()
-            conversation_name = sac.buttons(conv_names, label="当前会话：", key="cur_conv_name")
+
+            def on_conv_change():
+                print(conversation_name, st.session_state.cur_conv_name)
+                save_session(conversation_name)
+                restore_session(st.session_state.cur_conv_name)
+            conversation_name = sac.buttons(conv_names, label="当前会话：", key="cur_conv_name", on_change=on_conv_change, )
             chat_box.use_chat_name(conversation_name)
             conversation_id = chat_box.context["uid"]
             if cols[0].button("新建", on_click=add_conv):
@@ -405,7 +416,4 @@ def dialogue_page(
         use_container_width=True,
     )
 
-    # st.write(chat_box.history)
-
-
-save_session()
+    # st.write(chat_box.context)
