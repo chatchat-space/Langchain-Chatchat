@@ -8,6 +8,8 @@ from chatchat.configs import (
     ConfigModel,
     ConfigServerWorkSpace,
     ConfigServer,
+    ConfigKbWorkSpace,
+    ConfigKb,
 )
 import os
 
@@ -118,3 +120,26 @@ def test_config_server_workspace():
     assert config.WEBUI_SERVER_PORT == 8000
     assert config.API_SERVER_PORT == 8001
     config_server_workspace.clear()
+
+
+def test_server_config():
+    from chatchat.configs import (
+        HTTPX_DEFAULT_TIMEOUT, OPEN_CROSS_DOMAIN, DEFAULT_BIND_HOST,
+        WEBUI_SERVER, API_SERVER
+    )
+    assert HTTPX_DEFAULT_TIMEOUT is not None
+    assert OPEN_CROSS_DOMAIN is not None
+    assert DEFAULT_BIND_HOST is not None
+    assert WEBUI_SERVER is not None
+    assert API_SERVER is not None
+
+
+def test_config_kb_workspace():
+
+    config_kb_workspace: ConfigKbWorkSpace = ConfigKbWorkSpace()
+
+    assert config_kb_workspace.get_config() is not None
+
+    config_kb_workspace.set_default_knowledge_base(kb_name="test")
+    config_kb_workspace.set_default_vs_type(vs_type="tes")
+    
