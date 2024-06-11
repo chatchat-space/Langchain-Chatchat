@@ -262,57 +262,75 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
 
     def set_default_knowledge_base(self, kb_name: str):
         self._config_factory.DEFAULT_KNOWLEDGE_BASE = kb_name
+        self.store_config()
 
     def set_default_vs_type(self, vs_type: str):
         self._config_factory.DEFAULT_VS_TYPE = vs_type
+        self.store_config()
 
     def set_cached_vs_num(self, cached_vs_num: int):
         self._config_factory.CACHED_VS_NUM = cached_vs_num
+        self.store_config()
 
     def set_cached_memo_vs_num(self, cached_memo_vs_num: int):
         self._config_factory.CACHED_MEMO_VS_NUM = cached_memo_vs_num
+        self.store_config()
 
     def set_chunk_size(self, chunk_size: int):
         self._config_factory.CHUNK_SIZE = chunk_size
+        self.store_config()
 
     def set_overlap_size(self, overlap_size: int):
         self._config_factory.OVERLAP_SIZE = overlap_size
+        self.store_config()
 
     def set_vector_search_top_k(self, vector_search_top_k: int):
         self._config_factory.VECTOR_SEARCH_TOP_K = vector_search_top_k
+        self.store_config()
 
     def set_score_threshold(self, score_threshold: float):
         self._config_factory.SCORE_THRESHOLD = score_threshold
+        self.store_config()
 
     def set_default_search_engine(self, default_search_engine: str):
         self._config_factory.DEFAULT_SEARCH_ENGINE = default_search_engine
+        self.store_config()
 
     def set_search_engine_top_k(self, search_engine_top_k: int):
         self._config_factory.SEARCH_ENGINE_TOP_K = search_engine_top_k
+        self.store_config()
 
     def set_zh_title_enhance(self, zh_title_enhance: bool):
         self._config_factory.ZH_TITLE_ENHANCE = zh_title_enhance
+        self.store_config()
 
     def set_pdf_ocr_threshold(self, pdf_ocr_threshold: Tuple[float, float]):
         self._config_factory.PDF_OCR_THRESHOLD = pdf_ocr_threshold
+        self.store_config()
 
     def set_kb_info(self, kb_info: Dict[str, str]):
         self._config_factory.KB_INFO = kb_info
+        self.store_config()
 
     def set_kb_root_path(self, kb_root_path: str):
         self._config_factory.KB_ROOT_PATH = kb_root_path
+        self.store_config()
 
     def set_db_root_path(self, db_root_path: str):
         self._config_factory.DB_ROOT_PATH = db_root_path
+        self.store_config()
 
     def set_sqlalchemy_database_uri(self, sqlalchemy_database_uri: str):
         self._config_factory.SQLALCHEMY_DATABASE_URI = sqlalchemy_database_uri
+        self.store_config()
 
     def set_text_splitter_name(self, text_splitter_name: str):
         self._config_factory.TEXT_SPLITTER_NAME = text_splitter_name
+        self.store_config()
 
     def set_embedding_keyword_file(self, embedding_keyword_file: str):
         self._config_factory.EMBEDDING_KEYWORD_FILE = embedding_keyword_file
+        self.store_config()
 
 
 config_kb_workspace: ConfigKbWorkSpace = ConfigKbWorkSpace()

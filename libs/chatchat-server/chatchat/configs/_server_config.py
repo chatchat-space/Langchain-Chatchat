@@ -124,18 +124,23 @@ class ConfigServerWorkSpace(core_config.ConfigWorkSpace[ConfigServerFactory, Con
 
     def set_httpx_default_timeout(self, timeout: float):
         self._config_factory.httpx_default_timeout(timeout)
+        self.store_config()
 
     def set_open_cross_domain(self, open_cross_domain: bool):
         self._config_factory.open_cross_domain(open_cross_domain)
+        self.store_config()
 
     def set_default_bind_host(self, default_bind_host: str):
         self._config_factory.default_bind_host(default_bind_host)
+        self.store_config()
 
     def set_webui_server_port(self, webui_server_port: int):
         self._config_factory.webui_server_port(webui_server_port)
+        self.store_config()
 
     def set_api_server_port(self, api_server_port: int):
         self._config_factory.api_server_port(api_server_port)
+        self.store_config()
 
 
 config_server_workspace: ConfigServerWorkSpace = ConfigServerWorkSpace()

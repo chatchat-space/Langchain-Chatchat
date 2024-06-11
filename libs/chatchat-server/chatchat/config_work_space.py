@@ -1,3 +1,5 @@
+import json
+
 from chatchat.configs import (
     config_basic_workspace,
     config_model_workspace,
@@ -136,7 +138,8 @@ def server(**kwargs):
 @click.option('--pdf-ocr-threshold', type=(float, float), help='pdf ocr threshold')
 @click.option('--set_kb_info', type=str, help='''每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，
                                                             没写则没有介绍，不会被Agent调用。 
-                                                            Example: \'{"samples": "关于本项目issue的解答"}\'
+                                                            as a JSON string.
+                                                            Example:  "{\"samples\": \"关于本项目issue的解答\"}"
                                                             ''')
 @click.option("--set_kb_root_path", help="设置知识库根路径")
 @click.option("--set_db_root_path", help="设置db根路径")
@@ -175,7 +178,8 @@ def kb(**kwargs):
     if kwargs["pdf_ocr_threshold"]:
         config_kb_workspace.set_pdf_ocr_threshold(pdf_ocr_threshold=kwargs["pdf_ocr_threshold"])
     if kwargs["set_kb_info"]:
-        config_kb_workspace.set_kb_info(kb_info=ast.literal_eval(kwargs["set_kb_info"]))
+        kb_info_dict = json.loads(kwargs["set_kb_info"])
+        config_kb_workspace.set_kb_info(kb_info=kb_info_dict)
     if kwargs["set_kb_root_path"]:
         config_kb_workspace.set_kb_root_path(kb_root_path=kwargs["set_kb_root_path"])
     if kwargs["set_db_root_path"]:
