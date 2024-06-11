@@ -6,7 +6,6 @@ import sys
 import logging
 from typing import Any, Optional
 
-from chatchat.configs._core_config import CF
 
 sys.path.append(str(Path(__file__).parent))
 import _core_config as core_config
@@ -128,6 +127,9 @@ class ConfigBasicWorkSpace(core_config.ConfigWorkSpace[ConfigBasicFactory, Confi
     """
     config_factory_cls = ConfigBasicFactory
 
+    def __init__(self):
+        super().__init__()
+
     def _build_config_factory(self, config_json: Any) -> ConfigBasicFactory:
 
         _config_factory = self.config_factory_cls()
@@ -145,9 +147,6 @@ class ConfigBasicWorkSpace(core_config.ConfigWorkSpace[ConfigBasicFactory, Confi
     def get_type(cls) -> str:
         return ConfigBasic.class_name()
 
-    def __init__(self):
-        super().__init__()
-
     def get_config(self) -> ConfigBasic:
         return self._config_factory.get_config()
 
@@ -162,10 +161,6 @@ class ConfigBasicWorkSpace(core_config.ConfigWorkSpace[ConfigBasicFactory, Confi
     def set_log_format(self, log_format: str):
         self._config_factory.log_format(log_format)
         self.store_config()
-
-    def clear(self):
-        logger.info("Clear workspace config.")
-        os.remove(self.workspace_config)
 
 
 config_basic_workspace: ConfigBasicWorkSpace = ConfigBasicWorkSpace()

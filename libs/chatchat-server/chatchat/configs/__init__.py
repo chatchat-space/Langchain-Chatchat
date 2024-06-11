@@ -363,108 +363,140 @@ def _import_embedding_keyword_file() -> Any:
     return EMBEDDING_KEYWORD_FILE
 
 
+def _import_ConfigModel() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_model_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigModel = load_mod(basic_config_load.get("module"), "ConfigModel")
+
+    return ConfigModel
+
+
+def _import_ConfigModelFactory() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_model_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigModelFactory = load_mod(basic_config_load.get("module"), "ConfigModelFactory")
+
+    return ConfigModelFactory
+
+
+def _import_ConfigModelWorkSpace() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_model_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigModelWorkSpace = load_mod(basic_config_load.get("module"), "ConfigModelWorkSpace")
+
+    return ConfigModelWorkSpace
+
+
+def _import_config_model_workspace() -> Any:
+    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
+    load_mod = model_config_load.get("load_mod")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    return config_model_workspace
+
+
 def _import_default_llm_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    DEFAULT_LLM_MODEL = load_mod(model_config_load.get("module"), "DEFAULT_LLM_MODEL")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return DEFAULT_LLM_MODEL
+    return config_model_workspace.get_config().DEFAULT_LLM_MODEL
 
 
 def _import_default_embedding_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    DEFAULT_EMBEDDING_MODEL = load_mod(model_config_load.get("module"), "DEFAULT_EMBEDDING_MODEL")
 
-    return DEFAULT_EMBEDDING_MODEL
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+
+    return config_model_workspace.get_config().DEFAULT_EMBEDDING_MODEL
 
 
 def _import_agent_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    Agent_MODEL = load_mod(model_config_load.get("module"), "Agent_MODEL")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return Agent_MODEL
+    return config_model_workspace.get_config().Agent_MODEL
 
 
 def _import_history_len() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    HISTORY_LEN = load_mod(model_config_load.get("module"), "HISTORY_LEN")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return HISTORY_LEN
+    return config_model_workspace.get_config().HISTORY_LEN
 
 
 def _import_max_tokens() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    MAX_TOKENS = load_mod(model_config_load.get("module"), "MAX_TOKENS")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return MAX_TOKENS
+    return config_model_workspace.get_config().MAX_TOKENS
 
 
 def _import_temperature() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    TEMPERATURE = load_mod(model_config_load.get("module"), "TEMPERATURE")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return TEMPERATURE
+    return config_model_workspace.get_config().TEMPERATURE
 
 
 def _import_support_agent_models() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    SUPPORT_AGENT_MODELS = load_mod(model_config_load.get("module"), "SUPPORT_AGENT_MODELS")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return SUPPORT_AGENT_MODELS
+    return config_model_workspace.get_config().SUPPORT_AGENT_MODELS
 
 
 def _import_llm_model_config() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    LLM_MODEL_CONFIG = load_mod(model_config_load.get("module"), "LLM_MODEL_CONFIG")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return LLM_MODEL_CONFIG
+    return config_model_workspace.get_config().LLM_MODEL_CONFIG
 
 
 def _import_model_platforms() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    MODEL_PLATFORMS = load_mod(model_config_load.get("module"), "MODEL_PLATFORMS")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return MODEL_PLATFORMS
+    return config_model_workspace.get_config().MODEL_PLATFORMS
 
 
 def _import_model_providers_cfg_path() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    MODEL_PROVIDERS_CFG_PATH_CONFIG = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_PATH_CONFIG")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return MODEL_PROVIDERS_CFG_PATH_CONFIG
+    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PATH_CONFIG
 
 
 def _import_model_providers_cfg_host() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    MODEL_PROVIDERS_CFG_HOST = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_HOST")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return MODEL_PROVIDERS_CFG_HOST
+    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_HOST
 
 
 def _import_model_providers_cfg_port() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    MODEL_PROVIDERS_CFG_PORT = load_mod(model_config_load.get("module"), "MODEL_PROVIDERS_CFG_PORT")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return MODEL_PROVIDERS_CFG_PORT
+    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PORT
 
 
 def _import_tool_config() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    TOOL_CONFIG = load_mod(model_config_load.get("module"), "TOOL_CONFIG")
+    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
 
-    return TOOL_CONFIG
+    return config_model_workspace.get_config().TOOL_CONFIG
 
 
 def _import_prompt_templates() -> Any:
@@ -524,6 +556,14 @@ def __getattr__(name: str) -> Any:
         return _import_ConfigBasicWorkSpace()
     elif name == "config_basic_workspace":
         return _import_config_basic_workspace()
+    elif name == "ConfigModel":
+        return _import_ConfigModel()
+    elif name == "ConfigModelFactory":
+        return _import_ConfigModelFactory()
+    elif name == "ConfigModelWorkSpace":
+        return _import_ConfigModelWorkSpace()
+    elif name == "config_model_workspace":
+        return _import_config_model_workspace()
     elif name == "log_verbose":
         return _import_log_verbose()
     elif name == "CHATCHAT_ROOT":
@@ -624,7 +664,6 @@ VERSION = "v0.3.0-preview"
 
 __all__ = [
     "VERSION",
-    "config_basic_workspace",
     "log_verbose",
     "CHATCHAT_ROOT",
     "DATA_PATH",
@@ -676,5 +715,13 @@ __all__ = [
     "ConfigBasic",
     "ConfigBasicFactory",
     "ConfigBasicWorkSpace",
+
+    "config_basic_workspace",
+
+    "ConfigModel",
+    "ConfigModelFactory",
+    "ConfigModelWorkSpace",
+    
+    "config_model_workspace",
 
 ]

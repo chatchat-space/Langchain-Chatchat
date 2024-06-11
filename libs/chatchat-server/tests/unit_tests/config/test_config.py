@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from chatchat.configs import ConfigBasicFactory, ConfigBasic, ConfigBasicWorkSpace
+from chatchat.configs import (
+    ConfigBasicFactory,
+    ConfigBasic,
+    ConfigBasicWorkSpace
+)
 import os
 
 
@@ -36,3 +40,6 @@ def test_workspace_default():
     assert LOG_FORMAT is not None
     assert LOG_PATH is not None
     assert MEDIA_PATH is not None
+
+
+def test_config_model_workspace():
