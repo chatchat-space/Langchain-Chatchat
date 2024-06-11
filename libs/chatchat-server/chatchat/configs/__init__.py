@@ -820,7 +820,7 @@ __all__ = [
     "ConfigKbFactory",
     "ConfigKbWorkSpace",
 
-    "config_model_workspace",
+    "config_kb_workspace",
 
     "ConfigServer",
     "ConfigServerFactory",
