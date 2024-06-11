@@ -8,6 +8,8 @@ from chatchat.configs import (
     ConfigModel,
     ConfigServerWorkSpace,
     ConfigServer,
+    ConfigKbWorkSpace,
+    ConfigKb,
 )
 import os
 
@@ -118,3 +120,68 @@ def test_config_server_workspace():
     assert config.WEBUI_SERVER_PORT == 8000
     assert config.API_SERVER_PORT == 8001
     config_server_workspace.clear()
+
+
+def test_server_config():
+    from chatchat.configs import (
+        HTTPX_DEFAULT_TIMEOUT, OPEN_CROSS_DOMAIN, DEFAULT_BIND_HOST,
+        WEBUI_SERVER, API_SERVER
+    )
+    assert HTTPX_DEFAULT_TIMEOUT is not None
+    assert OPEN_CROSS_DOMAIN is not None
+    assert DEFAULT_BIND_HOST is not None
+    assert WEBUI_SERVER is not None
+    assert API_SERVER is not None
+
+
+def test_config_kb_workspace():
+
+    config_kb_workspace: ConfigKbWorkSpace = ConfigKbWorkSpace()
+
+    assert config_kb_workspace.get_config() is not None
+
+    config_kb_workspace.set_default_knowledge_base(kb_name="test")
+    config_kb_workspace.set_default_vs_type(vs_type="tes")
+    config_kb_workspace.set_cached_vs_num(cached_vs_num=10)
+    config_kb_workspace.set_cached_memo_vs_num(cached_memo_vs_num=10)
+    config_kb_workspace.set_chunk_size(chunk_size=10)
+    config_kb_workspace.set_overlap_size(overlap_size=10)
+    config_kb_workspace.set_vector_search_top_k(vector_search_top_k=10)
+    config_kb_workspace.set_score_threshold(score_threshold=0.1)
+    config_kb_workspace.set_default_search_engine(default_search_engine="test")
+    config_kb_workspace.set_search_engine_top_k(search_engine_top_k=10)
+    config_kb_workspace.set_zh_title_enhance(zh_title_enhance=True)
+    config_kb_workspace.set_pdf_ocr_threshold(pdf_ocr_threshold=(0.1, 0.2))
+    config_kb_workspace.set_kb_info(kb_info={
+        "samples": "关于本项目issue的解答",
+    })
+    config_kb_workspace.set_kb_root_path(kb_root_path="test")
+    config_kb_workspace.set_db_root_path(db_root_path="test")
+    config_kb_workspace.set_sqlalchemy_database_uri(sqlalchemy_database_uri="test")
+    config_kb_workspace.set_text_splitter_name(text_splitter_name="test")
+    config_kb_workspace.set_embedding_keyword_file(embedding_keyword_file="test")
+
+    config: ConfigKb = config_kb_workspace.get_config()
+    assert config.DEFAULT_KNOWLEDGE_BASE == "test"
+    assert config.DEFAULT_VS_TYPE == "tes"
+    assert config.CACHED_VS_NUM == 10
+    assert config.CACHED_MEMO_VS_NUM == 10
+    assert config.CHUNK_SIZE == 10
+    assert config.OVERLAP_SIZE == 10
+    assert config.VECTOR_SEARCH_TOP_K == 10
+    assert config.SCORE_THRESHOLD == 0.1
+    assert config.DEFAULT_SEARCH_ENGINE == "test"
+    assert config.SEARCH_ENGINE_TOP_K == 10
+    assert config.ZH_TITLE_ENHANCE is True
+    assert config.PDF_OCR_THRESHOLD == (0.1, 0.2)
+    assert config.KB_INFO == {
+        "samples": "关于本项目issue的解答",
+    }
+    assert config.KB_ROOT_PATH == "test"
+    assert config.DB_ROOT_PATH == "test"
+    assert config.SQLALCHEMY_DATABASE_URI == "test"
+    assert config.TEXT_SPLITTER_NAME == "test"
+    assert config.EMBEDDING_KEYWORD_FILE == "test"
+    config_kb_workspace.clear()
+
+

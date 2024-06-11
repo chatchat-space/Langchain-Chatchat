@@ -203,164 +203,196 @@ def _import_base_temp_dir() -> Any:
     return config_basic_workspace.get_config().BASE_TEMP_DIR
 
 
+def _import_ConfigKb() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_kb_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigKb = load_mod(basic_config_load.get("module"), "ConfigKb")
+
+    return ConfigKb
+
+
+def _import_ConfigKbFactory() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_kb_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigKbFactory = load_mod(basic_config_load.get("module"), "ConfigKbFactory")
+
+    return ConfigKbFactory
+
+
+def _import_ConfigKbWorkSpace() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_kb_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigKbWorkSpace = load_mod(basic_config_load.get("module"), "ConfigKbWorkSpace")
+
+    return ConfigKbWorkSpace
+
+
+def _import_config_kb_workspace() -> Any:
+    kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
+    load_mod = kb_config_load.get("load_mod")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
+
+    return config_kb_workspace
+
+
 def _import_default_knowledge_base() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    DEFAULT_KNOWLEDGE_BASE = load_mod(kb_config_load.get("module"), "DEFAULT_KNOWLEDGE_BASE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return DEFAULT_KNOWLEDGE_BASE
+    return config_kb_workspace.get_config().DEFAULT_KNOWLEDGE_BASE
 
 
 def _import_default_vs_type() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    DEFAULT_VS_TYPE = load_mod(kb_config_load.get("module"), "DEFAULT_VS_TYPE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return DEFAULT_VS_TYPE
+    return config_kb_workspace.get_config().DEFAULT_VS_TYPE
 
 
 def _import_cached_vs_num() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    CACHED_VS_NUM = load_mod(kb_config_load.get("module"), "CACHED_VS_NUM")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return CACHED_VS_NUM
+    return config_kb_workspace.get_config().CACHED_VS_NUM
 
 
 def _import_cached_memo_vs_num() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    CACHED_MEMO_VS_NUM = load_mod(kb_config_load.get("module"), "CACHED_MEMO_VS_NUM")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return CACHED_MEMO_VS_NUM
+    return config_kb_workspace.get_config().CACHED_MEMO_VS_NUM
 
 
 def _import_chunk_size() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    CHUNK_SIZE = load_mod(kb_config_load.get("module"), "CHUNK_SIZE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return CHUNK_SIZE
+    return config_kb_workspace.get_config().CHUNK_SIZE
 
 
 def _import_overlap_size() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    OVERLAP_SIZE = load_mod(kb_config_load.get("module"), "OVERLAP_SIZE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return OVERLAP_SIZE
+    return config_kb_workspace.get_config().OVERLAP_SIZE
 
 
 def _import_vector_search_top_k() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    VECTOR_SEARCH_TOP_K = load_mod(kb_config_load.get("module"), "VECTOR_SEARCH_TOP_K")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return VECTOR_SEARCH_TOP_K
+    return config_kb_workspace.get_config().VECTOR_SEARCH_TOP_K
 
 
 def _import_score_threshold() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    SCORE_THRESHOLD = load_mod(kb_config_load.get("module"), "SCORE_THRESHOLD")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return SCORE_THRESHOLD
+    return config_kb_workspace.get_config().SCORE_THRESHOLD
 
 
 def _import_default_search_engine() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    DEFAULT_SEARCH_ENGINE = load_mod(kb_config_load.get("module"), "DEFAULT_SEARCH_ENGINE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return DEFAULT_SEARCH_ENGINE
+    return config_kb_workspace.get_config().DEFAULT_SEARCH_ENGINE
 
 
 def _import_search_engine_top_k() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    SEARCH_ENGINE_TOP_K = load_mod(kb_config_load.get("module"), "SEARCH_ENGINE_TOP_K")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return SEARCH_ENGINE_TOP_K
+    return config_kb_workspace.get_config().SEARCH_ENGINE_TOP_K
 
 
 def _import_zh_title_enhance() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    ZH_TITLE_ENHANCE = load_mod(kb_config_load.get("module"), "ZH_TITLE_ENHANCE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return ZH_TITLE_ENHANCE
+    return config_kb_workspace.get_config().ZH_TITLE_ENHANCE
 
 
 def _import_pdf_ocr_threshold() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    PDF_OCR_THRESHOLD = load_mod(kb_config_load.get("module"), "PDF_OCR_THRESHOLD")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return PDF_OCR_THRESHOLD
+    return config_kb_workspace.get_config().PDF_OCR_THRESHOLD
 
 
 def _import_kb_info() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    KB_INFO = load_mod(kb_config_load.get("module"), "KB_INFO")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return KB_INFO
+    return config_kb_workspace.get_config().KB_INFO
 
 
 def _import_kb_root_path() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    KB_ROOT_PATH = load_mod(kb_config_load.get("module"), "KB_ROOT_PATH")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return KB_ROOT_PATH
+    return config_kb_workspace.get_config().KB_ROOT_PATH
 
 
 def _import_db_root_path() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    DB_ROOT_PATH = load_mod(kb_config_load.get("module"), "DB_ROOT_PATH")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return DB_ROOT_PATH
+    return config_kb_workspace.get_config().DB_ROOT_PATH
 
 
 def _import_sqlalchemy_database_uri() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    SQLALCHEMY_DATABASE_URI = load_mod(kb_config_load.get("module"), "SQLALCHEMY_DATABASE_URI")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return SQLALCHEMY_DATABASE_URI
+    return config_kb_workspace.get_config().SQLALCHEMY_DATABASE_URI
 
 
 def _import_kbs_config() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    kbs_config = load_mod(kb_config_load.get("module"), "kbs_config")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return kbs_config
+    return config_kb_workspace.get_config().kbs_config
 
 
 def _import_text_splitter_dict() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    text_splitter_dict = load_mod(kb_config_load.get("module"), "text_splitter_dict")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return text_splitter_dict
+    return config_kb_workspace.get_config().TEXT_SPLITTER_DICT
 
 
 def _import_text_splitter_name() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    TEXT_SPLITTER_NAME = load_mod(kb_config_load.get("module"), "TEXT_SPLITTER_NAME")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return TEXT_SPLITTER_NAME
+    return config_kb_workspace.get_config().TEXT_SPLITTER_NAME
 
 
 def _import_embedding_keyword_file() -> Any:
     kb_config_load = CONFIG_IMPORTS.get("_kb_config.py")
     load_mod = kb_config_load.get("load_mod")
-    EMBEDDING_KEYWORD_FILE = load_mod(kb_config_load.get("module"), "EMBEDDING_KEYWORD_FILE")
+    config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return EMBEDDING_KEYWORD_FILE
+    return config_kb_workspace.get_config().EMBEDDING_KEYWORD_FILE
 
 
 def _import_ConfigModel() -> Any:
@@ -563,6 +595,14 @@ def _import_default_bind_host() -> Any:
     return config_server_workspace.get_config().DEFAULT_BIND_HOST
 
 
+def _import_open_cross_domain() -> Any:
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
+    load_mod = server_config_load.get("load_mod")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+
+    return config_server_workspace.get_config().OPEN_CROSS_DOMAIN
+
+
 def _import_webui_server() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
@@ -622,6 +662,15 @@ def __getattr__(name: str) -> Any:
         return _import_media_path()
     elif name == "BASE_TEMP_DIR":
         return _import_base_temp_dir()
+
+    elif name == "ConfigKb":
+        return _import_ConfigKb()
+    elif name == "ConfigKbFactory":
+        return _import_ConfigKbFactory()
+    elif name == "ConfigKbWorkSpace":
+        return _import_ConfigKbWorkSpace()
+    elif name == "config_kb_workspace":
+        return _import_config_kb_workspace()
     elif name == "DEFAULT_KNOWLEDGE_BASE":
         return _import_default_knowledge_base()
     elif name == "DEFAULT_VS_TYPE":
@@ -692,8 +741,10 @@ def __getattr__(name: str) -> Any:
         return _import_prompt_templates()
     elif name == "HTTPX_DEFAULT_TIMEOUT":
         return _import_httpx_default_timeout()
-    elif name == "OPEN_CROSS_DOMAIN":
+    elif name == "DEFAULT_BIND_HOST":
         return _import_default_bind_host()
+    elif name == "OPEN_CROSS_DOMAIN":
+        return _import_open_cross_domain()
     elif name == "WEBUI_SERVER":
         return _import_webui_server()
     elif name == "API_SERVER":
@@ -748,6 +799,7 @@ __all__ = [
     "TOOL_CONFIG",
     "PROMPT_TEMPLATES",
     "HTTPX_DEFAULT_TIMEOUT",
+    "DEFAULT_BIND_HOST",
     "OPEN_CROSS_DOMAIN",
     "WEBUI_SERVER",
     "API_SERVER",
@@ -763,6 +815,12 @@ __all__ = [
     "ConfigModelWorkSpace",
     
     "config_model_workspace",
+
+    "ConfigKb",
+    "ConfigKbFactory",
+    "ConfigKbWorkSpace",
+
+    "config_kb_workspace",
 
     "ConfigServer",
     "ConfigServerFactory",
