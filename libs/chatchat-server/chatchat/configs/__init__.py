@@ -507,44 +507,76 @@ def _import_prompt_templates() -> Any:
     return PROMPT_TEMPLATES
 
 
+def _import_ConfigServer() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_server_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigServer = load_mod(basic_config_load.get("module"), "ConfigServer")
+
+    return ConfigServer
+
+
+def _import_ConfigServerFactory() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_server_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigServerFactory = load_mod(basic_config_load.get("module"), "ConfigServerFactory")
+
+    return ConfigServerFactory
+
+
+def _import_ConfigServerWorkSpace() -> Any:
+    basic_config_load = CONFIG_IMPORTS.get("_server_config.py")
+    load_mod = basic_config_load.get("load_mod")
+    ConfigServerWorkSpace = load_mod(basic_config_load.get("module"), "ConfigServerWorkSpace")
+
+    return ConfigServerWorkSpace
+
+
+def _import_config_server_workspace() -> Any:
+    server_config_load = CONFIG_IMPORTS.get("_server_config.py")
+    load_mod = server_config_load.get("load_mod")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+
+    return config_server_workspace
+
+
 def _import_httpx_default_timeout() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    HTTPX_DEFAULT_TIMEOUT = load_mod(server_config_load.get("module"), "HTTPX_DEFAULT_TIMEOUT")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
 
-    return HTTPX_DEFAULT_TIMEOUT
+    return config_server_workspace.get_config().HTTPX_DEFAULT_TIMEOUT
 
 
 def _import_open_cross_domain() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    OPEN_CROSS_DOMAIN = load_mod(server_config_load.get("module"), "OPEN_CROSS_DOMAIN")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
 
-    return OPEN_CROSS_DOMAIN
+    return config_server_workspace.get_config().OPEN_CROSS_DOMAIN
 
 
 def _import_default_bind_host() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    DEFAULT_BIND_HOST = load_mod(server_config_load.get("module"), "DEFAULT_BIND_HOST")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
 
-    return DEFAULT_BIND_HOST
+    return config_server_workspace.get_config().DEFAULT_BIND_HOST
 
 
 def _import_webui_server() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    WEBUI_SERVER = load_mod(server_config_load.get("module"), "WEBUI_SERVER")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
 
-    return WEBUI_SERVER
+    return config_server_workspace.get_config().WEBUI_SERVER
 
 
 def _import_api_server() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    API_SERVER = load_mod(server_config_load.get("module"), "API_SERVER")
+    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
 
-    return API_SERVER
+    return config_server_workspace.get_config().API_SERVER
 
 
 def __getattr__(name: str) -> Any:
@@ -564,6 +596,14 @@ def __getattr__(name: str) -> Any:
         return _import_ConfigModelWorkSpace()
     elif name == "config_model_workspace":
         return _import_config_model_workspace()
+    elif name == "ConfigServer":
+        return _import_ConfigServer()
+    elif name == "ConfigServerFactory":
+        return _import_ConfigServerFactory()
+    elif name == "ConfigServerWorkSpace":
+        return _import_ConfigServerWorkSpace()
+    elif name == "config_server_workspace":
+        return _import_config_server_workspace()
     elif name == "log_verbose":
         return _import_log_verbose()
     elif name == "CHATCHAT_ROOT":
@@ -723,5 +763,11 @@ __all__ = [
     "ConfigModelWorkSpace",
     
     "config_model_workspace",
+
+    "ConfigServer",
+    "ConfigServerFactory",
+    "ConfigServerWorkSpace",
+
+    "config_server_workspace",
 
 ]
