@@ -5,7 +5,9 @@ from chatchat.configs import (
     ConfigBasic,
     ConfigBasicWorkSpace,
     ConfigModelWorkSpace,
-    ConfigModel
+    ConfigModel,
+    ConfigServerWorkSpace,
+    ConfigServer,
 )
 import os
 
@@ -95,3 +97,24 @@ def test_model_config():
     assert TOOL_CONFIG is not None
     assert MODEL_PLATFORMS is not None
     assert LLM_MODEL_CONFIG is not None
+
+
+def test_config_server_workspace():
+    config_server_workspace: ConfigServerWorkSpace = ConfigServerWorkSpace()
+
+    assert config_server_workspace.get_config() is not None
+
+    config_server_workspace.set_httpx_default_timeout(timeout=10)
+    config_server_workspace.set_open_cross_domain(open_cross_domain=True)
+    config_server_workspace.set_default_bind_host(default_bind_host="0.0.0.0")
+    config_server_workspace.set_webui_server_port(webui_server_port=8000)
+    config_server_workspace.set_api_server_port(api_server_port=8001)
+
+    config: ConfigServer = config_server_workspace.get_config()
+
+    assert config.HTTPX_DEFAULT_TIMEOUT == 10
+    assert config.OPEN_CROSS_DOMAIN is True
+    assert config.DEFAULT_BIND_HOST == "0.0.0.0"
+    assert config.WEBUI_SERVER_PORT == 8000
+    assert config.API_SERVER_PORT == 8001
+    config_server_workspace.clear()
