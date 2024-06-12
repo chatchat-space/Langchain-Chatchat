@@ -86,53 +86,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
         self.MODEL_PROVIDERS_CFG_PORT = 20000
 
-        self._init_llm_work_config()
-
-    def _init_llm_work_config(self):
-        """初始化知识库runtime的一些配置"""
-
-        self.LLM_MODEL_CONFIG = {
-            # 意图识别不需要输出，模型后台知道就行
-            "preprocess_model": {
-                self.DEFAULT_LLM_MODEL: {
-                    "temperature": 0.05,
-                    "max_tokens": 4096,
-                    "history_len": 100,
-                    "prompt_name": "default",
-                    "callbacks": False
-                },
-            },
-            "llm_model": {
-                self.DEFAULT_LLM_MODEL: {
-                    "temperature": 0.9,
-                    "max_tokens": 4096,
-                    "history_len": 10,
-                    "prompt_name": "default",
-                    "callbacks": True
-                },
-            },
-            "action_model": {
-                self.DEFAULT_LLM_MODEL: {
-                    "temperature": 0.01,
-                    "max_tokens": 4096,
-                    "prompt_name": "ChatGLM3",
-                    "callbacks": True
-                },
-            },
-            "postprocess_model": {
-                self.DEFAULT_LLM_MODEL: {
-                    "temperature": 0.01,
-                    "max_tokens": 4096,
-                    "prompt_name": "default",
-                    "callbacks": True
-                }
-            },
-            "image_model": {
-                "sd-turbo": {
-                    "size": "256*256",
-                }
-            }
-        }
 
         # 可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力，启动后下面变量会自动增加相应的平台
         #   ### 如果您已经有了一个openai endpoint的能力的地址，可以在这里直接配置
@@ -314,6 +267,53 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 }
             },
         }
+        self._init_llm_work_config()
+
+    def _init_llm_work_config(self):
+        """初始化知识库runtime的一些配置"""
+
+        self.LLM_MODEL_CONFIG = {
+            # 意图识别不需要输出，模型后台知道就行
+            "preprocess_model": {
+                self.DEFAULT_LLM_MODEL: {
+                    "temperature": 0.05,
+                    "max_tokens": 4096,
+                    "history_len": 100,
+                    "prompt_name": "default",
+                    "callbacks": False
+                },
+            },
+            "llm_model": {
+                self.DEFAULT_LLM_MODEL: {
+                    "temperature": 0.9,
+                    "max_tokens": 4096,
+                    "history_len": 10,
+                    "prompt_name": "default",
+                    "callbacks": True
+                },
+            },
+            "action_model": {
+                self.DEFAULT_LLM_MODEL: {
+                    "temperature": 0.01,
+                    "max_tokens": 4096,
+                    "prompt_name": "ChatGLM3",
+                    "callbacks": True
+                },
+            },
+            "postprocess_model": {
+                self.DEFAULT_LLM_MODEL: {
+                    "temperature": 0.01,
+                    "max_tokens": 4096,
+                    "prompt_name": "default",
+                    "callbacks": True
+                }
+            },
+            "image_model": {
+                "sd-turbo": {
+                    "size": "256*256",
+                }
+            }
+        }
 
     def default_llm_model(self, llm_model: str):
         self.DEFAULT_LLM_MODEL = llm_model
@@ -344,6 +344,12 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
     def model_providers_cfg_port(self, model_providers_cfg_port: int):
         self.MODEL_PROVIDERS_CFG_PORT = model_providers_cfg_port
+
+    def model_platforms(self, model_platforms: List[Dict[str, Any]]):
+        self.MODEL_PLATFORMS = model_platforms
+
+    def tool_config(self, tool_config: Dict[str, Any]):
+        self.TOOL_CONFIG = tool_config
 
     def get_config(self) -> ConfigModel:
         config = ConfigModel()
@@ -396,6 +402,10 @@ class ConfigModelWorkSpace(core_config.ConfigWorkSpace[ConfigModelFactory, Confi
             _config_factory.model_providers_cfg_host(config_json.get("MODEL_PROVIDERS_CFG_HOST"))
         if config_json.get("MODEL_PROVIDERS_CFG_PORT"):
             _config_factory.model_providers_cfg_port(config_json.get("MODEL_PROVIDERS_CFG_PORT"))
+        if config_json.get("MODEL_PLATFORMS"):
+            _config_factory.model_platforms(config_json.get("MODEL_PLATFORMS"))
+        if config_json.get("TOOL_CONFIG"):
+            _config_factory.tool_config(config_json.get("TOOL_CONFIG"))
 
         return _config_factory
 
@@ -444,6 +454,14 @@ class ConfigModelWorkSpace(core_config.ConfigWorkSpace[ConfigModelFactory, Confi
 
     def set_model_providers_cfg_port(self, model_providers_cfg_port: int):
         self._config_factory.model_providers_cfg_port(model_providers_cfg_port)
+        self.store_config()
+
+    def set_model_platforms(self, model_platforms: List[Dict[str, Any]]):
+        self._config_factory.model_platforms(model_platforms=model_platforms)
+        self.store_config()
+
+    def set_tool_config(self, tool_config: Dict[str, Any]):
+        self._config_factory.tool_config(tool_config=tool_config)
         self.store_config()
 
 

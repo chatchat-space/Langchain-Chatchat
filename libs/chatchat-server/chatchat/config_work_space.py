@@ -50,6 +50,8 @@ def basic(**kwargs):
 @click.option("--model_providers_cfg_path_config", help="模型平台配置文件路径")
 @click.option("--model_providers_cfg_host", help="模型平台配置服务host")
 @click.option("--model_providers_cfg_port", type=int, help="模型平台配置服务port")
+@click.option("--set_model_platforms", type=str, help="模型平台配置")
+@click.option("--set_tool_config", type=str, help="工具配置项 ")
 @click.option("--clear", is_flag=True, help="清除配置")
 @click.option("--show", is_flag=True, help="显示配置")
 def model(**kwargs):
@@ -85,6 +87,13 @@ def model(**kwargs):
     if kwargs["model_providers_cfg_port"]:
         config_model_workspace.set_model_providers_cfg_port(model_providers_cfg_port=kwargs["model_providers_cfg_port"])
 
+    if kwargs["set_model_platforms"]:
+        model_platforms_dict = json.loads(kwargs["set_model_platforms"])
+        config_model_workspace.set_model_platforms(model_platforms=model_platforms_dict)
+    if kwargs["set_tool_config"]:
+        tool_config_dict = json.loads(kwargs["set_tool_config"])
+        config_model_workspace.set_tool_config(tool_config=tool_config_dict)
+        
     if kwargs["clear"]:
         config_model_workspace.clear()
     if kwargs["show"]:
