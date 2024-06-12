@@ -71,28 +71,21 @@ _仅仅是入门教程，能够基础运行__。
 
 ## 已支持的模型部署框架与模型
 
-			
-通过一套llm加载器支持模型加载，支持异构部署，有图形操作界面，支持tcp、http形式的客户端，部署方面有很多兼容问题、缺少运维文档	项目架构集成了各种语言（C++，Golang，Python等）通过编写一套GRPC实现不同模型加速服务接入、支持模型特殊token的提示模板配置。 支持目前多种模型推理形式、多端编译支持、
-有丰富的调度api，运维层面有一套基于docker构建的系统手册、有windows、linux、mac系统部署手册，项目编译复杂、操作流程繁琐	仅支持本地大型语言模型终端工具。有着完整的社区支持，包括但不限langchain、Transformers、llama-index、idea,在RAG方面提供很多的解决方案、有技术博客提供复现细节,提供多端一键运行脚本、侧重于命令终端管理模型	提供模型服务适配转发功能、支持多端部署、模型服务调度、图形操作界面、计费策略支持,平台推广等toC业务
-支持	支持	部分支持	支持
-GPT, embeddings、Functions、Image generation 、Audio generation 	GPT, embeddings、V-GPT,Functions、Audio generation and Voice cloning、Image generation 、Audio generation 	GPT, Functions,V-GPT,Image generation	
-https://inference.readthedocs.io/zh-cn/latest/models/builtin/index.html	https://localai.io/model-compatibility/	https://github.com/ollama/ollama?tab=readme-ov-file#model-library	
-GPTQ、GGML、vllm、TensorRT	GPTQ、GGML、vllm、TensorRT	GGUF、GGML	
-支持	支持	不支持	
-支持	支持	不支持	
-python、c	go、c	go、c、shell	
+本项目中已经支持市面上主流的如 GLM-4, Qwen2 等新近开源本地大语言模型和 Embedding 模型，这些模型需要用户自行启动模型部署框架后，通过修改配置信息接入项目，本项目已支持的本地模型部署框架如下：
 
-| 模型部署框架 |  xinference | ollama  | oneapi  | localAI  |
-|--------|---|---|---|---|
-|        |   |   |   |   |
-|        |   |   |   |   |
-|        |   |   |   |   |
-|        |   |   |   |   |
-|        |   |   |   |   |
+| 模型部署框架             | Xinference                                                                               | LocalAI                                                                                                                    | Ollama                                                                         | FastChat                                                  |
+|--------------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|-----------------------------------------------------------|
+| OpenAI API 接口对齐    | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | ✅                                                         |
+| 加速推理引擎             | GPTQ, GGML, vLLM, TensorRT                                                               | GPTQ, GGML, vLLM, TensorRT                                                                                                 | GGUF, GGML                                                                     | vLLM                                                      |
+| 接入模型类型             | LLM, Embedding, Rerank, Text-to-Image, Vision, Audio                                     | LLM, Embedding, Rerank, Text-to-Image, Vision, Audio                                                                       | LLM, Text-to-Image, Vision                                                     | LLM, Vision                                               |
+| Function Call      | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | /                                                         |
+| 更多平台支持(CPU, Metal) | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | ✅                                                         |
+| 异构                 | ✅                                                                                        | ✅                                                                                                                          | /                                                                              | /                                                         |
+| 集群                 | ✅                                                                                        | ✅                                                                                                                          | /                                                                              | /                                                         |
+| 操作文档链接             | [Xinference 文档](https://inference.readthedocs.io/zh-cn/latest/models/builtin/index.html) | [LocalAI 文档](https://localai.io/model-compatibility/)                                                                      | [Ollama 文档](https://github.com/ollama/ollama?tab=readme-ov-file#model-library) | [FastChat 文档](https://github.com/lm-sys/FastChat#install) |
+| 可用模型               | [Xinference 已支持模型](https://inference.readthedocs.io/en/latest/models/builtin/index.html) | [LocalAI 已支持模型](https://localai.io/model-compatibility/#/) | [Ollama 已支持模型](https://ollama.com/library#/)       | [FastChat 已支持模型](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)                                                             |
 
-
-我们支持市面上主流的本地大语言模型和Embedding模型，支持开源的本地向量数据库。
-支持列表详见 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+除上述本地模型加载框架外，项目中也支持了在线 API 的接入。
 
 ## 快速上手
 
