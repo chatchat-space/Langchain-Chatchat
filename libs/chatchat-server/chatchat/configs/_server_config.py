@@ -75,6 +75,7 @@ class ConfigServerFactory(core_config.ConfigFactory[ConfigServer]):
 
     def default_bind_host(self, default_bind_host: str):
         self.DEFAULT_BIND_HOST = default_bind_host
+        self.__init_server()
 
     def webui_server_port(self, webui_server_port: int):
         self.WEBUI_SERVER_PORT = webui_server_port
