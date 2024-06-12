@@ -239,7 +239,7 @@ class ProviderManager:
             if not provider_model_record.get("model_credentials"):
                 continue
 
-            provider_model_credentials = {}
+            provider_model_credentials = provider_model_record.get("model_credentials")
             for variable in model_credential_variables:
                 if variable in provider_model_record.get("model_credentials"):
                     try:

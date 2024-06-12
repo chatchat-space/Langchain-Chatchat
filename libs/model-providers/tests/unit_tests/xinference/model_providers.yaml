@@ -6,6 +6,7 @@ xinference:
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'chatglm3-6b'
+        completion_type: 'chat'
     - model: 'bge-m3'
       model_type: 'embeddings'
       completion_type: 'embeddings'
