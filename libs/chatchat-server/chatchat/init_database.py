@@ -166,9 +166,9 @@ def main():
             prune_folder_files(args.kb_name)
 
         end_time = datetime.now()
-        print(f"总计用时： {end_time-start_time}")
+        print(f"总计用时\t：{end_time-start_time}\n")
     except Exception as e:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         logger.warning("Caught KeyboardInterrupt! Setting stop event...")
     finally:
 
