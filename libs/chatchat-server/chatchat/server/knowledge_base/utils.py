@@ -157,7 +157,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     try:
         if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader",
                            "RapidOCRDocLoader", "RapidOCRPPTLoader"]:
-            document_loaders_module = importlib.import_module("server.document_loaders")
+            document_loaders_module = importlib.import_module("chatchat.server.file_rag.document_loaders")
         else:
             document_loaders_module = importlib.import_module("langchain_community.document_loaders")
         DocumentLoader = getattr(document_loaders_module, loader_name)
