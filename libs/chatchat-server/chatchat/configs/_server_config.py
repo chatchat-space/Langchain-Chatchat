@@ -52,6 +52,9 @@ class ConfigServerFactory(core_config.ConfigFactory[ConfigServer]):
         self.DEFAULT_BIND_HOST = "127.0.0.1" if sys.platform != "win32" else "127.0.0.1"
         self.WEBUI_SERVER_PORT = 8501
         self.API_SERVER_PORT = 7861
+        self.__init_server()
+
+    def __init_server(self):
         # webui.py server
         self.WEBUI_SERVER = {
             "host": self.DEFAULT_BIND_HOST,
@@ -75,9 +78,11 @@ class ConfigServerFactory(core_config.ConfigFactory[ConfigServer]):
 
     def webui_server_port(self, webui_server_port: int):
         self.WEBUI_SERVER_PORT = webui_server_port
+        self.__init_server()
 
     def api_server_port(self, api_server_port: int):
         self.API_SERVER_PORT = api_server_port
+        self.__init_server()
 
     def get_config(self) -> ConfigServer:
         config = ConfigServer()
