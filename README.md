@@ -34,7 +34,7 @@
 框架支持通过基于 [FastAPI](https://github.com/tiangolo/fastapi) 提供的 API
 调用服务，或使用基于 [Streamlit](https://github.com/streamlit/streamlit) 的 WebUI 进行操作。
 
-✅ 依托于本项目支持的开源 LLM 与 Embedding 模型，本项目可实现全部使用**开源**模型**离线私有部署**。与此同时，本项目也支持
+✅ 本项目支持市面上主流的开源 LLM、 Embedding 模型与向量数据库，可实现全部使用**开源**模型**离线私有部署**，可以免费商用。与此同时，本项目也支持
 OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 API 的接入。
 
 ⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 ->
@@ -67,15 +67,16 @@ _仅仅是入门教程，能够基础运行__。
 如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 界面
 
-## 解决的痛点
+## Langchain-Chatchat 提供哪些功能
 
-该项目是一个可以实现 __完全本地化__推理的知识库增强方案, 重点解决数据安全保护，私域化部署的企业痛点。
-本开源方案采用```Apache License```，可以免费商用，无需付费。
+## 已支持的模型部署框架与模型
 
 我们支持市面上主流的本地大语言模型和Embedding模型，支持开源的本地向量数据库。
 支持列表详见 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 ## 快速上手
+
+## 旧版本迁移
 
 ### 1. 环境配置
 
