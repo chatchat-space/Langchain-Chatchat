@@ -376,7 +376,7 @@ def _import_text_splitter_dict() -> Any:
     load_mod = kb_config_load.get("load_mod")
     config_kb_workspace = load_mod(kb_config_load.get("module"), "config_kb_workspace")
 
-    return config_kb_workspace.get_config().TEXT_SPLITTER_DICT
+    return config_kb_workspace.get_config().text_splitter_dict
 
 
 def _import_text_splitter_name() -> Any:
