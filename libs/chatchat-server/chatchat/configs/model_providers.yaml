@@ -25,9 +25,11 @@ xinference:
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'glm-4'
+        completion_type: 'chat'
     - model: 'qwen1.5-chat'
       model_type: 'llm'
       model_credentials:
+        completion_type: 'chat'
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'qwen1.5-chat'
     - model: 'bge-large-zh-v1.5'
