@@ -25,12 +25,13 @@ $ pip install xinference_client faiss-gpu  "unstructured[pdf]"
 ```shell
 $ conda create -p ~/miniconda3/envs/xinference python=3.8
 $ conda activate ~/miniconda3/envs/xinference
-$  pip install xinference --force
+$ pip install xinference --force
+$ pip install tiktoken  sentence-transformers
 ```
 
 - 启动xinference服务
 ```shell
-
+$ conda activate ~/miniconda3/envs/xinference
 $ xinference-local
 ```
 - 编辑注册模型脚本
@@ -130,12 +131,13 @@ $ bash ./start_models_emb.sh
 ```
 - 初始化chatchat配置
 ```shell
+$ conda activate ~/miniconda3/envs/chatchat
 $ chatchat-config basic --verbose true
 $ chatchat-config basic --data ~/chatchat-data
 $ cp ~/miniconda3/envs/chatchat/lib/python3.8/site-packages/chatchat/configs/model_providers.yaml ~/chatchat-data/
 ```
 
--- 设置模型
+- 设置模型
 ```shell
 $ vim ~/chatchat-data/model_providers.yaml
 # 修改model_providers.yaml文件，添加如下内容
@@ -154,9 +156,15 @@ xinference:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'bge-large-zh-v1.5'
 ```
-
--- 启动chatchat
+- 初始化知识库
 ```shell
+$ conda activate ~/miniconda3/envs/chatchat
+$ chatchat-kb -r
+
+```
+- 启动chatchat
+```shell
+$ conda activate ~/miniconda3/envs/chatchat
 $ chatchat -a
 
 ```
