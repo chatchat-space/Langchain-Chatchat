@@ -13,34 +13,22 @@ pip install langchain-chatchat -U
 > 
 > 操作指令` chatchat-config` 
 ```text 
-options:
-     
-    -h, --help            show this help message and exit
-    -v {true,false}, --verbose {true,false}
-    是否开启详细日志
-    -d DATA, --data DATA  数据存放路径
-    -f FORMAT, --format FORMAT
-    日志格式
-    --clear               清除配置
-    --show               显示配置
-``` 
-> 查看配置
-```shell
- chatchat-config --show                                                                                               ±[●●][dev_config_init]
-{
-    "log_verbose": false,
-    "CHATCHAT_ROOT": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat",
-    "DATA_PATH": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/data",
-    "IMG_DIR": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/img",
-    "NLTK_DATA_PATH": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/data/nltk_data",
-    "LOG_FORMAT": "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s",
-    "LOG_PATH": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/data/logs",
-    "MEDIA_PATH": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/data/media",
-    "BASE_TEMP_DIR": "/media/gpt4-pdf-chatbot-langchain/langchain-ChatGLM/libs/chatchat-server/chatchat/data/temp",
-    "class_name": "ConfigBasic"
-}
+ 
+Usage: chatchat-config [OPTIONS] COMMAND [ARGS]...
 
-```
+  指令` chatchat-config` 工作空间配置
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  basic   基础配置
+  kb      知识库配置
+  model   模型配置
+  server  服务配置
+
+``` 
+  
 
 ### 模型服务配置
  如果您已经有了一个openai endpoint的能力的地址，可以在`configs._model_config.py`文件中MODEL_PLATFORMS直接配置
