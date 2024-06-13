@@ -34,7 +34,7 @@
 框架支持通过基于 [FastAPI](https://github.com/tiangolo/fastapi) 提供的 API
 调用服务，或使用基于 [Streamlit](https://github.com/streamlit/streamlit) 的 WebUI 进行操作。
 
-✅ 依托于本项目支持的开源 LLM 与 Embedding 模型，本项目可实现全部使用**开源**模型**离线私有部署**。与此同时，本项目也支持
+✅ 本项目支持市面上主流的开源 LLM、 Embedding 模型与向量数据库，可实现全部使用**开源**模型**离线私有部署**，可以免费商用。与此同时，本项目也支持
 OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 API 的接入。
 
 ⛓️ 本项目实现原理如下图所示，过程包括加载文件 -> 读取文本 -> 文本分割 -> 文本向量化 -> 问句向量化 ->
@@ -67,97 +67,69 @@ _仅仅是入门教程，能够基础运行__。
 如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 界面
 
-## 解决的痛点
+## Langchain-Chatchat 提供哪些功能
 
-该项目是一个可以实现 __完全本地化__推理的知识库增强方案, 重点解决数据安全保护，私域化部署的企业痛点。
-本开源方案采用```Apache License```，可以免费商用，无需付费。
+### 0.3.x 版本功能一览
+|功能|0.2.x|0.3.x|
+|----|-----|-----|
+|模型接入|本地：fastchat<br>在线：XXXModelWorker|本地：model_provider,支持大部分主流模型加载框架<br>在线：oneapi<br>所有模型接入均兼容openai sdk|
+|Agent|❌不稳定|✅针对ChatGLM3和QWen进行优化,Agent能力显著提升||
+|LLM对话|✅|✅||
+|知识库对话|✅|✅||
+|搜索引擎对话|✅|✅||
+|文件对话|✅仅向量检索|✅统一为File RAG功能,支持BM25+KNN等多种检索方式||
+|数据库对话|❌|✅||
+|ARXIV文献对话|❌|✅||
+|Wolfram对话|❌|✅||
+|文生图|❌|✅||
+|本地知识库管理|✅|✅||
+|WEBUI|✅|✅更好的多会话支持,自定义系统提示词...|
 
-我们支持市面上主流的本地大语言模型和Embedding模型，支持开源的本地向量数据库。
-支持列表详见 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+
+0.3.x的核心功能由 Agent 实现,但用户也可以手动实现工具调用:
+|操作方式|实现的功能|适用场景|
+|-------|---------|-------|
+|选中"启用Agent",选择多个工具|由LLM自动进行工具调用|使用ChatGLM3/Qwen或在线API等具备Agent能力的模型|
+|选中"启用Agent",选择单个工具|LLM仅解析工具参数|使用的模型Agent能力一般,不能很好的选择工具<br>想手动选择功能|
+|不选中"启用Agent",选择单个工具|不使用Agent功能的情况下,手动填入参数进行工具调用|使用的模型不具备Agent能力|
+
+更多功能和更新请实际部署体验.
+
+### 已支持的模型部署框架与模型
+
+本项目中已经支持市面上主流的如 GLM-4, Qwen2 等新近开源本地大语言模型和 Embedding 模型，这些模型需要用户自行启动模型部署框架后，通过修改配置信息接入项目，本项目已支持的本地模型部署框架如下：
+
+| 模型部署框架             | Xinference                                                                               | LocalAI                                                                                                                    | Ollama                                                                         | FastChat                                                  |
+|--------------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|-----------------------------------------------------------|
+| OpenAI API 接口对齐    | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | ✅                                                         |
+| 加速推理引擎             | GPTQ, GGML, vLLM, TensorRT                                                               | GPTQ, GGML, vLLM, TensorRT                                                                                                 | GGUF, GGML                                                                     | vLLM                                                      |
+| 接入模型类型             | LLM, Embedding, Rerank, Text-to-Image, Vision, Audio                                     | LLM, Embedding, Rerank, Text-to-Image, Vision, Audio                                                                       | LLM, Text-to-Image, Vision                                                     | LLM, Vision                                               |
+| Function Call      | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | /                                                         |
+| 更多平台支持(CPU, Metal) | ✅                                                                                        | ✅                                                                                                                          | ✅                                                                              | ✅                                                         |
+| 异构                 | ✅                                                                                        | ✅                                                                                                                          | /                                                                              | /                                                         |
+| 集群                 | ✅                                                                                        | ✅                                                                                                                          | /                                                                              | /                                                         |
+| 操作文档链接             | [Xinference 文档](https://inference.readthedocs.io/zh-cn/latest/models/builtin/index.html) | [LocalAI 文档](https://localai.io/model-compatibility/)                                                                      | [Ollama 文档](https://github.com/ollama/ollama?tab=readme-ov-file#model-library) | [FastChat 文档](https://github.com/lm-sys/FastChat#install) |
+| 可用模型               | [Xinference 已支持模型](https://inference.readthedocs.io/en/latest/models/builtin/index.html) | [LocalAI 已支持模型](https://localai.io/model-compatibility/#/) | [Ollama 已支持模型](https://ollama.com/library#/)       | [FastChat 已支持模型](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)                                                             |
+
+除上述本地模型加载框架外，项目中也支持了在线 API 的接入。
+
+** 关于 Xinference 加载本地模型: **
+
+Xinference 内置模型会自动下载,如果想让它加载本机下载好的模型,可以在启动 Xinference 服务后,到项目 tools/model_loaders 目录下执行 `streamlit run xinference_manager.py`,按照页面提示为指定模型设置本地路径即可.
 
 ## 快速上手
 
-### 1. 环境配置
+### 安装部署
+<待补充>
 
-+ 首先，确保你的机器安装了 Python 3.8 - 3.11 。
+### 旧版本迁移
 
-```
-$ python --version
-Python 3.11.7
-```
+* 0.3.x 结构改变很大,强烈建议您按照文档重新部署. 以下指南不保证100%兼容和成功. 记得提前备份重要数据!
 
-接着，创建一个虚拟环境，并在虚拟环境内安装项目的依赖
+- 首先按照 `安装部署` 中的步骤配置运行环境
+- 配置 `DATA` 等选项
+- 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
 
-```shell
-
-# 拉取仓库
-$ git clone https://github.com/chatchat-space/Langchain-Chatchat.git
-
-# 进入目录
-$ cd Langchain-Chatchat
-
-# 安装全部依赖
-$ pip install -r requirements.txt 
-$ pip install -r requirements_api.txt
-$ pip install -r requirements_webui.txt  
-
-# 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
-```
-
-请注意，LangChain-Chatchat `0.3.x` 当前版本是针对 Langchain `0.1.x` 系列版本的，如果你使用的是 Langchain `0.2.x`
-版本，需要降级您的 `Langchain` 版本。
-
-### 2. 模型启动
-
-如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding
-模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
-
-以本项目中默认使用的 LLM 模型 [THUDM/ChatGLM3-6B](https://huggingface.co/THUDM/chatglm3-6b) 与 Embedding
-模型 [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh) 为例：
-
-下载模型需要先[安装 Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
-，然后运行
-
-```Shell
-$ git lfs install
-$ git clone https://huggingface.co/THUDM/chatglm3-6b
-$ git clone https://huggingface.co/BAAI/bge-large-zh
-```
-
-### 3. 初始化知识库和配置文件
-
-按照下列方式初始化自己的知识库和简单的复制配置文件
-
-```shell
-$ python copy_config_example.py
-$ python init_database.py --recreate-vs
- ```
-
-### 4. 项目一键启动
-
-按照以下命令启动项目
-
-```shell
-$ python startup.py -a
-```
-
-### 5. 启动界面示例
-
-如果正常启动，你将能看到以下界面
-
-1. FastAPI Docs 界面
-
-![](docs/img/fastapi_docs_026.png)
-
-2. Web UI 启动界面示例：
-
-- Web UI 对话界面：
-
-![img](docs/img/LLM_success.png)
-
-- Web UI 知识库管理页面：
-
-![](docs/img/init_knowledge_base.jpg)
 
 ### 注意
 
