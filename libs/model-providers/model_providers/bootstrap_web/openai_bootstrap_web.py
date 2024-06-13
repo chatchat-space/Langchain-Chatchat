@@ -218,6 +218,8 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
     async def create_embeddings(
         self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
+        print(f"yuehua EmbeddingsRequest: {embeddings_request}")
+        print(f"yuehua EmbeddingsRequest as dict: {embeddings_request.dict()}")
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
         )
