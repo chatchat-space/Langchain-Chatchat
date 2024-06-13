@@ -8,6 +8,9 @@
 ```shell
 pip install langchain-chatchat -U
 ```
+> 注意：chatchat请放在独立的虚拟环境中，比如conda，venv，virtualenv等
+> 
+> 已知问题，不能跟xf一起安装，会让一些插件出bug，例如文件无法上传
 
 > 工作空间配置
 > 
