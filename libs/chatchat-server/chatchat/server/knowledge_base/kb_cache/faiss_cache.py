@@ -128,7 +128,7 @@ class KBFaissPool(_FaissPool):
         except Exception as e:
             if locked: # we don't know exception raised before or after atomic.release
                 self.atomic.release()
-            logger.error(e)
+            logger.error(e, exc_info=True)
             raise RuntimeError(f"向量库 {kb_name} 加载失败。")
         return self.get((kb_name, vector_name))
 
