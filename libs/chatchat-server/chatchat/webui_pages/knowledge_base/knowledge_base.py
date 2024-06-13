@@ -206,7 +206,6 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             ]]
             doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
             doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
-            print(doc_details)
             gb = config_aggrid(
                 doc_details,
                 {
@@ -236,8 +235,11 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 enable_enterprise_modules=False
             )
 
-            selected_rows = doc_grid.get("selected_rows", [])
-            selected_rows = selected_rows.to_dict("records")
+            selected_rows = doc_grid.get("selected_rows")
+            if selected_rows is None:
+                selected_rows = []
+            else:
+                selected_rows = selected_rows.to_dict("records")
             cols = st.columns(4)
             file_name, file_path = file_exists(kb, selected_rows)
             if file_path:
