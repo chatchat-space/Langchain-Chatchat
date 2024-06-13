@@ -113,6 +113,10 @@ _仅仅是入门教程，能够基础运行__。
 
 除上述本地模型加载框架外，项目中也支持了在线 API 的接入。
 
+** 关于 Xinference 加载本地模型: **
+
+Xinference 内置模型会自动下载,如果想让它加载本机下载好的模型,可以在启动 Xinference 服务后,到项目 tools/model_loaders 目录下执行 `streamlit run xinference_manager.py`,按照页面提示为指定模型设置本地路径即可.
+
 ## 快速上手
 
 ### 安装部署
