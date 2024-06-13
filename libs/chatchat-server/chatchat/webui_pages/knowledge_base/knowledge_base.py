@@ -206,6 +206,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             ]]
             doc_details["in_folder"] = doc_details["in_folder"].replace(True, "✓").replace(False, "×")
             doc_details["in_db"] = doc_details["in_db"].replace(True, "✓").replace(False, "×")
+            print(doc_details)
             gb = config_aggrid(
                 doc_details,
                 {
@@ -217,8 +218,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                     ("docs_count", "文档数量"): {},
                     ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
-                    ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
-                    ("in_db", "向量库"): {"cellRenderer": cell_renderer},
+                    ("in_folder", "源文件"): {},
+                    ("in_db", "向量库"): {},
                 },
                 "multiple",
             )
@@ -236,7 +237,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             )
 
             selected_rows = doc_grid.get("selected_rows", [])
-
+            selected_rows = selected_rows.to_dict("records")
             cols = st.columns(4)
             file_name, file_path = file_exists(kb, selected_rows)
             if file_path:
@@ -330,6 +331,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
         if selected_rows:
             file_name = selected_rows[0]["file_name"]
             docs = api.search_kb_docs(knowledge_base_name=selected_kb, file_name=file_name)
+
             data = [
                 {"seq": i + 1, "id": x["id"], "page_content": x["page_content"], "source": x["metadata"].get("source"),
                  "type": x["type"],
