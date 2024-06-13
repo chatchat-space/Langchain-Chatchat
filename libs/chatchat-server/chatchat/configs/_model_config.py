@@ -1,7 +1,7 @@
 import os
 
 # 默认选用的 LLM 名称
-DEFAULT_LLM_MODEL = "chatglm3-6b"
+DEFAULT_LLM_MODEL = "glm4-chat"
 
 # 默认选用的 Embedding 名称
 DEFAULT_EMBEDDING_MODEL = "bge-large-zh-v1.5"
@@ -26,6 +26,7 @@ SUPPORT_AGENT_MODELS = [
     "Qwen-14B-Chat",
     "Qwen-7B-Chat",
     "qwen-turbo",
+    "glm4-chat",
 ]
 
 
@@ -125,7 +126,7 @@ MODEL_PLATFORMS = [
         "api_key": "EMPTY",
         "api_concurrencies": 5,
         "llm_models": [
-            "glm-4",
+            "glm4-chat",
             "qwen2-instruct",
             "qwen1.5-chat",
         ],
