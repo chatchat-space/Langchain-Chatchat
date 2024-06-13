@@ -69,7 +69,33 @@ _仅仅是入门教程，能够基础运行__。
 
 ## Langchain-Chatchat 提供哪些功能
 
-## 已支持的模型部署框架与模型
+### 0.3.x 版本功能一览
+|功能|0.2.x|0.3.x|
+|----|-----|-----|
+|模型接入|本地：fastchat<br>在线：XXXModelWorker|本地：model_provider,支持大部分主流模型加载框架<br>在线：oneapi<br>所有模型接入均兼容openai sdk|
+|Agent|❌不稳定|✅针对ChatGLM3和QWen进行优化,Agent能力显著提升||
+|LLM对话|✅|✅||
+|知识库对话|✅|✅||
+|搜索引擎对话|✅|✅||
+|文件对话|✅仅向量检索|✅统一为File RAG功能,支持BM25+KNN等多种检索方式||
+|数据库对话|❌|✅||
+|ARXIV文献对话|❌|✅||
+|Wolfram对话|❌|✅||
+|文生图|❌|✅||
+|本地知识库管理|✅|✅||
+|WEBUI|✅|✅更好的多会话支持,自定义系统提示词...|
+
+
+0.3.x的核心功能由 Agent 实现,但用户也可以手动实现工具调用:
+|操作方式|实现的功能|适用场景|
+|-------|---------|-------|
+|选中"启用Agent",选择多个工具|由LLM自动进行工具调用|使用ChatGLM3/Qwen或在线API等具备Agent能力的模型|
+|选中"启用Agent",选择单个工具|LLM仅解析工具参数|使用的模型Agent能力一般,不能很好的选择工具|
+|不选中"启用Agent",选择单个工具|不使用Agent功能的情况下,手动填入参数进行工具调用|使用的模型不具备Agent能力|
+
+更多功能和更新请实际部署体验.
+
+### 已支持的模型部署框架与模型
 
 本项目中已经支持市面上主流的如 GLM-4, Qwen2 等新近开源本地大语言模型和 Embedding 模型，这些模型需要用户自行启动模型部署框架后，通过修改配置信息接入项目，本项目已支持的本地模型部署框架如下：
 
@@ -89,89 +115,17 @@ _仅仅是入门教程，能够基础运行__。
 
 ## 快速上手
 
-## 旧版本迁移
+### 安装部署
+<待补充>
 
-### 1. 环境配置
+### 旧版本迁移
 
-+ 首先，确保你的机器安装了 Python 3.8 - 3.11 。
+* 0.3.x 结构改变很大,强烈建议您按照文档重新部署. 以下指南不保证100%兼容和成功. 记得提前备份重要数据!
 
-```
-$ python --version
-Python 3.11.7
-```
+- 首先按照 `安装部署` 中的步骤配置运行环境
+- 配置 `DATA` 等选项
+- 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
 
-接着，创建一个虚拟环境，并在虚拟环境内安装项目的依赖
-
-```shell
-
-# 拉取仓库
-$ git clone https://github.com/chatchat-space/Langchain-Chatchat.git
-
-# 进入目录
-$ cd Langchain-Chatchat
-
-# 安装全部依赖
-$ pip install -r requirements.txt 
-$ pip install -r requirements_api.txt
-$ pip install -r requirements_webui.txt  
-
-# 默认依赖包括基本运行环境（FAISS向量库）。如果要使用 milvus/pg_vector 等向量库，请将 requirements.txt 中相应依赖取消注释再安装。
-```
-
-请注意，LangChain-Chatchat `0.3.x` 当前版本是针对 Langchain `0.1.x` 系列版本的，如果你使用的是 Langchain `0.2.x`
-版本，需要降级您的 `Langchain` 版本。
-
-### 2. 模型启动
-
-如需在本地或离线环境下运行本项目，需要首先将项目所需的模型下载至本地，通常开源 LLM 与 Embedding
-模型可以从 [HuggingFace](https://huggingface.co/models) 下载。
-
-以本项目中默认使用的 LLM 模型 [THUDM/ChatGLM3-6B](https://huggingface.co/THUDM/chatglm3-6b) 与 Embedding
-模型 [BAAI/bge-large-zh](https://huggingface.co/BAAI/bge-large-zh) 为例：
-
-下载模型需要先[安装 Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
-，然后运行
-
-```Shell
-$ git lfs install
-$ git clone https://huggingface.co/THUDM/chatglm3-6b
-$ git clone https://huggingface.co/BAAI/bge-large-zh
-```
-
-### 3. 初始化知识库和配置文件
-
-按照下列方式初始化自己的知识库和简单的复制配置文件
-
-```shell
-$ python copy_config_example.py
-$ python init_database.py --recreate-vs
- ```
-
-### 4. 项目一键启动
-
-按照以下命令启动项目
-
-```shell
-$ python startup.py -a
-```
-
-### 5. 启动界面示例
-
-如果正常启动，你将能看到以下界面
-
-1. FastAPI Docs 界面
-
-![](docs/img/fastapi_docs_026.png)
-
-2. Web UI 启动界面示例：
-
-- Web UI 对话界面：
-
-![img](docs/img/LLM_success.png)
-
-- Web UI 知识库管理页面：
-
-![](docs/img/init_knowledge_base.jpg)
 
 ### 注意
 
