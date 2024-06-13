@@ -1,7 +1,7 @@
 ### 开始使用
 
 > 环境配置完成后，启动步骤为先启动chatchat-server，然后启动chatchat-frontend。
-> chatchat可通过pypi安装一键启动，您也可以选择使用[源码启动](README_dev.md)。(Tips:源码配置可以帮助我们更快的寻找bug，或者改进基础设施。我们不建议新手使用这个方式)
+> chatchat可通过pypi安装一键启动，您也可以选择使用[源码启动](../../docs/contributing/README_dev.md)。(Tips:源码配置可以帮助我们更快的寻找bug，或者改进基础设施。我们不建议新手使用这个方式)
 
 #### pypi安装一键启动
 - 安装chatchat
@@ -68,3 +68,7 @@ chatchat 0.3版本中，为保证平台、模型、及本地服务的兼容，�
 可以在`configs._model_config.py`文件中MODEL_PLATFORMS直接配置
  
 ```
+
+### 部署手册？
+
+移步这里 [xinference环境配置手册](../../docs/install/README_xinference.md)

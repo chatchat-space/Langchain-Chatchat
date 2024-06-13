@@ -7,7 +7,7 @@ git clone https://github.com/chatchat-space/Langchain-Chatchat.git
 
 - 初始化开发环境
 
-> [Code](../../docs/contributing/code.md): 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。
+> [Code](code.md): 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。
 
 - 关于chatchat-config
 > chatchat-config由ConfigWorkSpace接口提供知识库配置载入存储
@@ -29,12 +29,12 @@ ConfigWorkSpace是一个配置工作空间的抽象类，提供基础的配置�
 
 > 我们抽象了不同平台提供的 全局配置`provider_credential`,和模型配置`model_credential`
 
->关于设计文稿，请查看 [README_CN.md](model_providers/core/model_runtime/README_CN.md)
+>关于设计文稿，请查看 [README_CN.md](../../libs/model-providers/model_providers/core/model_runtime/README_CN.md)
 
 - 平台配置
 > 注意: 在您配置平台之前，请确认平台依赖完整，例如智谱平台，您需要安装智谱sdk `pip install zhipuai`
 >
-> 详细配置请参考[README.md](../model-providers/README.md)
+> 详细配置请参考[README.md](../../libs/model-providers/README.md)
 
 
 - 初始化仓库
