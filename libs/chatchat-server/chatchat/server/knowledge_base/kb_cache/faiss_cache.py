@@ -57,7 +57,7 @@ class _FaissPool(CachePool):
 
         # create an empty vector store
         embeddings = get_Embeddings(embed_model=embed_model)
-        doc = Document(page_content="init", metadata={})
+        doc = Document(page_content="yuehua test init", metadata={})
         vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True,distance_strategy="METRIC_INNER_PRODUCT")
         ids = list(vector_store.docstore._dict.keys())
         vector_store.delete(ids)
