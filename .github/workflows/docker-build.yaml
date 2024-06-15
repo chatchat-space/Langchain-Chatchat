@@ -1,0 +1,155 @@
+name: docker-build
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - 'README_en.md'
+      - 'README_ja.md'
+env:
+  TZ: Asia/Shanghai
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    # if: github.event.pull_request.merged == true
+    steps:
+      - name: Optimize Disk Space
+        uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
+        with:
+          operate_sudo: "True"
+          general_include: ".+"
+          general_exclude: |-
+            ^GCC$
+            ^G\+\+$
+            Clang
+            LLVM
+          docker_include: ".+"
+          docker_prune: "True"
+          docker_clean: "True"
+          apt_prune: "True"
+          apt_clean: "True"
+          homebrew_prune: "True"
+          homebrew_clean: "True"
+          npm_prune: "True"
+          npm_clean: "True"
+          os_swap: "True"
+      - name: Remove Unnecessary Tools And Files
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get remove -y '^dotnet-.*' '^llvm-.*' 'php.*' azure-cli google-chrome-stable firefox powershell mono-devel
+          sudo apt-get autoremove --purge -y
+          sudo find /var/log -name "*.gz" -type f -delete
+          sudo rm -rf /var/cache/apt/archives
+          sudo rm -rf /tmp/*
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /etc/mysql /etc/php
+          sudo -E apt-get -y purge azure-cli* docker* ghc* zulu* hhvm* llvm* firefox* google* dotnet* aspnetcore* powershell* openjdk* adoptopenjdk* mysql* php* mongodb* moby* snap* || true
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/local/lib/android /opt/ghc /usr/share/dotnet /usr/local/graalvm /usr/local/.ghcup \
+          /usr/local/share/powershell /usr/local/share/chromium /usr/local/lib/node_modules
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /etc/mysql /etc/php
+          sudo -E apt-get -y purge azure-cli* docker* ghc* zulu* hhvm* llvm* firefox* google* dotnet* aspnetcore* powershell* openjdk* adoptopenjdk* mysql* php* mongodb* moby* snap* || true
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install libfuse-dev $(curl -fsSL git.io/depends-ubuntu-2204)
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo apt-get clean
+          rm -rf /opt/hostedtoolcache
+          sudo timedatectl set-timezone "$TZ"
+      - name: Free Up Disk Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 62464 # 给 / 预留 61GiB 空间( docker 预留)
+          swap-size-mb: 1
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Get Latest Release
+        id: get_version
+        run: |
+          VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Set Image Tag
+        id: imageTag
+        run: echo "::set-output name=image_tag::$RELEASE_VERSION-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+      - name: Set Up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Clone Model
+        run: |
+          sudo mkdir -p $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          cd $GITHUB_WORKSPACE/bge-large-zh-v1.5
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/.gitattributes &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/config_sentence_transformers.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/modules.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/pytorch_model.bin &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/sentence_bert_config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/special_tokens_map.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/tokenizer.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/tokenizer_config.json &> /dev/null
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/vocab.txt &> /dev/null
+          sudo mkdir -p $GITHUB_WORKSPACE/bge-large-zh-v1.5/1_Pooling
+          cd $GITHUB_WORKSPACE/bge-large-zh-v1.5/1_Pooling
+          sudo wget https://huggingface.co/BAAI/bge-large-zh-v1.5/resolve/main/1_Pooling/config.json &> /dev/null
+          sudo mkdir -p $GITHUB_WORKSPACE/chatglm3-6b
+          cd $GITHUB_WORKSPACE/chatglm3-6b
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/config.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/configuration_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00001-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00002-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00003-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00004-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00005-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00006-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model-00007-of-00007.safetensors &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/model.safetensors.index.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/modeling_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/pytorch_model.bin.index.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/quantization.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/special_tokens_map.json &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/tokenization_chatglm.py &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/tokenizer.model &> /dev/null
+          sudo wget https://huggingface.co/THUDM/chatglm3-6b/resolve/main/tokenizer_config.json &> /dev/null
+          du -sh $GITHUB_WORKSPACE
+          du -sh $GITHUB_WORKSPACE/*
+          du -sh $GITHUB_WORKSPACE/bge-large-zh-v1.5/*       
+          du -sh $GITHUB_WORKSPACE/chatglm3-6b/*
+      - name: Show Runner Disk
+        run: df -hT
+      - name: Docker Build
+        run: |
+          docker build -t uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }} -f Dockerfile .
+      - name: Show Images Size
+        run: docker images
+      - name: Login To Tencent CCR
+        uses: docker/login-action@v2
+        with:
+          registry: uswccr.ccs.tencentyun.com
+          username: ${{ secrets.CCR_REGISTRY_USERNAME }}
+          password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
+      - name: Docker Push
+        run: docker push uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Update README.md
+        run: |
+          sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README.md
+          sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README_en.md
+          sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README_ja.md
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "feat:update docker image:tag"
+      - name: Push README.md
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          branch: ${{ github.ref }}

@@ -32,6 +32,7 @@ class SupportedVSType:
     DEFAULT = 'default'
     ZILLIZ = 'zilliz'
     PG = 'pg'
+    RELYT = 'relyt'
     ES = 'es'
     CHROMADB = 'chromadb'
 
@@ -195,14 +196,14 @@ class KBService(ABC):
             return False
 
         self.del_doc_by_ids(list(docs.keys()))
-        docs = []
+        pending_docs = []
         ids = []
-        for k, v in docs.items():
-            if not v or not v.page_content.strip():
+        for _id, doc in docs.items():
+            if not doc or not doc.page_content.strip():
                 continue
-            ids.append(k)
-            docs.append(v)
-        self.do_add_doc(docs=docs, ids=ids)
+            ids.append(_id)
+            pending_docs.append(doc)
+        self.do_add_doc(docs=pending_docs, ids=ids)
         return True
 
     def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
@@ -222,6 +223,20 @@ class KBService(ABC):
                 # 可以选择跳过当前循环迭代或执行其他操作
                 pass
         return docs
+
+    def get_relative_source_path(self,filepath: str):
+      '''
+      将文件路径转化为相对路径，保证查询时一致
+      '''
+      relative_path = filepath
+      if os.path.isabs(relative_path):
+        try:
+          relative_path = Path(filepath).relative_to(self.doc_path)
+        except Exception as e:
+          print(f"cannot convert absolute path ({relative_path}) to relative path. error is : {e}")
+
+      relative_path = str(relative_path.as_posix().strip("/"))
+      return relative_path
 
     @abstractmethod
     def do_create_kb(self):
@@ -311,6 +326,9 @@ class KBServiceFactory:
         elif SupportedVSType.PG == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.pg_kb_service import PGKBService
             return PGKBService(**params)
+        elif SupportedVSType.RELYT == vector_store_type:
+            from chatchat.server.knowledge_base.kb_service.relyt_kb_service import RelytKBService
+            return RelytKBService(**params)
         elif SupportedVSType.MILVUS == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(**params)

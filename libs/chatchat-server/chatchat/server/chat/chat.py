@@ -123,6 +123,18 @@ async def chat(query: str = Body(..., description="用户输入", examples=["恼
     async def chat_iterator() -> AsyncIterable[OpenAIChatOutput]:
         callback = AgentExecutorAsyncIteratorCallbackHandler()
         callbacks = [callback]
+
+        # Enable langchain-chatchat to support langfuse
+        import os
+        langfuse_secret_key = os.environ.get('LANGFUSE_SECRET_KEY')
+        langfuse_public_key = os.environ.get('LANGFUSE_PUBLIC_KEY')
+        langfuse_host = os.environ.get('LANGFUSE_HOST')
+        if langfuse_secret_key and langfuse_public_key and langfuse_host :
+            from langfuse import Langfuse
+            from langfuse.callback import CallbackHandler
+            langfuse_handler = CallbackHandler()
+            callbacks.append(langfuse_handler)
+
         models, prompts = create_models_from_config(callbacks=callbacks, configs=chat_model_config,
                                                     stream=stream)
         all_tools = get_tool().values()

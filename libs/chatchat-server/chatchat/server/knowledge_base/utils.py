@@ -46,7 +46,10 @@ def get_vs_path(knowledge_base_name: str, vector_name: str):
 
 
 def get_file_path(knowledge_base_name: str, doc_name: str):
-    return os.path.join(get_doc_path(knowledge_base_name), doc_name)
+    doc_path = Path(get_doc_path(knowledge_base_name)).resolve()
+    file_path = (doc_path / doc_name).resolve()
+    if str(file_path).startswith(str(doc_path)):
+        return str(file_path)
 
 
 def list_kbs_from_folder():

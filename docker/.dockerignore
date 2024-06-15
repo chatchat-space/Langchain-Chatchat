@@ -1,0 +1,19 @@
+.idea
+# Langchain-Chatchat
+docs
+.github
+tests
+Dockerfile
+.dockerignore
+.gitignore
+.gitmodules
+README.md
+README_en.md
+README_ja.md
+LICENSE
+requirements_api.txt
+requirements_lite.txt
+requirements_webui.txt
+# bge-large-zh-v1.5
+bge-large-zh-v1.5/README.md
+# chatglm3-6b

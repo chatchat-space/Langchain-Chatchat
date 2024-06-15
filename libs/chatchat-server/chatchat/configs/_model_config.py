@@ -54,7 +54,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
     def __init__(self):
         # 默认选用的 LLM 名称
-        self.DEFAULT_LLM_MODEL = "chatglm3-6b"
+        self.DEFAULT_LLM_MODEL = "glm4-chat"
 
         # 默认选用的 Embedding 名称
         self.DEFAULT_EMBEDDING_MODEL = "bge-large-zh-v1.5"

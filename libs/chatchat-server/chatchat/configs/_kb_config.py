@@ -73,7 +73,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
         # 默认使用的知识库
         self.DEFAULT_KNOWLEDGE_BASE = "samples"
 
-        # 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector,全文检索引擎es
+        # 默认向量库/全文检索引擎类型。可选：faiss, milvus(离线) & zilliz(在线), pgvector,全文检索引擎es,relyt
         self.DEFAULT_VS_TYPE = "faiss"
 
         # 缓存向量库数量（针对FAISS）
@@ -147,7 +147,9 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
             "pg": {
                 "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat",
             },
-
+            "relyt": {
+                "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat",
+            },
             "es": {
                 "host": "127.0.0.1",
                 "port": "9200",
