@@ -95,7 +95,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
         # 创建一个全局的共享字典
         self.MODEL_PLATFORMS = [
-
             {
                 "platform_name": "oneapi",
                 "platform_type": "oneapi",
@@ -131,8 +130,26 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "speech2text_models": [],
                 "tts_models": [],
             },
-
-
+            {
+                "platform_name": "xinference",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPT",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "chatglm3",
+                    "glm4-chat",
+                    "qwen1.5-chat",
+                    "qwen2-instruct",
+                ],
+                "embed_models": [
+                    "bge-large-zh-v1.5",
+                ],
+                "image_models": [],
+                "reranking_models": [],
+                "speech2text_models": [],
+                "tts_models": [],
+            },
         ]
         # 工具配置项
         self.TOOL_CONFIG = {

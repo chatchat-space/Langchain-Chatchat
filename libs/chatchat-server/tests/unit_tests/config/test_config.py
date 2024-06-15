@@ -54,26 +54,26 @@ def test_config_model_workspace():
 
     assert config_model_workspace.get_config() is not None
 
-    config_model_workspace.set_default_llm_model(llm_model="glm4")
+    config_model_workspace.set_default_llm_model(llm_model="glm4-chat")
     config_model_workspace.set_default_embedding_model(embedding_model="text1")
     config_model_workspace.set_agent_model(agent_model="agent")
     config_model_workspace.set_history_len(history_len=1)
     config_model_workspace.set_max_tokens(max_tokens=1000)
     config_model_workspace.set_temperature(temperature=0.1)
-    config_model_workspace.set_support_agent_models(support_agent_models=["glm4"])
+    config_model_workspace.set_support_agent_models(support_agent_models=["glm4-chat"])
     config_model_workspace.set_model_providers_cfg_path_config(model_providers_cfg_path_config="model_providers.yaml")
     config_model_workspace.set_model_providers_cfg_host(model_providers_cfg_host="127.0.0.1")
     config_model_workspace.set_model_providers_cfg_port(model_providers_cfg_port=8000)
 
     config: ConfigModel = config_model_workspace.get_config()
 
-    assert config.DEFAULT_LLM_MODEL == "glm4"
+    assert config.DEFAULT_LLM_MODEL == "glm4-chat"
     assert config.DEFAULT_EMBEDDING_MODEL == "text1"
     assert config.Agent_MODEL == "agent"
     assert config.HISTORY_LEN == 1
     assert config.MAX_TOKENS == 1000
     assert config.TEMPERATURE == 0.1
-    assert config.SUPPORT_AGENT_MODELS == ["glm4"]
+    assert config.SUPPORT_AGENT_MODELS == ["glm4-chat"]
     assert config.MODEL_PROVIDERS_CFG_PATH_CONFIG == "model_providers.yaml"
     assert config.MODEL_PROVIDERS_CFG_HOST == "127.0.0.1"
     assert config.MODEL_PROVIDERS_CFG_PORT == 8000

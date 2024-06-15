@@ -218,7 +218,7 @@ def dialogue_page(
 
     # Display chat messages from history on app rerun
     chat_box.output_messages()
-    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。输入/help查看自定义命令 "
+    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。"
 
     # def on_feedback(
     #         feedback,
@@ -302,7 +302,7 @@ def dialogue_page(
                 messages=messages,
                 model=llm_model,
                 stream=True,
-                tools=tools,
+                tools=tools or openai.NOT_GIVEN,
                 tool_choice=tool_choice,
                 extra_body=extra_body,
         ):
