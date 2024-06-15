@@ -46,6 +46,7 @@ class SupportedVSType:
     DEFAULT = 'default'
     ZILLIZ = 'zilliz'
     PG = 'pg'
+    RELYT = 'relyt'
     ES = 'es'
     CHROMADB = 'chromadb'
 
@@ -322,6 +323,9 @@ class KBServiceFactory:
         elif SupportedVSType.PG == vector_store_type:
             from server.knowledge_base.kb_service.pg_kb_service import PGKBService
             return PGKBService(kb_name, embed_model=embed_model)
+        elif SupportedVSType.RELYT == vector_store_type:
+            from server.knowledge_base.kb_service.relyt_kb_service import RelytKBService
+            return RelytKBService(kb_name, embed_model=embed_model)
         elif SupportedVSType.MILVUS == vector_store_type:
             from server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
             return MilvusKBService(kb_name,embed_model=embed_model)

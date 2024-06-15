@@ -48,6 +48,7 @@ llama-index==0.9.35
 # pymilvus==2.3.6
 # psycopg2==2.9.9
 # pgvector>=0.2.4
+# pgvecto-rs==0.1.4
 # chromadb==0.4.13
 
 #flash-attn==2.4.2 # For Orion-14B-Chat and Qwen-14B-Chat
