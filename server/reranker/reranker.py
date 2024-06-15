@@ -46,7 +46,7 @@ class LangchainReranker(BaseDocumentCompressor):
         # self.activation_fct=activation_fct
         # self.apply_softmax=apply_softmax
 
-        self._model = CrossEncoder(model_name=model_name_or_path, max_length=1024, device=device)
+        self._model = CrossEncoder(model_name=model_name_or_path, max_length=max_length, device=device)
         super().__init__(
             top_n=top_n,
             model_name_or_path=model_name_or_path,
