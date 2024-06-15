@@ -70,11 +70,23 @@ async def knowledge_base_chat(query: str = Body(..., description="用户输入",
         if isinstance(max_tokens, int) and max_tokens <= 0:
             max_tokens = None
 
+        callbacks = [callback]
+        # Enable langchain-chatchat to support langfuse
+        import os
+        langfuse_secret_key = os.environ.get('LANGFUSE_SECRET_KEY')
+        langfuse_public_key = os.environ.get('LANGFUSE_PUBLIC_KEY')
+        langfuse_host = os.environ.get('LANGFUSE_HOST')
+        if langfuse_secret_key and langfuse_public_key and langfuse_host :
+            from langfuse import Langfuse
+            from langfuse.callback import CallbackHandler
+            langfuse_handler = CallbackHandler()
+            callbacks.append(langfuse_handler)
+
         model = get_ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
-            callbacks=[callback],
+            callbacks=callbacks,
         )
         docs = await run_in_threadpool(search_docs,
                                        query=query,
