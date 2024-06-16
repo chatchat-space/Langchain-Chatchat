@@ -114,8 +114,8 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                     model_name: str = Body(None, description="LLM 模型名称。"),
                     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                     max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
-                    prompt_name: str = Body("default",
-                                            description="使用的prompt模板名称(在configs/prompt_config.py中配置)"),
+                    prompt_name: str = Body("rag",
+                                            description="使用的prompt模板名称(在configs/_prompt_config.py中配置)"),
                     ):
     if knowledge_id not in memo_faiss_pool.keys():
         return BaseResponse(code=404, msg=f"未找到临时知识库 {knowledge_id}，请先上传文件")
@@ -148,17 +148,18 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
         )
         embed_func = get_Embeddings()
         # 同步调用异步函数
-        nest_asyncio.apply()
-        embeddings = asyncio.get_event_loop().run_until_complete(embed_func.aembed_query(query))
+        # nest_asyncio.apply()
+        # LocalAIEmbeddings不支持异步调用
+        embeddings = embed_func.embed_query(query)
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
             docs = [x[0] for x in docs]
 
         context = "\n".join([doc.page_content for doc in docs])
         if len(docs) == 0:  # 如果没有找到相关文档，使用Empty模板
-            prompt_template = get_prompt_template("knowledge_base_chat", "empty")
+            prompt_template = get_prompt_template("knowledge_base_chat", "default")
         else:
-            prompt_template = get_prompt_template("knowledge_base_chat", prompt_name)
+            prompt_template = get_prompt_template("llm_model", "rag")
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
