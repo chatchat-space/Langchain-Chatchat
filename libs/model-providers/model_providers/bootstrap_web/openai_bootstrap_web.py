@@ -260,21 +260,28 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
 
                         input += text
                     elif isinstance(token, list):  # 增加判断，如果token是list类型
-                        for item in token:  # 遍历列表中的每个元素
-                            if isinstance(item, int):  # 如果元素是int类型
+                        # for item in token:  # 遍历列表中的每个元素
+                            # if isinstance(item, int):  # 如果元素是int类型
+                            #
+                            #     print("yuehua token(int) in list:", item)
+                            #
+                            #     text = encoding.decode(item)
+                            #
+                            #     print("yuehua text(token(int) in list):", text)
+                            #
+                            #     input += text
+                            # else:
+                            #
+                            #     print("yuehua token(other) in list:", item)
+                            #
+                            #     input += item
+                        print("yuehua token(list):", token)
 
-                                print("yuehua token(int) in list:", item)
+                        text = encoding.decode(token)
 
-                                text = encoding.decode(item)
+                        print("yuehua text(token(list)):", text)
 
-                                print("yuehua text(token(int) in list):", text)
-
-                                input += text
-                            else:
-
-                                print("yuehua token(other) in list:", item)
-
-                                input += item
+                        input += text
                     else:
 
                         print("yuehua token(other):", token)
