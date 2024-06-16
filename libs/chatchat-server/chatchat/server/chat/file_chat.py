@@ -114,7 +114,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                     model_name: str = Body(None, description="LLM 模型名称。"),
                     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
                     max_tokens: Optional[int] = Body(None, description="限制LLM生成Token数量，默认None代表模型最大值"),
-                    prompt_name: str = Body("rag",
+                    prompt_name: str = Body("rag_default",
                                             description="使用的prompt模板名称(在configs/_prompt_config.py中配置)"),
                     ):
     if knowledge_id not in memo_faiss_pool.keys():
@@ -157,7 +157,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
 
         context = "\n".join([doc.page_content for doc in docs])
         if len(docs) == 0:  # 如果没有找到相关文档，使用Empty模板
-            prompt_template = get_prompt_template("llm_model", "default")
+            prompt_template = get_prompt_template("llm_model", "rag_default" if prompt_name == "rag_default" else prompt_name)
         else:
             prompt_template = get_prompt_template("llm_model", "rag")
         input_msg = History(role="user", content=prompt_template).to_msg_template(False)
