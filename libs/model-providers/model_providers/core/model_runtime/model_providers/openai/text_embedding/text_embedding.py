@@ -90,8 +90,6 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
             used_tokens += embedding_used_tokens
             batched_embeddings += embeddings_batch
 
-        print("yuehua OpenAITextEmbeddingModel used_tokens:", used_tokens)
-
         results: List[List[List[float]]] = [[] for _ in range(len(texts))]
         num_tokens_in_batch: List[List[int]] = [[] for _ in range(len(texts))]
         for i in range(len(indices)):
@@ -119,7 +117,6 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
             model=model, credentials=credentials, tokens=used_tokens
         )
 
-        print("yuehua OpenAITextEmbeddingModel result:", TextEmbeddingResult(embeddings=embeddings, usage=usage, model=model))
         return TextEmbeddingResult(embeddings=embeddings, usage=usage, model=model)
 
     def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:

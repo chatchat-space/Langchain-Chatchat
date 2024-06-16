@@ -108,7 +108,6 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
         usage = self._calc_response_usage(
             model=model, credentials=credentials, tokens=usage["total_tokens"]
         )
-        print("yuehua XinferenceTextEmbeddingModel usage:", usage)
 
         result = TextEmbeddingResult(
             model=model,
@@ -116,7 +115,6 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
             usage=usage,
         )
 
-        print("yuehua XinferenceTextEmbeddingModel result:", result)
         return result
 
     def get_num_tokens(self, model: str, credentials: dict, texts: List[str]) -> int:

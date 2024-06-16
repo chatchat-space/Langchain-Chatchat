@@ -247,7 +247,7 @@ def get_Embeddings(
 def check_embed_model(embed_model: str=DEFAULT_EMBEDDING_MODEL) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
-        embeddings.embed_query("this is a yuehua test")
+        embeddings.embed_query("this is a test")
         return True
     except Exception as e:
         logger.error(f"failed to access embed model '{embed_model}': {e}", exc_info=True)

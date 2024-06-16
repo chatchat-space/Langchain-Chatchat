@@ -218,8 +218,6 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
     async def create_embeddings(
         self, provider: str, request: Request, embeddings_request: EmbeddingsRequest
     ):
-        print(f"yuehua EmbeddingsRequest: {embeddings_request}")
-        print(f"yuehua EmbeddingsRequest as dict: {embeddings_request.dict()}")
         logger.info(
             f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
         )
@@ -230,14 +228,10 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 model=embeddings_request.model,
             )
 
-            print("yuehua model_instance:", model_instance)
-
             # 判断embeddings_request.input是否为list[int]
             input = ""
             if isinstance(embeddings_request.input, list):
                 tokens = embeddings_request.input
-
-                print("yuehua tokens(embeddings_request.input):", tokens)
 
                 try:
                     encoding = tiktoken.encoding_for_model(embeddings_request.model)
@@ -253,24 +247,15 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     if isinstance(token, int):
                         text = encoding.decode(token)
                         input += text
-                    elif isinstance(token, list):  # 增加判断，如果token是list类型
-                        print("yuehua token(list):", token)
-
+                    # 增加判断，如果token是list类型
+                    elif isinstance(token, list):
                         text = encoding.decode(token)
-
-                        print("yuehua text(token(list)):", text)
-
                         input += text
                     else:
-
-                        print("yuehua token(other):", token)
-
                         input += token
 
             else:
                 input = embeddings_request.input
-
-            print("yuehua input:", input)
 
             response = model_instance.invoke_text_embedding(
                 texts=[input], user="abc-123"
