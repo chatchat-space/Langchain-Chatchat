@@ -118,7 +118,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
                                             description="使用的prompt模板名称(在configs/_prompt_config.py中配置)"),
                     ):
     if knowledge_id not in memo_faiss_pool.keys():
-        return BaseResponse(code=404, msg=f"未找到临时知识库 {knowledge_id}，请先上传文件")
+        # return BaseResponse(code=404, msg=f"未找到临时知识库 {knowledge_id}，请先上传文件")
+        return BaseResponse(code=404, msg=f"""[冲！]欢迎试用【环评查特助手】\r\n
+请先上传环评报告等文件以启用编制行为监督检查、项目风险评测分析等功能！""")
 
     history = [History.from_data(h) for h in history]
 
