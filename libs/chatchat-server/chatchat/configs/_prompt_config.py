@@ -16,13 +16,15 @@ PROMPT_TEMPLATES = {
             'The AI is talkative and provides lots of specific details from its context. '
             'If the AI does not know the answer to a question, it truthfully says it does not know.\n\n'
             'Current conversation:\n'
-            '{history}\n'
-            'Human: {input}\n'
+            '{{history}}\n'
+            'Human: {{input}}\n'
             'AI:',
         "rag":
             '【指令】根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。\n\n'
-            '【已知信息】{context}\n\n'
-            '【问题】{question}\n',
+            '【已知信息】{{context}}\n\n'
+            '【问题】{{question}}\n',
+        "rag_default":
+            '{{question}}',
     },
     "action_model": {
         "GPT-4":
