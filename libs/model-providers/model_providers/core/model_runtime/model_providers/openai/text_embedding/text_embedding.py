@@ -44,7 +44,6 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
         :return: embeddings result
         """
 
-        print("this is OpenAITextEmbeddingModel yuehua")
         # transform credentials to kwargs for model instance
         credentials_kwargs = self._to_credential_kwargs(credentials)
         # init model client
@@ -91,7 +90,6 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
             used_tokens += embedding_used_tokens
             batched_embeddings += embeddings_batch
 
-        print("yuehua OpenAITextEmbeddingModel batched_embeddings:", batched_embeddings)
         print("yuehua OpenAITextEmbeddingModel used_tokens:", used_tokens)
 
         results: List[List[List[float]]] = [[] for _ in range(len(texts))]

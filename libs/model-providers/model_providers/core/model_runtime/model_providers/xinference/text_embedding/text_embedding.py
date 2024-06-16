@@ -65,8 +65,6 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
         :return: embeddings result
         """
 
-        print("this is XinferenceTextEmbeddingModel yuehua")
-
         server_url = credentials["server_url"]
         model_uid = credentials["model_uid"]
 
@@ -89,8 +87,6 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
             embeddings = handle.create_embedding(input=texts)
         except RuntimeError as e:
             raise InvokeServerUnavailableError(e)
-
-        print("yuehua XinferenceTextEmbeddingModel embeddings:", embeddings)
 
         """
         for convenience, the response json is like:
