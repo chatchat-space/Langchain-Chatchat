@@ -232,7 +232,6 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             input = ""
             if isinstance(embeddings_request.input, list):
                 tokens = embeddings_request.input
-
                 try:
                     encoding = tiktoken.encoding_for_model(embeddings_request.model)
                 except KeyError:
@@ -241,7 +240,6 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     )
                     model = "cl100k_base"
                     encoding = tiktoken.get_encoding(model)
-
                 for i, token in enumerate(tokens):
                     # 判断是否是int
                     if isinstance(token, int):

@@ -43,7 +43,6 @@ class OpenAITextEmbeddingModel(_CommonOpenAI, TextEmbeddingModel):
         :param user: unique user id
         :return: embeddings result
         """
-
         # transform credentials to kwargs for model instance
         credentials_kwargs = self._to_credential_kwargs(credentials)
         # init model client

@@ -64,7 +64,6 @@ class XinferenceTextEmbeddingModel(TextEmbeddingModel):
         :param user: unique user id
         :return: embeddings result
         """
-
         server_url = credentials["server_url"]
         model_uid = credentials["model_uid"]
 

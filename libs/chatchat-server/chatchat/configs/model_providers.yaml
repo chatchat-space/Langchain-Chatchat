@@ -20,11 +20,11 @@
 
 xinference:
   model_credential:
-    - model: 'glm4-chat'
+    - model: 'glm-4'
       model_type: 'llm'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'glm4-chat'
+        model_uid: 'glm-4'
     - model: 'qwen1.5-chat'
       model_type: 'llm'
       model_credentials:
