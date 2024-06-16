@@ -3,7 +3,9 @@ import multiprocessing
 from contextlib import asynccontextmanager
 import multiprocessing as mp
 import os
+
 import logging
+import logging.config
 import sys
 from multiprocessing import Process
 logger = logging.getLogger()
@@ -64,6 +66,13 @@ def run_api_server(model_platforms_shard: Dict,
     import uvicorn
     from chatchat.server.utils import set_httpx_config
     from chatchat.configs import MODEL_PLATFORMS, API_SERVER
+    from model_providers.core.utils.utils import (
+        get_config_dict,
+        get_log_file,
+        get_timestamp_ms,
+    )
+
+    from chatchat.configs import LOG_PATH
     MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
     logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
@@ -73,6 +82,14 @@ def run_api_server(model_platforms_shard: Dict,
     host = API_SERVER["host"]
     port = API_SERVER["port"]
 
+    logging_conf = get_config_dict(
+        "INFO",
+        get_log_file(log_path=LOG_PATH, sub_dir=f"run_api_server_{get_timestamp_ms()}"),
+
+        1024*1024*1024*3,
+        1024*1024*1024*3,
+    )
+    logging.config.dictConfig(logging_conf)  # type: ignore
     uvicorn.run(app, host=host, port=port)
 
 
@@ -81,6 +98,13 @@ def run_webui(model_platforms_shard: Dict,
     import sys
     from chatchat.server.utils import set_httpx_config
     from chatchat.configs import MODEL_PLATFORMS, WEBUI_SERVER
+    from model_providers.core.utils.utils import (
+        get_config_dict,
+        get_log_file,
+        get_timestamp_ms,
+    )
+
+    from chatchat.configs import LOG_PATH
     if model_platforms_shard.get('provider_platforms'):
         MODEL_PLATFORMS.extend(model_platforms_shard.get('provider_platforms'))
     logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
@@ -133,6 +157,16 @@ def run_webui(model_platforms_shard: Dict,
         from streamlit.web import bootstrap
     except ImportError:
         from streamlit import bootstrap
+
+
+    logging_conf = get_config_dict(
+        "INFO",
+        get_log_file(log_path=LOG_PATH, sub_dir=f"run_webui_{get_timestamp_ms()}"),
+
+        1024*1024*1024*3,
+        1024*1024*1024*3,
+        )
+    logging.config.dictConfig(logging_conf)  # type: ignore
     bootstrap.load_config_options(flag_options=flag_options)
     bootstrap.run(script_dir, False, args, flag_options)
     started_event.set()
@@ -216,7 +250,20 @@ async def start_main_server():
     import time
     import signal
     from chatchat.configs import LOG_PATH
+    from model_providers.core.utils.utils import (
+        get_config_dict,
+        get_log_file,
+        get_timestamp_ms,
+    )
 
+    logging_conf = get_config_dict(
+        "INFO",
+        get_log_file(log_path=LOG_PATH, sub_dir=f"start_main_server_{get_timestamp_ms()}"),
+
+        1024*1024*1024*3,
+        1024*1024*1024*3,
+        )
+    logging.config.dictConfig(logging_conf)  # type: ignore
     def handler(signalname):
         """
         Python 3.9 has `signal.strsignal(signalnum)` so this closure would not be needed.

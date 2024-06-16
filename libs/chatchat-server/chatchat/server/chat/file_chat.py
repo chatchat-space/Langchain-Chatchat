@@ -14,6 +14,10 @@ from chatchat.server.chat.utils import History
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 import json
 import os
+import nest_asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_files_in_thread(
@@ -82,9 +86,13 @@ def upload_temp_docs(
             documents += docs
         else:
             failed_files.append({file: msg})
+    try:
 
-    with memo_faiss_pool.load_vector_store(kb_name=id).acquire() as vs:
-        vs.add_documents(documents)
+        with memo_faiss_pool.load_vector_store(kb_name=id).acquire() as vs:
+            vs.add_documents(documents)
+    except Exception as e:
+        logger.error(f"Failed to add documents to faiss: {e}")
+
     return BaseResponse(data={"id": id, "failed_files": failed_files})
 
 
@@ -139,7 +147,9 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             callbacks=callbacks,
         )
         embed_func = get_Embeddings()
-        embeddings = await embed_func.aembed_query(query)
+        # 同步调用异步函数
+        nest_asyncio.apply()
+        embeddings = asyncio.get_event_loop().run_until_complete(embed_func.aembed_query(query))
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
             docs = [x[0] for x in docs]
