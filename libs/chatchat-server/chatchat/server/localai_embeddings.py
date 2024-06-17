@@ -113,7 +113,7 @@ async def async_embed_with_retry(embeddings: LocalAIEmbeddings, **kwargs: Any) -
 
     @_async_retry_decorator(embeddings)
     async def _async_embed_with_retry(**kwargs: Any) -> Any:
-        response = await embeddings.async_client.acreate(**kwargs)
+        response = await embeddings.async_client.create(**kwargs)
         return _check_response(response)
 
     return await _async_embed_with_retry(**kwargs)
