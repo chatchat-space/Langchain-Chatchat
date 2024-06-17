@@ -1,5 +1,5 @@
 # LangChain 的 Shell 工具
-from langchain.tools.shell import ShellTool
+from langchain_community.tools import ShellTool
 
 from chatchat.server.pydantic_v1 import Field
 from .tools_registry import regist_tool, BaseToolOutput

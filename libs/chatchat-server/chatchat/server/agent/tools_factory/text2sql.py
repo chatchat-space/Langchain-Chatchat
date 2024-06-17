@@ -1,4 +1,4 @@
-from langchain.utilities import SQLDatabase
+from langchain_community.utilities import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain,SQLDatabaseSequentialChain
 from chatchat.server.utils import get_tool_config
 from chatchat.server.pydantic_v1 import Field
