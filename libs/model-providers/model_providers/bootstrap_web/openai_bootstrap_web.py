@@ -245,6 +245,10 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     if isinstance(token, int):
                         text = encoding.decode(token)
                         input += text
+                    # 增加判断, 如果 token 是 list 类型(如 embedding 使用 text-embedding-3-small 时)
+                    elif isinstance(token, list):
+                        text = encoding.decode(token)
+                        input += text
                     else:
                         input += token
 

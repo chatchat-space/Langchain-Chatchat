@@ -214,7 +214,7 @@ def get_Embeddings(
         embed_model: str = DEFAULT_EMBEDDING_MODEL,
         local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
-    from langchain_community.embeddings.openai import OpenAIEmbeddings
+    from langchain_openai import OpenAIEmbeddings
     from langchain_community.embeddings import OllamaEmbeddings
     from chatchat.server.localai_embeddings import LocalAIEmbeddings  # TODO: fork of lc pr #17154
 

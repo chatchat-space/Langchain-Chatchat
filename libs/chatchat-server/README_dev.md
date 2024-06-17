@@ -37,11 +37,16 @@ ConfigWorkSpace是一个配置工作空间的抽象类，提供基础的配置�
 > 详细配置请参考[README.md](../model-providers/README.md)
 
 
-- 初始化仓库
+- 初始化仓库(使用默认 embedding 模型)
 > 请注意：这个命令会清空数据库，如果您有重要数据，请备份
 ```shell
 cd Langchain-Chatchat/libs/chatchat-server/chatchat
 python init_database.py --recreate-vs
+```
+- 初始化仓库(指定 embedding 模型)
+```shell
+cd Langchain-Chatchat/libs/chatchat-server/chatchat
+python init_database.py --recreate-vs --embed-model=text-embedding-3-small # embedding 模型名称
 ```
 - 启动服务
 ```shell
