@@ -24,7 +24,7 @@ if __name__ == "__main__":
             'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
             'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
         },
-        layout="wide"
+        layout="centered"
     )
 
     # use the following code to set the app to wide mode and the html markdown to increase the sidebar width
