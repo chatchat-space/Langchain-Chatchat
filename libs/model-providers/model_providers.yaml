@@ -12,6 +12,12 @@ openai:
         openai_api_key: 'sk-'
         openai_organization: ''
         openai_api_base: ''
+    - model: 'text-embedding-3-small'
+      model_type: 'text-embedding'
+      model_credentials:
+        openai_api_key: 'sk-'
+        openai_organization: ''
+        openai_api_base: ''
 
   provider_credential:
     openai_api_key: 'sk-'
@@ -20,11 +26,11 @@ openai:
 
 xinference:
   model_credential:
-    - model: 'chatglm3-6b'
+    - model: 'glm4-chat'
       model_type: 'llm'
       model_credentials:
         server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'chatglm3-6b'
+        model_uid: 'glm4-chat'
     - model: 'bge-large-zh-v1.5'
       model_type: 'text-embedding'
       model_credentials:

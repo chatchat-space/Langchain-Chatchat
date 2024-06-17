@@ -122,7 +122,196 @@ Xinference 内置模型会自动下载,如果想让它加载本机下载好的�
 ## 快速上手
 
 ### 安装部署
-<待补充>
+
+#### 1. 启动 llm 和 embedding 模型推理
+这里以 Xinference 举例, 请参考 [Xinference文档](https://inference.readthedocs.io/zh-cn/latest/getting_started/installation.html)
+
+注意: 请不要将 chatchat 和 Xinference 放在相同的虚拟环境中, 比如 conda, venv, virtualenv 等.
+
+#### 2. 安装 Langchain-Chatchat
+```shell
+pip install langchain-chatchat -U
+```
+
+#### 3. 查看 Langchain-Chatchat 配置
+
+##### 3.1 查看 chatchat-config 命令参数
+```shell
+chatchat-config --help
+```
+```text 
+Usage: chatchat-config [OPTIONS] COMMAND [ARGS]...
+
+  指令` chatchat-config` 工作空间配置
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  basic   基础配置
+  kb      知识库配置
+  model   模型配置
+  server  服务配置
+```
+
+##### 3.2 查看 chatchat-config basic 基础配置
+```shell
+chatchat-config basic --show
+```
+```text 
+{
+    "log_verbose": false,
+    "CHATCHAT_ROOT": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat",
+    "DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data",
+    "IMG_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/img",
+    "NLTK_DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/nltk_data",
+    "LOG_FORMAT": "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s",
+    "LOG_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/logs",
+    "MEDIA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/media",
+    "BASE_TEMP_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/temp",
+    "class_name": "ConfigBasic"
+}
+```
+
+#### 4. 自定义平台加载
+配置 3.2 中 *CHATCHAT_ROOT* 变量指向的路径下 configs 中的`model_providers.yaml`文件, 即可完成自定义平台加载.
+```shell
+# 这里应为 3.2 中 "CHATCHAT_ROOT" 变量指向目录
+cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
+vim model_providers.yaml
+```
+配置介绍请参考 [README.md](libs/model-providers/README.md)
+
+详细配置请参考 [model_providers.yaml](libs/model-providers/model_providers.yaml)
+
+#### 5. 初始化知识库
+```shell
+cd # 回到原始目录
+chatchat-kb -r
+```
+指定 text-embedding 模型进行初始化( 如有需要 ):
+```shell
+cd # 回到原始目录
+chatchat-kb -r --embed-model=text-embedding-3-small
+```
+出现以下日志即为成功:
+```text 
+
+----------------------------------------------------------------------------------------------------
+知识库名称      ：samples
+知识库类型      ：faiss
+向量模型：      ：bge-large-zh-v1.5
+知识库路径      ：/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples
+文件总数量      ：47
+入库文件数      ：42
+知识条目数      ：740
+用时            ：0:02:29.701002
+----------------------------------------------------------------------------------------------------
+
+总计用时        ：0:02:33.414425
+
+2024-06-17 22:30:47,933 - init_database.py[line:176] - WARNING: Sending SIGKILL to <Process name='Model providers Server (3949160)' pid=3949160 parent=3949098 started daemon>
+```
+知识库路径为 3.2 中 *DATA_PATH* 变量指向的路径下的 knowledge_base 目录中:
+```shell
+(chatchat) [root@VM-centos ~]# ls /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples/vector_store
+bge-large-zh-v1.5  text-embedding-3-small
+```
+
+#### 6. 启动服务
+```shell
+chatchat -a
+```
+出现以下界面即为启动成功:
+> todo: 这里贴一张启动成功的图 @imClumsyPanda
+
+注意: 由于 chatchat-config server 配置默认监听地址 *DEFAULT_BIND_HOST* 为 127.0.0.1, 所以无法通过其他 ip 进行访问, 如下:
+```shell
+chatchat-config server --show
+```
+```text 
+{
+    "HTTPX_DEFAULT_TIMEOUT": 300.0,
+    "OPEN_CROSS_DOMAIN": true,
+    "DEFAULT_BIND_HOST": "127.0.0.1",
+    "WEBUI_SERVER_PORT": 8501,
+    "API_SERVER_PORT": 7861,
+    "WEBUI_SERVER": {
+        "host": "127.0.0.1",
+        "port": 8501
+    },
+    "API_SERVER": {
+        "host": "127.0.0.1",
+        "port": 7861
+    },
+    "class_name": "ConfigServer"
+}
+```
+如需通过机器ip 进行访问(如 linux 系统), 需要将监听地址修改为 0.0.0.0.
+```shell
+chatchat-config server --default_bind_host=0.0.0.0
+```
+```text 
+{
+    "HTTPX_DEFAULT_TIMEOUT": 300.0,
+    "OPEN_CROSS_DOMAIN": true,
+    "DEFAULT_BIND_HOST": "0.0.0.0",
+    "WEBUI_SERVER_PORT": 8501,
+    "API_SERVER_PORT": 7861,
+    "WEBUI_SERVER": {
+        "host": "0.0.0.0",
+        "port": 8501
+    },
+    "API_SERVER": {
+        "host": "0.0.0.0",
+        "port": 7861
+    },
+    "class_name": "ConfigServer"
+}
+```
+#### 7. 修改默认模型( 如有需要 )
+
+##### 7.1 查看当前默认模型
+```shell
+chatchat-config model --show
+```
+```text 
+{
+    "DEFAULT_LLM_MODEL": "glm4-chat",
+    "DEFAULT_EMBEDDING_MODEL": "bge-large-zh-v1.5",
+    "Agent_MODEL": null,
+    "HISTORY_LEN": 3,
+    "MAX_TOKENS": null,
+    "TEMPERATURE": 0.7,
+    ...
+    "class_name": "ConfigModel"
+}
+```
+##### 7.2 修改默认模型
+```shell
+# 修改默认 llm 模型
+chatchat-config model --default_llm_model=gpt-3.5-turbo-0125
+# 修改默认 embedding 模型
+chatchat-config model --default_embedding_model=text-embedding-3-small
+```
+```shell
+chatchat-config model --show
+```
+```text 
+{
+    "DEFAULT_LLM_MODEL": "gpt-3.5-turbo-0125",
+    "DEFAULT_EMBEDDING_MODEL": "text-embedding-3-small",
+    "Agent_MODEL": null,
+    "HISTORY_LEN": 3,
+    "MAX_TOKENS": null,
+    "TEMPERATURE": 0.7,
+    ...
+    "class_name": "ConfigModel"
+}
+```
+这里仅做抛砖引玉, chatchat-config --help 涉及到的配置 (basic, kb, model, server) 均可采取此法修改, 大家可通过 --help 参数自行查看支持参数. 
+更多帮助请参考 [README.md](libs/chatchat-server/README.md)
+
 
 ### 旧版本迁移
 
