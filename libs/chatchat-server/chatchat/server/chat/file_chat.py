@@ -149,10 +149,7 @@ async def file_chat(query: str = Body(..., description="用户输入", examples=
             callbacks=callbacks,
         )
         embed_func = get_Embeddings()
-        # 同步调用异步函数
-        # nest_asyncio.apply()
-        # LocalAIEmbeddings不支持异步调用
-        embeddings = embed_func.embed_query(query)
+        embeddings = await embed_func.aembed_query(query)
         with memo_faiss_pool.acquire(knowledge_id) as vs:
             docs = vs.similarity_search_with_score_by_vector(embeddings, k=top_k, score_threshold=score_threshold)
             docs = [x[0] for x in docs]
