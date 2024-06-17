@@ -23,7 +23,7 @@ class AliTextSplitter(CharacterTextSplitter):
                 "Could not import modelscope python package. "
                 "Please install modelscope with `pip install modelscope`. "
             )
-
+    #testing 
 
         p = pipeline(
             task="document-segmentation",
