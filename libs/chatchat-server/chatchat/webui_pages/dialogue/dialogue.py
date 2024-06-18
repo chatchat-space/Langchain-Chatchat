@@ -194,8 +194,9 @@ def dialogue_page(
                             else:
                                 tool_input[k] = st.text_input(v["title"], v.get("default"))
 
-            uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
-            files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
+            # uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
+            # files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
+            files_upload = None
 
         with tab2:
             # 会话
