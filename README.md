@@ -11,17 +11,13 @@
 
 ## 目录
 
-* [介绍](README.md#介绍)
-* [解决的痛点](README.md#解决的痛点)
+* [概述](README.md#概述)
+* [功能介绍](README.md#Langchain-Chatchat-提供哪些功能)
 * [快速上手](README.md#快速上手)
-    * [1. 环境配置](README.md#1-环境配置)
-    * [2. 模型下载](README.md#2-模型下载)
-    * [3. 初始化知识库和配置文件](README.md#3-初始化知识库和配置文件)
-    * [4. 一键启动](README.md#4-一键启动)
-    * [5. 启动界面示例](README.md#5-启动界面示例)
+   * [安装部署](README.md#安装部署)
 * [联系我们](README.md#联系我们)
 
-## 介绍
+## 概述
 
 🤖️ 一种利用 [langchain](https://github.com/langchain-ai/langchain)
 思想实现的基于本地知识库的问答应用，目标期望建立一套对中文场景与开源模型支持友好、可离线运行的知识库问答解决方案。
@@ -122,7 +118,270 @@ Xinference 内置模型会自动下载,如果想让它加载本机下载好的�
 ## 快速上手
 
 ### 安装部署
-<待补充>
+
+#### 1. 安装 Langchain-Chatchat
+从 0.3.0 版本起，Langchain-Chatchat 提供以 Python 库形式的安装方式，具体安装请执行：
+
+```shell
+pip install langchain-chatchat -U
+```
+
+#### 2. 模型推理框架并加载模型
+从 0.3.0 版本起，Langchain-Chatchat 不再根据用户输入的本地模型路径直接进行模型加载，改为支持市面常见的各大模型加载框架接入，如 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api) 等。
+
+因此，请确认在启动 Langchain-Chatchat 项目前，首先进行模型推理框架的运行，并加载所需使用的模型。
+
+这里以 Xinference 举例, 请参考 [Xinference文档](https://inference.readthedocs.io/zh-cn/latest/getting_started/installation.html) 进行框架部署与模型加载。
+
+> [!WARNING]  
+> 为避免依赖冲突，请将 Langchain-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中, 比如 conda, venv, virtualenv 等。
+
+#### 3. 查看与修改 Langchain-Chatchat 配置
+从 0.3.0 版本起，Langchain-Chatchat 不再使用本地文件的方式进行配置修改，改为使用命令行的方式，并会在后续版本中增加配置项修改页面。
+
+以下从查看配置、修改配置两种操作类型进行介绍。
+
+##### 3.1 查看 chatchat-config 命令帮助
+
+输入以下命令查看可选配置类型：
+```shell
+chatchat-config --help
+```
+
+这时会得到返回：
+```text 
+Usage: chatchat-config [OPTIONS] COMMAND [ARGS]...
+
+  指令` chatchat-config` 工作空间配置
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  basic   基础配置
+  kb      知识库配置
+  model   模型配置
+  server  服务配置
+```
+
+可根据上述配置命令选择需要查看或修改的配置类型，以`基础配置`为例，想要进行`基础配置`查看或修改时可以输入以下命令获取帮助信息：
+```shell
+chatchat-config basic --help
+```
+
+这时会得到返回信息：
+```text
+Usage: chatchat-config basic [OPTIONS]
+
+  基础配置
+
+Options:
+  --verbose [true|false]  是否开启详细日志
+  --data TEXT             初始化数据存放路径，注意：目录会清空重建
+  --format TEXT           日志格式
+  --clear                 清除配置
+  --show                  显示配置
+  --help                  Show this message and exit.
+```
+
+##### 3.2 使用 chatchat-config 查看对应配置参数
+
+以`基础配置`为例，可根据上述命令帮助内容确认，需要查看`基础配置`的配置参数，可直接输入：
+```shell
+chatchat-config basic --show
+```
+
+在未进行配置项修改时，可得到默认配置内容如下：
+```text 
+{
+    "log_verbose": false,
+    "CHATCHAT_ROOT": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat",
+    "DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data",
+    "IMG_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/img",
+    "NLTK_DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/nltk_data",
+    "LOG_FORMAT": "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s",
+    "LOG_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/logs",
+    "MEDIA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/media",
+    "BASE_TEMP_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/temp",
+    "class_name": "ConfigBasic"
+}
+```
+
+##### 3.2 使用 chatchat-config 修改对应配置参数
+以修改`模型配置`中`默认llm模型`为例，可以执行以下命令行查看配置项名称：
+```shell
+chatchat-config model --help
+```
+
+这时会得到
+```text 
+Usage: chatchat-config model [OPTIONS]
+
+  模型配置
+
+Options:
+  --default_llm_model TEXT        默认llm模型
+  --default_embedding_model TEXT  默认embedding模型
+  --agent_model TEXT              agent模型
+  --history_len INTEGER           历史长度
+  --max_tokens INTEGER            最大tokens
+  --temperature FLOAT             温度
+  --support_agent_models TEXT     支持的agent模型
+  --model_providers_cfg_path_config TEXT
+                                  模型平台配置文件路径
+  --model_providers_cfg_host TEXT
+                                  模型平台配置服务host
+  --model_providers_cfg_port INTEGER
+                                  模型平台配置服务port
+  --set_model_platforms TEXT      模型平台配置 as a JSON string.
+  --set_tool_config TEXT          工具配置项  as a JSON string.
+  --clear                         清除配置
+  --show                          显示配置
+  --help                          Show this message and exit.
+```
+
+可首先查看当前`模型配置`的配置项：
+```shell
+chatchat-config model --show
+```
+
+这时会得到
+```text 
+{
+    "DEFAULT_LLM_MODEL": "glm4-chat",
+    "DEFAULT_EMBEDDING_MODEL": "bge-large-zh-v1.5",
+    "Agent_MODEL": null,
+    "HISTORY_LEN": 3,
+    "MAX_TOKENS": null,
+    "TEMPERATURE": 0.7,
+    ...
+    "class_name": "ConfigModel"
+}
+```
+
+需要修改`默认llm模型`为`qwen2-instruct`时，可执行：
+```shell
+chatchat-config model --default_llm_model qwen2-instruct
+```
+
+更多配置项修改帮助请参考 [README.md](libs/chatchat-server/README.md)
+
+#### 4. 自定义模型接入配置
+完成上述项目配置项查看与修改后，需要根据步骤**2. 模型推理框架并加载模型** 中选用的模型推理框架与加载的模型进行模型接入配置。
+
+参考配置 3.2 中 `CHATCHAT_ROOT` 变量指向的路径下 configs 中的 `model_providers.yaml` 文件, 即可完成自定义平台加载.
+```shell
+# 这里应为 3.2 中 "CHATCHAT_ROOT" 变量指向目录
+cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
+vim model_providers.yaml
+```
+配置介绍请参考 [model-providers/README.md](libs/model-providers/README.md)
+
+详细配置请参考 [model_providers.yaml](libs/model-providers/model_providers.yaml)
+
+#### 5. 初始化知识库
+> [!WARNING]  
+> 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**与**步骤4**完成模型接入配置。
+
+```shell
+cd # 回到原始目录
+chatchat-kb -r
+```
+
+指定 text-embedding 模型进行初始化(如有需要):
+```shell
+cd # 回到原始目录
+chatchat-kb -r --embed-model=text-embedding-3-small
+```
+
+出现以下日志即为成功:
+```text 
+
+----------------------------------------------------------------------------------------------------
+知识库名称      ：samples
+知识库类型      ：faiss
+向量模型：      ：bge-large-zh-v1.5
+知识库路径      ：/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples
+文件总数量      ：47
+入库文件数      ：42
+知识条目数      ：740
+用时            ：0:02:29.701002
+----------------------------------------------------------------------------------------------------
+
+总计用时        ：0:02:33.414425
+
+2024-06-17 22:30:47,933 - init_database.py[line:176] - WARNING: Sending SIGKILL to <Process name='Model providers Server (3949160)' pid=3949160 parent=3949098 started daemon>
+```
+
+知识库路径为 3.2 中 *DATA_PATH* 变量指向的路径下的 knowledge_base 目录中:
+```shell
+(chatchat) [root@VM-centos ~]# ls /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples/vector_store
+bge-large-zh-v1.5  text-embedding-3-small
+```
+
+#### 6. 启动项目
+```shell
+chatchat -a
+```
+
+出现以下界面即为启动成功:
+
+![WebUI界面](docs/img/langchain_chatchat_webui.png)
+
+> [!WARNING]  
+> 由于 chatchat-config server 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
+>
+> 如需修改请参考以下方式：
+> <details>
+> ```shell
+> chatchat-config server --show
+> ```
+> 
+> 这时会得到
+> ```text 
+> {
+>     "HTTPX_DEFAULT_TIMEOUT": 300.0,
+>     "OPEN_CROSS_DOMAIN": true,
+>     "DEFAULT_BIND_HOST": "127.0.0.1",
+>     "WEBUI_SERVER_PORT": 8501,
+>     "API_SERVER_PORT": 7861,
+>     "WEBUI_SERVER": {
+>         "host": "127.0.0.1",
+>         "port": 8501
+>     },
+>     "API_SERVER": {
+>         "host": "127.0.0.1",
+>         "port": 7861
+>     },
+>     "class_name": "ConfigServer"
+> }
+> ```
+> 
+> 如需通过机器ip 进行访问(如 Linux 系统), 需要将监听地址修改为 0.0.0.0。
+> ```shell
+> chatchat-config server --default_bind_host=0.0.0.0
+> ```
+> 
+> 这时会得到
+> ```text 
+> {
+>     "HTTPX_DEFAULT_TIMEOUT": 300.0,
+>     "OPEN_CROSS_DOMAIN": true,
+>     "DEFAULT_BIND_HOST": "0.0.0.0",
+>     "WEBUI_SERVER_PORT": 8501,
+>     "API_SERVER_PORT": 7861,
+>     "WEBUI_SERVER": {
+>         "host": "0.0.0.0",
+>         "port": 8501
+>     },
+>     "API_SERVER": {
+>         "host": "0.0.0.0",
+>         "port": 7861
+>     },
+>     "class_name": "ConfigServer"
+> }
+> ```
+> </details>
 
 ### 旧版本迁移
 
@@ -133,9 +392,8 @@ Xinference 内置模型会自动下载,如果想让它加载本机下载好的�
 - 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
 
 
-### 注意
-
-以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
+> [!NOTE]  
+> 以上方式只是为了快速上手，如果需要更多的功能和自定义启动方式，请参考[Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
 
 
 ---
