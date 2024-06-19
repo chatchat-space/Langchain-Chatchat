@@ -42,7 +42,7 @@ async def completion(query: str = Body(..., description="用户输入", examples
         )
 
         prompt_template = get_prompt_template("completion", prompt_name)
-        prompt = PromptTemplate.from_template(prompt_template)
+        prompt = PromptTemplate.from_template(prompt_template, template_format="jinja2")
         chain = LLMChain(prompt=prompt, llm=model)
 
         # Begin a task that runs in the background.

@@ -94,7 +94,7 @@ async def chat_completions(
             ) if conversation_id else None
 
             tool_result = await tool.ainvoke(tool_input)
-            prompt_template = PromptTemplate.from_template(get_prompt_template("llm_model", "rag"))
+            prompt_template = PromptTemplate.from_template(get_prompt_template("llm_model", "rag"), template_format="jinja2")
             body.messages[-1]["content"] = prompt_template.format(context=tool_result, question=body.messages[-1]["content"])
             del body.tools
             del body.tool_choice

@@ -1,6 +1,7 @@
 import base64
 from datetime import datetime
 import os
+from urllib.parse import urlencode
 import uuid
 from typing import List, Dict
 
@@ -14,6 +15,7 @@ from streamlit_extras.bottom_container import bottom
 from chatchat.configs import (LLM_MODEL_CONFIG, TEMPERATURE, MODEL_PLATFORMS, DEFAULT_LLM_MODEL,
                               DEFAULT_EMBEDDING_MODEL)
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.utils import MsgType, get_config_models
 from chatchat.webui_pages.utils import *
 from chatchat.webui_pages.dialogue.utils import process_files
@@ -307,7 +309,8 @@ def dialogue_page(
                 tool_choice=tool_choice,
                 extra_body=extra_body,
         ):
-            # print("\n\n", d.status, "\n", d, "\n\n")
+            # from pprint import pprint
+            # pprint(d)
             message_id = d.message_id
             metadata = {
                 "message_id": message_id,
@@ -354,8 +357,18 @@ def dialogue_page(
                 chat_box.update_msg(text.replace("\n", "\n\n"))
             elif d.status is None:  # not agent chat
                 if getattr(d, "is_ref", False):
-                    chat_box.insert_msg(Markdown(d.choices[0].delta.content or "", in_expander=True, state="complete",
-                                                 title="参考资料"))
+                    context = ""
+                    docs = d.tool_output.get("docs")
+                    source_documents = []
+                    for inum, doc in enumerate(docs):
+                        doc = DocumentWithVSId.parse_obj(doc)
+                        filename = doc.metadata.get("source")
+                        parameters = urlencode({"knowledge_base_name": d.tool_output.get("knowledge_base"), "file_name": filename})
+                        url = f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+                        source_documents.append(ref)
+                    context = "\n".join(source_documents)
+                    chat_box.insert_msg(Markdown(context, in_expander=True, state="complete", title="参考资料"))
                     chat_box.insert_msg("")
                 else:
                     text += d.choices[0].delta.content or ""
