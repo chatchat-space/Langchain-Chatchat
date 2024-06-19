@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240618"
+version = "0.3.0.20240619"
 description = ""
 authors = ["chatchat"]
 readme = "README.md"
