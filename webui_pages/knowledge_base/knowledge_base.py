@@ -214,8 +214,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                     ("docs_count", "文档数量"): {},
                     ("text_splitter", "分词器"): {},
                     # ("create_time", "创建时间"): {},
-                    ("in_folder", "源文件"): {"cellRenderer": cell_renderer},
-                    ("in_db", "向量库"): {"cellRenderer": cell_renderer},
+                    ("in_folder", "源文件"): {},
+                    ("in_db", "向量库"): {},
                 },
                 "multiple",
             )
