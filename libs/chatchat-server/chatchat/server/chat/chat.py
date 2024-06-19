@@ -73,7 +73,7 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         memory=memory
     )
     classifier_chain = (
-            PromptTemplate.from_template(prompts["preprocess_model"])
+            PromptTemplate.from_template(prompts["preprocess_model"], template_format="jinja2")
             | models["preprocess_model"]
             | StrOutputParser()
     )

@@ -1,3 +1,5 @@
+# 除 Agent 模板使用 f-string 外，其它均使用 jinja2 格式
+
 PROMPT_TEMPLATES = {
     "preprocess_model": {
         "default":

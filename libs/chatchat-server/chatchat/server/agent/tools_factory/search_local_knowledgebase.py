@@ -16,22 +16,18 @@ template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 class KBToolOutput(BaseToolOutput):
     def __str__(self) -> str:
         context = ""
-        docs = self.data
+        docs = self.data["docs"]
         source_documents = []
 
         for inum, doc in enumerate(docs):
             doc = DocumentWithVSId.parse_obj(doc)
-            filename = doc.metadata.get("source")
-            parameters = urlencode({"knowledge_base_name": self.extras.get("database"), "file_name": filename})
-            url = f"download_doc?" + parameters
-            text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-            source_documents.append(text)
+            source_documents.append(doc.page_content)
 
         if len(source_documents) == 0:
             context = "没有找到相关文档,请更换关键词重试"
         else:
             for doc in source_documents:
-                context += doc + "\n"
+                context += doc + "\n\n"
 
         return context
 
@@ -42,7 +38,7 @@ def search_knowledgebase(query: str, database: str, config: dict):
         knowledge_base_name=database,
         top_k=config["top_k"],
         score_threshold=config["score_threshold"])
-    return docs
+    return {"knowledge_base": database, "docs": docs}
 
 
 @regist_tool(description=template_knowledge, title="本地知识库")
