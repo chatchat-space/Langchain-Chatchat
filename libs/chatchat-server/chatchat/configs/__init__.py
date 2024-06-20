@@ -751,7 +751,7 @@ def __getattr__(name: str) -> Any:
         return _import_api_server()
 
 
-VERSION = "v0.3.0-preview"
+VERSION = "v0.3.0"
 
 __all__ = [
     "VERSION",
