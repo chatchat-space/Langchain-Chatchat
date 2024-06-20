@@ -4,7 +4,7 @@ FROM python:3.11
 LABEL maintainer=chatchat
 # Environment Variables
 ENV HOME=/usr/local/lib/python3.11/site-packages/chatchat
-# Commands
+# Init Environment
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     apt-get update -y && \
@@ -12,11 +12,11 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     apt-get clean && \
     pip install openpyxl networkx && \
     rm -rf /var/lib/apt/lists/*
-# 安装需要的包
+# Install Chatchat
 RUN pip install langchain-chatchat[xinference] -U
-# 进行自定义设置
+# Make Custom Settings
 RUN chatchat-config server --default_bind_host=0.0.0.0
-# 拷贝自定义配置文件和数据文件
+# Copy Custom Files
 COPY /libs/chatchat-server/chatchat/configs/model_providers.yaml $HOME/configs/model_providers.yaml
 COPY /libs/chatchat-server/chatchat/data $HOME/data
 WORKDIR $HOME
