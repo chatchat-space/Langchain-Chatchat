@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  xinference:
+    image: xprobe/xinference:v0.12.1
+    command: xinference-local -H 0.0.0.0
+    ports:
+      - "9997:9997"
+    volumes:
+      - /root/xinference/.xinference:/root/.xinference
+      - /root/xinference/.cache/huggingface:/root/.cache/huggingface
+      - /root/xinference/.cache/modelscope:/root/.cache/modelscope
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+  chatchat:
+    image: chatchat:0.3
+    ports:
+      - "7861:7861"
+      - "8501:8501"
+    volumes:
+      - /root/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    runtime: nvidia
