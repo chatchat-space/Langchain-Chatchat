@@ -340,7 +340,7 @@ cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
 vim model_providers.yaml
 ```
 
-Refer to [model-providers/README.md](libs/model-providers/README.md) for configuration instructions.
+Refer to [model-providers/README.md](libs/model-providers/README_en.md) for configuration instructions.
 
 Refer to [model_providers.yaml](libs/model-providers/model_providers.yaml) for detailed configuration.
 
