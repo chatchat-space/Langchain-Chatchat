@@ -4,9 +4,8 @@ on:
     branches:
       - master
     paths-ignore:
+      - 'README.md'
       - 'README_en.md'
-      - 'README_en.md'
-      - 'README_ja.md'
 env:
   TZ: Asia/Shanghai
 jobs:
