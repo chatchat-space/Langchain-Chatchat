@@ -199,3 +199,8 @@ deepseek:
 
 
 ```
+
+### Additional License
+
+Some of the codes in this folder refer to the relevant codes in [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime).
+If you use this code and redistribute it, you need to include the full contents of the [ADDITIONAL_LICENSE](../../ADDITIONAL_LICENSE) .
