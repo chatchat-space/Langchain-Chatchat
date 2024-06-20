@@ -72,11 +72,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
         llm=llm,
         memory=memory
     )
-    classifier_chain = (
-            PromptTemplate.from_template(prompts["preprocess_model"], template_format="jinja2")
-            | models["preprocess_model"]
-            | StrOutputParser()
-    )
 
     if "action_model" in models and tools is not None:
         agent_executor = agents_registry(
@@ -86,11 +81,6 @@ def create_models_chains(history, history_len, prompts, models, tools, callbacks
             prompt=None,
             verbose=True
         )
-        # branch = RunnableBranch(
-        #     (lambda x: "1" in x["topic"].lower(), agent_executor),
-        #     chain
-        # )
-        # full_chain = ({"topic": classifier_chain, "input": lambda x: x["input"]} | branch)
         full_chain = ({"input": lambda x: x["input"]} | agent_executor)
     else:
         chain.llm.callbacks = callbacks
