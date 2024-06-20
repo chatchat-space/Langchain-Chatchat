@@ -468,6 +468,15 @@ The following guide does not guarantee 100% compatibility and success. Remember 
 
 ---
 
+## License
+
+The code of this project that does not involve *Additional License*  follows the [Apache-2.0](LICENSE) agreement.
+
+### Additional License
+
+The [model-providers code](https://github.com/chatchat-space/Langchain-Chatchat/tree/master/libs/model-providers/) in this repository
+references the relevant code in [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime).
+If you use this part of the code and redistribute it, you need to include the full content of [ADDITIONAL_LICENSE](ADDITIONAL_LICENSE).
 ## Project Milestones
 
 + `April 2023`: `Langchain-ChatGLM 0.1.0` released, supporting local knowledge base question and answer based on ChatGLM-6B model.
