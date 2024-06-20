@@ -402,15 +402,17 @@ Successful startup output:
 ![WebUI](docs/img/langchain_chatchat_webui.png)
 
 > [!WARNING]
-> As the DEFAULT_BIND_HOST of the chatchat-config server configuration is set to 127.0.0.1 by default, it cannot be
+> As the `DEFAULT_BIND_HOST` of the chatchat-config server configuration is set to `127.0.0.1` by default, it cannot be
 > accessed through other IPs.
-
+>
 > To modify, refer to the following method:
-><details>
->```shell
->chatchat-config server --show
->```
->You will get:
+> <details>
+> <summary>Instructions</summary>
+>
+> ```shell
+> chatchat-config server --show
+> ```
+> You will get:
 > ```text 
 > {
 >     "HTTPX_DEFAULT_TIMEOUT": 300.0,
@@ -429,11 +431,11 @@ Successful startup output:
 >     "class_name": "ConfigServer"
 > }
 > ```
-> To access via the machine's IP (such as in a Linux system), change the listening address to 0.0.0.0.
+> To access via the machine's IP (such as in a Linux system), change the listening address to `0.0.0.0`.
 > ```shell
 > chatchat-config server --default_bind_host=0.0.0.0
 > ```
-> you will get:
+> You will get:
 > ```text 
 > {
 >     "HTTPX_DEFAULT_TIMEOUT": 300.0,
@@ -452,7 +454,8 @@ Successful startup output:
 >     "class_name": "ConfigServer"
 > }
 > ```
-</details>
+> </details>
+
 
 ### Migration from Older Versions
 
