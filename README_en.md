@@ -35,7 +35,7 @@ on [Streamlit](https://github.com/streamlit/streamlit).
 ![](docs/img/langchain_chatchat_0.3.0.png)
 
 ✅ This project supports mainstream open-source LLMs, embedding models, and vector databases, allowing full **open-source
-** model **offline private deployment**, free for commercial use. Additionally, the project supports OpenAI GPT API
+** model **offline private deployment**. Additionally, the project supports OpenAI GPT API
 calls and will continue to expand access to various models and model APIs.
 
 ⛓️ The implementation principle of this project is as shown below, including loading files -> reading text -> text
