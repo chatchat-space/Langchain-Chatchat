@@ -1,4 +1,3 @@
-
 ### 开始使用
 
 当项目安装完成，配置这个`model_providers.yaml`文件，即可完成平台加载
@@ -8,24 +7,23 @@ model_providers包含了不同平台提供的 全局配置`provider_credential`,
 不同平台所加载的配置有所不同，关于如何配置这个文件
 
 请查看包`model_providers.core.model_runtime.model_providers`下方的平台 `yaml`文件
-关于`schemas`信息详细描述设计，请查看 [README_CN.md](model_providers/core/model_runtime/README_CN.md)
-
+关于`schemas`信息详细描述设计，请查看 [README.md](model_providers/core/model_runtime/README.md)
 
 ### 相关平台配置说明
-
 
 #### 要加载xinference平台，操作如下
 
 - 查看`schemas`信息
-  
+
 在[xinference.yaml](model_providers/core/model_runtime/model_providers/xinference/xinference.yaml)包含了如下信息，
-    `supported_model_types`描述支持了`llm`、`text-embedding`、`rerank` 模型类型
-    `configurate_methods`描述包含变量 `customizable-model`表示这个是一个可以自定义模型的平台
-    `model_credential_schema`描述包含了自定义模型需要的凭据信息
+`supported_model_types`描述支持了`llm`、`text-embedding`、`rerank` 模型类型
+`configurate_methods`描述包含变量 `customizable-model`表示这个是一个可以自定义模型的平台
+`model_credential_schema`描述包含了自定义模型需要的凭据信息
 
 - 安装sdk
+
 ```shell
-$ pip install xinference-client
+pip install xinference-client
 ```
 
 - 编辑`model_providers.yaml`
@@ -41,7 +39,6 @@ xinference:
         server_url: 'http://127.0.0.1:9997/'
         model_uid: 'chatglm3-6b'
 
-
 ```
 
 #### 要加载ollama平台，操作如下
@@ -51,11 +48,12 @@ xinference:
   在[ollama.yaml](model_providers/core/model_runtime/model_providers/ollama/ollama.yaml)包含了如下信息，
   `supported_model_types`描述支持了`llm`和`text-embedding`两种模型类型
 
-  `configurate_methods`描述包含变量 
-  - `customizable-model`表示这个是一个可以自定义模型的平台
+  `configurate_methods`描述包含变量
+    - `customizable-model`表示这个是一个可以自定义模型的平台
 
-  `model_credential_schema`描述包含了自定义模型需要的凭据信息 
+  `model_credential_schema`描述包含了自定义模型需要的凭据信息
 - 安装sdk
+
 ```shell
 $ pip install openai
 ```
@@ -74,13 +72,11 @@ ollama:
 
 ```
 
-
-
 #### 要加载openai平台，操作如下
 
 - 查看`schemas`信息
 
-  在[openai.yaml](model_providers/core/model_runtime/model_providers/openai/openai.yaml)包含了如下信息，
+  在[openai.yaml](Fmodel_providers/core/model_runtime/model_providers/openai/openai.yaml)包含了如下信息，
   `supported_model_types`描述支持了`llm`和`text-embedding`两种模型类型
 
   `configurate_methods`描述包含变量
@@ -90,6 +86,7 @@ ollama:
   `model_credential_schema`描述包含了自定义模型需要的凭据信息
   `provider_credential_schema`描述包含平台的凭据信息
 - 安装sdk
+
 ```shell
 $ pip install openai
 ```
@@ -130,6 +127,7 @@ openai:
   `provider_credential_schema`描述包含平台的凭据信息
 
 - 安装sdk
+
 ```shell
 $ pip install zhipuai
 ```
@@ -143,8 +141,6 @@ zhipuai:
     api_key: 'd4fa0690b6dfa205204cae2e12aa6fb6.2'
 ```
 
-
-
 #### 要加载deepseek平台，操作如下
 
 - 查看`schemas`信息
@@ -155,6 +151,7 @@ zhipuai:
   `provider_credential_schema`描述包含平台的凭据信息
 
 - 安装sdk
+
 ```shell
 $ pip install openai
 ```

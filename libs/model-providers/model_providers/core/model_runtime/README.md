@@ -1,62 +1,67 @@
 # Model Runtime
 
-This module is the loading module that unifies Dify's supplier information and credential form. The project has an OpenAI service forwarding capability at the upper layer, which can support the conversion of supplier services to OpenAI EndPoint calls.
+该模块是Dify 统一供应商信息和凭据表单的加载模块，此项目在上层做了openai服务转发能力，可以支持对供应商服务转换为 OpenAI EndPoint的调用
 
-On the basis of the original, this module has added `VIewProfileConfig`, `RESTFulProfileServer`, `OpenAIPluginsClient`, and has rewritten the logic for loading supplier configuration, focusing only on the supplier's configuration. The model configuration and calling logic are implemented in this module, providing a separation of model calls for `Chatchat`. The benefits of doing so are:
-- It changes the decoupling method between the model and the upstream and downstream callers.
-- During development, one does not need to pay attention to the specific implementation of the service provider module, but can simply make calls through the OpenAI EndPoint provided by Model Runtime.
+该模块在原有的基础上，增加了`VIewProfileConfig`、`RESTFulProfileServer`、`OpenAIPluginsClient`重写了供应商配置加载逻辑，仅关注供应商的配置，
+模型的配置和调用逻辑在本模块实现， 为`Chatchat`提供了模型调用的分离，这样做的好处是：
+- 改变了模型和上下游调用方解耦方式
+- 在开发时，不需要关注服务商模块的具体实现，仅通过Model Runtime提供的OpenAI EndPoint调用即可
 
-> Please note! Because the model configuration storage module has been removed, the ability to operate suppliers and models on the front-end page has been deleted accordingly. Now, it is only possible to configure suppliers and models through a backend yaml file.
-> Only a supplier configuration details interface is provided, and in the future, we will consider providing a model configuration details interface through other means.
+> 请注意！因为删除了模型配置的存储模块，原本在前端页面操作供应商和模型的能力因此被删除，现在只能通过后端yaml文件配置供应商和模型，
+> 仅提供了供应商的配置详情接口，未来会考虑通过其他方式提供模型的配置详情接口
 
-## Features
+## 功能介绍
 
-- Supports capability invocation for 5 types of models
+- 支持 5 种模型类型的能力调用
 
-  - `LLM` - LLM text completion, dialogue, pre-computed tokens capability
-  - `Text Embedding Model` - Text Embedding, pre-computed tokens capability
-  - `Rerank Model` - Segment Rerank capability
-  - `Speech-to-text Model` - Speech to text capability
-  - `Text-to-speech Model` - Text to speech capability
-  - `Moderation` - Moderation capability
+  - `LLM` - LLM 文本补全、对话，预计算 tokens 能力
+  - `Text Embedidng Model` - 文本 Embedding ，预计算 tokens 能力
+  - `Rerank Model` - 分段 Rerank 能力
+  - `Speech-to-text Model` - 语音转文本能力
+  - `Text-to-speech Model` - 文本转语音能力
+  - `Moderation` - Moderation 能力
 
-- Model provider display
+### 删除Dify配置页面的情况下，保留了以下功能：
+- 模型供应商展示
+展示所有已支持的供应商列表，除了返回供应商名称、图标之外，还提供了支持的模型类型列表，预定义模型列表、配置方式以及配置凭据的表单规则等等，规则设计详见：[Schema](./docs/zh_Hans/schema.md)。
 
-  Displays a list of all supported providers, including provider names, icons, supported model types list, predefined model list, configuration method, and credentials form rules, etc. For detailed rule design, see: [Schema](./schema.md).
+- 供应商/模型凭据鉴权 
+ 供应商列表返回了凭据表单的配置信息，可通过 Runtime 提供的接口对凭据进行鉴权， 
 
-- Provider/model credential authentication
-  The provider list returns configuration information for the credentials form, which can be authenticated through Runtime's interface. 
+## 结构
 
-## Structure
+![](./docs/zh_Hans/images/index/img.png)
 
-![](./docs/en_US/images/index/img.png)
+Model Runtime 分三层：
 
-Model Runtime is divided into three layers:
+- 最外层为OpenAI EndPoint发布层
 
-- The outermost layer is the OpenAI EndPoint publishing layer
+  提供异步加载配置`VIewProfileConfig`
+  供应商服务发布`RESTFulProfileServer` 
 
-  It provides asynchronous loading configuration `VIewProfileConfig`
-  Supplier service publishing `RESTFulProfileServer`
+- 第二层为供应商层
 
-- The second layer is the provider layer
+  提供获取当前供应商模型列表、获取模型实例、供应商凭据鉴权、供应商配置规则信息，**可横向扩展**以支持不同的供应商。
 
-  It provides the current provider's model list, model instance obtaining, provider credential authentication, and provider configuration rule information, **allowing horizontal expansion** to support different providers.
-  For supplier/model credentials, there are two situations:
-  - For centralized suppliers like OpenAI, you need to define authentication credentials like **api_key**.
-  - For locally deployed suppliers like [**Xinference**](https://github.com/xorbitsai/inference), you need to define address credentials like **server_url**. Sometimes you also need to define model type credentials like **model_uid**.
+  对于供应商/模型凭据，有两种情况
+  - 如OpenAI这类中心化供应商，需要定义如**api_key**这类的鉴权凭据
+  - 如[**Xinference**](https://github.com/xorbitsai/inference)这类本地部署的供应商，需要定义如**server_url**这类的地址凭据，有时候还需要定义**model_uid**之类的模型类型凭据， 
+ 
+- 最底层为模型层
 
-- The bottom layer is the model layer
+  提供各种模型类型的直接调用、预定义模型配置信息、获取预定义/远程模型列表、模型凭据鉴权方法，不同模型额外提供了特殊方法，如 LLM 提供预计算 tokens 方法、获取费用信息方法等，**可横向扩展**同供应商下不同的模型（支持的模型类型下）。
 
-  It provides direct calls for various model types, predefined model configuration information, obtaining predefined/remote model lists, model credential authentication methods, and different models provide special methods, such as LLM providing pre-computed tokens methods, obtaining cost information methods, etc., **which can be scaled horizontally** for different models under the same supplier (under the supported model types).
-  
-  Here we need to distinguish between model parameters and model credentials first.
+  在这里我们需要先区分模型参数与模型凭据。
 
-  - Model parameters (**defined in this layer**): These are parameters that often need to be changed and adjusted at any time, such as LLM's **max_tokens**, **temperature**, etc. These parameters are adjusted by users on the front-end page, so it is necessary to define the rules of parameters on the backend to facilitate the display and adjustment on the front-end page. In DifyRuntime, their parameter names are generally **model_parameters: Dict[str, any]**.
+  - 模型参数(**在本层定义**)：这是一类经常需要变动，随时调整的参数，如 LLM 的 **max_tokens**、**temperature** 等，这些参数是由用户在前端页面上进行调整的，因此需要在后端定义参数的规则，以便前端页面进行展示和调整。在DifyRuntime中，他们的参数名一般为**model_parameters: Dict[str, any]**。
 
-  - Model credentials (**defined in the supplier layer**): These are parameters that do not often change and generally do not change after configuration, such as **api_key**, **server_url**, etc. In DifyRuntime, their parameter names are generally **credentials: Dict[str, any]**. The credentials of the Provider layer will be directly passed to this layer, and there is no need to define them separately.
+  - 模型凭据(**在供应商层定义**)：这是一类不经常变动，一般在配置好后就不会再变动的参数，如 **api_key**、**server_url** 等。在DifyRuntime中，他们的参数名一般为**credentials: Dict[str, any]**，Provider层的credentials会直接被传递到这一层，不需要再单独定义。
 
  
+ 
 
-### If you want to implement a custom service provider model capability
-- [Go here 👈🏻](./docs/en_US/interfaces.md)
-- [Details about custom models](./docs/en_US/provider_scale_out.md)
+ 
+### 如果你想实现自定义的服务商模型能力
+- [移步这里 👈🏻](./docs/zh_Hans/interfaces.md)
+- [关于自定义模型的细节](./docs/zh_Hans/provider_scale_out.md)
+ 

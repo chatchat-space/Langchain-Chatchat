@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
-      - 'README_ja.md'
 env:
   TZ: Asia/Shanghai
 jobs:
@@ -140,7 +139,7 @@ jobs:
 #        with:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Update README.md
+      - name: Update README_en.md
         run: |
           sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README.md
           sed -i "s|uswccr.ccs.tencentyun.com/chatchat/chatchat:[^ ]*|uswccr.ccs.tencentyun.com/chatchat/chatchat:${{ steps.imageTag.outputs.image_tag }}|g" README_en.md
@@ -148,7 +147,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -am "feat:update docker image:tag"
-      - name: Push README.md
+      - name: Push README_en.md
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GH_PAT }}
