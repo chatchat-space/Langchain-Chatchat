@@ -46,24 +46,11 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.2.10`
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.3.0` 版本所使用代码已更新至本项目 `v0.3.0` 版本。
 
-版本所使用代码已更新至本项目 `v0.2.10` 版本。
+🐳 Docker 镜像将会在近期更新。
 
-🐳 [Docker 镜像](isafetech/chatchat:0.2.10) 已经更新到 ```0.2.10``` 版本。
-
-🌲 本次更新后同时支持DockerHub、阿里云、腾讯云镜像源：
-
-```shell
-docker run -d --gpus all -p 80:8501 isafetech/chatchat:0.2.10
-docker run -d --gpus all -p 80:8501 uswccr.ccs.tencentyun.com/chatchat/chatchat:0.2.10
-docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.10
-```
-
-🧩 本项目有一个非常完整的 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/) ， README只是一个简单的介绍，_
-_仅仅是入门教程，能够基础运行__。
-如果你想要更深入的了解本项目，或者想对本项目做出贡献。请移步 [Wiki](https://github.com/chatchat-space/Langchain-Chatchat/wiki/)
-界面
+🧑‍💻 如果你想对本项目做出贡献，欢迎移步[开发指南](docs/contributing/README_dev.md) 获取更多开发部署相关信息。
 
 ## Langchain-Chatchat 提供哪些功能
 
@@ -95,7 +82,7 @@ _仅仅是入门教程，能够基础运行__。
 
 ### 已支持的模型部署框架与模型
 
-本项目中已经支持市面上主流的如 GLM-4, Qwen2 等新近开源本地大语言模型和 Embedding 模型，这些模型需要用户自行启动模型部署框架后，通过修改配置信息接入项目，本项目已支持的本地模型部署框架如下：
+本项目中已经支持市面上主流的如 [GLM-4-Chat](https://github.com/THUDM/GLM-4) 与 [Qwen2-Instruct](https://github.com/QwenLM/Qwen2) 等新近开源大语言模型和 Embedding 模型，这些模型需要用户自行启动模型部署框架后，通过修改配置信息接入项目，本项目已支持的本地模型部署框架如下：
 
 | 模型部署框架             | Xinference                                                                               | LocalAI                                                                                                                    | Ollama                                                                         | FastChat                                                  |
 |--------------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|-----------------------------------------------------------|
@@ -109,15 +96,21 @@ _仅仅是入门教程，能够基础运行__。
 | 操作文档链接             | [Xinference 文档](https://inference.readthedocs.io/zh-cn/latest/models/builtin/index.html) | [LocalAI 文档](https://localai.io/model-compatibility/)                                                                      | [Ollama 文档](https://github.com/ollama/ollama?tab=readme-ov-file#model-library) | [FastChat 文档](https://github.com/lm-sys/FastChat#install) |
 | 可用模型               | [Xinference 已支持模型](https://inference.readthedocs.io/en/latest/models/builtin/index.html) | [LocalAI 已支持模型](https://localai.io/model-compatibility/#/) | [Ollama 已支持模型](https://ollama.com/library#/)       | [FastChat 已支持模型](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md)                                                             |
 
-除上述本地模型加载框架外，项目中也支持了在线 API 的接入。
+除上述本地模型加载框架外，项目中也为可接入在线 API 的 [One API](https://github.com/songquanpeng/one-api) 框架接入提供了支持，支持包括 [OpenAI ChatGPT](https://platform.openai.com/docs/guides/gpt/chat-completions-api)、[Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)、[Anthropic Claude](https://anthropic.com/)、[智谱请言](https://bigmodel.cn/)、[百川](https://platform.baichuan-ai.com/)等常用在线 API 的接入使用。
 
-** 关于 Xinference 加载本地模型: **
-
-Xinference 内置模型会自动下载,如果想让它加载本机下载好的模型,可以在启动 Xinference 服务后,到项目 tools/model_loaders 目录下执行 `streamlit run xinference_manager.py`,按照页面提示为指定模型设置本地路径即可.
+> [!Note]
+> 关于 Xinference 加载本地模型:
+> Xinference 内置模型会自动下载,如果想让它加载本机下载好的模型,可以在启动 Xinference 服务后,到项目 tools/model_loaders 目录下执行 `streamlit run xinference_manager.py`,按照页面提示为指定模型设置本地路径即可.
 
 ## 快速上手
 
 ### 安装部署
+
+#### 0. 软硬件要求
+
+💡 软件方面，本项目已支持在 Python 3.8-3.11 环境中进行使用，并已在 Windows、macOS、Linux 操作系统中进行测试。
+
+💻 硬件方面，因 0.3.0 版本已修改为支持不同模型部署框架接入，因此可在 CPU、GPU、NPU、MPS 等不同硬件条件下使用。
 
 #### 1. 安装 Langchain-Chatchat
 从 0.3.0 版本起，Langchain-Chatchat 提供以 Python 库形式的安装方式，具体安装请执行：
@@ -126,8 +119,14 @@ Xinference 内置模型会自动下载,如果想让它加载本机下载好的�
 pip install langchain-chatchat -U
 ```
 
+> [!Note]
+> 因模型部署框架 Xinference 接入 Langchain-Chatchat 时需要额外安装对应的 Python 依赖库，因此如需搭配 Xinference 框架使用时，建议使用如下安装方式：
+> ```shell
+> pip install langchain-chatchat[xinference] -U
+> ```
+
 #### 2. 模型推理框架并加载模型
-从 0.3.0 版本起，Langchain-Chatchat 不再根据用户输入的本地模型路径直接进行模型加载，改为支持市面常见的各大模型加载框架接入，如 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api) 等。
+从 0.3.0 版本起，Langchain-Chatchat 不再根据用户输入的本地模型路径直接进行模型加载，涉及到的模型种类包括 LLM、Embedding、Reranker 及后续会提供支持的多模态模型等，均改为支持市面常见的各大模型推理框架接入，如 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api) 等。
 
 因此，请确认在启动 Langchain-Chatchat 项目前，首先进行模型推理框架的运行，并加载所需使用的模型。
 
@@ -267,7 +266,7 @@ chatchat-config model --default_llm_model qwen2-instruct
 更多配置项修改帮助请参考 [README.md](libs/chatchat-server/README.md)
 
 #### 4. 自定义模型接入配置
-完成上述项目配置项查看与修改后，需要根据步骤**2. 模型推理框架并加载模型** 中选用的模型推理框架与加载的模型进行模型接入配置。
+完成上述项目配置项查看与修改后，需要根据步骤**2. 模型推理框架并加载模型** 中选用的模型推理框架与加载的模型进行模型接入配置，其中模型推理框架包括 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api) 等，可以提供 [GLM-4-Chat](https://github.com/THUDM/GLM-4) 与 [Qwen2-Instruct](https://github.com/QwenLM/Qwen2) 等中文最新开源模型的接入支持。
 
 参考配置 3.2 中 `CHATCHAT_ROOT` 变量指向的路径下 configs 中的 `model_providers.yaml` 文件, 即可完成自定义平台加载.
 ```shell
@@ -415,7 +414,7 @@ chatchat -a
 
 ### Telegram
 
-[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatglm")](https://t.me/+RjliQ3jnJ1YyN2E9)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatchat")](https://t.me/+RjliQ3jnJ1YyN2E9)
 
 ### 项目交流群
 <img src="docs/img/qr_code_108.jpg" alt="二维码" width="300" />
