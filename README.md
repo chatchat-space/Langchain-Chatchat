@@ -15,6 +15,7 @@
 * [功能介绍](README.md#Langchain-Chatchat-提供哪些功能)
 * [快速上手](README.md#快速上手)
    * [安装部署](README.md#安装部署)
+* [项目里程碑](README.md#项目里程碑)
 * [联系我们](README.md#联系我们)
 
 ## 概述
