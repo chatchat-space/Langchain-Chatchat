@@ -470,9 +470,9 @@ The following guide does not guarantee 100% compatibility and success. Remember 
 
 ## License
 
-The code of this project that does not involve additional agreements follows the [Apache-2.0](LICENSE) agreement.
+The code of this project that does not involve *Additional License*  follows the [Apache-2.0](LICENSE) agreement.
 
-### Additional Agreement
+### Additional License
 
 The [model-providers code](https://github.com/chatchat-space/Langchain-Chatchat/tree/master/libs/model-providers/) in this repository
 references the relevant code in [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime).
