@@ -447,6 +447,16 @@ chatchat -a
 
 ---
 
+## 协议
+
+本项目非涉及 额外协议 部分的代码遵循 [Apache-2.0](LICENSE) 协议。
+
+### 额外协议
+
+本仓库中的 [model-providers 代码](https://github.com/chatchat-space/Langchain-Chatchat/tree/master/libs/model-providers/)
+引用了 [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime)中的相关代码。
+如果您使用这部分代码并再分发，你需要包含 [ADDITIONAL_LICENSE](ADDITIONAL_LICENSE) 的完整内容。
+
 ## 联系我们
 
 ### Telegram
