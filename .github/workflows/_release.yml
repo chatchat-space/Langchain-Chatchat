@@ -3,7 +3,7 @@ run-name: Release ${{ inputs.working-directory }} by @${{ github.actor }}
 on:
   workflow_call:
     branches:
-      - dev
+      - master
     inputs:
       working-directory:
         required: true
