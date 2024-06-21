@@ -11,7 +11,7 @@ on:
         description: "From which folder this pipeline executes"
   workflow_dispatch:
     branches:
-      - dev
+      - master
     inputs:
       working-directory:
         required: true
