@@ -14,6 +14,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/*
 # Install Chatchat
 RUN pip install langchain-chatchat[xinference] -U
+RUN pip install streamlit-chatbox==1.1.12.post4
 # Make Custom Settings
 RUN chatchat-config server --default_bind_host=0.0.0.0
 # Copy Custom Files
