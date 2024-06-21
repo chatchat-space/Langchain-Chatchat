@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240619"
+version = "0.3.0.20240621.3"
 description = ""
 authors = ["chatchat"]
 readme = "README.md"
 packages = [
-    {include = "chatchat"}
+    {include = "chatchat"},
+    {include = "langchain_chatchat"}
 ]
 
 [tool.poetry.scripts]
@@ -66,7 +67,6 @@ pymysql = "^1.1.0"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
-cli = ["typer"]
 
 # An extra used to be able to add extended testing.
 # Please use new-line on formatting to make it easier to add new packages without
@@ -106,13 +106,11 @@ extended_testing = [
     "scikit-learn",
     "streamlit",
     "pyspark",
-    "openai",
     "sympy",
     "rapidfuzz",
     "jsonschema",
     "rank-bm25",
     "geopandas",
-    "jinja2",
     "gitpython",
     "newspaper3k",
     "nvidia-riva-client",
@@ -141,8 +139,6 @@ extended_testing = [
     "tree-sitter-languages",
     "azure-ai-documentintelligence",
     "oracle-ads",
-    "zhipuai",
-    "httpx",
     "elasticsearch",
     "hdbcli",
     "oci",
@@ -263,7 +259,7 @@ dotenv = "dotenv:plugin"
 
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "primary"
+#[[tool.poetry.source]]
+#name = "tsinghua"
+#url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+#priority = "primary"

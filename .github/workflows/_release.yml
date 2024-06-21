@@ -2,21 +2,17 @@ name: release
 run-name: Release ${{ inputs.working-directory }} by @${{ github.actor }}
 on:
   workflow_call:
-    branches:
-      - dev
     inputs:
       working-directory:
         required: true
         type: string
         description: "From which folder this pipeline executes"
   workflow_dispatch:
-    branches:
-      - dev
     inputs:
       working-directory:
         required: true
         type: string
-        default: './chatchat-server'
+        default: './libs/model-providers'
         description: "From which folder this pipeline executes"
 env:
   PYTHON_VERSION: "3.8"
@@ -179,13 +175,7 @@ jobs:
       - pre-release-checks
     environment: Scheduled testing
     runs-on: ubuntu-latest
-    permissions:
-      # This permission is used for trusted publishing:
-      # https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/
-      #
-      # Trusted publishing has to also be configured on PyPI for each package:
-      # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
-      id-token: write
+
 
     defaults:
       run:
@@ -213,11 +203,12 @@ jobs:
           packages-dir: ${{ inputs.working-directory }}/dist/
           verbose: true
           print-hash: true
+          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           # We overwrite any existing distributions with the same name and version.
           # This is *only for CI use* and is *extremely dangerous* otherwise!
           # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
-          skip-existing: true
+#          skip-existing: true
 
   mark-release:
     needs:
@@ -231,6 +222,7 @@ jobs:
       # This permission is needed by `ncipollo/release-action` to
       # create the GitHub release.
       contents: write
+      id-token: none
 
     defaults:
       run:
