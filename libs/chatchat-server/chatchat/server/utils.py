@@ -24,7 +24,7 @@ from typing import (
     Tuple,
     Literal,
 )
-
+import socket
 from chatchat.configs import (log_verbose, HTTPX_DEFAULT_TIMEOUT,
                               DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE,
                               MODEL_PLATFORMS)
@@ -760,3 +760,9 @@ def get_tool_config(name: str = None) -> Dict:
         return TOOL_CONFIG
     else:
         return TOOL_CONFIG.get(name, {})
+
+
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        return sock.connect_ex(('localhost', port)) == 0
