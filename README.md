@@ -130,6 +130,9 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 pip install langchain-chatchat -U
 ```
 
+> [!important]
+> 为确保所使用的 Python 库为最新版，建议使用官方 Pypi 源或清华源。
+
 > [!Note]
 > 因模型部署框架 Xinference 接入 Langchain-Chatchat 时需要额外安装对应的 Python 依赖库，因此如需搭配 Xinference
 > 框架使用时，建议使用如下安装方式：
