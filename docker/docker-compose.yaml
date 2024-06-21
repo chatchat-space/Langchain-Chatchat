@@ -8,8 +8,8 @@ services:
     network_mode: "host"
     volumes:
       - ~/xinference:/root/.xinference # 将本地目录(/root/xinference/.xinference)挂载到容器目录(/root/.xinference)中, 详细见:https://inference.readthedocs.io/zh-cn/latest/getting_started/using_docker_image.html
-#      - ~/xinference/cache/huggingface:/root/.cache/huggingface
-#      - ~/xinference/cache/modelscope:/root/.cache/modelscope
+      # - ~/xinference/cache/huggingface:/root/.cache/huggingface
+      # - ~/xinference/cache/modelscope:/root/.cache/modelscope
     deploy:
       resources:
         reservations:
@@ -19,7 +19,7 @@ services:
               capabilities: [gpu]
     runtime: nvidia
   chatchat:
-    image: ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.0-0622
+    image: chatimage/chatchat:0.3.0-0622
     # ports:
     #   - "7861:7861"
     #   - "8501:8501"

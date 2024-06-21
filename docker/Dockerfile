@@ -10,7 +10,8 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends libgl1 libglib2.0-0 && \
     apt-get clean && \
-    pip install openpyxl networkx faiss-cpu jq unstructured[pdf] opencv-python rapidocr-onnxruntime PyMuPDF rank_bm25 && \
+    pip install openpyxl networkx faiss-cpu jq unstructured[pdf] opencv-python rapidocr-onnxruntime PyMuPDF rank_bm25 \
+    youtube_search && \
     pip install streamlit-chatbox==1.1.12.post4 && \
     rm -rf /var/lib/apt/lists/*
 # Install Chatchat
