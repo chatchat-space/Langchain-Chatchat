@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "model-providers"
-version = "0.3.0.20240619"
+version = "0.3.0.20240621.3"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
@@ -43,6 +43,10 @@ requests-mock = "^1.11.0"
 langchain = { version = "0.1.17", python = ">=3.8.1,<3.12,!=3.9.7" }
 langchain-openai = { version = "0.0.6", python = ">=3.8.1,<3.12,!=3.9.7" }
 
+xinference_client = { version = "^0.11.1" }
+zhipuai = { version = "^2.1.0" }
+
+
 [tool.poetry.group.lint]
 optional = true
 
@@ -59,91 +63,7 @@ jupyter = "^1.0.0"
 setuptools = "^67.6.1"
 
 [tool.poetry.extras]
-cli = ["typer"]
 
-# An extra used to be able to add extended testing.
-# Please use new-line on formatting to make it easier to add new packages without
-# merge-conflicts
-extended_testing = [
-    "aleph-alpha-client",
-    "aiosqlite",
-    "assemblyai",
-    "beautifulsoup4",
-    "bibtexparser",
-    "cassio",
-    "chardet",
-    "datasets",
-    "google-cloud-documentai",
-    "esprima",
-    "jq",
-    "pdfminer-six",
-    "pgvector",
-    "pypdf",
-    "pymupdf",
-    "pypdfium2",
-    "tqdm",
-    "lxml",
-    "atlassian-python-api",
-    "mwparserfromhell",
-    "mwxml",
-    "msal",
-    "pandas",
-    "telethon",
-    "psychicapi",
-    "gql",
-    "gradientai",
-    "requests-toolbelt",
-    "html2text",
-    "numexpr",
-    "py-trello",
-    "scikit-learn",
-    "streamlit",
-    "pyspark",
-    "openai",
-    "sympy",
-    "rapidfuzz",
-    "jsonschema",
-    "rank-bm25",
-    "geopandas",
-    "jinja2",
-    "gitpython",
-    "newspaper3k",
-    "nvidia-riva-client",
-    "feedparser",
-    "xata",
-    "xmltodict",
-    "faiss-cpu",
-    "openapi-pydantic",
-    "arxiv",
-    "sqlite-vss",
-    "rapidocr-onnxruntime",
-    "motor",
-    "timescale-vector",
-    "anthropic",
-    "upstash-redis",
-    "rspace_client",
-    "fireworks-ai",
-    "javelin-sdk",
-    "hologres-vector",
-    "praw",
-    "databricks-vectorsearch",
-    "cloudpickle",
-    "dgml-utils",
-    "cohere",
-    "tree-sitter",
-    "tree-sitter-languages",
-    "azure-ai-documentintelligence",
-    "oracle-ads",
-    "zhipuai",
-    "httpx",
-    "elasticsearch",
-    "hdbcli",
-    "oci",
-    "rdflib",
-    "tidb-vector",
-    "cloudpickle",
-    "friendli-client"
-]
 
 [tool.ruff]
 exclude = [
@@ -209,7 +129,7 @@ ignore = "false"
 dotenv = "dotenv:plugin"
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "default"
+#[[tool.poetry.source]]
+#name = "tsinghua"
+#url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+#priority = "default"

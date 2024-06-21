@@ -37,7 +37,6 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
 def run_init_server(
         model_platforms_shard: Dict,
         started_event: mp.Event = None,
-        run_mode: str = None,
         model_providers_cfg_path: str = None,
         provider_host: str = None,
         provider_port: int = None):
@@ -320,8 +319,7 @@ async def start_main_server():
         process = Process(
             target=run_init_server,
             name=f"Model providers Server",
-            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=model_providers_started,
-                        run_mode=run_mode),
+            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=model_providers_started),
             daemon=True,
         )
         processes["model_providers"] = process
