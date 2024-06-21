@@ -7,9 +7,9 @@ services:
     #  - "9997:9997"
     network_mode: "host"
     volumes:
-      - /root/xinference/.xinference:/root/.xinference # 将本地目录(/root/xinference/.xinference)挂载到容器目录(/root/.xinference)中, 详细见:https://inference.readthedocs.io/zh-cn/latest/getting_started/using_docker_image.html
-      - /root/xinference/.cache/huggingface:/root/.cache/huggingface
-      - /root/xinference/.cache/modelscope:/root/.cache/modelscope
+      - ~/xinference:/root/.xinference # 将本地目录(/root/xinference/.xinference)挂载到容器目录(/root/.xinference)中, 详细见:https://inference.readthedocs.io/zh-cn/latest/getting_started/using_docker_image.html
+#      - ~/xinference/cache/huggingface:/root/.cache/huggingface
+#      - ~/xinference/cache/modelscope:/root/.cache/modelscope
     deploy:
       resources:
         reservations:
