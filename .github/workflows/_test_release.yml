@@ -87,4 +87,4 @@ jobs:
           # We overwrite any existing distributions with the same name and version.
           # This is *only for CI use* and is *extremely dangerous* otherwise!
           # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
-          skip-existing: true
+#          skip-existing: true
