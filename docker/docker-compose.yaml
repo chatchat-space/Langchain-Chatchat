@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  xinference:
+    image: xprobe/xinference:v0.12.1
+    command: xinference-local -H 0.0.0.0
+    # ports:
+    #  - "9997:9997"
+    network_mode: "host"
+    volumes:
+      - ~/xinference:/root/.xinference # 将本地目录(/root/xinference/.xinference)挂载到容器目录(/root/.xinference)中, 详细见:https://inference.readthedocs.io/zh-cn/latest/getting_started/using_docker_image.html
+      # - ~/xinference/cache/huggingface:/root/.cache/huggingface
+      # - ~/xinference/cache/modelscope:/root/.cache/modelscope
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+  chatchat:
+    image: chatimage/chatchat:0.3.0-0622
+    # ports:
+    #   - "7861:7861"
+    #   - "8501:8501"
+    network_mode: "host"
+    # volumes:
+    #   - /root/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
