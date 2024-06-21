@@ -229,7 +229,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
             )
 
             # 判断embeddings_request.input是否为list[int]
-            input = ""
+            input = "" if provider != "openai" else []
             if isinstance(embeddings_request.input, list):
                 tokens = embeddings_request.input
                 try:
@@ -248,7 +248,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                     # 增加判断, 如果 token 是 list 类型(如 embedding 使用 text-embedding-3-small 时)
                     elif isinstance(token, list):
                         text = encoding.decode(token)
-                        input += text
+                        input.append(text)
                     else:
                         input += token
 
@@ -256,7 +256,7 @@ class RESTFulOpenAIBootstrapBaseWeb(OpenAIBootstrapBaseWeb):
                 input = embeddings_request.input
 
             response = model_instance.invoke_text_embedding(
-                texts=[input], user="abc-123"
+                 texts=[input] if provider != 'openai' else input, user="abc-123"
             )
             return await openai_embedding_text(response)
 
