@@ -2,16 +2,12 @@ name: release
 run-name: Release ${{ inputs.working-directory }} by @${{ github.actor }}
 on:
   workflow_call:
-    branches:
-      - master
     inputs:
       working-directory:
         required: true
         type: string
         description: "From which folder this pipeline executes"
   workflow_dispatch:
-    branches:
-      - master
     inputs:
       working-directory:
         required: true
