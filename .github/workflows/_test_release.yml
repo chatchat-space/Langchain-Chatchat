@@ -2,8 +2,6 @@ name: test-release
 
 on:
   workflow_call:
-    branches:
-      - dev
     inputs:
       working-directory:
         required: true
@@ -67,13 +65,7 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
-    permissions:
-      # This permission is used for trusted publishing:
-      # https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/
-      #
-      # Trusted publishing has to also be configured on PyPI for each package:
-      # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
-      id-token: write
+    environment: Scheduled test pypi publish
 
     steps:
       - uses: actions/checkout@v4
@@ -86,12 +78,13 @@ jobs:
       - name: Publish to test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           packages-dir: ${{ inputs.working-directory }}/dist/
           verbose: true
           print-hash: true
           repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           # We overwrite any existing distributions with the same name and version.
           # This is *only for CI use* and is *extremely dangerous* otherwise!
           # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
-          skip-existing: true
+#          skip-existing: true
