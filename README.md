@@ -311,7 +311,7 @@ chatchat-config model --default_llm_model qwen2-instruct
 ```shell
 # 这里应为 3.2 中 "CHATCHAT_ROOT" 变量指向目录
 cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
-vim model_providers.yaml
+vim configs/model_providers.yaml
 ```
 
 配置介绍请参考 [model-providers/README.md](libs/model-providers/README.md)
