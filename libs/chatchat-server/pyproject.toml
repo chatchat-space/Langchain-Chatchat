@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240621.1"
+version = "0.3.0.20240621.2"
 description = ""
 authors = ["chatchat"]
 readme = "README.md"
 packages = [
-    {include = "chatchat"}
+    {include = "chatchat"},
+    {include = "langchain_chatchat"}
 ]
 
 [tool.poetry.scripts]
