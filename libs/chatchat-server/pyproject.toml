@@ -105,7 +105,6 @@ extended_testing = [
     "scikit-learn",
     "streamlit",
     "pyspark",
-    "openai",
     "sympy",
     "rapidfuzz",
     "jsonschema",

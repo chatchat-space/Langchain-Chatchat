@@ -43,6 +43,10 @@ requests-mock = "^1.11.0"
 langchain = { version = "0.1.17", python = ">=3.8.1,<3.12,!=3.9.7" }
 langchain-openai = { version = "0.0.6", python = ">=3.8.1,<3.12,!=3.9.7" }
 
+xinference_client = { version = "^0.11.1" }
+zhipuai = { version = "^2.1.0" }
+
+
 [tool.poetry.group.lint]
 optional = true
 
