@@ -19,7 +19,7 @@ services:
               capabilities: [gpu]
     runtime: nvidia
   chatchat:
-    image: ccr.ccs.tencentyun.com/chatchat/chatchat:0622-0.3.0
+    image: ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.0-0622
     # ports:
     #   - "7861:7861"
     #   - "8501:8501"
