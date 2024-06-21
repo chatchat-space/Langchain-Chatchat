@@ -18,7 +18,8 @@ RUN pip install langchain-chatchat -U
 # Install ModelProvider
 RUN pip install xinference-client
 # Make Custom Settings
-RUN chatchat-config server --default_bind_host=0.0.0.0
+RUN chatchat-config server --default_bind_host=0.0.0.0 && \
+    chatchat-config model --default_llm_model qwen2-instruct
 # Copy Data
 COPY /libs/chatchat-server/chatchat/configs/model_providers.yaml $HOME/configs/model_providers.yaml
 ADD /docker/data.tar.gz $HOME/
