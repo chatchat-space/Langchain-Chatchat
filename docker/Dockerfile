@@ -19,10 +19,10 @@ RUN pip install xinference-client
 RUN pip install streamlit-chatbox==1.1.12.post4
 # Make Custom Settings
 RUN chatchat-config server --default_bind_host=0.0.0.0
-RUN chatchat-kb -r
 # Copy Custom Files
 COPY /libs/chatchat-server/chatchat/configs/model_providers.yaml $HOME/configs/model_providers.yaml
-COPY /libs/chatchat-server/chatchat/data $HOME/data
+#COPY /libs/chatchat-server/chatchat/data $HOME/data
+ADD /docker/data.tar.gz $HOME/data
 WORKDIR $HOME
 EXPOSE 7861 8501
 ENTRYPOINT ["chatchat", "-a"]

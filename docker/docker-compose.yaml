@@ -3,8 +3,8 @@ services:
   xinference:
     image: xprobe/xinference:v0.12.1
     command: xinference-local -H 0.0.0.0
-    ports:
-      - "9997:9997"
+#    ports:
+#      - "9997:9997"
     network_mode: "host"
     volumes:
       - /root/xinference/.xinference:/root/.xinference
@@ -20,9 +20,7 @@ services:
     runtime: nvidia
   chatchat:
     image: chatchat:0.3
-    ports:
-      - "7861:7861"
-      - "8501:8501"
+#    ports:
+#      - "7861:7861"
+#      - "8501:8501"
     network_mode: "host"
-#    volumes:
-#      - /root/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
