@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240621.2"
+version = "0.3.0.20240621.3"
 description = ""
 authors = ["chatchat"]
 readme = "README.md"
@@ -259,7 +259,7 @@ dotenv = "dotenv:plugin"
 
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "primary"
+#[[tool.poetry.source]]
+#name = "tsinghua"
+#url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+#priority = "primary"

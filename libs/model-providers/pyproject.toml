@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "model-providers"
-version = "0.3.0.20240621.2"
+version = "0.3.0.20240621.3"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
@@ -129,7 +129,7 @@ ignore = "false"
 dotenv = "dotenv:plugin"
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "default"
+#[[tool.poetry.source]]
+#name = "tsinghua"
+#url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+#priority = "default"
