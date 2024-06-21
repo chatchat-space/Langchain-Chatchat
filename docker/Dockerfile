@@ -15,13 +15,12 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /var/lib/apt/lists/*
 # Install Chatchat
 RUN pip install langchain-chatchat -U
-# Install ModelPlatform
+# Install ModelProvider
 RUN pip install xinference-client
 # Make Custom Settings
 RUN chatchat-config server --default_bind_host=0.0.0.0
-# Copy Custom Files
+# Copy Data
 COPY /libs/chatchat-server/chatchat/configs/model_providers.yaml $HOME/configs/model_providers.yaml
-#COPY /libs/chatchat-server/chatchat/data $HOME/data
 ADD /docker/data.tar.gz $HOME/
 WORKDIR $HOME
 EXPOSE 7861 8501
