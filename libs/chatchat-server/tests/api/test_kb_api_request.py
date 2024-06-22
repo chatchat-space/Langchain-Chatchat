@@ -1,17 +1,17 @@
-import requests
 import json
 import sys
 from pathlib import Path
 
+import requests
+
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
-from chatchat.server.utils import api_address
-from chatchat.configs import VECTOR_SEARCH_TOP_K
-from chatchat.server.knowledge_base.utils import get_kb_path, get_file_path
-from chatchat.webui_pages.utils import ApiRequest
-
 from pprint import pprint
 
+from chatchat.configs import VECTOR_SEARCH_TOP_K
+from chatchat.server.knowledge_base.utils import get_file_path, get_kb_path
+from chatchat.server.utils import api_address
+from chatchat.webui_pages.utils import ApiRequest
 
 api_base_url = api_address()
 api: ApiRequest = ApiRequest(api_base_url)

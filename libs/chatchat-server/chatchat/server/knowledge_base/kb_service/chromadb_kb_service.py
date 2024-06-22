@@ -2,25 +2,31 @@ import uuid
 from typing import Any, Dict, List, Tuple
 
 import chromadb
-from chromadb.api.types import (GetResult, QueryResult)
+from chromadb.api.types import GetResult, QueryResult
 from langchain.docstore.document import Document
 
 from chatchat.configs import SCORE_THRESHOLD
+from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 from chatchat.server.utils import get_Embeddings
-from chatchat.server.file_rag.utils import get_Retriever
 
 
 def _get_result_to_documents(get_result: GetResult) -> List[Document]:
-    if not get_result['documents']:
+    if not get_result["documents"]:
         return []
 
-    _metadatas = get_result['metadatas'] if get_result['metadatas'] else [{}] * len(get_result['documents'])
+    _metadatas = (
+        get_result["metadatas"]
+        if get_result["metadatas"]
+        else [{}] * len(get_result["documents"])
+    )
 
     document_list = []
-    for page_content, metadata in zip(get_result['documents'], _metadatas):
-        document_list.append(Document(**{'page_content': page_content, 'metadata': metadata}))
+    for page_content, metadata in zip(get_result["documents"], _metadatas):
+        document_list.append(
+            Document(**{"page_content": page_content, "metadata": metadata})
+        )
 
     return document_list
 
@@ -74,13 +80,14 @@ class ChromaKBService(KBService):
             if not str(e) == f"Collection {self.kb_name} does not exist.":
                 raise e
 
-    def do_search(self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD) -> List[
-        Tuple[Document, float]]:
+    def do_search(
+        self, query: str, top_k: int, score_threshold: float = SCORE_THRESHOLD
+    ) -> List[Tuple[Document, float]]:
         retriever = get_Retriever("vectorstore").from_vectorstore(
-             self.collection,
-             top_k=top_k,
-             score_threshold=score_threshold,
-         )
+            self.collection,
+            top_k=top_k,
+            score_threshold=score_threshold,
+        )
         docs = retriever.get_relevant_documents(query)
         return docs
 
@@ -92,7 +99,9 @@ class ChromaKBService(KBService):
         embeddings = embed_func.embed_documents(texts=texts)
         ids = [str(uuid.uuid1()) for _ in range(len(texts))]
         for _id, text, embedding, metadata in zip(ids, texts, embeddings, metadatas):
-            self.collection.add(ids=_id, embeddings=embedding, metadatas=metadata, documents=text)
+            self.collection.add(
+                ids=_id, embeddings=embedding, metadatas=metadata, documents=text
+            )
             doc_infos.append({"id": _id, "metadata": metadata})
         return doc_infos
 

@@ -1,21 +1,22 @@
+import os
+import sys
+
 import streamlit as st
+from streamlit_option_menu import option_menu
+
+from chatchat.configs import VERSION
+from chatchat.server.utils import api_address
+from chatchat.webui_pages.dialogue.dialogue import chat_box, dialogue_page
+from chatchat.webui_pages.knowledge_base.knowledge_base import knowledge_base_page
 
 # from chatchat.webui_pages.loom_view_client import update_store
 # from chatchat.webui_pages.openai_plugins import openai_plugins_page
 from chatchat.webui_pages.utils import *
-from streamlit_option_menu import option_menu
-from chatchat.webui_pages.dialogue.dialogue import dialogue_page, chat_box
-from chatchat.webui_pages.knowledge_base.knowledge_base import knowledge_base_page
-import os
-import sys
-from chatchat.configs import VERSION
-from chatchat.server.utils import api_address
-
 
 # def on_change(key):
 #     if key:
 #         update_store()
-img_dir =  os.path.dirname(os.path.abspath(__file__))
+img_dir = os.path.dirname(os.path.abspath(__file__))
 
 api = ApiRequest(base_url=api_address())
 
@@ -27,12 +28,11 @@ if __name__ == "__main__":
         os.path.join(img_dir, "img", "chatchat_icon_blue_square_v2.png"),
         initial_sidebar_state="expanded",
         menu_items={
-            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
-            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
+            "Get Help": "https://github.com/chatchat-space/Langchain-Chatchat",
+            "Report a bug": "https://github.com/chatchat-space/Langchain-Chatchat/issues",
+            "About": f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！""",
         },
-        layout="wide"
-
+        layout="wide",
     )
 
     # use the following code to set the app to wide mode and the html markdown to increase the sidebar width
@@ -73,8 +73,8 @@ if __name__ == "__main__":
     #     update_store()
     with st.sidebar:
         st.image(
-            os.path.join(img_dir, "img", 'logo-long-chatchat-trans-v2.png'),
-            use_column_width=True
+            os.path.join(img_dir, "img", "logo-long-chatchat-trans-v2.png"),
+            use_column_width=True,
         )
         st.caption(
             f"""<p align="right">当前版本：{VERSION}</p>""",

@@ -15,10 +15,10 @@ from typing import (
     Union,
 )
 
+from langchain_community.utils.openai import is_openai_v1
 from langchain_core.embeddings import Embeddings
 from langchain_core.pydantic_v1 import BaseModel, Field, root_validator
 from langchain_core.utils import get_from_dict_or_env, get_pydantic_field_names
-from langchain_community.utils.openai import is_openai_v1
 from tenacity import (
     AsyncRetrying,
     before_sleep_log,
@@ -27,8 +27,8 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
-from chatchat.server.utils import run_in_thread_pool
 
+from chatchat.server.utils import run_in_thread_pool
 
 logger = logging.getLogger(__name__)
 
@@ -284,11 +284,15 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
             # See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
             # replace newlines, which can negatively affect performance.
             text = text.replace("\n", " ")
-        return embed_with_retry(
-            self,
-            input=[text],
-            **self._invocation_params,
-        ).data[0].embedding
+        return (
+            embed_with_retry(
+                self,
+                input=[text],
+                **self._invocation_params,
+            )
+            .data[0]
+            .embedding
+        )
 
     async def _aembedding_func(self, text: str, *, engine: str) -> List[float]:
         """Call out to LocalAI's embedding endpoint."""
@@ -298,12 +302,16 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
             # replace newlines, which can negatively affect performance.
             text = text.replace("\n", " ")
         return (
-            await async_embed_with_retry(
-                self,
-                input=[text],
-                **self._invocation_params,
+            (
+                await async_embed_with_retry(
+                    self,
+                    input=[text],
+                    **self._invocation_params,
+                )
             )
-        ).data[0].embedding
+            .data[0]
+            .embedding
+        )
 
     def embed_documents(
         self, texts: List[str], chunk_size: Optional[int] = 0
@@ -318,6 +326,7 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
+
         # call _embedding_func for each text with multithreads
         def task(seq, text):
             return (seq, self._embedding_func(text, engine=self.deployment))

@@ -26,6 +26,7 @@ def test_add_doc():
 def test_search_db():
     result = kbService.search_docs(search_content)
     assert len(result) > 0
+
+
 def test_delete_doc():
     assert kbService.delete_doc(testKnowledgeFile)
-

@@ -1,17 +1,17 @@
 import sys
 from pathlib import Path
+
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
 
-from chatchat.webui_pages.utils import ApiRequest
-
-import pytest
 from pprint import pprint
 from typing import List
 
+import pytest
+
+from chatchat.webui_pages.utils import ApiRequest
 
 api = ApiRequest()
-
 
 
 @pytest.mark.parametrize("type", ["llm_chat"])

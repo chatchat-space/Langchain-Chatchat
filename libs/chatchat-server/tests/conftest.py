@@ -4,12 +4,12 @@ from importlib import util
 from typing import Dict, List, Sequence
 
 import pytest
-from pytest import Config, Function, Parser
 from model_providers.core.utils.utils import (
     get_config_dict,
     get_log_file,
     get_timestamp_ms,
 )
+from pytest import Config, Function, Parser
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -100,7 +100,7 @@ def logging_conf() -> dict:
         get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
         1024 * 1024 * 1024 * 3,
         1024 * 1024 * 1024 * 3,
-        )
+    )
 
 
 @pytest.fixture

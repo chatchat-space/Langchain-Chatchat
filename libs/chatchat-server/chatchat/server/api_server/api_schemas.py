@@ -13,9 +13,10 @@ from openai.types.chat import (
 )
 
 from chatchat.configs import DEFAULT_LLM_MODEL, TEMPERATURE
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus # noaq
-from chatchat.server.pydantic_v2 import BaseModel, Field, AnyUrl
+from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
+from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType
+
 
 class OpenAIBaseInput(BaseModel):
     user: Optional[str] = None
@@ -63,7 +64,9 @@ class OpenAIImageBaseInput(OpenAIBaseInput):
     model: str
     n: int = 1
     response_format: Optional[Literal["url", "b64_json"]] = None
-    size: Optional[Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]] = "256x256"
+    size: Optional[
+        Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]
+    ] = "256x256"
 
 
 class OpenAIImageGenerationsInput(OpenAIImageBaseInput):
@@ -98,7 +101,9 @@ class OpenAIAudioSpeechInput(OpenAIBaseInput):
     input: str
     model: str
     voice: str
-    response_format: Optional[Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]] = None
+    response_format: Optional[
+        Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]
+    ] = None
     speed: Optional[float] = None
 
 
@@ -111,16 +116,18 @@ class OpenAIBaseOutput(BaseModel):
     id: Optional[str] = None
     content: Optional[str] = None
     model: Optional[str] = None
-    object: Literal["chat.completion", "chat.completion.chunk"] = "chat.completion.chunk"
+    object: Literal[
+        "chat.completion", "chat.completion.chunk"
+    ] = "chat.completion.chunk"
     role: Literal["assistant"] = "assistant"
     finish_reason: Optional[str] = None
-    created: int = Field(default_factory=lambda : int(time.time()))
+    created: int = Field(default_factory=lambda: int(time.time()))
     tool_calls: List[Dict] = []
 
-    status: Optional[int] = None # AgentStatus
+    status: Optional[int] = None  # AgentStatus
     message_type: int = MsgType.TEXT
-    message_id: Optional[str] = None # id in database table
-    is_ref: bool = False # wheather show in seperated expander
+    message_id: Optional[str] = None  # id in database table
+    is_ref: bool = False  # wheather show in seperated expander
 
     class Config:
         extra = "allow"
@@ -131,7 +138,6 @@ class OpenAIBaseOutput(BaseModel):
             "object": self.object,
             "model": self.model,
             "created": self.created,
-
             "status": self.status,
             "message_type": self.message_type,
             "message_id": self.message_id,
@@ -140,22 +146,26 @@ class OpenAIBaseOutput(BaseModel):
         }
 
         if self.object == "chat.completion.chunk":
-            result["choices"] = [{
-                "delta": {
-                    "content": self.content,
-                    "tool_calls": self.tool_calls,
-                },
-                "role": self.role,
-            }]
-        elif self.object == "chat.completion":
-            result["choices"] = [{
-                "message": {
+            result["choices"] = [
+                {
+                    "delta": {
+                        "content": self.content,
+                        "tool_calls": self.tool_calls,
+                    },
                     "role": self.role,
-                    "content": self.content,
-                    "finish_reason": self.finish_reason,
-                    "tool_calls": self.tool_calls,
                 }
-            }]
+            ]
+        elif self.object == "chat.completion":
+            result["choices"] = [
+                {
+                    "message": {
+                        "role": self.role,
+                        "content": self.content,
+                        "finish_reason": self.finish_reason,
+                        "tool_calls": self.tool_calls,
+                    }
+                }
+            ]
         return result
 
     def model_dump_json(self):

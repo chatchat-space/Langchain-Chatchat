@@ -1,10 +1,10 @@
-import os
 import json
-from abc import abstractmethod, ABC
+import logging
+import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-import logging
-from typing import Any, Dict, TypeVar, Generic, Optional, Type
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 
 from dataclasses_json import DataClassJsonMixin
 from pydantic import BaseModel
@@ -33,7 +33,7 @@ F = TypeVar("F", bound=Config)
 
 @dataclass
 class ConfigFactory(Generic[F], DataClassJsonMixin):
-    """config for ChatChat """
+    """config for ChatChat"""
 
     @classmethod
     @abstractmethod
@@ -52,6 +52,7 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
     工作空间的配置信息存储在用户的家目录下的.chatchat/workspace/workspace_config.json文件中。
     注意：不存在则读取默认
     """
+
     config_factory_cls: Type[CF]
     _config_factory: Optional[CF] = None
 
@@ -111,7 +112,9 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
         if store_cfg is None:
             raise RuntimeError("store_cfg is None.")
 
-        get_lambda = lambda store_cfg_type: store_cfg[self._get_store_cfg_index_by_type(store_cfg, store_cfg_type)]
+        get_lambda = lambda store_cfg_type: store_cfg[
+            self._get_store_cfg_index_by_type(store_cfg, store_cfg_type)
+        ]
         return get_lambda(cfg_type)
 
     def store_config(self):
@@ -123,8 +126,7 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
             if _load_config is None:
                 _load_config = []
             config_json_index = self._get_store_cfg_index_by_type(
-                store_cfg=_load_config,
-                store_cfg_type=self.get_type()
+                store_cfg=_load_config, store_cfg_type=self.get_type()
             )
             config_type_json = {"type": self.get_type(), "config": config_json}
             if config_json_index == -1:

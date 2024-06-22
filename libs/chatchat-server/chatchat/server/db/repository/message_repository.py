@@ -1,20 +1,33 @@
-from chatchat.server.db.session import with_session
-from typing import Dict, List
 import uuid
+from typing import Dict, List
+
 from chatchat.server.db.models.message_model import MessageModel
+from chatchat.server.db.session import with_session
 
 
 @with_session
-def add_message_to_db(session, conversation_id: str, chat_type, query, response="", message_id=None,
-                      metadata: Dict = {}):
+def add_message_to_db(
+    session,
+    conversation_id: str,
+    chat_type,
+    query,
+    response="",
+    message_id=None,
+    metadata: Dict = {},
+):
     """
     新增聊天记录
     """
     if not message_id:
         message_id = uuid.uuid4().hex
-    m = MessageModel(id=message_id, chat_type=chat_type, query=query, response=response,
-                     conversation_id=conversation_id,
-                     meta_data=metadata)
+    m = MessageModel(
+        id=message_id,
+        chat_type=chat_type,
+        query=query,
+        response=response,
+        conversation_id=conversation_id,
+        meta_data=metadata,
+    )
     session.add(m)
     session.commit()
     return m.id
@@ -60,11 +73,18 @@ def feedback_message_to_db(session, message_id, feedback_score, feedback_reason)
 
 @with_session
 def filter_message(session, conversation_id: str, limit: int = 10):
-    messages = (session.query(MessageModel).filter_by(conversation_id=conversation_id).
-                # 用户最新的query 也会插入到db，忽略这个message record
-                filter(MessageModel.response != '').
-                # 返回最近的limit 条记录
-                order_by(MessageModel.create_time.desc()).limit(limit).all())
+    messages = (
+        session.query(MessageModel)
+        .filter_by(conversation_id=conversation_id)
+        .
+        # 用户最新的query 也会插入到db，忽略这个message record
+        filter(MessageModel.response != "")
+        .
+        # 返回最近的limit 条记录
+        order_by(MessageModel.create_time.desc())
+        .limit(limit)
+        .all()
+    )
     # 直接返回 List[MessageModel] 报错
     data = []
     for m in messages:
