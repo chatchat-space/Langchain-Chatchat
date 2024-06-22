@@ -22,7 +22,7 @@ services:
               capabilities: [gpu]
     runtime: nvidia
   chatchat:
-    image: chatimage/chatchat:0.3.0-0622
+    image: chatimage/chatchat:0.3.0-0623
     restart: always
     # ports: # 不使用 host network 时可打开.
     #   - "7861:7861"
