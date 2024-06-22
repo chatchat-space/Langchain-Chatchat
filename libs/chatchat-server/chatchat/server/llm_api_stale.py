@@ -4,15 +4,15 @@
 但少数非关键参数如--worker-address,--allowed-origins,--allowed-methods,--allowed-headers不支持
 
 """
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import subprocess
-import re
-import logging
 import argparse
+import logging
+import re
+import subprocess
 
 LOG_PATH = "./logs/"
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
@@ -22,11 +22,13 @@ logging.basicConfig(format=LOG_FORMAT)
 
 parser = argparse.ArgumentParser()
 # ------multi worker-----------------
-parser.add_argument('--model-path-address',
-                    default="THUDM/chatglm2-6b@localhost@20002",
-                    nargs="+",
-                    type=str,
-                    help="model path, host, and port, formatted as model-path@host@port")
+parser.add_argument(
+    "--model-path-address",
+    default="THUDM/chatglm2-6b@localhost@20002",
+    nargs="+",
+    type=str,
+    help="model path, host, and port, formatted as model-path@host@port",
+)
 # ---------------controller-------------------------
 
 parser.add_argument("--controller-host", type=str, default="localhost")
@@ -79,9 +81,7 @@ parser.add_argument(
     default="20GiB",
     help="The maximum memory per gpu. Use a string like '13Gib'",
 )
-parser.add_argument(
-    "--load-8bit", action="store_true", help="Use 8-bit quantization"
-)
+parser.add_argument("--load-8bit", action="store_true", help="Use 8-bit quantization")
 parser.add_argument(
     "--cpu-offloading",
     action="store_true",
@@ -126,13 +126,26 @@ parser.add_argument("--stream-interval", type=int, default=2)
 parser.add_argument("--no-register", action="store_true")
 
 worker_args = [
-    "worker-host", "worker-port",
-    "model-path", "revision", "device", "gpus", "num-gpus",
-    "max-gpu-memory", "load-8bit", "cpu-offloading",
-    "gptq-ckpt", "gptq-wbits", "gptq-groupsize",
-    "gptq-act-order", "model-names", "limit-worker-concurrency",
-    "stream-interval", "no-register",
-    "controller-address", "worker-address"
+    "worker-host",
+    "worker-port",
+    "model-path",
+    "revision",
+    "device",
+    "gpus",
+    "num-gpus",
+    "max-gpu-memory",
+    "load-8bit",
+    "cpu-offloading",
+    "gptq-ckpt",
+    "gptq-wbits",
+    "gptq-groupsize",
+    "gptq-act-order",
+    "model-names",
+    "limit-worker-concurrency",
+    "stream-interval",
+    "no-register",
+    "controller-address",
+    "worker-address",
 ]
 # -----------------openai server---------------------------
 
@@ -155,9 +168,13 @@ parser.add_argument(
     type=lambda s: s.split(","),
     help="Optional list of comma separated API keys",
 )
-server_args = ["server-host", "server-port", "allow-credentials", "api-keys",
-               "controller-address"
-               ]
+server_args = [
+    "server-host",
+    "server-port",
+    "allow-credentials",
+    "api-keys",
+    "controller-address",
+]
 
 # 0,controller, model_worker, openai_api_server
 # 1, 命令行选项
@@ -190,7 +207,11 @@ def string_args(args, args_list):
         # 1==True ->  True
         elif isinstance(value, bool) and value == True:
             args_str += f" --{key} "
-        elif isinstance(value, list) or isinstance(value, tuple) or isinstance(value, set):
+        elif (
+            isinstance(value, list)
+            or isinstance(value, tuple)
+            or isinstance(value, set)
+        ):
             value = " ".join(value)
             args_str += f" --{key} {value} "
         else:
@@ -200,7 +221,13 @@ def string_args(args, args_list):
 
 
 def launch_worker(item, args, worker_args=worker_args):
-    log_name = item.split("/")[-1].split("\\")[-1].replace("-", "_").replace("@", "_").replace(".", "_")
+    log_name = (
+        item.split("/")[-1]
+        .split("\\")[-1]
+        .replace("-", "_")
+        .replace("@", "_")
+        .replace(".", "_")
+    )
     # 先分割model-path-address,在传到string_args中分析参数
     args.model_path, args.worker_host, args.worker_port = item.split("@")
     args.worker_address = f"http://{args.worker_host}:{args.worker_port}"
@@ -208,21 +235,28 @@ def launch_worker(item, args, worker_args=worker_args):
     print(f"如长时间未启动，请到{LOG_PATH}{log_name}.log下查看日志")
     worker_str_args = string_args(args, worker_args)
     print(worker_str_args)
-    worker_sh = base_launch_sh.format("model_worker", worker_str_args, LOG_PATH, f"worker_{log_name}")
-    worker_check_sh = base_check_sh.format(LOG_PATH, f"worker_{log_name}", "model_worker")
+    worker_sh = base_launch_sh.format(
+        "model_worker", worker_str_args, LOG_PATH, f"worker_{log_name}"
+    )
+    worker_check_sh = base_check_sh.format(
+        LOG_PATH, f"worker_{log_name}", "model_worker"
+    )
     subprocess.run(worker_sh, shell=True, check=True)
     subprocess.run(worker_check_sh, shell=True, check=True)
 
 
-def launch_all(args,
-               controller_args=controller_args,
-               worker_args=worker_args,
-               server_args=server_args
-               ):
+def launch_all(
+    args,
+    controller_args=controller_args,
+    worker_args=worker_args,
+    server_args=server_args,
+):
     print(f"Launching llm service,logs are located in {LOG_PATH}...")
     print(f"开始启动LLM服务,请到{LOG_PATH}下监控各模块日志...")
     controller_str_args = string_args(args, controller_args)
-    controller_sh = base_launch_sh.format("controller", controller_str_args, LOG_PATH, "controller")
+    controller_sh = base_launch_sh.format(
+        "controller", controller_str_args, LOG_PATH, "controller"
+    )
     controller_check_sh = base_check_sh.format(LOG_PATH, "controller", "controller")
     subprocess.run(controller_sh, shell=True, check=True)
     subprocess.run(controller_check_sh, shell=True, check=True)
@@ -235,8 +269,12 @@ def launch_all(args,
             launch_worker(item, args=args, worker_args=worker_args)
 
     server_str_args = string_args(args, server_args)
-    server_sh = base_launch_sh.format("openai_api_server", server_str_args, LOG_PATH, "openai_api_server")
-    server_check_sh = base_check_sh.format(LOG_PATH, "openai_api_server", "openai_api_server")
+    server_sh = base_launch_sh.format(
+        "openai_api_server", server_str_args, LOG_PATH, "openai_api_server"
+    )
+    server_check_sh = base_check_sh.format(
+        LOG_PATH, "openai_api_server", "openai_api_server"
+    )
     subprocess.run(server_sh, shell=True, check=True)
     subprocess.run(server_check_sh, shell=True, check=True)
     print("Launching LLM service done!")
@@ -246,8 +284,12 @@ def launch_all(args,
 if __name__ == "__main__":
     args = parser.parse_args()
     # 必须要加http//:，否则InvalidSchema: No connection adapters were found
-    args = argparse.Namespace(**vars(args),
-                              **{"controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"})
+    args = argparse.Namespace(
+        **vars(args),
+        **{
+            "controller-address": f"http://{args.controller_host}:{str(args.controller_port)}"
+        },
+    )
 
     if args.gpus:
         if len(args.gpus.split(",")) < args.num_gpus:

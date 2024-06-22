@@ -1,14 +1,13 @@
-import os
 import json
+import logging
+import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-import logging
-from typing import Any, Optional, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 sys.path.append(str(Path(__file__).parent))
 import _core_config as core_config
-
 from _basic_config import config_basic_workspace
 
 
@@ -117,7 +116,9 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
         # 通常情况下不需要更改以下内容
 
         # 知识库默认存储路径
-        self.KB_ROOT_PATH = os.path.join(config_basic_workspace.get_config().DATA_PATH, "knowledge_base")
+        self.KB_ROOT_PATH = os.path.join(
+            config_basic_workspace.get_config().DATA_PATH, "knowledge_base"
+        )
         if not os.path.exists(self.KB_ROOT_PATH):
             os.mkdir(self.KB_ROOT_PATH)
 
@@ -128,8 +129,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
 
         # 可选向量库类型及对应配置
         self.kbs_config = {
-            "faiss": {
-            },
+            "faiss": {},
             "milvus": {
                 "host": "127.0.0.1",
                 "port": "19530",
@@ -155,13 +155,16 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
                 "port": "9200",
                 "index_name": "test_index",
                 "user": "",
-                "password": ""
+                "password": "",
             },
             "milvus_kwargs": {
-                "search_params": {"metric_type": "L2"},  #在此处增加search_params
-                "index_params": {"metric_type": "L2", "index_type": "HNSW"}  # 在此处增加index_params
+                "search_params": {"metric_type": "L2"},  # 在此处增加search_params
+                "index_params": {
+                    "metric_type": "L2",
+                    "index_type": "HNSW",
+                },  # 在此处增加index_params
             },
-            "chromadb": {}
+            "chromadb": {},
         }
 
         # TextSplitter配置项，如果你不明白其中的含义，就不要修改。
@@ -179,13 +182,12 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
                 "tokenizer_name_or_path": "cl100k_base",
             },
             "MarkdownHeaderTextSplitter": {
-                "headers_to_split_on":
-                    [
-                        ("#", "head1"),
-                        ("##", "head2"),
-                        ("###", "head3"),
-                        ("####", "head4"),
-                    ]
+                "headers_to_split_on": [
+                    ("#", "head1"),
+                    ("##", "head2"),
+                    ("###", "head3"),
+                    ("####", "head4"),
+                ]
             },
         }
 
@@ -207,6 +209,7 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
     """
     工作空间的配置预设，提供ConfigKb建造方法产生实例。
     """
+
     config_factory_cls = ConfigKbFactory
 
     def __init__(self):
@@ -215,7 +218,9 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
     def _build_config_factory(self, config_json: Any) -> ConfigKbFactory:
         _config_factory = self.config_factory_cls()
         if config_json.get("DEFAULT_KNOWLEDGE_BASE"):
-            _config_factory.DEFAULT_KNOWLEDGE_BASE = config_json.get("DEFAULT_KNOWLEDGE_BASE")
+            _config_factory.DEFAULT_KNOWLEDGE_BASE = config_json.get(
+                "DEFAULT_KNOWLEDGE_BASE"
+            )
         if config_json.get("DEFAULT_VS_TYPE"):
             _config_factory.DEFAULT_VS_TYPE = config_json.get("DEFAULT_VS_TYPE")
         if config_json.get("CACHED_VS_NUM"):
@@ -231,7 +236,9 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
         if config_json.get("SCORE_THRESHOLD"):
             _config_factory.SCORE_THRESHOLD = config_json.get("SCORE_THRESHOLD")
         if config_json.get("DEFAULT_SEARCH_ENGINE"):
-            _config_factory.DEFAULT_SEARCH_ENGINE = config_json.get("DEFAULT_SEARCH_ENGINE")
+            _config_factory.DEFAULT_SEARCH_ENGINE = config_json.get(
+                "DEFAULT_SEARCH_ENGINE"
+            )
         if config_json.get("SEARCH_ENGINE_TOP_K"):
             _config_factory.SEARCH_ENGINE_TOP_K = config_json.get("SEARCH_ENGINE_TOP_K")
         if config_json.get("ZH_TITLE_ENHANCE"):
@@ -245,13 +252,17 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
         if config_json.get("DB_ROOT_PATH"):
             _config_factory.DB_ROOT_PATH = config_json.get("DB_ROOT_PATH")
         if config_json.get("SQLALCHEMY_DATABASE_URI"):
-            _config_factory.SQLALCHEMY_DATABASE_URI = config_json.get("SQLALCHEMY_DATABASE_URI")
+            _config_factory.SQLALCHEMY_DATABASE_URI = config_json.get(
+                "SQLALCHEMY_DATABASE_URI"
+            )
 
         if config_json.get("TEXT_SPLITTER_NAME"):
             _config_factory.TEXT_SPLITTER_NAME = config_json.get("TEXT_SPLITTER_NAME")
 
         if config_json.get("EMBEDDING_KEYWORD_FILE"):
-            _config_factory.EMBEDDING_KEYWORD_FILE = config_json.get("EMBEDDING_KEYWORD_FILE")
+            _config_factory.EMBEDDING_KEYWORD_FILE = config_json.get(
+                "EMBEDDING_KEYWORD_FILE"
+            )
 
         return _config_factory
 

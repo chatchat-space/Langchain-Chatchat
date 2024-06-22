@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 import sys
-from pathlib import Path
-from typing import Any, Optional, List, Dict
-
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 sys.path.append(str(Path(__file__).parent))
 import _core_config as core_config
@@ -80,12 +79,12 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "qwen-turbo",
         ]
 
-        self.MODEL_PROVIDERS_CFG_PATH_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                            "model_providers.yaml")
+        self.MODEL_PROVIDERS_CFG_PATH_CONFIG = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "model_providers.yaml"
+        )
         self.MODEL_PROVIDERS_CFG_HOST = "127.0.0.1"
 
         self.MODEL_PROVIDERS_CFG_PORT = 20000
-
 
         # 可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力，启动后下面变量会自动增加相应的平台
         #   ### 如果您已经有了一个openai endpoint的能力的地址，可以在这里直接配置
@@ -158,46 +157,40 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "top_k": 3,
                 "score_threshold": 1.0,
                 "conclude_prompt": {
-                    "with_result":
-                        '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
-                        '不允许在答案中添加编造成分，答案请使用中文。 </指令>\n'
-                        '<已知信息>{{ context }}</已知信息>\n'
-                        '<问题>{{ question }}</问题>\n',
-                    "without_result":
-                        '请你根据我的提问回答我的问题:\n'
-                        '{{ question }}\n'
-                        '请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n',
-                }
+                    "with_result": '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
+                    "不允许在答案中添加编造成分，答案请使用中文。 </指令>\n"
+                    "<已知信息>{{ context }}</已知信息>\n"
+                    "<问题>{{ question }}</问题>\n",
+                    "without_result": "请你根据我的提问回答我的问题:\n"
+                    "{{ question }}\n"
+                    "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
+                },
             },
             "search_internet": {
                 "use": False,
                 "search_engine_name": "bing",
-                "search_engine_config":
-                    {
-                        "bing": {
-                            "result_len": 3,
-                            "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
-                            "bing_key": "",
-                        },
-                        "metaphor": {
-                            "result_len": 3,
-                            "metaphor_api_key": "",
-                            "split_result": False,
-                            "chunk_size": 500,
-                            "chunk_overlap": 0,
-                        },
-                        "duckduckgo": {
-                            "result_len": 3
-                        }
+                "search_engine_config": {
+                    "bing": {
+                        "result_len": 3,
+                        "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
+                        "bing_key": "",
                     },
+                    "metaphor": {
+                        "result_len": 3,
+                        "metaphor_api_key": "",
+                        "split_result": False,
+                        "chunk_size": 500,
+                        "chunk_overlap": 0,
+                    },
+                    "duckduckgo": {"result_len": 3},
+                },
                 "top_k": 10,
                 "verbose": "Origin",
-                "conclude_prompt":
-                    "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
-                    "</指令>\n<已知信息>{{ context }}</已知信息>\n"
-                    "<问题>\n"
-                    "{{ question }}\n"
-                    "</问题>\n"
+                "conclude_prompt": "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
+                "</指令>\n<已知信息>{{ context }}</已知信息>\n"
+                "<问题>\n"
+                "{{ question }}\n"
+                "</问题>\n",
             },
             "arxiv": {
                 "use": False,
@@ -223,13 +216,13 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "use": False,
                 "model_path": "your model path",
                 "tokenizer_path": "your tokenizer path",
-                "device": "cuda:1"
+                "device": "cuda:1",
             },
             "aqa_processor": {
                 "use": False,
                 "model_path": "your model path",
                 "tokenizer_path": "yout tokenizer path",
-                "device": "cuda:2"
+                "device": "cuda:2",
             },
             "text2images": {
                 "use": False,
@@ -262,7 +255,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     # 如果出现大模型选错表的情况，可尝试根据实际情况填写表名和说明
                     # "tableA":"这是一个用户表，存储了用户的基本信息",
                     # "tanleB":"角色表",
-                }
+                },
             },
         }
         self._init_llm_work_config()
@@ -278,7 +271,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     "max_tokens": 4096,
                     "history_len": 100,
                     "prompt_name": "default",
-                    "callbacks": False
+                    "callbacks": False,
                 },
             },
             "llm_model": {
@@ -287,7 +280,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     "max_tokens": 4096,
                     "history_len": 10,
                     "prompt_name": "default",
-                    "callbacks": True
+                    "callbacks": True,
                 },
             },
             "action_model": {
@@ -295,7 +288,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     "temperature": 0.01,
                     "max_tokens": 4096,
                     "prompt_name": "ChatGLM3",
-                    "callbacks": True
+                    "callbacks": True,
                 },
             },
             "postprocess_model": {
@@ -303,14 +296,14 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     "temperature": 0.01,
                     "max_tokens": 4096,
                     "prompt_name": "default",
-                    "callbacks": True
+                    "callbacks": True,
                 }
             },
             "image_model": {
                 "sd-turbo": {
                     "size": "256*256",
                 }
-            }
+            },
         }
 
     def default_llm_model(self, llm_model: str):
@@ -368,22 +361,26 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
         return config
 
 
-class ConfigModelWorkSpace(core_config.ConfigWorkSpace[ConfigModelFactory, ConfigModel]):
+class ConfigModelWorkSpace(
+    core_config.ConfigWorkSpace[ConfigModelFactory, ConfigModel]
+):
     """
     工作空间的配置预设, 提供ConfigModel建造方法产生实例。
     """
+
     config_factory_cls = ConfigModelFactory
 
     def __init__(self):
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigModelFactory:
-
         _config_factory = self.config_factory_cls()
         if config_json.get("DEFAULT_LLM_MODEL"):
             _config_factory.default_llm_model(config_json.get("DEFAULT_LLM_MODEL"))
         if config_json.get("DEFAULT_EMBEDDING_MODEL"):
-            _config_factory.default_embedding_model(config_json.get("DEFAULT_EMBEDDING_MODEL"))
+            _config_factory.default_embedding_model(
+                config_json.get("DEFAULT_EMBEDDING_MODEL")
+            )
         if config_json.get("Agent_MODEL"):
             _config_factory.agent_model(config_json.get("Agent_MODEL"))
         if config_json.get("HISTORY_LEN"):
@@ -393,13 +390,21 @@ class ConfigModelWorkSpace(core_config.ConfigWorkSpace[ConfigModelFactory, Confi
         if config_json.get("TEMPERATURE"):
             _config_factory.temperature(config_json.get("TEMPERATURE"))
         if config_json.get("SUPPORT_AGENT_MODELS"):
-            _config_factory.support_agent_models(config_json.get("SUPPORT_AGENT_MODELS"))
+            _config_factory.support_agent_models(
+                config_json.get("SUPPORT_AGENT_MODELS")
+            )
         if config_json.get("MODEL_PROVIDERS_CFG_PATH_CONFIG"):
-            _config_factory.model_providers_cfg_path_config(config_json.get("MODEL_PROVIDERS_CFG_PATH_CONFIG"))
+            _config_factory.model_providers_cfg_path_config(
+                config_json.get("MODEL_PROVIDERS_CFG_PATH_CONFIG")
+            )
         if config_json.get("MODEL_PROVIDERS_CFG_HOST"):
-            _config_factory.model_providers_cfg_host(config_json.get("MODEL_PROVIDERS_CFG_HOST"))
+            _config_factory.model_providers_cfg_host(
+                config_json.get("MODEL_PROVIDERS_CFG_HOST")
+            )
         if config_json.get("MODEL_PROVIDERS_CFG_PORT"):
-            _config_factory.model_providers_cfg_port(config_json.get("MODEL_PROVIDERS_CFG_PORT"))
+            _config_factory.model_providers_cfg_port(
+                config_json.get("MODEL_PROVIDERS_CFG_PORT")
+            )
         if config_json.get("MODEL_PLATFORMS"):
             _config_factory.model_platforms(config_json.get("MODEL_PLATFORMS"))
         if config_json.get("TOOL_CONFIG"):
@@ -443,7 +448,9 @@ class ConfigModelWorkSpace(core_config.ConfigWorkSpace[ConfigModelFactory, Confi
         self.store_config()
 
     def set_model_providers_cfg_path_config(self, model_providers_cfg_path_config: str):
-        self._config_factory.model_providers_cfg_path_config(model_providers_cfg_path_config)
+        self._config_factory.model_providers_cfg_path_config(
+            model_providers_cfg_path_config
+        )
         self.store_config()
 
     def set_model_providers_cfg_host(self, model_providers_cfg_host: str):

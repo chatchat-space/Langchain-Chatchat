@@ -1,17 +1,17 @@
 import base64
 import json
 import os
-from PIL import Image
-from typing import List
 import uuid
+from typing import List
 
-from chatchat.server.pydantic_v1 import Field
-from chatchat.server.utils import get_tool_config
-from .tools_registry import regist_tool, BaseToolOutput
 import openai
+from PIL import Image
 
 from chatchat.configs import MEDIA_PATH
-from chatchat.server.utils import MsgType
+from chatchat.server.pydantic_v1 import Field
+from chatchat.server.utils import MsgType, get_tool_config
+
+from .tools_registry import BaseToolOutput, regist_tool
 
 
 def get_image_model_config() -> dict:
@@ -26,6 +26,7 @@ def get_image_model_config() -> dict:
     #         return config
     pass
 
+
 @regist_tool(title="文生图", return_direct=True)
 def text2images(
     prompt: str,
@@ -33,7 +34,7 @@ def text2images(
     width: int = Field(512, description="生成图片的宽度"),
     height: int = Field(512, description="生成图片的高度"),
 ) -> List[str]:
-    '''根据用户的描述生成图片'''
+    """根据用户的描述生成图片"""
 
     model_config = get_image_model_config()
     assert model_config is not None, "请正确配置文生图模型"
@@ -43,12 +44,13 @@ def text2images(
         api_key=model_config["api_key"],
         timeout=600,
     )
-    resp = client.images.generate(prompt=prompt,
-                                  n=n,
-                                  size=f"{width}*{height}",
-                                  response_format="b64_json",
-                                  model=model_config["model_name"],
-                                  )
+    resp = client.images.generate(
+        prompt=prompt,
+        n=n,
+        size=f"{width}*{height}",
+        response_format="b64_json",
+        model=model_config["model_name"],
+    )
     images = []
     for x in resp.data:
         uid = uuid.uuid4().hex
@@ -56,14 +58,18 @@ def text2images(
         with open(os.path.join(MEDIA_PATH, filename), "wb") as fp:
             fp.write(base64.b64decode(x.b64_json))
         images.append(filename)
-    return BaseToolOutput({"message_type": MsgType.IMAGE, "images": images}, format="json")
+    return BaseToolOutput(
+        {"message_type": MsgType.IMAGE, "images": images}, format="json"
+    )
 
 
 if __name__ == "__main__":
-    from io import BytesIO
-    from matplotlib import pyplot as plt
-    from pathlib import Path
     import sys
+    from io import BytesIO
+    from pathlib import Path
+
+    from matplotlib import pyplot as plt
+
     sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
     prompt = "draw a house with trees and river"

@@ -1,25 +1,42 @@
-from datetime import datetime
-from dateutil.parser import parse
 import os
-from typing import Literal, List
+from datetime import datetime
+from typing import List, Literal
+
+from dateutil.parser import parse
 
 from chatchat.configs import (
-    DEFAULT_EMBEDDING_MODEL, DEFAULT_VS_TYPE, ZH_TITLE_ENHANCE,
-    CHUNK_SIZE, OVERLAP_SIZE, logger, log_verbose
+    CHUNK_SIZE,
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_VS_TYPE,
+    OVERLAP_SIZE,
+    ZH_TITLE_ENHANCE,
+    log_verbose,
+    logger,
 )
-from chatchat.server.knowledge_base.utils import (
-    get_file_path, list_kbs_from_folder,
-    list_files_from_folder, files2docs_in_thread,
-    KnowledgeFile
-)
-from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory, SupportedVSType
+from chatchat.server.db.base import Base, engine
 from chatchat.server.db.models.conversation_model import ConversationModel
 from chatchat.server.db.models.message_model import MessageModel
-from chatchat.server.db.repository.knowledge_file_repository import add_file_to_db # ensure Models are imported
-from chatchat.server.db.repository.knowledge_metadata_repository import add_summary_to_db
+from chatchat.server.db.repository.knowledge_file_repository import (
+    add_file_to_db,
+)
 
-from chatchat.server.db.base import Base, engine
+# ensure Models are imported
+from chatchat.server.db.repository.knowledge_metadata_repository import (
+    add_summary_to_db,
+)
 from chatchat.server.db.session import session_scope
+from chatchat.server.knowledge_base.kb_service.base import (
+    KBServiceFactory,
+    SupportedVSType,
+)
+from chatchat.server.knowledge_base.utils import (
+    KnowledgeFile,
+    files2docs_in_thread,
+    get_file_path,
+    list_files_from_folder,
+    list_kbs_from_folder,
+)
+
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
@@ -31,8 +48,8 @@ def reset_tables():
 
 
 def import_from_db(
-        sqlite_path: str = None,
-        # csv_path: str = None,
+    sqlite_path: str = None,
+    # csv_path: str = None,
 ) -> bool:
     """
     在知识库与向量库无变化的情况下，从备份数据库中导入数据到 info.db。
@@ -49,7 +66,12 @@ def import_from_db(
         con = sql.connect(sqlite_path)
         con.row_factory = sql.Row
         cur = con.cursor()
-        tables = [x["name"] for x in cur.execute("select name from sqlite_master where type='table'").fetchall()]
+        tables = [
+            x["name"]
+            for x in cur.execute(
+                "select name from sqlite_master where type='table'"
+            ).fetchall()
+        ]
         for model in models:
             table = model.local_table.fullname
             if table not in tables:
@@ -77,19 +99,20 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
             kb_files.append(kb_file)
         except Exception as e:
             msg = f"{e}，已跳过"
-            logger.error(f'{e.__class__.__name__}: {msg}',
-                         exc_info=e if log_verbose else None)
+            logger.error(
+                f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
+            )
     return kb_files
 
 
 def folder2db(
-        kb_names: List[str],
-        mode: Literal["recreate_vs", "update_in_db", "increment"],
-        vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+    kb_names: List[str],
+    mode: Literal["recreate_vs", "update_in_db", "increment"],
+    vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
+    embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = OVERLAP_SIZE,
+    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
 ):
     """
     use existed files in local folder to populate database and/or vector store.
@@ -102,13 +125,17 @@ def folder2db(
 
     def files2vs(kb_name: str, kb_files: List[KnowledgeFile]) -> List:
         result = []
-        for success, res in files2docs_in_thread(kb_files,
-                                                    chunk_size=chunk_size,
-                                                    chunk_overlap=chunk_overlap,
-                                                    zh_title_enhance=zh_title_enhance):
+        for success, res in files2docs_in_thread(
+            kb_files,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            zh_title_enhance=zh_title_enhance,
+        ):
             if success:
                 _, filename, docs = res
-                print(f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档")
+                print(
+                    f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档"
+                )
                 kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
                 kb_file.splited_docs = docs
                 kb.add_doc(kb_file=kb_file, not_refresh_vs_cache=True)
@@ -156,23 +183,27 @@ def folder2db(
         else:
             print(f"unsupported migrate mode: {mode}")
         end = datetime.now()
-        kb_path = f"知识库路径\t：{kb.kb_path}\n" if kb.vs_type()==SupportedVSType.FAISS else ""
+        kb_path = (
+            f"知识库路径\t：{kb.kb_path}\n"
+            if kb.vs_type() == SupportedVSType.FAISS
+            else ""
+        )
         file_count = len(kb_files)
         success_count = len(result)
-        docs_count = sum([len(x['docs']) for x in result])
+        docs_count = sum([len(x["docs"]) for x in result])
         print("\n" + "-" * 100)
         print(
             (
-            f"知识库名称\t：{kb_name}\n"
-            f"知识库类型\t：{kb.vs_type()}\n"
-            f"向量模型：\t：{kb.embed_model}\n"
+                f"知识库名称\t：{kb_name}\n"
+                f"知识库类型\t：{kb.vs_type()}\n"
+                f"向量模型：\t：{kb.embed_model}\n"
             )
-            +kb_path+
-            (
-            f"文件总数量\t：{file_count}\n"
-            f"入库文件数\t：{success_count}\n"
-            f"知识条目数\t：{docs_count}\n"
-            f"用时\t\t：{end-start}"
+            + kb_path
+            + (
+                f"文件总数量\t：{file_count}\n"
+                f"入库文件数\t：{success_count}\n"
+                f"知识条目数\t：{docs_count}\n"
+                f"用时\t\t：{end-start}"
             )
         )
         print("-" * 100 + "\n")

@@ -1,9 +1,9 @@
 import base64
-from datetime import datetime
 import os
-from urllib.parse import urlencode
 import uuid
-from typing import List, Dict
+from datetime import datetime
+from typing import Dict, List
+from urllib.parse import urlencode
 
 # from audio_recorder_streamlit import audio_recorder
 import openai
@@ -12,27 +12,34 @@ import streamlit_antd_components as sac
 from streamlit_chatbox import *
 from streamlit_extras.bottom_container import bottom
 
-from chatchat.configs import (LLM_MODEL_CONFIG, TEMPERATURE, MODEL_PLATFORMS, DEFAULT_LLM_MODEL,
-                              DEFAULT_EMBEDDING_MODEL)
+from chatchat.configs import (
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_LLM_MODEL,
+    LLM_MODEL_CONFIG,
+    MODEL_PLATFORMS,
+    TEMPERATURE,
+)
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.utils import MsgType, get_config_models
-from chatchat.webui_pages.utils import *
 from chatchat.webui_pages.dialogue.utils import process_files
+from chatchat.webui_pages.utils import *
 
-chat_box = ChatBox(
-    assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png")
-)
+chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
 
 
-def save_session(conv_name:str=None):
+def save_session(conv_name: str = None):
     """save session state to chat context"""
-    chat_box.context_from_session(conv_name, exclude=["selected_page", "prompt", "cur_conv_name"])
+    chat_box.context_from_session(
+        conv_name, exclude=["selected_page", "prompt", "cur_conv_name"]
+    )
 
 
-def restore_session(conv_name:str=None):
+def restore_session(conv_name: str = None):
     """restore sesstion state from chat context"""
-    chat_box.context_to_session(conv_name, exclude=["selected_page", "prompt", "cur_conv_name"])
+    chat_box.context_to_session(
+        conv_name, exclude=["selected_page", "prompt", "cur_conv_name"]
+    )
 
 
 def rerun():
@@ -43,14 +50,18 @@ def rerun():
     st.rerun()
 
 
-def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
+def get_messages_history(
+    history_len: int, content_in_expander: bool = False
+) -> List[Dict]:
     """
     返回消息历史。
     content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
     """
 
     def filter(msg):
-        content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        content = [
+            x for x in msg["elements"] if x._output_method in ["markdown", "text"]
+        ]
         if not content_in_expander:
             content = [x for x in content if not x._in_expander]
         content = [x.content for x in content]
@@ -85,7 +96,12 @@ def add_conv(name: str = ""):
                 break
             i += 1
     if name in conv_names:
-        sac.alert("创建新会话出错", f"该会话名称 “{name}” 已存在", color="error", closable=True)
+        sac.alert(
+            "创建新会话出错",
+            f"该会话名称 “{name}” 已存在",
+            color="error",
+            closable=True,
+        )
     else:
         chat_box.use_chat_name(name)
         st.session_state["cur_conv_name"] = name
@@ -95,9 +111,13 @@ def del_conv(name: str = None):
     conv_names = chat_box.get_chat_names()
     name = name or chat_box.cur_chat_name
     if len(conv_names) == 1:
-        sac.alert("删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True)
+        sac.alert(
+            "删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True
+        )
     elif not name or name not in conv_names:
-        sac.alert("删除会话出错", f"无效的会话名称：“{name}”", color="error", closable=True)
+        sac.alert(
+            "删除会话出错", f"无效的会话名称：“{name}”", color="error", closable=True
+        )
     else:
         chat_box.del_chat_name(name)
         restore_session()
@@ -114,8 +134,8 @@ def list_tools(_api: ApiRequest):
 
 
 def dialogue_page(
-        api: ApiRequest,
-        is_lite: bool = False,
+    api: ApiRequest,
+    is_lite: bool = False,
 ):
     ctx = chat_box.context
     ctx.setdefault("uid", uuid.uuid4().hex)
@@ -140,7 +160,11 @@ def dialogue_page(
         cols = st.columns(3)
         platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
         platform = cols[0].selectbox("选择模型平台", platforms, key="platform")
-        llm_models = list(get_config_models(model_type="llm", platform_name=None if platform == "所有" else platform))
+        llm_models = list(
+            get_config_models(
+                model_type="llm", platform_name=None if platform == "所有" else platform
+            )
+        )
         llm_model = cols[1].selectbox("选择LLM模型", llm_models, key="llm_model")
         temperature = cols[2].slider("Temperature", 0.0, 1.0, key="temperature")
         system_message = st.text_area("System Message:", key="system_message")
@@ -160,23 +184,36 @@ def dialogue_page(
         tab1, tab2 = st.tabs(["工具设置", "会话设置"])
 
         with tab1:
-            use_agent = st.checkbox("启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent")
+            use_agent = st.checkbox(
+                "启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent"
+            )
             # 选择工具
             tools = list_tools(api)
             tool_names = ["None"] + list(tools)
             if use_agent:
                 # selected_tools = sac.checkbox(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
                 # check_all=True, key="selected_tools")
-                selected_tools = st.multiselect("选择工具", list(tools), format_func=lambda x: tools[x]["title"],
-                                                key="selected_tools")
+                selected_tools = st.multiselect(
+                    "选择工具",
+                    list(tools),
+                    format_func=lambda x: tools[x]["title"],
+                    key="selected_tools",
+                )
             else:
                 # selected_tool = sac.buttons(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
                 # key="selected_tool")
-                selected_tool = st.selectbox("选择工具", tool_names,
-                                             format_func=lambda x: tools.get(x, {"title": "None"})["title"],
-                                             key="selected_tool")
+                selected_tool = st.selectbox(
+                    "选择工具",
+                    tool_names,
+                    format_func=lambda x: tools.get(x, {"title": "None"})["title"],
+                    key="selected_tool",
+                )
                 selected_tools = [selected_tool]
-            selected_tool_configs = {name: tool["config"] for name, tool in tools.items() if name in selected_tools}
+            selected_tool_configs = {
+                name: tool["config"]
+                for name, tool in tools.items()
+                if name in selected_tools
+            }
 
             if "None" in selected_tools:
                 selected_tools.remove("None")
@@ -190,11 +227,17 @@ def dialogue_page(
                             tool_input[k] = st.selectbox(v["title"], choices)
                         else:
                             if v["type"] == "integer":
-                                tool_input[k] = st.slider(v["title"], value=v.get("default"))
+                                tool_input[k] = st.slider(
+                                    v["title"], value=v.get("default")
+                                )
                             elif v["type"] == "number":
-                                tool_input[k] = st.slider(v["title"], value=v.get("default"), step=0.1)
+                                tool_input[k] = st.slider(
+                                    v["title"], value=v.get("default"), step=0.1
+                                )
                             else:
-                                tool_input[k] = st.text_input(v["title"], v.get("default"))
+                                tool_input[k] = st.text_input(
+                                    v["title"], v.get("default")
+                                )
 
             # uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
             # files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
@@ -209,7 +252,13 @@ def dialogue_page(
                 print(conversation_name, st.session_state.cur_conv_name)
                 save_session(conversation_name)
                 restore_session(st.session_state.cur_conv_name)
-            conversation_name = sac.buttons(conv_names, label="当前会话：", key="cur_conv_name", on_change=on_conv_change, )
+
+            conversation_name = sac.buttons(
+                conv_names,
+                label="当前会话：",
+                key="cur_conv_name",
+                on_change=on_conv_change,
+            )
             chat_box.use_chat_name(conversation_name)
             conversation_id = chat_box.context["uid"]
             if cols[0].button("新建", on_click=add_conv):
@@ -249,7 +298,9 @@ def dialogue_page(
             chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
     llm_model = ctx.get("llm_model")
     if llm_model is not None:
-        chat_model_config['llm_model'][llm_model] = LLM_MODEL_CONFIG['llm_model'].get(llm_model, {})
+        chat_model_config["llm_model"][llm_model] = LLM_MODEL_CONFIG["llm_model"].get(
+            llm_model, {}
+        )
 
     # chat input
     with bottom():
@@ -263,21 +314,27 @@ def dialogue_page(
         prompt = cols[2].chat_input(chat_input_placeholder, key="prompt")
     if prompt:
         history = get_messages_history(
-            chat_model_config["llm_model"].get(next(iter(chat_model_config["llm_model"])), {}).get("history_len", 1)
+            chat_model_config["llm_model"]
+            .get(next(iter(chat_model_config["llm_model"])), {})
+            .get("history_len", 1)
         )
         chat_box.user_say(prompt)
         if files_upload:
             if files_upload["images"]:
-                st.markdown(f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
-                            unsafe_allow_html=True)
+                st.markdown(
+                    f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
+                    unsafe_allow_html=True,
+                )
             elif files_upload["videos"]:
                 st.markdown(
                     f'<video width="400" height="300" controls><source src="data:video/mp4;base64,{files_upload["videos"][0]}" type="video/mp4"></video>',
-                    unsafe_allow_html=True)
+                    unsafe_allow_html=True,
+                )
             elif files_upload["audios"]:
                 st.markdown(
                     f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
-                    unsafe_allow_html=True)
+                    unsafe_allow_html=True,
+                )
 
         chat_box.ai_say("正在思考...")
         text = ""
@@ -302,12 +359,12 @@ def dialogue_page(
             tool_input=tool_input,
         )
         for d in client.chat.completions.create(
-                messages=messages,
-                model=llm_model,
-                stream=True,
-                tools=tools or openai.NOT_GIVEN,
-                tool_choice=tool_choice,
-                extra_body=extra_body,
+            messages=messages,
+            model=llm_model,
+            stream=True,
+            tools=tools or openai.NOT_GIVEN,
+            tool_choice=tool_choice,
+            extra_body=extra_body,
         ):
             # from pprint import pprint
             # pprint(d)
@@ -328,10 +385,14 @@ def dialogue_page(
                 text = d.choices[0].delta.content or ""
             elif d.status == AgentStatus.llm_new_token:
                 text += d.choices[0].delta.content or ""
-                chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True, metadata=metadata)
+                chat_box.update_msg(
+                    text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                )
             elif d.status == AgentStatus.llm_end:
                 text += d.choices[0].delta.content or ""
-                chat_box.update_msg(text.replace("\n", "\n\n"), streaming=False, metadata=metadata)
+                chat_box.update_msg(
+                    text.replace("\n", "\n\n"), streaming=False, metadata=metadata
+                )
             # tool 的输出与 llm 输出重复了
             # elif d.status == AgentStatus.tool_start:
             #     formatted_data = {
@@ -363,22 +424,42 @@ def dialogue_page(
                     for inum, doc in enumerate(docs):
                         doc = DocumentWithVSId.parse_obj(doc)
                         filename = doc.metadata.get("source")
-                        parameters = urlencode({"knowledge_base_name": d.tool_output.get("knowledge_base"), "file_name": filename})
-                        url = f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                        parameters = urlencode(
+                            {
+                                "knowledge_base_name": d.tool_output.get(
+                                    "knowledge_base"
+                                ),
+                                "file_name": filename,
+                            }
+                        )
+                        url = (
+                            f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                        )
                         ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
                         source_documents.append(ref)
                     context = "\n".join(source_documents)
-                    chat_box.insert_msg(Markdown(context, in_expander=True, state="complete", title="参考资料"))
+                    chat_box.insert_msg(
+                        Markdown(
+                            context,
+                            in_expander=True,
+                            state="complete",
+                            title="参考资料",
+                        )
+                    )
                     chat_box.insert_msg("")
                 else:
                     text += d.choices[0].delta.content or ""
-                    chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True, metadata=metadata)
+                    chat_box.update_msg(
+                        text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                    )
         chat_box.update_msg(text, streaming=False, metadata=metadata)
 
         if os.path.exists("tmp/image.jpg"):
             with open("tmp/image.jpg", "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode()
-                img_tag = f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
+                img_tag = (
+                    f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
+                )
                 st.markdown(img_tag, unsafe_allow_html=True)
             os.remove("tmp/image.jpg")
         # chat_box.show_feedback(**feedback_kwargs,
@@ -416,8 +497,8 @@ def dialogue_page(
         cols = st.columns(2)
         export_btn = cols[0]
         if cols[1].button(
-                "清空对话",
-                use_container_width=True,
+            "清空对话",
+            use_container_width=True,
         ):
             chat_box.reset_history()
             rerun()

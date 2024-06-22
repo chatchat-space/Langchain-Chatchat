@@ -1,5 +1,7 @@
 from typing import List
+
 from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
+
 from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 
 
@@ -16,6 +18,7 @@ class RapidOCRLoader(UnstructuredFileLoader):
 
         text = img2text(self.file_path)
         from unstructured.partition.text import partition_text
+
         return partition_text(text=text, **self.unstructured_kwargs)
 
 

@@ -1,10 +1,10 @@
-from chatchat.init_server import init_server
-import multiprocessing as mp
-
-from chatchat.server.utils import is_port_in_use
-from chatchat.startup import run_init_server
 import logging
 import logging.config
+import multiprocessing as mp
+
+from chatchat.init_server import init_server
+from chatchat.server.utils import is_port_in_use
+from chatchat.startup import run_init_server
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,10 @@ def test_init_server(logging_conf, providers_file):
     process = mp.Process(
         target=run_init_server,
         name=f"Model providers Server",
-        kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=model_providers_started),
+        kwargs=dict(
+            model_platforms_shard=model_platforms_shard,
+            started_event=model_providers_started,
+        ),
         daemon=True,
     )
 
