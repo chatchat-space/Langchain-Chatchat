@@ -1,15 +1,18 @@
+import threading
+from collections import OrderedDict
+from contextlib import contextmanager
+from typing import Any, List, Tuple, Union
+
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.faiss import FAISS
-import threading
-from chatchat.configs import (DEFAULT_EMBEDDING_MODEL, CHUNK_SIZE,
-                     logger, log_verbose)
-from contextlib import contextmanager
-from collections import OrderedDict
-from typing import List, Any, Union, Tuple
+
+from chatchat.configs import CHUNK_SIZE, DEFAULT_EMBEDDING_MODEL, log_verbose, logger
 
 
 class ThreadSafeObject:
-    def __init__(self, key: Union[str, Tuple], obj: Any = None, pool: "CachePool" = None):
+    def __init__(
+        self, key: Union[str, Tuple], obj: Any = None, pool: "CachePool" = None
+    ):
         self._obj = obj
         self._key = key
         self._pool = pool
@@ -62,7 +65,7 @@ class CachePool:
         self._cache_num = cache_num
         self._cache = OrderedDict()
         self.atomic = threading.RLock()
-        
+
     def keys(self) -> List[str]:
         return list(self._cache.keys())
 
@@ -96,4 +99,3 @@ class CachePool:
             return cache.acquire(owner=owner, msg=msg)
         else:
             return cache
-

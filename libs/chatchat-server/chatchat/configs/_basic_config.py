@@ -1,11 +1,10 @@
-import os
 import json
+import logging
+import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-import logging
 from typing import Any, Optional
-
 
 sys.path.append(str(Path(__file__).parent))
 import _core_config as core_config
@@ -43,11 +42,13 @@ class ConfigBasic(core_config.Config):
 
 @dataclass
 class ConfigBasicFactory(core_config.ConfigFactory[ConfigBasic]):
-    """Basic config for ChatChat """
+    """Basic config for ChatChat"""
 
     def __init__(self):
         # 日志格式
-        self.LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+        self.LOG_FORMAT = (
+            "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+        )
         logging.basicConfig(format=self.LOG_FORMAT)
         self.LOG_VERBOSE = False
         self.CHATCHAT_ROOT = str(Path(__file__).absolute().parent.parent)
@@ -86,6 +87,7 @@ class ConfigBasicFactory(core_config.ConfigFactory[ConfigBasic]):
         # nltk 模型存储路径
         self.NLTK_DATA_PATH = os.path.join(self.DATA_PATH, "nltk_data")
         import nltk
+
         nltk.data.path = [self.NLTK_DATA_PATH] + nltk.data.path
         # 日志存储路径
         self.LOG_PATH = os.path.join(self.DATA_PATH, "logs")
@@ -121,17 +123,19 @@ class ConfigBasicFactory(core_config.ConfigFactory[ConfigBasic]):
         return config
 
 
-class ConfigBasicWorkSpace(core_config.ConfigWorkSpace[ConfigBasicFactory, ConfigBasic]):
+class ConfigBasicWorkSpace(
+    core_config.ConfigWorkSpace[ConfigBasicFactory, ConfigBasic]
+):
     """
     工作空间的配置预设，提供ConfigBasic建造方法产生实例。
     """
+
     config_factory_cls = ConfigBasicFactory
 
     def __init__(self):
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigBasicFactory:
-
         _config_factory = self.config_factory_cls()
 
         if config_json.get("log_verbose"):

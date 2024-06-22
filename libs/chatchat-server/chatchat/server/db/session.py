@@ -1,7 +1,9 @@
-from functools import wraps
 from contextlib import contextmanager
-from chatchat.server.db.base import SessionLocal
+from functools import wraps
+
 from sqlalchemy.orm import Session
+
+from chatchat.server.db.base import SessionLocal
 
 
 @contextmanager

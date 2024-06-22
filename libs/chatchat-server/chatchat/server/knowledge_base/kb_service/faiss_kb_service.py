@@ -1,13 +1,17 @@
 import os
 import shutil
+from typing import Dict, List, Tuple
+
+from langchain.docstore.document import Document
 
 from chatchat.configs import SCORE_THRESHOLD
-from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
-from chatchat.server.knowledge_base.kb_cache.faiss_cache import kb_faiss_pool, ThreadSafeFaiss
-from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
-from langchain.docstore.document import Document
-from typing import List, Dict, Tuple
 from chatchat.server.file_rag.utils import get_Retriever
+from chatchat.server.knowledge_base.kb_cache.faiss_cache import (
+    ThreadSafeFaiss,
+    kb_faiss_pool,
+)
+from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
+from chatchat.server.knowledge_base.utils import KnowledgeFile, get_kb_path, get_vs_path
 
 
 class FaissKBService(KBService):
@@ -25,9 +29,11 @@ class FaissKBService(KBService):
         return get_kb_path(self.kb_name)
 
     def load_vector_store(self) -> ThreadSafeFaiss:
-        return kb_faiss_pool.load_vector_store(kb_name=self.kb_name,
-                                               vector_name=self.vector_name,
-                                               embed_model=self.embed_model)
+        return kb_faiss_pool.load_vector_store(
+            kb_name=self.kb_name,
+            vector_name=self.vector_name,
+            embed_model=self.embed_model,
+        )
 
     def save_vector_store(self):
         self.load_vector_store().save(self.vs_path)
@@ -57,41 +63,45 @@ class FaissKBService(KBService):
         except Exception:
             pass
 
-    def do_search(self,
-                  query: str,
-                  top_k: int,
-                  score_threshold: float = SCORE_THRESHOLD,
-                  ) -> List[Tuple[Document, float]]:
+    def do_search(
+        self,
+        query: str,
+        top_k: int,
+        score_threshold: float = SCORE_THRESHOLD,
+    ) -> List[Tuple[Document, float]]:
         with self.load_vector_store().acquire() as vs:
             retriever = get_Retriever("ensemble").from_vectorstore(
-                 vs,
-                 top_k=top_k,
-                 score_threshold=score_threshold,
-             )
+                vs,
+                top_k=top_k,
+                score_threshold=score_threshold,
+            )
             docs = retriever.get_relevant_documents(query)
         return docs
 
-    def do_add_doc(self,
-                   docs: List[Document],
-                   **kwargs,
-                   ) -> List[Dict]:
-
+    def do_add_doc(
+        self,
+        docs: List[Document],
+        **kwargs,
+    ) -> List[Dict]:
         texts = [x.page_content for x in docs]
         metadatas = [x.metadata for x in docs]
         with self.load_vector_store().acquire() as vs:
             embeddings = vs.embeddings.embed_documents(texts)
-            ids = vs.add_embeddings(text_embeddings=zip(texts, embeddings),
-                                    metadatas=metadatas)
+            ids = vs.add_embeddings(
+                text_embeddings=zip(texts, embeddings), metadatas=metadatas
+            )
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self.vs_path)
         doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
         return doc_infos
 
-    def do_delete_doc(self,
-                      kb_file: KnowledgeFile,
-                      **kwargs):
+    def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         with self.load_vector_store().acquire() as vs:
-            ids = [k for k, v in vs.docstore._dict.items() if v.metadata.get("source").lower() == kb_file.filename.lower()]
+            ids = [
+                k
+                for k, v in vs.docstore._dict.items()
+                if v.metadata.get("source").lower() == kb_file.filename.lower()
+            ]
             if len(ids) > 0:
                 vs.delete(ids)
             if not kwargs.get("not_refresh_vs_cache"):
@@ -118,7 +128,7 @@ class FaissKBService(KBService):
             return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     faissService = FaissKBService("test")
     faissService.add_doc(KnowledgeFile("README.md", "test"))
     faissService.delete_doc(KnowledgeFile("README.md", "test"))

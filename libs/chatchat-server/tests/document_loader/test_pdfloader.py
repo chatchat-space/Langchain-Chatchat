@@ -9,6 +9,7 @@ test_files = {
     "ocr_test.pdf": str(root_path / "tests" / "samples" / "ocr_test.pdf"),
 }
 
+
 def test_rapidocrpdfloader():
     pdf_path = test_files["ocr_test.pdf"]
     from document_loaders import RapidOCRPDFLoader
@@ -16,6 +17,8 @@ def test_rapidocrpdfloader():
     loader = RapidOCRPDFLoader(pdf_path)
     docs = loader.load()
     pprint(docs)
-    assert isinstance(docs, list) and len(docs) > 0 and isinstance(docs[0].page_content, str)
-
-
+    assert (
+        isinstance(docs, list)
+        and len(docs) > 0
+        and isinstance(docs[0].page_content, str)
+    )

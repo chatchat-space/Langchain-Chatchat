@@ -1,51 +1,71 @@
-from abc import ABC, abstractmethod
-
 import operator
 import os
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
 from langchain.docstore.document import Document
 
-from typing import List, Union, Dict, Optional, Tuple
-
-from chatchat.configs import (kbs_config, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD,
-                     DEFAULT_EMBEDDING_MODEL, KB_INFO, logger)
+from chatchat.configs import (
+    DEFAULT_EMBEDDING_MODEL,
+    KB_INFO,
+    SCORE_THRESHOLD,
+    VECTOR_SEARCH_TOP_K,
+    kbs_config,
+    logger,
+)
 from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
 from chatchat.server.db.repository.knowledge_base_repository import (
-    add_kb_to_db, delete_kb_from_db, list_kbs_from_db, kb_exists,
-    load_kb_from_db, get_kb_detail,
+    add_kb_to_db,
+    delete_kb_from_db,
+    get_kb_detail,
+    kb_exists,
+    list_kbs_from_db,
+    load_kb_from_db,
 )
 from chatchat.server.db.repository.knowledge_file_repository import (
-    add_file_to_db, delete_file_from_db, delete_files_from_db, file_exists_in_db,
-    count_files_from_db, list_files_from_db, get_file_detail, delete_file_from_db,
+    add_file_to_db,
+    count_files_from_db,
+    delete_file_from_db,
+    delete_files_from_db,
+    file_exists_in_db,
+    get_file_detail,
     list_docs_from_db,
-)
-from chatchat.server.knowledge_base.utils import (
-    get_kb_path, get_doc_path, KnowledgeFile,
-    list_kbs_from_folder, list_files_from_folder,
+    list_files_from_db,
 )
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from chatchat.server.knowledge_base.utils import (
+    KnowledgeFile,
+    get_doc_path,
+    get_kb_path,
+    list_files_from_folder,
+    list_kbs_from_folder,
+)
 from chatchat.server.utils import check_embed_model as _check_embed_model
 
+
 class SupportedVSType:
-    FAISS = 'faiss'
-    MILVUS = 'milvus'
-    DEFAULT = 'default'
-    ZILLIZ = 'zilliz'
-    PG = 'pg'
-    RELYT = 'relyt'
-    ES = 'es'
-    CHROMADB = 'chromadb'
+    FAISS = "faiss"
+    MILVUS = "milvus"
+    DEFAULT = "default"
+    ZILLIZ = "zilliz"
+    PG = "pg"
+    RELYT = "relyt"
+    ES = "es"
+    CHROMADB = "chromadb"
 
 
 class KBService(ABC):
-
-    def __init__(self,
-                 knowledge_base_name: str,
-                 kb_info: str = None,
-                 embed_model: str = DEFAULT_EMBEDDING_MODEL,
-                 ):
+    def __init__(
+        self,
+        knowledge_base_name: str,
+        kb_info: str = None,
+        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    ):
         self.kb_name = knowledge_base_name
-        self.kb_info = kb_info or KB_INFO.get(knowledge_base_name, f"关于{knowledge_base_name}的知识库")
+        self.kb_info = kb_info or KB_INFO.get(
+            knowledge_base_name, f"关于{knowledge_base_name}的知识库"
+        )
         self.embed_model = embed_model
         self.kb_path = get_kb_path(self.kb_name)
         self.doc_path = get_doc_path(self.kb_name)
@@ -55,9 +75,9 @@ class KBService(ABC):
         return f"{self.kb_name} @ {self.embed_model}"
 
     def save_vector_store(self):
-        '''
+        """
         保存向量库:FAISS保存到磁盘，milvus保存到数据库。PGVector暂未支持
-        '''
+        """
         pass
 
     def check_embed_model(self, error_msg: str) -> bool:
@@ -74,7 +94,9 @@ class KBService(ABC):
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
 
-        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
+        status = add_kb_to_db(
+            self.kb_name, self.kb_info, self.vs_type(), self.embed_model
+        )
 
         if status:
             self.do_create_kb()
@@ -101,7 +123,9 @@ class KBService(ABC):
         向知识库添加文件
         如果指定了docs，则不再将文本向量化，并将数据库对应条目标为custom_docs=True
         """
-        if not self.check_embed_model(f"could not add docs because failed to access embed model."):
+        if not self.check_embed_model(
+            f"could not add docs because failed to access embed model."
+        ):
             return False
 
         if docs:
@@ -120,18 +144,24 @@ class KBService(ABC):
                         rel_path = Path(source).relative_to(self.doc_path)
                         doc.metadata["source"] = str(rel_path.as_posix().strip("/"))
                 except Exception as e:
-                    print(f"cannot convert absolute path ({source}) to relative path. error is : {e}")
+                    print(
+                        f"cannot convert absolute path ({source}) to relative path. error is : {e}"
+                    )
             self.delete_doc(kb_file)
             doc_infos = self.do_add_doc(docs, **kwargs)
-            status = add_file_to_db(kb_file,
-                                    custom_docs=custom_docs,
-                                    docs_count=len(docs),
-                                    doc_infos=doc_infos)
+            status = add_file_to_db(
+                kb_file,
+                custom_docs=custom_docs,
+                docs_count=len(docs),
+                doc_infos=doc_infos,
+            )
         else:
             status = False
         return status
 
-    def delete_doc(self, kb_file: KnowledgeFile, delete_content: bool = False, **kwargs):
+    def delete_doc(
+        self, kb_file: KnowledgeFile, delete_content: bool = False, **kwargs
+    ):
         """
         从知识库删除文件
         """
@@ -146,7 +176,9 @@ class KBService(ABC):
         更新知识库介绍
         """
         self.kb_info = kb_info
-        status = add_kb_to_db(self.kb_name, self.kb_info, self.vs_type(), self.embed_model)
+        status = add_kb_to_db(
+            self.kb_name, self.kb_info, self.vs_type(), self.embed_model
+        )
         return status
 
     def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
@@ -154,7 +186,9 @@ class KBService(ABC):
         使用content中的文件更新向量库
         如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
         """
-        if not self.check_embed_model(f"could not update docs because failed to access embed model."):
+        if not self.check_embed_model(
+            f"could not update docs because failed to access embed model."
+        ):
             return False
 
         if os.path.exists(kb_file.filepath):
@@ -162,8 +196,9 @@ class KBService(ABC):
             return self.add_doc(kb_file, docs=docs, **kwargs)
 
     def exist_doc(self, file_name: str):
-        return file_exists_in_db(KnowledgeFile(knowledge_base_name=self.kb_name,
-                                               filename=file_name))
+        return file_exists_in_db(
+            KnowledgeFile(knowledge_base_name=self.kb_name, filename=file_name)
+        )
 
     def list_files(self):
         return list_files_from_db(self.kb_name)
@@ -171,12 +206,15 @@ class KBService(ABC):
     def count_files(self):
         return count_files_from_db(self.kb_name)
 
-    def search_docs(self,
-                    query: str,
-                    top_k: int = VECTOR_SEARCH_TOP_K,
-                    score_threshold: float = SCORE_THRESHOLD,
-                    ) ->List[Document]:
-        if not self.check_embed_model(f"could not search docs because failed to access embed model."):
+    def search_docs(
+        self,
+        query: str,
+        top_k: int = VECTOR_SEARCH_TOP_K,
+        score_threshold: float = SCORE_THRESHOLD,
+    ) -> List[Document]:
+        if not self.check_embed_model(
+            f"could not search docs because failed to access embed model."
+        ):
             return []
         docs = self.do_search(query, top_k, score_threshold)
         return docs
@@ -188,11 +226,13 @@ class KBService(ABC):
         raise NotImplementedError
 
     def update_doc_by_ids(self, docs: Dict[str, Document]) -> bool:
-        '''
+        """
         传入参数为： {doc_id: Document, ...}
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
-        '''
-        if not self.check_embed_model(f"could not update docs because failed to access embed model."):
+        """
+        if not self.check_embed_model(
+            f"could not update docs because failed to access embed model."
+        ):
             return False
 
         self.del_doc_by_ids(list(docs.keys()))
@@ -206,11 +246,15 @@ class KBService(ABC):
         self.do_add_doc(docs=pending_docs, ids=ids)
         return True
 
-    def list_docs(self, file_name: str = None, metadata: Dict = {}) -> List[DocumentWithVSId]:
-        '''
+    def list_docs(
+        self, file_name: str = None, metadata: Dict = {}
+    ) -> List[DocumentWithVSId]:
+        """
         通过file_name或metadata检索Document
-        '''
-        doc_infos = list_docs_from_db(kb_name=self.kb_name, file_name=file_name, metadata=metadata)
+        """
+        doc_infos = list_docs_from_db(
+            kb_name=self.kb_name, file_name=file_name, metadata=metadata
+        )
         docs = []
         for x in doc_infos:
             doc_info = self.get_doc_by_ids([x["id"]])[0]
@@ -224,19 +268,21 @@ class KBService(ABC):
                 pass
         return docs
 
-    def get_relative_source_path(self,filepath: str):
-      '''
-      将文件路径转化为相对路径，保证查询时一致
-      '''
-      relative_path = filepath
-      if os.path.isabs(relative_path):
-        try:
-          relative_path = Path(filepath).relative_to(self.doc_path)
-        except Exception as e:
-          print(f"cannot convert absolute path ({relative_path}) to relative path. error is : {e}")
+    def get_relative_source_path(self, filepath: str):
+        """
+        将文件路径转化为相对路径，保证查询时一致
+        """
+        relative_path = filepath
+        if os.path.isabs(relative_path):
+            try:
+                relative_path = Path(filepath).relative_to(self.doc_path)
+            except Exception as e:
+                print(
+                    f"cannot convert absolute path ({relative_path}) to relative path. error is : {e}"
+                )
 
-      relative_path = str(relative_path.as_posix().strip("/"))
-      return relative_path
+        relative_path = str(relative_path.as_posix().strip("/"))
+        return relative_path
 
     @abstractmethod
     def do_create_kb(self):
@@ -273,29 +319,30 @@ class KBService(ABC):
         pass
 
     @abstractmethod
-    def do_search(self,
-                  query: str,
-                  top_k: int,
-                  score_threshold: float,
-                  ) -> List[Tuple[Document, float]]:
+    def do_search(
+        self,
+        query: str,
+        top_k: int,
+        score_threshold: float,
+    ) -> List[Tuple[Document, float]]:
         """
         搜索知识库子类实自己逻辑
         """
         pass
 
     @abstractmethod
-    def do_add_doc(self,
-                   docs: List[Document],
-                   **kwargs,
-                   ) -> List[Dict]:
+    def do_add_doc(
+        self,
+        docs: List[Document],
+        **kwargs,
+    ) -> List[Dict]:
         """
         向知识库添加文档子类实自己逻辑
         """
         pass
 
     @abstractmethod
-    def do_delete_doc(self,
-                      kb_file: KnowledgeFile):
+    def do_delete_doc(self, kb_file: KnowledgeFile):
         """
         从知识库删除文档子类实自己逻辑
         """
@@ -310,42 +357,77 @@ class KBService(ABC):
 
 
 class KBServiceFactory:
-
     @staticmethod
-    def get_service(kb_name: str,
-                    vector_store_type: Union[str, SupportedVSType],
-                    embed_model: str = DEFAULT_EMBEDDING_MODEL,
-                    kb_info: str = None,
-                    ) -> KBService:
+    def get_service(
+        kb_name: str,
+        vector_store_type: Union[str, SupportedVSType],
+        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        kb_info: str = None,
+    ) -> KBService:
         if isinstance(vector_store_type, str):
             vector_store_type = getattr(SupportedVSType, vector_store_type.upper())
-        params = {"knowledge_base_name": kb_name, "embed_model": embed_model, "kb_info": kb_info}
+        params = {
+            "knowledge_base_name": kb_name,
+            "embed_model": embed_model,
+            "kb_info": kb_info,
+        }
         if SupportedVSType.FAISS == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.faiss_kb_service import FaissKBService
+            from chatchat.server.knowledge_base.kb_service.faiss_kb_service import (
+                FaissKBService,
+            )
+
             return FaissKBService(**params)
         elif SupportedVSType.PG == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.pg_kb_service import PGKBService
+            from chatchat.server.knowledge_base.kb_service.pg_kb_service import (
+                PGKBService,
+            )
+
             return PGKBService(**params)
         elif SupportedVSType.RELYT == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.relyt_kb_service import RelytKBService
+            from chatchat.server.knowledge_base.kb_service.relyt_kb_service import (
+                RelytKBService,
+            )
+
             return RelytKBService(**params)
         elif SupportedVSType.MILVUS == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
+            from chatchat.server.knowledge_base.kb_service.milvus_kb_service import (
+                MilvusKBService,
+            )
+
             return MilvusKBService(**params)
         elif SupportedVSType.ZILLIZ == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.zilliz_kb_service import ZillizKBService
+            from chatchat.server.knowledge_base.kb_service.zilliz_kb_service import (
+                ZillizKBService,
+            )
+
             return ZillizKBService(**params)
         elif SupportedVSType.DEFAULT == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.milvus_kb_service import MilvusKBService
-            return MilvusKBService(**params)  # other milvus parameters are set in model_config.kbs_config
+            from chatchat.server.knowledge_base.kb_service.milvus_kb_service import (
+                MilvusKBService,
+            )
+
+            return MilvusKBService(
+                **params
+            )  # other milvus parameters are set in model_config.kbs_config
         elif SupportedVSType.ES == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.es_kb_service import ESKBService
+            from chatchat.server.knowledge_base.kb_service.es_kb_service import (
+                ESKBService,
+            )
+
             return ESKBService(**params)
         elif SupportedVSType.CHROMADB == vector_store_type:
-            from chatchat.server.knowledge_base.kb_service.chromadb_kb_service import ChromaKBService
+            from chatchat.server.knowledge_base.kb_service.chromadb_kb_service import (
+                ChromaKBService,
+            )
+
             return ChromaKBService(**params)
-        elif SupportedVSType.DEFAULT == vector_store_type:  # kb_exists of default kbservice is False, to make validation easier.
-            from chatchat.server.knowledge_base.kb_service.default_kb_service import DefaultKBService
+        elif (
+            SupportedVSType.DEFAULT == vector_store_type
+        ):  # kb_exists of default kbservice is False, to make validation easier.
+            from chatchat.server.knowledge_base.kb_service.default_kb_service import (
+                DefaultKBService,
+            )
+
             return DefaultKBService(kb_name)
 
     @staticmethod
@@ -362,7 +444,7 @@ class KBServiceFactory:
 
 def get_kb_details() -> List[Dict]:
     kbs_in_folder = list_kbs_from_folder()
-    kbs_in_db:List[KnowledgeBaseSchema] = KBService.list_kbs()
+    kbs_in_db: List[KnowledgeBaseSchema] = KBService.list_kbs()
     result = {}
 
     for kb in kbs_in_folder:
@@ -378,19 +460,18 @@ def get_kb_details() -> List[Dict]:
         }
 
     for kb_detail in kbs_in_db:
-        kb_detail=kb_detail.model_dump()
-        kb_name=kb_detail["kb_name"]
+        kb_detail = kb_detail.model_dump()
+        kb_name = kb_detail["kb_name"]
         kb_detail["in_db"] = True
         if kb_name in result:
             result[kb_name].update(kb_detail)
         else:
             kb_detail["in_folder"] = False
             result[kb_name] = kb_detail
-            
 
     data = []
     for i, v in enumerate(result.values()):
-        v['No'] = i + 1
+        v["No"] = i + 1
         data.append(v)
 
     return data
@@ -431,7 +512,7 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
 
     data = []
     for i, v in enumerate(result.values()):
-        v['No'] = i + 1
+        v["No"] = i + 1
         data.append(v)
 
     return data
@@ -439,9 +520,7 @@ def get_kb_file_details(kb_name: str) -> List[Dict]:
 
 def score_threshold_process(score_threshold, k, docs):
     if score_threshold is not None:
-        cmp = (
-            operator.le
-        )
+        cmp = operator.le
         docs = [
             (doc, similarity)
             for doc, similarity in docs

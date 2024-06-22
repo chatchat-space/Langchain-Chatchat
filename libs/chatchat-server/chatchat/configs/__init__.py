@@ -1,11 +1,10 @@
 import importlib
 import importlib.util
-import os
-from pathlib import Path
-from typing import Dict, Any
-
 import json
 import logging
+import os
+from pathlib import Path
+from typing import Any, Dict
 
 logger = logging.getLogger()
 
@@ -18,20 +17,19 @@ def _load_mod(mod, attr):
             break
 
     if attr_cfg is None:
-        logger.warning(
-            f"Missing attr_cfg:{attr} in {mod}, Skip."
-        )
+        logger.warning(f"Missing attr_cfg:{attr} in {mod}, Skip.")
         return attr_cfg
     return attr_cfg
 
 
 def _import_config_mod_load(import_config_mod: str) -> Dict:
     # 加载用户空间的配置
-    user_config_path = os.path.join(os.path.expanduser("~"), ".config", "chatchat/configs")
+    user_config_path = os.path.join(
+        os.path.expanduser("~"), ".config", "chatchat/configs"
+    )
     user_import = True  # 默认加载用户配置
     if os.path.exists(user_config_path):
         try:
-
             file_names = os.listdir(user_config_path)
 
             if import_config_mod + ".py" not in file_names:
@@ -42,10 +40,7 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
             if user_import:
                 # Dynamic loading {config}.py file
                 py_path = os.path.join(user_config_path, import_config_mod + ".py")
-                spec = importlib.util.spec_from_file_location(
-                    f"*",
-                    py_path
-                )
+                spec = importlib.util.spec_from_file_location(f"*", py_path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
 
@@ -65,15 +60,14 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
         user_import = False
 
     if user_import:
-        logger.error(
-            f"Failed to load user config from {user_config_path}, Skip."
-        )
+        logger.error(f"Failed to load user config from {user_config_path}, Skip.")
         raise RuntimeError(f"Failed to load user config from {user_config_path}")
     # 当前文件路径
-    py_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), import_config_mod + ".py")
+    py_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), import_config_mod + ".py"
+    )
 
-    spec = importlib.util.spec_from_file_location(f"*",
-                                                  py_path)
+    spec = importlib.util.spec_from_file_location(f"*", py_path)
 
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -87,7 +81,6 @@ def _import_config_mod_load(import_config_mod: str) -> Dict:
 
 
 CONFIG_IMPORTS = {
-
     "_basic_config.py": _import_config_mod_load("_basic_config"),
     "_kb_config.py": _import_config_mod_load("_kb_config"),
     "_model_config.py": _import_config_mod_load("_model_config"),
@@ -115,7 +108,9 @@ def _import_ConfigBasicFactory() -> Any:
 def _import_ConfigBasicWorkSpace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    ConfigBasicWorkSpace = load_mod(basic_config_load.get("module"), "ConfigBasicWorkSpace")
+    ConfigBasicWorkSpace = load_mod(
+        basic_config_load.get("module"), "ConfigBasicWorkSpace"
+    )
 
     return ConfigBasicWorkSpace
 
@@ -123,7 +118,9 @@ def _import_ConfigBasicWorkSpace() -> Any:
 def _import_config_basic_workspace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
     return config_basic_workspace
 
 
@@ -131,7 +128,9 @@ def _import_log_verbose() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
     return config_basic_workspace.get_config().log_verbose
 
 
@@ -139,7 +138,9 @@ def _import_chatchat_root() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().CHATCHAT_ROOT
 
@@ -148,7 +149,9 @@ def _import_data_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
     return config_basic_workspace.get_config().DATA_PATH
 
 
@@ -156,7 +159,9 @@ def _import_img_dir() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().IMG_DIR
 
@@ -164,7 +169,9 @@ def _import_img_dir() -> Any:
 def _import_nltk_data_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().NLTK_DATA_PATH
 
@@ -173,7 +180,9 @@ def _import_log_format() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().LOG_FORMAT
 
@@ -182,7 +191,9 @@ def _import_log_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().LOG_PATH
 
@@ -191,7 +202,9 @@ def _import_media_path() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
 
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
 
     return config_basic_workspace.get_config().MEDIA_PATH
 
@@ -199,7 +212,9 @@ def _import_media_path() -> Any:
 def _import_base_temp_dir() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_basic_config.py")
     load_mod = basic_config_load.get("load_mod")
-    config_basic_workspace = load_mod(basic_config_load.get("module"), "config_basic_workspace")
+    config_basic_workspace = load_mod(
+        basic_config_load.get("module"), "config_basic_workspace"
+    )
     return config_basic_workspace.get_config().BASE_TEMP_DIR
 
 
@@ -414,7 +429,9 @@ def _import_ConfigModelFactory() -> Any:
 def _import_ConfigModelWorkSpace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = basic_config_load.get("load_mod")
-    ConfigModelWorkSpace = load_mod(basic_config_load.get("module"), "ConfigModelWorkSpace")
+    ConfigModelWorkSpace = load_mod(
+        basic_config_load.get("module"), "ConfigModelWorkSpace"
+    )
 
     return ConfigModelWorkSpace
 
@@ -422,14 +439,18 @@ def _import_ConfigModelWorkSpace() -> Any:
 def _import_config_model_workspace() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
     return config_model_workspace
 
 
 def _import_default_llm_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().DEFAULT_LLM_MODEL
 
@@ -438,7 +459,9 @@ def _import_default_embedding_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
 
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().DEFAULT_EMBEDDING_MODEL
 
@@ -446,7 +469,9 @@ def _import_default_embedding_model() -> Any:
 def _import_agent_model() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().Agent_MODEL
 
@@ -454,7 +479,9 @@ def _import_agent_model() -> Any:
 def _import_history_len() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().HISTORY_LEN
 
@@ -462,7 +489,9 @@ def _import_history_len() -> Any:
 def _import_max_tokens() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().MAX_TOKENS
 
@@ -470,7 +499,9 @@ def _import_max_tokens() -> Any:
 def _import_temperature() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().TEMPERATURE
 
@@ -478,7 +509,9 @@ def _import_temperature() -> Any:
 def _import_support_agent_models() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().SUPPORT_AGENT_MODELS
 
@@ -486,7 +519,9 @@ def _import_support_agent_models() -> Any:
 def _import_llm_model_config() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().LLM_MODEL_CONFIG
 
@@ -494,7 +529,9 @@ def _import_llm_model_config() -> Any:
 def _import_model_platforms() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().MODEL_PLATFORMS
 
@@ -502,7 +539,9 @@ def _import_model_platforms() -> Any:
 def _import_model_providers_cfg_path() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PATH_CONFIG
 
@@ -510,7 +549,9 @@ def _import_model_providers_cfg_path() -> Any:
 def _import_model_providers_cfg_host() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_HOST
 
@@ -518,7 +559,9 @@ def _import_model_providers_cfg_host() -> Any:
 def _import_model_providers_cfg_port() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PORT
 
@@ -526,7 +569,9 @@ def _import_model_providers_cfg_port() -> Any:
 def _import_tool_config() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(model_config_load.get("module"), "config_model_workspace")
+    config_model_workspace = load_mod(
+        model_config_load.get("module"), "config_model_workspace"
+    )
 
     return config_model_workspace.get_config().TOOL_CONFIG
 
@@ -550,7 +595,9 @@ def _import_ConfigServer() -> Any:
 def _import_ConfigServerFactory() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = basic_config_load.get("load_mod")
-    ConfigServerFactory = load_mod(basic_config_load.get("module"), "ConfigServerFactory")
+    ConfigServerFactory = load_mod(
+        basic_config_load.get("module"), "ConfigServerFactory"
+    )
 
     return ConfigServerFactory
 
@@ -558,7 +605,9 @@ def _import_ConfigServerFactory() -> Any:
 def _import_ConfigServerWorkSpace() -> Any:
     basic_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = basic_config_load.get("load_mod")
-    ConfigServerWorkSpace = load_mod(basic_config_load.get("module"), "ConfigServerWorkSpace")
+    ConfigServerWorkSpace = load_mod(
+        basic_config_load.get("module"), "ConfigServerWorkSpace"
+    )
 
     return ConfigServerWorkSpace
 
@@ -566,7 +615,9 @@ def _import_ConfigServerWorkSpace() -> Any:
 def _import_config_server_workspace() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace
 
@@ -574,7 +625,9 @@ def _import_config_server_workspace() -> Any:
 def _import_httpx_default_timeout() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().HTTPX_DEFAULT_TIMEOUT
 
@@ -582,7 +635,9 @@ def _import_httpx_default_timeout() -> Any:
 def _import_open_cross_domain() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().OPEN_CROSS_DOMAIN
 
@@ -590,7 +645,9 @@ def _import_open_cross_domain() -> Any:
 def _import_default_bind_host() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().DEFAULT_BIND_HOST
 
@@ -598,7 +655,9 @@ def _import_default_bind_host() -> Any:
 def _import_open_cross_domain() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().OPEN_CROSS_DOMAIN
 
@@ -606,7 +665,9 @@ def _import_open_cross_domain() -> Any:
 def _import_webui_server() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().WEBUI_SERVER
 
@@ -614,7 +675,9 @@ def _import_webui_server() -> Any:
 def _import_api_server() -> Any:
     server_config_load = CONFIG_IMPORTS.get("_server_config.py")
     load_mod = server_config_load.get("load_mod")
-    config_server_workspace = load_mod(server_config_load.get("module"), "config_server_workspace")
+    config_server_workspace = load_mod(
+        server_config_load.get("module"), "config_server_workspace"
+    )
 
     return config_server_workspace.get_config().API_SERVER
 
@@ -803,29 +866,20 @@ __all__ = [
     "OPEN_CROSS_DOMAIN",
     "WEBUI_SERVER",
     "API_SERVER",
-
     "ConfigBasic",
     "ConfigBasicFactory",
     "ConfigBasicWorkSpace",
-
     "config_basic_workspace",
-
     "ConfigModel",
     "ConfigModelFactory",
     "ConfigModelWorkSpace",
-    
     "config_model_workspace",
-
     "ConfigKb",
     "ConfigKbFactory",
     "ConfigKbWorkSpace",
-
     "config_kb_workspace",
-
     "ConfigServer",
     "ConfigServerFactory",
     "ConfigServerWorkSpace",
-
     "config_server_workspace",
-
 ]

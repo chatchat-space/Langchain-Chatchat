@@ -1,16 +1,19 @@
-from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 from typing import List
+
 import tqdm
+from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 
 
 class RapidOCRPPTLoader(UnstructuredFileLoader):
     def _get_elements(self) -> List:
         def ppt2text(filepath):
-            from pptx import Presentation
-            from PIL import Image
-            import numpy as np
             from io import BytesIO
+
+            import numpy as np
+            from PIL import Image
+            from pptx import Presentation
             from rapidocr_onnxruntime import RapidOCR
+
             ocr = RapidOCR()
             prs = Presentation(filepath)
             resp = ""
@@ -34,15 +37,18 @@ class RapidOCRPPTLoader(UnstructuredFileLoader):
                     for child_shape in shape.shapes:
                         extract_text(child_shape)
 
-            b_unit = tqdm.tqdm(total=len(prs.slides),
-                               desc="RapidOCRPPTLoader slide index: 1")
+            b_unit = tqdm.tqdm(
+                total=len(prs.slides), desc="RapidOCRPPTLoader slide index: 1"
+            )
             # 遍历所有幻灯片
             for slide_number, slide in enumerate(prs.slides, start=1):
                 b_unit.set_description(
-                    "RapidOCRPPTLoader slide index: {}".format(slide_number))
+                    "RapidOCRPPTLoader slide index: {}".format(slide_number)
+                )
                 b_unit.refresh()
-                sorted_shapes = sorted(slide.shapes,
-                                       key=lambda x: (x.top, x.left))  # 从上到下、从左到右遍历
+                sorted_shapes = sorted(
+                    slide.shapes, key=lambda x: (x.top, x.left)
+                )  # 从上到下、从左到右遍历
                 for shape in sorted_shapes:
                     extract_text(shape)
                 b_unit.update(1)
@@ -50,10 +56,11 @@ class RapidOCRPPTLoader(UnstructuredFileLoader):
 
         text = ppt2text(self.file_path)
         from unstructured.partition.text import partition_text
+
         return partition_text(text=text, **self.unstructured_kwargs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     loader = RapidOCRPPTLoader(file_path="../tests/samples/ocr_test.pptx")
     docs = loader.load()
     print(docs)

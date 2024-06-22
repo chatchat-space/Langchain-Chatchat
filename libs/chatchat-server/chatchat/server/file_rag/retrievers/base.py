@@ -1,5 +1,6 @@
-from langchain.vectorstores import VectorStore
 from abc import ABCMeta, abstractmethod
+
+from langchain.vectorstores import VectorStore
 
 
 class BaseRetrieverService(metaclass=ABCMeta):
@@ -10,12 +11,11 @@ class BaseRetrieverService(metaclass=ABCMeta):
     def do_init(self, **kwargs):
         pass
 
-
     @abstractmethod
     def from_vectorstore(
-            vectorstore: VectorStore,
-            top_k: int,
-            score_threshold: int or float,
+        vectorstore: VectorStore,
+        top_k: int,
+        score_threshold: int or float,
     ):
         pass
 

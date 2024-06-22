@@ -1,21 +1,20 @@
+import os
 from pathlib import Path
 
 from chatchat.configs import (
-    ConfigBasicFactory,
     ConfigBasic,
+    ConfigBasicFactory,
     ConfigBasicWorkSpace,
-    ConfigModelWorkSpace,
-    ConfigModel,
-    ConfigServerWorkSpace,
-    ConfigServer,
-    ConfigKbWorkSpace,
     ConfigKb,
+    ConfigKbWorkSpace,
+    ConfigModel,
+    ConfigModelWorkSpace,
+    ConfigServer,
+    ConfigServerWorkSpace,
 )
-import os
 
 
 class TestWorkSpace:
-
     def test_config_basic_workspace_clear(self):
         config_basic_workspace: ConfigBasicWorkSpace = ConfigBasicWorkSpace()
 
@@ -44,7 +43,16 @@ class TestWorkSpace:
         config_basic_workspace.clear()
 
     def test_workspace_default(self):
-        from chatchat.configs import (log_verbose, DATA_PATH, IMG_DIR, NLTK_DATA_PATH, LOG_FORMAT, LOG_PATH, MEDIA_PATH)
+        from chatchat.configs import (
+            DATA_PATH,
+            IMG_DIR,
+            LOG_FORMAT,
+            LOG_PATH,
+            MEDIA_PATH,
+            NLTK_DATA_PATH,
+            log_verbose,
+        )
+
         assert log_verbose is False
         assert DATA_PATH is not None
         assert IMG_DIR is not None
@@ -64,11 +72,18 @@ class TestWorkSpace:
         config_model_workspace.set_history_len(history_len=1)
         config_model_workspace.set_max_tokens(max_tokens=1000)
         config_model_workspace.set_temperature(temperature=0.1)
-        config_model_workspace.set_support_agent_models(support_agent_models=["glm4-chat"])
+        config_model_workspace.set_support_agent_models(
+            support_agent_models=["glm4-chat"]
+        )
         config_model_workspace.set_model_providers_cfg_path_config(
-            model_providers_cfg_path_config="model_providers.yaml")
-        config_model_workspace.set_model_providers_cfg_host(model_providers_cfg_host="127.0.0.1")
-        config_model_workspace.set_model_providers_cfg_port(model_providers_cfg_port=8000)
+            model_providers_cfg_path_config="model_providers.yaml"
+        )
+        config_model_workspace.set_model_providers_cfg_host(
+            model_providers_cfg_host="127.0.0.1"
+        )
+        config_model_workspace.set_model_providers_cfg_port(
+            model_providers_cfg_port=8000
+        )
 
         config: ConfigModel = config_model_workspace.get_config()
 
@@ -86,10 +101,21 @@ class TestWorkSpace:
 
     def test_model_config(self):
         from chatchat.configs import (
-            DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, Agent_MODEL, HISTORY_LEN, MAX_TOKENS, TEMPERATURE,
-            SUPPORT_AGENT_MODELS, MODEL_PROVIDERS_CFG_PATH_CONFIG, MODEL_PROVIDERS_CFG_HOST, MODEL_PROVIDERS_CFG_PORT,
-            TOOL_CONFIG, MODEL_PLATFORMS, LLM_MODEL_CONFIG
+            DEFAULT_EMBEDDING_MODEL,
+            DEFAULT_LLM_MODEL,
+            HISTORY_LEN,
+            LLM_MODEL_CONFIG,
+            MAX_TOKENS,
+            MODEL_PLATFORMS,
+            MODEL_PROVIDERS_CFG_HOST,
+            MODEL_PROVIDERS_CFG_PATH_CONFIG,
+            MODEL_PROVIDERS_CFG_PORT,
+            SUPPORT_AGENT_MODELS,
+            TEMPERATURE,
+            TOOL_CONFIG,
+            Agent_MODEL,
         )
+
         assert DEFAULT_LLM_MODEL is not None
         assert DEFAULT_EMBEDDING_MODEL is not None
         assert Agent_MODEL is None
@@ -126,9 +152,13 @@ class TestWorkSpace:
 
     def test_server_config(self):
         from chatchat.configs import (
-            HTTPX_DEFAULT_TIMEOUT, OPEN_CROSS_DOMAIN, DEFAULT_BIND_HOST,
-            WEBUI_SERVER, API_SERVER
+            API_SERVER,
+            DEFAULT_BIND_HOST,
+            HTTPX_DEFAULT_TIMEOUT,
+            OPEN_CROSS_DOMAIN,
+            WEBUI_SERVER,
         )
+
         assert HTTPX_DEFAULT_TIMEOUT is not None
         assert OPEN_CROSS_DOMAIN is not None
         assert DEFAULT_BIND_HOST is not None
@@ -152,9 +182,11 @@ class TestWorkSpace:
         config_kb_workspace.set_search_engine_top_k(search_engine_top_k=10)
         config_kb_workspace.set_zh_title_enhance(zh_title_enhance=True)
         config_kb_workspace.set_pdf_ocr_threshold(pdf_ocr_threshold=(0.1, 0.2))
-        config_kb_workspace.set_kb_info(kb_info={
-            "samples": "关于本项目issue的解答",
-        })
+        config_kb_workspace.set_kb_info(
+            kb_info={
+                "samples": "关于本项目issue的解答",
+            }
+        )
         config_kb_workspace.set_kb_root_path(kb_root_path="test")
         config_kb_workspace.set_db_root_path(db_root_path="test")
         config_kb_workspace.set_sqlalchemy_database_uri(sqlalchemy_database_uri="test")
