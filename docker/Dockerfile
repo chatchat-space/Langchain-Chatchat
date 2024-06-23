@@ -6,16 +6,16 @@ LABEL maintainer=chatchat
 ENV HOME=/usr/local/lib/python3.11/site-packages/chatchat
 # Init Environment
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone && \
-    apt-get update -y && \
+    echo "Asia/Shanghai" > /etc/timezone
+# Install Dependencies
+RUN apt-get update -y && \
     apt-get install -y --no-install-recommends libgl1 libglib2.0-0 && \
     apt-get clean && \
-    pip install openpyxl networkx faiss-cpu jq unstructured[pdf] opencv-python rapidocr-onnxruntime PyMuPDF rank_bm25 \
-    youtube_search python-docx && \
-    pip install streamlit-chatbox==1.1.12.post4 && \
     rm -rf /var/lib/apt/lists/*
+RUN pip install openpyxl networkx faiss-cpu jq unstructured[pdf] \
+    opencv-python rapidocr-onnxruntime PyMuPDF rank_bm25 youtube_search python-docx
 # Install Chatchat
-RUN pip install langchain-chatchat -U
+RUN pip install --index-url https://pypi.python.org/simple/ langchain-chatchat -U
 # Install ModelProvider
 RUN pip install xinference-client
 # Make Custom Settings
