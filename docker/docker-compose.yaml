@@ -21,10 +21,11 @@ services:
               count: all
               capabilities: [gpu]
     runtime: nvidia
-    environment:
-      - XINFERENCE_MODEL_SRC=modelscope # 模型源更改为 ModelScope, 默认为 HuggingFace
+    # 模型源更改为 ModelScope, 默认为 HuggingFace
+    # environment:
+    #   - XINFERENCE_MODEL_SRC=modelscope
   chatchat:
-    image: chatimage/chatchat:0.3.0-0623
+    image: chatimage/chatchat:0.3.0-0623-3
     restart: always
     # ports: # 不使用 host network 时可打开.
     #   - "7861:7861"

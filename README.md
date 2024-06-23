@@ -428,7 +428,12 @@ chatchat -a
 > </details>
 
 ### Docker 部署
-Docker 部署请参考 [README_docker](docs/install/README_docker.md)
+```shell
+docker pull chatimage/chatchat:0.3.0-0623-3
+```
+> [!important]
+> 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](docs/install/README_docker.md)
+
 
 ### 旧版本迁移
 
