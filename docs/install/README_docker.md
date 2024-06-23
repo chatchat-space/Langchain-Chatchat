@@ -11,6 +11,9 @@
 
 举例: Linux X86 环境 可下载 [docker-compose-linux-x86_64](https://github.com/docker/compose/releases/download/v2.27.3/docker-compose-linux-x86_64) 使用.
 ```shell
+cd ~
+wget https://github.com/docker/compose/releases/download/v2.27.3/docker-compose-linux-x86_64
+mv docker-compose-linux-x86_64 /usr/bin/docker-compose
 which docker-compose
 ```
 /usr/bin/docker-compose

@@ -427,6 +427,9 @@ chatchat -a
 > ```
 > </details>
 
+### Docker 部署
+Docker 部署请参考 [README_docker](docs/install/README_docker.md)
+
 ### 旧版本迁移
 
 * 0.3.x 结构改变很大,强烈建议您按照文档重新部署. 以下指南不保证100%兼容和成功. 记得提前备份重要数据!
