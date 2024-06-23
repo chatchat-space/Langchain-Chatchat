@@ -29,7 +29,7 @@ def test_embedding(init_server: str):
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-large",
         openai_api_key="YOUR_API_KEY",
-        openai_api_base=f"{init_server}/zhipuai/v1",
+        openai_api_base=f"{init_server}/openai/v1",
     )
 
     text = "你好"
