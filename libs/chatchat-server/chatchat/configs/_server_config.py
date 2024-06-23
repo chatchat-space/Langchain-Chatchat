@@ -1,10 +1,10 @@
-import os
 import json
+import logging
+import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-import logging
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 sys.path.append(str(Path(__file__).parent))
 import _core_config as core_config
@@ -97,10 +97,13 @@ class ConfigServerFactory(core_config.ConfigFactory[ConfigServer]):
         return config
 
 
-class ConfigServerWorkSpace(core_config.ConfigWorkSpace[ConfigServerFactory, ConfigServer]):
+class ConfigServerWorkSpace(
+    core_config.ConfigWorkSpace[ConfigServerFactory, ConfigServer]
+):
     """
     工作空间的配置预设，提供ConfigServer建造方法产生实例。
     """
+
     config_factory_cls = ConfigServerFactory
 
     def __init__(self):

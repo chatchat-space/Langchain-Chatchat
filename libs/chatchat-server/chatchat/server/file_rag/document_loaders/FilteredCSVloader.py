@@ -1,23 +1,24 @@
 ## 指定制定列的csv文件加载器
 
-from langchain_community.document_loaders import CSVLoader
 import csv
 from io import TextIOWrapper
 from typing import Dict, List, Optional
+
 from langchain.docstore.document import Document
+from langchain_community.document_loaders import CSVLoader
 from langchain_community.document_loaders.helpers import detect_file_encodings
 
 
 class FilteredCSVLoader(CSVLoader):
     def __init__(
-            self,
-            file_path: str,
-            columns_to_read: List[str],
-            source_column: Optional[str] = None,
-            metadata_columns: List[str] = [],
-            csv_args: Optional[Dict] = None,
-            encoding: Optional[str] = None,
-            autodetect_encoding: bool = False,
+        self,
+        file_path: str,
+        columns_to_read: List[str],
+        source_column: Optional[str] = None,
+        metadata_columns: List[str] = [],
+        csv_args: Optional[Dict] = None,
+        encoding: Optional[str] = None,
+        autodetect_encoding: bool = False,
     ):
         super().__init__(
             file_path=file_path,
@@ -62,10 +63,12 @@ class FilteredCSVLoader(CSVLoader):
             content = []
             for col in self.columns_to_read:
                 if col in row:
-                    content.append(f'{col}:{str(row[col])}')
+                    content.append(f"{col}:{str(row[col])}")
                 else:
-                    raise ValueError(f"Column '{self.columns_to_read[0]}' not found in CSV file.")
-            content = '\n'.join(content)
+                    raise ValueError(
+                        f"Column '{self.columns_to_read[0]}' not found in CSV file."
+                    )
+            content = "\n".join(content)
             # Extract the source if available
             source = (
                 row.get(self.source_column, None)

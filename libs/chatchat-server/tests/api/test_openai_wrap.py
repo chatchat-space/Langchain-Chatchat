@@ -1,20 +1,20 @@
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+import openai
 import requests
 
-import openai
-
-from chatchat.configs import DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL
+from chatchat.configs import DEFAULT_EMBEDDING_MODEL, DEFAULT_LLM_MODEL
 from chatchat.server.utils import api_address
-
 
 api_base_url = f"{api_address()}/v1"
 client = openai.Client(
     api_key="EMPTY",
     base_url=api_base_url,
 )
+
 
 def test_chat():
     resp = client.chat.completions.create(

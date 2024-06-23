@@ -1,7 +1,12 @@
-from typing import List, Dict
-from chatchat.configs import MODEL_PROVIDERS_CFG_HOST, MODEL_PROVIDERS_CFG_PORT, MODEL_PROVIDERS_CFG_PATH_CONFIG
+import asyncio
+import logging
+import multiprocessing as mp
+from typing import Dict, List
+
 from model_providers import BootstrapWebBuilder
-from model_providers.bootstrap_web.entities.model_provider_entities import ProviderResponse
+from model_providers.bootstrap_web.entities.model_provider_entities import (
+    ProviderResponse,
+)
 from model_providers.core.bootstrap.providers_wapper import ProvidersWrapper
 from model_providers.core.provider_manager import ProviderManager
 from model_providers.core.utils.utils import (
@@ -9,42 +14,45 @@ from model_providers.core.utils.utils import (
     get_log_file,
     get_timestamp_ms,
 )
-import multiprocessing as mp
-import asyncio
-import logging
+
+from chatchat.configs import (
+    MODEL_PROVIDERS_CFG_HOST,
+    MODEL_PROVIDERS_CFG_PATH_CONFIG,
+    MODEL_PROVIDERS_CFG_PORT,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def init_server(model_platforms_shard: Dict,
-                started_event: mp.Event = None,
-                model_providers_cfg_path: str = MODEL_PROVIDERS_CFG_PATH_CONFIG,
-                provider_host: str = MODEL_PROVIDERS_CFG_HOST,
-                provider_port: int = MODEL_PROVIDERS_CFG_PORT,
-                log_path: str = "logs"
-                ) -> None:
+def init_server(
+    model_platforms_shard: Dict,
+    started_event: mp.Event = None,
+    model_providers_cfg_path: str = MODEL_PROVIDERS_CFG_PATH_CONFIG,
+    provider_host: str = MODEL_PROVIDERS_CFG_HOST,
+    provider_port: int = MODEL_PROVIDERS_CFG_PORT,
+    log_path: str = "logs",
+) -> None:
     logging_conf = get_config_dict(
         "INFO",
         get_log_file(log_path=log_path, sub_dir=f"provider_{get_timestamp_ms()}"),
-
-        1024*1024*1024*3,
-        1024*1024*1024*3,
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
     )
 
     try:
         boot = (
             BootstrapWebBuilder()
-            .model_providers_cfg_path(
-                model_providers_cfg_path=model_providers_cfg_path
-            )
+            .model_providers_cfg_path(model_providers_cfg_path=model_providers_cfg_path)
             .host(host=provider_host)
             .port(port=provider_port)
             .build()
         )
         boot.set_app_event(started_event=started_event)
 
-        provider_platforms = init_provider_platforms(boot.provider_manager.provider_manager)
-        model_platforms_shard['provider_platforms'] = provider_platforms
+        provider_platforms = init_provider_platforms(
+            boot.provider_manager.provider_manager
+        )
+        model_platforms_shard["provider_platforms"] = provider_platforms
         boot.logging_conf(logging_conf=logging_conf)
         boot.run()
 
@@ -57,9 +65,10 @@ def init_server(model_platforms_shard: Dict,
         raise
 
 
-def init_provider_platforms(provider_manager: ProviderManager)-> List[Dict]:
+def init_provider_platforms(provider_manager: ProviderManager) -> List[Dict]:
     provider_list: List[ProviderResponse] = ProvidersWrapper(
-                        provider_manager=provider_manager).get_provider_list()
+        provider_manager=provider_manager
+    ).get_provider_list()
     logger.info(f"Provider list: {provider_list}")
     # 转换MODEL_PLATFORMS
     provider_platforms = []
@@ -69,7 +78,7 @@ def init_provider_platforms(provider_manager: ProviderManager)-> List[Dict]:
             "platform_type": provider.provider,
             "api_base_url": f"http://127.0.0.1:20000/{provider.provider}/v1",
             "api_key": "EMPTY",
-            "api_concurrencies": 5
+            "api_concurrencies": 5,
         }
 
         provider_dict["llm_models"] = []
@@ -78,11 +87,12 @@ def init_provider_platforms(provider_manager: ProviderManager)-> List[Dict]:
         provider_dict["reranking_models"] = []
         provider_dict["speech2text_models"] = []
         provider_dict["tts_models"] = []
-        supported_model_str_types = [model_type.to_origin_model_type() for model_type in
-                                     provider.supported_model_types]
+        supported_model_str_types = [
+            model_type.to_origin_model_type()
+            for model_type in provider.supported_model_types
+        ]
 
         for model_type in supported_model_str_types:
-
             providers_model_type = ProvidersWrapper(
                 provider_manager=provider_manager
             ).get_models_by_model_type(model_type=model_type)

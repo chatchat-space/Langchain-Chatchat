@@ -1,13 +1,13 @@
 import asyncio
-import multiprocessing
-from contextlib import asynccontextmanager
-import multiprocessing as mp
-import os
-
 import logging
 import logging.config
+import multiprocessing
+import multiprocessing as mp
+import os
 import sys
+from contextlib import asynccontextmanager
 from multiprocessing import Process
+
 logger = logging.getLogger()
 
 # 设置numexpr最大线程数，默认为CPU核心数
@@ -19,9 +19,10 @@ try:
 except:
     pass
 
-from fastapi import FastAPI
 import argparse
-from typing import List, Dict
+from typing import Dict, List
+
+from fastapi import FastAPI
 
 
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
@@ -35,15 +36,19 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
 
 
 def run_init_server(
-        model_platforms_shard: Dict,
-        started_event: mp.Event = None,
-        model_providers_cfg_path: str = None,
-        provider_host: str = None,
-        provider_port: int = None):
+    model_platforms_shard: Dict,
+    started_event: mp.Event = None,
+    model_providers_cfg_path: str = None,
+    provider_host: str = None,
+    provider_port: int = None,
+):
+    from chatchat.configs import (
+        MODEL_PROVIDERS_CFG_HOST,
+        MODEL_PROVIDERS_CFG_PATH_CONFIG,
+        MODEL_PROVIDERS_CFG_PORT,
+    )
     from chatchat.init_server import init_server
-    from chatchat.configs import (MODEL_PROVIDERS_CFG_PATH_CONFIG,
-                                  MODEL_PROVIDERS_CFG_HOST,
-                                  MODEL_PROVIDERS_CFG_PORT)
+
     if model_providers_cfg_path is None:
         model_providers_cfg_path = MODEL_PROVIDERS_CFG_PATH_CONFIG
     if provider_host is None:
@@ -51,28 +56,30 @@ def run_init_server(
     if provider_port is None:
         provider_port = MODEL_PROVIDERS_CFG_PORT
 
-    init_server(model_platforms_shard=model_platforms_shard,
-                started_event=started_event,
-                model_providers_cfg_path=model_providers_cfg_path,
-                provider_host=provider_host,
-                provider_port=provider_port)
+    init_server(
+        model_platforms_shard=model_platforms_shard,
+        started_event=started_event,
+        model_providers_cfg_path=model_providers_cfg_path,
+        provider_host=provider_host,
+        provider_port=provider_port,
+    )
 
 
-def run_api_server(model_platforms_shard: Dict,
-                   started_event: mp.Event = None,
-                   run_mode: str = None):
-    from chatchat.server.api_server.server_app import create_app
+def run_api_server(
+    model_platforms_shard: Dict, started_event: mp.Event = None, run_mode: str = None
+):
     import uvicorn
-    from chatchat.server.utils import set_httpx_config
-    from chatchat.configs import MODEL_PLATFORMS, API_SERVER
     from model_providers.core.utils.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
     )
 
-    from chatchat.configs import LOG_PATH
-    MODEL_PLATFORMS.extend(model_platforms_shard['provider_platforms'])
+    from chatchat.configs import API_SERVER, LOG_PATH, MODEL_PLATFORMS
+    from chatchat.server.api_server.server_app import create_app
+    from chatchat.server.utils import set_httpx_config
+
+    MODEL_PLATFORMS.extend(model_platforms_shard["provider_platforms"])
     logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
     app = create_app(run_mode=run_mode)
@@ -84,65 +91,99 @@ def run_api_server(model_platforms_shard: Dict,
     logging_conf = get_config_dict(
         "INFO",
         get_log_file(log_path=LOG_PATH, sub_dir=f"run_api_server_{get_timestamp_ms()}"),
-
-        1024*1024*1024*3,
-        1024*1024*1024*3,
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
     )
     logging.config.dictConfig(logging_conf)  # type: ignore
     uvicorn.run(app, host=host, port=port)
 
 
-def run_webui(model_platforms_shard: Dict,
-              started_event: mp.Event = None, run_mode: str = None):
+def run_webui(
+    model_platforms_shard: Dict, started_event: mp.Event = None, run_mode: str = None
+):
     import sys
-    from chatchat.server.utils import set_httpx_config
-    from chatchat.configs import MODEL_PLATFORMS, WEBUI_SERVER
+
     from model_providers.core.utils.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
     )
 
-    from chatchat.configs import LOG_PATH
-    if model_platforms_shard.get('provider_platforms'):
-        MODEL_PLATFORMS.extend(model_platforms_shard.get('provider_platforms'))
+    from chatchat.configs import LOG_PATH, MODEL_PLATFORMS, WEBUI_SERVER
+    from chatchat.server.utils import set_httpx_config
+
+    if model_platforms_shard.get("provider_platforms"):
+        MODEL_PLATFORMS.extend(model_platforms_shard.get("provider_platforms"))
     logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
 
     host = WEBUI_SERVER["host"]
     port = WEBUI_SERVER["port"]
 
-    script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webui.py')
+    script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui.py")
 
-    flag_options = {'server_address': host,
-                    'server_port': port,
-                    'theme_base': 'light',
-                    'theme_primaryColor': '#165dff',
-                    'theme_secondaryBackgroundColor': '#f5f5f5',
-                    'theme_textColor': '#000000',
-                    'global_disableWatchdogWarning': None,
-                    'global_disableWidgetStateDuplicationWarning': None,
-                    'global_showWarningOnDirectExecution': None,
-                    'global_developmentMode': None, 'global_logLevel': None, 'global_unitTest': None,
-                    'global_suppressDeprecationWarnings': None, 'global_minCachedMessageSize': None,
-                    'global_maxCachedMessageAge': None, 'global_storeCachedForwardMessagesInMemory': None,
-                    'global_dataFrameSerialization': None, 'logger_level': None, 'logger_messageFormat': None,
-                    'logger_enableRich': None, 'client_caching': None, 'client_displayEnabled': None,
-                    'client_showErrorDetails': None, 'client_toolbarMode': None, 'client_showSidebarNavigation': None,
-                    'runner_magicEnabled': None, 'runner_installTracer': None, 'runner_fixMatplotlib': None,
-                    'runner_postScriptGC': None, 'runner_fastReruns': None,
-                    'runner_enforceSerializableSessionState': None, 'runner_enumCoercion': None,
-                    'server_folderWatchBlacklist': None, 'server_fileWatcherType': None, 'server_headless': None,
-                    'server_runOnSave': None, 'server_allowRunOnSave': None, 'server_scriptHealthCheckEnabled': None,
-                    'server_baseUrlPath': None, 'server_enableCORS': None, 'server_enableXsrfProtection': None,
-                    'server_maxUploadSize': None, 'server_maxMessageSize': None, 'server_enableArrowTruncation': None,
-                    'server_enableWebsocketCompression': None, 'server_enableStaticServing': None,
-                    'browser_serverAddress': None, 'browser_gatherUsageStats': None, 'browser_serverPort': None,
-                    'server_sslCertFile': None, 'server_sslKeyFile': None, 'ui_hideTopBar': None,
-                    'ui_hideSidebarNav': None, 'magic_displayRootDocString': None,
-                    'magic_displayLastExprIfNoSemicolon': None, 'deprecation_showfileUploaderEncoding': None,
-                    'deprecation_showImageFormat': None, 'deprecation_showPyplotGlobalUse': None,
-                    'theme_backgroundColor': None, 'theme_font': None}
+    flag_options = {
+        "server_address": host,
+        "server_port": port,
+        "theme_base": "light",
+        "theme_primaryColor": "#165dff",
+        "theme_secondaryBackgroundColor": "#f5f5f5",
+        "theme_textColor": "#000000",
+        "global_disableWatchdogWarning": None,
+        "global_disableWidgetStateDuplicationWarning": None,
+        "global_showWarningOnDirectExecution": None,
+        "global_developmentMode": None,
+        "global_logLevel": None,
+        "global_unitTest": None,
+        "global_suppressDeprecationWarnings": None,
+        "global_minCachedMessageSize": None,
+        "global_maxCachedMessageAge": None,
+        "global_storeCachedForwardMessagesInMemory": None,
+        "global_dataFrameSerialization": None,
+        "logger_level": None,
+        "logger_messageFormat": None,
+        "logger_enableRich": None,
+        "client_caching": None,
+        "client_displayEnabled": None,
+        "client_showErrorDetails": None,
+        "client_toolbarMode": None,
+        "client_showSidebarNavigation": None,
+        "runner_magicEnabled": None,
+        "runner_installTracer": None,
+        "runner_fixMatplotlib": None,
+        "runner_postScriptGC": None,
+        "runner_fastReruns": None,
+        "runner_enforceSerializableSessionState": None,
+        "runner_enumCoercion": None,
+        "server_folderWatchBlacklist": None,
+        "server_fileWatcherType": None,
+        "server_headless": None,
+        "server_runOnSave": None,
+        "server_allowRunOnSave": None,
+        "server_scriptHealthCheckEnabled": None,
+        "server_baseUrlPath": None,
+        "server_enableCORS": None,
+        "server_enableXsrfProtection": None,
+        "server_maxUploadSize": None,
+        "server_maxMessageSize": None,
+        "server_enableArrowTruncation": None,
+        "server_enableWebsocketCompression": None,
+        "server_enableStaticServing": None,
+        "browser_serverAddress": None,
+        "browser_gatherUsageStats": None,
+        "browser_serverPort": None,
+        "server_sslCertFile": None,
+        "server_sslKeyFile": None,
+        "ui_hideTopBar": None,
+        "ui_hideSidebarNav": None,
+        "magic_displayRootDocString": None,
+        "magic_displayLastExprIfNoSemicolon": None,
+        "deprecation_showfileUploaderEncoding": None,
+        "deprecation_showImageFormat": None,
+        "deprecation_showPyplotGlobalUse": None,
+        "theme_backgroundColor": None,
+        "theme_font": None,
+    }
 
     args = []
     if run_mode == "lite":
@@ -157,14 +198,12 @@ def run_webui(model_platforms_shard: Dict,
     except ImportError:
         from streamlit import bootstrap
 
-
     logging_conf = get_config_dict(
         "INFO",
         get_log_file(log_path=LOG_PATH, sub_dir=f"run_webui_{get_timestamp_ms()}"),
-
-        1024*1024*1024*3,
-        1024*1024*1024*3,
-        )
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
+    )
     logging.config.dictConfig(logging_conf)  # type: ignore
     bootstrap.load_config_options(flag_options=flag_options)
     bootstrap.run(script_dir, False, args, flag_options)
@@ -214,9 +253,12 @@ def parse_args() -> argparse.ArgumentParser:
 
 def dump_server_info(after_start=False, args=None):
     import platform
+
     import langchain
+
+    from chatchat.configs import DEFAULT_EMBEDDING_MODEL, TEXT_SPLITTER_NAME, VERSION
     from chatchat.server.utils import api_address, webui_address
-    from chatchat.configs import VERSION, TEXT_SPLITTER_NAME, DEFAULT_EMBEDDING_MODEL
+
     print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print(f"操作系统：{platform.platform()}.")
@@ -236,7 +278,8 @@ def dump_server_info(after_start=False, args=None):
             print(
                 f"    Chatchat Model providers Server: model_providers_cfg_path_config:{MODEL_PROVIDERS_CFG_PATH_CONFIG}\n"
                 f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n"
-                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n")
+                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n"
+            )
 
             print(f"    Chatchat Api Server: {api_address()}")
         if args.webui:
@@ -246,23 +289,27 @@ def dump_server_info(after_start=False, args=None):
 
 
 async def start_main_server():
-    import time
     import signal
-    from chatchat.configs import LOG_PATH
+    import time
+
     from model_providers.core.utils.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
     )
 
+    from chatchat.configs import LOG_PATH
+
     logging_conf = get_config_dict(
         "INFO",
-        get_log_file(log_path=LOG_PATH, sub_dir=f"start_main_server_{get_timestamp_ms()}"),
-
-        1024*1024*1024*3,
-        1024*1024*1024*3,
-        )
+        get_log_file(
+            log_path=LOG_PATH, sub_dir=f"start_main_server_{get_timestamp_ms()}"
+        ),
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
+    )
     logging.config.dictConfig(logging_conf)  # type: ignore
+
     def handler(signalname):
         """
         Python 3.9 has `signal.strsignal(signalnum)` so this closure would not be needed.
@@ -319,7 +366,10 @@ async def start_main_server():
         process = Process(
             target=run_init_server,
             name=f"Model providers Server",
-            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=model_providers_started),
+            kwargs=dict(
+                model_platforms_shard=model_platforms_shard,
+                started_event=model_providers_started,
+            ),
             daemon=True,
         )
         processes["model_providers"] = process
@@ -328,7 +378,11 @@ async def start_main_server():
         process = Process(
             target=run_api_server,
             name=f"API Server",
-            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=api_started, run_mode=run_mode),
+            kwargs=dict(
+                model_platforms_shard=model_platforms_shard,
+                started_event=api_started,
+                run_mode=run_mode,
+            ),
             daemon=False,
         )
         processes["api"] = process
@@ -338,7 +392,11 @@ async def start_main_server():
         process = Process(
             target=run_webui,
             name=f"WEBUI Server",
-            kwargs=dict(model_platforms_shard=model_platforms_shard, started_event=webui_started, run_mode=run_mode),
+            kwargs=dict(
+                model_platforms_shard=model_platforms_shard,
+                started_event=webui_started,
+                run_mode=run_mode,
+            ),
             daemon=True,
         )
         processes["webui"] = process
@@ -375,7 +433,6 @@ async def start_main_server():
             logger.error(e)
             logger.warning("Caught KeyboardInterrupt! Setting stop event...")
         finally:
-
             for p in processes.values():
                 logger.warning("Sending SIGKILL to %s", p)
                 # Queues and other inter-process communication primitives can break when
@@ -396,8 +453,9 @@ def main():
     cwd = os.getcwd()
     sys.path.append(cwd)
     multiprocessing.freeze_support()
-    print("cwd:"+cwd)
+    print("cwd:" + cwd)
     from chatchat.server.knowledge_base.migrate import create_tables
+
     create_tables()
     if sys.version_info < (3, 10):
         loop = asyncio.get_event_loop()

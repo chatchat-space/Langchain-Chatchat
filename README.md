@@ -311,7 +311,7 @@ chatchat-config model --default_llm_model qwen2-instruct
 ```shell
 # 这里应为 3.2 中 "CHATCHAT_ROOT" 变量指向目录
 cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
-vim model_providers.yaml
+vim configs/model_providers.yaml
 ```
 
 配置介绍请参考 [model-providers/README.md](libs/model-providers/README.md)
@@ -426,6 +426,14 @@ chatchat -a
 > }
 > ```
 > </details>
+
+### Docker 部署
+```shell
+docker pull chatimage/chatchat:0.3.0-0623-3
+```
+> [!important]
+> 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](docs/install/README_docker.md)
+
 
 ### 旧版本迁移
 

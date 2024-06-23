@@ -1,18 +1,21 @@
-from typing import List, Dict
-
-from langchain.schema import Document
-from langchain_community.vectorstores.pgvecto_rs import PGVecto_rs
-from sqlalchemy import text, create_engine
-from sqlalchemy.orm import Session
+from typing import Dict, List
 
 from configs import kbs_config
-from server.knowledge_base.kb_service.base import SupportedVSType, KBService, EmbeddingsFunAdapter, \
-    score_threshold_process
+from langchain.schema import Document
+from langchain_community.vectorstores.pgvecto_rs import PGVecto_rs
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
+
+from server.knowledge_base.kb_service.base import (
+    EmbeddingsFunAdapter,
+    KBService,
+    SupportedVSType,
+    score_threshold_process,
+)
 from server.knowledge_base.utils import KnowledgeFile
 
 
 class RelytKBService(KBService):
-
     def _load_relyt_vector(self):
         embedding_func = EmbeddingsFunAdapter(self.embed_model)
         sample_embedding = embedding_func.embed_query("Hello relyt!")
@@ -25,18 +28,22 @@ class RelytKBService(KBService):
         self.engine = create_engine(kbs_config.get("relyt").get("connection_uri"))
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
-        ids_str = ', '.join([f"{id}" for id in ids])
+        ids_str = ", ".join([f"{id}" for id in ids])
         with Session(self.engine) as session:
-            stmt = text(f"SELECT text, meta FROM collection_{self.kb_name} WHERE id in (:ids)")
-            results = [Document(page_content=row[0], metadata=row[1]) for row in
-                      session.execute(stmt, {'ids': ids_str}).fetchall()]
+            stmt = text(
+                f"SELECT text, meta FROM collection_{self.kb_name} WHERE id in (:ids)"
+            )
+            results = [
+                Document(page_content=row[0], metadata=row[1])
+                for row in session.execute(stmt, {"ids": ids_str}).fetchall()
+            ]
             return results
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
-        ids_str = ', '.join([f"{id}" for id in ids])
+        ids_str = ", ".join([f"{id}" for id in ids])
         with Session(self.engine) as session:
             stmt = text(f"DELETE FROM collection_{self.kb_name} WHERE id in (:ids)")
-            session.execute(stmt, {'ids': ids_str})
+            session.execute(stmt, {"ids": ids_str})
             session.commit()
         return True
 
@@ -53,7 +60,8 @@ class RelytKBService(KBService):
                         SELECT 1
                         FROM pg_indexes
                         WHERE indexname = '{index_name}';
-                    """)
+                    """
+                )
                 result = conn.execute(index_query).scalar()
                 if not result:
                     index_statement = text(
@@ -69,7 +77,8 @@ class RelytKBService(KBService):
                             m=30
                             ef_construction=500
                             $$);
-                        """)
+                        """
+                    )
                     conn.execute(index_statement)
 
     def vs_type(self) -> str:
@@ -103,8 +112,9 @@ class RelytKBService(KBService):
         self.do_drop_kb()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from server.db.base import Base, engine
+
     Base.metadata.create_all(bind=engine)
     relyt_kb_service = RelytKBService("collection_test")
     kf = KnowledgeFile("README.md", "test")

@@ -1,9 +1,10 @@
-from functools import lru_cache
-from chatchat.server.pydantic_v2 import BaseModel, Field
-from langchain.prompts.chat import ChatMessagePromptTemplate
-from typing import List, Tuple, Dict, Union
-
 import logging
+from functools import lru_cache
+from typing import Dict, List, Tuple, Union
+
+from langchain.prompts.chat import ChatMessagePromptTemplate
+
+from chatchat.server.pydantic_v2 import BaseModel, Field
 
 logger = logging.getLogger()
 
@@ -16,11 +17,12 @@ class History(BaseModel):
     也可转换为tuple，如
     h.to_msy_tuple = ("human", "你好")
     """
+
     role: str = Field(...)
     content: str = Field(...)
 
     def to_msg_tuple(self):
-        return "ai" if self.role=="assistant" else "human", self.content
+        return "ai" if self.role == "assistant" else "human", self.content
 
     def to_msg_template(self, is_raw=True) -> ChatMessagePromptTemplate:
         role_maps = {
@@ -28,7 +30,7 @@ class History(BaseModel):
             "human": "user",
         }
         role = role_maps.get(self.role, self.role)
-        if is_raw: # 当前默认历史消息都是没有input_variable的文本。
+        if is_raw:  # 当前默认历史消息都是没有input_variable的文本。
             content = "{% raw %}" + self.content + "{% endraw %}"
         else:
             content = self.content
@@ -41,7 +43,7 @@ class History(BaseModel):
 
     @classmethod
     def from_data(cls, h: Union[List, Tuple, Dict]) -> "History":
-        if isinstance(h, (list,tuple)) and len(h) >= 2:
+        if isinstance(h, (list, tuple)) and len(h) >= 2:
             h = cls(role=h[0], content=h[1])
         elif isinstance(h, dict):
             h = cls(**h)

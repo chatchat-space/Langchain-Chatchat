@@ -1,36 +1,41 @@
-from fastapi import FastAPI
-from pathlib import Path
 import asyncio
-import os
-import sys
+import logging
 import multiprocessing as mp
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
-
-from langchain_core.embeddings import Embeddings
-from langchain.tools import BaseTool
-from langchain_openai.chat_models import ChatOpenAI
-from langchain_openai.llms import OpenAI
-import httpx
-import openai
+import os
+import socket
+import sys
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import (
-    Optional,
-    Callable,
-    Generator,
-    Dict,
-    List,
     Any,
     Awaitable,
-    Union,
-    Tuple,
+    Callable,
+    Dict,
+    Generator,
+    List,
     Literal,
+    Optional,
+    Tuple,
+    Union,
 )
-import socket
-from chatchat.configs import (log_verbose, HTTPX_DEFAULT_TIMEOUT,
-                              DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE,
-                              MODEL_PLATFORMS)
-from chatchat.server.pydantic_v2 import BaseModel, Field
 
-import logging
+import httpx
+import openai
+from fastapi import FastAPI
+from langchain.tools import BaseTool
+from langchain_core.embeddings import Embeddings
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_openai.llms import OpenAI
+
+from chatchat.configs import (
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_LLM_MODEL,
+    HTTPX_DEFAULT_TIMEOUT,
+    MODEL_PLATFORMS,
+    TEMPERATURE,
+    log_verbose,
+)
+from chatchat.server.pydantic_v2 import BaseModel, Field
 
 logger = logging.getLogger()
 
@@ -42,8 +47,9 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     except Exception as e:
         logging.exception(e)
         msg = f"Caught exception: {e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
+        logger.error(
+            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
+        )
     finally:
         # Signal the aiter to stop.
         event.set()
@@ -59,11 +65,13 @@ def get_config_platforms() -> Dict[str, Dict]:
 
 
 def get_config_models(
-        model_name: str = None,
-        model_type: Literal["llm", "embed", "image", "reranking","speech2text","tts"] = None,
-        platform_name: str = None,
+    model_name: str = None,
+    model_type: Literal[
+        "llm", "embed", "image", "reranking", "speech2text", "tts"
+    ] = None,
+    platform_name: str = None,
 ) -> Dict[str, Dict]:
-    '''
+    """
     获取配置的模型列表，返回值为:
     {model_name: {
         "platform_name": xx,
@@ -74,7 +82,7 @@ def get_config_models(
         "api_key": xx,
         "api_proxy": xx,
     }}
-    '''
+    """
     # import importlib
     # 不能支持重载
     # from chatchat.configs import model_config
@@ -95,7 +103,7 @@ def get_config_models(
                 "reranking_models",
                 "speech2text_models",
                 "tts_models",
-           ]
+            ]
         else:
             model_types = [f"{model_type}_models"]
 
@@ -114,11 +122,13 @@ def get_config_models(
     return result
 
 
-def get_model_info(model_name: str = None, platform_name: str = None, multiple: bool = False) -> Dict:
-    '''
+def get_model_info(
+    model_name: str = None, platform_name: str = None, multiple: bool = False
+) -> Dict:
+    """
     获取配置的模型信息，主要是 api_base_url, api_key
     如果指定 multiple=True，则返回所有重名模型；否则仅返回第一个
-    '''
+    """
     result = get_config_models(model_name=model_name, platform_name=platform_name)
     if len(result) > 0:
         if multiple:
@@ -130,14 +140,14 @@ def get_model_info(model_name: str = None, platform_name: str = None, multiple: 
 
 
 def get_ChatOpenAI(
-        model_name: str = DEFAULT_LLM_MODEL,
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
-        streaming: bool = True,
-        callbacks: List[Callable] = [],
-        verbose: bool = True,
-        local_wrap: bool = False,  # use local wrapped api
-        **kwargs: Any,
+    model_name: str = DEFAULT_LLM_MODEL,
+    temperature: float = TEMPERATURE,
+    max_tokens: int = None,
+    streaming: bool = True,
+    callbacks: List[Callable] = [],
+    verbose: bool = True,
+    local_wrap: bool = False,  # use local wrapped api
+    **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
     params = dict(
@@ -147,7 +157,7 @@ def get_ChatOpenAI(
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        **kwargs
+        **kwargs,
     )
     try:
         if local_wrap:
@@ -163,21 +173,23 @@ def get_ChatOpenAI(
             )
         model = ChatOpenAI(**params)
     except Exception as e:
-        logger.error(f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True)
+        logger.error(
+            f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True
+        )
         model = None
     return model
 
 
 def get_OpenAI(
-        model_name: str,
-        temperature: float,
-        max_tokens: int = None,
-        streaming: bool = True,
-        echo: bool = True,
-        callbacks: List[Callable] = [],
-        verbose: bool = True,
-        local_wrap: bool = False,  # use local wrapped api
-        **kwargs: Any,
+    model_name: str,
+    temperature: float,
+    max_tokens: int = None,
+    streaming: bool = True,
+    echo: bool = True,
+    callbacks: List[Callable] = [],
+    verbose: bool = True,
+    local_wrap: bool = False,  # use local wrapped api
+    **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
     model_info = get_model_info(model_name)
@@ -189,7 +201,7 @@ def get_OpenAI(
         temperature=temperature,
         max_tokens=max_tokens,
         echo=echo,
-        **kwargs
+        **kwargs,
     )
     try:
         if local_wrap:
@@ -211,12 +223,15 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
-        local_wrap: bool = False,  # use local wrapped api
+    embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
-    from langchain_openai import OpenAIEmbeddings
     from langchain_community.embeddings import OllamaEmbeddings
-    from chatchat.server.localai_embeddings import LocalAIEmbeddings  # TODO: fork of lc pr #17154
+    from langchain_openai import OpenAIEmbeddings
+
+    from chatchat.server.localai_embeddings import (
+        LocalAIEmbeddings,
+    )
 
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
@@ -235,37 +250,46 @@ def get_Embeddings(
         if model_info.get("platform_type") == "openai":
             return OpenAIEmbeddings(**params)
         elif model_info.get("platform_type") == "ollama":
-            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1', ''),
-                                    model=embed_model,
-                                    )
+            return OllamaEmbeddings(
+                base_url=model_info.get("api_base_url").replace("/v1", ""),
+                model=embed_model,
+            )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
-        logger.error(f"failed to create Embeddings for model: {embed_model}.", exc_info=True)
+        logger.error(
+            f"failed to create Embeddings for model: {embed_model}.", exc_info=True
+        )
 
 
-def check_embed_model(embed_model: str=DEFAULT_EMBEDDING_MODEL) -> bool:
+def check_embed_model(embed_model: str = DEFAULT_EMBEDDING_MODEL) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
         return True
     except Exception as e:
-        logger.error(f"failed to access embed model '{embed_model}': {e}", exc_info=True)
+        logger.error(
+            f"failed to access embed model '{embed_model}': {e}", exc_info=True
+        )
         return False
 
 
 def get_OpenAIClient(
-        platform_name: str = None,
-        model_name: str = None,
-        is_async: bool = True,
+    platform_name: str = None,
+    model_name: str = None,
+    is_async: bool = True,
 ) -> Union[openai.Client, openai.AsyncClient]:
-    '''
+    """
     construct an openai Client for specified platform or model
-    '''
+    """
     if platform_name is None:
-        platform_info = get_model_info(model_name=model_name, platform_name=platform_name)
+        platform_info = get_model_info(
+            model_name=model_name, platform_name=platform_name
+        )
         if platform_info is None:
-            raise RuntimeError(f"cannot find configured platform for model: {model_name}")
+            raise RuntimeError(
+                f"cannot find configured platform for model: {model_name}"
+            )
         platform_name = platform_info.get("platform_name")
     platform_info = get_config_platforms().get(platform_name)
     assert platform_info, f"cannot find configured platform: {platform_name}"
@@ -337,11 +361,11 @@ class ChatMessage(BaseModel):
             "example": {
                 "question": "工伤保险如何办理？",
                 "response": "根据已知信息，可以总结如下：\n\n1. 参保单位为员工缴纳工伤保险费，以保障员工在发生工伤时能够获得相应的待遇。\n"
-                            "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
-                            "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
-                            "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
-                            "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
-                            "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
+                "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
+                "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
+                "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
+                "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
+                "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
                 "history": [
                     [
                         "工伤保险是什么？",
@@ -360,9 +384,9 @@ class ChatMessage(BaseModel):
 
 
 def run_async(cor):
-    '''
+    """
     在同步环境中运行异步代码.
-    '''
+    """
     try:
         loop = asyncio.get_event_loop()
     except:
@@ -371,9 +395,9 @@ def run_async(cor):
 
 
 def iter_over_async(ait, loop=None):
-    '''
+    """
     将异步生成器封装成同步生成器.
-    '''
+    """
     ait = ait.__aiter__()
 
     async def get_next():
@@ -397,11 +421,11 @@ def iter_over_async(ait, loop=None):
 
 
 def MakeFastAPIOffline(
-        app: FastAPI,
-        static_dir=Path(__file__).parent / "api_server" / "static",
-        static_url="/static-offline-docs",
-        docs_url: Optional[str] = "/docs",
-        redoc_url: Optional[str] = "/redoc",
+    app: FastAPI,
+    static_dir=Path(__file__).parent / "api_server" / "static",
+    static_url="/static-offline-docs",
+    docs_url: Optional[str] = "/docs",
+    redoc_url: Optional[str] = "/redoc",
 ) -> None:
     """patch the FastAPI obj that doesn't rely on CDN for the documentation page"""
     from fastapi import Request
@@ -417,9 +441,9 @@ def MakeFastAPIOffline(
     swagger_ui_oauth2_redirect_url = app.swagger_ui_oauth2_redirect_url
 
     def remove_route(url: str) -> None:
-        '''
+        """
         remove original route from app
-        '''
+        """
         index = None
         for i, r in enumerate(app.routes):
             if r.path.lower() == url.lower():
@@ -530,10 +554,10 @@ def webui_address() -> str:
 
 
 def get_prompt_template(type: str, name: str) -> Optional[str]:
-    '''
+    """
     从prompt_config中加载模板内容
     type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
-    '''
+    """
 
     from chatchat.configs import PROMPT_TEMPLATES
 
@@ -541,18 +565,19 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
 
 
 def set_httpx_config(
-        timeout: float = HTTPX_DEFAULT_TIMEOUT,
-        proxy: Union[str, Dict] = None,
-        unused_proxies: List[str] = [],
+    timeout: float = HTTPX_DEFAULT_TIMEOUT,
+    proxy: Union[str, Dict] = None,
+    unused_proxies: List[str] = [],
 ):
-    '''
+    """
     设置httpx默认timeout。httpx默认timeout是5秒，在请求LLM回答时不够用。
     将本项目相关服务加入无代理列表，避免fastchat的服务器请求错误。(windows下无效)
     对于chatgpt等在线API，如要使用代理需要手动配置。搜索引擎的代理如何处置还需考虑。
-    '''
+    """
+
+    import os
 
     import httpx
-    import os
 
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
@@ -574,7 +599,9 @@ def set_httpx_config(
         os.environ[k] = v
 
     # set host to bypass proxy
-    no_proxy = [x.strip() for x in os.environ.get("no_proxy", "").split(",") if x.strip()]
+    no_proxy = [
+        x.strip() for x in os.environ.get("no_proxy", "").split(",") if x.strip()
+    ]
     no_proxy += [
         # do not use proxy for locahost
         "http://127.0.0.1",
@@ -591,17 +618,18 @@ def set_httpx_config(
         return proxies
 
     import urllib.request
+
     urllib.request.getproxies = _get_proxies
 
 
 def run_in_thread_pool(
-        func: Callable,
-        params: List[Dict] = [],
+    func: Callable,
+    params: List[Dict] = [],
 ) -> Generator:
-    '''
+    """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    '''
+    """
     tasks = []
     with ThreadPoolExecutor() as pool:
         for kwargs in params:
@@ -615,17 +643,19 @@ def run_in_thread_pool(
 
 
 def run_in_process_pool(
-        func: Callable,
-        params: List[Dict] = [],
+    func: Callable,
+    params: List[Dict] = [],
 ) -> Generator:
-    '''
+    """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    '''
+    """
     tasks = []
     max_workers = None
     if sys.platform.startswith("win"):
-        max_workers = min(mp.cpu_count(), 60)  # max_workers should not exceed 60 on windows
+        max_workers = min(
+            mp.cpu_count(), 60
+        )  # max_workers should not exceed 60 on windows
     with ProcessPoolExecutor(max_workers=max_workers) as pool:
         for kwargs in params:
             tasks.append(pool.submit(func, **kwargs))
@@ -638,15 +668,15 @@ def run_in_process_pool(
 
 
 def get_httpx_client(
-        use_async: bool = False,
-        proxies: Union[str, Dict] = None,
-        timeout: float = HTTPX_DEFAULT_TIMEOUT,
-        unused_proxies: List[str] = [],
-        **kwargs,
+    use_async: bool = False,
+    proxies: Union[str, Dict] = None,
+    timeout: float = HTTPX_DEFAULT_TIMEOUT,
+    unused_proxies: List[str] = [],
+    **kwargs,
 ) -> Union[httpx.Client, httpx.AsyncClient]:
-    '''
+    """
     helper to get httpx client with default proxies that bypass local addesses.
-    '''
+    """
     default_proxies = {
         # do not use proxy for locahost
         "all://127.0.0.1": None,
@@ -659,21 +689,34 @@ def get_httpx_client(
 
     # get proxies from system envionrent
     # proxy not str empty string, None, False, 0, [] or {}
-    default_proxies.update({
-        "http://": (os.environ.get("http_proxy")
-                    if os.environ.get("http_proxy") and len(os.environ.get("http_proxy").strip())
-                    else None),
-        "https://": (os.environ.get("https_proxy")
-                     if os.environ.get("https_proxy") and len(os.environ.get("https_proxy").strip())
-                     else None),
-        "all://": (os.environ.get("all_proxy")
-                   if os.environ.get("all_proxy") and len(os.environ.get("all_proxy").strip())
-                   else None),
-    })
+    default_proxies.update(
+        {
+            "http://": (
+                os.environ.get("http_proxy")
+                if os.environ.get("http_proxy")
+                and len(os.environ.get("http_proxy").strip())
+                else None
+            ),
+            "https://": (
+                os.environ.get("https_proxy")
+                if os.environ.get("https_proxy")
+                and len(os.environ.get("https_proxy").strip())
+                else None
+            ),
+            "all://": (
+                os.environ.get("all_proxy")
+                if os.environ.get("all_proxy")
+                and len(os.environ.get("all_proxy").strip())
+                else None
+            ),
+        }
+    )
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
             # default_proxies.update({host: None}) # Origin code
-            default_proxies.update({'all://' + host: None})  # PR 1838 fix, if not add 'all://', httpx will raise error
+            default_proxies.update(
+                {"all://" + host: None}
+            )  # PR 1838 fix, if not add 'all://', httpx will raise error
 
     # merge default proxies with user provided proxies
     if isinstance(proxies, str):
@@ -692,9 +735,9 @@ def get_httpx_client(
 
 
 def get_server_configs() -> Dict:
-    '''
+    """
     获取configs中的原始配置项，供前端使用
-    '''
+    """
     _custom = {
         "api_address": api_address(),
     }
@@ -703,11 +746,12 @@ def get_server_configs() -> Dict:
 
 
 def get_temp_dir(id: str = None) -> Tuple[str, str]:
-    '''
+    """
     创建一个临时目录，返回（路径，文件夹名称）
-    '''
-    from chatchat.configs import BASE_TEMP_DIR
+    """
     import uuid
+
+    from chatchat.configs import BASE_TEMP_DIR
 
     if id is not None:  # 如果指定的临时目录已存在，直接返回
         path = os.path.join(BASE_TEMP_DIR, id)
@@ -723,26 +767,37 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
 # 动态更新知识库信息
 def update_search_local_knowledgebase_tool():
     import re
+
     from chatchat.server.agent.tools_factory import tools_registry
     from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
-    kbs=list_kbs_from_db()
+
+    kbs = list_kbs_from_db()
     template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool. The 'database' should be one of the above [{key}]."
-    KB_info_str = '\n'.join([f"{kb.kb_name}: {kb.kb_info}" for kb in kbs])
-    KB_name_info_str = '\n'.join([f"{kb.kb_name}" for kb in kbs])
+    KB_info_str = "\n".join([f"{kb.kb_name}: {kb.kb_info}" for kb in kbs])
+    KB_name_info_str = "\n".join([f"{kb.kb_name}" for kb in kbs])
     template_knowledge = template.format(KB_info=KB_info_str, key=KB_name_info_str)
 
-    search_local_knowledgebase_tool=tools_registry._TOOLS_REGISTRY.get("search_local_knowledgebase")
+    search_local_knowledgebase_tool = tools_registry._TOOLS_REGISTRY.get(
+        "search_local_knowledgebase"
+    )
     if search_local_knowledgebase_tool:
-        search_local_knowledgebase_tool.description = " ".join(re.split(r"\n+\s*", template_knowledge))
-        search_local_knowledgebase_tool.args["database"]["choices"]=[kb.kb_name for kb in kbs]
+        search_local_knowledgebase_tool.description = " ".join(
+            re.split(r"\n+\s*", template_knowledge)
+        )
+        search_local_knowledgebase_tool.args["database"]["choices"] = [
+            kb.kb_name for kb in kbs
+        ]
 
 
 def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
     import importlib
+
     from chatchat.server.agent import tools_factory
+
     importlib.reload(tools_factory)
 
     from chatchat.server.agent.tools_factory import tools_registry
+
     update_search_local_knowledgebase_tool()
     if name is None:
         return tools_registry._TOOLS_REGISTRY
@@ -752,17 +807,18 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
 
 def get_tool_config(name: str = None) -> Dict:
     import importlib
+
     # TODO 因为使用了变量更新，不支持重载
     # from chatchat.configs import model_config
     # importlib.reload(model_config)
     from chatchat.configs import TOOL_CONFIG
+
     if name is None:
         return TOOL_CONFIG
     else:
         return TOOL_CONFIG.get(name, {})
 
 
-
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        return sock.connect_ex(('localhost', port)) == 0
+        return sock.connect_ex(("localhost", port)) == 0

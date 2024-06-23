@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import List
 
-from fastapi import APIRouter, Request, Body
+from fastapi import APIRouter, Body, Request
 
 from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
-
-import logging
 
 logger = logging.getLogger()
 
@@ -16,13 +15,16 @@ tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
 @tool_router.get("", response_model=BaseResponse)
 async def list_tools():
     tools = get_tool()
-    data = {t.name: {
-                "name": t.name,
-                "title": t.title,
-                "description": t.description,
-                "args": t.args,
-                "config": get_tool_config(t.name),
-            } for t in tools.values()}
+    data = {
+        t.name: {
+            "name": t.name,
+            "title": t.title,
+            "description": t.description,
+            "args": t.args,
+            "config": get_tool_config(t.name),
+        }
+        for t in tools.values()
+    }
     return {"data": data}
 
 
