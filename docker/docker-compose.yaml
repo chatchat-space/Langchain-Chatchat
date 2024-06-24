@@ -32,7 +32,5 @@ services:
     #   - "8501:8501"
     network_mode: "host"
     # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
-    # 将本地模型接入配置文件(~/chatchat/model_providers.yaml)挂载到容器默认模型接入配置文件路径(/usr/local/lib/python3.11/site-packages/chatchat/configs/)中
     # volumes:
     #   - ~/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
-    #   - ~/chatchat/model_providers.yaml:/usr/local/lib/python3.11/site-packages/chatchat/configs/model_providers.yaml

@@ -17,7 +17,7 @@ chatchat沿用了 monorepo的组织方式, 项目的代码库包含了多个包�
 │   │    └── tests
 │   │        ├── integration_tests # 集成测试 （每个包都有，为了简洁没有展示）
 │   │        └── unit_tests # 单元测试 （每个包都有，为了简洁没有展示）
-│   └── model-providers # 模型平台
+
  
 
 ```
@@ -33,7 +33,6 @@ Makefile: 包含用于构建，linting和文档和cookbook的快捷方式的文�
 代码库中的代码分为两个部分：
 
 - libs/chatchat-server目录包含chatchat服务端代码。
-- libs/model-providers目录包含对供应商模型转换的代码。
 - frontend目录包含chatchat前端代码。
 
 详细的

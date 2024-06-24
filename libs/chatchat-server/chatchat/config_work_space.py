@@ -49,9 +49,6 @@ def basic(**kwargs):
 @click.option("--max_tokens", type=int, help="最大tokens")
 @click.option("--temperature", type=float, help="温度")
 @click.option("--support_agent_models", multiple=True, help="支持的agent模型")
-@click.option("--model_providers_cfg_path_config", help="模型平台配置文件路径")
-@click.option("--model_providers_cfg_host", help="模型平台配置服务host")
-@click.option("--model_providers_cfg_port", type=int, help="模型平台配置服务port")
 @click.option(
     "--set_model_platforms",
     type=str,
@@ -94,22 +91,6 @@ def model(**kwargs):
         config_model_workspace.set_support_agent_models(
             support_agent_models=kwargs["support_agent_models"]
         )
-
-    if kwargs["model_providers_cfg_path_config"]:
-        config_model_workspace.set_model_providers_cfg_path_config(
-            model_providers_cfg_path_config=kwargs["model_providers_cfg_path_config"]
-        )
-
-    if kwargs["model_providers_cfg_host"]:
-        config_model_workspace.set_model_providers_cfg_host(
-            model_providers_cfg_host=kwargs["model_providers_cfg_host"]
-        )
-
-    if kwargs["model_providers_cfg_port"]:
-        config_model_workspace.set_model_providers_cfg_port(
-            model_providers_cfg_port=kwargs["model_providers_cfg_port"]
-        )
-
     if kwargs["set_model_platforms"]:
         model_platforms_dict = json.loads(kwargs["set_model_platforms"])
         config_model_workspace.set_model_platforms(model_platforms=model_platforms_dict)

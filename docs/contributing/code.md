@@ -44,7 +44,7 @@ poetry install --with lint,test
 
 要对某个库进行格式化,请在相应的库目录下运行相同的命令:
 ```shell
-cd {model-providers|chatchat-server|chatchat-frontend}
+cd {chatchat-server|chatchat-frontend}
 make format
 ```
 

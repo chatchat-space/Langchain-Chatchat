@@ -30,12 +30,6 @@ class ConfigModel(core_config.Config):
     """LLM模型配置，包括了不同模态初始化参数"""
     MODEL_PLATFORMS: Optional[List[Dict[str, Any]]] = None
     """模型平台配置"""
-    MODEL_PROVIDERS_CFG_PATH_CONFIG: Optional[str] = None
-    """模型平台配置文件路径"""
-    MODEL_PROVIDERS_CFG_HOST: Optional[str] = None
-    """模型平台配置服务host"""
-    MODEL_PROVIDERS_CFG_PORT: Optional[int] = None
-    """模型平台配置服务port"""
     TOOL_CONFIG: Optional[Dict[str, Any]] = None
     """工具配置项"""
 
@@ -79,14 +73,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "qwen-turbo",
         ]
 
-        self.MODEL_PROVIDERS_CFG_PATH_CONFIG = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "model_providers.yaml"
-        )
-        self.MODEL_PROVIDERS_CFG_HOST = "127.0.0.1"
-
-        self.MODEL_PROVIDERS_CFG_PORT = 20000
-
-        # 可以通过 model_providers 提供转换不同平台的接口为openai endpoint的能力，启动后下面变量会自动增加相应的平台
         #   ### 如果您已经有了一个openai endpoint的能力的地址，可以在这里直接配置
         #   - platform_name 可以任意填写，不要重复即可
         #   - platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
@@ -327,15 +313,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
     def support_agent_models(self, support_agent_models: List[str]):
         self.SUPPORT_AGENT_MODELS = support_agent_models
 
-    def model_providers_cfg_path_config(self, model_providers_cfg_path_config: str):
-        self.MODEL_PROVIDERS_CFG_PATH_CONFIG = model_providers_cfg_path_config
-
-    def model_providers_cfg_host(self, model_providers_cfg_host: str):
-        self.MODEL_PROVIDERS_CFG_HOST = model_providers_cfg_host
-
-    def model_providers_cfg_port(self, model_providers_cfg_port: int):
-        self.MODEL_PROVIDERS_CFG_PORT = model_providers_cfg_port
-
     def model_platforms(self, model_platforms: List[Dict[str, Any]]):
         self.MODEL_PLATFORMS = model_platforms
 
@@ -353,9 +330,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
         config.SUPPORT_AGENT_MODELS = self.SUPPORT_AGENT_MODELS
         config.LLM_MODEL_CONFIG = self.LLM_MODEL_CONFIG
         config.MODEL_PLATFORMS = self.MODEL_PLATFORMS
-        config.MODEL_PROVIDERS_CFG_PATH_CONFIG = self.MODEL_PROVIDERS_CFG_PATH_CONFIG
-        config.MODEL_PROVIDERS_CFG_HOST = self.MODEL_PROVIDERS_CFG_HOST
-        config.MODEL_PROVIDERS_CFG_PORT = self.MODEL_PROVIDERS_CFG_PORT
         config.TOOL_CONFIG = self.TOOL_CONFIG
 
         return config
@@ -392,18 +366,6 @@ class ConfigModelWorkSpace(
         if config_json.get("SUPPORT_AGENT_MODELS"):
             _config_factory.support_agent_models(
                 config_json.get("SUPPORT_AGENT_MODELS")
-            )
-        if config_json.get("MODEL_PROVIDERS_CFG_PATH_CONFIG"):
-            _config_factory.model_providers_cfg_path_config(
-                config_json.get("MODEL_PROVIDERS_CFG_PATH_CONFIG")
-            )
-        if config_json.get("MODEL_PROVIDERS_CFG_HOST"):
-            _config_factory.model_providers_cfg_host(
-                config_json.get("MODEL_PROVIDERS_CFG_HOST")
-            )
-        if config_json.get("MODEL_PROVIDERS_CFG_PORT"):
-            _config_factory.model_providers_cfg_port(
-                config_json.get("MODEL_PROVIDERS_CFG_PORT")
             )
         if config_json.get("MODEL_PLATFORMS"):
             _config_factory.model_platforms(config_json.get("MODEL_PLATFORMS"))
@@ -445,20 +407,6 @@ class ConfigModelWorkSpace(
 
     def set_support_agent_models(self, support_agent_models: List[str]):
         self._config_factory.support_agent_models(support_agent_models)
-        self.store_config()
-
-    def set_model_providers_cfg_path_config(self, model_providers_cfg_path_config: str):
-        self._config_factory.model_providers_cfg_path_config(
-            model_providers_cfg_path_config
-        )
-        self.store_config()
-
-    def set_model_providers_cfg_host(self, model_providers_cfg_host: str):
-        self._config_factory.model_providers_cfg_host(model_providers_cfg_host)
-        self.store_config()
-
-    def set_model_providers_cfg_port(self, model_providers_cfg_port: int):
-        self._config_factory.model_providers_cfg_port(model_providers_cfg_port)
         self.store_config()
 
     def set_model_platforms(self, model_platforms: List[Dict[str, Any]]):

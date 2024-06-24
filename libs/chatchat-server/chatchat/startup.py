@@ -34,42 +34,11 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
 
     app.router.lifespan_context = lifespan
 
-
-def run_init_server(
-    model_platforms_shard: Dict,
-    started_event: mp.Event = None,
-    model_providers_cfg_path: str = None,
-    provider_host: str = None,
-    provider_port: int = None,
-):
-    from chatchat.configs import (
-        MODEL_PROVIDERS_CFG_HOST,
-        MODEL_PROVIDERS_CFG_PATH_CONFIG,
-        MODEL_PROVIDERS_CFG_PORT,
-    )
-    from chatchat.init_server import init_server
-
-    if model_providers_cfg_path is None:
-        model_providers_cfg_path = MODEL_PROVIDERS_CFG_PATH_CONFIG
-    if provider_host is None:
-        provider_host = MODEL_PROVIDERS_CFG_HOST
-    if provider_port is None:
-        provider_port = MODEL_PROVIDERS_CFG_PORT
-
-    init_server(
-        model_platforms_shard=model_platforms_shard,
-        started_event=started_event,
-        model_providers_cfg_path=model_providers_cfg_path,
-        provider_host=provider_host,
-        provider_port=provider_port,
-    )
-
-
 def run_api_server(
-    model_platforms_shard: Dict, started_event: mp.Event = None, run_mode: str = None
+    started_event: mp.Event = None, run_mode: str = None
 ):
     import uvicorn
-    from model_providers.core.utils.utils import (
+    from chatchat.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
@@ -79,7 +48,6 @@ def run_api_server(
     from chatchat.server.api_server.server_app import create_app
     from chatchat.server.utils import set_httpx_config
 
-    MODEL_PLATFORMS.extend(model_platforms_shard["provider_platforms"])
     logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
     app = create_app(run_mode=run_mode)
@@ -99,11 +67,11 @@ def run_api_server(
 
 
 def run_webui(
-    model_platforms_shard: Dict, started_event: mp.Event = None, run_mode: str = None
+    started_event: mp.Event = None, run_mode: str = None
 ):
     import sys
 
-    from model_providers.core.utils.utils import (
+    from chatchat.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
@@ -112,8 +80,6 @@ def run_webui(
     from chatchat.configs import LOG_PATH, MODEL_PLATFORMS, WEBUI_SERVER
     from chatchat.server.utils import set_httpx_config
 
-    if model_platforms_shard.get("provider_platforms"):
-        MODEL_PLATFORMS.extend(model_platforms_shard.get("provider_platforms"))
     logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
     set_httpx_config()
 
@@ -216,13 +182,13 @@ def parse_args() -> argparse.ArgumentParser:
         "-a",
         "--all-webui",
         action="store_true",
-        help="run model_providers servers,run api.py and webui.py",
+        help="run api.py and webui.py",
         dest="all_webui",
     )
     parser.add_argument(
         "--all-api",
         action="store_true",
-        help="run model_providers  servers, run api.py",
+        help="run api.py",
         dest="all_api",
     )
 
@@ -275,11 +241,6 @@ def dump_server_info(after_start=False, args=None):
         print("\n")
         print(f"服务端运行信息：")
         if args.api:
-            print(
-                f"    Chatchat Model providers Server: model_providers_cfg_path_config:{MODEL_PROVIDERS_CFG_PATH_CONFIG}\n"
-                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n"
-                f"                                     provider_host:{MODEL_PROVIDERS_CFG_HOST}\n"
-            )
 
             print(f"    Chatchat Api Server: {api_address()}")
         if args.webui:
@@ -292,7 +253,7 @@ async def start_main_server():
     import signal
     import time
 
-    from model_providers.core.utils.utils import (
+    from chatchat.utils import (
         get_config_dict,
         get_log_file,
         get_timestamp_ms,
@@ -359,27 +320,12 @@ async def start_main_server():
     def process_count():
         return len(processes)
 
-    # 定义全局配置变量,使用 Manager 创建共享字典
-    model_platforms_shard = manager.dict()
-    model_providers_started = manager.Event()
-    if args.api:
-        process = Process(
-            target=run_init_server,
-            name=f"Model providers Server",
-            kwargs=dict(
-                model_platforms_shard=model_platforms_shard,
-                started_event=model_providers_started,
-            ),
-            daemon=True,
-        )
-        processes["model_providers"] = process
     api_started = manager.Event()
     if args.api:
         process = Process(
             target=run_api_server,
             name=f"API Server",
             kwargs=dict(
-                model_platforms_shard=model_platforms_shard,
                 started_event=api_started,
                 run_mode=run_mode,
             ),
@@ -393,7 +339,6 @@ async def start_main_server():
             target=run_webui,
             name=f"WEBUI Server",
             kwargs=dict(
-                model_platforms_shard=model_platforms_shard,
                 started_event=webui_started,
                 run_mode=run_mode,
             ),
@@ -405,12 +350,6 @@ async def start_main_server():
         parser.print_help()
     else:
         try:
-            # 保证任务收到SIGINT后，能够正常退出
-            if p := processes.get("model_providers"):
-                p.start()
-                p.name = f"{p.name} ({p.pid})"
-                model_providers_started.wait()  # 等待model_providers启动完成
-
             if p := processes.get("api"):
                 p.start()
                 p.name = f"{p.name} ({p.pid})"

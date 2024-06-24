@@ -257,12 +257,6 @@ Options:
   --max_tokens INTEGER            最大tokens
   --temperature FLOAT             温度
   --support_agent_models TEXT     支持的agent模型
-  --model_providers_cfg_path_config TEXT
-                                  模型平台配置文件路径
-  --model_providers_cfg_host TEXT
-                                  模型平台配置服务host
-  --model_providers_cfg_port INTEGER
-                                  模型平台配置服务port
   --set_model_platforms TEXT      模型平台配置 as a JSON string.
   --set_tool_config TEXT          工具配置项  as a JSON string.
   --clear                         清除配置
@@ -305,18 +299,33 @@ chatchat-config model --default_llm_model qwen2-instruct
 中选用的模型推理框架与加载的模型进行模型接入配置，其中模型推理框架包括 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api)
 等，可以提供 [GLM-4-Chat](https://github.com/THUDM/GLM-4) 与 [Qwen2-Instruct](https://github.com/QwenLM/Qwen2)
 等中文最新开源模型的接入支持。
-
-参考配置 3.2 中 `CHATCHAT_ROOT` 变量指向的路径下 configs 中的 `model_providers.yaml` 文件, 即可完成自定义平台加载.
-
-```shell
-# 这里应为 3.2 中 "CHATCHAT_ROOT" 变量指向目录
-cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
-vim configs/model_providers.yaml
+如果您已经有了一个openai endpoint的能力的地址，可以在MODEL_PLATFORMS这里直接配置
+```text
+chatchat-config model --set_model_platforms TEXT      模型平台配置 as a JSON string.
 ```
-
-配置介绍请参考 [model-providers/README.md](libs/model-providers/README.md)
-
-详细配置请参考 [model_providers.yaml](libs/model-providers/model_providers.yaml)
+- platform_name 可以任意填写，不要重复即可
+- platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
+- 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
+- 设置模型
+```shell
+$ chatchat-config model --set_model_platforms "[{
+    \"platform_name\": \"xinference\",
+    \"platform_type\": \"xinference\",
+    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
+    \"api_key\": \"EMPT\",
+    \"api_concurrencies\": 5,
+    \"llm_models\": [
+        \"autodl-tmp-glm-4-9b-chat\"
+    ],
+    \"embed_models\": [
+        \"bge-large-zh-v1.5\"
+    ],
+    \"image_models\": [],
+    \"reranking_models\": [],
+    \"speech2text_models\": [],
+    \"tts_models\": []
+}]"
+```
 
 #### 5. 初始化知识库
 
@@ -352,7 +361,6 @@ chatchat-kb -r --embed-model=text-embedding-3-small
 
 总计用时        ：0:02:33.414425
 
-2024-06-17 22:30:47,933 - init_database.py[line:176] - WARNING: Sending SIGKILL to <Process name='Model providers Server (3949160)' pid=3949160 parent=3949098 started daemon>
 ```
 
 知识库路径为 3.2 中 *DATA_PATH* 变量指向的路径下的 knowledge_base 目录中:
@@ -461,12 +469,6 @@ docker pull chatimage/chatchat:0.3.0-0623-3
 ## 协议
 
 本项目非涉及 额外协议 部分的代码遵循 [Apache-2.0](LICENSE) 协议。
-
-### 额外协议
-
-本仓库中的 [model-providers 代码](https://github.com/chatchat-space/Langchain-Chatchat/tree/master/libs/model-providers/)
-引用了 [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime)中的相关代码。
-如果您使用这部分代码并再分发，你需要包含 [ADDITIONAL_LICENSE](ADDITIONAL_LICENSE) 的完整内容。
 
 ## 联系我们
 

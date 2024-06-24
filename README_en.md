@@ -281,12 +281,6 @@ Options:
   --max_tokens INTEGER            最大tokens
   --temperature FLOAT             温度
   --support_agent_models TEXT     支持的agent模型
-  --model_providers_cfg_path_config TEXT
-                                  模型平台配置文件路径
-  --model_providers_cfg_host TEXT
-                                  模型平台配置服务host
-  --model_providers_cfg_port INTEGER
-                                  模型平台配置服务port
   --set_model_platforms TEXT      模型平台配置 as a JSON string.
   --set_tool_config TEXT          工具配置项  as a JSON string.
   --clear                         清除配置
@@ -331,18 +325,35 @@ Framework and Load Models and select the model inference framework and loaded mo
 and [One API](https://github.com/songquanpeng/one-api), supporting new Chinese open-source models
 like [GLM-4-Chat](https://github.com/THUDM/GLM-4) and [Qwen2-Instruct](https://github.com/QwenLM/Qwen2)
 
-Refer to the `model_providers.yaml` file in the configs directory pointed by the `CHATCHAT_ROOT` variable in step 3.2 to
-complete the custom platform loading.
+If you already have an address with the capability of an OpenAI endpoint, you can directly configure it in MODEL_PLATFORMS as follows:
+
+```text
+chatchat-config model --set_model_platforms TEXT      Configure model platforms as a JSON string.
+```
+- `platform_name` can be arbitrarily filled, just ensure it is unique.
+- `platform_type` might be used in the future for functional distinctions based on platform types, so it should match the platform_name.
+- List the models deployed on the framework in the corresponding list. Different frameworks can load models with the same name, and the project will automatically balance the load.
+- Set up the model
 
 ```shell
-# Here should be the directory pointed by the "CHATCHAT_ROOT" variable in step 3.2
-cd /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat
-vim model_providers.yaml
+$ chatchat-config model --set_model_platforms "[{
+    \"platform_name\": \"xinference\",
+    \"platform_type\": \"xinference\",
+    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
+    \"api_key\": \"EMPT\",
+    \"api_concurrencies\": 5,
+    \"llm_models\": [
+        \"autodl-tmp-glm-4-9b-chat\"
+    ],
+    \"embed_models\": [
+        \"bge-large-zh-v1.5\"
+    ],
+    \"image_models\": [],
+    \"reranking_models\": [],
+    \"speech2text_models\": [],
+    \"tts_models\": []
+}]"
 ```
-
-Refer to [model-providers/README.md](libs/model-providers/README_en.md) for configuration instructions.
-
-Refer to [model_providers.yaml](libs/model-providers/model_providers.yaml) for detailed configuration.
 
 #### 5. Initialize Knowledge Base
 
@@ -380,7 +391,6 @@ Successful output will be:
 
 总计用时        ：0:02:33.414425
 
-2024-06-17 22:30:47,933 - init_database.py[line:176] - WARNING: Sending SIGKILL to <Process name='Model providers Server (3949160)' pid=3949160 parent=3949098 started daemon>
 ```
 
 The knowledge base path is in the knowledge_base directory under the path pointed by the *DATA_PATH* variable in
@@ -472,11 +482,6 @@ The following guide does not guarantee 100% compatibility and success. Remember 
 
 The code of this project that does not involve *Additional License*  follows the [Apache-2.0](LICENSE) agreement.
 
-### Additional License
-
-The [model-providers code](https://github.com/chatchat-space/Langchain-Chatchat/tree/master/libs/model-providers/) in this repository
-references the relevant code in [Dify](https://github.com/langgenius/dify/tree/main/api/core/model_runtime).
-If you use this part of the code and redistribute it, you need to include the full content of [ADDITIONAL_LICENSE](ADDITIONAL_LICENSE).
 ## Project Milestones
 
 + `April 2023`: `Langchain-ChatGLM 0.1.0` released, supporting local knowledge base question and answer based on ChatGLM-6B model.

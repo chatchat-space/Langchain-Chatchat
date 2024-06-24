@@ -12,7 +12,7 @@ on:
       working-directory:
         required: true
         type: string
-        default: './libs/model-providers'
+        default: './libs/chatchat-server'
         description: "From which folder this pipeline executes"
 env:
   PYTHON_VERSION: "3.8"
