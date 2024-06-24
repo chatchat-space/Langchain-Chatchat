@@ -98,10 +98,8 @@ mkdir -p ~/chatchat
     image: chatimage/chatchat:0.3.0-0622
     (省略 ...)
     # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
-    # 将本地模型接入配置文件(~/chatchat/model_providers.yaml)挂载到容器默认模型接入配置文件路径(/usr/local/lib/python3.11/site-packages/chatchat/configs/)中
     # volumes:
     #   - ~/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
-    #   - ~/chatchat/model_providers.yaml:/usr/local/lib/python3.11/site-packages/chatchat/configs/model_providers.yaml
   (下文 ...)
 ```
 将 `volumes` 字段注释打开, 并按照 `YAML` 格式对齐, 如下:
@@ -111,10 +109,8 @@ mkdir -p ~/chatchat
     image: chatimage/chatchat:0.3.0-0622
     (省略 ...)
     # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
-    # 将本地模型接入配置文件(~/chatchat/model_providers.yaml)挂载到容器默认模型接入配置文件路径(/usr/local/lib/python3.11/site-packages/chatchat/configs/)中
     volumes:
       - ~/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
-      - ~/chatchat/model_providers.yaml:/usr/local/lib/python3.11/site-packages/chatchat/configs/model_providers.yaml
   (下文 ...)
 ```
 
@@ -144,14 +140,7 @@ drwxr-xr-x  5 root root 4096 Jun 22 10:46 media
 drwxr-xr-x  5 root root 4096 Jun 22 10:46 nltk_data
 drwxr-xr-x  3 root root 4096 Jun 22 10:46 temp
 ```
-
-##### 5. 下载 `model_providers.yaml` 配置文件
-> 提示: 后续可以自定义本地路径下的 `model_providers.yaml` 来实现`自定义模型接入配置`
-```shell
-cd ~/chatchat
-wget https://github.com/chatchat-space/Langchain-Chatchat/blob/master/libs/model-providers/model_providers.yaml
-```
-
+ 
 ##### 6. 重启 chatchat 服务
 
 这一步需要到 `docker-compose.yaml` 文件所在路径下执行, 即:

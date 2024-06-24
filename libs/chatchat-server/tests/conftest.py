@@ -4,7 +4,7 @@ from importlib import util
 from typing import Dict, List, Sequence
 
 import pytest
-from model_providers.core.utils.utils import (
+from chatchat.utils import (
     get_config_dict,
     get_log_file,
     get_timestamp_ms,
@@ -102,14 +102,3 @@ def logging_conf() -> dict:
         1024 * 1024 * 1024 * 3,
     )
 
-
-@pytest.fixture
-def providers_file(request) -> str:
-    import os
-    from pathlib import Path
-
-    # 当前执行目录
-    # 获取当前测试文件的路径
-    test_file_path = Path(str(request.fspath)).parent
-    print("test_file_path:", test_file_path)
-    return os.path.join(test_file_path, "model_providers.yaml")

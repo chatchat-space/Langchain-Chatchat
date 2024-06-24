@@ -535,37 +535,6 @@ def _import_model_platforms() -> Any:
 
     return config_model_workspace.get_config().MODEL_PLATFORMS
 
-
-def _import_model_providers_cfg_path() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
-    load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(
-        model_config_load.get("module"), "config_model_workspace"
-    )
-
-    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PATH_CONFIG
-
-
-def _import_model_providers_cfg_host() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
-    load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(
-        model_config_load.get("module"), "config_model_workspace"
-    )
-
-    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_HOST
-
-
-def _import_model_providers_cfg_port() -> Any:
-    model_config_load = CONFIG_IMPORTS.get("_model_config.py")
-    load_mod = model_config_load.get("load_mod")
-    config_model_workspace = load_mod(
-        model_config_load.get("module"), "config_model_workspace"
-    )
-
-    return config_model_workspace.get_config().MODEL_PROVIDERS_CFG_PORT
-
-
 def _import_tool_config() -> Any:
     model_config_load = CONFIG_IMPORTS.get("_model_config.py")
     load_mod = model_config_load.get("load_mod")
@@ -792,12 +761,6 @@ def __getattr__(name: str) -> Any:
         return _import_llm_model_config()
     elif name == "MODEL_PLATFORMS":
         return _import_model_platforms()
-    elif name == "MODEL_PROVIDERS_CFG_PATH_CONFIG":
-        return _import_model_providers_cfg_path()
-    elif name == "MODEL_PROVIDERS_CFG_HOST":
-        return _import_model_providers_cfg_host()
-    elif name == "MODEL_PROVIDERS_CFG_PORT":
-        return _import_model_providers_cfg_port()
     elif name == "TOOL_CONFIG":
         return _import_tool_config()
     elif name == "PROMPT_TEMPLATES":
@@ -856,9 +819,6 @@ __all__ = [
     "SUPPORT_AGENT_MODELS",
     "LLM_MODEL_CONFIG",
     "MODEL_PLATFORMS",
-    "MODEL_PROVIDERS_CFG_PATH_CONFIG",
-    "MODEL_PROVIDERS_CFG_HOST",
-    "MODEL_PROVIDERS_CFG_PORT",
     "TOOL_CONFIG",
     "PROMPT_TEMPLATES",
     "HTTPX_DEFAULT_TIMEOUT",

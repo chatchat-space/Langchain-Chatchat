@@ -14,36 +14,6 @@ from chatchat.server.knowledge_base.migrate import (
 )
 
 
-def run_init_model_provider(
-    model_platforms_shard: Dict,
-    started_event: mp.Event = None,
-    model_providers_cfg_path: str = None,
-    provider_host: str = None,
-    provider_port: int = None,
-):
-    from chatchat.configs import (
-        MODEL_PROVIDERS_CFG_HOST,
-        MODEL_PROVIDERS_CFG_PATH_CONFIG,
-        MODEL_PROVIDERS_CFG_PORT,
-    )
-    from chatchat.init_server import init_server
-
-    if model_providers_cfg_path is None:
-        model_providers_cfg_path = MODEL_PROVIDERS_CFG_PATH_CONFIG
-    if provider_host is None:
-        provider_host = MODEL_PROVIDERS_CFG_HOST
-    if provider_port is None:
-        provider_port = MODEL_PROVIDERS_CFG_PORT
-
-    init_server(
-        model_platforms_shard=model_platforms_shard,
-        started_event=started_event,
-        model_providers_cfg_path=model_providers_cfg_path,
-        provider_host=provider_host,
-        provider_port=provider_port,
-    )
-
-
 def main():
     import argparse
 
@@ -143,29 +113,9 @@ def main():
     mp.set_start_method("spawn")
     manager = mp.Manager()
 
-    # 定义全局配置变量,使用 Manager 创建共享字典
-    model_platforms_shard = manager.dict()
-    model_providers_started = manager.Event()
     processes = {}
-    process = mp.Process(
-        target=run_init_model_provider,
-        name=f"Model providers Server",
-        kwargs=dict(
-            model_platforms_shard=model_platforms_shard,
-            started_event=model_providers_started,
-        ),
-        daemon=True,
-    )
-    processes["model_providers"] = process
-    try:
-        # 保证任务收到SIGINT后，能够正常退出
-        if p := processes.get("model_providers"):
-            p.start()
-            p.name = f"{p.name} ({p.pid})"
-            model_providers_started.wait()  # 等待model_providers启动完成
-            MODEL_PLATFORMS.extend(model_platforms_shard["provider_platforms"])
-            logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
 
+    try:
         if args.create_tables:
             create_tables()  # confirm tables exist
 

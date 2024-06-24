@@ -23,8 +23,6 @@ from chatchat.server.knowledge_base.kb_service.base import (
 from chatchat.server.knowledge_base.utils import LOADER_DICT, get_file_path
 from chatchat.server.utils import get_config_models
 
-# from chatchat.webui_pages.loom_view_client import build_providers_embedding_plugins_name, find_menu_items_by_index, \
-#     set_llm_select, set_embed_select, get_select_embed_endpoint
 from chatchat.webui_pages.utils import *
 
 # SENTENCE_SIZE = 100

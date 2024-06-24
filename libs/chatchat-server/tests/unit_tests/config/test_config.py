@@ -75,15 +75,6 @@ class TestWorkSpace:
         config_model_workspace.set_support_agent_models(
             support_agent_models=["glm4-chat"]
         )
-        config_model_workspace.set_model_providers_cfg_path_config(
-            model_providers_cfg_path_config="model_providers.yaml"
-        )
-        config_model_workspace.set_model_providers_cfg_host(
-            model_providers_cfg_host="127.0.0.1"
-        )
-        config_model_workspace.set_model_providers_cfg_port(
-            model_providers_cfg_port=8000
-        )
 
         config: ConfigModel = config_model_workspace.get_config()
 
@@ -94,9 +85,6 @@ class TestWorkSpace:
         assert config.MAX_TOKENS == 1000
         assert config.TEMPERATURE == 0.1
         assert config.SUPPORT_AGENT_MODELS == ["glm4-chat"]
-        assert config.MODEL_PROVIDERS_CFG_PATH_CONFIG == "model_providers.yaml"
-        assert config.MODEL_PROVIDERS_CFG_HOST == "127.0.0.1"
-        assert config.MODEL_PROVIDERS_CFG_PORT == 8000
         config_model_workspace.clear()
 
     def test_model_config(self):
@@ -107,9 +95,6 @@ class TestWorkSpace:
             LLM_MODEL_CONFIG,
             MAX_TOKENS,
             MODEL_PLATFORMS,
-            MODEL_PROVIDERS_CFG_HOST,
-            MODEL_PROVIDERS_CFG_PATH_CONFIG,
-            MODEL_PROVIDERS_CFG_PORT,
             SUPPORT_AGENT_MODELS,
             TEMPERATURE,
             TOOL_CONFIG,
@@ -123,9 +108,6 @@ class TestWorkSpace:
         assert MAX_TOKENS is None
         assert TEMPERATURE is not None
         assert SUPPORT_AGENT_MODELS is not None
-        assert MODEL_PROVIDERS_CFG_PATH_CONFIG is not None
-        assert MODEL_PROVIDERS_CFG_HOST is not None
-        assert MODEL_PROVIDERS_CFG_PORT is not None
         assert TOOL_CONFIG is not None
         assert MODEL_PLATFORMS is not None
         assert LLM_MODEL_CONFIG is not None
