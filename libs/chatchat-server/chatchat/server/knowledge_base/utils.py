@@ -242,10 +242,10 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                 headers_to_split_on=headers_to_split_on, strip_headers=False
             )
         else:
-            try:  ## 优先使用用户自定义的text_splitter
-                text_splitter_module = importlib.import_module("server.text_splitter")
+            try:  # 优先使用用户自定义的text_splitter
+                text_splitter_module = importlib.import_module("chatchat.server.file_rag.text_splitter")
                 TextSplitter = getattr(text_splitter_module, splitter_name)
-            except:  ## 否则使用langchain的text_splitter
+            except:  # 否则使用langchain的text_splitter
                 text_splitter_module = importlib.import_module(
                     "langchain.text_splitter"
                 )
@@ -253,7 +253,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
 
             if (
                 text_splitter_dict[splitter_name]["source"] == "tiktoken"
-            ):  ## 从tiktoken加载
+            ):  # 从tiktoken加载
                 try:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
                         encoding_name=text_splitter_dict[splitter_name][
@@ -273,7 +273,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                     )
             elif (
                 text_splitter_dict[splitter_name]["source"] == "huggingface"
-            ):  ## 从huggingface加载
+            ):  # 从huggingface加载
                 if (
                     text_splitter_dict[splitter_name]["tokenizer_name_or_path"]
                     == "gpt2"
@@ -282,7 +282,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                     from transformers import GPT2TokenizerFast
 
                     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-                else:  ## 字符长度加载
+                else:  # 字符长度加载
                     from transformers import AutoTokenizer
 
                     tokenizer = AutoTokenizer.from_pretrained(

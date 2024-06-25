@@ -483,7 +483,7 @@ The following guide does not guarantee 100% compatibility and success. Remember 
 
 ## License
 
-The code of this project that does not involve *Additional License*  follows the [Apache-2.0](LICENSE) agreement.
+The code of this project follows the [Apache-2.0](LICENSE) agreement.
 
 ## Project Milestones
 
