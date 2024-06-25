@@ -137,7 +137,7 @@ pip install langchain-chatchat -U
 > 因模型部署框架 Xinference 接入 Langchain-Chatchat 时需要额外安装对应的 Python 依赖库，因此如需搭配 Xinference
 > 框架使用时，建议使用如下安装方式：
 > ```shell
-> pip install langchain-chatchat[xinference] -U
+> pip install "langchain-chatchat[xinference]" -U
 > ```
 
 #### 2. 模型推理框架并加载模型
@@ -333,7 +333,6 @@ $ chatchat-config model --set_model_platforms "[{
 > 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**与**步骤4**完成模型接入配置。
 
 ```shell
-cd # 回到原始目录
 chatchat-kb -r
 ```
 
