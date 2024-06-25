@@ -1,5 +1,8 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
 
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11+-blue.svg)](https://pypi.org/project/pypiserver/)
+
 🌍 [READ THIS IN ENGLISH](README_en.md)
 
 📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
