@@ -55,6 +55,7 @@ httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
 # webui
 streamlit = "1.34.0"
+watchdog = "4.0.1"
 streamlit-option-menu = "0.3.12"
 streamlit-antd-components = "0.3.1"
 streamlit-chatbox = "1.1.12.post4"
