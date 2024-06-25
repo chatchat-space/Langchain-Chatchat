@@ -468,7 +468,7 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 
 ## 协议
 
-本项目非涉及 额外协议 部分的代码遵循 [Apache-2.0](LICENSE) 协议。
+本项目代码遵循 [Apache-2.0](LICENSE) 协议。
 
 ## 联系我们
 
