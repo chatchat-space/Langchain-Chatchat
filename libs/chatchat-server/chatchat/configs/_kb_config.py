@@ -170,7 +170,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
         # TextSplitter配置项，如果你不明白其中的含义，就不要修改。
         self.text_splitter_dict = {
             "ChineseRecursiveTextSplitter": {
-                "source": "huggingface",  # 选择tiktoken则使用openai的方法
+                "source": "",  # 选择tiktoken则使用openai的方法 "huggingface"
                 "tokenizer_name_or_path": "",
             },
             "SpacyTextSplitter": {
