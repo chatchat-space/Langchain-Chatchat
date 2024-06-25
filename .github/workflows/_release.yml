@@ -211,47 +211,47 @@ jobs:
           # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
 #          skip-existing: true
 
-  mark-release:
-    needs:
-      - build
-      - test-pypi-publish
-      - pre-release-checks
-      - publish
-    environment: Scheduled testing
-    runs-on: ubuntu-latest
-    permissions:
-      # This permission is needed by `ncipollo/release-action` to
-      # create the GitHub release.
-      contents: write
-      id-token: none
+  # mark-release:
+  #   needs:
+  #     - build
+  #     - test-pypi-publish
+  #     - pre-release-checks
+  #     - publish
+  #   environment: Scheduled testing
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     # This permission is needed by `ncipollo/release-action` to
+  #     # create the GitHub release.
+  #     contents: write
+  #     id-token: none
 
-    defaults:
-      run:
-        working-directory: ${{ inputs.working-directory }}
+  #   defaults:
+  #     run:
+  #       working-directory: ${{ inputs.working-directory }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Set up Python + Poetry ${{ env.POETRY_VERSION }}
-        uses: "./.github/actions/poetry_setup"
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          poetry-version: ${{ env.POETRY_VERSION }}
-          working-directory: ${{ inputs.working-directory }}
-          cache-key: release
+  #     - name: Set up Python + Poetry ${{ env.POETRY_VERSION }}
+  #       uses: "./.github/actions/poetry_setup"
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #         poetry-version: ${{ env.POETRY_VERSION }}
+  #         working-directory: ${{ inputs.working-directory }}
+  #         cache-key: release
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: ${{ inputs.working-directory }}/dist/
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: ${{ inputs.working-directory }}/dist/
 
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        if: ${{ inputs.working-directory == './chatchat-server' }}
-        with:
-          artifacts: "dist/*"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: false
-          generateReleaseNotes: true
-          tag: v${{ needs.build.outputs.version }}
-          commit: main
+  #     - name: Create Release
+  #       uses: ncipollo/release-action@v1
+  #       if: ${{ inputs.working-directory == './chatchat-server' }}
+  #       with:
+  #         artifacts: "dist/*"
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         draft: false
+  #         generateReleaseNotes: true
+  #         tag: v${{ needs.build.outputs.version }}
+  #         commit: main
