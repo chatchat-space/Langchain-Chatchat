@@ -25,7 +25,7 @@ services:
     # environment:
     #   - XINFERENCE_MODEL_SRC=modelscope
   chatchat:
-    image: chatimage/chatchat:0.3.0-0623-3
+    image: chatimage/chatchat:0.3.0-2024-0624
     restart: always
     # ports: # 不使用 host network 时可打开.
     #   - "7861:7861"
