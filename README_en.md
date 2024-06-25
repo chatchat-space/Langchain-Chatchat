@@ -155,7 +155,7 @@ pip install langchain-chatchat -U
 > Xinference
 > framework:
 > ```shell
-> pip install langchain-chatchat[xinference] -U
+> pip install "langchain-chatchat[xinference]" -U
 > ```
 
 2. Model Inference Framework and Load Models
