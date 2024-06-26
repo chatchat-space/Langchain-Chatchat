@@ -372,6 +372,22 @@ chatchat-kb -r --embed-model=text-embedding-3-small
 bge-large-zh-v1.5  text-embedding-3-small
 ```
 
+##### 常见问题
+
+##### 1. Windows 下重建知识库或添加知识文件时卡住不动
+此问题常出现于新建虚拟环境中，可以通过以下方式确认：
+
+`from unstructured.partition.auto import partition`
+
+如果该语句卡住无法执行，可以执行以下命令：
+```shell
+pip uninstall python-magic-bin
+# check the version of the uninstalled package
+pip install 'python-magic-bin=={version}'
+```
+然后按照本节指引重新创建知识库即可。
+
+
 #### 6. 启动项目
 
 ```shell

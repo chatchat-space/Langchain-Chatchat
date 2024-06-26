@@ -404,6 +404,23 @@ step `3.2`:
 bge-large-zh-v1.5  text-embedding-3-small
 ```
 
+##### Frequently asked questions
+##### 1.  Stuck when rebuilding the knowledge base or adding knowledge files under Windows
+
+This issue often occurs in newly created virtual environments and can be confirmed through the following methods:
+
+`from unstructured.partition.auto import partition`
+
+If the statement gets stuck and cannot be executed, the following command can be executed:
+
+```shell
+pip uninstall python-magic-bin
+# check the version of the uninstalled package
+pip install 'python-magic-bin=={version}'
+```
+
+Then follow the instructions in this section to recreate the knowledge base.
+
 #### 6. Start the Project
 
 ```shell
