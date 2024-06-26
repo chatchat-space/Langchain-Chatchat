@@ -417,7 +417,8 @@ def dialogue_page(
                 text = d.choices[0].delta.content or ""
                 chat_box.update_msg(text.replace("\n", "\n\n"))
             elif d.status is None:  # not agent chat
-                if getattr(d, "is_ref", False):
+                # 若只有原来第一个判断 天气预报工具的处理会走到这,加后续判断为只有tool_output包含docs才走进知识库处理
+                if getattr(d, "is_ref", False) and getattr(d, "tool_output", True) and d.tool_output.get("docs") != None:
                     context = ""
                     docs = d.tool_output.get("docs")
                     source_documents = []
@@ -448,10 +449,12 @@ def dialogue_page(
                     )
                     chat_box.insert_msg("")
                 else:
-                    text += d.choices[0].delta.content or ""
-                    chat_box.update_msg(
-                        text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                    )
+                    # 过滤tool_output字段的输出
+                    if getattr(d, "tool_output", False) == False:
+                        text += d.choices[0].delta.content or ""
+                        chat_box.update_msg(
+                            text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                        )
         chat_box.update_msg(text, streaming=False, metadata=metadata)
 
         if os.path.exists("tmp/image.jpg"):
