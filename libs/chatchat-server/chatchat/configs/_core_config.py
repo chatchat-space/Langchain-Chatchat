@@ -57,10 +57,17 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
     _config_factory: Optional[CF] = None
 
     def __init__(self):
+
+        self.workspace_config = None
         self.workspace = os.path.join(os.path.expanduser("~"), ".chatchat", "workspace")
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace, exist_ok=True)
-        self.workspace_config = os.path.join(self.workspace, "workspace_config.json")
+
+        self.init()
+
+    def init(self):
+
+        self.workspace_config = os.path.join(self.workspace, f"workspace_{self.get_type()}config.json")
         # 初始化工作空间配置，转换成json格式，实现Config的实例化
 
         _load_config = self._load_config()
@@ -69,10 +76,8 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
             self.store_config()
 
         else:
-            config_type_json = self.get_config_by_type(self.get_type())
 
-            config_json = config_type_json.get("config")
-            self._config_factory = self._build_config_factory(config_json)
+            self._config_factory = self._build_config_factory(_load_config)
 
     @abstractmethod
     def _build_config_factory(self, config_json: Any) -> CF:
@@ -97,40 +102,10 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
         except FileNotFoundError:
             return None
 
-    @staticmethod
-    def _get_store_cfg_index_by_type(store_cfg, store_cfg_type) -> int:
-        if store_cfg is None:
-            raise RuntimeError("store_cfg is None.")
-        for cfg in store_cfg:
-            if cfg.get("type") == store_cfg_type:
-                return store_cfg.index(cfg)
-
-        return -1
-
-    def get_config_by_type(self, cfg_type) -> Dict[str, Any]:
-        store_cfg = self._load_config()
-        if store_cfg is None:
-            raise RuntimeError("store_cfg is None.")
-
-        get_lambda = lambda store_cfg_type: store_cfg[
-            self._get_store_cfg_index_by_type(store_cfg, store_cfg_type)
-        ]
-        return get_lambda(cfg_type)
-
     def store_config(self):
         logger.info("Store workspace config.")
-        _load_config = self._load_config()
         with open(self.workspace_config, "w") as f:
             config_json = self.get_config().to_dict()
-
-            if _load_config is None:
-                _load_config = []
-            config_json_index = self._get_store_cfg_index_by_type(
-                store_cfg=_load_config, store_cfg_type=self.get_type()
-            )
             config_type_json = {"type": self.get_type(), "config": config_json}
-            if config_json_index == -1:
-                _load_config.append(config_type_json)
-            else:
-                _load_config[config_json_index] = config_type_json
-            f.write(json.dumps(_load_config, indent=4, ensure_ascii=False))
+
+            f.write(json.dumps(config_type_json, indent=4, ensure_ascii=False))
