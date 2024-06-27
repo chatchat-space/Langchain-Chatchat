@@ -130,7 +130,7 @@ def clear_conv(name: str = None):
 
 # @st.cache_data
 def list_tools(_api: ApiRequest):
-    return _api.list_tools()
+    return _api.list_tools() or []
 
 
 def dialogue_page(
@@ -419,26 +419,28 @@ def dialogue_page(
                 chat_box.update_msg(text.replace("\n", "\n\n"))
             elif d.status is None:  # not agent chat
                 if getattr(d, "is_ref", False):
-                    context = ""
-                    docs = d.tool_output.get("docs")
-                    source_documents = []
-                    for inum, doc in enumerate(docs):
-                        doc = DocumentWithVSId.parse_obj(doc)
-                        filename = doc.metadata.get("source")
-                        parameters = urlencode(
-                            {
-                                "knowledge_base_name": d.tool_output.get(
-                                    "knowledge_base"
-                                ),
-                                "file_name": filename,
-                            }
-                        )
-                        url = (
-                            f"{api.base_url}/knowledge_base/download_doc?" + parameters
-                        )
-                        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-                        source_documents.append(ref)
-                    context = "\n".join(source_documents)
+                    context = str(d.tool_output)
+                    if isinstance(d.tool_output, dict):
+                        docs = d.tool_output.get("docs")
+                        source_documents = []
+                        for inum, doc in enumerate(docs):
+                            doc = DocumentWithVSId.parse_obj(doc)
+                            filename = doc.metadata.get("source")
+                            parameters = urlencode(
+                                {
+                                    "knowledge_base_name": d.tool_output.get(
+                                        "knowledge_base"
+                                    ),
+                                    "file_name": filename,
+                                }
+                            )
+                            url = (
+                                f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                            )
+                            ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+                            source_documents.append(ref)
+                        context = "\n".join(source_documents)
+
                     chat_box.insert_msg(
                         Markdown(
                             context,
