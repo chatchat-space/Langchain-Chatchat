@@ -162,6 +162,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
                 "index_params": {
                     "metric_type": "L2",
                     "index_type": "HNSW",
+                    "params": {"M": 8, "efConstruction": 64},
                 },  # 在此处增加index_params
             },
             "chromadb": {},
