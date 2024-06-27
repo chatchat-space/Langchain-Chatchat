@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from fastapi import APIRouter, Request
 from langchain.prompts.prompt import PromptTemplate
+from sse_starlette import EventSourceResponse
 
 from chatchat.server.api_server.api_schemas import AgentStatus, MsgType, OpenAIChatInput
 from chatchat.server.chat.chat import chat
@@ -17,7 +18,8 @@ from chatchat.server.utils import (
     get_tool_config,
 )
 
-from .openai_routes import openai_request
+from .openai_routes import openai_request, OpenAIChatOutput
+
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
@@ -124,16 +126,22 @@ async def chat_completions(
                 {
                     **extra_json,
                     "content": f"{tool_result}",
+                    "tool_call": tool.get_name(),
                     "tool_output": tool_result.data,
-                    "is_ref": True,
+                    "is_ref": False if tool.return_direct else True,
                 }
             ]
-            return await openai_request(
-                client.chat.completions.create,
-                body,
-                extra_json=extra_json,
-                header=header,
-            )
+            if tool.return_direct:
+                def temp_gen():
+                    yield OpenAIChatOutput(**header[0]).model_dump_json()
+                return EventSourceResponse(temp_gen())
+            else:
+                return await openai_request(
+                    client.chat.completions.create,
+                    body,
+                    extra_json=extra_json,
+                    header=header,
+                )
 
     # agent chat with tool calls
     if body.tools:

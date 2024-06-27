@@ -212,6 +212,8 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             },
             "text2images": {
                 "use": False,
+                "model": "sd-turbo",
+                "size": "256*256",
             },
             # text2sql使用建议
             # 1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
