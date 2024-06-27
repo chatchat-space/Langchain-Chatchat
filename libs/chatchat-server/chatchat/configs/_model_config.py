@@ -80,7 +80,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
         # 创建一个全局的共享字典
         self.MODEL_PLATFORMS = [
-
             {
                 "platform_name": "xinference",
                 "platform_type": "xinference",
