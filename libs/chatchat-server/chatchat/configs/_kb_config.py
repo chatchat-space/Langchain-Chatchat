@@ -91,7 +91,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
         self.VECTOR_SEARCH_TOP_K = 3
 
         # 知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右
-        self.SCORE_THRESHOLD = 1
+        self.SCORE_THRESHOLD = 2.0
 
         # 默认搜索引擎。可选：bing, duckduckgo, metaphor
         self.DEFAULT_SEARCH_ENGINE = "duckduckgo"

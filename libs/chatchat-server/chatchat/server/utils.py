@@ -159,6 +159,11 @@ def get_ChatOpenAI(
         max_tokens=max_tokens,
         **kwargs,
     )
+    # remove paramters with None value to avoid openai validation error
+    for k in list(params):
+        if params[k] is None:
+            params.pop(k)
+
     try:
         if local_wrap:
             params.update(
