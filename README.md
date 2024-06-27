@@ -1,4 +1,5 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
+<a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 
