@@ -21,10 +21,10 @@ from .openai_routes import openai_request
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
-chat_router.post(
-    "/chat",
-    summary="与llm模型对话(通过LLMChain)",
-)(chat)
+# chat_router.post(
+#     "/chat",
+#     summary="与llm模型对话(通过LLMChain)",
+# )(chat)
 
 chat_router.post(
     "/feedback",
@@ -54,6 +54,8 @@ async def chat_completions(
     以后还要考虑其它的组合（如文件对话）
     返回与 openai 兼容的 Dict
     """
+    # import rich
+    # rich.print(body)
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}
     for key in list(extra):

@@ -43,6 +43,8 @@ def search_knowledgebase(query: str, database: str, config: dict):
         knowledge_base_name=database,
         top_k=config["top_k"],
         score_threshold=config["score_threshold"],
+        file_name="",
+        metadata={},
     )
     return {"knowledge_base": database, "docs": docs}
 

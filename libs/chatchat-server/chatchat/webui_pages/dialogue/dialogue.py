@@ -290,6 +290,7 @@ def dialogue_page(
     #     "optional_text_label": "欢迎反馈您打分的理由",
     # }
 
+    # TODO: 这里的内容有点奇怪，从后端导入LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
     #  传入后端的内容
     chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
     for key in LLM_MODEL_CONFIG:
