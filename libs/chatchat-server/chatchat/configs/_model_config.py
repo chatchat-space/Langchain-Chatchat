@@ -86,6 +86,15 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "api_base_url": "http://127.0.0.1:9997/v1",
                 "api_key": "EMPTY",
                 "api_concurrencies": 5,
+                "auto_detect_model": True,
+            },
+            {
+                "platform_name": "xinference1",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "auto_detect_model": False,
                 "llm_models": [
                     "glm4-chat",
                     "qwen1.5-chat",

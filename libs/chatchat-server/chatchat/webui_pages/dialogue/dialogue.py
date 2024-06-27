@@ -450,7 +450,7 @@ def dialogue_page(
                         )
                     )
                     chat_box.insert_msg("")
-                elif getattr(d, "tool_call") == "text2images": # TODO：特定工具特别处理，需要更通用的处理方式
+                elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
                     for img in d.tool_output.get("images", []):
                         chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
                 else:

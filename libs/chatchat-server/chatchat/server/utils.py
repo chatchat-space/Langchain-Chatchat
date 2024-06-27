@@ -6,6 +6,7 @@ import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import (
     Any,
     Awaitable,
@@ -55,6 +56,11 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
         event.set()
 
 
+def get_base_url(url):
+    parsed_url = urlparse(url)  # 解析url
+    base_url = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_url)  # 格式化基础url
+    return base_url.rstrip('/')
+
 def get_config_platforms() -> Dict[str, Dict]:
     # import importlib
     # 不能支持重载
@@ -93,7 +99,24 @@ def get_config_models(
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
         if model_type is not None and f"{model_type}_models" not in m:
-            continue
+            if "auto_detect_model" in m and m.get("auto_detect_model"):
+                if m.get("platform_type") == "xinference":
+                    try:
+                        from xinference_client import RESTfulClient as Client
+                        xf_url = get_base_url(m.get("api_base_url"))
+                        xf_client = Client(xf_url)
+                        xf_models = xf_client.list_models()
+                        m["llm_models"] = [k for k,v in xf_models.items() if "LLM" in v["model_type"]]
+                        m["embed_models"] = [k for k, v in xf_models.items() if "embedding" in v["model_type"]]
+                        m["image_models"] = [k for k, v in xf_models.items() if "image" in v["model_type"]]
+                        m["reranking_models"] = [k for k, v in xf_models.items() if "rerank" in v["model_type"]]
+                    except ImportError:
+                        logger.warning('auto_detect_model needs xinference-client installed. '
+                                       'Please try "pip install xinference-client". ')
+
+            else:
+                logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
+                continue
 
         if model_type is None:
             model_types = [
