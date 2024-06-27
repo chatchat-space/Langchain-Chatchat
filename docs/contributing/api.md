@@ -52,13 +52,13 @@
 ### /chat/chat/completions
 
 最主要的对话接口，兼容 openai sdk 格式。它支持以下3种对话模式：  
-- 纯 LLM 对话。传入 `model`, `messages` 参数即可，可选参数： `temperature`, `max_tokens`, `temperature` 等。
+- 纯 LLM 对话。传入 `model`, `messages` 参数即可，可选参数： `temperature`, `max_tokens`, `stream` 等。
 - Agent 对话。在 LLM 对话的基础上，传入 `tools` 参数，可以让 LLM 选择合适的工具和参数，作为对话的参考。
 - 半 Agent 对话。在 LLM 对话的基础上，传入 `tool_choice` 参数，可以让 LLM 解析参数，直接调用指定的工具，作为对话的参考。如果使用的 LLM 解析参数的效果不理想，也可以手动指定工具参数。
 
 输入参数：与 openai sdk 参数一致。针对 chatchat 做了以下优化：  
-- `tools` 参数可以使用 chatchat 中编写的工具名称，所有支持的名称可以通过 `/tools` 接口获取。
-- 在指定 `tool_choice` 的情况下，可以在 `extra_body` 中传入 `tool_input={...}` 来指定工具参数。
+- `tools` 参数可以使用 chatchat 中编写的工具名称，所有支持的工具可以通过 `/tools` 接口获取。
+- 在指定 `tool_choice` 的情况下，可以在 `extra_body` 中传入 `tool_input={...}` 来手动指定工具参数。
 - 使用 Agent 功能时，`stream` 参数必须指定为 `True`。因为 Agent 是分步执行的，必须通过 SSE 把每个步骤逐一输出。注意：此时 SSE 的单元是执行步骤，LLM 的输出是非流式的。
 
 调用示例：
@@ -93,13 +93,9 @@
     ```shell
     # 方式一输出，SSE 格式
     data: {"id":"chat6aa251c3-3425-11ef-be81-603a7c6af450","choices":[{"delta":{"content":"","function_call":null,"role":"assistant","tool_calls":null},"finish_reason":null,"index":0,"logprobs":null}],"created":1719452077,"model":"qwen1.5-chat","object":"chat.completion.chunk","system_fingerprint":null,"usage":null,"message_id":null,"status":null}
-
     data: {"id":"chat6aa251c3-3425-11ef-be81-603a7c6af450","choices":[{"delta":{"content":"我是","function_call":null,"role":null,"tool_calls":null},"finish_reason":null,"index":0,"logprobs":null}],"created":1719452077,"model":"qwen1.5-chat","object":"chat.completion.chunk","system_fingerprint":null,"usage":null,"message_id":null,"status":null}
-
     data: {"id":"chat6abf605c-3425-11ef-9f15-603a7c6af450","choices":[{"delta":{"content":"阿里云","function_call":null,"role":null,"tool_calls":null},"finish_reason":null,"index":0,"logprobs":null}],"created":1719452078,"model":"qwen1.5-chat","object":"chat.completion.chunk","system_fingerprint":null,"usage":null,"message_id":null,"status":null}
-
     data: {"id":"chat6ad00242-3425-11ef-af45-603a7c6af450","choices":[{"delta":{"content":"自主研发的","function_call":null,"role":null,"tool_calls":null},"finish_reason":null,"index":0,"logprobs":null}],"created":1719452078,"model":"qwen1.5-chat","object":"chat.completion.chunk","system_fingerprint":null,"usage":null,"message_id":null,"status":null}
-
     ...
     ```
     ```shell
@@ -108,7 +104,6 @@
     ChatCompletionChunk(id='chat682070c8-3426-11ef-947d-603a7c6af450', choices=[Choice(delta=ChoiceDelta(content='我是', function_call=None, role=None, tool_calls=None), finish_reason=None, index=0, logprobs=None)], created=1719452503, model='qwen1.5-chat', object='chat.completion.chunk', system_fingerprint=None, usage=None, message_id=None, status=None)
     ChatCompletionChunk(id='chat683fdd72-3426-11ef-be33-603a7c6af450', choices=[Choice(delta=ChoiceDelta(content='由阿里', function_call=None, role=None, tool_calls=None), finish_reason=None, index=0, logprobs=None)], created=1719452503, model='qwen1.5-chat', object='chat.completion.chunk', system_fingerprint=None, usage=None, message_id=None, status=None)
     ChatCompletionChunk(id='chat68511ba1-3426-11ef-b2be-603a7c6af450', choices=[Choice(delta=ChoiceDelta(content='云开发', function_call=None, role=None, tool_calls=None), finish_reason=None, index=0, logprobs=None)], created=1719452503, model='qwen1.5-chat', object='chat.completion.chunk', system_fingerprint=None, usage=None, message_id=None, status=None)
-
     ...
     ```
 - Agent 对话  
@@ -134,19 +129,12 @@
     ```shell
     # 输出：
     data: {"id": "chat39830df6-d016-4b91-b502-e113bb71542c", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453364, "status": 1, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "", "tool_calls": []}, "role": "assistant"}]}
-
     data: {"id": "chatb05f9cb2-1e93-4657-806b-29ec135483b9", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453367, "status": 3, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "Thought: The problem involves adding two numbers: 37 and 48. To perform this calculation, I will use the calculator API.\nAction: calculate\nAction Input: {\"text\": \"37 + 48\"}", "tool_calls": []}, "role": "assistant"}]}
-
     data: {"id": "chat73adade0-b62f-412a-a448-9002a59cbc30", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453367, "status": 4, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "Thought: The problem involves adding two numbers: 37 and 48. To perform this calculation, I will use the calculator API.\nAction: calculate\nAction Input: {\"text\": \"37 + 48\"}", "tool_calls": []}, "role": "assistant"}]}
-
     data: {"id": "chat7752232b-7360-4010-bc55-e50fa8ac9f44", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453367, "status": 6, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "", "tool_calls": [{"index": 0, "id": "f2b20744-3958-4e3b-9e51-c5738d87a020", "type": "function", "function": {"name": "calculate", "arguments": "{'text': '37 + 48'}"}, "tool_output": null, "is_error": false}]}, "role": "assistant"}]}
-
     data: {"id": "chatef5f948e-4772-477d-823d-ce74b38ba586", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453367, "status": 7, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "", "tool_calls": [{"index": 0, "id": "f2b20744-3958-4e3b-9e51-c5738d87a020", "type": "function", "function": {"name": "calculate", "arguments": "{'text': '37 + 48'}"}, "tool_output": "85", "is_error": false}]}, "role": "assistant"}]}
-
     data: {"id": "chatdee106c6-42e6-41cf-b2df-692431829e4d", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453367, "status": 1, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": "", "tool_calls": []}, "role": "assistant"}]}
-
     data: {"id": "chat819ef11b-576f-4489-b6bb-47565eb69ee8", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453370, "status": 3, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": " The calculation 37 + 48 has been successfully performed using the calculate API, resulting in the result of 85. Therefore, the final answer to the given question is 85. \n\nJSON Object:\n{\n  \"answer\": 85\n}", "tool_calls": []}, "role": "assistant"}]}
-
     data: {"id": "chatb6b1071b-5346-4713-922c-b2887728491f", "object": "chat.completion.chunk", "model": "qwen1.5-chat", "created": 1719453370, "status": 5, "message_type": 1, "message_id": null, "is_ref": false, "choices": [{"delta": {"content": " The calculation 37 + 48 has been successfully performed using the calculate API, resulting in the result of 85. Therefore, the final answer to the given question is 85. \n\nJSON Object:\n{\n  \"answer\": 85\n}", "tool_calls": []}, "role": "assistant"}]}
     ```
     输出中包含一个 `status` 字段，代表 Agent 当前执行阶段。在 `status` 为 6 和 7 的输出中，可以看到 tool_call 的相关信息。具体值为：
@@ -162,7 +150,7 @@
         error: int = 8
     ```
 
-    输出中包含一个 `message_type` 字段，代表输出内容的类型，主要用于前端渲染不同的消息。具体值为：
+    输出中包含一个 `message_type` 字段，代表输出内容的类型，主要用于前端渲染不同的消息，当前除了`text2image` 工具是 `IMAGE`，其它都是 `TEXT`。具体值为：
     ```python3
     class MsgType:
         TEXT = 1
@@ -191,7 +179,7 @@
     在 `status` 为 6 和 7 的返回值中，可以获取工具的调用和输出信息。  
     由于输出信息太多，这里不做展示，请自行测试。
 - 知识库对话（手动传入参数）
-    直接指定 `tool_choice` 为 `"search_local_knowledgebase"，在 `extra_body` 中通过 `tool_input` 设定工具参数，即可手动调用工具，实现指定知识库对话。
+    直接指定 `tool_choice` 为 `"search_local_knowledgebase"`，在 `extra_body` 中通过 `tool_input` 设定工具参数，即可手动调用工具，实现指定知识库对话。
     ```python3
     base_url = "http://127.0.0.1:7861/chat"
     data = {
