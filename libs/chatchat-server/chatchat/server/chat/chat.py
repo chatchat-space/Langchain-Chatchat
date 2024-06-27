@@ -82,17 +82,17 @@ def create_models_chains(
         )
         chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
-    llm = models["llm_model"]
-    llm.callbacks = callbacks
-    chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
-
-    if "action_model" in models and tools is not None:
+    if "action_model" in models and tools:
+        llm = models["action_model"]
+        llm.callbacks = callbacks
         agent_executor = agents_registry(
             llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
         )
         full_chain = {"input": lambda x: x["input"]} | agent_executor
     else:
-        chain.llm.callbacks = callbacks
+        llm = models["llm_model"]
+        llm.callbacks = callbacks
+        chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
         full_chain = {"input": lambda x: x["input"]} | chain
     return full_chain
 
