@@ -348,6 +348,8 @@ class ConfigModelWorkSpace(
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigModelFactory:
+        if "config" in config_json:
+            config_json = config_json["config"]        
         _config_factory = self.config_factory_cls()
         if config_json.get("DEFAULT_LLM_MODEL"):
             _config_factory.default_llm_model(config_json.get("DEFAULT_LLM_MODEL"))

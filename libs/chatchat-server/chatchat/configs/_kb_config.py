@@ -216,6 +216,8 @@ class ConfigKbWorkSpace(core_config.ConfigWorkSpace[ConfigKbFactory, ConfigKb]):
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigKbFactory:
+        if "config" in config_json:
+            config_json = config_json["config"]
         _config_factory = self.config_factory_cls()
         if config_json.get("DEFAULT_KNOWLEDGE_BASE"):
             _config_factory.DEFAULT_KNOWLEDGE_BASE = config_json.get(
