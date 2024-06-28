@@ -46,4 +46,4 @@ xinference:
 #      model_type: 'llm'
 #      model_credentials:
 #        base_url: 'http://172.21.192.1:11434'
-#        mode: 'completion'
+#        mode: 'chat'
