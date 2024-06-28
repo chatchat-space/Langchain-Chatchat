@@ -33,6 +33,7 @@ from chatchat.configs import (
     HTTPX_DEFAULT_TIMEOUT,
     MODEL_PLATFORMS,
     TEMPERATURE,
+    MAX_TOKENS,
     log_verbose,
 )
 from chatchat.server.pydantic_v2 import BaseModel, Field
@@ -142,7 +143,7 @@ def get_model_info(
 def get_ChatOpenAI(
     model_name: str = DEFAULT_LLM_MODEL,
     temperature: float = TEMPERATURE,
-    max_tokens: int = None,
+    max_tokens: int = MAX_TOKENS,
     streaming: bool = True,
     callbacks: List[Callable] = [],
     verbose: bool = True,
@@ -188,7 +189,7 @@ def get_ChatOpenAI(
 def get_OpenAI(
     model_name: str,
     temperature: float,
-    max_tokens: int = None,
+    max_tokens: int = MAX_TOKENS,
     streaming: bool = True,
     echo: bool = True,
     callbacks: List[Callable] = [],
