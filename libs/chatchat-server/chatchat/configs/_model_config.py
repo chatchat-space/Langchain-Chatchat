@@ -71,6 +71,11 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "Qwen-14B-Chat",
             "Qwen-7B-Chat",
             "qwen-turbo",
+            "glm4-chat",
+            "glm4-chat-1m",
+            "qwen2-instruct",
+            "gpt-4o",
+            "gpt-3.5-turbo",
         ]
 
         #   ### 如果您已经有了一个openai endpoint的能力的地址，可以在这里直接配置
@@ -156,7 +161,27 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "reranking_models": [],
                 "speech2text_models": [],
                 "tts_models": [],
-            }
+            },
+            {
+                "platform_name": "openai",
+                "platform_type": "openai",
+                "api_base_url": "https://api.openai.com/v1",
+                "api_key": "sk-",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "gpt-4o",
+                    "gpt-3.5-turbo",
+                ],
+                "embed_models": [
+                    "text-embedding-3-small",
+                    "text-embedding-3-large",
+                    "ada v2",
+                ],
+                "image_models": [],
+                "reranking_models": [],
+                "speech2text_models": [],
+                "tts_models": [],
+            },
         ]
         # 工具配置项
         self.TOOL_CONFIG = {
@@ -278,7 +303,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "preprocess_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.05,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "history_len": 100,
                     "prompt_name": "default",
                     "callbacks": False,
@@ -287,7 +312,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "llm_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.9,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "history_len": 10,
                     "prompt_name": "default",
                     "callbacks": True,
@@ -296,7 +321,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "action_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.01,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "prompt_name": "ChatGLM3",
                     "callbacks": True,
                 },
@@ -304,7 +329,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "postprocess_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.01,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "prompt_name": "default",
                     "callbacks": True,
                 }

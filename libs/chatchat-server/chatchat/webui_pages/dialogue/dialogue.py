@@ -18,6 +18,7 @@ from chatchat.configs import (
     LLM_MODEL_CONFIG,
     MODEL_PLATFORMS,
     TEMPERATURE,
+    MAX_TOKENS,
 )
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -366,6 +367,7 @@ def dialogue_page(
             tools=tools or openai.NOT_GIVEN,
             tool_choice=tool_choice,
             extra_body=extra_body,
+            max_tokens=MAX_TOKENS,
         ):
             # import rich
             # rich.print(d)

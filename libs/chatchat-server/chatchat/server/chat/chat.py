@@ -33,17 +33,19 @@ from chatchat.server.utils import (
 )
 
 
-def create_models_from_config(configs, callbacks, stream):
+def create_models_from_config(configs, callbacks, stream, max_tokens):
     configs = configs or LLM_MODEL_CONFIG
     models = {}
     prompts = {}
     for model_type, model_configs in configs.items():
         for model_name, params in model_configs.items():
             callbacks = callbacks if params.get("callbacks", False) else None
+            # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
+            max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
             model_instance = get_ChatOpenAI(
                 model_name=model_name,
                 temperature=params.get("temperature", 0.5),
-                max_tokens=params.get("max_tokens", 1000),
+                max_tokens=max_tokens_value,
                 callbacks=callbacks,
                 streaming=stream,
                 local_wrap=True,
@@ -116,6 +118,7 @@ async def chat(
     stream: bool = Body(True, description="流式输出"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
+    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
 
@@ -137,7 +140,7 @@ async def chat(
             callbacks.append(langfuse_handler)
 
         models, prompts = create_models_from_config(
-            callbacks=callbacks, configs=chat_model_config, stream=stream
+            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
         )
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]

@@ -17,9 +17,11 @@ from chatchat.server.utils import (
     get_tool,
     get_tool_config,
 )
+from chatchat.configs import (
+    MAX_TOKENS,
+)
 
 from .openai_routes import openai_request, OpenAIChatOutput
-
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
@@ -58,6 +60,11 @@ async def chat_completions(
     """
     # import rich
     # rich.print(body)
+
+    # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
+    if body.max_tokens == None:
+        body.max_tokens = MAX_TOKENS
+
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}
     for key in list(extra):
@@ -168,6 +175,7 @@ async def chat_completions(
             stream=body.stream,
             chat_model_config=extra.get("chat_model_config", chat_model_config),
             tool_config=extra.get("tool_config", tool_config),
+            max_tokens=body.max_tokens,
         )
         return result
     else:  # LLM chat directly
