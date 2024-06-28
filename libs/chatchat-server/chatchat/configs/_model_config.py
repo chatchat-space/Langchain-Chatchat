@@ -86,6 +86,48 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
         # 创建一个全局的共享字典
         self.MODEL_PLATFORMS = [
             {
+                "platform_name": "xinference",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "auto_detect_model": True,
+            },
+            {
+                "platform_name": "xinference1",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "auto_detect_model": False,
+                "llm_models": [
+                    "glm4-chat",
+                    "qwen1.5-chat",
+                    "qwen2-instruct",
+                ],
+                "embed_models": [
+                    "bge-large-zh-v1.5",
+                ],
+                "image_models": [],
+                "reranking_models": [],
+                "speech2text_models": [],
+                "tts_models": [],
+            },
+            {
+                "platform_name": "ollama",
+                "platform_type": "ollama",
+                "api_base_url": "http://127.0.0.1:11434/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "qwen:7b",
+                    "qwen2:7b",
+                ],
+                "embed_models": [
+                    "'quentinz/bge-large-zh-v1.5",
+                ],
+            },
+            {
                 "platform_name": "oneapi",
                 "platform_type": "oneapi",
                 "api_base_url": "http://127.0.0.1:3000/v1",
@@ -114,24 +156,6 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     "text-embedding-v1",
                     # 千帆 API
                     "Embedding-V1",
-                ],
-                "image_models": [],
-                "reranking_models": [],
-                "speech2text_models": [],
-                "tts_models": [],
-            },
-            {
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://129.226.91.63:9997/v1",
-                "api_key": "EMPT",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "glm4-chat",
-                    "qwen2-instruct",
-                ],
-                "embed_models": [
-                    "bge-large-zh-v1.5",
                 ],
                 "image_models": [],
                 "reranking_models": [],
@@ -235,6 +259,8 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             },
             "text2images": {
                 "use": False,
+                "model": "sd-turbo",
+                "size": "256*256",
             },
             # text2sql使用建议
             # 1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；

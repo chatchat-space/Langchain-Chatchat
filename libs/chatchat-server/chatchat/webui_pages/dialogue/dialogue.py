@@ -369,8 +369,8 @@ def dialogue_page(
             extra_body=extra_body,
             max_tokens=MAX_TOKENS,
         ):
-            # from pprint import pprint
-            # pprint(d)
+            # import rich
+            # rich.print(d)
             message_id = d.message_id
             metadata = {
                 "message_id": message_id,
@@ -423,7 +423,7 @@ def dialogue_page(
                 if getattr(d, "is_ref", False):
                     context = str(d.tool_output)
                     if isinstance(d.tool_output, dict):
-                        docs = d.tool_output.get("docs")
+                        docs = d.tool_output.get("docs", [])
                         source_documents = []
                         for inum, doc in enumerate(docs):
                             doc = DocumentWithVSId.parse_obj(doc)
@@ -452,6 +452,9 @@ def dialogue_page(
                         )
                     )
                     chat_box.insert_msg("")
+                elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
+                    for img in d.tool_output.get("images", []):
+                        chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
                 else:
                     text += d.choices[0].delta.content or ""
                     chat_box.update_msg(
@@ -516,4 +519,4 @@ def dialogue_page(
         use_container_width=True,
     )
 
-    # st.write(chat_box.context)
+    # st.write(chat_box.history)

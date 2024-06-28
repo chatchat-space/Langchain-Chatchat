@@ -1,9 +1,11 @@
 # Description: 初始化数据库，包括创建表、导入数据、更新向量空间等操作
-import multiprocessing as mp
 from datetime import datetime
+import multiprocessing as mp
+import sys
+import time
 from typing import Dict
 
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, MODEL_PLATFORMS, logger
+from chatchat.configs import DEFAULT_EMBEDDING_MODEL, logger
 from chatchat.server.knowledge_base.migrate import (
     create_tables,
     folder2db,
@@ -14,7 +16,7 @@ from chatchat.server.knowledge_base.migrate import (
 )
 
 
-def main():
+def worker():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -110,11 +112,6 @@ def main():
     args = parser.parse_args()
     start_time = datetime.now()
 
-    mp.set_start_method("spawn")
-    manager = mp.Manager()
-
-    processes = {}
-
     try:
         if args.create_tables:
             create_tables()  # confirm tables exist
@@ -148,22 +145,20 @@ def main():
         print(f"总计用时\t：{end_time-start_time}\n")
     except Exception as e:
         logger.error(e, exc_info=True)
-        logger.warning("Caught KeyboardInterrupt! Setting stop event...")
-    finally:
-        for p in processes.values():
-            logger.warning("Sending SIGKILL to %s", p)
-            # Queues and other inter-process communication primitives can break when
-            # process is killed, but we don't care here
 
-            if isinstance(p, dict):
-                for process in p.values():
-                    process.kill()
-            else:
-                p.kill()
 
-        for p in processes.values():
-            logger.info("Process status: %s", p)
+def main():
+    p = mp.Process(target=worker, daemon=True)
+    p.start()
+    while True:
+        try:
+            time.sleep(0.1)
+        except KeyboardInterrupt:
+            logger.warning("Caught KeyboardInterrupt! Setting stop event...")
+            p.terminate()
+            sys.exit()
 
 
 if __name__ == "__main__":
+    mp.set_start_method("spawn")
     main()
