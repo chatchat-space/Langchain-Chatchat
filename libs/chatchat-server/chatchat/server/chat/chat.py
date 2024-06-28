@@ -40,7 +40,7 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
     for model_type, model_configs in configs.items():
         for model_name, params in model_configs.items():
             callbacks = callbacks if params.get("callbacks", False) else None
-            # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值( api 调用且赋值), 如果没有传入则按照初始化配置赋值( ui 调用或 api 调用未赋值)
+            # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
             max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
             model_instance = get_ChatOpenAI(
                 model_name=model_name,
@@ -96,7 +96,6 @@ def create_models_chains(
         llm.callbacks = callbacks
         chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
         full_chain = {"input": lambda x: x["input"]} | chain
-
     return full_chain
 
 
@@ -141,7 +140,7 @@ async def chat(
             callbacks.append(langfuse_handler)
 
         models, prompts = create_models_from_config(
-            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens,
+            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
         )
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]
