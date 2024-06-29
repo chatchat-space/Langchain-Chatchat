@@ -71,6 +71,11 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "Qwen-14B-Chat",
             "Qwen-7B-Chat",
             "qwen-turbo",
+            "glm4-chat",
+            "glm4-chat-1m",
+            "qwen2-instruct",
+            "gpt-4o",
+            "gpt-3.5-turbo",
         ]
 
         #   ### 如果您已经有了一个openai endpoint的能力的地址，可以在这里直接配置
@@ -80,6 +85,48 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
 
         # 创建一个全局的共享字典
         self.MODEL_PLATFORMS = [
+            {
+                "platform_name": "xinference",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "auto_detect_model": True,
+            },
+            {
+                "platform_name": "xinference1",
+                "platform_type": "xinference",
+                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "auto_detect_model": False,
+                "llm_models": [
+                    "glm4-chat",
+                    "qwen1.5-chat",
+                    "qwen2-instruct",
+                ],
+                "embed_models": [
+                    "bge-large-zh-v1.5",
+                ],
+                "image_models": [],
+                "reranking_models": [],
+                "speech2text_models": [],
+                "tts_models": [],
+            },
+            {
+                "platform_name": "ollama",
+                "platform_type": "ollama",
+                "api_base_url": "http://127.0.0.1:11434/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "qwen:7b",
+                    "qwen2:7b",
+                ],
+                "embed_models": [
+                    "'quentinz/bge-large-zh-v1.5",
+                ],
+            },
             {
                 "platform_name": "oneapi",
                 "platform_type": "oneapi",
@@ -116,19 +163,19 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 "tts_models": [],
             },
             {
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://127.0.0.1:9997/v1",
-                "api_key": "EMPT",
+                "platform_name": "openai",
+                "platform_type": "openai",
+                "api_base_url": "https://api.openai.com/v1",
+                "api_key": "sk-",
                 "api_concurrencies": 5,
                 "llm_models": [
-                    "chatglm3",
-                    "glm4-chat",
-                    "qwen1.5-chat",
-                    "qwen2-instruct",
+                    "gpt-4o",
+                    "gpt-3.5-turbo",
                 ],
                 "embed_models": [
-                    "bge-large-zh-v1.5",
+                    "text-embedding-3-small",
+                    "text-embedding-3-large",
+                    "ada v2",
                 ],
                 "image_models": [],
                 "reranking_models": [],
@@ -141,7 +188,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "search_local_knowledgebase": {
                 "use": False,
                 "top_k": 3,
-                "score_threshold": 1.0,
+                "score_threshold": 2.0,
                 "conclude_prompt": {
                     "with_result": '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
                     "不允许在答案中添加编造成分，答案请使用中文。 </指令>\n"
@@ -212,6 +259,8 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             },
             "text2images": {
                 "use": False,
+                "model": "sd-turbo",
+                "size": "256*256",
             },
             # text2sql使用建议
             # 1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
@@ -254,7 +303,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "preprocess_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.05,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "history_len": 100,
                     "prompt_name": "default",
                     "callbacks": False,
@@ -263,7 +312,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "llm_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.9,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "history_len": 10,
                     "prompt_name": "default",
                     "callbacks": True,
@@ -272,7 +321,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "action_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.01,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "prompt_name": "ChatGLM3",
                     "callbacks": True,
                 },
@@ -280,7 +329,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "postprocess_model": {
                 self.DEFAULT_LLM_MODEL: {
                     "temperature": 0.01,
-                    "max_tokens": 4096,
+                    "max_tokens": self.MAX_TOKENS,
                     "prompt_name": "default",
                     "callbacks": True,
                 }
@@ -348,6 +397,8 @@ class ConfigModelWorkSpace(
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigModelFactory:
+        if "config" in config_json:
+            config_json = config_json["config"]        
         _config_factory = self.config_factory_cls()
         if config_json.get("DEFAULT_LLM_MODEL"):
             _config_factory.default_llm_model(config_json.get("DEFAULT_LLM_MODEL"))

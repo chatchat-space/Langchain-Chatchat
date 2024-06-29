@@ -18,6 +18,7 @@ from chatchat.configs import (
     LLM_MODEL_CONFIG,
     MODEL_PLATFORMS,
     TEMPERATURE,
+    MAX_TOKENS,
 )
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -130,7 +131,7 @@ def clear_conv(name: str = None):
 
 # @st.cache_data
 def list_tools(_api: ApiRequest):
-    return _api.list_tools()
+    return _api.list_tools() or []
 
 
 def dialogue_page(
@@ -290,6 +291,7 @@ def dialogue_page(
     #     "optional_text_label": "欢迎反馈您打分的理由",
     # }
 
+    # TODO: 这里的内容有点奇怪，从后端导入LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
     #  传入后端的内容
     chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
     for key in LLM_MODEL_CONFIG:
@@ -365,9 +367,10 @@ def dialogue_page(
             tools=tools or openai.NOT_GIVEN,
             tool_choice=tool_choice,
             extra_body=extra_body,
+            max_tokens=MAX_TOKENS,
         ):
-            # from pprint import pprint
-            # pprint(d)
+            # import rich
+            # rich.print(d)
             message_id = d.message_id
             metadata = {
                 "message_id": message_id,
@@ -418,26 +421,28 @@ def dialogue_page(
                 chat_box.update_msg(text.replace("\n", "\n\n"))
             elif d.status is None:  # not agent chat
                 if getattr(d, "is_ref", False):
-                    context = ""
-                    docs = d.tool_output.get("docs")
-                    source_documents = []
-                    for inum, doc in enumerate(docs):
-                        doc = DocumentWithVSId.parse_obj(doc)
-                        filename = doc.metadata.get("source")
-                        parameters = urlencode(
-                            {
-                                "knowledge_base_name": d.tool_output.get(
-                                    "knowledge_base"
-                                ),
-                                "file_name": filename,
-                            }
-                        )
-                        url = (
-                            f"{api.base_url}/knowledge_base/download_doc?" + parameters
-                        )
-                        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-                        source_documents.append(ref)
-                    context = "\n".join(source_documents)
+                    context = str(d.tool_output)
+                    if isinstance(d.tool_output, dict):
+                        docs = d.tool_output.get("docs", [])
+                        source_documents = []
+                        for inum, doc in enumerate(docs):
+                            doc = DocumentWithVSId.parse_obj(doc)
+                            filename = doc.metadata.get("source")
+                            parameters = urlencode(
+                                {
+                                    "knowledge_base_name": d.tool_output.get(
+                                        "knowledge_base"
+                                    ),
+                                    "file_name": filename,
+                                }
+                            )
+                            url = (
+                                f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                            )
+                            ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+                            source_documents.append(ref)
+                        context = "\n".join(source_documents)
+
                     chat_box.insert_msg(
                         Markdown(
                             context,
@@ -447,6 +452,9 @@ def dialogue_page(
                         )
                     )
                     chat_box.insert_msg("")
+                elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
+                    for img in d.tool_output.get("images", []):
+                        chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
                 else:
                     text += d.choices[0].delta.content or ""
                     chat_box.update_msg(
@@ -511,4 +519,4 @@ def dialogue_page(
         use_container_width=True,
     )
 
-    # st.write(chat_box.context)
+    # st.write(chat_box.history)

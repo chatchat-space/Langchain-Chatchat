@@ -17,6 +17,28 @@ def main():
     pass
 
 
+@main.command("init", help="初始配置")
+def init(**kwargs):
+    try:
+
+        config_basic_workspace.clear()
+        config_kb_workspace.clear()
+        config_model_workspace.clear()
+        config_server_workspace.clear()
+    finally:
+
+        config_basic_workspace.init()
+        config_kb_workspace.init()
+        config_model_workspace.init()
+        config_server_workspace.init()
+
+    print("初始化配置成功:\n"
+          f"config_basic_workspace:{config_basic_workspace.workspace_config}\n"
+          f"config_kb_workspace:{config_kb_workspace.workspace_config}\n"
+          f"config_model_workspace:{config_model_workspace.workspace_config}\n"
+          f"config_server_workspace:{config_server_workspace.workspace_config}\n"
+          )
+
 @main.command("basic", help="基础配置")
 @click.option(
     "--verbose", type=click.Choice(["true", "false"]), help="是否开启详细日志"

@@ -1,5 +1,8 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
 
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
+
 🌍 [READ THIS IN CHINESE](README.md)
 
 📃 **LangChain-Chatchat** (formerly Langchain-ChatGLM)
@@ -400,6 +403,23 @@ step `3.2`:
 (chatchat) [root@VM-centos ~]#  ls /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples/vector_store
 bge-large-zh-v1.5  text-embedding-3-small
 ```
+
+##### Frequently asked questions
+##### 1.  Stuck when rebuilding the knowledge base or adding knowledge files under Windows
+
+This issue often occurs in newly created virtual environments and can be confirmed through the following methods:
+
+`from unstructured.partition.auto import partition`
+
+If the statement gets stuck and cannot be executed, the following command can be executed:
+
+```shell
+pip uninstall python-magic-bin
+# check the version of the uninstalled package
+pip install 'python-magic-bin=={version}'
+```
+
+Then follow the instructions in this section to recreate the knowledge base.
 
 #### 6. Start the Project
 

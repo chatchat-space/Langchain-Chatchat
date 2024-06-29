@@ -129,7 +129,7 @@ def query_database(query: str, config: dict):
     return context
 
 
-@regist_tool(title="Text2Sql")
+@regist_tool(title="数据库对话")
 def text2sql(
     query: str = Field(
         description="No need for SQL statements,just input the natural language that you want to chat with database"

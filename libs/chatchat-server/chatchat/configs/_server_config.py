@@ -110,6 +110,8 @@ class ConfigServerWorkSpace(
         super().__init__()
 
     def _build_config_factory(self, config_json: Any) -> ConfigServerFactory:
+        if "config" in config_json:
+            config_json = config_json["config"]
         _config_factory = self.config_factory_cls()
         if config_json.get("HTTPX_DEFAULT_TIMEOUT") is not None:
             _config_factory.httpx_default_timeout(config_json["HTTPX_DEFAULT_TIMEOUT"])

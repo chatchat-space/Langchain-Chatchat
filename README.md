@@ -1,6 +1,9 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
 <a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
+
 🌍 [READ THIS IN ENGLISH](README_en.md)
 
 📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
@@ -369,6 +372,22 @@ chatchat-kb -r --embed-model=text-embedding-3-small
 (chatchat) [root@VM-centos ~]# ls /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples/vector_store
 bge-large-zh-v1.5  text-embedding-3-small
 ```
+
+##### 常见问题
+
+##### 1. Windows 下重建知识库或添加知识文件时卡住不动
+此问题常出现于新建虚拟环境中，可以通过以下方式确认：
+
+`from unstructured.partition.auto import partition`
+
+如果该语句卡住无法执行，可以执行以下命令：
+```shell
+pip uninstall python-magic-bin
+# check the version of the uninstalled package
+pip install 'python-magic-bin=={version}'
+```
+然后按照本节指引重新创建知识库即可。
+
 
 #### 6. 启动项目
 
