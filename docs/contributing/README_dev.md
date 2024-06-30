@@ -54,6 +54,16 @@ poetry install --with lint,test
 
 当开发环境中所需的依赖库发生变化时，一般按照更新主项目目录(`Langchain-Chatchat/libs/chatchat-server/`)下的 pyproject.toml 再进行 poetry update 的顺序执行。
 
+### 1.4 将更新后的代码打包测试
+
+如果需要对开发环境中代码打包成 Python 库并进行测试，可在主项目目录执行以下命令：
+
+```shell
+poetry build
+```
+
+命令执行完成后，在主项目目录下会新增 `dist` 路径，其中存储了打包后的 Python 库。
+
 ## 2. 设置源代码根目录
 
 如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`Langchain-Chatchat/libs/chatchat-server/`)设置为源代码根目录。
