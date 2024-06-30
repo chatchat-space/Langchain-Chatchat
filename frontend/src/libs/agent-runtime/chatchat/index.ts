@@ -11,6 +11,7 @@ import { handleOpenAIError } from '../utils/handleOpenAIError';
 import { Stream } from 'openai/streaming';
 
 const DEFAULT_BASE_URL = 'http://localhost:7861/v1';
+// const DEFAULT_BASE_URL = 'https://calm-sloths-press.loca.lt/v1';
 
 
 export class LobeChatChatAI implements LobeRuntimeAI {

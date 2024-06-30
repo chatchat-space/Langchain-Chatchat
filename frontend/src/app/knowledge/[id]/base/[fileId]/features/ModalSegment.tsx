@@ -7,27 +7,32 @@ import type { KnowledgeUpdateDocsParams, KnowledgeSearchDocsListItem } from '@/t
 type ModalSegmentProps = {
   fileId: string;
   kbName: string;
-  open: boolean;
   toggleOpen: (open: boolean) => void;
 };
 
-const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, open, toggleOpen }) => {
+const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, toggleOpen }) => {
 
   const [updateLoading, setUpdateLoading] = useState(false);
   const [editKnowledgeInfo, editContentInfo, useFetcUpdateDocs] = useKnowledgeStore((s) => [
     s.editKnowledgeInfo, s.editContentInfo, s.useFetcUpdateDocs
   ]);
-
   const [textValue, setTextValue] = useState<string>(editContentInfo?.page_content || "");
 
-  const onOk = async () => {
+  const onOk = async () => { 
+    console.log('editContentInfo', editContentInfo)
     const params: KnowledgeUpdateDocsParams = {
       knowledge_base_name: kbName,
-      file_names: [fileId],
+      override_custom_docs: false,
+      to_vector_store: true,
+      zh_title_enhance: false,
+      not_refresh_vs_cache: false,
+      chunk_size: 250,
+      chunk_overlap: 50,
+      file_names: [decodeURIComponent(fileId)],
       docs: {
         file_name: [
           {
-            ...editKnowledgeInfo,
+            ...editContentInfo,  
             page_content: textValue
           } as KnowledgeSearchDocsListItem
         ]
@@ -39,12 +44,12 @@ const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, open, toggleOpen
     })
     setUpdateLoading(false)
   }
-  const onChange = (event: BaseSyntheticEvent) => { 
+  const onChange = (event: BaseSyntheticEvent) => {
     setTextValue(event.target.value)
   }
 
   return (
-    <Modal okText="确认修改" onOk={onOk} onCancel={() => toggleOpen(false)} open={open} title="知识片段" confirmLoading={updateLoading}>
+    <Modal okText="确认修改" onOk={onOk} onCancel={() => toggleOpen(false)} open title="知识片段" confirmLoading={updateLoading}>
       <Flexbox padding={20}>
         <Center>
           <Input.TextArea autoSize={{ maxRows: 15, minRows: 10 }} style={{ width: 600 }} value={textValue} onChange={onChange} />

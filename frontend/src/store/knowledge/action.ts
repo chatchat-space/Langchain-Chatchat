@@ -79,7 +79,7 @@ export const createKnowledgeAction: StateCreator<
   filesData: [],
   useFetchKnowledgeFilesList: (knowledge_base_name) => {
     return useSWR<Reseponse<KnowledgeFilesList>>(
-      globalHelpers.getCurrentLanguage(),
+      [globalHelpers.getCurrentLanguage(), knowledge_base_name],
       knowledgeService.getFilesList(knowledge_base_name),
       {
         onSuccess: (res) => {

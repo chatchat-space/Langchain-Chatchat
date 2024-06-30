@@ -111,8 +111,8 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
         name="validate_other"
         initialValues={{
           override: true,
-          chunk_size: 0,
-          chunk_overlap: 0,
+          chunk_size: 250,
+          chunk_overlap: 50,
           to_vector_store: true,
           ...initialValue
         }}

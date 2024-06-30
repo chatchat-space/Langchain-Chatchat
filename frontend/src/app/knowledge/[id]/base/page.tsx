@@ -39,7 +39,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     s.useFetcRebuildVectorDB,
     s.useFetchKnowledgeDel
   ]);
-  const { isLoading } = useFetchKnowledgeFilesList(params.id);
+  const { isLoading, mutate  } = useFetchKnowledgeFilesList(params.id);
 
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [delDocsLoading, setDelDocsLoading] = useState(false);
@@ -47,16 +47,16 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
   const [rebuildVectorDBLoading, setRebuildVectorDBLoading] = useState(false);
 
   // rebuild progress
-  const [rebuildProgress, setRebuildProgress] = useState("0%");
-
-  const data: DataType[] = filesData.map((item, i) => ({
-    id: i, // item 应该为对象，待提交问题...
-    name: item, // item 应该为对象，待提交问题...
+  const [rebuildProgress, setRebuildProgress] = useState("0%"); 
+  const data: DataType[] = filesData.map(({ No, file_name, text_splitter, in_folder, in_db }, i) => ({
+    index: No,
+    id: file_name,
+    name: file_name,
     loader: "",
-    splitter: "",
-    source: "",
-    vector: ""
-  })); 
+    splitter: text_splitter,
+    source: in_folder ? "✔️" : "❌",
+    vector: in_db ? "✔️" : "❌",
+  }));
   // const data = [
   //   { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
   //   { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
@@ -79,10 +79,10 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
       render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${encodeURIComponent(rowData.name)}`}>{text}</Link>,
       title: '文档名称',
     },
-    {
-      dataIndex: 'loader',
-      title: '文档加载器',
-    },
+    // {
+    //   dataIndex: 'loader',
+    //   title: '文档加载器',
+    // },
     {
       dataIndex: 'splitter',
       title: '分词器',
@@ -153,6 +153,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     })
     setDelVSLoading(false);
     setSelectedRowKeys([]);
+    mutate();
   }
   const delInknowledgeDB = async () => {
     setDelDocsLoading(true);
@@ -166,6 +167,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     })
     setDelDocsLoading(false);
     setSelectedRowKeys([]);
+    mutate();
   }
   const delKnowledge = async () => {
     Modal.confirm({

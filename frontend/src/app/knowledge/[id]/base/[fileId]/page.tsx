@@ -11,7 +11,8 @@ const ModalSegment = dynamic(() => import('./features/ModalSegment'));
 
 const useStyle = createStyles(({ css, token }) => ({
   page: css`
-    width: 100%;
+    width: 100%;  
+    padding-top: 12px;
   `,
   card: css`
     cursor: pointer;
@@ -24,7 +25,7 @@ const useStyle = createStyles(({ css, token }) => ({
       scale: 0.95;
     }
   `,
-  null:  css`
+  null: css`
   display: block;
   position: absolute;
   top: 0px; bottom: 0px; left: 0px; right: 0px;
@@ -34,8 +35,9 @@ const useStyle = createStyles(({ css, token }) => ({
 }));
 
 const App = memo((props: { params: { id: string; fileId: string } }) => {
+  const { params: { id, fileId } } = props;
   const { styles } = useStyle();
-  const [isModalOpen, toggleOpen] = useState(false); 
+  const [isModalOpen, toggleOpen] = useState(false);
   const [fileSearchData, useFetchSearchDocs, setEditContentInfo] = useKnowledgeStore((s) => [
     s.fileSearchData, s.useFetchSearchDocs, s.setEditContentInfo
   ]);
@@ -48,15 +50,21 @@ const App = memo((props: { params: { id: string; fileId: string } }) => {
   //     id: 2,
   //     page_content: "This is a test22", 
   //   },  
-  // ]
-  const { isLoading } = useFetchSearchDocs({ query: "", knowledge_base_name: "", file_name: "" });
+  // ] 
+  const { isLoading } = useFetchSearchDocs({
+    query: "", 
+    top_k: 3,
+    score_threshold: 1,
+    knowledge_base_name: id, 
+    file_name: decodeURIComponent(fileId)
+  });
 
   const handleSegmentCardClick: typeof setEditContentInfo = (item) => {
+    setEditContentInfo({...item})
     toggleOpen(true);
-    setEditContentInfo(item)
   };
 
-  
+
   if (!isLoading && !fileSearchData.length) {
     return <div className={styles.null}>
       <Empty />
@@ -83,7 +91,7 @@ const App = memo((props: { params: { id: string; fileId: string } }) => {
           )}
           size="large"
         />
-        <ModalSegment open={isModalOpen} toggleOpen={toggleOpen} kbName={props.params.id} fileId={props.params.fileId}/>
+        {isModalOpen && <ModalSegment toggleOpen={toggleOpen} kbName={props.params.id} fileId={props.params.fileId} />}
       </Spin>
     </div>
   );
