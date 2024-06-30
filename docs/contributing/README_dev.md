@@ -8,18 +8,6 @@
 git clone https://github.com/chatchat-space/Langchain-Chatchat.git
 ```
 
-如果您是想要进行 master 分支 Bug 修复的开发者，请拉取 master 分支代码，并基于 master 分支代码进行后续开发，在开发完成后，请发起 PR 将代码合并至 master 分支。
-
-```shell
-git clone https://github.com/chatchat-space/Langchain-Chatchat.git
-```
-
-如果您是想要进行新功能开发的开发者，请拉取 dev 分支代码，并基于 dev 分支代码进行后续开发，在开发完成后，请发起 PR 将代码合并至 dev 分支。
-
-```shell
-git clone https://github.com/chatchat-space/Langchain-Chatchat.git -b dev
-```
-
 ## 1. 初始化开发环境
 
 Langchain-Chatchat 自 0.3.0 版本起，为方便支持用户使用 pip 方式安装部署，以及为避免环境中依赖包版本冲突等问题，
@@ -79,6 +67,10 @@ ConfigWorkSpace是一个配置工作空间的抽象类，提供基础的配置�
 该类的实例对象用于存储工作空间的配置信息，如工作空间的路径等
 工作空间的配置信息存储在用户的家目录下的.chatchat/workspace/workspace_config.json文件中。
 注意：不存在则读取默认
+
+```shell
+python config_work_space.py init
+```
 
 ## 4. 初始化知识库
 
