@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240625.1"
-description = ""
+version = "0.3.0.20240630"
+description = "Langchain-Chatchat (formerly langchain-ChatGLM), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langchain"
 authors = ["chatchat"]
 readme = "README.md"
 packages = [
@@ -29,11 +29,8 @@ unstructured = "~0.11.0"
 python-magic-bin = {version = "*", platform = "win32"}
 SQLAlchemy = "~2.0.25"
 faiss-cpu = "~1.7.4"
-#cutword = "0.1.0"
 jieba = "0.42.1"
 rank_bm25 = "0.2.2"
-# accelerate = "~0.24.1"
-# spacy = "~3.7.2"
 openpyxl = "3.1.4"
 networkx = "3.1"
 opencv-python = "4.10.0.84"
@@ -68,6 +65,7 @@ pymysql = "^1.1.0"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
+ollama = ["ollama"]
 
 # An extra used to be able to add extended testing.
 # Please use new-line on formatting to make it easier to add new packages without

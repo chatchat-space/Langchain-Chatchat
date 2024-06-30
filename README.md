@@ -16,7 +16,7 @@
 * [概述](README.md#概述)
 * [功能介绍](README.md#Langchain-Chatchat-提供哪些功能)
 * [快速上手](README.md#快速上手)
-    * [安装部署](README.md#安装部署)
+    * [pip 安装部署](README.md#pip-安装部署)
 * [项目里程碑](README.md#项目里程碑)
 * [联系我们](README.md#联系我们)
 
@@ -117,7 +117,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 ## 快速上手
 
-### 安装部署
+### pip 安装部署
 
 #### 0. 软硬件要求
 
@@ -372,21 +372,25 @@ chatchat-kb -r --embed-model=text-embedding-3-small
 bge-large-zh-v1.5  text-embedding-3-small
 ```
 
-##### 常见问题
-
-##### 1. Windows 下重建知识库或添加知识文件时卡住不动
-此问题常出现于新建虚拟环境中，可以通过以下方式确认：
-
-`from unstructured.partition.auto import partition`
-
-如果该语句卡住无法执行，可以执行以下命令：
-```shell
-pip uninstall python-magic-bin
-# check the version of the uninstalled package
-pip install 'python-magic-bin=={version}'
-```
-然后按照本节指引重新创建知识库即可。
-
+> [!Note]
+> 知识库初始化的常见问题
+>
+> <details>
+>
+> ##### 1. Windows 下重建知识库或添加知识文件时卡住不动
+> 此问题常出现于新建虚拟环境中，可以通过以下方式确认：
+> 
+> `from unstructured.partition.auto import partition`
+>
+> 如果该语句卡住无法执行，可以执行以下命令：
+> ```shell
+> pip uninstall python-magic-bin
+> # check the version of the uninstalled package
+> pip install 'python-magic-bin=={version}'
+> ```
+> 然后按照本节指引重新创建知识库即可。
+> 
+> </details>
 
 #### 6. 启动项目
 
@@ -452,6 +456,10 @@ chatchat -a
 > }
 > ```
 > </details>
+
+### 源码安装部署/开发部署
+
+源码安装部署请参考 [开发指南](docs/contributing/README_dev.md)
 
 ### Docker 部署
 ```shell
