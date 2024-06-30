@@ -487,3 +487,19 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 <img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
+
+
+## 引用
+
+如果本项目有帮助到您的研究，请引用我们：
+
+```
+@software{langchain_chatchat,
+    title        = {{langchain-chatchat}},
+    author       = {Liu, Qian and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
+    year         = 2024,
+    journal      = {GitHub repository},
+    publisher    = {GitHub},
+    howpublished = {\url{https://github.com/chatchat-space/Langchain-Chatchat}}
+}
+```
