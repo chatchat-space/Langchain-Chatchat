@@ -179,7 +179,7 @@
     在 `status` 为 6 和 7 的返回值中，可以获取工具的调用和输出信息。  
     由于输出信息太多，这里不做展示，请自行测试。
 - 知识库对话（手动传入参数）  
-    直接指定 `tool_choice` 为 `"search_local_knowledgebase"`，在 `extra_body` 中通过 `tool_input` 设定工具参数，即可手动调用工具，实现指定知识库对话。
+    直接指定 `tool_choice` 为 `"search_local_knowledgebase"`，再通过 `tool_input` 设定工具参数，即可手动调用工具，实现指定知识库对话。
     ```python3
     base_url = "http://127.0.0.1:7861/chat"
     data = {
@@ -188,7 +188,7 @@
         ],
         "model": "qwen1.5-chat",
         "tool_choice": "search_local_knowledgebase",
-        "extra_body": {"tool_input": {"database": "samples", "query": "如何提问以获得高质量答案"}},
+        "tool_input": {"database": "samples", "query": "如何提问以获得高质量答案"},
         "stream": True,
     }
 
