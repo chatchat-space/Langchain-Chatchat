@@ -1,30 +1,29 @@
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from typing import Any, List, Optional, Sequence
-
+import torch
+from sentence_transformers import CrossEncoder
+from transformers import AutoTokenizer
+from langchain_core.documents import Document
 from langchain.callbacks.manager import Callbacks
 from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
-from langchain_core.documents import Document
-from pydantic import Field, PrivateAttr
-from sentence_transformers import CrossEncoder
-
-
+from llama_index.legacy.bridge.pydantic import Field, PrivateAttr
+from server.utils import embedding_device
+from configs import (LLM_MODELS,
+                     VECTOR_SEARCH_TOP_K,
+                     SCORE_THRESHOLD,
+                     TEMPERATURE,
+                     USE_RERANKER,
+                     RERANKER_MODEL,
+                     RERANKER_MAX_LENGTH,
+                     MODEL_PATH)
 class LangchainReranker(BaseDocumentCompressor):
     """Document compressor that uses `Cohere Rerank API`."""
-
     model_name_or_path: str = Field()
     _model: Any = PrivateAttr()
     top_n: int = Field()
     device: str = Field()
     max_length: int = Field()
     batch_size: int = Field()
-    # show_progress_bar: bool = None
     num_workers: int = Field()
-
-    # activation_fct = None
-    # apply_softmax = False
 
     def __init__(
         self,
@@ -33,99 +32,46 @@ class LangchainReranker(BaseDocumentCompressor):
         device: str = "cuda",
         max_length: int = 1024,
         batch_size: int = 32,
-        # show_progress_bar: bool = None,
         num_workers: int = 0,
-        # activation_fct = None,
-        # apply_softmax = False,
     ):
-        # self.top_n=top_n
-        # self.model_name_or_path=model_name_or_path
-        # self.device=device
-        # self.max_length=max_length
-        # self.batch_size=batch_size
-        # self.show_progress_bar=show_progress_bar
-        # self.num_workers=num_workers
-        # self.activation_fct=activation_fct
-        # self.apply_softmax=apply_softmax
-
-        self._model = CrossEncoder(
-            model_name=model_name_or_path, max_length=max_length, device=device
-        )
+        self._model = CrossEncoder(model_name=model_name_or_path, device=device)
         super().__init__(
             top_n=top_n,
             model_name_or_path=model_name_or_path,
             device=device,
             max_length=max_length,
             batch_size=batch_size,
-            # show_progress_bar=show_progress_bar,
             num_workers=num_workers,
-            # activation_fct=activation_fct,
-            # apply_softmax=apply_softmax
         )
-
     def compress_documents(
         self,
-        documents: Sequence[Document],
+        documents: List[Document],
         query: str,
         callbacks: Optional[Callbacks] = None,
     ) -> Sequence[Document]:
-        """
-        Compress documents using Cohere's rerank API.
-
-        Args:
-            documents: A sequence of documents to compress.
-            query: The query to use for compressing the documents.
-            callbacks: Callbacks to run during the compression process.
-
-        Returns:
-            A sequence of compressed documents.
-        """
-        if len(documents) == 0:  # to avoid empty api call
+        if len(documents) == 0:
             return []
-        doc_list = list(documents)
-        _docs = [d.page_content for d in doc_list]
+        
+        _docs = [d[0].page_content for d in documents]
         sentence_pairs = [[query, _doc] for _doc in _docs]
-        results = self._model.predict(
-            sentences=sentence_pairs,
-            batch_size=self.batch_size,
-            #  show_progress_bar=self.show_progress_bar,
-            num_workers=self.num_workers,
-            #  activation_fct=self.activation_fct,
-            #  apply_softmax=self.apply_softmax,
-            convert_to_tensor=True,
-        )
-        top_k = self.top_n if self.top_n < len(results) else len(results)
+        # 批量处理文本数据，每个批次包含多个句子对
+        batch_results = []
+        for batch in self._get_batches(sentence_pairs, self.batch_size):
+            # CrossEncoder的predict方法可以接受列表形式的句子对，并自动处理批次
+            scores = self._model.predict(batch)
+            batch_results.extend(scores)
+        
+        # 根据得分选择top_n个文档
+        scores = torch.tensor(batch_results)
+        top_k = self.top_n if self.top_n < len(scores) else len(scores)
+        values, indices = scores.topk(top_k)
 
-        values, indices = results.topk(top_k)
         final_results = []
-        for value, index in zip(values, indices):
-            doc = doc_list[index]
-            doc.metadata["relevance_score"] = value
+        for index in indices:
+            doc = documents[index]
+            doc[0].metadata["relevance_score"] = values[index].item()
             final_results.append(doc)
         return final_results
 
-
-if __name__ == "__main__":
-    from chatchat.configs import (
-        LLM_MODELS,
-        MODEL_PATH,
-        RERANKER_MAX_LENGTH,
-        RERANKER_MODEL,
-        SCORE_THRESHOLD,
-        TEMPERATURE,
-        USE_RERANKER,
-        VECTOR_SEARCH_TOP_K,
-    )
-
-    if USE_RERANKER:
-        reranker_model_path = MODEL_PATH["reranker"].get(
-            RERANKER_MODEL, "BAAI/bge-reranker-large"
-        )
-        print("-----------------model path------------------")
-        print(reranker_model_path)
-        reranker_model = LangchainReranker(
-            top_n=3,
-            device="cpu",
-            max_length=RERANKER_MAX_LENGTH,
-            model_name_or_path=reranker_model_path,
-        )
+    def _get_batches(self, data, batch_size):
+        return [data[i:i + batch_size] for i in range(0, len(data), batch_size)]
