@@ -123,6 +123,6 @@ export const getProviderConfig = () => {
 
     CHATCHAT_PROXY_URL: process.env.CHATCHAT_PROXY_URL || '',
     // KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'http://localhost:7861/knowledge_base',
-    KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'https://calm-sloths-press.loca.lt/knowledge_base',
+    KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'https://violet-swans-relate.loca.lt/knowledge_base',
   };
 };

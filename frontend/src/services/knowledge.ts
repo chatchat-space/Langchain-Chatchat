@@ -152,7 +152,7 @@ class KnowledgeService {
         return res.json();
     }; 
     updateDocs = async (params: KnowledgeUpdateDocsParams): Promise<Reseponse<{}>> => {
-        const res = await fetch(`${API_ENDPOINTS.knowledgeUploadDocs}`, {
+        const res = await fetch(`${API_ENDPOINTS.updateDocsContent}`, {
             body: JSON.stringify({
                 ...params,
             }),

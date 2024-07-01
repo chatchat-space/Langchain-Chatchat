@@ -18,8 +18,7 @@ const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, toggleOpen }) =>
   ]);
   const [textValue, setTextValue] = useState<string>(editContentInfo?.page_content || "");
 
-  const onOk = async () => { 
-    console.log('editContentInfo', editContentInfo)
+  const onOk = async () => {  
     const params: KnowledgeUpdateDocsParams = {
       knowledge_base_name: kbName,
       override_custom_docs: false,
@@ -28,15 +27,16 @@ const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, toggleOpen }) =>
       not_refresh_vs_cache: false,
       chunk_size: 250,
       chunk_overlap: 50,
-      file_names: [decodeURIComponent(fileId)],
-      docs: {
-        file_name: [
+      file_names: [decodeURIComponent(fileId)], 
+      // docs: JSON.stringify({
+      docs: ({
+        [decodeURIComponent(fileId)]: [
           {
             ...editContentInfo,  
             page_content: textValue
           } as KnowledgeSearchDocsListItem
         ]
-      }
+      })
     }
     setUpdateLoading(true)
     await useFetcUpdateDocs(params).catch(() => {

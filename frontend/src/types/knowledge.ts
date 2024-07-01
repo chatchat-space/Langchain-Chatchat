@@ -71,7 +71,8 @@ export interface KnowledgeUpdateDocsParams {
     chunk_overlap?: number;
     zh_title_enhance?: boolean;
     not_refresh_vs_cache?: boolean;
-    docs?: { file_name: { page_content: string; type?: string; metadata?: string; }[] };
+    docs?: string | { [file_name: string]: { page_content: string; type?: string; metadata?: string; }[] };
+    // docs?: string;
 }
 
 // re add docs
