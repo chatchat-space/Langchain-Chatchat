@@ -28,8 +28,8 @@ const ModalSegment = memo<ModalSegmentProps>(({ kbName, fileId, toggleOpen }) =>
       chunk_size: 250,
       chunk_overlap: 50,
       file_names: [decodeURIComponent(fileId)], 
-      // docs: JSON.stringify({
-      docs: ({
+      docs: JSON.stringify({
+      // docs: ({
         [decodeURIComponent(fileId)]: [
           {
             ...editContentInfo,  
