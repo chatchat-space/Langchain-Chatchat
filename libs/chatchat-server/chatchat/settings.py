@@ -12,18 +12,29 @@ from chatchat.pydantic_settings_file import *
 # chatchat 数据目录，必须通过环境变量设置。如未设置则自动使用当前目录。
 CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
-# yaml 配置文件路径
-YAML_PATH = CHATCHAT_ROOT / "settings.yaml"
-
 # 一些帮助简化定义的变量
 _DEFAULT_LLM_MODEL = "glm4-chat"
 
 
-class DataPathConfig(MyBaseModel):
+class BasicSettings(BaseFileSettings):
     '''
-    chatchat 用到的数据目录位置，主要在程序内部使用。
-    根据 CHATCHAT_ROOT 自动设置，无需手动配置。
+    服务器基本配置信息
+    除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效，其它配置项修改后都需要重启服务器才能生效
     '''
+
+    model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "basic_settings.yaml")
+
+    version: str = __version__
+    """生成该配置模板的项目代码版本，如这里的值与程序实际版本不一致，建议重建配置文件模板"""
+
+    log_verbose: bool = False
+    """是否开启日志详细信息"""
+
+    LOG_FORMAT: str = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+    """日志格式"""
+
+    HTTPX_DEFAULT_TIMEOUT: float = 300
+    """httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。"""
 
     # @computed_field
     @cached_property
@@ -36,7 +47,6 @@ class DataPathConfig(MyBaseModel):
     def DATA_PATH(self) -> Path:
         """用户数据根目录"""
         p = CHATCHAT_ROOT / "data"
-        p.mkdir(parents=True, exist_ok=True)
         return p
 
     # @computed_field
@@ -51,7 +61,6 @@ class DataPathConfig(MyBaseModel):
     def NLTK_DATA_PATH(self) -> Path:
         """nltk 模型存储路径"""
         p = self.DATA_PATH / "nltk_data"
-        p.mkdir(parents=True, exist_ok=True)
         return p
 
     # @computed_field
@@ -59,7 +68,6 @@ class DataPathConfig(MyBaseModel):
     def LOG_PATH(self) -> Path:
         """日志存储路径"""
         p = self.DATA_PATH / "logs"
-        p.mkdir(parents=True, exist_ok=True)
         return p
 
     # @computed_field
@@ -67,9 +75,6 @@ class DataPathConfig(MyBaseModel):
     def MEDIA_PATH(self) -> Path:
         """模型生成内容（图片、视频、音频等）保存位置"""
         p = self.DATA_PATH / "media"
-        (p / "image").mkdir(parents=True, exist_ok=True)
-        (p / "audio").mkdir(parents=True, exist_ok=True)
-        (p / "video").mkdir(parents=True, exist_ok=True)
         return p
 
     # @computed_field
@@ -80,21 +85,14 @@ class DataPathConfig(MyBaseModel):
         (p / "openai_files").mkdir(parents=True, exist_ok=True)
         return p
 
-    KB_ROOT_PATH: str = str(CHATCHAT_ROOT / "knowledge_base")
+    KB_ROOT_PATH: str = str(CHATCHAT_ROOT / "data/knowledge_base")
     """知识库默认存储路径"""
 
-    DB_ROOT_PATH: str = str(CHATCHAT_ROOT / "knowledge_base" / "info.db")
+    DB_ROOT_PATH: str = str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。"""
 
-    SQLALCHEMY_DATABASE_URI:str = "sqlite:///" + str(CHATCHAT_ROOT / "knowledge_base" / "info.db")
+    SQLALCHEMY_DATABASE_URI:str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """知识库信息数据库连接URI"""
-
-
-class BasicInit(MyBaseModel):
-    '''基本配置信息，修改后需要重启服务器'''
-
-    data_path_config: DataPathConfig = DataPathConfig()
-    """项目运行时配置和数据目录"""
 
     OPEN_CROSS_DOMAIN: bool = False
     """API 是否开启跨域"""
@@ -102,7 +100,7 @@ class BasicInit(MyBaseModel):
     DEFAULT_BIND_HOST: str = "127.0.0.1" if sys.platform != "win32" else "127.0.0.1"
     """
     各服务器默认绑定host。如改为"0.0.0.0"需要修改下方所有XX_SERVER的host
-    Windows 下 WEBUI 自动弹出浏览器时，如果地址为 "0.0.0.1" 是无法访问的，需要手动修改地址栏
+    Windows 下 WEBUI 自动弹出浏览器时，如果地址为 "0.0.0.0" 是无法访问的，需要手动修改地址栏
     """
 
     API_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 7861}
@@ -111,30 +109,19 @@ class BasicInit(MyBaseModel):
     WEBUI_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 8501}
     """WEBUI 服务器地址"""
 
-
-class BasicRuntime(MyBaseModel):
-    '''基本配置信息，修改后即时生效'''
-
-    log_verbose: bool = False
-    """是否开启日志详细信息"""
-
-    LOG_FORMAT: str = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
-    """日志格式"""
-
-    HTTPX_DEFAULT_TIMEOUT: float = 300
-    """httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。"""
-
-
-class BasicSettings(BaseFileSettings):
-    '''服务器基本配置信息'''
-
-    model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "basic_settings.yaml")
-
-    version: str = __version__
-    """项目代码版本，如这里的值与程序实际版本不一致，建议重建配置文件模板"""
-
-    init_config: BasicInit = BasicInit()
-    runtime_config: BasicRuntime = BasicRuntime()
+    def make_dirs(self):
+        '''创建所有数据目录'''
+        for p in [
+            self.DATA_PATH,
+            self.NLTK_DATA_PATH,
+            self.MEDIA_PATH,
+            self.LOG_PATH,
+            self.BASE_TEMP_DIR,
+        ]:
+            p.mkdir(parents=True, exist_ok=True)
+        for n in ["image", "audio", "video"]:
+            (self.MEDIA_PATH / n).mkdir(parents=True, exist_ok=True)
+        Path(self.KB_ROOT_PATH).mkdir(parents=True, exist_ok=True)
 
 
 class KBSettings(BaseFileSettings):
@@ -734,6 +721,8 @@ class PromptSettings(BaseFileSettings):
 
 
 class SettingsContainer:
+    CHATCHAT_ROOT = CHATCHAT_ROOT
+
     basic_settings: BasicSettings = settings_property(BasicSettings())
     kb_settings: KBSettings = settings_property(KBSettings())
     model_settings: ApiModelSettings = settings_property(ApiModelSettings())
@@ -741,15 +730,7 @@ class SettingsContainer:
     prompt_settings: PromptSettings = settings_property(PromptSettings())
 
     def createl_all_templates(self):
-        self.basic_settings.create_template_file(sub_comments={
-                                 "init_config": {"model_obj": BasicInit(),
-                                                 "sub_comments": {
-                                                     "data_path_config": {
-                                                         "model_obj": DataPathConfig()
-                                                     }
-                                                 }},
-                                 "runtime_config": {"model_obj": BasicRuntime()}},
-                                                write_file=True)
+        self.basic_settings.create_template_file(write_file=True)
         self.kb_settings.create_template_file(write_file=True)
         self.model_settings.create_template_file(sub_comments={
                                  "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),

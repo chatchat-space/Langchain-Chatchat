@@ -8,17 +8,7 @@ from fastapi.responses import FileResponse
 from langchain.docstore.document import Document
 from sse_starlette import EventSourceResponse
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_VS_TYPE,
-    OVERLAP_SIZE,
-    SCORE_THRESHOLD,
-    VECTOR_SEARCH_TOP_K,
-    ZH_TITLE_ENHANCE,
-    log_verbose,
-    logger,
-)
+from chatchat.settings import Settings
 from chatchat.server.db.repository.knowledge_file_repository import get_file_detail
 from chatchat.server.knowledge_base.kb_service.base import (
     KBServiceFactory,
@@ -38,6 +28,10 @@ from chatchat.server.utils import (
     check_embed_model,
     run_in_thread_pool,
 )
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def search_docs(
@@ -45,9 +39,9 @@ def search_docs(
     knowledge_base_name: str = Body(
         ..., description="知识库名称", examples=["samples"]
     ),
-    top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+    top_k: int = Body(Settings.kb_settings.VECTOR_SEARCH_TOP_K, description="匹配向量数"),
     score_threshold: float = Body(
-        SCORE_THRESHOLD,
+        Settings.kb_settings.SCORE_THRESHOLD,
         description="知识库匹配相关度阈值，取值范围在0-1之间，"
         "SCORE越小，相关度越高，"
         "取到1相当于不筛选，建议设置在0.5左右",
@@ -123,9 +117,7 @@ def _save_files_in_thread(
             return dict(code=200, msg=f"成功上传文件 {filename}", data=data)
         except Exception as e:
             msg = f"{filename} 文件上传失败，报错信息为: {e}"
-            logger.error(
-                f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-            )
+            logger.error(f"{e.__class__.__name__}: {msg}")
             return dict(code=500, msg=msg, data=data)
 
     params = [
@@ -156,9 +148,9 @@ def upload_docs(
     ),
     override: bool = Form(False, description="覆盖已有文件"),
     to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
-    chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-    chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-    zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    chunk_size: int = Form(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Form(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Form(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     docs: str = Form("", description="自定义的docs，需要转为json字符串"),
     not_refresh_vs_cache: bool = Form(False, description="暂不保存向量库（用于FAISS）"),
 ) -> BaseResponse:
@@ -234,9 +226,7 @@ def delete_docs(
             kb.delete_doc(kb_file, delete_content, not_refresh_vs_cache=True)
         except Exception as e:
             msg = f"{file_name} 文件删除失败，错误信息：{e}"
-            logger.error(
-                f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-            )
+            logger.error(f"{e.__class__.__name__}: {msg}")
             failed_files[file_name] = msg
 
     if not not_refresh_vs_cache:
@@ -271,9 +261,9 @@ def update_docs(
     file_names: List[str] = Body(
         ..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]
     ),
-    chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-    chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-    zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     override_custom_docs: bool = Body(False, description="是否覆盖之前自定义的docs"),
     docs: str = Body("", description="自定义的docs，需要转为json字符串"),
     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
@@ -307,10 +297,7 @@ def update_docs(
                 )
             except Exception as e:
                 msg = f"加载文档 {file_name} 时出错：{e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 failed_files[file_name] = msg
 
     # 从文件生成docs，并进行向量化。
@@ -342,9 +329,7 @@ def update_docs(
             kb.update_doc(kb_file, docs=v, not_refresh_vs_cache=True)
         except Exception as e:
             msg = f"为 {file_name} 添加自定义docs时出错：{e}"
-            logger.error(
-                f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-            )
+            logger.error(f"{e.__class__.__name__}: {msg}")
             failed_files[file_name] = msg
 
     if not not_refresh_vs_cache:
@@ -391,9 +376,7 @@ def download_doc(
             )
     except Exception as e:
         msg = f"{kb_file.filename} 读取文件失败，错误信息是：{e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=500, msg=f"{kb_file.filename} 读取文件失败")
@@ -402,11 +385,11 @@ def download_doc(
 def recreate_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     allow_empty_kb: bool = Body(True),
-    vs_type: str = Body(DEFAULT_VS_TYPE),
-    embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
-    chunk_size: int = Body(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-    chunk_overlap: int = Body(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-    zh_title_enhance: bool = Body(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
+    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
     not_refresh_vs_cache: bool = Body(False, description="暂不保存向量库（用于FAISS）"),
 ):
     """

@@ -115,7 +115,7 @@ class YamlTemplate:
         # add start comment for class
         cls_comment = self.get_class_comment()
         if cls_comment:
-            obj.yaml_set_start_comment("\n"+cls_comment, indent)
+            obj.yaml_set_start_comment(cls_comment + "\n\n", indent)
         
         sub_comments = self.sub_comments
         # add comments for fields

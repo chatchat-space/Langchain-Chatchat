@@ -17,10 +17,7 @@ from chatchat.server.utils import (
     get_tool,
     get_tool_config,
 )
-from chatchat.configs import (
-    MAX_TOKENS,
-)
-
+from chatchat.settings import Settings
 from .openai_routes import openai_request, OpenAIChatOutput
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
@@ -63,7 +60,7 @@ async def chat_completions(
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
     if body.max_tokens == None:
-        body.max_tokens = MAX_TOKENS
+        body.max_tokens = Settings.model_settings.MAX_TOKENS
 
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}

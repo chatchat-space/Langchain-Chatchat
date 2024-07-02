@@ -12,7 +12,7 @@ from openai.types.chat import (
     completion_create_params,
 )
 
-from chatchat.configs import DEFAULT_LLM_MODEL, TEMPERATURE
+from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
 from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType
@@ -33,7 +33,7 @@ class OpenAIBaseInput(BaseModel):
 
 class OpenAIChatInput(OpenAIBaseInput):
     messages: List[ChatCompletionMessageParam]
-    model: str = DEFAULT_LLM_MODEL
+    model: str = Settings.model_settings.DEFAULT_LLM_MODEL
     frequency_penalty: Optional[float] = None
     function_call: Optional[completion_create_params.FunctionCall] = None
     functions: List[completion_create_params.Function] = None
@@ -46,7 +46,7 @@ class OpenAIChatInput(OpenAIBaseInput):
     seed: Optional[int] = None
     stop: Union[Optional[str], List[str]] = None
     stream: Optional[bool] = None
-    temperature: Optional[float] = TEMPERATURE
+    temperature: Optional[float] = Settings.model_settings.TEMPERATURE
     tool_choice: Optional[Union[ChatCompletionToolChoiceOptionParam, str]] = None
     tools: List[Union[ChatCompletionToolParam, str]] = None
     top_logprobs: Optional[int] = None
@@ -89,7 +89,7 @@ class OpenAIAudioTranslationsInput(OpenAIBaseInput):
     model: str
     prompt: Optional[str] = None
     response_format: Optional[str] = None
-    temperature: float = TEMPERATURE
+    temperature: float = Settings.model_settings.TEMPERATURE
 
 
 class OpenAIAudioTranscriptionsInput(OpenAIAudioTranslationsInput):

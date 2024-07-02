@@ -3,7 +3,7 @@ from typing import Dict, List
 from langchain.schema import Document
 from langchain.vectorstores import Zilliz
 
-from chatchat.configs import kbs_config
+from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import (
     KBService,
@@ -54,7 +54,7 @@ class ZillizKBService(KBService):
         return SupportedVSType.ZILLIZ
 
     def _load_zilliz(self):
-        zilliz_args = kbs_config.get("zilliz")
+        zilliz_args = Settings.kb_settings.kbs_config.get("zilliz")
         self.zilliz = Zilliz(
             embedding_function=get_Embeddings(self.embed_model),
             collection_name=self.kb_name,

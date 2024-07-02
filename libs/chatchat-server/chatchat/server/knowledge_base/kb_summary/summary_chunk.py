@@ -14,8 +14,10 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 class SummaryAdapter:

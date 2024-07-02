@@ -1,12 +1,10 @@
-import logging
-
 from fastapi import Body
 
-from chatchat.configs import log_verbose
+from chatchat.utils import build_logger
 from chatchat.server.db.repository import feedback_message_to_db
 from chatchat.server.utils import BaseResponse
 
-logger = logging.getLogger()
+logger = build_logger()
 
 
 def chat_feedback(
@@ -18,9 +16,7 @@ def chat_feedback(
         feedback_message_to_db(message_id, score, reason)
     except Exception as e:
         msg = f"反馈聊天记录出错： {e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=200, msg=f"已反馈聊天记录 {message_id}")

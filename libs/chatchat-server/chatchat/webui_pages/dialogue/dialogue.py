@@ -12,19 +12,13 @@ import streamlit_antd_components as sac
 from streamlit_chatbox import *
 from streamlit_extras.bottom_container import bottom
 
-from chatchat.configs import (
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_LLM_MODEL,
-    LLM_MODEL_CONFIG,
-    MODEL_PLATFORMS,
-    TEMPERATURE,
-    MAX_TOKENS,
-)
+from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.utils import MsgType, get_config_models
+from chatchat.server.utils import MsgType, get_config_models, get_config_platforms
 from chatchat.webui_pages.dialogue.utils import process_files
 from chatchat.webui_pages.utils import *
+
 
 chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
 
@@ -141,8 +135,8 @@ def dialogue_page(
     ctx = chat_box.context
     ctx.setdefault("uid", uuid.uuid4().hex)
     ctx.setdefault("file_chat_id", None)
-    ctx.setdefault("llm_model", DEFAULT_LLM_MODEL)
-    ctx.setdefault("temperature", TEMPERATURE)
+    ctx.setdefault("llm_model", Settings.model_settings.DEFAULT_LLM_MODEL)
+    ctx.setdefault("temperature", Settings.model_settings.TEMPERATURE)
     st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
     st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
 
@@ -159,7 +153,7 @@ def dialogue_page(
     def llm_model_setting():
         # 模型
         cols = st.columns(3)
-        platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
+        platforms = ["所有"] + list(get_config_platforms())
         platform = cols[0].selectbox("选择模型平台", platforms, key="platform")
         llm_models = list(
             get_config_models(
@@ -291,16 +285,16 @@ def dialogue_page(
     #     "optional_text_label": "欢迎反馈您打分的理由",
     # }
 
-    # TODO: 这里的内容有点奇怪，从后端导入LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
+    # TODO: 这里的内容有点奇怪，从后端导入Settings.model_settings.LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
     #  传入后端的内容
-    chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
-    for key in LLM_MODEL_CONFIG:
-        if LLM_MODEL_CONFIG[key]:
-            first_key = next(iter(LLM_MODEL_CONFIG[key]))
-            chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
+    chat_model_config = {key: {} for key in Settings.model_settings.LLM_MODEL_CONFIG.keys()}
+    for key in Settings.model_settings.LLM_MODEL_CONFIG:
+        if Settings.model_settings.LLM_MODEL_CONFIG[key]:
+            first_key = next(iter(Settings.model_settings.LLM_MODEL_CONFIG[key]))
+            chat_model_config[key][first_key] = Settings.model_settings.LLM_MODEL_CONFIG[key][first_key]
     llm_model = ctx.get("llm_model")
     if llm_model is not None:
-        chat_model_config["llm_model"][llm_model] = LLM_MODEL_CONFIG["llm_model"].get(
+        chat_model_config["llm_model"][llm_model] = Settings.model_settings.LLM_MODEL_CONFIG["llm_model"].get(
             llm_model, {}
         )
 
@@ -367,7 +361,7 @@ def dialogue_page(
             tools=tools or openai.NOT_GIVEN,
             tool_choice=tool_choice,
             extra_body=extra_body,
-            max_tokens=MAX_TOKENS,
+            max_tokens=Settings.model_settings.MAX_TOKENS,
         ):
             # import rich
             # rich.print(d)

@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 
 from langchain.docstore.document import Document
 
-from chatchat.configs import SCORE_THRESHOLD
+from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_cache.faiss_cache import (
     ThreadSafeFaiss,
@@ -67,7 +67,7 @@ class FaissKBService(KBService):
         self,
         query: str,
         top_k: int,
-        score_threshold: float = SCORE_THRESHOLD,
+        score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
     ) -> List[Tuple[Document, float]]:
         with self.load_vector_store().acquire() as vs:
             retriever = get_Retriever("ensemble").from_vectorstore(

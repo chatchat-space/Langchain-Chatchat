@@ -24,8 +24,10 @@ from langchain_core.callbacks import Callbacks
 from langchain_core.runnables import Runnable, RunnablePassthrough
 
 from chatchat.server.utils import get_prompt_template
+from chatchat.utils import build_logger
 
-logger = logging.getLogger(__name__)
+
+logger = build_logger()
 
 
 # langchain's AgentRunnable use .stream to make sure .stream_log working.

@@ -1,6 +1,53 @@
 import logging
 import os
 import time
+import typing as t
+
+import loguru
+import loguru._logger
+from chatchat.settings import Settings
+
+
+if t.TYPE_CHECKING:
+    class _LoggerWrapper(loguru._logger.Logger):
+        ...
+else:
+    class _LoggerWrapper:
+        def __init__(self, log_file: str=None):
+            self.logger = loguru.logger.opt(colors=True)
+            if log_file:
+                if not log_file.endswith(".log"):
+                    log_file = f"{log_file}.log"
+                if not os.path.isabs(log_file):
+                    log_file = str((Settings.basic_settings.LOG_PATH / log_file).resolve())
+                self.logger.add(log_file, colorize=False)
+
+        def info(self, *args, **kwds):
+            self.logger.info(*args, **kwds)
+        
+        def error(self, *args, **kwds):
+            self.logger.opt(exception=True).error(*args, **kwds)
+        
+        def debug(self, *args, **kwds):
+            if Settings.basic_settings.log_verbose:
+                self.logger.debug(*args, **kwds)
+
+        def warning(self, *args, **kwds):
+            self.logger.warning(*args, **kwds)
+
+        def __getattr__(self, attr):
+            return getattr(self.logger, atrr)
+
+
+def build_logger(log_file: str="chatchat"):
+    '''
+    build a logger with colorized output and a log file, for example:
+
+    logger = build_logger("api")
+    logger.info("<green>some message</green>")
+    '''
+    return _LoggerWrapper(log_file=log_file)
+
 
 logger = logging.getLogger(__name__)
 
