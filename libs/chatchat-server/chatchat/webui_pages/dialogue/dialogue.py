@@ -131,7 +131,7 @@ def clear_conv(name: str = None):
 
 # @st.cache_data
 def list_tools(_api: ApiRequest):
-    return _api.list_tools() or []
+    return _api.list_tools() or {}
 
 
 def dialogue_page(
