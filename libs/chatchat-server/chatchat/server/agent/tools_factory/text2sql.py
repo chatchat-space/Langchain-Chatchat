@@ -56,7 +56,7 @@ def query_database(query: str, config: dict):
 
     llm = get_ChatOpenAI(
         model_name=global_model_name,
-        temperature=0,
+        temperature=0.1,
         streaming=True,
         local_wrap=True,
         verbose=True,
