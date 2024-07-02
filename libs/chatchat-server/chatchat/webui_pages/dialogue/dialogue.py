@@ -417,7 +417,14 @@ def dialogue_page(
                 text = d.choices[0].delta.content or ""
                 chat_box.update_msg(text.replace("\n", "\n\n"))
             elif d.status is None:  # not agent chat
-                if getattr(d, "is_ref", False):
+                if getattr(d, "tool_output", False) != False:
+                    print("tool_output的类型：{}".format(type(d.tool_output)))
+                # if getattr(d, "is_ref", False):
+                # 若只有原来第一个判断 天气预报工具的处理会走到这,加后续判断为只有tool_output包含docs才走进知识库处理
+                # if getattr(d, "is_ref", False) and getattr(d, "tool_output", True) and d.tool_output.get("docs") != None:
+                # 之前用d.tool_output.get("docs") 会导致在调用text2Sql时报错，text2Sql返回数据中d.tool_output的字段类型为str(见上print打印结果),用get("doc")会报错,所以改为 "docs" in d.tool_output判断
+                # 经测试不管d.tool_output类型为str还是dict,均正常运行 （天气、text2sql、知识库 三种agent）
+                if getattr(d, "is_ref", False) and getattr(d, "tool_output", False) != False and "docs" in d.tool_output:
                     context = ""
                     docs = d.tool_output.get("docs")
                     source_documents = []
@@ -448,10 +455,12 @@ def dialogue_page(
                     )
                     chat_box.insert_msg("")
                 else:
-                    text += d.choices[0].delta.content or ""
-                    chat_box.update_msg(
-                        text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                    )
+                    # 过滤tool_output字段的输出
+                    if getattr(d, "tool_output", False) == False:
+                        text += d.choices[0].delta.content or ""
+                        chat_box.update_msg(
+                            text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                        )
         chat_box.update_msg(text, streaming=False, metadata=metadata)
 
         if os.path.exists("tmp/image.jpg"):
