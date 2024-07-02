@@ -275,7 +275,7 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                 # crate、duckdb、googlesql、mssql、mysql、mariadb、oracle、postgresql、sqlite、clickhouse、prestodb
                 # 不同的数据库请查询SQLAlchemy，修改sqlalchemy_connect_str，配置对应的数据库连接，如sqlite为sqlite:///数据库文件路径，下面示例为mysql
                 # 如提示缺少对应数据库的驱动，请自行通过poetry安装
-                "sqlalchemy_connect_str": "mysql+pymysql://用户名:密码@主机地址/数据库名称e",
+                "sqlalchemy_connect_str": "mysql+pymysql://用户名:密码@主机地址/数据库名称",
                 # 务必评估是否需要开启read_only,开启后会对sql语句进行检查，请确认text2sql.py中的intercept_sql拦截器是否满足你使用的数据库只读要求
                 # 优先推荐从数据库层面对用户权限进行限制
                 "read_only": False,
