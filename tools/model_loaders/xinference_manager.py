@@ -12,13 +12,14 @@ from xinference.model import audio as xf_audio
 from xinference.constants import XINFERENCE_CACHE_DIR
 
 
-model_types = ["LLM", "embedding", "image", "rerank"] # "audio"
+model_types = ["LLM", "embedding", "image", "rerank", "audio"]
 model_name_suffix = "-custom"
 cache_methods = {
     "LLM": xf_llm.llm_family.cache,
     "embedding": xf_embedding.core.cache,
     "image": xf_image.core.cache,
     "rerank": xf_rerank.core.cache,
+    "audio": xf_audio.core.cache,
 }
 
 
@@ -178,6 +179,9 @@ elif model_type == "image":
     cache_dir = get_cache_dir(model_type, model_name)
 elif model_type == "rerank":
     cur_spec = xf_rerank.core.RerankModelSpec.parse_obj(cur_reg)
+    cache_dir = get_cache_dir(model_type, model_name)
+elif model_type == "audio":
+    cur_spec = xf_audio.core.AudioModelFamilyV1.parse_obj(cur_reg)
     cache_dir = get_cache_dir(model_type, model_name)
 
 meta_file = get_meta_path(
