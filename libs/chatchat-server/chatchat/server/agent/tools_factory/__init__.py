@@ -13,3 +13,4 @@ from .wolfram import wolfram
 from .amap_poi_search import amap_poi_search
 from .amap_weather import amap_weather
 from .wikipedia_search import wikipedia_search
+from .text2promql import text2promql
