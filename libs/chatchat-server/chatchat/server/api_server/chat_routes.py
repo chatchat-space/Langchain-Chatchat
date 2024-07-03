@@ -18,7 +18,11 @@ from chatchat.server.utils import (
     get_tool_config,
 )
 from chatchat.settings import Settings
+from chatchat.utils import build_logger
 from .openai_routes import openai_request, OpenAIChatOutput
+
+
+logger = build_logger()
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
@@ -176,15 +180,20 @@ async def chat_completions(
         )
         return result
     else:  # LLM chat directly
-        message_id = (
-            add_message_to_db(
-                chat_type="llm_chat",
-                query=body.messages[-1]["content"],
-                conversation_id=conversation_id,
+        try: # query is complex object that unable add to db when using qwen-vl-chat 
+            message_id = (
+                add_message_to_db(
+                    chat_type="llm_chat",
+                    query=body.messages[-1]["content"],
+                    conversation_id=conversation_id,
+                )
+                if conversation_id
+                else None
             )
-            if conversation_id
-            else None
-        )
+        except Exception as e:
+            logger.error(f"failed to add message to db")
+            message_id = None
+
         extra_json = {
             "message_id": message_id,
             "status": None,

@@ -128,7 +128,11 @@ def get_config_models(
                                     'Please try "pip install xinference-client". ')
 
         for m_type in model_types:
-            for m_name in m.get(m_type, []):
+            models = m.get(m_type, [])
+            if not models or models == "auto":
+                logger.warning("you should not set `auto` without auto_detect_model=True")
+                continue
+            for m_name in models:
                 if model_name is None or model_name == m_name:
                     result[m_name] = {
                         "platform_name": m.get("platform_name"),

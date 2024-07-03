@@ -63,6 +63,7 @@ memoization = "0.4.0"
 pydantic_settings = "2.3.4"
 ruamel_yaml = "0.18.6"
 loguru = "^0.7.2"
+streamlit-paste-button = "0.1.2"
 
 [tool.poetry.extras]
 xinference = ["xinference_client"]

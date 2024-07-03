@@ -247,7 +247,7 @@ def _get_file_info(file_id: str) -> Dict:
 
 def _get_file_path(file_id: str) -> str:
     file_id = base64.urlsafe_b64decode(file_id).decode()
-    return os.path.join(Settings.basic_settings.TEMPERATURE, "openai_files", file_id)
+    return os.path.join(Settings.basic_settings.BASE_TEMP_DIR, "openai_files", file_id)
 
 
 @openai_router.post("/files")
@@ -280,7 +280,7 @@ async def files(
 @openai_router.get("/files")
 def list_files(purpose: str) -> Dict[str, List[Dict]]:
     file_ids = []
-    root_path = Path(Settings.basic_settings.TEMPERATURE) / "openai_files" / purpose
+    root_path = Path(Settings.basic_settings.BASE_TEMP_DIR) / "openai_files" / purpose
     for dir, sub_dirs, files in os.walk(root_path):
         dir = Path(dir).relative_to(root_path).as_posix()
         for file in files:
