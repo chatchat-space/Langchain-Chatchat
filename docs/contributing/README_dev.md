@@ -64,7 +64,7 @@ export CHATCHAT_ROOT=/parth/to/chatchat_data
 
 ## 3. 关于 chatchat 配置项
 
-从 `0.3.1` 版本开始，所有配置项改为 `yaml` 文件，具体参考 [Settings](docs/contributing/settings.md)。
+从 `0.3.1` 版本开始，所有配置项改为 `yaml` 文件，具体参考 [Settings](settings.md)。
 
 执行以下命令初始化项目配置文件和数据目录：
 ```shell
@@ -87,4 +87,4 @@ python cli.py kb --recreate-vs
 python cli.py start -a
 ```
 
-如需调用 API，请参考 [API 使用说明](docs/contributing/api.md)
+如需调用 API，请参考 [API 使用说明](api.md)
