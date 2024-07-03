@@ -524,18 +524,6 @@ _default_tool_settings = {
     "calculate": {
         "use": False,
     },
-    "vqa_processor": {
-        "use": False,
-        "model_path": "your model path",
-        "tokenizer_path": "your tokenizer path",
-        "device": "cuda:1",
-    },
-    "aqa_processor": {
-        "use": False,
-        "model_path": "your model path",
-        "tokenizer_path": "yout tokenizer path",
-        "device": "cuda:2",
-    },
     "text2images": {
         "use": False,
         "model": "sd-turbo",
