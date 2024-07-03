@@ -292,6 +292,19 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
                     # "tanleB":"角色表",
                 },
             },
+            # text2promql 使用建议
+            # 1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
+            # 2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
+            # 3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
+            "text2promql": {
+                "use": False,
+                # <your_prometheus_ip>:<your_prometheus_port>
+                "prometheus_endpoint": "http://127.0.0.1:9090",
+                # <your_prometheus_username>
+                "username": "",
+                # <your_prometheus_password>
+                "password": "",
+            },
         }
         self._init_llm_work_config()
 
