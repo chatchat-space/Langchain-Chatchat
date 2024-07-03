@@ -114,17 +114,15 @@ class KnowledgeService {
         });
         return res.json();
     };
-
-    downloadDocs = async (kbName: string, docName: string): Promise<Reseponse<{}>> => {
+ 
+    downloadDocs = async (kbName: string, docName: string): Promise<void> => {
         const queryString = new URLSearchParams({
             knowledge_base_name: kbName,
             file_name: docName,
             preview: 'false'
         }).toString();
-        const res = await fetch(`${API_ENDPOINTS.knowledgeDownloadDocs}?${queryString}`);
-        console.log('res', res)
-        const data = await res.json();
-        return data;
+        const url = `${API_ENDPOINTS.knowledgeDownloadDocs}?${queryString}`;
+        window.open(url, docName); 
     }; 
     reAddVectorDB = async (params: ReAddVectorDBParams): Promise<Reseponse<ReAddVectorDBRes>> => {
         const res = await fetch(`${API_ENDPOINTS.knowledgeReAddVectorDB}`, {

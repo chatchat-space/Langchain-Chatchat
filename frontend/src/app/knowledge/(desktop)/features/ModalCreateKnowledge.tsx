@@ -74,6 +74,7 @@ const CreateKnowledgeBase = memo<ModalCreateKnowledgeProps>(({ toggleModal, open
           <div style={{ flex: '1' }}>
             <Form.Item label="Embedding模型" name="embed_model" rules={[{ required: true, message: '请选择Embedding模型' }]}>
               <Select>
+                <Select.Option value="bce-embedding-base_v1">bce-embedding-base_v1</Select.Option>
                 <Select.Option value="bge-large-zh-v1.5">bge-large-zh-v1.5</Select.Option>
                 <Select.Option value="text-embedding-v1">text-embedding-v1</Select.Option>
                 <Select.Option value="Bert">Bert</Select.Option>

@@ -99,19 +99,21 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
       dataIndex: 'vector',
       title: '向量库',
     },
-  ]; 
+  ];
   const hasSelected = selectedRowKeys.length > 0;
 
   const download = async () => {
-    setDownloadLoading(true);
-    for (const docName of selectedRowKeys) {
-      await useFetchKnowledgeDownloadDocs(params.id, docName).catch(() => {
+    // setDownloadLoading(true);
+    console.log('selectedRowKeys', selectedRowKeys)
+    selectedRowKeys.forEach((docName) => {
+      console.log('docName', docName)
+      useFetchKnowledgeDownloadDocs(params.id, docName).catch(() => {
         message.error(`下载 ${docName} 失败`);
       })
-    }
-    setDownloadLoading(false);
+    })
+    // setDownloadLoading(false);
   };
-  const reAddVectorDB = async () => { 
+  const reAddVectorDB = async () => {
     Modal.confirm({
       title: `确认将所选数据重新添加至向量库吗?`,
       icon: <ExclamationCircleOutlined />,
@@ -125,12 +127,13 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
             not_refresh_vs_cache: false,
             chunk_size: 250,
             chunk_overlap: 50,
-            file_names: selectedRowKeys.map(decodeURIComponent), 
+            file_names: selectedRowKeys.map(decodeURIComponent),
             docs: ""
           }
           await useFetcUpdateDocs(_params).catch(() => {
             message.error(`更新失败`);
           })
+          mutate();
           resolve(true)
         })
       },
@@ -139,7 +142,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
   }
   const rebuildVectorDB = async () => {
     Modal.confirm({
-      title: `确认重构 ${params.id} 的向量库吗?`,
+      title: `确认依据源文件重建 ${params.id} 的向量库吗?`,
       icon: <ExclamationCircleOutlined />,
       async onOk() {
         setRebuildVectorDBLoading(true);
@@ -157,9 +160,10 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
             onFinish: async () => {
               message.success(`重建向量库成功`);
               setRebuildVectorDBLoading(false);
+              mutate();
             },
             onMessageHandle: (text) => {
-              console.log('text', text)
+              // console.log('text', text)
               setRebuildProgress(text)
             }
           })

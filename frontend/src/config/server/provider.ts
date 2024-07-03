@@ -122,7 +122,7 @@ export const getProviderConfig = () => {
     OLLAMA_PROXY_URL: process.env.OLLAMA_PROXY_URL || '',
 
     CHATCHAT_PROXY_URL: process.env.CHATCHAT_PROXY_URL || '',
-    // KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'http://localhost:7861/knowledge_base',
-    KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'https://violet-swans-relate.loca.lt/knowledge_base',
+    KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'http://localhost:7861/knowledge_base',
+    // KNOWLEDGE_PROXY_URL: process.env.KNOWLEDGE_PROXY_URL || 'https://beige-points-count.loca.lt/knowledge_base',
   };
 };

@@ -3,7 +3,7 @@
 import { Card, List, Empty, Spin } from 'antd';
 import { createStyles } from 'antd-style';
 import dynamic from 'next/dynamic';
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useKnowledgeStore } from '@/store/knowledge';
 
 const ModalSegment = dynamic(() => import('./features/ModalSegment'));
@@ -51,13 +51,17 @@ const App = memo((props: { params: { id: string; fileId: string } }) => {
   //     page_content: "This is a test22", 
   //   },  
   // ] 
-  const { isLoading } = useFetchSearchDocs({
+  const { isLoading, mutate } = useFetchSearchDocs({
     query: "", 
     top_k: 3,
     score_threshold: 1,
     knowledge_base_name: id, 
     file_name: decodeURIComponent(fileId)
   });
+
+  useEffect(()=>{
+    !isModalOpen && mutate();
+  }, [isModalOpen])
 
   const handleSegmentCardClick: typeof setEditContentInfo = (item) => {
     setEditContentInfo({...item})
@@ -91,7 +95,7 @@ const App = memo((props: { params: { id: string; fileId: string } }) => {
           )}
           size="large"
         />
-        {isModalOpen && <ModalSegment toggleOpen={toggleOpen} kbName={props.params.id} fileId={props.params.fileId} />}
+        {isModalOpen && <ModalSegment dataSource={[...fileSearchData]} toggleOpen={toggleOpen} kbName={props.params.id} fileId={props.params.fileId} />}
       </Spin>
     </div>
   );

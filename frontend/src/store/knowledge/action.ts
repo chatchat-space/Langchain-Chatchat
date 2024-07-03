@@ -32,7 +32,8 @@ export interface StoreAction {
   filesData: KnowledgeFilesList;
   useFetchKnowledgeFilesList: (name: string) => SWRResponse<Reseponse<KnowledgeFilesList>>;
   useFetchKnowledgeUploadDocs: (arg: FormData) => Promise<Reseponse<{}>>;
-  useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<Reseponse<{}>>;
+  // useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<Reseponse<{}>>;
+  useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<void>;
   useFetcDelInknowledgeDB: (arg: KnowledgeDelDocsParams) => Promise<Reseponse<KnowledgeDelDocsRes>>;
   useFetcDelInVectorDB: (arg: KnowledgeDelDocsParams) => Promise<Reseponse<KnowledgeDelDocsRes>>;
   useFetcRebuildVectorDB: (arg: KnowledgeRebuildVectorParams, options: {
