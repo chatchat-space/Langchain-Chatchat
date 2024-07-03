@@ -211,7 +211,8 @@ chatchat init
      # 知识库信息数据库连接URI
      SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
     ```
-  - 配置知识库（kb_settings.yaml）（可选） 
+  - 配置知识库（kb_settings.yaml）（可选）
+
     默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
 
 #### 4. 初始化知识库
@@ -274,7 +275,7 @@ chatchat start -a
 ![WebUI界面](docs/img/langchain_chatchat_webui.png)
 
 > [!WARNING]  
-> 由于 chatchat-config server 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
+> 由于 chatchat 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
 >
 > 如需通过机器ip 进行访问(如 Linux 系统), 需要到 `basic_settings.yaml` 中将监听地址修改为 0.0.0.0。
 

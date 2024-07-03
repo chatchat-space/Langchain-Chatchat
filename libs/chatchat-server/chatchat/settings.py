@@ -266,7 +266,7 @@ class PlatformConfig(MyBaseModel):
     """该平台单模型最大并发数"""
 
     auto_detect_model: bool = True
-    """是否自动获取平台可用模型列表，也可针对不同模型类型分别设置"""
+    """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型设为 auto 即可自动检测"""
 
     llm_models: t.Union[t.Literal["auto"], t.List[str]] = [
         "glm4-chat",
@@ -282,6 +282,9 @@ class PlatformConfig(MyBaseModel):
 
     image_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
     """该平台支持的图像生成模型列表，设为 'auto' 则自动检测"""
+
+    multimodal_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    """该平台支持的多模态模型列表，设为 'auto' 则自动检测"""
 
     reranking_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
     """该平台支持的重排模型列表，设为 'auto' 则自动检测"""

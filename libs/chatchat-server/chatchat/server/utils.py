@@ -55,11 +55,9 @@ def get_base_url(url):
 
 
 def get_config_platforms() -> Dict[str, Dict]:
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
-
+    '''
+    获取配置的模型平台，会将 pydantic model 转换为字典。
+    '''
     platforms = [m.model_dump() for m in Settings.model_settings.MODEL_PLATFORMS]
     return {m["platform_name"]: m for m in platforms}
 
@@ -67,7 +65,7 @@ def get_config_platforms() -> Dict[str, Dict]:
 def get_config_models(
     model_name: str = None,
     model_type: Literal[
-        "llm", "embed", "image", "reranking", "speech2text", "tts"
+        "llm", "embed", "image", "multimodal", "reranking", "speech2text", "tts"
     ] = None,
     platform_name: str = None,
 ) -> Dict[str, Dict]:
@@ -83,46 +81,51 @@ def get_config_models(
         "api_proxy": xx,
     }}
     """
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
-
     result = {}
+    if model_type is None:
+        model_types = [
+            "llm_models",
+            "embed_models",
+            "image_models",
+            "multimodal_models",
+            "reranking_models",
+            "speech2text_models",
+            "tts_models",
+        ]
+    else:
+        model_types = [f"{model_type}_models"]
+
+    xf_model_type_maps = {
+        "llm_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" not in v["model_ability"]],
+        "embed_models" : lambda xf_models: [k for k,v in xf_models.items() if "embedding" == v["model_type"]],
+        "image_models" : lambda xf_models: [k for k,v in xf_models.items() if "image" == v["model_type"]],
+        "multimodal_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" in v["model_ability"]],
+        "reranking_models" : lambda xf_models: [k for k,v in xf_models.items() if "rerank" == v["model_type"]],
+        # TODO: audio models
+        "speech2text_models": lambda xf_models: [],
+        "tts_models": lambda xf_models: [],
+    }
+
     for m in list(get_config_platforms().values()):
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
-        if model_type is not None and f"{model_type}_models" not in m:
-            if "auto_detect_model" in m and m.get("auto_detect_model"):
-                if m.get("platform_type") == "xinference":
-                    try:
-                        from xinference_client import RESTfulClient as Client
-                        xf_url = get_base_url(m.get("api_base_url"))
-                        xf_client = Client(xf_url)
-                        xf_models = xf_client.list_models()
-                        m["llm_models"] = [k for k,v in xf_models.items() if "LLM" in v["model_type"]]
-                        m["embed_models"] = [k for k, v in xf_models.items() if "embedding" in v["model_type"]]
-                        m["image_models"] = [k for k, v in xf_models.items() if "image" in v["model_type"]]
-                        m["reranking_models"] = [k for k, v in xf_models.items() if "rerank" in v["model_type"]]
-                    except ImportError:
-                        logger.warning('auto_detect_model needs xinference-client installed. '
-                                       'Please try "pip install xinference-client". ')
 
-            else:
+        if m.get("auto_detect_model"):
+            if not m.get("platform_type") == "xinference": # TODO：当前仅支持 xf 自动检测模型
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
-
-        if model_type is None:
-            model_types = [
-                "llm_models",
-                "embed_models",
-                "image_models",
-                "reranking_models",
-                "speech2text_models",
-                "tts_models",
-            ]
-        else:
-            model_types = [f"{model_type}_models"]
+            for m_type in model_types:
+                if m.get(m_type) != "auto":
+                    continue
+                try:
+                    from xinference_client import RESTfulClient as Client
+                    xf_url = get_base_url(m.get("api_base_url"))
+                    xf_client = Client(xf_url)
+                    xf_models = xf_client.list_models()
+                    m[m_type] = xf_model_type_maps[m_type](xf_models)
+                except ImportError:
+                    logger.warning('auto_detect_model needs xinference-client installed. '
+                                    'Please try "pip install xinference-client". ')
 
         for m_type in model_types:
             for m_name in m.get(m_type, []):
@@ -844,3 +847,11 @@ def get_tool_config(name: str = None) -> Dict:
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         return sock.connect_ex(("localhost", port)) == 0
+
+
+if __name__ == "__main__":
+    # for debug
+    platforms = get_config_platforms()
+    models = get_config_models()
+    model_info = get_model_info(platform_name="xinference-auto")
+    print(1)
