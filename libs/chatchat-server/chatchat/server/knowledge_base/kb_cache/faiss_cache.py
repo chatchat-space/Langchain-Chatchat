@@ -97,7 +97,7 @@ class KBFaissPool(_FaissPool):
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         locked = True
-        vector_name = vector_name or embed_model
+        vector_name = vector_name or embed_model.replace(":", "_")
         cache = self.get((kb_name, vector_name))  # 用元组比拼接字符串好一些
         try:
             if cache is None:

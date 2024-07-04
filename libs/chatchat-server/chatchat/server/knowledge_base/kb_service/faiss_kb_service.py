@@ -47,7 +47,7 @@ class FaissKBService(KBService):
             vs.delete(ids)
 
     def do_init(self):
-        self.vector_name = self.vector_name or self.embed_model
+        self.vector_name = self.vector_name or self.embed_model.replace(":", "_")
         self.kb_path = self.get_kb_path()
         self.vs_path = self.get_vs_path()
 
