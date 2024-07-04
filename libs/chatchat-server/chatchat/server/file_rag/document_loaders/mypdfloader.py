@@ -8,7 +8,7 @@ from PIL import Image
 
 from chatchat.configs import PDF_OCR_THRESHOLD
 from chatchat.server.file_rag.document_loaders.ocr import get_ocr
-
+PDF_FULL_PAGE_SCANNING = False
 
 class RapidOCRPDFLoader(UnstructuredFileLoader):
     def _get_elements(self) -> List:
@@ -52,7 +52,22 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
                     "RapidOCRPDFLoader context page index: {}".format(i)
                 )
                 b_unit.refresh()
-                text = page.get_text("")
+                if PDF_FULL_PAGE_SCANNING == False:
+                    text = page.get_text("")
+
+                # 如果提取不到文字，说明本页都是嵌入图片，直接将整页看作一张图片进行扫描（避免本页pdf是由若干不良切割的图片组成的，从而导致语序混乱）
+                # 可以通过PDF_FULL_PAGE_SCANNING选择是否知识库中的 PDF 全部当作图片 PDF 整页扫描
+                if  PDF_FULL_PAGE_SCANNING or text=="":  
+                    pix = page.get_pixmap(dpi=300)  #提取本页作为单张图片进行扫描,如果出现显存不足的情况可以调低dpi
+                    img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, -1)
+                    result, _ = ocr(img_array)
+                    if result:
+                         ocr_result = [line[1] for line in result]
+                         resp += "\n".join(ocr_result)
+
+                    b_unit.update(1)
+                    continue
+                
                 resp += text + "\n"
 
                 img_list = page.get_image_info(xrefs=True)
