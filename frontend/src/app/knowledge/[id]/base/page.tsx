@@ -10,6 +10,8 @@ import { useKnowledgeStore } from '@/store/knowledge';
 import { useRouter } from 'next/navigation';
 import { UndoOutlined, DeleteOutlined, DownloadOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
+import type { KnowledgeUpdateDocsParams } from '@/types/knowledge';
+
 const ModalAddFile = dynamic(() => import('./features/ModalAddFile'));
 interface DataType {
   id: React.Key;
@@ -29,7 +31,8 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     useFetcDelInknowledgeDB,
     useFetcDelInVectorDB,
     useFetcRebuildVectorDB,
-    useFetchKnowledgeDel
+    useFetchKnowledgeDel,
+    useFetcUpdateDocs
   ] = useKnowledgeStore((s) => [
     s.filesData,
     s.useFetchKnowledgeFilesList,
@@ -37,9 +40,10 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     s.useFetcDelInknowledgeDB,
     s.useFetcDelInVectorDB,
     s.useFetcRebuildVectorDB,
-    s.useFetchKnowledgeDel
+    s.useFetchKnowledgeDel,
+    s.useFetcUpdateDocs
   ]);
-  const { isLoading } = useFetchKnowledgeFilesList(params.id);
+  const { isLoading, mutate } = useFetchKnowledgeFilesList(params.id);
 
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [delDocsLoading, setDelDocsLoading] = useState(false);
@@ -48,26 +52,26 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
 
   // rebuild progress
   const [rebuildProgress, setRebuildProgress] = useState("0%");
-
-  // const data: DataType[] = filesData.map((item, i) => ({
-  //   id: i, // item 应该为对象，待提交问题...
-  //   name: item, // item 应该为对象，待提交问题...
-  //   loader: "",
-  //   splitter: "",
-  //   source: "",
-  //   vector: ""
-  // })); 
-  const data = [
-    { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
-    { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
-  ];
+  const data: DataType[] = filesData.map(({ No, file_name, text_splitter, in_folder, in_db }, i) => ({
+    index: No,
+    id: file_name,
+    name: file_name,
+    loader: "",
+    splitter: text_splitter,
+    source: in_folder ? "✔️" : "❌",
+    vector: in_db ? "✔️" : "❌",
+  }));
+  // const data = [
+  //   { id: '1', name: 'name1', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+  //   { id: '2', name: 'name2', loader: "loader", splitter: "splitter", source: "source", vector: "vector" },
+  // ];
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isShowModal, setModal] = useState(false);
   const [isRebuildVectorDB, setIsRebuildVectorDB] = useState(false);
-  const onSelectChange = (newSelectedRowKeys: string[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
+  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+    setSelectedRowKeys(newSelectedRowKeys as string[]);
   };
   const columns: TableColumnsType<DataType> = [
     {
@@ -76,13 +80,13 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     },
     {
       dataIndex: 'name',
-      render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${rowData.id}`}>{text}</Link>,
+      render: (text, rowData) => <Link href={`/knowledge/${params.id}/base/${encodeURIComponent(rowData.name)}`}>{text}</Link>,
       title: '文档名称',
     },
-    {
-      dataIndex: 'loader',
-      title: '文档加载器',
-    },
+    // {
+    //   dataIndex: 'loader',
+    //   title: '文档加载器',
+    // },
     {
       dataIndex: 'splitter',
       title: '分词器',
@@ -96,50 +100,80 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
       title: '向量库',
     },
   ];
-  const rowSelection = {
-    onChange: onSelectChange,
-    selectedRowKeys,
-  };
   const hasSelected = selectedRowKeys.length > 0;
 
   const download = async () => {
-    setDownloadLoading(true);
-    for (const docName of selectedRowKeys) {
-      await useFetchKnowledgeDownloadDocs(params.id, docName).catch(() => {
+    // setDownloadLoading(true);
+    console.log('selectedRowKeys', selectedRowKeys)
+    selectedRowKeys.forEach((docName) => {
+      console.log('docName', docName)
+      useFetchKnowledgeDownloadDocs(params.id, docName).catch(() => {
         message.error(`下载 ${docName} 失败`);
       })
-    }
-    setDownloadLoading(false);
+    })
+    // setDownloadLoading(false);
   };
   const reAddVectorDB = async () => {
-    setIsRebuildVectorDB(true);
-    setModal(true)
+    Modal.confirm({
+      title: `确认将所选数据重新添加至向量库吗?`,
+      icon: <ExclamationCircleOutlined />,
+      onOk() {
+        return new Promise(async (resolve) => {
+          const _params: KnowledgeUpdateDocsParams = {
+            knowledge_base_name: params.id,
+            override_custom_docs: false,
+            to_vector_store: true,
+            zh_title_enhance: false,
+            not_refresh_vs_cache: false,
+            chunk_size: 250,
+            chunk_overlap: 50,
+            file_names: selectedRowKeys.map(decodeURIComponent),
+            docs: ""
+          }
+          await useFetcUpdateDocs(_params).catch(() => {
+            message.error(`更新失败`);
+          })
+          mutate();
+          resolve(true)
+        })
+      },
+    });
+
   }
   const rebuildVectorDB = async () => {
-    setRebuildVectorDBLoading(true);
-    try {
-      useFetcRebuildVectorDB({
-        "knowledge_base_name": params.id,
-        "allow_empty_kb": true,
-        "vs_type": "faiss",
-        "embed_model": "text-embedding-v1",
-        "chunk_size": 250,
-        "chunk_overlap": 50,
-        "zh_title_enhance": false,
-        "not_refresh_vs_cache": false,
-      }, {
-        onFinish: async () => {
-          message.success(`重建向量库成功`);
+    Modal.confirm({
+      title: `确认依据源文件重建 ${params.id} 的向量库吗?`,
+      icon: <ExclamationCircleOutlined />,
+      async onOk() {
+        setRebuildVectorDBLoading(true);
+        try {
+          useFetcRebuildVectorDB({
+            "knowledge_base_name": params.id,
+            "allow_empty_kb": true,
+            "vs_type": "faiss",
+            "embed_model": "text-embedding-v1",
+            "chunk_size": 250,
+            "chunk_overlap": 50,
+            "zh_title_enhance": false,
+            "not_refresh_vs_cache": false,
+          }, {
+            onFinish: async () => {
+              message.success(`重建向量库成功`);
+              setRebuildVectorDBLoading(false);
+              mutate();
+            },
+            onMessageHandle: (text) => {
+              // console.log('text', text)
+              setRebuildProgress(text)
+            }
+          })
+        } catch (err) {
+          message.error(`请求错误`);
           setRebuildVectorDBLoading(false);
-        },
-        onMessageHandle: (text) => {
-          setRebuildProgress(text)
         }
-      })
-    } catch (err) {
-      message.error(`请求错误`);
-    }
-    setRebuildVectorDBLoading(false);
+      },
+    });
+
   }
   const delInVectorDB = async () => {
     setDelVSLoading(true);
@@ -153,6 +187,7 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     })
     setDelVSLoading(false);
     setSelectedRowKeys([]);
+    mutate();
   }
   const delInknowledgeDB = async () => {
     setDelDocsLoading(true);
@@ -166,10 +201,11 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
     })
     setDelDocsLoading(false);
     setSelectedRowKeys([]);
+    mutate();
   }
   const delKnowledge = async () => {
     Modal.confirm({
-      title: `确认 ${params.id} 删除吗?`,
+      title: `确认删除 ${params.id} 吗?`,
       icon: <ExclamationCircleOutlined />,
       async onOk() {
         const { code: resCode, msg: resMsg } = await useFetchKnowledgeDel(params.id)
@@ -215,14 +251,17 @@ const App: React.FC<{ params: { id: string } }> = ({ params }) => {
           <Table
             columns={columns}
             dataSource={data}
-            rowSelection={rowSelection}
+            rowSelection={{
+              onChange: onSelectChange,
+              selectedRowKeys,
+            }}
             size="middle"
             style={{ width: '100%' }}
             rowKey={"name"}
             loading={isLoading}
             footer={() => <div>
               <Button danger loading={rebuildVectorDBLoading} onClick={rebuildVectorDB} icon={<UndoOutlined />}>
-                依据源文件重建向量库
+                {rebuildVectorDBLoading ? rebuildProgress : ''} 依据源文件重建向量库
               </Button>
             </div>}
           />

@@ -30,6 +30,7 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
 
   const antdUploadProps: UploadProps = {
     name: "files",
+    // multiple: true,
     onRemove: (file) => {
       const index = fileList.indexOf(file);
       const newFileList = fileList.slice();
@@ -78,17 +79,22 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
     }
     formData.append('knowledge_base_name', kbName);
 
-    setConfirmLoading(true);
-    const { code: resCode, msg: resMsg } = await useFetchKnowledgeUploadDocs(formData)
-    setConfirmLoading(true);
+    try {
+      setConfirmLoading(true);
+      const { code: resCode, msg: resMsg } = await useFetchKnowledgeUploadDocs(formData)
+      setConfirmLoading(false);
 
-    if (resCode !== 200) {
-      message.error(resMsg)
-      return;
+      if (resCode !== 200) {
+        message.error(resMsg)
+        return;
+      }
+      message.success(resMsg)
+      mutate();
+      setModalOpen(false);
+    } catch (err) {
+      message.error(`${err}`)
+      setConfirmLoading(false);
     }
-    message.success(resMsg)
-    mutate();
-    setModalOpen(false);
   }
 
 
@@ -100,19 +106,23 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
   return (
     <Modal
       onCancel={() => setModalOpen(false)}
-      open={open} 
+      open={open}
       title={isRebuildVectorDB ? "重新添加至向量库" : "添加文件"}
       onOk={onSubmit}
       confirmLoading={confirmLoading}
       width={600}
+      destroyOnClose
+      afterOpenChange={(open) => { 
+        !open && setFileList([])
+      }}
     >
 
       <Form
         name="validate_other"
         initialValues={{
           override: true,
-          chunk_size: 0,
-          chunk_overlap: 0,
+          chunk_size: 250,
+          chunk_overlap: 50,
           to_vector_store: true,
           ...initialValue
         }}
@@ -126,7 +136,7 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
                 <InboxOutlined />
               </p>
               <p className="ant-upload-text">单击或拖动文件到此区域进行上传</p>
-              <p className="ant-upload-hint">支持单个或批量上传。</p>
+              {/* <p className="ant-upload-hint">支持单个或批量上传。</p> */}
             </Upload.Dragger>
           </div>
           <Form.Item name="override" label="覆盖已有文件" {...layout}>
@@ -157,15 +167,15 @@ const ModalAddFile = memo<ModalAddFileProps>(({ open, setModalOpen, setSelectedR
         </Form.Item>
 
         <Form.Item name="chunk_size" label="单段文本最大长度" {...layout} {...layout}>
-          <InputNumber min={0}  style={{ width: 200 }} />
+          <InputNumber min={0} style={{ width: 200 }} />
         </Form.Item>
 
         <Form.Item name="chunk_overlap" label="相邻文本重合长度" {...layout} {...layout}>
-          <InputNumber min={0}  style={{ width: 200 }} />
+          <InputNumber min={0} style={{ width: 200 }} />
         </Form.Item>
-        <Form.Item name="docs" label="自定义的docs" {...layout} {...layout}>
+        {/* <Form.Item name="docs" label="自定义的docs" {...layout} {...layout}>
           <Input style={{ width: 200 }} />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );

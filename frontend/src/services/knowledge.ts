@@ -4,7 +4,7 @@ import type {
     KnowledgeFilesList, KnowledgeDelDocsParams, KnowledgeDelDocsRes,
     KnowledgeRebuildVectorParams, 
     ReAddVectorDBParams, ReAddVectorDBRes,
-    KnowledgeUplodDocsParams, KnowledgeUplodDocsRes
+    KnowledgeSearchDocsParams, KnowledgeSearchDocsList, KnowledgeUpdateDocsParams
 } from '@/types/knowledge';
 
 import { fetchSSE, FetchSSEOptions } from '@/utils/fetch';
@@ -114,17 +114,15 @@ class KnowledgeService {
         });
         return res.json();
     };
-
-    downloadDocs = async (kbName: string, docName: string): Promise<Reseponse<{}>> => {
+ 
+    downloadDocs = async (kbName: string, docName: string): Promise<void> => {
         const queryString = new URLSearchParams({
             knowledge_base_name: kbName,
             file_name: docName,
             preview: 'false'
         }).toString();
-        const res = await fetch(`${API_ENDPOINTS.knowledgeDownloadDocs}?${queryString}`);
-        console.log('res', res)
-        const data = await res.json();
-        return data;
+        const url = `${API_ENDPOINTS.knowledgeDownloadDocs}?${queryString}`;
+        window.open(url, docName); 
     }; 
     reAddVectorDB = async (params: ReAddVectorDBParams): Promise<Reseponse<ReAddVectorDBRes>> => {
         const res = await fetch(`${API_ENDPOINTS.knowledgeReAddVectorDB}`, {
@@ -138,9 +136,31 @@ class KnowledgeService {
         });
         return res.json();
     };
-
-
-
+    // searchDocs = async (params: KnowledgeSearchDocsParams): Promise<Reseponse<KnowledgeSearchDocsList>> => {
+    searchDocs = async (params: KnowledgeSearchDocsParams): Promise<KnowledgeSearchDocsList> => {
+        const res = await fetch(`${API_ENDPOINTS.knowledgeSearchDocs}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    }; 
+    updateDocs = async (params: KnowledgeUpdateDocsParams): Promise<Reseponse<{}>> => {
+        const res = await fetch(`${API_ENDPOINTS.updateDocsContent}`, {
+            body: JSON.stringify({
+                ...params,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+        });
+        return res.json();
+    }; 
 }
 
 export const knowledgeService = new KnowledgeService();

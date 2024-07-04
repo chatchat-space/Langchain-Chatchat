@@ -9,19 +9,20 @@ import type {
   KnowledgeDelDocsParams, KnowledgeDelDocsRes,
   KnowledgeRebuildVectorParams, KnowledgeUplodDocsParams, KnowledgeUplodDocsRes,
   ReAddVectorDBParams, ReAddVectorDBRes,
+  KnowledgeSearchDocsParams, KnowledgeSearchDocsList, KnowledgeSearchDocsListItem, KnowledgeUpdateDocsParams
 } from '@/types/knowledge';
 import type { FetchSSEOptions } from '@/utils/fetch';
 
 import type { Store } from './store';
 
 export interface StoreAction {
-  // 知识库数据列表
-  listData: KnowledgeList;
 
   // 当前编辑的知识库
   editKnowledgeInfo: null | KnowledgeFormFields;
   setEditKnowledge: (data: KnowledgeFormFields) => void;
 
+  // 知识库数据列表
+  listData: KnowledgeList;
   useFetchKnowledgeList: () => SWRResponse<Reseponse<KnowledgeList>>;
   useFetchKnowledgeAdd: (arg: KnowledgeFormFields) => Promise<Reseponse<KnowledgeFormFields>>;
   useFetchKnowledgeUpdate: (arg: Partial<KnowledgeFormFields>) => Promise<Reseponse<KnowledgeFormFields>>;
@@ -31,14 +32,22 @@ export interface StoreAction {
   filesData: KnowledgeFilesList;
   useFetchKnowledgeFilesList: (name: string) => SWRResponse<Reseponse<KnowledgeFilesList>>;
   useFetchKnowledgeUploadDocs: (arg: FormData) => Promise<Reseponse<{}>>;
-  useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<Reseponse<{}>>;
+  // useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<Reseponse<{}>>;
+  useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<void>;
   useFetcDelInknowledgeDB: (arg: KnowledgeDelDocsParams) => Promise<Reseponse<KnowledgeDelDocsRes>>;
   useFetcDelInVectorDB: (arg: KnowledgeDelDocsParams) => Promise<Reseponse<KnowledgeDelDocsRes>>;
   useFetcRebuildVectorDB: (arg: KnowledgeRebuildVectorParams, options: {
     onFinish: FetchSSEOptions["onFinish"];
     onMessageHandle: FetchSSEOptions["onMessageHandle"]
   }) => void;
-  useFetcReAddVectorDB: (arg: ReAddVectorDBParams) => Promise<Reseponse<ReAddVectorDBRes>>;
+  useFetcReAddVectorDB: (arg: ReAddVectorDBParams) => Promise<Reseponse<ReAddVectorDBRes>>; 
+
+  fileSearchData: KnowledgeSearchDocsList;
+  // useFetchSearchDocs:  (arg: KnowledgeSearchDocsParams) => SWRResponse<Reseponse<KnowledgeSearchDocsList>>;
+  useFetchSearchDocs:  (arg: KnowledgeSearchDocsParams) => SWRResponse<KnowledgeSearchDocsList>;
+  useFetcUpdateDocs:  (arg: KnowledgeUpdateDocsParams) => Promise<Reseponse<{}>>; 
+  editContentInfo: null | KnowledgeSearchDocsListItem;
+  setEditContentInfo: (data: KnowledgeSearchDocsListItem) => void;
 }
 
 export const createKnowledgeAction: StateCreator<
@@ -71,7 +80,7 @@ export const createKnowledgeAction: StateCreator<
   filesData: [],
   useFetchKnowledgeFilesList: (knowledge_base_name) => {
     return useSWR<Reseponse<KnowledgeFilesList>>(
-      globalHelpers.getCurrentLanguage(),
+      [globalHelpers.getCurrentLanguage(), knowledge_base_name],
       knowledgeService.getFilesList(knowledge_base_name),
       {
         onSuccess: (res) => {
@@ -103,6 +112,29 @@ export const createKnowledgeAction: StateCreator<
   editKnowledgeInfo: null,
   setEditKnowledge: (data) => {
     set({ editKnowledgeInfo: data })
-  }
+  },
+  
+  
+  fileSearchData: [],
+  useFetchSearchDocs: (params) => {
+    // return useSWR<Reseponse<KnowledgeSearchDocsList>>(
+    return useSWR<KnowledgeSearchDocsList>(
+      globalHelpers.getCurrentLanguage(),
+      ()=> knowledgeService.searchDocs(params),
+      {
+        onSuccess: (res) => {
+          // set({ fileSearchData: res.data })
+          set({ fileSearchData: res })
+        },
+      },
+    )
+  },
+  useFetcUpdateDocs: (params) => {
+    return knowledgeService.updateDocs(params);
+  }, 
+  editContentInfo: null,
+  setEditContentInfo: (data) => {
+    set({ editContentInfo: data })
+  },
 
 });
