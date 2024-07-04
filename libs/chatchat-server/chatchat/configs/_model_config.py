@@ -241,6 +241,10 @@ class ConfigModelFactory(core_config.ConfigFactory[ConfigModel]):
             "wolfram": {
                 "use": False,
                 "appid": "",
+            },           
+            "amap": {
+                "use": False,
+                "api_key": "",
             },
             "calculate": {
                 "use": False,
