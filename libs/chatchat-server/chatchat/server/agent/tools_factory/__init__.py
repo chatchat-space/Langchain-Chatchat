@@ -10,3 +10,4 @@ from .text2sql import text2sql
 from .vqa_processor import vqa_processor
 from .weather_check import weather_check
 from .wolfram import wolfram
+from .text2promql import text2promql
