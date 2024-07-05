@@ -9,7 +9,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pprint import pprint
 
-from chatchat.configs import BING_SUBSCRIPTION_KEY
 from chatchat.server.utils import api_address
 
 api_base_url = api_address()

@@ -11,13 +11,7 @@ from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
 from sse_starlette.sse import EventSourceResponse
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    OVERLAP_SIZE,
-    SCORE_THRESHOLD,
-    VECTOR_SEARCH_TOP_K,
-    ZH_TITLE_ENHANCE,
-)
+from chatchat.settings import Settings
 from chatchat.server.chat.utils import History
 from chatchat.server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from chatchat.server.knowledge_base.utils import KnowledgeFile
@@ -31,7 +25,10 @@ from chatchat.server.utils import (
     wrap_done,
 )
 
-logger = logging.getLogger(__name__)
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def _parse_files_in_thread(
@@ -79,9 +76,9 @@ def _parse_files_in_thread(
 def upload_temp_docs(
     files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
     prev_id: str = Form(None, description="前知识库ID"),
-    chunk_size: int = Form(CHUNK_SIZE, description="知识库中单段文本最大长度"),
-    chunk_overlap: int = Form(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
-    zh_title_enhance: bool = Form(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+    chunk_size: int = Form(Settings.model_settings.LLM_MODEL_CONFIG, description="知识库中单段文本最大长度"),
+    chunk_overlap: int = Form(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+    zh_title_enhance: bool = Form(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
 ) -> BaseResponse:
     """
     将文件保存到临时目录，并进行向量化。
@@ -116,9 +113,9 @@ def upload_temp_docs(
 async def file_chat(
     query: str = Body(..., description="用户输入", examples=["你好"]),
     knowledge_id: str = Body(..., description="临时知识库ID"),
-    top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+    top_k: int = Body(Settings.kb_settings.VECTOR_SEARCH_TOP_K, description="匹配向量数"),
     score_threshold: float = Body(
-        SCORE_THRESHOLD,
+        Settings.kb_settings.SCORE_THRESHOLD,
         description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右",
         ge=0,
         le=2,

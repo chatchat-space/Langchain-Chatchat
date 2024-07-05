@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
-from chatchat.configs import CHATCHAT_ROOT, MEDIA_PATH, OPEN_CROSS_DOMAIN, VERSION
+from chatchat import __version__
+from chatchat.settings import Settings
 from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.kb_routes import kb_router
 from chatchat.server.api_server.openai_routes import openai_router
@@ -19,12 +20,12 @@ from chatchat.server.utils import MakeFastAPIOffline
 
 
 def create_app(run_mode: str = None):
-    app = FastAPI(title="Langchain-Chatchat API Server", version=VERSION)
+    app = FastAPI(title="Langchain-Chatchat API Server", version=__version__)
     MakeFastAPIOffline(app)
     # Add CORS middleware to allow all origins
     # 在config.py中设置OPEN_DOMAIN=True，允许跨域
     # set OPEN_DOMAIN=True in config.py to allow cross-domain
-    if OPEN_CROSS_DOMAIN:
+    if Settings.basic_settings.OPEN_CROSS_DOMAIN:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -51,10 +52,10 @@ def create_app(run_mode: str = None):
     )(completion)
 
     # 媒体文件
-    app.mount("/media", StaticFiles(directory=MEDIA_PATH), name="media")
+    app.mount("/media", StaticFiles(directory=Settings.basic_settings.MEDIA_PATH), name="media")
 
     # 项目相关图片
-    img_dir = os.path.join(CHATCHAT_ROOT, "img")
+    img_dir = str(Settings.basic_settings.IMG_DIR)
     app.mount("/img", StaticFiles(directory=img_dir), name="img")
 
     return app

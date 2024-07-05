@@ -1,12 +1,15 @@
 import threading
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, Generator
 
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.faiss import FAISS
 
-from chatchat.configs import CHUNK_SIZE, DEFAULT_EMBEDDING_MODEL, log_verbose, logger
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 class ThreadSafeObject:
@@ -28,18 +31,16 @@ class ThreadSafeObject:
         return self._key
 
     @contextmanager
-    def acquire(self, owner: str = "", msg: str = "") -> FAISS:
+    def acquire(self, owner: str = "", msg: str = "") -> Generator[None, None, FAISS]:
         owner = owner or f"thread {threading.get_native_id()}"
         try:
             self._lock.acquire()
             if self._pool is not None:
                 self._pool._cache.move_to_end(self.key)
-            if log_verbose:
-                logger.info(f"{owner} 开始操作：{self.key}。{msg}")
+            logger.debug(f"{owner} 开始操作：{self.key}。{msg}")
             yield self._obj
         finally:
-            if log_verbose:
-                logger.info(f"{owner} 结束操作：{self.key}。{msg}")
+            logger.debug(f"{owner} 结束操作：{self.key}。{msg}")
             self._lock.release()
 
     def start_loading(self):

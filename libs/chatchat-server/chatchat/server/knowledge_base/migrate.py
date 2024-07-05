@@ -4,15 +4,7 @@ from typing import List, Literal
 
 from dateutil.parser import parse
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_VS_TYPE,
-    OVERLAP_SIZE,
-    ZH_TITLE_ENHANCE,
-    log_verbose,
-    logger,
-)
+from chatchat.settings import Settings
 from chatchat.server.db.base import Base, engine
 from chatchat.server.db.models.conversation_model import ConversationModel
 from chatchat.server.db.models.message_model import MessageModel
@@ -36,6 +28,10 @@ from chatchat.server.knowledge_base.utils import (
     list_files_from_folder,
     list_kbs_from_folder,
 )
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def create_tables():
@@ -99,20 +95,18 @@ def file_to_kbfile(kb_name: str, files: List[str]) -> List[KnowledgeFile]:
             kb_files.append(kb_file)
         except Exception as e:
             msg = f"{e}，已跳过"
-            logger.error(
-                f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-            )
+            logger.error(f"{e.__class__.__name__}: {msg}")
     return kb_files
 
 
 def folder2db(
     kb_names: List[str],
     mode: Literal["recreate_vs", "update_in_db", "increment"],
-    vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = DEFAULT_VS_TYPE,
-    embed_model: str = DEFAULT_EMBEDDING_MODEL,
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = OVERLAP_SIZE,
-    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+    vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = Settings.kb_settings.DEFAULT_VS_TYPE,
+    embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+    chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+    chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
+    zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
 ):
     """
     use existed files in local folder to populate database and/or vector store.

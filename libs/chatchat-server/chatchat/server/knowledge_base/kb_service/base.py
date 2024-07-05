@@ -6,14 +6,8 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from langchain.docstore.document import Document
 
-from chatchat.configs import (
-    DEFAULT_EMBEDDING_MODEL,
-    KB_INFO,
-    SCORE_THRESHOLD,
-    VECTOR_SEARCH_TOP_K,
-    kbs_config,
-    logger,
-)
+from chatchat.settings import Settings
+from chatchat.utils import build_logger
 from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
 from chatchat.server.db.repository.knowledge_base_repository import (
     add_kb_to_db,
@@ -44,6 +38,9 @@ from chatchat.server.knowledge_base.utils import (
 from chatchat.server.utils import check_embed_model as _check_embed_model
 
 
+logger = build_logger()
+
+
 class SupportedVSType:
     FAISS = "faiss"
     MILVUS = "milvus"
@@ -60,10 +57,10 @@ class KBService(ABC):
         self,
         knowledge_base_name: str,
         kb_info: str = None,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
     ):
         self.kb_name = knowledge_base_name
-        self.kb_info = kb_info or KB_INFO.get(
+        self.kb_info = kb_info or Settings.kb_settings.KB_INFO.get(
             knowledge_base_name, f"关于{knowledge_base_name}的知识库"
         )
         self.embed_model = embed_model
@@ -209,8 +206,8 @@ class KBService(ABC):
     def search_docs(
         self,
         query: str,
-        top_k: int = VECTOR_SEARCH_TOP_K,
-        score_threshold: float = SCORE_THRESHOLD,
+        top_k: int = Settings.kb_settings.VECTOR_SEARCH_TOP_K,
+        score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
     ) -> List[Document]:
         if not self.check_embed_model(
             f"could not search docs because failed to access embed model."
@@ -293,7 +290,7 @@ class KBService(ABC):
 
     @staticmethod
     def list_kbs_type():
-        return list(kbs_config.keys())
+        return list(Settings.kb_settings.kbs_config.keys())
 
     @classmethod
     def list_kbs(cls):
@@ -361,7 +358,7 @@ class KBServiceFactory:
     def get_service(
         kb_name: str,
         vector_store_type: Union[str, SupportedVSType],
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
         kb_info: str = None,
     ) -> KBService:
         if isinstance(vector_store_type, str):
@@ -408,7 +405,7 @@ class KBServiceFactory:
 
             return MilvusKBService(
                 **params
-            )  # other milvus parameters are set in model_config.kbs_config
+            )  # other milvus parameters are set in model_config.Settings.kb_settings.kbs_config
         elif SupportedVSType.ES == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.es_kb_service import (
                 ESKBService,
