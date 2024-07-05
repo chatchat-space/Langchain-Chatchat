@@ -265,7 +265,7 @@ class PlatformConfig(MyBaseModel):
     api_concurrencies: int = 5
     """该平台单模型最大并发数"""
 
-    auto_detect_model: bool = True
+    auto_detect_model: bool = False
     """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型设为 auto 即可自动检测"""
 
     llm_models: t.Union[t.Literal["auto"], t.List[str]] = [
@@ -389,7 +389,6 @@ class ApiModelSettings(BaseFileSettings):
                 "api_base_url": "http://127.0.0.1:9997/v1",
                 "api_key": "EMPTY",
                 "api_concurrencies": 5,
-                "auto_detect_model": False,
                 "llm_models": [
                     "glm4-chat",
                     "qwen1.5-chat",
@@ -414,7 +413,7 @@ class ApiModelSettings(BaseFileSettings):
                     "qwen2:7b",
                 ],
                 "embed_models": [
-                    "'quentinz/bge-large-zh-v1.5",
+                    "quentinz/bge-large-zh-v1.5",
                 ],
             }),
             PlatformConfig(**{
