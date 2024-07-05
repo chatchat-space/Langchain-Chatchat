@@ -105,27 +105,27 @@ class LangchainReranker(BaseDocumentCompressor):
         return final_results
 
 
-if __name__ == "__main__":
-    from chatchat.configs import (
-        LLM_MODELS,
-        MODEL_PATH,
-        RERANKER_MAX_LENGTH,
-        RERANKER_MODEL,
-        SCORE_THRESHOLD,
-        TEMPERATURE,
-        USE_RERANKER,
-        VECTOR_SEARCH_TOP_K,
-    )
+# if __name__ == "__main__":
+    # 不再适用
+    # from chatchat.configs import (
+    #     MODEL_PATH,
+    #     RERANKER_MAX_LENGTH,
+    #     RERANKER_MODEL,
+    #     SCORE_THRESHOLD,
+    #     TEMPERATURE,
+    #     USE_RERANKER,
+    #     VECTOR_SEARCH_TOP_K,
+    # )
 
-    if USE_RERANKER:
-        reranker_model_path = MODEL_PATH["reranker"].get(
-            RERANKER_MODEL, "BAAI/bge-reranker-large"
-        )
-        print("-----------------model path------------------")
-        print(reranker_model_path)
-        reranker_model = LangchainReranker(
-            top_n=3,
-            device="cpu",
-            max_length=RERANKER_MAX_LENGTH,
-            model_name_or_path=reranker_model_path,
-        )
+    # if USE_RERANKER:
+    #     reranker_model_path = MODEL_PATH["reranker"].get(
+    #         RERANKER_MODEL, "BAAI/bge-reranker-large"
+    #     )
+    #     print("-----------------model path------------------")
+    #     print(reranker_model_path)
+    #     reranker_model = LangchainReranker(
+    #         top_n=3,
+    #         device="cpu",
+    #         max_length=RERANKER_MAX_LENGTH,
+    #         model_name_or_path=reranker_model_path,
+    #     )

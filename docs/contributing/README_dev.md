@@ -56,46 +56,35 @@ poetry build
 
 如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`Langchain-Chatchat/libs/chatchat-server/`)设置为源代码根目录。
 
-## 3. 关于 chatchat-config
-
-chatchat-config 由 ConfigWorkSpace 接口提供知识库配置载入存储，具体实现可以参考 basic_config.py
-
-- ConfigWorkSpace接口说明
-
-ConfigWorkSpace是一个配置工作空间的抽象类，提供基础的配置信息存储和读取功能。
-提供ConfigFactory建造方法产生实例。
-该类的实例对象用于存储工作空间的配置信息，如工作空间的路径等
-工作空间的配置信息存储在用户的家目录下的.chatchat/workspace/workspace_config.json文件中。
-注意：不存在则读取默认
-
+执行以下命令之前，请先设置当前目录和项目数据目录：
 ```shell
-python config_work_space.py init
+cd Langchain-Chatchat/libs/chatchat-server/chatchat
+export CHATCHAT_ROOT=/parth/to/chatchat_data
+```
+
+## 3. 关于 chatchat 配置项
+
+从 `0.3.1` 版本开始，所有配置项改为 `yaml` 文件，具体参考 [Settings](settings.md)。
+
+执行以下命令初始化项目配置文件和数据目录：
+```shell
+python cli.py init
 ```
 
 ## 4. 初始化知识库
 
-> [!Warning]
-> 这个命令会清空数据库，如果您有重要数据，请备份
-
-### 4.1 使用默认 Embedding 模型进行初始化知识库
+> [!WARNING]
+> 这个命令会清空数据库、删除已有的配置文件，如果您有重要数据，请备份。
 
 ```shell
-cd Langchain-Chatchat/libs/chatchat-server/chatchat
-python init_database.py --recreate-vs
+python cli.py kb --recreate-vs
 ```
-
-### 4.2 使用默认 Embedding 模型进行初始化知识库
-
-```shell
-cd Langchain-Chatchat/libs/chatchat-server/chatchat
-python init_database.py --recreate-vs --embed-model=text-embedding-3-small # embedding 模型名称
-```
+如需使用其它 Embedding 模型，或者重建特定的知识库，请查看 `python cli.py kb --help` 了解更多的参数。
 
 ## 5. 启动服务
 
 ```shell
-cd Langchain-Chatchat/libs/chatchat-server/chatchat
-python startup.py -a
+python cli.py start -a
 ```
 
-如需调用 API，请参考 [API 使用说明](/Users/liuqian/Downloads/Langchain-Chatchat/docs/contributing/api.md)
+如需调用 API，请参考 [API 使用说明](api.md)

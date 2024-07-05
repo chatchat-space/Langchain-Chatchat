@@ -6,7 +6,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 import openai
 import requests
 
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, DEFAULT_LLM_MODEL
+from chatchat.settings import Settings
 from chatchat.server.utils import api_address
 
 api_base_url = f"{api_address()}/v1"
@@ -19,13 +19,13 @@ client = openai.Client(
 def test_chat():
     resp = client.chat.completions.create(
         messages=[{"role": "user", "content": "你是谁"}],
-        model=DEFAULT_LLM_MODEL,
+        model=Settings.model_settings.DEFAULT_LLM_MODEL,
     )
     print(resp)
     assert hasattr(resp, "choices") and len(resp.choices) > 0
 
 
 def test_embeddings():
-    resp = client.embeddings.create(input="你是谁", model=DEFAULT_EMBEDDING_MODEL)
+    resp = client.embeddings.create(input="你是谁", model=Settings.model_settings.DEFAULT_EMBEDDING_MODEL)
     print(resp)
     assert hasattr(resp, "data") and len(resp.data) > 0

@@ -9,13 +9,7 @@ from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 from streamlit_antd_components.utils import ParseItems
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    DEFAULT_VS_TYPE,
-    OVERLAP_SIZE,
-    ZH_TITLE_ENHANCE,
-    kbs_config,
-)
+from chatchat.settings import Settings
 from chatchat.server.knowledge_base.kb_service.base import (
     get_kb_details,
     get_kb_file_details,
@@ -115,11 +109,11 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
 
             col0, _ = st.columns([3, 1])
 
-            vs_types = list(kbs_config.keys())
+            vs_types = list(Settings.kb_settings.kbs_config.keys())
             vs_type = col0.selectbox(
                 "向量库类型",
                 vs_types,
-                index=vs_types.index(DEFAULT_VS_TYPE),
+                index=vs_types.index(Settings.kb_settings.DEFAULT_VS_TYPE),
                 key="vs_type",
             )
 
@@ -127,8 +121,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             with col1:
                 embed_models = list(get_config_models(model_type="embed"))
                 index = 0
-                if DEFAULT_EMBEDDING_MODEL in embed_models:
-                    index = embed_models.index(DEFAULT_EMBEDDING_MODEL)
+                if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in embed_models:
+                    index = embed_models.index(Settings.model_settings.DEFAULT_EMBEDDING_MODEL)
                 embed_model = st.selectbox("Embeddings模型", embed_models, index)
 
             submit_create_kb = st.form_submit_button(
@@ -185,13 +179,13 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             expanded=True,
         ):
             cols = st.columns(3)
-            chunk_size = cols[0].number_input("单段文本最大长度：", 1, 1000, CHUNK_SIZE)
+            chunk_size = cols[0].number_input("单段文本最大长度：", 1, 1000, Settings.kb_settings.CHUNK_SIZE)
             chunk_overlap = cols[1].number_input(
-                "相邻文本重合长度：", 0, chunk_size, OVERLAP_SIZE
+                "相邻文本重合长度：", 0, chunk_size, Settings.kb_settings.OVERLAP_SIZE
             )
             cols[2].write("")
             cols[2].write("")
-            zh_title_enhance = cols[2].checkbox("开启中文标题加强", ZH_TITLE_ENHANCE)
+            zh_title_enhance = cols[2].checkbox("开启中文标题加强", Settings.kb_settings.ZH_TITLE_ENHANCE)
 
         if st.button(
             "添加文件到知识库",

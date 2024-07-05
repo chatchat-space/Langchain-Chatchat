@@ -2,11 +2,15 @@ import urllib
 
 from fastapi import Body
 
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, log_verbose, logger
+from chatchat.settings import Settings
 from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
 from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.utils import validate_kb_name
 from chatchat.server.utils import BaseResponse, ListResponse
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def list_kbs():
@@ -18,7 +22,7 @@ def create_kb(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     vector_store_type: str = Body("faiss"),
     kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
-    embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
 ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
@@ -37,9 +41,7 @@ def create_kb(
         kb.create_kb()
     except Exception as e:
         msg = f"创建知识库出错： {e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
@@ -65,9 +67,7 @@ def delete_kb(
             return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
     except Exception as e:
         msg = f"删除知识库时出现意外： {e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=500, msg=f"删除知识库失败 {knowledge_base_name}")

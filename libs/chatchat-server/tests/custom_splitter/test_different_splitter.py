@@ -4,7 +4,7 @@ import sys
 from transformers import AutoTokenizer
 
 sys.path.append("../..")
-from chatchat.configs import CHUNK_SIZE, OVERLAP_SIZE
+from chatchat.settings import Settings
 from chatchat.server.knowledge_base.utils import make_text_splitter
 
 
@@ -15,7 +15,7 @@ def text(splitter_name):
     filepath = "../../knowledge_base/samples/content/test_files/test.txt"
     loader = document_loaders.UnstructuredFileLoader(filepath, autodetect_encoding=True)
     docs = loader.load()
-    text_splitter = make_text_splitter(splitter_name, CHUNK_SIZE, OVERLAP_SIZE)
+    text_splitter = make_text_splitter(splitter_name, Settings.kb_settings.CHUNK_SIZE, Settings.kb_settings.OVERLAP_SIZE)
     if splitter_name == "MarkdownHeaderTextSplitter":
         docs = text_splitter.split_text(docs[0].page_content)
         for doc in docs:

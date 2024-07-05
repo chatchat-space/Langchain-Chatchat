@@ -7,7 +7,7 @@ from typing import List, Literal
 import openai
 from PIL import Image
 
-from chatchat.configs import MEDIA_PATH
+from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import MsgType, get_tool_config, get_model_info
 
@@ -43,10 +43,10 @@ def text2images(
     for x in resp.data:
         uid = uuid.uuid4().hex
         today = datetime.now().strftime("%Y-%m-%d")
-        path = os.path.join(MEDIA_PATH, "image", today)
+        path = os.path.join(Settings.basic_settings.MEDIA_PATH, "image", today)
         os.makedirs(path, exist_ok=True)
         filename = f"image/{today}/{uid}.png"
-        with open(os.path.join(MEDIA_PATH, filename), "wb") as fp:
+        with open(os.path.join(Settings.basic_settings.MEDIA_PATH, filename), "wb") as fp:
             fp.write(base64.b64decode(x.b64_json))
         images.append(filename)
     return BaseToolOutput(

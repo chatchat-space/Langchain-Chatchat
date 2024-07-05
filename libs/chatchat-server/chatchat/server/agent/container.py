@@ -1,8 +1,10 @@
 import logging
 
 from chatchat.server.utils import get_tool_config
+from chatchat.utils import build_logger
 
-logger = logging.getLogger(__name__)
+
+logger = build_logger()
 
 
 class ModelContainer:
