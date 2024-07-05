@@ -40,6 +40,8 @@ async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
     max_semaphore = 0
     selected_platform = ""
     model_infos = get_model_info(model_name=model_name, multiple=True)
+    assert model_infos, f"specified model '{model_name}' cannot be found in MODEL_PLATFORMS."
+
     for m, c in model_infos.items():
         key = (m, c["platform_name"])
         api_concurrencies = c.get("api_concurrencies", DEFAULT_API_CONCURRENCIES)
