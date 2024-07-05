@@ -333,14 +333,15 @@ def dialogue_page(
 
     # TODO: 这里的内容有点奇怪，从后端导入Settings.model_settings.LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
     #  传入后端的内容
-    chat_model_config = {key: {} for key in Settings.model_settings.LLM_MODEL_CONFIG.keys()}
-    for key in Settings.model_settings.LLM_MODEL_CONFIG:
-        if Settings.model_settings.LLM_MODEL_CONFIG[key]:
-            first_key = next(iter(Settings.model_settings.LLM_MODEL_CONFIG[key]))
-            chat_model_config[key][first_key] = Settings.model_settings.LLM_MODEL_CONFIG[key][first_key]
+    llm_model_config = Settings.model_settings.LLM_MODEL_CONFIG
+    chat_model_config = {key: {} for key in llm_model_config.keys()}
+    for key in llm_model_config:
+        if c := llm_model_config[key]:
+            model = c.get("model", "").strip() or Settings.model_settings.DEFAULT_LLM_MODEL
+            chat_model_config[key][model] = llm_model_config[key]
     llm_model = ctx.get("llm_model")
     if llm_model is not None:
-        chat_model_config["llm_model"][llm_model] = Settings.model_settings.LLM_MODEL_CONFIG["llm_model"].get(
+        chat_model_config["llm_model"][llm_model] = llm_model_config["llm_model"].get(
             llm_model, {}
         )
 

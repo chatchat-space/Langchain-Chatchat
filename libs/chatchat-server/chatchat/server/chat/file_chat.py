@@ -76,7 +76,7 @@ def _parse_files_in_thread(
 def upload_temp_docs(
     files: List[UploadFile] = File(..., description="上传文件，支持多文件"),
     prev_id: str = Form(None, description="前知识库ID"),
-    chunk_size: int = Form(Settings.model_settings.LLM_MODEL_CONFIG, description="知识库中单段文本最大长度"),
+    chunk_size: int = Form(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Form(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Form(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
 ) -> BaseResponse:

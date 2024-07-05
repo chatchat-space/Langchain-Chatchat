@@ -180,6 +180,18 @@ class BaseFileSettings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    def model_post_init(self, __context: os.Any) -> None:
+        self._auto_reload = True
+        return super().model_post_init(__context)
+
+    @property
+    def auto_reload(self) -> bool:
+        return self._auto_reload
+    
+    @auto_reload.setter
+    def auto_reload(self, val: bool):
+        self._auto_reload = val
+
     @classmethod
     def settings_customise_sources(
         cls,
@@ -191,23 +203,24 @@ class BaseFileSettings(BaseSettings):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         return init_settings, env_settings, dotenv_settings, YamlConfigSettingsSource(settings_cls)
 
-    @classmethod
     def create_template_file(
-        cls,
-        init_kwds: t.Dict = {},
+        self,
+        model_obj: BaseFileSettings=None,
         dump_kwds: t.Dict={},
         sub_comments: t.Dict[str, SubModelComment]={},
         write_file: bool | str | Path = False,
         file_format: t.Literal["yaml", "json"] = "yaml",
     ) -> str:
+        if model_obj is None:
+            model_obj = self
         if file_format == "yaml":
-            template = YamlTemplate(cls(**init_kwds), dump_kwds=dump_kwds, sub_comments=sub_comments)
+            template = YamlTemplate(model_obj=model_obj, dump_kwds=dump_kwds, sub_comments=sub_comments)
             return template.create_yaml_template(write_to=write_file)
         else:
             dump_kwds.setdefault("indent", 4)
-            data = cls(**init_kwds).model_dump_json(**dump_kwds)
+            data = model_obj.model_dump_json(**dump_kwds)
             if write_file:
-                write_file = cls.model_config.get("json_file")
+                write_file = self.model_config.get("json_file")
                 with open(write_file, "w", encoding="utf-8") as fp:
                     fp.write(data)
             return data
@@ -218,20 +231,21 @@ def _lazy_load_key(settings: BaseSettings):
     for n in ["env_file", "json_file", "yaml_file", "toml_file"]:
         key = None
         if file := settings.model_config.get(n):
-            if os.path.isfile(file):
+            if os.path.isfile(file) and os.path.getsize(file) > 0:
                 key = int(os.path.getmtime(file))
         keys.append(key)
     return tuple(keys)
 
 
-_T = t.TypeVar("_T", bound=BaseSettings)
+_T = t.TypeVar("_T", bound=BaseFileSettings)
 
 @cached(max_size=1, algorithm=CachingAlgorithmFlag.LRU, thread_safe=True, custom_key_maker=_lazy_load_key)
 def _cached_settings(settings: _T) -> _T:
     '''
     the sesstings is cached, and refreshed when configuration files changed
     '''
-    settings.__init__()
+    if settings.auto_reload:
+        settings.__init__()
     return settings
 
 
