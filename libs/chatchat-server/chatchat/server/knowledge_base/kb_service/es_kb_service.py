@@ -25,11 +25,12 @@ class ESKBService(KBService):
     def do_init(self):
         self.kb_path = self.get_kb_path(self.kb_name)
         self.index_name = os.path.split(self.kb_path)[-1]
-        self.IP = Settings.kb_settings.kbs_config[self.vs_type()]["host"]
-        self.PORT = Settings.kb_settings.kbs_config[self.vs_type()]["port"]
-        self.user = Settings.kb_settings.kbs_config[self.vs_type()].get("user", "")
-        self.password = Settings.kb_settings.kbs_config[self.vs_type()].get("password", "")
-        self.dims_length = Settings.kb_settings.kbs_config[self.vs_type()].get("dims_length", None)
+        kb_config = Settings.kb_settings.kbs_config[self.vs_type()]
+        self.IP = kb_config["host"]
+        self.PORT = kb_config["port"]
+        self.user = kb_config.get("user", "")
+        self.password = kb_config.get("password", "")
+        self.dims_length = kb_config.get("dims_length", None)
         self.embeddings_model = get_Embeddings(self.embed_model)
         try:
             # ES python客户端连接（仅连接）

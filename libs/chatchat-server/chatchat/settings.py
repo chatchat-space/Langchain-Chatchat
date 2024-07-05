@@ -12,9 +12,6 @@ from chatchat.pydantic_settings_file import *
 # chatchat 数据目录，必须通过环境变量设置。如未设置则自动使用当前目录。
 CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
-# 一些帮助简化定义的变量
-_DEFAULT_LLM_MODEL = "glm4-chat"
-
 
 class BasicSettings(BaseFileSettings):
     '''
@@ -280,19 +277,19 @@ class PlatformConfig(MyBaseModel):
     ]
     """该平台支持的嵌入模型列表，设为 'auto' 则自动检测"""
 
-    image_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    image_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的图像生成模型列表，设为 'auto' 则自动检测"""
 
-    multimodal_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    multimodal_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的多模态模型列表，设为 'auto' 则自动检测"""
 
-    reranking_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    reranking_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的重排模型列表，设为 'auto' 则自动检测"""
 
-    speech2text_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    speech2text_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的 STT 模型列表，设为 'auto' 则自动检测"""
 
-    tts_models: t.Union[t.Literal["auto"], t.List[str]] = "auto"
+    tts_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的 TTS 模型列表，设为 'auto' 则自动检测"""
 
 
@@ -301,19 +298,19 @@ class ApiModelSettings(BaseFileSettings):
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "model_settings.yaml")
 
-    DEFAULT_LLM_MODEL: str = _DEFAULT_LLM_MODEL
+    DEFAULT_LLM_MODEL: str = "glm4-chat"
     """默认选用的 LLM 名称"""
 
     DEFAULT_EMBEDDING_MODEL: str = "bge-large-zh-v1.5"
     """默认选用的 Embedding 名称"""
 
-    Agent_MODEL: str = "" # TODO: 似乎与 LLM_MODEL_CONFIGS 重复了
+    Agent_MODEL: str = "" # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     """AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])"""
 
     HISTORY_LEN: int = 3
     """默认历史对话轮数"""
 
-    MAX_TOKENS: t.Optional[int] = None # TODO: 似乎与 LLM_MODEL_CONFIGS 重复了
+    MAX_TOKENS: t.Optional[int] = None # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     """大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度"""
 
     TEMPERATURE: float = 0.7
@@ -331,48 +328,46 @@ class ApiModelSettings(BaseFileSettings):
     LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {
             # 意图识别不需要输出，模型后台知道就行
             "preprocess_model": {
-                _DEFAULT_LLM_MODEL: {
-                    "temperature": 0.05,
-                    "max_tokens": 4096,
-                    "history_len": 10,
-                    "prompt_name": "default",
-                    "callbacks": False,
-                },
+                "model": "",
+                "temperature": 0.05,
+                "max_tokens": 4096,
+                "history_len": 10,
+                "prompt_name": "default",
+                "callbacks": False,
             },
             "llm_model": {
-                _DEFAULT_LLM_MODEL: {
-                    "temperature": 0.9,
-                    "max_tokens": 4096,
-                    "history_len": 10,
-                    "prompt_name": "default",
-                    "callbacks": True,
-                }
+                "model": "",
+                "temperature": 0.9,
+                "max_tokens": 4096,
+                "history_len": 10,
+                "prompt_name": "default",
+                "callbacks": True,
             },
             "action_model": {
-                _DEFAULT_LLM_MODEL: {
-                    "temperature": 0.01,
-                    "max_tokens": 4096,
-                    "history_len": 10,
-                    "prompt_name": "ChatGLM3",
-                    "callbacks": True,
-                }
+                "model": "",
+                "temperature": 0.01,
+                "max_tokens": 4096,
+                "history_len": 10,
+                "prompt_name": "ChatGLM3",
+                "callbacks": True,
             },
             "postprocess_model": {
-                _DEFAULT_LLM_MODEL: {
-                    "temperature": 0.01,
-                    "max_tokens": 4096,
-                    "history_len": 10,
-                    "prompt_name": "default",
-                    "callbacks": True,
-                }
+                "model": "",
+                "temperature": 0.01,
+                "max_tokens": 4096,
+                "history_len": 10,
+                "prompt_name": "default",
+                "callbacks": True,
             },
             "image_model": {
-                "sd-turbo": {
-                    "size": "256*256",
-                }
+                "model": "sd-turbo",
+                "size": "256*256",
             },
         }
-    """LLM模型配置，包括了不同模态初始化参数"""
+    """
+    LLM模型配置，包括了不同模态初始化参数。
+    `model` 如果留空则自动使用 DEFAULT_LLM_MODEL
+    """
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
             PlatformConfig(**{
@@ -753,11 +748,18 @@ class SettingsContainer:
         self.basic_settings.create_template_file(write_file=True)
         self.kb_settings.create_template_file(write_file=True)
         self.model_settings.create_template_file(sub_comments={
-                                 "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
-                                                     "is_entire_comment": True}},
+                                                    "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
+                                                                        "is_entire_comment": True}},
                                                 write_file=True)
-        self.tool_settings.create_template_file(init_kwds=_default_tool_settings, write_file=True, file_format="yaml")
+        self.tool_settings.create_template_file(write_file=True, file_format="yaml")
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
+
+    def set_auto_reload(self, flag: bool=True):
+        self.basic_settings.auto_reload = flag
+        self.kb_settings.auto_reload = flag
+        self.model_settings.auto_reload = flag
+        self.tool_settings.auto_reload = flag
+        self.prompt_settings.auto_reload = flag
 
 
 Settings = SettingsContainer()

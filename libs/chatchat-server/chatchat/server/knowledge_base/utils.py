@@ -350,7 +350,7 @@ class KnowledgeFile:
         docs: List[Document] = None,
         zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
         refresh: bool = False,
-        chunk_size: int = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
         text_splitter: TextSplitter = None,
     ):
@@ -382,7 +382,7 @@ class KnowledgeFile:
         self,
         zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
         refresh: bool = False,
-        chunk_size: int = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
         text_splitter: TextSplitter = None,
     ):
@@ -421,7 +421,7 @@ def files2docs_in_thread_file2docs(
 
 def files2docs_in_thread(
     files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
-    chunk_size: int = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+    chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
     chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
     zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
 ) -> Generator:

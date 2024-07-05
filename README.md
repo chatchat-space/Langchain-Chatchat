@@ -182,6 +182,10 @@ set CHATCHAT_ROOT=/path/to/chatchat_data
 2. 执行初始化
 ```shell
 chatchat init
+# 如果你已经启动了 Xinference 服务，可以直接指定 Xinference API 地址、LLM 模型、Embedding 模型，可以跳过第3、4步，直接按第5步启动服务：
+# chatchat init -x http://127.0.0.1:9999/v1 -l qwen2-instruct -e bce -r
+# chatchat start -a
+# 具体查看 chatchat init --help
 ```
 该命令会执行以下操作：
 - 创建所有需要的数据目录
