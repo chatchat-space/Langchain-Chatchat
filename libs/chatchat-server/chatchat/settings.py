@@ -570,6 +570,11 @@ _default_tool_settings = {
             # "tanleB":"角色表",
         },
     },
+    "amap": {
+        "use": False,
+        "api_key": "高德地图 API KEY",
+    },
+
     # text2promql 使用建议
     # 1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
     # 2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
