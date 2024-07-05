@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from langchain.schema import Document
 from langchain.vectorstores.milvus import Milvus
 
-from chatchat.configs import kbs_config
+from chatchat.settings import Settings
 from chatchat.server.db.repository import list_file_num_docs_id_by_kb_name_and_file_name
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import (
@@ -60,9 +60,9 @@ class MilvusKBService(KBService):
         self.milvus = Milvus(
             embedding_function=(self.embed_model),
             collection_name=self.kb_name,
-            connection_args=kbs_config.get("milvus"),
-            index_params=kbs_config.get("milvus_kwargs")["index_params"],
-            search_params=kbs_config.get("milvus_kwargs")["search_params"],
+            connection_args=Settings.kb_settings.kbs_config.get("milvus"),
+            index_params=Settings.kb_settings.kbs_config.get("milvus_kwargs")["index_params"],
+            search_params=Settings.kb_settings.kbs_config.get("milvus_kwargs")["search_params"],
         )
 
     def do_init(self):

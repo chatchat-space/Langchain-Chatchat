@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
 from langchain_core.output_parsers import StrOutputParser
 from sse_starlette.sse import EventSourceResponse
 
-from chatchat.configs import LLM_MODEL_CONFIG
+from chatchat.settings import Settings
 from chatchat.server.agent.agent_factory.agents_registry import agents_registry
 from chatchat.server.agent.container import container
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
@@ -34,7 +34,7 @@ from chatchat.server.utils import (
 
 
 def create_models_from_config(configs, callbacks, stream, max_tokens):
-    configs = configs or LLM_MODEL_CONFIG
+    configs = configs or Settings.model_settings.LLM_MODEL_CONFIG
     models = {}
     prompts = {}
     for model_type, model_configs in configs.items():

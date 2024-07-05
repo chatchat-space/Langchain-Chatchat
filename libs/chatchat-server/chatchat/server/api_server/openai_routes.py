@@ -16,12 +16,13 @@ from openai import AsyncClient
 from openai.types.file_object import FileObject
 from sse_starlette.sse import EventSourceResponse
 
-from chatchat.configs import BASE_TEMP_DIR, log_verbose
+from chatchat.settings import Settings
 from chatchat.server.utils import get_config_platforms, get_model_info, get_OpenAIClient
+from chatchat.utils import build_logger
 
 from .api_schemas import *
 
-logger = logging.getLogger()
+logger = build_logger()
 
 
 DEFAULT_API_CONCURRENCIES = 5  # 默认单个模型最大并发数
@@ -139,8 +140,7 @@ async def create_chat_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
-    if log_verbose:
-        print(body)
+    logger.debug(body)
     async with get_model_client(body.model) as client:
         result = await openai_request(client.chat.completions.create, body)
         return result
@@ -247,7 +247,7 @@ def _get_file_info(file_id: str) -> Dict:
 
 def _get_file_path(file_id: str) -> str:
     file_id = base64.urlsafe_b64decode(file_id).decode()
-    return os.path.join(BASE_TEMP_DIR, "openai_files", file_id)
+    return os.path.join(Settings.basic_settings.BASE_TEMP_DIR, "openai_files", file_id)
 
 
 @openai_router.post("/files")
@@ -280,7 +280,7 @@ async def files(
 @openai_router.get("/files")
 def list_files(purpose: str) -> Dict[str, List[Dict]]:
     file_ids = []
-    root_path = Path(BASE_TEMP_DIR) / "openai_files" / purpose
+    root_path = Path(Settings.basic_settings.BASE_TEMP_DIR) / "openai_files" / purpose
     for dir, sub_dirs, files in os.walk(root_path):
         dir = Path(dir).relative_to(root_path).as_posix()
         for file in files:

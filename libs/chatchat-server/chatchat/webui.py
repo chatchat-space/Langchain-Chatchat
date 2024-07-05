@@ -3,7 +3,7 @@ import sys
 import streamlit as st
 import streamlit_antd_components as sac
 
-from chatchat.configs import VERSION
+from chatchat import __version__
 from chatchat.server.utils import api_address
 from chatchat.webui_pages.dialogue.dialogue import chat_box, dialogue_page
 from chatchat.webui_pages.knowledge_base.knowledge_base import knowledge_base_page
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         menu_items={
             "Get Help": "https://github.com/chatchat-space/Langchain-Chatchat",
             "Report a bug": "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            "About": f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！""",
+            "About": f"""欢迎使用 Langchain-Chatchat WebUI {__version__}！""",
         },
         layout="centered",
     )
@@ -48,7 +48,7 @@ if __name__ == "__main__":
             get_img_base64("logo-long-chatchat-trans-v2.png"), use_column_width=True
         )
         st.caption(
-            f"""<p align="right">当前版本：{VERSION}</p>""",
+            f"""<p align="right">当前版本：{__version__}</p>""",
             unsafe_allow_html=True,
         )
 

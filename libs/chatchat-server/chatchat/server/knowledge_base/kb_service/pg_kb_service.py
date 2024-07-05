@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import Session
 
-from chatchat.configs import kbs_config
+from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import (
     KBService,
@@ -22,7 +22,7 @@ from chatchat.server.utils import get_Embeddings
 
 class PGKBService(KBService):
     engine: Engine = sqlalchemy.create_engine(
-        kbs_config.get("pg").get("connection_uri"), pool_size=10
+        Settings.kb_settings.kbs_config.get("pg").get("connection_uri"), pool_size=10
     )
 
     def _load_pg_vector(self):
@@ -31,7 +31,7 @@ class PGKBService(KBService):
             collection_name=self.kb_name,
             distance_strategy=DistanceStrategy.EUCLIDEAN,
             connection=PGKBService.engine,
-            connection_string=kbs_config.get("pg").get("connection_uri"),
+            connection_string=Settings.kb_settings.kbs_config.get("pg").get("connection_uri"),
         )
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:

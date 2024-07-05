@@ -10,24 +10,26 @@ from langchain_community.vectorstores.elasticsearch import (
     ElasticsearchStore,
 )
 
-from chatchat.configs import KB_ROOT_PATH, kbs_config
+from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 class ESKBService(KBService):
     def do_init(self):
         self.kb_path = self.get_kb_path(self.kb_name)
         self.index_name = os.path.split(self.kb_path)[-1]
-        self.IP = kbs_config[self.vs_type()]["host"]
-        self.PORT = kbs_config[self.vs_type()]["port"]
-        self.user = kbs_config[self.vs_type()].get("user", "")
-        self.password = kbs_config[self.vs_type()].get("password", "")
-        self.dims_length = kbs_config[self.vs_type()].get("dims_length", None)
+        self.IP = Settings.kb_settings.kbs_config[self.vs_type()]["host"]
+        self.PORT = Settings.kb_settings.kbs_config[self.vs_type()]["port"]
+        self.user = Settings.kb_settings.kbs_config[self.vs_type()].get("user", "")
+        self.password = Settings.kb_settings.kbs_config[self.vs_type()].get("password", "")
+        self.dims_length = Settings.kb_settings.kbs_config[self.vs_type()].get("dims_length", None)
         self.embeddings_model = get_Embeddings(self.embed_model)
         try:
             # ES python客户端连接（仅连接）
@@ -97,7 +99,7 @@ class ESKBService(KBService):
 
     @staticmethod
     def get_kb_path(knowledge_base_name: str):
-        return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+        return os.path.join(Settings.basic_settings.KB_ROOT_PATH, knowledge_base_name)
 
     @staticmethod
     def get_vs_path(knowledge_base_name: str):

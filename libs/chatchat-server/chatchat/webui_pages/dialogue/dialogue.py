@@ -1,7 +1,10 @@
 import base64
+import hashlib
+import io
 import os
 import uuid
 from datetime import datetime
+from PIL import Image as PILImage
 from typing import Dict, List
 from urllib.parse import urlencode
 
@@ -11,20 +14,15 @@ import streamlit as st
 import streamlit_antd_components as sac
 from streamlit_chatbox import *
 from streamlit_extras.bottom_container import bottom
+from streamlit_paste_button import paste_image_button
 
-from chatchat.configs import (
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_LLM_MODEL,
-    LLM_MODEL_CONFIG,
-    MODEL_PLATFORMS,
-    TEMPERATURE,
-    MAX_TOKENS,
-)
+from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.utils import MsgType, get_config_models
+from chatchat.server.utils import MsgType, get_config_models, get_config_platforms
 from chatchat.webui_pages.dialogue.utils import process_files
 from chatchat.webui_pages.utils import *
+
 
 chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
 
@@ -87,6 +85,18 @@ def upload_temp_docs(files, _api: ApiRequest) -> str:
     return _api.upload_temp_docs(files).get("data", {}).get("id")
 
 
+@st.cache_data
+def upload_image_file(file_name: str, content: bytes) -> dict:
+    '''upload image for vision model using openai sdk'''
+    client = openai.Client(base_url=f"{api_address()}/v1", api_key="NONE")
+    return client.files.create(file=(file_name, content), purpose="assistants").to_dict()
+
+
+def get_image_file_url(upload_file: dict) -> str:
+    file_id = upload_file.get("id")
+    return f"{api_address()}/v1/files/{file_id}/content"
+
+
 def add_conv(name: str = ""):
     conv_names = chat_box.get_chat_names()
     if not name:
@@ -131,7 +141,7 @@ def clear_conv(name: str = None):
 
 # @st.cache_data
 def list_tools(_api: ApiRequest):
-    return _api.list_tools() or []
+    return _api.list_tools() or {}
 
 
 def dialogue_page(
@@ -141,8 +151,8 @@ def dialogue_page(
     ctx = chat_box.context
     ctx.setdefault("uid", uuid.uuid4().hex)
     ctx.setdefault("file_chat_id", None)
-    ctx.setdefault("llm_model", DEFAULT_LLM_MODEL)
-    ctx.setdefault("temperature", TEMPERATURE)
+    ctx.setdefault("llm_model", Settings.model_settings.DEFAULT_LLM_MODEL)
+    ctx.setdefault("temperature", Settings.model_settings.TEMPERATURE)
     st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
     st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
 
@@ -159,11 +169,16 @@ def dialogue_page(
     def llm_model_setting():
         # 模型
         cols = st.columns(3)
-        platforms = ["所有"] + [x["platform_name"] for x in MODEL_PLATFORMS]
+        platforms = ["所有"] + list(get_config_platforms())
         platform = cols[0].selectbox("选择模型平台", platforms, key="platform")
         llm_models = list(
             get_config_models(
                 model_type="llm", platform_name=None if platform == "所有" else platform
+            )
+        )
+        llm_models += list(
+            get_config_models(
+                model_type="multimodal", platform_name=None if platform == "所有" else platform
             )
         )
         llm_model = cols[1].selectbox("选择LLM模型", llm_models, key="llm_model")
@@ -244,6 +259,31 @@ def dialogue_page(
             # files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
             files_upload = None
 
+            # 用于图片对话、文生图的图片
+            upload_image = None
+            def on_upload_file_change():
+                if f := st.session_state.get("upload_image"):
+                    name = ".".join(f.name.split(".")[:-1]) + ".png"
+                    st.session_state["cur_image"] = (name, PILImage.open(f))
+                else:
+                    st.session_state["cur_image"] = (None, None)
+                st.session_state.pop("paste_image", None)
+
+            st.file_uploader("上传图片", ["bmp", "jpg", "jpeg", "png"],
+                                            accept_multiple_files=False,
+                                            key="upload_image",
+                                            on_change=on_upload_file_change)
+            paste_image = paste_image_button("黏贴图像", key="paste_image")
+            cur_image = st.session_state.get("cur_image", (None, None))
+            if cur_image[1] is None and paste_image.image_data is not None:
+                name = hashlib.md5(paste_image.image_data.tobytes()).hexdigest()+".png"
+                cur_image = (name, paste_image.image_data) 
+            if cur_image[1] is not None:
+                st.image(cur_image[1])
+                buffer = io.BytesIO()
+                cur_image[1].save(buffer, format="png")
+                upload_image = upload_image_file(cur_image[0], buffer.getvalue())
+
         with tab2:
             # 会话
             cols = st.columns(3)
@@ -291,16 +331,16 @@ def dialogue_page(
     #     "optional_text_label": "欢迎反馈您打分的理由",
     # }
 
-    # TODO: 这里的内容有点奇怪，从后端导入LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
+    # TODO: 这里的内容有点奇怪，从后端导入Settings.model_settings.LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
     #  传入后端的内容
-    chat_model_config = {key: {} for key in LLM_MODEL_CONFIG.keys()}
-    for key in LLM_MODEL_CONFIG:
-        if LLM_MODEL_CONFIG[key]:
-            first_key = next(iter(LLM_MODEL_CONFIG[key]))
-            chat_model_config[key][first_key] = LLM_MODEL_CONFIG[key][first_key]
+    chat_model_config = {key: {} for key in Settings.model_settings.LLM_MODEL_CONFIG.keys()}
+    for key in Settings.model_settings.LLM_MODEL_CONFIG:
+        if Settings.model_settings.LLM_MODEL_CONFIG[key]:
+            first_key = next(iter(Settings.model_settings.LLM_MODEL_CONFIG[key]))
+            chat_model_config[key][first_key] = Settings.model_settings.LLM_MODEL_CONFIG[key][first_key]
     llm_model = ctx.get("llm_model")
     if llm_model is not None:
-        chat_model_config["llm_model"][llm_model] = LLM_MODEL_CONFIG["llm_model"].get(
+        chat_model_config["llm_model"][llm_model] = Settings.model_settings.LLM_MODEL_CONFIG["llm_model"].get(
             llm_model, {}
         )
 
@@ -320,7 +360,13 @@ def dialogue_page(
             .get(next(iter(chat_model_config["llm_model"])), {})
             .get("history_len", 1)
         )
-        chat_box.user_say(prompt)
+
+        is_vision_chat = upload_image and not selected_tools
+
+        if is_vision_chat: # multimodal chat
+            chat_box.user_say([Image(get_image_file_url(upload_image), width=100), Markdown(prompt)])
+        else:
+            chat_box.user_say(prompt)
         if files_upload:
             if files_upload["images"]:
                 st.markdown(
@@ -343,7 +389,14 @@ def dialogue_page(
         started = False
 
         client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE")
-        messages = history + [{"role": "user", "content": prompt}]
+        if is_vision_chat: # multimodal chat
+            content = [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": get_image_file_url(upload_image)}}
+            ]
+            messages = [{"role": "user", "content": content}]
+        else:
+            messages = history + [{"role": "user", "content": prompt}]
         tools = list(selected_tool_configs)
         if len(selected_tools) == 1:
             tool_choice = selected_tools[0]
@@ -359,117 +412,133 @@ def dialogue_page(
             chat_model_config=chat_model_config,
             conversation_id=conversation_id,
             tool_input=tool_input,
+            upload_image=upload_image,
         )
-        for d in client.chat.completions.create(
-            messages=messages,
-            model=llm_model,
-            stream=True,
-            tools=tools or openai.NOT_GIVEN,
-            tool_choice=tool_choice,
-            extra_body=extra_body,
-            max_tokens=MAX_TOKENS,
-        ):
-            # import rich
-            # rich.print(d)
-            message_id = d.message_id
-            metadata = {
-                "message_id": message_id,
-            }
+        stream = not is_vision_chat
+        if stream:
+            for d in client.chat.completions.create(
+                messages=messages,
+                model=llm_model,
+                stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
+                tools=tools or openai.NOT_GIVEN,
+                tool_choice=tool_choice,
+                extra_body=extra_body,
+                max_tokens=Settings.model_settings.MAX_TOKENS,
+            ):
+                # import rich
+                # rich.print(d)
+                message_id = d.message_id
+                metadata = {
+                    "message_id": message_id,
+                }
 
-            # clear initial message
-            if not started:
-                chat_box.update_msg("", streaming=False)
-                started = True
+                # clear initial message
+                if not started:
+                    chat_box.update_msg("", streaming=False)
+                    started = True
 
-            if d.status == AgentStatus.error:
-                st.error(d.choices[0].delta.content)
-            elif d.status == AgentStatus.llm_start:
-                chat_box.insert_msg("正在解读工具输出结果...")
-                text = d.choices[0].delta.content or ""
-            elif d.status == AgentStatus.llm_new_token:
-                text += d.choices[0].delta.content or ""
-                chat_box.update_msg(
-                    text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                )
-            elif d.status == AgentStatus.llm_end:
-                text += d.choices[0].delta.content or ""
-                chat_box.update_msg(
-                    text.replace("\n", "\n\n"), streaming=False, metadata=metadata
-                )
-            # tool 的输出与 llm 输出重复了
-            # elif d.status == AgentStatus.tool_start:
-            #     formatted_data = {
-            #         "Function": d.choices[0].delta.tool_calls[0].function.name,
-            #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
-            #     }
-            #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-            #     text = """\n```{}\n```\n""".format(formatted_json)
-            #     chat_box.insert_msg( # TODO: insert text directly not shown
-            #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
-            # elif d.status == AgentStatus.tool_end:
-            #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
-            #     if d.message_type == MsgType.IMAGE:
-            #         for url in json.loads(tool_output).get("images", []):
-            #             url = f"{api.base_url}/media/{url}"
-            #             chat_box.insert_msg(Image(url))
-            #         chat_box.update_msg(expanded=False, state="complete")
-            #     else:
-            #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
-            #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
-            elif d.status == AgentStatus.agent_finish:
-                text = d.choices[0].delta.content or ""
-                chat_box.update_msg(text.replace("\n", "\n\n"))
-            elif d.status is None:  # not agent chat
-                if getattr(d, "is_ref", False):
-                    context = str(d.tool_output)
-                    if isinstance(d.tool_output, dict):
-                        docs = d.tool_output.get("docs", [])
-                        source_documents = []
-                        for inum, doc in enumerate(docs):
-                            doc = DocumentWithVSId.parse_obj(doc)
-                            filename = doc.metadata.get("source")
-                            parameters = urlencode(
-                                {
-                                    "knowledge_base_name": d.tool_output.get(
-                                        "knowledge_base"
-                                    ),
-                                    "file_name": filename,
-                                }
-                            )
-                            url = (
-                                f"{api.base_url}/knowledge_base/download_doc?" + parameters
-                            )
-                            ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-                            source_documents.append(ref)
-                        context = "\n".join(source_documents)
-
-                    chat_box.insert_msg(
-                        Markdown(
-                            context,
-                            in_expander=True,
-                            state="complete",
-                            title="参考资料",
-                        )
-                    )
-                    chat_box.insert_msg("")
-                elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
-                    for img in d.tool_output.get("images", []):
-                        chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
-                else:
+                if d.status == AgentStatus.error:
+                    st.error(d.choices[0].delta.content)
+                elif d.status == AgentStatus.llm_start:
+                    chat_box.insert_msg("正在解读工具输出结果...")
+                    text = d.choices[0].delta.content or ""
+                elif d.status == AgentStatus.llm_new_token:
                     text += d.choices[0].delta.content or ""
                     chat_box.update_msg(
                         text.replace("\n", "\n\n"), streaming=True, metadata=metadata
                     )
-        chat_box.update_msg(text, streaming=False, metadata=metadata)
+                elif d.status == AgentStatus.llm_end:
+                    text += d.choices[0].delta.content or ""
+                    chat_box.update_msg(
+                        text.replace("\n", "\n\n"), streaming=False, metadata=metadata
+                    )
+                # tool 的输出与 llm 输出重复了
+                # elif d.status == AgentStatus.tool_start:
+                #     formatted_data = {
+                #         "Function": d.choices[0].delta.tool_calls[0].function.name,
+                #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+                #     }
+                #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                #     text = """\n```{}\n```\n""".format(formatted_json)
+                #     chat_box.insert_msg( # TODO: insert text directly not shown
+                #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
+                # elif d.status == AgentStatus.tool_end:
+                #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
+                #     if d.message_type == MsgType.IMAGE:
+                #         for url in json.loads(tool_output).get("images", []):
+                #             url = f"{api.base_url}/media/{url}"
+                #             chat_box.insert_msg(Image(url))
+                #         chat_box.update_msg(expanded=False, state="complete")
+                #     else:
+                #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
+                #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
+                elif d.status == AgentStatus.agent_finish:
+                    text = d.choices[0].delta.content or ""
+                    chat_box.update_msg(text.replace("\n", "\n\n"))
+                elif d.status is None:  # not agent chat
+                    if getattr(d, "is_ref", False):
+                        context = str(d.tool_output)
+                        if isinstance(d.tool_output, dict):
+                            docs = d.tool_output.get("docs", [])
+                            source_documents = []
+                            for inum, doc in enumerate(docs):
+                                doc = DocumentWithVSId.parse_obj(doc)
+                                filename = doc.metadata.get("source")
+                                parameters = urlencode(
+                                    {
+                                        "knowledge_base_name": d.tool_output.get(
+                                            "knowledge_base"
+                                        ),
+                                        "file_name": filename,
+                                    }
+                                )
+                                url = (
+                                    f"{api.base_url}/knowledge_base/download_doc?" + parameters
+                                )
+                                ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
+                                source_documents.append(ref)
+                            context = "\n".join(source_documents)
 
-        if os.path.exists("tmp/image.jpg"):
-            with open("tmp/image.jpg", "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode()
-                img_tag = (
-                    f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
-                )
-                st.markdown(img_tag, unsafe_allow_html=True)
-            os.remove("tmp/image.jpg")
+                        chat_box.insert_msg(
+                            Markdown(
+                                context,
+                                in_expander=True,
+                                state="complete",
+                                title="参考资料",
+                            )
+                        )
+                        chat_box.insert_msg("")
+                    elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
+                        for img in d.tool_output.get("images", []):
+                            chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
+                    else:
+                        text += d.choices[0].delta.content or ""
+                        chat_box.update_msg(
+                            text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                        )
+            chat_box.update_msg(text, streaming=False, metadata=metadata)
+        else:
+            d =client.chat.completions.create(
+                messages=messages,
+                model=llm_model,
+                stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
+                tools=tools or openai.NOT_GIVEN,
+                tool_choice=tool_choice,
+                extra_body=extra_body,
+                max_tokens=Settings.model_settings.MAX_TOKENS,
+            )
+            import rich
+            rich.print(d)
+            chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
+
+        # if os.path.exists("tmp/image.jpg"):
+        #     with open("tmp/image.jpg", "rb") as image_file:
+        #         encoded_string = base64.b64encode(image_file.read()).decode()
+        #         img_tag = (
+        #             f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
+        #         )
+        #         st.markdown(img_tag, unsafe_allow_html=True)
+            # os.remove("tmp/image.jpg")
         # chat_box.show_feedback(**feedback_kwargs,
         #                        key=message_id,
         #                        on_submit=on_feedback,

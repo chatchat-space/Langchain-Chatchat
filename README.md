@@ -76,6 +76,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 | 搜索引擎对话    | ✅                                | ✅                                                                   ||
 | 文件对话      | ✅仅向量检索                           | ✅统一为File RAG功能,支持BM25+KNN等多种检索方式                                    ||
 | 数据库对话     | ❌                                | ✅                                                                   ||
+| 多模态图片对话     | ❌                                | ✅  推荐使用 qwen-vl-chat                   ||
 | ARXIV文献对话 | ❌                                | ✅                                                                   ||
 | Wolfram对话 | ❌                                | ✅                                                                   ||
 | 文生图       | ❌                                | ✅                                                                   ||
@@ -89,6 +90,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 |选中"启用Agent",选择多个工具|由LLM自动进行工具调用|使用ChatGLM3/Qwen或在线API等具备Agent能力的模型|
 |选中"启用Agent",选择单个工具|LLM仅解析工具参数|使用的模型Agent能力一般,不能很好的选择工具<br>想手动选择功能|
 |不选中"启用Agent",选择单个工具|不使用Agent功能的情况下,手动填入参数进行工具调用|使用的模型不具备Agent能力|
+|不选中任何工具，上传一个图片|图片对话|使用 qwen-vl-chat 等多模态模型|
 
 更多功能和更新请实际部署体验.
 
@@ -163,192 +165,67 @@ LLM、Embedding、Reranker
 > 为避免依赖冲突，请将 Langchain-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中, 比如 conda, venv,
 > virtualenv 等。
 
-#### 3. 查看与修改 Langchain-Chatchat 配置
+#### 3. 初始化项目配置与数据目录
 
-从 0.3.0 版本起，Langchain-Chatchat 不再使用本地文件的方式进行配置修改，改为使用命令行的方式，并会在后续版本中增加配置项修改页面。
+从 0.3.1 版本起，Langchain-Chatchat 使用本地 `yaml` 文件的方式进行配置，用户可以直接查看并修改其中的内容，服务器会自动更新无需重启。
 
-以下从查看配置、修改配置两种操作类型进行介绍。
-
-##### 3.1 查看 chatchat-config 命令帮助
-
-输入以下命令查看可选配置类型：
-
+1. 设置 Chatchat 存储配置文件和数据文件的根目录（可选）
 ```shell
-chatchat-config --help
+# on linux or macos
+export CHATCHAT_ROOT=/path/to/chatchat_data
+
+# on windows
+set CHATCHAT_ROOT=/path/to/chatchat_data
 ```
+若不设置该环境变量，则自动使用当前目录。
 
-这时会得到返回：
-
-```text 
-Usage: chatchat-config [OPTIONS] COMMAND [ARGS]...
-
-  指令` chatchat-config` 工作空间配置
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  basic   基础配置
-  kb      知识库配置
-  model   模型配置
-  server  服务配置
-```
-
-可根据上述配置命令选择需要查看或修改的配置类型，以`基础配置`为例，想要进行`基础配置`查看或修改时可以输入以下命令获取帮助信息：
-
+2. 执行初始化
 ```shell
-chatchat-config basic --help
+chatchat init
 ```
+该命令会执行以下操作：
+- 创建所有需要的数据目录
+- 复制 samples 知识库内容
+- 生成默认 `yaml` 配置文件
 
-这时会得到返回信息：
+3. 修改配置文件
+  - 配置模型（model_settings.yaml）  
+    需要根据步骤 **2. 模型推理框架并加载模型** 中选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
+    ```yaml
+    # 默认选用的 LLM 名称
+     DEFAULT_LLM_MODEL: qwen1.5-chat
 
-```text
-Usage: chatchat-config basic [OPTIONS]
+     # 默认选用的 Embedding 名称
+     DEFAULT_EMBEDDING_MODEL: bge-large-zh-v1.5
 
-  基础配置
+    # 将 `LLM_MODEL_CONFIG` 中 `llm_model, action_model` 的键改成对应的 LLM 模型
+    # 在 `MODEL_PLATFORMS` 中修改对应模型平台信息
+    ```
+  - 配置知识库路径（basic_settings.yaml）（可选）  
+    默认知识库位于 `CHATCHAT_ROOT/data/knowledge_base`，如果你想把知识库放在不同的位置，或者想连接现有的知识库，可以在这里修改对应目录即可。
+    ```yaml
+    # 知识库默认存储路径
+     KB_ROOT_PATH: D:\chatchat-test\data\knowledge_base
 
-Options:
-  --verbose [true|false]  是否开启详细日志
-  --data TEXT             初始化数据存放路径，注意：目录会清空重建
-  --format TEXT           日志格式
-  --clear                 清除配置
-  --show                  显示配置
-  --help                  Show this message and exit.
-```
+     # 数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
+     DB_ROOT_PATH: D:\chatchat-test\data\knowledge_base\info.db
 
-##### 3.2 使用 chatchat-config 查看对应配置参数
+     # 知识库信息数据库连接URI
+     SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
+    ```
+  - 配置知识库（kb_settings.yaml）（可选）
 
-以`基础配置`为例，可根据上述命令帮助内容确认，需要查看`基础配置`的配置参数，可直接输入：
+    默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
 
-```shell
-chatchat-config basic --show
-```
-
-在未进行配置项修改时，可得到默认配置内容如下：
-
-```text 
-{
-    "log_verbose": false,
-    "CHATCHAT_ROOT": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat",
-    "DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data",
-    "IMG_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/img",
-    "NLTK_DATA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/nltk_data",
-    "LOG_FORMAT": "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s",
-    "LOG_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/logs",
-    "MEDIA_PATH": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/media",
-    "BASE_TEMP_DIR": "/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/temp",
-    "class_name": "ConfigBasic"
-}
-```
-
-##### 3.3 使用 chatchat-config 修改对应配置参数
-
-以修改`模型配置`中`默认llm模型`为例，可以执行以下命令行查看配置项名称：
-
-```shell
-chatchat-config model --help
-```
-
-这时会得到
-
-```text 
-Usage: chatchat-config model [OPTIONS]
-
-  模型配置
-
-Options:
-  --default_llm_model TEXT        默认llm模型
-  --default_embedding_model TEXT  默认embedding模型
-  --agent_model TEXT              agent模型
-  --history_len INTEGER           历史长度
-  --max_tokens INTEGER            最大tokens
-  --temperature FLOAT             温度
-  --support_agent_models TEXT     支持的agent模型
-  --set_model_platforms TEXT      模型平台配置 as a JSON string.
-  --set_tool_config TEXT          工具配置项  as a JSON string.
-  --clear                         清除配置
-  --show                          显示配置
-  --help                          Show this message and exit.
-```
-
-可首先查看当前`模型配置`的配置项：
-
-```shell
-chatchat-config model --show
-```
-
-这时会得到:
-
-```text 
-{
-    "DEFAULT_LLM_MODEL": "glm4-chat",
-    "DEFAULT_EMBEDDING_MODEL": "bge-large-zh-v1.5",
-    "Agent_MODEL": null,
-    "HISTORY_LEN": 3,
-    "MAX_TOKENS": null,
-    "TEMPERATURE": 0.7,
-    ...
-    "class_name": "ConfigModel"
-}
-```
-
-需要修改`默认llm模型`为`qwen2-instruct`时，可执行：
-
-```shell
-chatchat-config model --default_llm_model qwen2-instruct
-```
-
-更多配置项修改帮助请参考 [README.md](libs/chatchat-server/README.md)
-
-#### 4. 自定义模型接入配置
-
-完成上述项目配置项查看与修改后，需要根据步骤**2. 模型推理框架并加载模型**
-中选用的模型推理框架与加载的模型进行模型接入配置，其中模型推理框架包括 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api)
-等，可以提供 [GLM-4-Chat](https://github.com/THUDM/GLM-4) 与 [Qwen2-Instruct](https://github.com/QwenLM/Qwen2)
-等中文最新开源模型的接入支持。
-如果您已经有了一个openai endpoint的能力的地址，可以在MODEL_PLATFORMS这里直接配置
-```text
-chatchat-config model --set_model_platforms TEXT      模型平台配置 as a JSON string.
-```
-- platform_name 可以任意填写，不要重复即可
-- platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
-- 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
-- 设置模型
-```shell
-$ chatchat-config model --set_model_platforms "[{
-    \"platform_name\": \"xinference\",
-    \"platform_type\": \"xinference\",
-    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
-    \"api_key\": \"EMPT\",
-    \"api_concurrencies\": 5,
-    \"llm_models\": [
-        \"autodl-tmp-glm-4-9b-chat\"
-    ],
-    \"embed_models\": [
-        \"bge-large-zh-v1.5\"
-    ],
-    \"image_models\": [],
-    \"reranking_models\": [],
-    \"speech2text_models\": [],
-    \"tts_models\": []
-}]"
-```
-
-#### 5. 初始化知识库
+#### 4. 初始化知识库
 
 > [!WARNING]  
-> 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**与**步骤4**完成模型接入配置。
+> 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**完成模型接入配置。
 
 ```shell
-chatchat-kb -r
+chatchat kb -r
 ```
-
-指定 text-embedding 模型进行初始化(如有需要):
-
-```shell
-cd # 回到原始目录
-chatchat-kb -r --embed-model=text-embedding-3-small
-```
+更多功能可以查看 `chatchat kb --help`
 
 出现以下日志即为成功:
 
@@ -367,13 +244,6 @@ chatchat-kb -r --embed-model=text-embedding-3-small
 
 总计用时        ：0:02:33.414425
 
-```
-
-知识库路径为 3.2 中 *DATA_PATH* 变量指向的路径下的 knowledge_base 目录中:
-
-```shell
-(chatchat) [root@VM-centos ~]# ls /root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples/vector_store
-bge-large-zh-v1.5  text-embedding-3-small
 ```
 
 > [!Note]
@@ -396,10 +266,10 @@ bge-large-zh-v1.5  text-embedding-3-small
 > 
 > </details>
 
-#### 6. 启动项目
+#### 5. 启动项目
 
 ```shell
-chatchat -a
+chatchat start -a
 ```
 
 出现以下界面即为启动成功:
@@ -407,58 +277,10 @@ chatchat -a
 ![WebUI界面](docs/img/langchain_chatchat_webui.png)
 
 > [!WARNING]  
-> 由于 chatchat-config server 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
+> 由于 chatchat 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
 >
-> 如需修改请参考以下方式：
-> <details>
-> ```shell
-> chatchat-config server --show
-> ```
->
-> 这时会得到
-> ```text 
-> {
->     "HTTPX_DEFAULT_TIMEOUT": 300.0,
->     "OPEN_CROSS_DOMAIN": true,
->     "DEFAULT_BIND_HOST": "127.0.0.1",
->     "WEBUI_SERVER_PORT": 8501,
->     "API_SERVER_PORT": 7861,
->     "WEBUI_SERVER": {
->         "host": "127.0.0.1",
->         "port": 8501
->     },
->     "API_SERVER": {
->         "host": "127.0.0.1",
->         "port": 7861
->     },
->     "class_name": "ConfigServer"
-> }
-> ```
->
-> 如需通过机器ip 进行访问(如 Linux 系统), 需要将监听地址修改为 0.0.0.0。
-> ```shell
-> chatchat-config server --default_bind_host=0.0.0.0
-> ```
->
-> 这时会得到
-> ```text 
-> {
->     "HTTPX_DEFAULT_TIMEOUT": 300.0,
->     "OPEN_CROSS_DOMAIN": true,
->     "DEFAULT_BIND_HOST": "0.0.0.0",
->     "WEBUI_SERVER_PORT": 8501,
->     "API_SERVER_PORT": 7861,
->     "WEBUI_SERVER": {
->         "host": "0.0.0.0",
->         "port": 8501
->     },
->     "API_SERVER": {
->         "host": "0.0.0.0",
->         "port": 7861
->     },
->     "class_name": "ConfigServer"
-> }
-> ```
+> 如需通过机器ip 进行访问(如 Linux 系统), 需要到 `basic_settings.yaml` 中将监听地址修改为 0.0.0.0。
+
 > </details>
 
 ### 源码安装部署/开发部署
@@ -477,8 +299,7 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 
 * 0.3.x 结构改变很大,强烈建议您按照文档重新部署. 以下指南不保证100%兼容和成功. 记得提前备份重要数据!
 
-- 首先按照 `安装部署` 中的步骤配置运行环境
-- 配置 `DATA` 等选项
+- 首先按照 `安装部署` 中的步骤配置运行环境，修改配置文件
 - 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
 
 ---

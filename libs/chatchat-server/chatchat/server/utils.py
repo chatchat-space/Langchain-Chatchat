@@ -28,18 +28,12 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
 
-from chatchat.configs import (
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_LLM_MODEL,
-    HTTPX_DEFAULT_TIMEOUT,
-    MODEL_PLATFORMS,
-    TEMPERATURE,
-    MAX_TOKENS,
-    log_verbose,
-)
+from chatchat.settings import Settings
 from chatchat.server.pydantic_v2 import BaseModel, Field
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -47,11 +41,8 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     try:
         await fn
     except Exception as e:
-        logging.exception(e)
         msg = f"Caught exception: {e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
     finally:
         # Signal the aiter to stop.
         event.set()
@@ -62,19 +53,19 @@ def get_base_url(url):
     base_url = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_url)  # 格式化基础url
     return base_url.rstrip('/')
 
-def get_config_platforms() -> Dict[str, Dict]:
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
 
-    return {m["platform_name"]: m for m in MODEL_PLATFORMS}
+def get_config_platforms() -> Dict[str, Dict]:
+    '''
+    获取配置的模型平台，会将 pydantic model 转换为字典。
+    '''
+    platforms = [m.model_dump() for m in Settings.model_settings.MODEL_PLATFORMS]
+    return {m["platform_name"]: m for m in platforms}
 
 
 def get_config_models(
     model_name: str = None,
     model_type: Literal[
-        "llm", "embed", "image", "reranking", "speech2text", "tts"
+        "llm", "embed", "image", "multimodal", "reranking", "speech2text", "tts"
     ] = None,
     platform_name: str = None,
 ) -> Dict[str, Dict]:
@@ -90,49 +81,58 @@ def get_config_models(
         "api_proxy": xx,
     }}
     """
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
-
     result = {}
-    for m in MODEL_PLATFORMS:
+    if model_type is None:
+        model_types = [
+            "llm_models",
+            "embed_models",
+            "image_models",
+            "multimodal_models",
+            "reranking_models",
+            "speech2text_models",
+            "tts_models",
+        ]
+    else:
+        model_types = [f"{model_type}_models"]
+
+    xf_model_type_maps = {
+        "llm_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" not in v["model_ability"]],
+        "embed_models" : lambda xf_models: [k for k,v in xf_models.items() if "embedding" == v["model_type"]],
+        "image_models" : lambda xf_models: [k for k,v in xf_models.items() if "image" == v["model_type"]],
+        "multimodal_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" in v["model_ability"]],
+        "reranking_models" : lambda xf_models: [k for k,v in xf_models.items() if "rerank" == v["model_type"]],
+        # TODO: audio models
+        "speech2text_models": lambda xf_models: [],
+        "tts_models": lambda xf_models: [],
+    }
+
+    for m in list(get_config_platforms().values()):
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
-        if model_type is not None and f"{model_type}_models" not in m:
-            if "auto_detect_model" in m and m.get("auto_detect_model"):
-                if m.get("platform_type") == "xinference":
-                    try:
-                        from xinference_client import RESTfulClient as Client
-                        xf_url = get_base_url(m.get("api_base_url"))
-                        xf_client = Client(xf_url)
-                        xf_models = xf_client.list_models()
-                        m["llm_models"] = [k for k,v in xf_models.items() if "LLM" in v["model_type"]]
-                        m["embed_models"] = [k for k, v in xf_models.items() if "embedding" in v["model_type"]]
-                        m["image_models"] = [k for k, v in xf_models.items() if "image" in v["model_type"]]
-                        m["reranking_models"] = [k for k, v in xf_models.items() if "rerank" in v["model_type"]]
-                    except ImportError:
-                        logger.warning('auto_detect_model needs xinference-client installed. '
-                                       'Please try "pip install xinference-client". ')
 
-            else:
+        if m.get("auto_detect_model"):
+            if not m.get("platform_type") == "xinference": # TODO：当前仅支持 xf 自动检测模型
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
-
-        if model_type is None:
-            model_types = [
-                "llm_models",
-                "embed_models",
-                "image_models",
-                "reranking_models",
-                "speech2text_models",
-                "tts_models",
-            ]
-        else:
-            model_types = [f"{model_type}_models"]
+            for m_type in model_types:
+                if m.get(m_type) != "auto":
+                    continue
+                try:
+                    from xinference_client import RESTfulClient as Client
+                    xf_url = get_base_url(m.get("api_base_url"))
+                    xf_client = Client(xf_url)
+                    xf_models = xf_client.list_models()
+                    m[m_type] = xf_model_type_maps[m_type](xf_models)
+                except ImportError:
+                    logger.warning('auto_detect_model needs xinference-client installed. '
+                                    'Please try "pip install xinference-client". ')
 
         for m_type in model_types:
-            for m_name in m.get(m_type, []):
+            models = m.get(m_type, [])
+            if not models or models == "auto":
+                logger.warning("you should not set `auto` without auto_detect_model=True")
+                continue
+            for m_name in models:
                 if model_name is None or model_name == m_name:
                     result[m_name] = {
                         "platform_name": m.get("platform_name"),
@@ -164,9 +164,9 @@ def get_model_info(
 
 
 def get_ChatOpenAI(
-    model_name: str = DEFAULT_LLM_MODEL,
-    temperature: float = TEMPERATURE,
-    max_tokens: int = MAX_TOKENS,
+    model_name: str = Settings.model_settings.DEFAULT_LLM_MODEL,
+    temperature: float = Settings.model_settings.TEMPERATURE,
+    max_tokens: int = Settings.model_settings.MAX_TOKENS,
     streaming: bool = True,
     callbacks: List[Callable] = [],
     verbose: bool = True,
@@ -212,7 +212,7 @@ def get_ChatOpenAI(
 def get_OpenAI(
     model_name: str,
     temperature: float,
-    max_tokens: int = MAX_TOKENS,
+    max_tokens: int = Settings.model_settings.MAX_TOKENS,
     streaming: bool = True,
     echo: bool = True,
     callbacks: List[Callable] = [],
@@ -252,7 +252,7 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-    embed_model: str = DEFAULT_EMBEDDING_MODEL,
+    embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
     local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
@@ -291,7 +291,7 @@ def get_Embeddings(
         )
 
 
-def check_embed_model(embed_model: str = DEFAULT_EMBEDDING_MODEL) -> bool:
+def check_embed_model(embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
@@ -565,20 +565,20 @@ def MakeFastAPIOffline(
 
 
 def api_address() -> str:
-    from chatchat.configs import API_SERVER
+    from chatchat.settings import Settings
 
-    host = API_SERVER["host"]
+    host = Settings.basic_settings.API_SERVER["host"]
     if host == "0.0.0.0":
         host = "127.0.0.1"
-    port = API_SERVER["port"]
+    port = Settings.basic_settings.API_SERVER["port"]
     return f"http://{host}:{port}"
 
 
 def webui_address() -> str:
-    from chatchat.configs import WEBUI_SERVER
+    from chatchat.settings import Settings
 
-    host = WEBUI_SERVER["host"]
-    port = WEBUI_SERVER["port"]
+    host = Settings.basic_settings.WEBUI_SERVER["host"]
+    port = Settings.basic_settings.WEBUI_SERVER["port"]
     return f"http://{host}:{port}"
 
 
@@ -588,13 +588,13 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
     type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
     """
 
-    from chatchat.configs import PROMPT_TEMPLATES
+    from chatchat.settings import Settings
 
-    return PROMPT_TEMPLATES.get(type, {}).get(name)
+    return Settings.prompt_settings.model_dump().get(type, {}).get(name)
 
 
 def set_httpx_config(
-    timeout: float = HTTPX_DEFAULT_TIMEOUT,
+    timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
     proxy: Union[str, Dict] = None,
     unused_proxies: List[str] = [],
 ):
@@ -699,7 +699,7 @@ def run_in_process_pool(
 def get_httpx_client(
     use_async: bool = False,
     proxies: Union[str, Dict] = None,
-    timeout: float = HTTPX_DEFAULT_TIMEOUT,
+    timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
     unused_proxies: List[str] = [],
     **kwargs,
 ) -> Union[httpx.Client, httpx.AsyncClient]:
@@ -780,15 +780,15 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
     """
     import uuid
 
-    from chatchat.configs import BASE_TEMP_DIR
+    from chatchat.settings import Settings
 
     if id is not None:  # 如果指定的临时目录已存在，直接返回
-        path = os.path.join(BASE_TEMP_DIR, id)
+        path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
         if os.path.isdir(path):
             return path, id
 
     id = uuid.uuid4().hex
-    path = os.path.join(BASE_TEMP_DIR, id)
+    path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
     os.mkdir(path)
     return path, id
 
@@ -840,14 +840,22 @@ def get_tool_config(name: str = None) -> Dict:
     # TODO 因为使用了变量更新，不支持重载
     # from chatchat.configs import model_config
     # importlib.reload(model_config)
-    from chatchat.configs import TOOL_CONFIG
+    from chatchat.settings import Settings
 
     if name is None:
-        return TOOL_CONFIG
+        return Settings.tool_settings.model_dump()
     else:
-        return TOOL_CONFIG.get(name, {})
+        return Settings.tool_settings.model_dump().get(name, {})
 
 
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         return sock.connect_ex(("localhost", port)) == 0
+
+
+if __name__ == "__main__":
+    # for debug
+    platforms = get_config_platforms()
+    models = get_config_models()
+    model_info = get_model_info(platform_name="xinference-auto")
+    print(1)
