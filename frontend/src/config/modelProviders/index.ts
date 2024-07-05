@@ -9,6 +9,7 @@ import OllamaProvider from './ollama';
 import OpenAIProvider from './openai';
 import PerplexityProvider from './perplexity';
 import ZhiPuProvider from './zhipu';
+import ChatChatProvider from './chatchat'
 
 export const LOBE_DEFAULT_MODEL_LIST: ChatModelCard[] = [
   OpenAIProvider.chatModels,
@@ -20,6 +21,7 @@ export const LOBE_DEFAULT_MODEL_LIST: ChatModelCard[] = [
   OllamaProvider.chatModels,
   PerplexityProvider.chatModels,
   AnthropicProvider.chatModels,
+  ChatChatProvider.chatModels,
 ].flat();
 
 export { default as AnthropicProvider } from './anthropic';
@@ -31,3 +33,4 @@ export { default as OllamaProvider } from './ollama';
 export { default as OpenAIProvider } from './openai';
 export { default as PerplexityProvider } from './perplexity';
 export { default as ZhiPuProvider } from './zhipu';
+export { default as ChatChatProvider } from './chatchat' 

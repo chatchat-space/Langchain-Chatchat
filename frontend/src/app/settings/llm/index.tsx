@@ -17,6 +17,7 @@ import Ollama from './Ollama';
 import OpenAI from './OpenAI';
 import Perplexity from './Perplexity';
 import Zhipu from './Zhipu';
+import ChatChat from './ChatChat'
 
 export default memo<{ showOllama: boolean }>(({ showOllama }) => {
   const { t } = useTranslation('setting');
@@ -34,6 +35,7 @@ export default memo<{ showOllama: boolean }>(({ showOllama }) => {
       <Anthropic />
       <Mistral />
       {showOllama && <Ollama />}
+      <ChatChat/>
       <Footer>
         <Trans i18nKey="llm.waitingForMore" ns={'setting'}>
           更多模型正在

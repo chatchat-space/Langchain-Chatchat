@@ -20,6 +20,7 @@ import {
   LobePerplexityAI,
   LobeRuntimeAI,
   LobeZhipuAI,
+  LobeChatChatAI,
   ModelProvider,
 } from '@/libs/agent-runtime';
 import { TraceClient } from '@/libs/traces';
@@ -167,6 +168,11 @@ class AgentRuntime {
         runtimeModel = this.initMistral(payload);
         break;
       }
+
+      case ModelProvider.ChatChat: {
+        runtimeModel = this.initChatChat(payload);
+        break;
+      }
     }
 
     return new AgentRuntime(runtimeModel);
@@ -267,6 +273,13 @@ class AgentRuntime {
     const apiKey = apiKeyManager.pick(payload?.apiKey || MISTRAL_API_KEY);
 
     return new LobeMistralAI({ apiKey });
+  }
+
+  private static initChatChat(payload: JWTPayload) {
+    const { CHATCHAT_PROXY_URL } = getServerConfig();
+    const baseURL = payload?.endpoint || CHATCHAT_PROXY_URL;
+
+    return new LobeChatChatAI({ baseURL });
   }
 }
 

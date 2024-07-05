@@ -60,6 +60,10 @@ export const getProviderAuthPayload = (provider: string) => {
       return { apiKey: modelProviderSelectors.mistralAPIKey(useGlobalStore.getState()) };
     }
 
+    case ModelProvider.ChatChat: {
+      return { endpoint: modelProviderSelectors.chatChatProxyUrl(useGlobalStore.getState()) }
+    }
+
     default:
     case ModelProvider.OpenAI: {
       const openai = modelProviderSelectors.openAIConfig(useGlobalStore.getState());

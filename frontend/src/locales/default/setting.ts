@@ -181,6 +181,29 @@ export default {
         title: 'API Key',
       },
     },
+    ChatChat: {
+      title: 'ChatChat',
+      checker: {
+        desc: '测试地址是否正确填写',
+      },
+      customModelName: {
+        desc: '增加自定义模型，多个模型使用逗号（,）隔开',
+        placeholder: 'gml-4',
+        title: '自定义模型名称',
+      },
+      endpoint: {
+        desc: '填入 ChatCaht 接口代理地址，本地未额外指定可留空',
+        placeholder: 'http://127.0.0.1:7861/chat',
+        title: '接口代理地址',
+      },
+    },
+
+    selectorModel: {
+      button: '更新',
+      desc: '选择代理地址所有模型，默认/v1/models获取',
+      pass: '更新成功',
+      title: '更新模型到本地',
+    },
 
     checker: {
       button: '检查',
