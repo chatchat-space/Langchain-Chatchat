@@ -250,7 +250,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -322,6 +322,7 @@ class ApiModelSettings(BaseFileSettings):
             "Qwen-14B-Chat",
             "Qwen-7B-Chat",
             "qwen-turbo",
+            "qwen2-instruct",
         ]
     """支持的Agent模型"""
 
@@ -446,6 +447,21 @@ class ApiModelSettings(BaseFileSettings):
                 "speech2text_models": [],
                 "tts_models": [],
             }),
+            PlatformConfig(**{
+                "platform_name": "openai",
+                "platform_type": "openai",
+                "api_base_url": "https://api.openai.com/v1",
+                "api_key": "sk-proj-",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "gpt-4o",
+                    "gpt-3.5-turbo-0125",
+                ],
+                "embed_models": [
+                    "text-embedding-3-small",
+                    "text-embedding-3-large",
+                ],
+            }),
         ]
     """模型平台配置"""
 
@@ -474,7 +490,7 @@ _default_tool_settings = {
     },
     "search_internet": {
         "use": False,
-        "search_engine_name": "bing",
+        "search_engine_name": "duckduckgo",
         "search_engine_config": {
             "bing": {
                 "result_len": 3,
