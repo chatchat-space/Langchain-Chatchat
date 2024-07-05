@@ -751,7 +751,7 @@ class SettingsContainer:
                                                     "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
                                                                         "is_entire_comment": True}},
                                                 write_file=True)
-        self.tool_settings.create_template_file(write_file=True, file_format="yaml")
+        self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings(**_default_tool_settings))
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 
     def set_auto_reload(self, flag: bool=True):
