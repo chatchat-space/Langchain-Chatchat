@@ -269,6 +269,8 @@ class PlatformConfig(MyBaseModel):
         "glm4-chat",
         "qwen1.5-chat",
         "qwen2-instruct",
+        "gpt-3.5-turbo",
+        "gpt-4o",
     ]
     """该平台支持的大语言模型列表，设为 'auto' 则自动检测"""
 
@@ -323,6 +325,8 @@ class ApiModelSettings(BaseFileSettings):
             "Qwen-7B-Chat",
             "qwen-turbo",
             "qwen2-instruct",
+            "gpt-3.5-turbo",
+            "gpt-4o",
         ]
     """支持的Agent模型"""
 
@@ -455,7 +459,7 @@ class ApiModelSettings(BaseFileSettings):
                 "api_concurrencies": 5,
                 "llm_models": [
                     "gpt-4o",
-                    "gpt-3.5-turbo-0125",
+                    "gpt-3.5-turbo",
                 ],
                 "embed_models": [
                     "text-embedding-3-small",

@@ -11,9 +11,9 @@ from langchain_core.runnables import RunnablePassthrough
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config, get_ChatOpenAI
 from chatchat.server.api_server.chat_routes import global_model_name
-from chatchat.configs import (
-    MAX_TOKENS,
-)
+# from chatchat.configs import (
+#     MAX_TOKENS,
+# )
 
 from .tools_registry import BaseToolOutput, regist_tool
 
@@ -61,7 +61,7 @@ def query_prometheus(query: str, config: dict) -> str:
         streaming=True,
         local_wrap=True,
         verbose=True,
-        max_tokens=MAX_TOKENS,
+        # max_tokens=MAX_TOKENS,
     )
 
     prometheus_prompt = ChatPromptTemplate.from_template(PROMETHEUS_PROMPT_TEMPLATE)
