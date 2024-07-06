@@ -10,7 +10,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config, get_ChatOpenAI
-from chatchat.server.api_server.chat_routes import global_model_name
+# from chatchat.server.api_server.chat_routes import global_model_name
 # from chatchat.configs import (
 #     MAX_TOKENS,
 # )
@@ -56,11 +56,11 @@ def query_prometheus(query: str, config: dict) -> str:
     password = config["password"]
 
     llm = get_ChatOpenAI(
-        model_name=global_model_name,
-        temperature=0.1,
-        streaming=True,
-        local_wrap=True,
-        verbose=True,
+        # model_name=global_model_name,
+        # temperature=0.1,
+        # streaming=True,
+        # local_wrap=True,
+        # verbose=True,
         # max_tokens=MAX_TOKENS,
     )
 
@@ -81,7 +81,7 @@ def query_prometheus(query: str, config: dict) -> str:
     logger.info(f"PromQL: {promql}")
 
     # debug
-    # promql = 'query?query=kube_pod_status_phase{namespace="default"}'
+    promql = 'query?query=kube_pod_status_phase{namespace="default"}'
 
     # 从 promql 字符串中提取 query_type 和 参数
     try:
