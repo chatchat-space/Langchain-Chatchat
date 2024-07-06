@@ -81,7 +81,7 @@ def query_prometheus(query: str, config: dict) -> str:
     logger.info(f"PromQL: {promql}")
 
     # debug
-    promql = 'query?query=kube_pod_status_phase{namespace="default"}'
+    # promql = 'query?query=kube_pod_status_phase{namespace="default"}'
 
     # 从 promql 字符串中提取 query_type 和 参数
     try:
