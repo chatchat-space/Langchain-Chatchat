@@ -1,15 +1,12 @@
 import asyncio
 import json
-import time
 import uuid
 from typing import AsyncIterable, List
 
 from fastapi import Body
 from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import ChatPromptTemplate
-from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import convert_to_messages
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
@@ -33,15 +30,17 @@ from chatchat.server.utils import (
 )
 
 
-def create_models_from_config(configs, callbacks, stream, max_tokens):
+def create_models_from_config(configs, callbacks, stream):
     configs = configs or Settings.model_settings.LLM_MODEL_CONFIG
     models = {}
     prompts = {}
     for model_type, params in configs.items():
         model_name = params.get("model", "").strip() or Settings.model_settings.DEFAULT_LLM_MODEL
         callbacks = callbacks if params.get("callbacks", False) else None
-        # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
-        max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
+        if model_type == "image_model":
+            max_tokens_value = 1000
+        else:
+            max_tokens_value = params.get("max_tokens")
         model_instance = get_ChatOpenAI(
             model_name=model_name,
             temperature=params.get("temperature", 0.5),
@@ -118,7 +117,6 @@ async def chat(
     stream: bool = Body(True, description="流式输出"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
-    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
 
@@ -140,7 +138,7 @@ async def chat(
             callbacks.append(langfuse_handler)
 
         models, prompts = create_models_from_config(
-            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
+            callbacks=callbacks, configs=chat_model_config, stream=stream
         )
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]

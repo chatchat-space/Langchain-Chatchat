@@ -330,37 +330,48 @@ class ApiModelSettings(BaseFileSettings):
         ]
     """支持的Agent模型"""
 
-    LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {
+    LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {}
+    """
+    LLM模型配置，包括了不同模态初始化参数。
+    `model` 如果留空则自动使用 DEFAULT_LLM_MODEL
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.LLM_MODEL_CONFIG = self._llm_model_config()
+
+    def _llm_model_config(self):
+        return {
             # 意图识别不需要输出，模型后台知道就行
             "preprocess_model": {
                 "model": "",
-                "temperature": 0.05,
-                "max_tokens": 4096,
-                "history_len": 10,
+                "temperature": self.TEMPERATURE,
+                "max_tokens": self.MAX_TOKENS,
+                "history_len": self.HISTORY_LEN,
                 "prompt_name": "default",
                 "callbacks": False,
             },
             "llm_model": {
                 "model": "",
-                "temperature": 0.9,
-                "max_tokens": 4096,
-                "history_len": 10,
+                "temperature": self.TEMPERATURE,
+                "max_tokens": self.MAX_TOKENS,
+                "history_len": self.HISTORY_LEN,
                 "prompt_name": "default",
                 "callbacks": True,
             },
             "action_model": {
-                "model": "",
-                "temperature": 0.01,
-                "max_tokens": 4096,
-                "history_len": 10,
+                "model": self.Agent_MODEL,
+                "temperature": self.TEMPERATURE,
+                "max_tokens": self.MAX_TOKENS,
+                "history_len": self.HISTORY_LEN,
                 "prompt_name": "ChatGLM3",
                 "callbacks": True,
             },
             "postprocess_model": {
                 "model": "",
-                "temperature": 0.01,
-                "max_tokens": 4096,
-                "history_len": 10,
+                "temperature": self.TEMPERATURE,
+                "max_tokens": self.MAX_TOKENS,
+                "history_len": self.HISTORY_LEN,
                 "prompt_name": "default",
                 "callbacks": True,
             },
@@ -369,10 +380,6 @@ class ApiModelSettings(BaseFileSettings):
                 "size": "256*256",
             },
         }
-    """
-    LLM模型配置，包括了不同模态初始化参数。
-    `model` 如果留空则自动使用 DEFAULT_LLM_MODEL
-    """
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
             PlatformConfig(**{
@@ -458,8 +465,8 @@ class ApiModelSettings(BaseFileSettings):
                 "api_key": "sk-proj-",
                 "api_concurrencies": 5,
                 "llm_models": [
-                    "gpt-4o",
                     "gpt-3.5-turbo",
+                    "gpt-4o",
                 ],
                 "embed_models": [
                     "text-embedding-3-small",

@@ -51,16 +51,18 @@ def query_database(query: str, config: dict):
     read_only = config["read_only"]
     db = SQLDatabase.from_uri(sqlalchemy_connect_str)
 
-    from chatchat.server.api_server.chat_routes import global_model_name
+    from chatchat.server.api_server.chat_routes import get_global_model_config
     from chatchat.server.utils import get_ChatOpenAI
 
     llm = get_ChatOpenAI(
-        model_name=global_model_name,
-        temperature=0.1,
-        streaming=True,
+        model_name=get_global_model_config("model"),
+        temperature=get_global_model_config("temperature"),
+        streaming=get_global_model_config("stream"),
         local_wrap=True,
         verbose=True,
+        max_tokens=get_global_model_config("max_tokens"),
     )
+
     table_names = config["table_names"]
     table_comments = config["table_comments"]
     result = None

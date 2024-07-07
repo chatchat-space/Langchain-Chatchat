@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, Any
 
 from fastapi import APIRouter, Request
 from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
-from chatchat.server.api_server.api_schemas import AgentStatus, MsgType, OpenAIChatInput
+from chatchat.server.api_server.api_schemas import OpenAIChatInput
 from chatchat.server.chat.chat import chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
@@ -20,7 +20,6 @@ from chatchat.server.utils import (
 from chatchat.settings import Settings
 from chatchat.utils import build_logger
 from .openai_routes import openai_request, OpenAIChatOutput
-
 
 logger = build_logger()
 
@@ -38,9 +37,23 @@ chat_router.post(
 
 chat_router.post("/file_chat", summary="文件对话")(file_chat)
 
-# 定义全局model信息，用于给Text2Sql中的get_ChatOpenAI提供model_name
-global_model_name = None
+# 定义全局 model 信息，用于给 Text2Sql/Text2PromQL 中的 get_ChatOpenAI 提供 model_config
+_global_model_config = {}
 
+
+def set_global_model_config(key: str, value: Any):
+    _global_model_config[key] = value
+
+
+def get_global_model_config(key: str) -> Any:
+    return _global_model_config.get(key)
+
+
+def update_global_model_config(body: OpenAIChatInput):
+    set_global_model_config('model', body.model)
+    set_global_model_config('max_tokens', body.max_tokens)
+    set_global_model_config('temperature', body.temperature)
+    set_global_model_config('stream', body.stream)
 
 @chat_router.post("/chat/completions", summary="兼容 openai 的统一 chat 接口")
 async def chat_completions(
@@ -63,16 +76,15 @@ async def chat_completions(
     # rich.print(body)
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
-    if body.max_tokens == None:
-        body.max_tokens = Settings.model_settings.MAX_TOKENS
+    body.max_tokens = body.max_tokens or Settings.model_settings.MAX_TOKENS
+
+    update_global_model_config(body)
 
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}
     for key in list(extra):
         delattr(body, key)
 
-    global global_model_name
-    global_model_name = body.model
     # check tools & tool_choice in request body
     if isinstance(body.tool_choice, str):
         if t := get_tool(body.tool_choice):
@@ -163,7 +175,18 @@ async def chat_completions(
             else None
         )
 
-        chat_model_config = {}  # TODO: 前端支持配置模型
+        # chat_model_config = {}  # TODO: 前端支持配置模型
+
+        # 支持 Body 传入的 LLM 配置
+        chat_model_config = Settings.model_settings.LLM_MODEL_CONFIG
+        for model_type, params in chat_model_config.items():
+            if model_type != "image_model":
+                # 符合设计规则: 当指定 Agent_MODEL 之后就锁定进入 Agent 之后的 LLM 的模型, 当不指定时就是 Body 传入的 LLM 模型
+                if Settings.model_settings.Agent_MODEL == "" or model_type != "action_model":
+                    params['model'] = getattr(body, 'model', params['model'])
+                params['temperature'] = getattr(body, 'temperature', params['temperature'])
+                params['max_tokens'] = getattr(body, 'max_tokens', params['max_tokens'])
+
         tool_names = [x["function"]["name"] for x in body.tools]
         tool_config = {name: get_tool_config(name) for name in tool_names}
         result = await chat(
@@ -174,9 +197,8 @@ async def chat_completions(
             history_len=-1,
             history=body.messages[:-1],
             stream=body.stream,
-            chat_model_config=extra.get("chat_model_config", chat_model_config),
+            chat_model_config=chat_model_config,
             tool_config=extra.get("tool_config", tool_config),
-            max_tokens=body.max_tokens,
         )
         return result
     else:  # LLM chat directly
