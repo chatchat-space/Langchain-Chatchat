@@ -14,10 +14,10 @@ CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
 
 class BasicSettings(BaseFileSettings):
-    '''
+    """
     服务器基本配置信息
     除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效，其它配置项修改后都需要重启服务器才能生效
-    '''
+    """
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "basic_settings.yaml")
 
@@ -122,7 +122,7 @@ class BasicSettings(BaseFileSettings):
 
 
 class KBSettings(BaseFileSettings):
-    '''知识库相关配置'''
+    """知识库相关配置"""
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "kb_settings.yaml")
 
@@ -245,7 +245,7 @@ class KBSettings(BaseFileSettings):
 
 
 class PlatformConfig(MyBaseModel):
-    '''模型加载平台配置'''
+    """模型加载平台配置"""
 
     platform_name: str = "xinference"
     """平台名称"""
@@ -296,7 +296,7 @@ class PlatformConfig(MyBaseModel):
 
 
 class ApiModelSettings(BaseFileSettings):
-    '''模型配置项'''
+    """模型配置项"""
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "model_settings.yaml")
 
@@ -471,7 +471,7 @@ class ApiModelSettings(BaseFileSettings):
 
 
 class ToolSettings(BaseFileSettings):
-    '''Agent 工具配置项'''
+    """Agent 工具配置项"""
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "tool_settings.yaml",
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
@@ -607,7 +607,7 @@ _default_tool_settings = {
 
 
 class PromptSettings(BaseFileSettings):
-    '''Prompt 模板.除 Agent 模板使用 f-string 外，其它均使用 jinja2 格式'''
+    """Prompt 模板.除 Agent 模板使用 f-string 外，其它均使用 jinja2 格式"""
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "prompt_settings.yaml",
                                       json_file=CHATCHAT_ROOT / "prompt_settings.json",
