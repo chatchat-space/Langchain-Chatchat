@@ -119,7 +119,7 @@ def run_webui(
         "runner_enforceSerializableSessionState": None,
         "runner_enumCoercion": None,
         "server_folderWatchBlacklist": None,
-        "server_fileWatcherType": None,
+        "server_fileWatcherType": "none",
         "server_headless": None,
         "server_runOnSave": None,
         "server_allowRunOnSave": None,
@@ -352,7 +352,7 @@ def main(all, api, webui):
     args.all = all
     args.api = api
     args.webui = webui
-    
+
     # 添加这行代码
     cwd = os.getcwd()
     sys.path.append(cwd)
