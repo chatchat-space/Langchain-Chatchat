@@ -37,7 +37,7 @@ def import_yaml() -> ruamel.yaml.YAML:
 
 
 class SubModelComment(t.TypedDict):
-    '''parameter defines howto create template for sub model'''
+    """parameter defines howto create template for sub model"""
     model_obj: BaseModel
     dump_kwds: t.Dict
     is_entire_comment: bool = False # share comment for complex field such as list
@@ -45,7 +45,7 @@ class SubModelComment(t.TypedDict):
 
 
 class YamlTemplate:
-    '''create yaml configuration template for pydantic model object'''
+    """create yaml configuration template for pydantic model object"""
     def __init__(
         self,
         model_obj: BaseModel,
@@ -63,7 +63,7 @@ class YamlTemplate:
     def _create_yaml_object(
         self,
     ) -> CommentedBase:
-        '''helper method to convert settings instance to ruamel.YAML object'''
+        """helper method to convert settings instance to ruamel.YAML object"""
         # # exclude computed fields
         # exclude = set(self.dump_kwds.get("exclude", []))
         # exclude |= set(self.model_cls.model_computed_fields)
@@ -78,18 +78,18 @@ class YamlTemplate:
         return obj
 
     def get_class_comment(self, model_cls: t.Type[BaseModel] | BaseModel=None) -> str | None:
-        '''
+        """
         you can override this to customize class comments
-        '''
+        """
         if model_cls is None:
             model_cls = self.model_cls
         return model_cls.model_json_schema().get("description")
 
     def get_field_comment(self, field_name: str, model_obj: BaseModel=None) -> str | None:
-        '''
+        """
         you can override this to customize field comments
         model_obj is the instance that field_name belongs to
-        '''
+        """
         if model_obj is None:
             schema = self.model_cls.model_json_schema().get("properties", {})
         else:
@@ -105,10 +105,10 @@ class YamlTemplate:
         write_to: str | Path | bool = False,
         indent: int = 0,
     ) -> str:
-        '''
+        """
         generate yaml template with default object
         sub_comments indicate how to populate comments for sub models, it could be nested.
-        '''
+        """
         cls = self.model_cls
         obj = self._create_yaml_object()
 
@@ -241,9 +241,9 @@ _T = t.TypeVar("_T", bound=BaseFileSettings)
 
 @cached(max_size=1, algorithm=CachingAlgorithmFlag.LRU, thread_safe=True, custom_key_maker=_lazy_load_key)
 def _cached_settings(settings: _T) -> _T:
-    '''
+    """
     the sesstings is cached, and refreshed when configuration files changed
-    '''
+    """
     if settings.auto_reload:
         settings.__init__()
     return settings
