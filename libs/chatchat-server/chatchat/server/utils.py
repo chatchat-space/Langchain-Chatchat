@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import multiprocessing as mp
 import os
 import socket
@@ -28,10 +27,9 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
 
-from chatchat.settings import Settings
+from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
 from chatchat.utils import build_logger
-
 
 logger = build_logger()
 
@@ -55,19 +53,19 @@ def get_base_url(url):
 
 
 def get_config_platforms() -> Dict[str, Dict]:
-    '''
+    """
     获取配置的模型平台，会将 pydantic model 转换为字典。
-    '''
+    """
     platforms = [m.model_dump() for m in Settings.model_settings.MODEL_PLATFORMS]
     return {m["platform_name"]: m for m in platforms}
 
 
 def get_config_models(
-    model_name: str = None,
-    model_type: Literal[
-        "llm", "embed", "image", "multimodal", "reranking", "speech2text", "tts"
-    ] = None,
-    platform_name: str = None,
+        model_name: str = None,
+        model_type: Literal[
+            "llm", "embed", "text2image", "image2image", "image2text", "rerank", "speech2text", "text2speech"
+        ] = None,
+        platform_name: str = None,
 ) -> Dict[str, Dict]:
     """
     获取配置的模型列表，返回值为:
@@ -86,24 +84,37 @@ def get_config_models(
         model_types = [
             "llm_models",
             "embed_models",
-            "image_models",
-            "multimodal_models",
-            "reranking_models",
+            "text2image_models",
+            "image2image_models",
+            "image2text_models",
+            "rerank_models",
             "speech2text_models",
-            "tts_models",
+            "text2speech_models",
         ]
     else:
         model_types = [f"{model_type}_models"]
 
     xf_model_type_maps = {
-        "llm_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" not in v["model_ability"]],
-        "embed_models" : lambda xf_models: [k for k,v in xf_models.items() if "embedding" == v["model_type"]],
-        "image_models" : lambda xf_models: [k for k,v in xf_models.items() if "image" == v["model_type"]],
-        "multimodal_models" : lambda xf_models: [k for k,v in xf_models.items() if "LLM" == v["model_type"] and "vision" in v["model_ability"]],
-        "reranking_models" : lambda xf_models: [k for k,v in xf_models.items() if "rerank" == v["model_type"]],
-        # TODO: audio models
-        "speech2text_models": lambda xf_models: [],
-        "tts_models": lambda xf_models: [],
+        "llm_models": lambda xf_models: [k for k, v in xf_models.items()
+                                         if "LLM" == v["model_type"]
+                                         and "vision" not in v["model_ability"]],
+        "embed_models": lambda xf_models: [k for k, v in xf_models.items()
+                                           if "embedding" == v["model_type"]],
+        "text2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "image" == v["model_type"]],
+        "image2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if "image" == v["model_type"]],
+        "image2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "LLM" == v["model_type"]
+                                                and "vision" in v["model_ability"]],
+        "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
+                                            if "rerank" == v["model_type"]],
+        "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if v[list(XF_MODELS_TYPES["speech2text"].keys())[0]]
+                                                 in XF_MODELS_TYPES["speech2text"].values()],
+        "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if v[list(XF_MODELS_TYPES["text2speech"].keys())[0]]
+                                                 in XF_MODELS_TYPES["text2speech"].values()],
     }
 
     for m in list(get_config_platforms().values()):
@@ -111,7 +122,7 @@ def get_config_models(
             continue
 
         if m.get("auto_detect_model"):
-            if not m.get("platform_type") == "xinference": # TODO：当前仅支持 xf 自动检测模型
+            if not m.get("platform_type") == "xinference":  # TODO：当前仅支持 xf 自动检测模型
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
             for m_type in model_types:
@@ -125,7 +136,7 @@ def get_config_models(
                     m[m_type] = xf_model_type_maps[m_type](xf_models)
                 except ImportError:
                     logger.warning('auto_detect_model needs xinference-client installed. '
-                                    'Please try "pip install xinference-client". ')
+                                   'Please try "pip install xinference-client". ')
 
         for m_type in model_types:
             models = m.get(m_type, [])
@@ -147,7 +158,7 @@ def get_config_models(
 
 
 def get_model_info(
-    model_name: str = None, platform_name: str = None, multiple: bool = False
+        model_name: str = None, platform_name: str = None, multiple: bool = False
 ) -> Dict:
     """
     获取配置的模型信息，主要是 api_base_url, api_key
@@ -164,14 +175,14 @@ def get_model_info(
 
 
 def get_ChatOpenAI(
-    model_name: str = Settings.model_settings.DEFAULT_LLM_MODEL,
-    temperature: float = Settings.model_settings.TEMPERATURE,
-    max_tokens: int = Settings.model_settings.MAX_TOKENS,
-    streaming: bool = True,
-    callbacks: List[Callable] = [],
-    verbose: bool = True,
-    local_wrap: bool = False,  # use local wrapped api
-    **kwargs: Any,
+        model_name: str = Settings.model_settings.DEFAULT_LLM_MODEL,
+        temperature: float = Settings.model_settings.TEMPERATURE,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        local_wrap: bool = False,  # use local wrapped api
+        **kwargs: Any,
 ) -> ChatOpenAI:
     model_info = get_model_info(model_name)
     params = dict(
@@ -210,15 +221,15 @@ def get_ChatOpenAI(
 
 
 def get_OpenAI(
-    model_name: str,
-    temperature: float,
-    max_tokens: int = Settings.model_settings.MAX_TOKENS,
-    streaming: bool = True,
-    echo: bool = True,
-    callbacks: List[Callable] = [],
-    verbose: bool = True,
-    local_wrap: bool = False,  # use local wrapped api
-    **kwargs: Any,
+        model_name: str,
+        temperature: float,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
+        streaming: bool = True,
+        echo: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        local_wrap: bool = False,  # use local wrapped api
+        **kwargs: Any,
 ) -> OpenAI:
     # TODO: 从API获取模型信息
     model_info = get_model_info(model_name)
@@ -252,8 +263,8 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-    embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
-    local_wrap: bool = False,  # use local wrapped api
+        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
     from langchain_openai import OpenAIEmbeddings
@@ -304,9 +315,9 @@ def check_embed_model(embed_model: str = Settings.model_settings.DEFAULT_EMBEDDI
 
 
 def get_OpenAIClient(
-    platform_name: str = None,
-    model_name: str = None,
-    is_async: bool = True,
+        platform_name: str = None,
+        model_name: str = None,
+        is_async: bool = True,
 ) -> Union[openai.Client, openai.AsyncClient]:
     """
     construct an openai Client for specified platform or model
@@ -390,11 +401,11 @@ class ChatMessage(BaseModel):
             "example": {
                 "question": "工伤保险如何办理？",
                 "response": "根据已知信息，可以总结如下：\n\n1. 参保单位为员工缴纳工伤保险费，以保障员工在发生工伤时能够获得相应的待遇。\n"
-                "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
-                "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
-                "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
-                "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
-                "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
+                            "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
+                            "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
+                            "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
+                            "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
+                            "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
                 "history": [
                     [
                         "工伤保险是什么？",
@@ -450,11 +461,11 @@ def iter_over_async(ait, loop=None):
 
 
 def MakeFastAPIOffline(
-    app: FastAPI,
-    static_dir=Path(__file__).parent / "api_server" / "static",
-    static_url="/static-offline-docs",
-    docs_url: Optional[str] = "/docs",
-    redoc_url: Optional[str] = "/redoc",
+        app: FastAPI,
+        static_dir=Path(__file__).parent / "api_server" / "static",
+        static_url="/static-offline-docs",
+        docs_url: Optional[str] = "/docs",
+        redoc_url: Optional[str] = "/redoc",
 ) -> None:
     """patch the FastAPI obj that doesn't rely on CDN for the documentation page"""
     from fastapi import Request
@@ -594,9 +605,9 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
 
 
 def set_httpx_config(
-    timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
-    proxy: Union[str, Dict] = None,
-    unused_proxies: List[str] = [],
+        timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
+        proxy: Union[str, Dict] = None,
+        unused_proxies: List[str] = [],
 ):
     """
     设置httpx默认timeout。httpx默认timeout是5秒，在请求LLM回答时不够用。
@@ -652,8 +663,8 @@ def set_httpx_config(
 
 
 def run_in_thread_pool(
-    func: Callable,
-    params: List[Dict] = [],
+        func: Callable,
+        params: List[Dict] = [],
 ) -> Generator:
     """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
@@ -672,8 +683,8 @@ def run_in_thread_pool(
 
 
 def run_in_process_pool(
-    func: Callable,
-    params: List[Dict] = [],
+        func: Callable,
+        params: List[Dict] = [],
 ) -> Generator:
     """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
@@ -697,11 +708,11 @@ def run_in_process_pool(
 
 
 def get_httpx_client(
-    use_async: bool = False,
-    proxies: Union[str, Dict] = None,
-    timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
-    unused_proxies: List[str] = [],
-    **kwargs,
+        use_async: bool = False,
+        proxies: Union[str, Dict] = None,
+        timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
+        unused_proxies: List[str] = [],
+        **kwargs,
 ) -> Union[httpx.Client, httpx.AsyncClient]:
     """
     helper to get httpx client with default proxies that bypass local addesses.
@@ -723,19 +734,19 @@ def get_httpx_client(
             "http://": (
                 os.environ.get("http_proxy")
                 if os.environ.get("http_proxy")
-                and len(os.environ.get("http_proxy").strip())
+                   and len(os.environ.get("http_proxy").strip())
                 else None
             ),
             "https://": (
                 os.environ.get("https_proxy")
                 if os.environ.get("https_proxy")
-                and len(os.environ.get("https_proxy").strip())
+                   and len(os.environ.get("https_proxy").strip())
                 else None
             ),
             "all://": (
                 os.environ.get("all_proxy")
                 if os.environ.get("all_proxy")
-                and len(os.environ.get("all_proxy").strip())
+                   and len(os.environ.get("all_proxy").strip())
                 else None
             ),
         }

@@ -12,6 +12,13 @@ from chatchat.pydantic_settings_file import *
 # chatchat 数据目录，必须通过环境变量设置。如未设置则自动使用当前目录。
 CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
+XF_MODELS_TYPES = {
+    "text2image": {"model_family": ["stable_diffusion"]},
+    "image2image": {"model_family": ["stable_diffusion"]},
+    "speech2text": {"model_family": ["whisper"]},
+    "text2speech": {"model_family": ["ChatTTS"]},
+}
+
 
 class BasicSettings(BaseFileSettings):
     """
@@ -279,19 +286,19 @@ class PlatformConfig(MyBaseModel):
     ]
     """该平台支持的嵌入模型列表，设为 'auto' 则自动检测"""
 
-    image_models: t.Union[t.Literal["auto"], t.List[str]] = []
+    text2image_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的图像生成模型列表，设为 'auto' 则自动检测"""
 
-    multimodal_models: t.Union[t.Literal["auto"], t.List[str]] = []
+    image2text_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的多模态模型列表，设为 'auto' 则自动检测"""
 
-    reranking_models: t.Union[t.Literal["auto"], t.List[str]] = []
+    rerank_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的重排模型列表，设为 'auto' 则自动检测"""
 
     speech2text_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的 STT 模型列表，设为 'auto' 则自动检测"""
 
-    tts_models: t.Union[t.Literal["auto"], t.List[str]] = []
+    text2speech_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的 TTS 模型列表，设为 'auto' 则自动检测"""
 
 
@@ -397,10 +404,11 @@ class ApiModelSettings(BaseFileSettings):
                 "embed_models": [
                     "bge-large-zh-v1.5",
                 ],
-                "image_models": [],
-                "reranking_models": [],
+                "text2image_models": [],
+                "image2text_models": [],
+                "rerank_models": [],
                 "speech2text_models": [],
-                "tts_models": [],
+                "text2speech_models": [],
             }),
             PlatformConfig(**{
                 "platform_name": "ollama",
@@ -446,10 +454,11 @@ class ApiModelSettings(BaseFileSettings):
                     # 千帆 API
                     "Embedding-V1",
                 ],
-                "image_models": [],
-                "reranking_models": [],
+                "text2image_models": [],
+                "image2text_models": [],
+                "rerank_models": [],
                 "speech2text_models": [],
-                "tts_models": [],
+                "text2speech_models": [],
             }),
             PlatformConfig(**{
                 "platform_name": "openai",
