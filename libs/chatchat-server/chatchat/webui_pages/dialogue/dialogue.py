@@ -178,7 +178,7 @@ def dialogue_page(
         )
         llm_models += list(
             get_config_models(
-                model_type="multimodal", platform_name=None if platform == "所有" else platform
+                model_type="image2text", platform_name=None if platform == "所有" else platform
             )
         )
         llm_model = cols[1].selectbox("选择LLM模型", llm_models, key="llm_model")

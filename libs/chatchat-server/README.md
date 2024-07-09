@@ -60,10 +60,11 @@ $ chatchat-config model --set_model_platforms "[{
     \"embed_models\": [
         \"bge-large-zh-v1.5\"
     ],
-    \"image_models\": [],
-    \"reranking_models\": [],
+    \"image2text_models\": [],
+    \"text2image_models\": [],
+    \"rerank_models\": [],
     \"speech2text_models\": [],
-    \"tts_models\": []
+    \"text2speech_models\": []
 }]"
 ```
 
