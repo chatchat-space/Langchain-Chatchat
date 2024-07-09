@@ -257,7 +257,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -765,7 +765,7 @@ class PromptSettings(BaseFileSettings):
 
 
 class SettingsContainer:
-    CHATCHAT_ROOT = CHATCHAT_ROOT
+    CHATCHAT_ROOT = "."
 
     basic_settings: BasicSettings = settings_property(BasicSettings())
     kb_settings: KBSettings = settings_property(KBSettings())
@@ -777,9 +777,9 @@ class SettingsContainer:
         self.basic_settings.create_template_file(write_file=True)
         self.kb_settings.create_template_file(write_file=True)
         self.model_settings.create_template_file(sub_comments={
-                                                    "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
-                                                                        "is_entire_comment": True}},
-                                                write_file=True)
+            "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
+                                "is_entire_comment": True}},
+            write_file=True)
         self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings(**_default_tool_settings))
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 

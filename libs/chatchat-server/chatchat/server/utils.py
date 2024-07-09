@@ -110,10 +110,10 @@ def get_config_models(
         "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
                                             if "rerank" == v["model_type"]],
         "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v[list(XF_MODELS_TYPES["speech2text"].keys())[0]]
+                                                 if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
                                                  in XF_MODELS_TYPES["speech2text"].values()],
         "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v[list(XF_MODELS_TYPES["text2speech"].keys())[0]]
+                                                 if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
                                                  in XF_MODELS_TYPES["text2speech"].values()],
     }
 
@@ -126,8 +126,8 @@ def get_config_models(
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
             for m_type in model_types:
-                if m.get(m_type) != "auto":
-                    continue
+                # if m.get(m_type) != "auto":
+                #     continue
                 try:
                     from xinference_client import RESTfulClient as Client
                     xf_url = get_base_url(m.get("api_base_url"))
