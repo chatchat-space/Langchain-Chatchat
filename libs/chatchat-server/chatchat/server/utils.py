@@ -130,7 +130,7 @@ def get_config_models(
         for m_type in model_types:
             models = m.get(m_type, [])
             if not models or models == "auto":
-                logger.warning("you should not set `auto` without auto_detect_model=True")
+                # logger.warning("you should not set `auto` without auto_detect_model=True")
                 continue
             for m_name in models:
                 if model_name is None or model_name == m_name:
@@ -252,7 +252,7 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-    embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+    embed_model: str = None,
     local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
@@ -262,6 +262,7 @@ def get_Embeddings(
         LocalAIEmbeddings,
     )
 
+    embed_model = embed_model or Settings.model_settings.DEFAULT_EMBEDDING_MODEL
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
     try:

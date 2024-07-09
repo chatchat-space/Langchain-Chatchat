@@ -528,8 +528,6 @@ def dialogue_page(
                 extra_body=extra_body,
                 max_tokens=Settings.model_settings.MAX_TOKENS,
             )
-            import rich
-            rich.print(d)
             chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
 
         # if os.path.exists("tmp/image.jpg"):
