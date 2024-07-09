@@ -6,7 +6,7 @@ from chatchat.settings import Settings
 from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
 from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.utils import validate_kb_name
-from chatchat.server.utils import BaseResponse, ListResponse
+from chatchat.server.utils import BaseResponse, ListResponse, get_default_embedding
 from chatchat.utils import build_logger
 
 
@@ -22,7 +22,7 @@ def create_kb(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     vector_store_type: str = Body("faiss"),
     kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
-    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(get_default_embedding()),
 ) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):

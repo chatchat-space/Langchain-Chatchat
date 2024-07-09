@@ -19,7 +19,7 @@ from streamlit_paste_button import paste_image_button
 from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.utils import MsgType, get_config_models, get_config_platforms
+from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
 from chatchat.webui_pages.dialogue.utils import process_files
 from chatchat.webui_pages.utils import *
 
@@ -151,7 +151,7 @@ def dialogue_page(
     ctx = chat_box.context
     ctx.setdefault("uid", uuid.uuid4().hex)
     ctx.setdefault("file_chat_id", None)
-    ctx.setdefault("llm_model", Settings.model_settings.DEFAULT_LLM_MODEL)
+    ctx.setdefault("llm_model", get_default_llm())
     ctx.setdefault("temperature", Settings.model_settings.TEMPERATURE)
     st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
     st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
@@ -337,7 +337,7 @@ def dialogue_page(
     chat_model_config = {key: {} for key in llm_model_config.keys()}
     for key in llm_model_config:
         if c := llm_model_config[key]:
-            model = c.get("model", "").strip() or Settings.model_settings.DEFAULT_LLM_MODEL
+            model = c.get("model", "").strip() or get_default_llm()
             chat_model_config[key][model] = llm_model_config[key]
     llm_model = ctx.get("llm_model")
     if llm_model is not None:

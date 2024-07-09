@@ -27,6 +27,7 @@ from chatchat.server.utils import (
     ListResponse,
     check_embed_model,
     run_in_thread_pool,
+    get_default_embedding,
 )
 from chatchat.utils import build_logger
 
@@ -386,7 +387,7 @@ def recreate_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     allow_empty_kb: bool = Body(True),
     vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
-    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(get_default_embedding()),
     chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
     chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
     zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),

@@ -7,6 +7,7 @@ from chatchat.startup import main as startup_main
 from chatchat.init_database import main as kb_main, create_tables, folder2db
 from chatchat.settings import Settings
 from chatchat.utils import build_logger
+from chatchat.server.utils import get_default_embedding
 
 
 logger = build_logger()
@@ -70,7 +71,7 @@ def init(
         folder2db(kb_names=kb_names,
                   mode="recreate_vs",
                   vs_type=Settings.kb_settings.DEFAULT_VS_TYPE,
-                  embed_model=Settings.model_settings.DEFAULT_EMBEDDING_MODEL)
+                  embed_model=get_default_embedding())
         logger.success("所有初始化已完成，执行 chatchat start -a 启动服务。")
     else:
         logger.warning("执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。")

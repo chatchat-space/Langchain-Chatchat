@@ -15,7 +15,7 @@ from openai.types.chat import (
 from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
 from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
-from chatchat.server.utils import MsgType
+from chatchat.server.utils import MsgType, get_default_llm
 
 
 class OpenAIBaseInput(BaseModel):
@@ -33,7 +33,7 @@ class OpenAIBaseInput(BaseModel):
 
 class OpenAIChatInput(OpenAIBaseInput):
     messages: List[ChatCompletionMessageParam]
-    model: str = Settings.model_settings.DEFAULT_LLM_MODEL
+    model: str = get_default_llm()
     frequency_penalty: Optional[float] = None
     function_call: Optional[completion_create_params.FunctionCall] = None
     functions: List[completion_create_params.Function] = None

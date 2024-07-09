@@ -17,6 +17,7 @@ from chatchat.server.knowledge_base.migrate import (
     reset_tables,
 )
 from chatchat.utils import build_logger
+from chatchat.server.utils import get_default_embedding
 
 
 logger = build_logger()
@@ -139,7 +140,7 @@ def worker(args: dict):
         "-e",
         "--embed-model",
         type=str,
-        default=Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        default=get_default_embedding(),
         help=("specify embeddings model."),
 )
 @click.option(

@@ -15,7 +15,7 @@ from chatchat.server.knowledge_base.kb_service.base import (
     get_kb_file_details,
 )
 from chatchat.server.knowledge_base.utils import LOADER_DICT, get_file_path
-from chatchat.server.utils import get_config_models
+from chatchat.server.utils import get_config_models, get_default_embedding
 
 from chatchat.webui_pages.utils import *
 
@@ -121,8 +121,8 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             with col1:
                 embed_models = list(get_config_models(model_type="embed"))
                 index = 0
-                if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in embed_models:
-                    index = embed_models.index(Settings.model_settings.DEFAULT_EMBEDDING_MODEL)
+                if get_default_embedding() in embed_models:
+                    index = embed_models.index(get_default_embedding())
                 embed_model = st.selectbox("Embeddings模型", embed_models, index)
 
             submit_create_kb = st.form_submit_button(
