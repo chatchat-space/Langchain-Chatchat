@@ -10,7 +10,7 @@ from chatchat.server.knowledge_base.kb_summary.base import KBSummaryService
 from chatchat.server.knowledge_base.kb_summary.summary_chunk import SummaryAdapter
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import list_files_from_folder
-from chatchat.server.utils import BaseResponse, get_ChatOpenAI, wrap_done
+from chatchat.server.utils import BaseResponse, get_ChatOpenAI, wrap_done, get_default_embedding
 from chatchat.utils import build_logger
 
 
@@ -21,7 +21,7 @@ def recreate_summary_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     allow_empty_kb: bool = Body(True),
     vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
-    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(get_default_embedding()),
     file_description: str = Body(""),
     model_name: str = Body(None, description="LLM 模型名称。"),
     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
@@ -115,7 +115,7 @@ def summary_file_to_vector_store(
     file_name: str = Body(..., examples=["test.pdf"]),
     allow_empty_kb: bool = Body(True),
     vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
-    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(get_default_embedding()),
     file_description: str = Body(""),
     model_name: str = Body(None, description="LLM 模型名称。"),
     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),
@@ -194,7 +194,7 @@ def summary_doc_ids_to_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     doc_ids: List = Body([], examples=[["uuid"]]),
     vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
-    embed_model: str = Body(Settings.model_settings.DEFAULT_EMBEDDING_MODEL),
+    embed_model: str = Body(get_default_embedding()),
     file_description: str = Body(""),
     model_name: str = Body(None, description="LLM 模型名称。"),
     temperature: float = Body(0.01, description="LLM 采样温度", ge=0.0, le=1.0),

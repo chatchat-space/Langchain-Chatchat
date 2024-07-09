@@ -35,7 +35,10 @@ from chatchat.server.knowledge_base.utils import (
     list_files_from_folder,
     list_kbs_from_folder,
 )
-from chatchat.server.utils import check_embed_model as _check_embed_model
+from chatchat.server.utils import (
+    check_embed_model as _check_embed_model,
+    get_default_embedding,
+)
 
 
 logger = build_logger()
@@ -57,7 +60,7 @@ class KBService(ABC):
         self,
         knowledge_base_name: str,
         kb_info: str = None,
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ):
         self.kb_name = knowledge_base_name
         self.kb_info = kb_info or Settings.kb_settings.KB_INFO.get(
@@ -358,7 +361,7 @@ class KBServiceFactory:
     def get_service(
         kb_name: str,
         vector_store_type: Union[str, SupportedVSType],
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
         kb_info: str = None,
     ) -> KBService:
         if isinstance(vector_store_type, str):

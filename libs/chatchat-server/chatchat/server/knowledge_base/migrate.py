@@ -29,6 +29,7 @@ from chatchat.server.knowledge_base.utils import (
     list_kbs_from_folder,
 )
 from chatchat.utils import build_logger
+from chatchat.server.utils import get_default_embedding
 
 
 logger = build_logger()
@@ -103,7 +104,7 @@ def folder2db(
     kb_names: List[str],
     mode: Literal["recreate_vs", "update_in_db", "increment"],
     vs_type: Literal["faiss", "milvus", "pg", "chromadb"] = Settings.kb_settings.DEFAULT_VS_TYPE,
-    embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+    embed_model: str = get_default_embedding(),
     chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
     chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
     zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,

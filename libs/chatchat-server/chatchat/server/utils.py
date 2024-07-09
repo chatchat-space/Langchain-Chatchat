@@ -140,8 +140,10 @@ def get_config_models(
 
         for m_type in model_types:
             models = m.get(m_type, [])
-            if not models or models == "auto":
+            if models == "auto":
                 logger.warning("you should not set `auto` without auto_detect_model=True")
+                continue
+            elif not models:
                 continue
             for m_name in models:
                 if model_name is None or model_name == m_name:
@@ -174,8 +176,27 @@ def get_model_info(
         return {}
 
 
+def get_default_llm():
+    available_llms = list(get_config_models(model_type="llm").keys())
+    if Settings.model_settings.DEFAULT_LLM_MODEL in available_llms:
+        return Settings.model_settings.DEFAULT_LLM_MODEL
+    else:
+        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available llms, "
+                       f"using {available_llms[0]} instead")
+        return available_llms[0]
+
+def get_default_embedding():
+    available_embeddings = list(get_config_models(model_type="embed").keys())
+    if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
+        return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
+    else:
+        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in available "
+                       f"embeddings, using {available_embeddings[0]} instead")
+        return available_embeddings[0]
+
+
 def get_ChatOpenAI(
-        model_name: str = Settings.model_settings.DEFAULT_LLM_MODEL,
+        model_name: str = get_default_llm(),
         temperature: float = Settings.model_settings.TEMPERATURE,
         max_tokens: int = Settings.model_settings.MAX_TOKENS,
         streaming: bool = True,
@@ -263,7 +284,7 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
         local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
@@ -302,7 +323,7 @@ def get_Embeddings(
         )
 
 
-def check_embed_model(embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL) -> bool:
+def check_embed_model(embed_model: str = get_default_embedding()) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
@@ -866,6 +887,8 @@ def is_port_in_use(port):
 
 if __name__ == "__main__":
     # for debug
+    print(get_default_llm())
+    print(get_default_embedding())
     platforms = get_config_platforms()
     models = get_config_models()
     model_info = get_model_info(platform_name="xinference-auto")

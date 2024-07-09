@@ -772,7 +772,7 @@ class PromptSettings(BaseFileSettings):
 
 
 class SettingsContainer:
-    CHATCHAT_ROOT = "."
+    CHATCHAT_ROOT = CHATCHAT_ROOT
 
     basic_settings: BasicSettings = settings_property(BasicSettings())
     kb_settings: KBSettings = settings_property(KBSettings())

@@ -6,6 +6,7 @@ from typing import List
 from langchain.docstore.document import Document
 
 from chatchat.settings import Settings
+from chatchat.server.utils import get_default_embedding
 from chatchat.server.db.repository.knowledge_metadata_repository import (
     add_summary_to_db,
     delete_summary_from_db,
@@ -23,7 +24,7 @@ class KBSummaryService(ABC):
     kb_path: str
 
     def __init__(
-        self, knowledge_base_name: str, embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL
+        self, knowledge_base_name: str, embed_model: str = get_default_embedding()
     ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model
