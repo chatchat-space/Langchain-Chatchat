@@ -347,11 +347,14 @@ def dialogue_page(
 
     # chat input
     with bottom():
-        cols = st.columns([1, 1, 15])
-        if cols[0].button(":atom_symbol:"):
+        cols = st.columns([1, 0.2, 15,  1])
+        if cols[0].button(":gear:", help="模型配置"):
             widget_keys = ["platform", "llm_model", "temperature", "system_message"]
             chat_box.context_to_session(include=widget_keys)
             llm_model_setting()
+        if cols[-1].button(":wastebasket:", help="清空对话"):
+            chat_box.reset_history()
+            rerun()
         # with cols[1]:
         #     mic_audio = audio_recorder("", icon_size="2x", key="mic_audio")
         prompt = cols[2].chat_input(chat_input_placeholder, key="prompt")
