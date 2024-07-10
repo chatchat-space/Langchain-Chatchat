@@ -49,7 +49,7 @@ async def kb_chat_endpoint(body: OpenAIChatInput, request: Request):
         history=body.messages[:-1],
         stream=body.stream,
         model=body.model,
-        temperature=extra.get("temperature", Settings.model_settings.TEMPERATURE),
+        temperature=body.temperature,
         max_tokens=body.max_tokens,
         prompt_name=extra.get("prompt_name", "default"),
         return_direct=extra.get("return_direct", False),
