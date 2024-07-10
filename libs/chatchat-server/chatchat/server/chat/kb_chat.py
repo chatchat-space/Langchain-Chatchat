@@ -19,7 +19,6 @@ from chatchat.server.chat.utils import History
 from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.kb_doc_api import search_docs, search_temp_docs
 from chatchat.server.knowledge_base.utils import format_reference
-from chatchat.server.reranker.reranker import LangchainReranker
 from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
                                    BaseResponse, get_prompt_template,
                                 )
