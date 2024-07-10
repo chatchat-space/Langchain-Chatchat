@@ -42,6 +42,7 @@ async def kb_chat_endpoint(body: OpenAIChatInput, request: Request):
     extra = body.model_extra
     ret = await kb_chat(
         query=body.messages[-1]["content"],
+        mode=extra.get("mode", "local_kb"),
         kb_name=extra.get("kb_name"),
         top_k=extra.get("top_k", Settings.kb_settings.VECTOR_SEARCH_TOP_K),
         score_threshold=extra.get("score_threshold", Settings.kb_settings.SCORE_THRESHOLD),

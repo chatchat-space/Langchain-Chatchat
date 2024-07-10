@@ -66,7 +66,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             return BaseResponse(code=404, msg=f"未找到知识库 {kb_name}")
     
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
-        nonlocal history
+        nonlocal history, prompt_name
 
         history = [History.from_data(h) for h in history]
 
@@ -93,7 +93,15 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
         else:
             docs = []
             source_documents = []
-
+        # import rich
+        # rich.print(dict(
+        #     mode=mode,
+        #     query=query,
+        #     knowledge_base_name=kb_name,
+        #     top_k=top_k,
+        #     score_threshold=score_threshold,
+        # ))
+        # rich.print(docs)
         if return_direct:
             yield OpenAIChatOutput(
                 id=f"chat{uuid.uuid4()}",
