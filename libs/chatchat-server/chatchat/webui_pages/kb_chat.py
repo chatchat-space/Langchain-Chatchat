@@ -10,7 +10,7 @@ from streamlit_extras.bottom_container import bottom
 
 from chatchat.settings import Settings
 from chatchat.server.knowledge_base.utils import LOADER_DICT
-from chatchat.server.utils import get_config_models, get_config_platforms
+from chatchat.server.utils import get_config_models, get_config_platforms, get_default_llm
 from chatchat.webui_pages.dialogue.dialogue import (save_session, restore_session, rerun,
                                                     get_messages_history, upload_temp_docs,
                                                     add_conv, del_conv, clear_conv)
@@ -36,7 +36,7 @@ def kb_chat(api: ApiRequest):
     ctx = chat_box.context
     ctx.setdefault("uid", uuid.uuid4().hex)
     ctx.setdefault("file_chat_id", None)
-    ctx.setdefault("llm_model", Settings.model_settings.DEFAULT_LLM_MODEL)
+    ctx.setdefault("llm_model", get_default_llm())
     ctx.setdefault("temperature", Settings.model_settings.TEMPERATURE)
     init_widgets()
 

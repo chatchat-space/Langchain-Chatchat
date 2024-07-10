@@ -20,7 +20,7 @@ from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.kb_doc_api import search_docs, search_temp_docs
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.reranker.reranker import LangchainReranker
-from chatchat.server.utils import (wrap_done, get_ChatOpenAI,
+from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
                                    BaseResponse, get_prompt_template,
                                 )
 
@@ -47,7 +47,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                         "content": "虎头虎脑"}]]
                 ),
                 stream: bool = Body(True, description="流式输出"),
-                model: str = Body(Settings.model_settings.DEFAULT_LLM_MODEL, description="LLM 模型名称。"),
+                model: str = Body(get_default_llm(), description="LLM 模型名称。"),
                 temperature: float = Body(Settings.model_settings.TEMPERATURE, description="LLM 采样温度", ge=0.0, le=2.0),
                 max_tokens: Optional[int] = Body(
                     Settings.model_settings.MAX_TOKENS,

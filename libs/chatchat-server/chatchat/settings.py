@@ -257,7 +257,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -270,7 +270,7 @@ class PlatformConfig(MyBaseModel):
     """该平台单模型最大并发数"""
 
     auto_detect_model: bool = False
-    """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型设为 auto 即可自动检测"""
+    """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型可自动检测"""
 
     llm_models: t.Union[t.Literal["auto"], t.List[str]] = [
         "glm4-chat",
@@ -279,27 +279,27 @@ class PlatformConfig(MyBaseModel):
         "gpt-3.5-turbo",
         "gpt-4o",
     ]
-    """该平台支持的大语言模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的大语言模型列表，auto_detect_model 设为 True 时自动检测"""
 
     embed_models: t.Union[t.Literal["auto"], t.List[str]] = [
         "bge-large-zh-v1.5",
     ]
-    """该平台支持的嵌入模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的嵌入模型列表，auto_detect_model 设为 True 时自动检测"""
 
     text2image_models: t.Union[t.Literal["auto"], t.List[str]] = []
-    """该平台支持的图像生成模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的图像生成模型列表，auto_detect_model 设为 True 时自动检测"""
 
     image2text_models: t.Union[t.Literal["auto"], t.List[str]] = []
-    """该平台支持的多模态模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的多模态模型列表，auto_detect_model 设为 True 时自动检测"""
 
     rerank_models: t.Union[t.Literal["auto"], t.List[str]] = []
-    """该平台支持的重排模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的重排模型列表，auto_detect_model 设为 True 时自动检测"""
 
     speech2text_models: t.Union[t.Literal["auto"], t.List[str]] = []
-    """该平台支持的 STT 模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的 STT 模型列表，auto_detect_model 设为 True 时自动检测"""
 
     text2speech_models: t.Union[t.Literal["auto"], t.List[str]] = []
-    """该平台支持的 TTS 模型列表，设为 'auto' 则自动检测"""
+    """该平台支持的 TTS 模型列表，auto_detect_model 设为 True 时自动检测"""
 
 
 class ApiModelSettings(BaseFileSettings):
@@ -389,6 +389,13 @@ class ApiModelSettings(BaseFileSettings):
                 "api_key": "EMPTY",
                 "api_concurrencies": 5,
                 "auto_detect_model": True,
+                "llm_models": [],
+                "embed_models": [],
+                "text2image_models": [],
+                "image2text_models": [],
+                "rerank_models": [],
+                "speech2text_models": [],
+                "text2speech_models": [],
             }),
             PlatformConfig(**{
                 "platform_name": "xinference",
@@ -781,9 +788,9 @@ class SettingsContainer:
         self.basic_settings.create_template_file(write_file=True)
         self.kb_settings.create_template_file(write_file=True)
         self.model_settings.create_template_file(sub_comments={
-                                                    "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
-                                                                        "is_entire_comment": True}},
-                                                write_file=True)
+            "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
+                                "is_entire_comment": True}},
+            write_file=True)
         self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings(**_default_tool_settings))
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 

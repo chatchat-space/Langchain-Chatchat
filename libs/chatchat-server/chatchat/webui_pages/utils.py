@@ -13,7 +13,7 @@ from typing import *
 import httpx
 
 from chatchat.settings import Settings
-from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config
+from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config, get_default_embedding
 from chatchat.utils import build_logger
 
 
@@ -391,7 +391,7 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         vector_store_type: str = Settings.kb_settings.DEFAULT_VS_TYPE,
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ):
         """
         对应api.py/knowledge_base/create_knowledge_base接口
@@ -587,7 +587,7 @@ class ApiRequest:
         knowledge_base_name: str,
         allow_empty_kb: bool = True,
         vs_type: str = Settings.kb_settings.DEFAULT_VS_TYPE,
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
         chunk_size=Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
         zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
@@ -616,7 +616,7 @@ class ApiRequest:
     def embed_texts(
         self,
         texts: List[str],
-        embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
         to_query: bool = False,
     ) -> List[List[float]]:
         """

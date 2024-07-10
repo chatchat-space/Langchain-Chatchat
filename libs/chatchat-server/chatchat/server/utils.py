@@ -110,10 +110,10 @@ def get_config_models(
         "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
                                             if "rerank" == v["model_type"]],
         "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v[list(XF_MODELS_TYPES["speech2text"].keys())[0]]
+                                                 if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
                                                  in XF_MODELS_TYPES["speech2text"].values()],
         "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v[list(XF_MODELS_TYPES["text2speech"].keys())[0]]
+                                                 if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
                                                  in XF_MODELS_TYPES["text2speech"].values()],
     }
 
@@ -126,8 +126,8 @@ def get_config_models(
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
             for m_type in model_types:
-                if m.get(m_type) != "auto":
-                    continue
+                # if m.get(m_type) != "auto":
+                #     continue
                 try:
                     from xinference_client import RESTfulClient as Client
                     xf_url = get_base_url(m.get("api_base_url"))
@@ -140,8 +140,10 @@ def get_config_models(
 
         for m_type in model_types:
             models = m.get(m_type, [])
-            if not models or models == "auto":
-                # logger.warning("you should not set `auto` without auto_detect_model=True")
+            if models == "auto":
+                logger.warning("you should not set `auto` without auto_detect_model=True")
+                continue
+            elif not models:
                 continue
             for m_name in models:
                 if model_name is None or model_name == m_name:
@@ -174,8 +176,27 @@ def get_model_info(
         return {}
 
 
+def get_default_llm():
+    available_llms = list(get_config_models(model_type="llm").keys())
+    if Settings.model_settings.DEFAULT_LLM_MODEL in available_llms:
+        return Settings.model_settings.DEFAULT_LLM_MODEL
+    else:
+        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available llms, "
+                       f"using {available_llms[0]} instead")
+        return available_llms[0]
+
+def get_default_embedding():
+    available_embeddings = list(get_config_models(model_type="embed").keys())
+    if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
+        return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
+    else:
+        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in available "
+                       f"embeddings, using {available_embeddings[0]} instead")
+        return available_embeddings[0]
+
+
 def get_ChatOpenAI(
-        model_name: str = Settings.model_settings.DEFAULT_LLM_MODEL,
+        model_name: str = get_default_llm(),
         temperature: float = Settings.model_settings.TEMPERATURE,
         max_tokens: int = Settings.model_settings.MAX_TOKENS,
         streaming: bool = True,
@@ -273,7 +294,7 @@ def get_Embeddings(
         LocalAIEmbeddings,
     )
 
-    embed_model = embed_model or Settings.model_settings.DEFAULT_EMBEDDING_MODEL
+    embed_model = embed_model or get_default_embedding()
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
     try:
@@ -303,7 +324,7 @@ def get_Embeddings(
         )
 
 
-def check_embed_model(embed_model: str = Settings.model_settings.DEFAULT_EMBEDDING_MODEL) -> bool:
+def check_embed_model(embed_model: str = get_default_embedding()) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
@@ -867,6 +888,8 @@ def is_port_in_use(port):
 
 if __name__ == "__main__":
     # for debug
+    print(get_default_llm())
+    print(get_default_embedding())
     platforms = get_config_platforms()
     models = get_config_models()
     model_info = get_model_info(platform_name="xinference-auto")

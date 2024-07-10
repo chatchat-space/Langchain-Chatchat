@@ -32,7 +32,7 @@ Langchain-Chatchat 自 0.3.0 版本起，为方便支持用户使用 pip 方式�
 
 ```shell
 cd  Langchain-Chatchat/libs/chatchat-server/
-poetry install --with lint,test
+poetry install --with lint,test -E xinference
 ```
 
 > [!Note]
