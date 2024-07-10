@@ -30,6 +30,7 @@ def init_widgets():
     st.session_state.setdefault("return_direct", False)
     st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
     st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
+    st.session_state.setdefault("file_chat_id", None)
 
 
 def kb_chat(api: ApiRequest):
@@ -197,13 +198,13 @@ def kb_chat(api: ApiRequest):
                 f"正在查询知识库 `{selected_kb}` ...",
             ])
         elif dialogue_mode == "文件对话":
-            if st.session_state["file_chat_id"] is None:
+            if st.session_state.get("file_chat_id") is None:
                 st.error("请先上传文件再进行对话")
                 st.stop()
-            extra_body["knowledge_id"] = st.session_state["file_chat_id"]
+            extra_body["knowledge_id"] = st.session_state.get("file_chat_id")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
-                f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
+                f"正在查询文件 `{st.session_state.get('file_chat_id')}` ...",
             ])
         else:
             extra_body["search_engine_name"] = search_engine
