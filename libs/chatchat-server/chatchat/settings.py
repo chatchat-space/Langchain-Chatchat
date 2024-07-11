@@ -307,10 +307,10 @@ class ApiModelSettings(BaseFileSettings):
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "model_settings.yaml")
 
-    DEFAULT_LLM_MODEL: str = "glm4-chat"
+    DEFAULT_LLM_MODEL: str = "glm-4-9b-chat"
     """默认选用的 LLM 名称"""
 
-    DEFAULT_EMBEDDING_MODEL: str = "bge-large-zh-v1.5"
+    DEFAULT_EMBEDDING_MODEL: str = "bge-m3"
     """默认选用的 Embedding 名称"""
 
     Agent_MODEL: str = "" # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
@@ -327,10 +327,9 @@ class ApiModelSettings(BaseFileSettings):
 
     SUPPORT_AGENT_MODELS: t.List[str] = [
             "chatglm3-6b",
+            "glm-4",
             "openai-api",
-            "Qwen-14B-Chat",
-            "Qwen-7B-Chat",
-            "qwen-turbo",
+            "Qwen-2",
             "qwen2-instruct",
             "gpt-3.5-turbo",
             "gpt-4o",
