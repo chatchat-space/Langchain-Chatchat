@@ -310,7 +310,7 @@ class ApiModelSettings(BaseFileSettings):
     DEFAULT_LLM_MODEL: str = "glm4-chat"
     """默认选用的 LLM 名称"""
 
-    DEFAULT_EMBEDDING_MODEL: str = "bge-large-zh-v1.5"
+    DEFAULT_EMBEDDING_MODEL: str = "bge-m3"
     """默认选用的 Embedding 名称"""
 
     Agent_MODEL: str = "" # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
@@ -327,10 +327,9 @@ class ApiModelSettings(BaseFileSettings):
 
     SUPPORT_AGENT_MODELS: t.List[str] = [
             "chatglm3-6b",
+            "glm-4",
             "openai-api",
-            "Qwen-14B-Chat",
-            "Qwen-7B-Chat",
-            "qwen-turbo",
+            "Qwen-2",
             "qwen2-instruct",
             "gpt-3.5-turbo",
             "gpt-4o",
@@ -540,10 +539,6 @@ class ToolSettings(BaseFileSettings):
     '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
 
     arxiv: dict = {
-        "use": False,
-    }
-
-    shell: dict = {
         "use": False,
     }
 

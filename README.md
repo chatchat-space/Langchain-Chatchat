@@ -16,8 +16,8 @@
 
 * [概述](README.md#概述)
 * [功能介绍](README.md#功能介绍)
-  * [0.3.x 功能一览](README.md#03x-版本功能一览)
-  * [已支持的模型推理框架与模型](README.md#已支持的模型部署框架与模型)
+    * [0.3.x 功能一览](README.md#03x-版本功能一览)
+    * [已支持的模型推理框架与模型](README.md#已支持的模型部署框架与模型)
 * [快速上手](README.md#快速上手)
     * [pip 安装部署](README.md#pip-安装部署)
     * [源码安装部署/开发部署](README.md#源码安装部署开发部署)
@@ -171,6 +171,7 @@ LLM、Embedding、Reranker
 从 0.3.1 版本起，Langchain-Chatchat 使用本地 `yaml` 文件的方式进行配置，用户可以直接查看并修改其中的内容，服务器会自动更新无需重启。
 
 1. 设置 Chatchat 存储配置文件和数据文件的根目录（可选）
+
 ```shell
 # on linux or macos
 export CHATCHAT_ROOT=/path/to/chatchat_data
@@ -178,9 +179,11 @@ export CHATCHAT_ROOT=/path/to/chatchat_data
 # on windows
 set CHATCHAT_ROOT=/path/to/chatchat_data
 ```
+
 若不设置该环境变量，则自动使用当前目录。
 
 2. 执行初始化
+
 ```shell
 chatchat init
 # 如果你已经启动了 Xinference 服务，可以直接指定 Xinference API 地址、LLM 模型、Embedding 模型，可以跳过第3、4步，直接按第5步启动服务：
@@ -188,39 +191,43 @@ chatchat init
 # chatchat start -a
 # 具体查看 chatchat init --help
 ```
+
 该命令会执行以下操作：
+
 - 创建所有需要的数据目录
 - 复制 samples 知识库内容
 - 生成默认 `yaml` 配置文件
 
 3. 修改配置文件
-  - 配置模型（model_settings.yaml）  
-    需要根据步骤 **2. 模型推理框架并加载模型** 中选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
-    ```yaml
-    # 默认选用的 LLM 名称
-     DEFAULT_LLM_MODEL: qwen1.5-chat
 
-     # 默认选用的 Embedding 名称
-     DEFAULT_EMBEDDING_MODEL: bge-large-zh-v1.5
+- 配置模型（model_settings.yaml）  
+  需要根据步骤 **2. 模型推理框架并加载模型**
+  中选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
+  ```yaml
+  # 默认选用的 LLM 名称
+   DEFAULT_LLM_MODEL: qwen1.5-chat
 
-    # 将 `LLM_MODEL_CONFIG` 中 `llm_model, action_model` 的键改成对应的 LLM 模型
-    # 在 `MODEL_PLATFORMS` 中修改对应模型平台信息
-    ```
-  - 配置知识库路径（basic_settings.yaml）（可选）  
-    默认知识库位于 `CHATCHAT_ROOT/data/knowledge_base`，如果你想把知识库放在不同的位置，或者想连接现有的知识库，可以在这里修改对应目录即可。
-    ```yaml
-    # 知识库默认存储路径
-     KB_ROOT_PATH: D:\chatchat-test\data\knowledge_base
+   # 默认选用的 Embedding 名称
+   DEFAULT_EMBEDDING_MODEL: bge-large-zh-v1.5
 
-     # 数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
-     DB_ROOT_PATH: D:\chatchat-test\data\knowledge_base\info.db
+  # 将 `LLM_MODEL_CONFIG` 中 `llm_model, action_model` 的键改成对应的 LLM 模型
+  # 在 `MODEL_PLATFORMS` 中修改对应模型平台信息
+  ```
+- 配置知识库路径（basic_settings.yaml）（可选）  
+  默认知识库位于 `CHATCHAT_ROOT/data/knowledge_base`，如果你想把知识库放在不同的位置，或者想连接现有的知识库，可以在这里修改对应目录即可。
+  ```yaml
+  # 知识库默认存储路径
+   KB_ROOT_PATH: D:\chatchat-test\data\knowledge_base
 
-     # 知识库信息数据库连接URI
-     SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
-    ```
-  - 配置知识库（kb_settings.yaml）（可选）
+   # 数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
+   DB_ROOT_PATH: D:\chatchat-test\data\knowledge_base\info.db
 
-    默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
+   # 知识库信息数据库连接URI
+   SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
+  ```
+- 配置知识库（kb_settings.yaml）（可选）
+
+  默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
 
 #### 4. 初始化知识库
 
@@ -230,6 +237,7 @@ chatchat init
 ```shell
 chatchat kb -r
 ```
+
 更多功能可以查看 `chatchat kb --help`
 
 出现以下日志即为成功:
@@ -258,7 +266,7 @@ chatchat kb -r
 >
 > ##### 1. Windows 下重建知识库或添加知识文件时卡住不动
 > 此问题常出现于新建虚拟环境中，可以通过以下方式确认：
-> 
+>
 > `from unstructured.partition.auto import partition`
 >
 > 如果该语句卡住无法执行，可以执行以下命令：
@@ -268,7 +276,7 @@ chatchat kb -r
 > pip install 'python-magic-bin=={version}'
 > ```
 > 然后按照本节指引重新创建知识库即可。
-> 
+>
 > </details>
 
 #### 5. 启动项目
@@ -285,7 +293,6 @@ chatchat start -a
 > 由于 chatchat 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
 >
 > 如需通过机器ip 进行访问(如 Linux 系统), 需要到 `basic_settings.yaml` 中将监听地址修改为 0.0.0.0。
-
 > </details>
 
 ### 其它配置
@@ -298,12 +305,13 @@ chatchat start -a
 源码安装部署请参考 [开发指南](docs/contributing/README_dev.md)
 
 ### Docker 部署
+
 ```shell
 docker pull chatimage/chatchat:0.3.0-2024-0624
 ```
+
 > [!important]
 > 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](docs/install/README_docker.md)
-
 
 ### 旧版本迁移
 
@@ -348,7 +356,6 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 <img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-
 
 ## 引用
 
