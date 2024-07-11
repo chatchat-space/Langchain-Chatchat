@@ -154,6 +154,9 @@ class BaseToolOutput:
 
 
 def format_context(self: BaseToolOutput) -> str:
+    '''
+    将包含知识库输出的ToolOutput格式化为 LLM 需要的字符串
+    '''
     context = ""
     docs = self.data["docs"]
     source_documents = []

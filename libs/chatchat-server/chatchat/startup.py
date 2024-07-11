@@ -188,6 +188,7 @@ def dump_server_info(after_start=False, args=None):
     print(f"python版本：{sys.version}")
     print(f"项目版本：{__version__}")
     print(f"langchain版本：{langchain.__version__}")
+    print(f"数据目录：{Settings.CHATCHAT_ROOT}")
     print("\n")
 
     print(f"当前使用的分词器：{Settings.kb_settings.TEXT_SPLITTER_NAME}")

@@ -310,7 +310,7 @@ class ApiRequest:
         zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
     ):
         """
-        对应api.py/knowledge_base/upload_tmep_docs接口
+        对应api.py/knowledge_base/upload_temp_docs接口
         """
 
         def convert_file(file, filename=None):

@@ -190,8 +190,8 @@ def get_default_embedding():
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
         return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
     else:
-        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in available "
-                       f"embeddings, using {available_embeddings[0]} instead")
+        logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
+                       f"available embeddings, using {available_embeddings[0]} instead")
         return available_embeddings[0]
 
 
@@ -284,8 +284,8 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-        embed_model: str = get_default_embedding(),
-        local_wrap: bool = False,  # use local wrapped api
+    embed_model: str = None,
+    local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
     from langchain_openai import OpenAIEmbeddings
@@ -294,6 +294,7 @@ def get_Embeddings(
         LocalAIEmbeddings,
     )
 
+    embed_model = embed_model or get_default_embedding()
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
     try:

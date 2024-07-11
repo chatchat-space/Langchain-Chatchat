@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.0.20240708"
+version = "0.3.1.20240711"
 description = "Langchain-Chatchat (formerly langchain-ChatGLM), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langchain"
 authors = ["chatchat"]
 readme = "README.md"
