@@ -63,6 +63,7 @@ text2sql:
 
 
    如果出现大模型选错表的情况，可尝试根据实际情况额外声明表名和对应的说明，例如：
-   ```yaml
-     table_comments: {"tableA":"这是一个用户表，存储了用户的基本信息","tanleB":"角色表"}
-   ```
+
+  ```yaml
+    table_comments: {"tableA":"这是一个用户表，存储了用户的基本信息","tanleB":"角色表"}
+  ```

@@ -7,7 +7,7 @@
 !/libs/chatchat-server/chatchat/data/knowledge_base/samples
 /libs/chatchat-server/chatchat/data/knowledge_base/samples/vector_store
 !/libs/chatchat-server/chatchat/data/nltk_data
-
+config/
 .vscode/
 
 # below are standard python ignore files
