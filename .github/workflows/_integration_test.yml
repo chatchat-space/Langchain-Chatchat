@@ -14,13 +14,12 @@ env:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-
     environment: Scheduled testing publish
-    outputs:
-      pkg-name: ${{ steps.check-version.outputs.pkg-name }}
-      version: ${{ steps.check-version.outputs.version }}
     strategy:
       matrix:
         python-version:
