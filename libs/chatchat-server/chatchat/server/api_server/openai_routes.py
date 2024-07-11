@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import logging
+import os
+import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime
-import os
 from pathlib import Path
-import shutil
-from typing import Dict, Tuple, AsyncGenerator, Iterable
+from typing import AsyncGenerator, Dict, Iterable, Tuple
 
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse
@@ -15,28 +16,32 @@ from openai import AsyncClient
 from openai.types.file_object import FileObject
 from sse_starlette.sse import EventSourceResponse
 
+from chatchat.settings import Settings
+from chatchat.server.utils import get_config_platforms, get_model_info, get_OpenAIClient
+from chatchat.utils import build_logger
+
 from .api_schemas import *
-from chatchat.configs import BASE_TEMP_DIR, log_verbose
-from chatchat.server.utils import get_model_info, get_config_platforms, get_OpenAIClient
 
-import logging
-
-logger = logging.getLogger()
+logger = build_logger()
 
 
-DEFAULT_API_CONCURRENCIES = 5 # 默认单个模型最大并发数
-model_semaphores: Dict[Tuple[str, str], asyncio.Semaphore] = {} # key: (model_name, platform)
+DEFAULT_API_CONCURRENCIES = 5  # 默认单个模型最大并发数
+model_semaphores: Dict[
+    Tuple[str, str], asyncio.Semaphore
+] = {}  # key: (model_name, platform)
 openai_router = APIRouter(prefix="/v1", tags=["OpenAI 兼容平台整合接口"])
 
 
 @asynccontextmanager
 async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
-    '''
+    """
     对重名模型进行调度，依次选择：空闲的模型 -> 当前访问数最少的模型
-    '''
+    """
     max_semaphore = 0
     selected_platform = ""
     model_infos = get_model_info(model_name=model_name, multiple=True)
+    assert model_infos, f"specified model '{model_name}' cannot be found in MODEL_PLATFORMS."
+
     for m, c in model_infos.items():
         key = (m, c["platform_name"])
         api_concurrencies = c.get("api_concurrencies", DEFAULT_API_CONCURRENCIES)
@@ -60,10 +65,13 @@ async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
         semaphore.release()
 
 
-async def openai_request(method, body, extra_json: Dict={}, header: Iterable=[], tail: Iterable=[]):
-    '''
+async def openai_request(
+    method, body, extra_json: Dict = {}, header: Iterable = [], tail: Iterable = []
+):
+    """
     helper function to make openai request with extra fields
-    '''
+    """
+
     async def generator():
         for x in header:
             if isinstance(x, str):
@@ -105,9 +113,10 @@ async def openai_request(method, body, extra_json: Dict={}, header: Iterable=[],
 
 @openai_router.get("/models")
 async def list_models() -> Dict:
-    '''
+    """
     整合所有平台的模型列表。
-    '''
+    """
+
     async def task(name: str, config: Dict):
         try:
             client = get_OpenAIClient(name, is_async=True)
@@ -118,9 +127,12 @@ async def list_models() -> Dict:
             return []
 
     result = []
-    tasks = [asyncio.create_task(task(name, config)) for name, config in get_config_platforms().items()]
+    tasks = [
+        asyncio.create_task(task(name, config))
+        for name, config in get_config_platforms().items()
+    ]
     for t in asyncio.as_completed(tasks):
-        result += (await t)
+        result += await t
 
     return {"object": "list", "data": result}
 
@@ -130,8 +142,7 @@ async def create_chat_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
-    if log_verbose:
-        print(body)
+    logger.debug(body)
     async with get_model_client(body.model) as client:
         result = await openai_request(client.chat.completions.create, body)
         return result
@@ -182,7 +193,7 @@ async def create_image_edit(
     async with get_model_client(body.model) as client:
         return await openai_request(client.images.edit, body)
 
-    
+
 @openai_router.post("/audio/translations", deprecated="暂不支持")
 async def create_audio_translations(
     request: Request,
@@ -238,7 +249,7 @@ def _get_file_info(file_id: str) -> Dict:
 
 def _get_file_path(file_id: str) -> str:
     file_id = base64.urlsafe_b64decode(file_id).decode()
-    return os.path.join(BASE_TEMP_DIR, "openai_files", file_id)
+    return os.path.join(Settings.basic_settings.BASE_TEMP_DIR, "openai_files", file_id)
 
 
 @openai_router.post("/files")
@@ -248,7 +259,9 @@ async def files(
     purpose: str = "assistants",
 ) -> Dict:
     created_at = int(datetime.now().timestamp())
-    file_id = _get_file_id(purpose=purpose, created_at=created_at, filename=file.filename)
+    file_id = _get_file_id(
+        purpose=purpose, created_at=created_at, filename=file.filename
+    )
     file_path = _get_file_path(file_id)
     file_dir = os.path.dirname(file_path)
     os.makedirs(file_dir, exist_ok=True)
@@ -269,13 +282,17 @@ async def files(
 @openai_router.get("/files")
 def list_files(purpose: str) -> Dict[str, List[Dict]]:
     file_ids = []
-    root_path = Path(BASE_TEMP_DIR) / "openai_files" / purpose
+    root_path = Path(Settings.basic_settings.BASE_TEMP_DIR) / "openai_files" / purpose
     for dir, sub_dirs, files in os.walk(root_path):
         dir = Path(dir).relative_to(root_path).as_posix()
         for file in files:
-            file_id = base64.urlsafe_b64encode(f"{purpose}/{dir}/{file}".encode()).decode()
+            file_id = base64.urlsafe_b64encode(
+                f"{purpose}/{dir}/{file}".encode()
+            ).decode()
             file_ids.append(file_id)
-    return {"data": [{**_get_file_info(x), "id":x, "object": "file"} for x in file_ids]}
+    return {
+        "data": [{**_get_file_info(x), "id": x, "object": "file"} for x in file_ids]
+    }
 
 
 @openai_router.get("/files/{file_id}")

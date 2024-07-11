@@ -1,5 +1,6 @@
-from langchain.docstore.document import Document
 import re
+
+from langchain.docstore.document import Document
 
 
 def under_non_alpha_ratio(text: str, threshold: float = 0.5):
@@ -28,9 +29,9 @@ def under_non_alpha_ratio(text: str, threshold: float = 0.5):
 
 
 def is_possible_title(
-        text: str,
-        title_max_word_length: int = 20,
-        non_alpha_threshold: float = 0.5,
+    text: str,
+    title_max_word_length: int = 20,
+    non_alpha_threshold: float = 0.5,
 ) -> bool:
     """Checks to see if the text passes all of the checks for a valid title.
 
@@ -90,7 +91,7 @@ def zh_title_enhance(docs: Document) -> Document:
     if len(docs) > 0:
         for doc in docs:
             if is_possible_title(doc.page_content):
-                doc.metadata['category'] = 'cn_Title'
+                doc.metadata["category"] = "cn_Title"
                 title = doc.page_content
             elif title:
                 doc.page_content = f"下文与({title})有关。{doc.page_content}"

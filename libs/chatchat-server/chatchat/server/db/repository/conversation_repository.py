@@ -1,6 +1,7 @@
-from chatchat.server.db.session import with_session
 import uuid
+
 from chatchat.server.db.models.conversation_model import ConversationModel
+from chatchat.server.db.session import with_session
 
 
 @with_session

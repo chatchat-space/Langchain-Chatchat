@@ -2,7 +2,6 @@ from chatchat.server.knowledge_base.kb_service.faiss_kb_service import FaissKBSe
 from chatchat.server.knowledge_base.migrate import create_tables
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 
-
 kbService = FaissKBService("test")
 test_kb_name = "test"
 test_file_name = "README.md"

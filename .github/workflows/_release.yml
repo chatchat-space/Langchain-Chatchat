@@ -2,25 +2,22 @@ name: release
 run-name: Release ${{ inputs.working-directory }} by @${{ github.actor }}
 on:
   workflow_call:
-    branches:
-      - dev
     inputs:
       working-directory:
         required: true
         type: string
         description: "From which folder this pipeline executes"
   workflow_dispatch:
-    branches:
-      - dev
     inputs:
       working-directory:
         required: true
         type: string
-        default: './chatchat-server'
+        default: './libs/chatchat-server'
         description: "From which folder this pipeline executes"
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.7.1"
+
 
 jobs:
   build:
@@ -179,13 +176,7 @@ jobs:
       - pre-release-checks
     environment: Scheduled testing
     runs-on: ubuntu-latest
-    permissions:
-      # This permission is used for trusted publishing:
-      # https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/
-      #
-      # Trusted publishing has to also be configured on PyPI for each package:
-      # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
-      id-token: write
+
 
     defaults:
       run:
@@ -213,52 +204,54 @@ jobs:
           packages-dir: ${{ inputs.working-directory }}/dist/
           verbose: true
           print-hash: true
+          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           # We overwrite any existing distributions with the same name and version.
           # This is *only for CI use* and is *extremely dangerous* otherwise!
           # https://github.com/pypa/gh-action-pypi-publish#tolerating-release-package-file-duplicates
-          skip-existing: true
+#          skip-existing: true
 
-  mark-release:
-    needs:
-      - build
-      - test-pypi-publish
-      - pre-release-checks
-      - publish
-    environment: Scheduled testing
-    runs-on: ubuntu-latest
-    permissions:
-      # This permission is needed by `ncipollo/release-action` to
-      # create the GitHub release.
-      contents: write
+  # mark-release:
+  #   needs:
+  #     - build
+  #     - test-pypi-publish
+  #     - pre-release-checks
+  #     - publish
+  #   environment: Scheduled testing
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     # This permission is needed by `ncipollo/release-action` to
+  #     # create the GitHub release.
+  #     contents: write
+  #     id-token: none
 
-    defaults:
-      run:
-        working-directory: ${{ inputs.working-directory }}
+  #   defaults:
+  #     run:
+  #       working-directory: ${{ inputs.working-directory }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Set up Python + Poetry ${{ env.POETRY_VERSION }}
-        uses: "./.github/actions/poetry_setup"
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          poetry-version: ${{ env.POETRY_VERSION }}
-          working-directory: ${{ inputs.working-directory }}
-          cache-key: release
+  #     - name: Set up Python + Poetry ${{ env.POETRY_VERSION }}
+  #       uses: "./.github/actions/poetry_setup"
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #         poetry-version: ${{ env.POETRY_VERSION }}
+  #         working-directory: ${{ inputs.working-directory }}
+  #         cache-key: release
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: ${{ inputs.working-directory }}/dist/
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: ${{ inputs.working-directory }}/dist/
 
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        if: ${{ inputs.working-directory == './chatchat-server' }}
-        with:
-          artifacts: "dist/*"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: false
-          generateReleaseNotes: true
-          tag: v${{ needs.build.outputs.version }}
-          commit: main
+  #     - name: Create Release
+  #       uses: ncipollo/release-action@v1
+  #       if: ${{ inputs.working-directory == './chatchat-server' }}
+  #       with:
+  #         artifacts: "dist/*"
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         draft: false
+  #         generateReleaseNotes: true
+  #         tag: v${{ needs.build.outputs.version }}
+  #         commit: main

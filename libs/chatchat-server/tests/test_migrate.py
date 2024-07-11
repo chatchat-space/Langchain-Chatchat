@@ -1,15 +1,23 @@
-from pathlib import Path
-from pprint import pprint
 import os
 import shutil
 import sys
+from pathlib import Path
+from pprint import pprint
+
 root_path = Path(__file__).parent.parent
 sys.path.append(str(root_path))
 
 from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
-from chatchat.server.knowledge_base.utils import get_kb_path, get_doc_path, KnowledgeFile
-from chatchat.server.knowledge_base.migrate import folder2db, prune_db_docs, prune_folder_files
-
+from chatchat.server.knowledge_base.migrate import (
+    folder2db,
+    prune_db_docs,
+    prune_folder_files,
+)
+from chatchat.server.knowledge_base.utils import (
+    KnowledgeFile,
+    get_doc_path,
+    get_kb_path,
+)
 
 # setup test knowledge base
 kb_name = "test_kb_for_migrate"

@@ -1,10 +1,16 @@
 import urllib
-from chatchat.server.utils import BaseResponse, ListResponse
-from chatchat.server.knowledge_base.utils import validate_kb_name
-from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
-from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, logger, log_verbose
+
 from fastapi import Body
+
+from chatchat.settings import Settings
+from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
+from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
+from chatchat.server.knowledge_base.utils import validate_kb_name
+from chatchat.server.utils import BaseResponse, ListResponse, get_default_embedding
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def list_kbs():
@@ -12,11 +18,12 @@ def list_kbs():
     return ListResponse(data=list_kbs_from_db())
 
 
-def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
-              vector_store_type: str = Body("faiss"),
-              kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
-              embed_model: str = Body(DEFAULT_EMBEDDING_MODEL),
-              ) -> BaseResponse:
+def create_kb(
+    knowledge_base_name: str = Body(..., examples=["samples"]),
+    vector_store_type: str = Body("faiss"),
+    kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
+    embed_model: str = Body(get_default_embedding()),
+) -> BaseResponse:
     # Create selected knowledge base
     if not validate_kb_name(knowledge_base_name):
         return BaseResponse(code=403, msg="Don't attack me")
@@ -27,20 +34,21 @@ def create_kb(knowledge_base_name: str = Body(..., examples=["samples"]),
     if kb is not None:
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
 
-    kb = KBServiceFactory.get_service(knowledge_base_name, vector_store_type, embed_model, kb_info=kb_info)
+    kb = KBServiceFactory.get_service(
+        knowledge_base_name, vector_store_type, embed_model, kb_info=kb_info
+    )
     try:
         kb.create_kb()
     except Exception as e:
         msg = f"创建知识库出错： {e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=200, msg=f"已新增知识库 {knowledge_base_name}")
 
 
 def delete_kb(
-        knowledge_base_name: str = Body(..., examples=["samples"])
+    knowledge_base_name: str = Body(..., examples=["samples"]),
 ) -> BaseResponse:
     # Delete selected knowledge base
     if not validate_kb_name(knowledge_base_name):
@@ -59,8 +67,7 @@ def delete_kb(
             return BaseResponse(code=200, msg=f"成功删除知识库 {knowledge_base_name}")
     except Exception as e:
         msg = f"删除知识库时出现意外： {e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
 
     return BaseResponse(code=500, msg=f"删除知识库失败 {knowledge_base_name}")

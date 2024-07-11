@@ -1,25 +1,33 @@
 from __future__ import annotations
 
-from functools import partial
 import json
 import logging
-from operator import itemgetter
 import re
-from typing import List, Sequence, Union, Tuple, Any
+from functools import partial
+from operator import itemgetter
+from typing import Any, List, Sequence, Tuple, Union
 
-from langchain_core.callbacks import Callbacks
-from langchain_core.runnables import Runnable, RunnablePassthrough
-from langchain.agents.agent import RunnableAgent, AgentExecutor
+from langchain.agents.agent import AgentExecutor, RunnableAgent
 from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
 from langchain.prompts.chat import BaseChatPromptTemplate
-from langchain.schema import (AgentAction, AgentFinish, OutputParserException,
-                              HumanMessage, SystemMessage, AIMessage)
+from langchain.schema import (
+    AgentAction,
+    AgentFinish,
+    AIMessage,
+    HumanMessage,
+    OutputParserException,
+    SystemMessage,
+)
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools.base import BaseTool
+from langchain_core.callbacks import Callbacks
+from langchain_core.runnables import Runnable, RunnablePassthrough
+
 from chatchat.server.utils import get_prompt_template
+from chatchat.utils import build_logger
 
 
-logger = logging.getLogger(__name__)
+logger = build_logger()
 
 
 # langchain's AgentRunnable use .stream to make sure .stream_log working.
@@ -33,6 +41,7 @@ def _plan_without_stream(
 ) -> Union[AgentAction, AgentFinish]:
     inputs = {**kwargs, **{"intermediate_steps": intermediate_steps}}
     return self.runnable.invoke(inputs, config={"callbacks": callbacks})
+
 
 async def _aplan_without_stream(
     self: RunnableAgent,
@@ -60,7 +69,9 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
             thoughts += f"\nObservation: {observation}\nThought: "
         # Set the agent_scratchpad variable to that value
         if thoughts:
-            kwargs["agent_scratchpad"] = f"These were previous tasks you completed:\n{thoughts}\n\n"
+            kwargs[
+                "agent_scratchpad"
+            ] = f"These were previous tasks you completed:\n{thoughts}\n\n"
         else:
             kwargs["agent_scratchpad"] = ""
         # Create a tools variable from the list of tools provided
@@ -68,9 +79,10 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
         tools = []
         for t in self.tools:
             desc = re.sub(r"\n+", " ", t.description)
-            text = (f"{t.name}: Call this tool to interact with the {t.name} API. What is the {t.name} API useful for?"
-                    f" {desc}"
-                    f" Parameters: {t.args}"
+            text = (
+                f"{t.name}: Call this tool to interact with the {t.name} API. What is the {t.name} API useful for?"
+                f" {desc}"
+                f" Parameters: {t.args}"
             )
             tools.append(text)
         kwargs["tools"] = "\n\n".join(tools)
@@ -85,19 +97,21 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
     """Output parser with retries for the structured chat agent with custom qwen prompt."""
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
-        if s := re.findall(r"\nAction:\s*(.+)\nAction\sInput:\s*(.+)", text, flags=re.DOTALL):
+        if s := re.findall(
+            r"\nAction:\s*(.+)\nAction\sInput:\s*(.+)", text, flags=re.DOTALL
+        ):
             s = s[-1]
-            json_string: str=s[1]
-            json_input=None
+            json_string: str = s[1]
+            json_input = None
             try:
-                json_input=json.loads(json_string)
+                json_input = json.loads(json_string)
             except:
                 # ollama部署的qwen，返回的json键值可能为单引号，可能缺少最后的引号和括号
-                if not json_string.endswith("\"}"):
-                    print("尝试修复格式不正确的json输出:"+json_string)
-                    json_string=(json_string+"\"}").replace("'","\"");
-                    print("修复后的json:"+json_string)
-                    json_input=json.loads(json_string)  
+                if not json_string.endswith('"}'):
+                    print("尝试修复格式不正确的json输出:" + json_string)
+                    json_string = (json_string + '"}').replace("'", '"')
+                    print("修复后的json:" + json_string)
+                    json_input = json.loads(json_string)
             return AgentAction(tool=s[0].strip(), tool_input=json_input, log=text)
         elif s := re.findall(r"\nFinal\sAnswer:\s*(.+)", text, flags=re.DOTALL):
             s = s[-1]
@@ -121,7 +135,9 @@ class QwenChatAgentOutputParserLC(StructuredChatOutputParser):
             if tool == "Final Answer":
                 return AgentFinish({"output": action.get("action_input", "")}, log=text)
             else:
-                return AgentAction(tool=tool, tool_input=action.get("action_input", {}), log=text)
+                return AgentAction(
+                    tool=tool, tool_input=action.get("action_input", {}), log=text
+                )
         else:
             raise OutputParserException(f"Could not parse LLM output: {text}")
 
@@ -131,10 +147,10 @@ class QwenChatAgentOutputParserLC(StructuredChatOutputParser):
 
 
 def create_structured_qwen_chat_agent(
-        llm: BaseLanguageModel,
-        tools: Sequence[BaseTool],
-        callbacks: Sequence[Callbacks],
-        use_custom_prompt: bool = True,
+    llm: BaseLanguageModel,
+    tools: Sequence[BaseTool],
+    callbacks: Sequence[Callbacks],
+    use_custom_prompt: bool = True,
 ) -> AgentExecutor:
     if use_custom_prompt:
         prompt = "qwen"
@@ -145,16 +161,16 @@ def create_structured_qwen_chat_agent(
 
     tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
     template = get_prompt_template("action_model", prompt)
-    prompt = QwenChatAgentPromptTemplate(input_variables=["input", "intermediate_steps"],
-                                        template=template,
-                                        tools=tools)
+    prompt = QwenChatAgentPromptTemplate(
+        input_variables=["input", "intermediate_steps"], template=template, tools=tools
+    )
 
     agent = (
-        RunnablePassthrough.assign(
-            agent_scratchpad=itemgetter("intermediate_steps")
-        )
+        RunnablePassthrough.assign(agent_scratchpad=itemgetter("intermediate_steps"))
         | prompt
-        | llm.bind(stop=["<|endoftext|>", "<|im_start|>", "<|im_end|>", "\nObservation:"])
+        | llm.bind(
+            stop=["<|endoftext|>", "<|im_start|>", "<|im_end|>", "\nObservation:"]
+        )
         | output_parser
     )
     executor = AgentExecutor(agent=agent, tools=tools, callbacks=callbacks)

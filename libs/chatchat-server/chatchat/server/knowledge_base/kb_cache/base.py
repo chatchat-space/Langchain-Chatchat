@@ -1,15 +1,21 @@
+import threading
+from collections import OrderedDict
+from contextlib import contextmanager
+from typing import Any, List, Tuple, Union, Generator
+
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.faiss import FAISS
-import threading
-from chatchat.configs import (DEFAULT_EMBEDDING_MODEL, CHUNK_SIZE,
-                     logger, log_verbose)
-from contextlib import contextmanager
-from collections import OrderedDict
-from typing import List, Any, Union, Tuple
+
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 class ThreadSafeObject:
-    def __init__(self, key: Union[str, Tuple], obj: Any = None, pool: "CachePool" = None):
+    def __init__(
+        self, key: Union[str, Tuple], obj: Any = None, pool: "CachePool" = None
+    ):
         self._obj = obj
         self._key = key
         self._pool = pool
@@ -25,18 +31,16 @@ class ThreadSafeObject:
         return self._key
 
     @contextmanager
-    def acquire(self, owner: str = "", msg: str = "") -> FAISS:
+    def acquire(self, owner: str = "", msg: str = "") -> Generator[None, None, FAISS]:
         owner = owner or f"thread {threading.get_native_id()}"
         try:
             self._lock.acquire()
             if self._pool is not None:
                 self._pool._cache.move_to_end(self.key)
-            if log_verbose:
-                logger.info(f"{owner} 开始操作：{self.key}。{msg}")
+            logger.debug(f"{owner} 开始操作：{self.key}。{msg}")
             yield self._obj
         finally:
-            if log_verbose:
-                logger.info(f"{owner} 结束操作：{self.key}。{msg}")
+            logger.debug(f"{owner} 结束操作：{self.key}。{msg}")
             self._lock.release()
 
     def start_loading(self):
@@ -62,7 +66,7 @@ class CachePool:
         self._cache_num = cache_num
         self._cache = OrderedDict()
         self.atomic = threading.RLock()
-        
+
     def keys(self) -> List[str]:
         return list(self._cache.keys())
 
@@ -96,4 +100,3 @@ class CachePool:
             return cache.acquire(owner=owner, msg=msg)
         else:
             return cache
-

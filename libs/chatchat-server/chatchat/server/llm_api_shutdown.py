@@ -3,16 +3,20 @@
 python llm_api_shutdown.py --serve all
 可选"all","controller","model_worker","openai_api_server"， all表示停止所有服务
 """
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import subprocess
 import argparse
+import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--serve", choices=["all", "controller", "model_worker", "openai_api_server"], default="all")
+parser.add_argument(
+    "--serve",
+    choices=["all", "controller", "model_worker", "openai_api_server"],
+    default="all",
+)
 
 args = parser.parse_args()
 

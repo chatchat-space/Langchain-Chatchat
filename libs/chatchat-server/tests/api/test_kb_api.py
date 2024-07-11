@@ -1,16 +1,16 @@
-import requests
 import json
 import sys
 from pathlib import Path
 
+import requests
+
 root_path = Path(__file__).parent.parent.parent
 sys.path.append(str(root_path))
-from chatchat.server.utils import api_address
-from chatchat.configs import VECTOR_SEARCH_TOP_K
-from chatchat.server.knowledge_base.utils import get_kb_path, get_file_path
-
 from pprint import pprint
 
+from chatchat.settings import Settings
+from chatchat.server.knowledge_base.utils import get_file_path, get_kb_path
+from chatchat.server.utils import api_address
 
 api_base_url = api_address()
 
@@ -134,7 +134,7 @@ def test_search_docs(api="/knowledge_base/search_docs"):
     r = requests.post(url, json={"knowledge_base_name": kb, "query": query})
     data = r.json()
     pprint(data)
-    assert isinstance(data, list) and len(data) == VECTOR_SEARCH_TOP_K
+    assert isinstance(data, list) and len(data) == Settings.kb_settings.VECTOR_SEARCH_TOP_K
 
 
 def test_update_info(api="/knowledge_base/update_info"):
@@ -145,11 +145,14 @@ def test_update_info(api="/knowledge_base/update_info"):
     pprint(data)
     assert data["code"] == 200
 
+
 def test_update_docs(api="/knowledge_base/update_docs"):
     url = api_base_url + api
 
     print(f"\n更新知识文件")
-    r = requests.post(url, json={"knowledge_base_name": kb, "file_names": list(test_files)})
+    r = requests.post(
+        url, json={"knowledge_base_name": kb, "file_names": list(test_files)}
+    )
     data = r.json()
     pprint(data)
     assert data["code"] == 200
@@ -160,7 +163,9 @@ def test_delete_docs(api="/knowledge_base/delete_docs"):
     url = api_base_url + api
 
     print(f"\n删除知识文件")
-    r = requests.post(url, json={"knowledge_base_name": kb, "file_names": list(test_files)})
+    r = requests.post(
+        url, json={"knowledge_base_name": kb, "file_names": list(test_files)}
+    )
     data = r.json()
     pprint(data)
     assert data["code"] == 200
@@ -193,7 +198,7 @@ def test_recreate_vs(api="/knowledge_base/recreate_vector_store"):
     r = requests.post(url, json={"knowledge_base_name": kb, "query": query})
     data = r.json()
     pprint(data)
-    assert isinstance(data, list) and len(data) == VECTOR_SEARCH_TOP_K
+    assert isinstance(data, list) and len(data) == Settings.kb_settings.VECTOR_SEARCH_TOP_K
 
 
 def test_delete_kb_after(api="/knowledge_base/delete_knowledge_base"):

@@ -1,12 +1,13 @@
-from chatchat.configs import CACHED_VS_NUM, CACHED_MEMO_VS_NUM
-from chatchat.server.knowledge_base.kb_cache.base import *
-from chatchat.server.utils import get_Embeddings
-from chatchat.server.knowledge_base.utils import get_vs_path
-from langchain.vectorstores.faiss import FAISS
+import os
+
 from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.schema import Document
-import os
-from langchain.schema import Document
+from langchain.vectorstores.faiss import FAISS
+
+from chatchat.settings import Settings
+from chatchat.server.knowledge_base.kb_cache.base import *
+from chatchat.server.knowledge_base.utils import get_vs_path
+from chatchat.server.utils import get_Embeddings, get_default_embedding
 
 
 # patch FAISS to include doc id in Document.metadata
@@ -18,6 +19,8 @@ def _new_ds_search(self, search: str) -> Union[str, Document]:
         if isinstance(doc, Document):
             doc.metadata["id"] = search
         return doc
+
+
 InMemoryDocstore.search = _new_ds_search
 
 
@@ -50,11 +53,10 @@ class ThreadSafeFaiss(ThreadSafeObject):
 
 class _FaissPool(CachePool):
     def new_vector_store(
-            self,
-            kb_name: str,
-            embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        self,
+        kb_name: str,
+        embed_model: str = get_default_embedding(),
     ) -> FAISS:
-
         # create an empty vector store
         embeddings = get_Embeddings(embed_model=embed_model)
         doc = Document(page_content="init", metadata={})
@@ -64,10 +66,9 @@ class _FaissPool(CachePool):
         return vector_store
 
     def new_temp_vector_store(
-            self,
-            embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        self,
+        embed_model: str = get_default_embedding(),
     ) -> FAISS:
-
         # create an empty vector store
         embeddings = get_Embeddings(embed_model=embed_model)
         doc = Document(page_content="init", metadata={})
@@ -88,15 +89,15 @@ class _FaissPool(CachePool):
 
 class KBFaissPool(_FaissPool):
     def load_vector_store(
-            self,
-            kb_name: str,
-            vector_name: str = None,
-            create: bool = True,
-            embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        self,
+        kb_name: str,
+        vector_name: str = None,
+        create: bool = True,
+        embed_model: str = get_default_embedding(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         locked = True
-        vector_name = vector_name or embed_model
+        vector_name = vector_name or embed_model.replace(":", "_")
         cache = self.get((kb_name, vector_name))  # 用元组比拼接字符串好一些
         try:
             if cache is None:
@@ -105,18 +106,26 @@ class KBFaissPool(_FaissPool):
                 with item.acquire(msg="初始化"):
                     self.atomic.release()
                     locked = False
-                    logger.info(f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk.")
+                    logger.info(
+                        f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk."
+                    )
                     vs_path = get_vs_path(kb_name, vector_name)
 
                     if os.path.isfile(os.path.join(vs_path, "index.faiss")):
                         embeddings = get_Embeddings(embed_model=embed_model)
-                        vector_store = FAISS.load_local(vs_path, embeddings, normalize_L2=True,
-                                                        allow_dangerous_deserialization=True)
+                        vector_store = FAISS.load_local(
+                            vs_path,
+                            embeddings,
+                            normalize_L2=True,
+                            allow_dangerous_deserialization=True,
+                        )
                     elif create:
                         # create an empty vector store
                         if not os.path.exists(vs_path):
                             os.makedirs(vs_path)
-                        vector_store = self.new_vector_store(kb_name=kb_name, embed_model=embed_model)
+                        vector_store = self.new_vector_store(
+                            kb_name=kb_name, embed_model=embed_model
+                        )
                         vector_store.save_local(vs_path)
                     else:
                         raise RuntimeError(f"knowledge base {kb_name} not exist.")
@@ -126,7 +135,7 @@ class KBFaissPool(_FaissPool):
                 self.atomic.release()
                 locked = False
         except Exception as e:
-            if locked: # we don't know exception raised before or after atomic.release
+            if locked:  # we don't know exception raised before or after atomic.release
                 self.atomic.release()
             logger.error(e, exc_info=True)
             raise RuntimeError(f"向量库 {kb_name} 加载失败。")
@@ -137,10 +146,11 @@ class MemoFaissPool(_FaissPool):
     r"""
     临时向量库的缓存池
     """
+
     def load_vector_store(
-            self,
-            kb_name: str,
-            embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        self,
+        kb_name: str,
+        embed_model: str = get_default_embedding(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         cache = self.get(kb_name)
@@ -159,8 +169,8 @@ class MemoFaissPool(_FaissPool):
         return self.get(kb_name)
 
 
-kb_faiss_pool = KBFaissPool(cache_num=CACHED_VS_NUM)
-memo_faiss_pool = MemoFaissPool(cache_num=CACHED_MEMO_VS_NUM)
+kb_faiss_pool = KBFaissPool(cache_num=Settings.kb_settings.CACHED_VS_NUM)
+memo_faiss_pool = MemoFaissPool(cache_num=Settings.kb_settings.CACHED_MEMO_VS_NUM)
 #
 #
 # if __name__ == "__main__":

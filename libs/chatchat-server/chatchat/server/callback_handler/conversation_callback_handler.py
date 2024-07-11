@@ -2,13 +2,16 @@ from typing import Any, Dict, List
 
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.schema import LLMResult
+
 from chatchat.server.db.repository import update_message
 
 
 class ConversationCallbackHandler(BaseCallbackHandler):
     raise_error: bool = True
 
-    def __init__(self, conversation_id: str, message_id: str, chat_type: str, query: str):
+    def __init__(
+        self, conversation_id: str, message_id: str, chat_type: str, query: str
+    ):
         self.conversation_id = conversation_id
         self.message_id = message_id
         self.chat_type = chat_type
@@ -21,7 +24,7 @@ class ConversationCallbackHandler(BaseCallbackHandler):
         return True
 
     def on_llm_start(
-            self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
         # TODO 如果想存更多信息，则 prompts 也需要持久化,不用的提示词需要特殊支持
         pass

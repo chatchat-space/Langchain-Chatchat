@@ -2,6 +2,7 @@ export { LobeAnthropicAI } from './anthropic';
 export { LobeAzureOpenAI } from './azureOpenai';
 export * from './BaseAI';
 export { LobeBedrockAI } from './bedrock';
+export { LobeChatChatAI } from './chatchat';
 export * from './error';
 export { LobeGoogleAI } from './google';
 export { LobeMistralAI } from './mistral';

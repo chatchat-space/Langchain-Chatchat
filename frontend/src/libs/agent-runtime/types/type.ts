@@ -25,6 +25,7 @@ export enum ModelProvider {
   Anthropic = 'anthropic',
   Azure = 'azure',
   Bedrock = 'bedrock',
+  ChatChat = 'chatchat',
   ChatGLM = 'chatglm',
   Google = 'google',
   Mistral = 'mistral',
@@ -33,5 +34,5 @@ export enum ModelProvider {
   OpenAI = 'openai',
   Perplexity = 'perplexity',
   Tongyi = 'tongyi',
-  ZhiPu = 'zhipu',
+  ZhiPu = 'zhipu'
 }

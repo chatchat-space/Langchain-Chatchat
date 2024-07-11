@@ -1,12 +1,17 @@
-from typing import List, Dict
+from typing import Dict, List
+
 from langchain.schema import Document
 from langchain.vectorstores import Zilliz
-from chatchat.configs import kbs_config
-from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType, \
-    score_threshold_process
+
+from chatchat.settings import Settings
+from chatchat.server.file_rag.utils import get_Retriever
+from chatchat.server.knowledge_base.kb_service.base import (
+    KBService,
+    SupportedVSType,
+    score_threshold_process,
+)
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
-from chatchat.server.file_rag.utils import get_Retriever
 
 
 class ZillizKBService(KBService):
@@ -15,20 +20,21 @@ class ZillizKBService(KBService):
     @staticmethod
     def get_collection(zilliz_name):
         from pymilvus import Collection
+
         return Collection(zilliz_name)
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
         result = []
         if self.zilliz.col:
             # ids = [int(id) for id in ids]  # for zilliz if needed #pr 2725
-            data_list = self.zilliz.col.query(expr=f'pk in {ids}', output_fields=["*"])
+            data_list = self.zilliz.col.query(expr=f"pk in {ids}", output_fields=["*"])
             for data in data_list:
                 text = data.pop("text")
                 result.append(Document(page_content=text, metadata=data))
         return result
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
-        self.zilliz.col.delete(expr=f'pk in {ids}')
+        self.zilliz.col.delete(expr=f"pk in {ids}")
 
     @staticmethod
     def search(zilliz_name, content, limit=3):
@@ -37,7 +43,9 @@ class ZillizKBService(KBService):
             "params": {},
         }
         c = ZillizKBService.get_collection(zilliz_name)
-        return c.search(content, "embeddings", search_params, limit=limit, output_fields=["content"])
+        return c.search(
+            content, "embeddings", search_params, limit=limit, output_fields=["content"]
+        )
 
     def do_create_kb(self):
         pass
@@ -46,9 +54,12 @@ class ZillizKBService(KBService):
         return SupportedVSType.ZILLIZ
 
     def _load_zilliz(self):
-        zilliz_args = kbs_config.get("zilliz")
-        self.zilliz = Zilliz(embedding_function=get_Embeddings(self.embed_model),
-                             collection_name=self.kb_name, connection_args=zilliz_args)
+        zilliz_args = Settings.kb_settings.kbs_config.get("zilliz")
+        self.zilliz = Zilliz(
+            embedding_function=get_Embeddings(self.embed_model),
+            collection_name=self.kb_name,
+            connection_args=zilliz_args,
+        )
 
     def do_init(self):
         self._load_zilliz()
@@ -83,10 +94,14 @@ class ZillizKBService(KBService):
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
         if self.zilliz.col:
-            filepath = kb_file.filepath.replace('\\', '\\\\')
-            delete_list = [item.get("pk") for item in
-                           self.zilliz.col.query(expr=f'source == "{filepath}"', output_fields=["pk"])]
-            self.zilliz.col.delete(expr=f'pk in {delete_list}')
+            filepath = kb_file.filepath.replace("\\", "\\\\")
+            delete_list = [
+                item.get("pk")
+                for item in self.zilliz.col.query(
+                    expr=f'source == "{filepath}"', output_fields=["pk"]
+                )
+            ]
+            self.zilliz.col.delete(expr=f"pk in {delete_list}")
 
     def do_clear_vs(self):
         if self.zilliz.col:
@@ -94,7 +109,7 @@ class ZillizKBService(KBService):
             self.do_init()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from chatchat.server.db.base import Base, engine
 
     Base.metadata.create_all(bind=engine)

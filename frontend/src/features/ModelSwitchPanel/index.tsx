@@ -44,7 +44,7 @@ const ModelSwitchPanel = memo<PropsWithChildren>(({ children }) => {
       provider.chatModels
         .filter((c) => !c.hidden)
         .map((model) => ({
-          key: model.id,
+          key: `${provider.id}-${model.id}`,
           label: <ModelItemRender {...model} />,
           onClick: () => {
             updateAgentConfig({ model: model.id, provider: provider.id });

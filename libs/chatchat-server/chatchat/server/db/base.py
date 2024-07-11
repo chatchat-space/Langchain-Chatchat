@@ -1,13 +1,14 @@
+import json
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from chatchat.configs import SQLALCHEMY_DATABASE_URI
-import json
+from chatchat.settings import Settings
 
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URI,
+    Settings.basic_settings.SQLALCHEMY_DATABASE_URI,
     json_serializer=lambda obj: json.dumps(obj, ensure_ascii=False),
 )
 

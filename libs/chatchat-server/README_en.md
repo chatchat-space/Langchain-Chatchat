@@ -42,31 +42,36 @@ Commands:
 
 ## Model service configuration
 
-If you already have an openai endpoint capability address, you can directly configure it in
-the `configs._model_config.py` file MODEL_PLATFORMS
+If you already have an address with the capability of an OpenAI endpoint, you can directly configure it in MODEL_PLATFORMS as follows:
 
-- platform_name can be filled in arbitrarily, just don't repeat it
-- platform_type may make some functional distinctions based on platform type in the future, just be consistent with
-  platform_name
-- Fill in the model deployed by the framework into the corresponding list. Different frameworks can load models with the
-  same name, and the project will automatically do load balancing.
-
-### Custom platform loading
-
-You can use model_providers to provide the ability to convert interfaces of different platforms to openai endpoints
-> Configure the `model_providers.yaml` file in the *CHATCHAT_ROOT* folder configs to complete the custom platform
-> loading
+```text
+chatchat-config model --set_model_platforms TEXT      Configure model platforms as a JSON string.
+```
+- `platform_name` can be arbitrarily filled, just ensure it is unique.
+- `platform_type` might be used in the future for functional distinctions based on platform types, so it should match the platform_name.
+- List the models deployed on the framework in the corresponding list. Different frameworks can load models with the same name, and the project will automatically balance the load.
+- Set up the model
 
 ```shell
-
-vim model_providers.yaml
+$ chatchat-config model --set_model_platforms "[{
+    \"platform_name\": \"xinference\",
+    \"platform_type\": \"xinference\",
+    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
+    \"api_key\": \"EMPT\",
+    \"api_concurrencies\": 5,
+    \"llm_models\": [
+        \"autodl-tmp-glm-4-9b-chat\"
+    ],
+    \"embed_models\": [
+        \"bge-large-zh-v1.5\"
+    ],
+    \"text2image_models\": [],
+    \"image2text_models\": [],
+    \"rerank_models\": [],
+    \"speech2text_models\": [],
+    \"text2speech_models\": []
+}]"
 ```
-
->
-> Note: Before you configure the platform, please confirm that the platform dependencies are complete. For example, for
-> the Zhipu platform, you need to install the Zhipu SDK `pip install zhipuai`
->
-> For detailed configuration, please refer to [README.md](../model-providers/README_en.md)
 
 ## Initialize knowledge base
 
@@ -82,12 +87,20 @@ chatchat -a
 
 ### Model?
 
-```text
-In chatchat 0.3, to ensure compatibility of platform, model, and local service, while ensuring scalability,
-we redesigned the model loading. After chatchat 0.3, we will separate model loading and service startup. You can use any service that provides `openaiEndpoint`,
-you can directly configure MODEL_PLATFORMS in the `configs._model_config.py` file
+In version 0.3 of chatchat, to ensure compatibility across platforms, models, 
+and local services while maintaining scalability, we have redesigned the model loading process. 
+From chatchat 0.3 onwards, we will separate model loading from service startup. 
+You can use any service that provides openaiEndpoint and directly configure it 
+in MODEL_PLATFORMS as follows:
+```text 
+chatchat-config model --set_model_platforms TEXT      Configure model platforms as a JSON string.
 
 ```
+- `platform_name` can be arbitrarily filled, just ensure it is unique.
+- `platform_type` might be used in the future for functional distinctions based on platform types, so it should match the platform_name.
+- List the models deployed on the framework in the corresponding list. Different frameworks can load models with the same name, and the project will automatically balance the load.
+
+
 
 ### Deployment manual
 

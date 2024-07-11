@@ -12,8 +12,11 @@ import {
 } from '@lobehub/icons';
 import { memo } from 'react';
 import { Center } from 'react-layout-kit';
+import Avatar from 'next/image';
 
 import { ModelProvider } from '@/libs/agent-runtime';
+
+import { imageUrl } from '@/const/url';
 
 interface ModelProviderIconProps {
   provider?: string;
@@ -67,6 +70,15 @@ const ModelProviderIcon = memo<ModelProviderIconProps>(({ provider }) => {
 
     case ModelProvider.Anthropic: {
       return <Anthropic size={20} />;
+    }
+
+    case ModelProvider.ChatChat: {
+      return  <Avatar
+                alt={'Chatchat'}
+                height={24}
+                src={imageUrl('logo.png')}
+                width={24}
+              />
     }
 
     default: {

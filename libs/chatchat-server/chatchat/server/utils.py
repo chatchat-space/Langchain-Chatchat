@@ -1,38 +1,37 @@
-from fastapi import FastAPI
-from pathlib import Path
 import asyncio
-import os
-import sys
 import multiprocessing as mp
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
-
-from langchain_core.embeddings import Embeddings
-from langchain.tools import BaseTool
-from langchain_openai.chat_models import ChatOpenAI
-from langchain_openai.llms import OpenAI
-import httpx
-import openai
+import os
+import socket
+import sys
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from pathlib import Path
+from urllib.parse import urlparse
 from typing import (
-    Optional,
-    Callable,
-    Generator,
-    Dict,
-    List,
     Any,
     Awaitable,
-    Union,
-    Tuple,
+    Callable,
+    Dict,
+    Generator,
+    List,
     Literal,
+    Optional,
+    Tuple,
+    Union,
 )
 
-from chatchat.configs import (log_verbose, HTTPX_DEFAULT_TIMEOUT,
-                              DEFAULT_LLM_MODEL, DEFAULT_EMBEDDING_MODEL, TEMPERATURE,
-                              MODEL_PLATFORMS)
+import httpx
+import openai
+from fastapi import FastAPI
+from langchain.tools import BaseTool
+from langchain_core.embeddings import Embeddings
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_openai.llms import OpenAI
+
+from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
+from chatchat.utils import build_logger
 
-import logging
-
-logger = logging.getLogger()
+logger = build_logger()
 
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
@@ -40,30 +39,35 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     try:
         await fn
     except Exception as e:
-        logging.exception(e)
         msg = f"Caught exception: {e}"
-        logger.error(f'{e.__class__.__name__}: {msg}',
-                     exc_info=e if log_verbose else None)
+        logger.error(f"{e.__class__.__name__}: {msg}")
     finally:
         # Signal the aiter to stop.
         event.set()
 
 
-def get_config_platforms() -> Dict[str, Dict]:
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
+def get_base_url(url):
+    parsed_url = urlparse(url)  # 解析url
+    base_url = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_url)  # 格式化基础url
+    return base_url.rstrip('/')
 
-    return {m["platform_name"]: m for m in MODEL_PLATFORMS}
+
+def get_config_platforms() -> Dict[str, Dict]:
+    """
+    获取配置的模型平台，会将 pydantic model 转换为字典。
+    """
+    platforms = [m.model_dump() for m in Settings.model_settings.MODEL_PLATFORMS]
+    return {m["platform_name"]: m for m in platforms}
 
 
 def get_config_models(
         model_name: str = None,
-        model_type: Literal["llm", "embed", "image", "reranking","speech2text","tts"] = None,
+        model_type: Literal[
+            "llm", "embed", "text2image", "image2image", "image2text", "rerank", "speech2text", "text2speech"
+        ] = None,
         platform_name: str = None,
 ) -> Dict[str, Dict]:
-    '''
+    """
     获取配置的模型列表，返回值为:
     {model_name: {
         "platform_name": xx,
@@ -74,33 +78,74 @@ def get_config_models(
         "api_key": xx,
         "api_proxy": xx,
     }}
-    '''
-    # import importlib
-    # 不能支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
-
+    """
     result = {}
-    for m in MODEL_PLATFORMS:
+    if model_type is None:
+        model_types = [
+            "llm_models",
+            "embed_models",
+            "text2image_models",
+            "image2image_models",
+            "image2text_models",
+            "rerank_models",
+            "speech2text_models",
+            "text2speech_models",
+        ]
+    else:
+        model_types = [f"{model_type}_models"]
+
+    xf_model_type_maps = {
+        "llm_models": lambda xf_models: [k for k, v in xf_models.items()
+                                         if "LLM" == v["model_type"]
+                                         and "vision" not in v["model_ability"]],
+        "embed_models": lambda xf_models: [k for k, v in xf_models.items()
+                                           if "embedding" == v["model_type"]],
+        "text2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "image" == v["model_type"]],
+        "image2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if "image" == v["model_type"]],
+        "image2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "LLM" == v["model_type"]
+                                                and "vision" in v["model_ability"]],
+        "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
+                                            if "rerank" == v["model_type"]],
+        "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
+                                                 in XF_MODELS_TYPES["speech2text"].values()],
+        "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                 if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
+                                                 in XF_MODELS_TYPES["text2speech"].values()],
+    }
+
+    for m in list(get_config_platforms().values()):
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
-        if model_type is not None and f"{model_type}_models" not in m:
-            continue
 
-        if model_type is None:
-            model_types = [
-                "llm_models",
-                "embed_models",
-                "image_models",
-                "reranking_models",
-                "speech2text_models",
-                "tts_models",
-           ]
-        else:
-            model_types = [f"{model_type}_models"]
+        if m.get("auto_detect_model"):
+            if not m.get("platform_type") == "xinference":  # TODO：当前仅支持 xf 自动检测模型
+                logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
+                continue
+            for m_type in model_types:
+                # if m.get(m_type) != "auto":
+                #     continue
+                try:
+                    from xinference_client import RESTfulClient as Client
+                    xf_url = get_base_url(m.get("api_base_url"))
+                    xf_client = Client(xf_url)
+                    xf_models = xf_client.list_models()
+                    m[m_type] = xf_model_type_maps[m_type](xf_models)
+                except ImportError:
+                    logger.warning('auto_detect_model needs xinference-client installed. '
+                                   'Please try "pip install xinference-client". ')
 
         for m_type in model_types:
-            for m_name in m.get(m_type, []):
+            models = m.get(m_type, [])
+            if models == "auto":
+                logger.warning("you should not set `auto` without auto_detect_model=True")
+                continue
+            elif not models:
+                continue
+            for m_name in models:
                 if model_name is None or model_name == m_name:
                     result[m_name] = {
                         "platform_name": m.get("platform_name"),
@@ -114,11 +159,13 @@ def get_config_models(
     return result
 
 
-def get_model_info(model_name: str = None, platform_name: str = None, multiple: bool = False) -> Dict:
-    '''
+def get_model_info(
+        model_name: str = None, platform_name: str = None, multiple: bool = False
+) -> Dict:
+    """
     获取配置的模型信息，主要是 api_base_url, api_key
     如果指定 multiple=True，则返回所有重名模型；否则仅返回第一个
-    '''
+    """
     result = get_config_models(model_name=model_name, platform_name=platform_name)
     if len(result) > 0:
         if multiple:
@@ -129,10 +176,29 @@ def get_model_info(model_name: str = None, platform_name: str = None, multiple: 
         return {}
 
 
+def get_default_llm():
+    available_llms = list(get_config_models(model_type="llm").keys())
+    if Settings.model_settings.DEFAULT_LLM_MODEL in available_llms:
+        return Settings.model_settings.DEFAULT_LLM_MODEL
+    else:
+        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available llms, "
+                       f"using {available_llms[0]} instead")
+        return available_llms[0]
+
+def get_default_embedding():
+    available_embeddings = list(get_config_models(model_type="embed").keys())
+    if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
+        return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
+    else:
+        logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
+                       f"available embeddings, using {available_embeddings[0]} instead")
+        return available_embeddings[0]
+
+
 def get_ChatOpenAI(
-        model_name: str = DEFAULT_LLM_MODEL,
-        temperature: float = TEMPERATURE,
-        max_tokens: int = None,
+        model_name: str = get_default_llm(),
+        temperature: float = Settings.model_settings.TEMPERATURE,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
@@ -147,8 +213,13 @@ def get_ChatOpenAI(
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
-        **kwargs
+        **kwargs,
     )
+    # remove paramters with None value to avoid openai validation error
+    for k in list(params):
+        if params[k] is None:
+            params.pop(k)
+
     try:
         if local_wrap:
             params.update(
@@ -163,7 +234,9 @@ def get_ChatOpenAI(
             )
         model = ChatOpenAI(**params)
     except Exception as e:
-        logger.error(f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True)
+        logger.error(
+            f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True
+        )
         model = None
     return model
 
@@ -171,7 +244,7 @@ def get_ChatOpenAI(
 def get_OpenAI(
         model_name: str,
         temperature: float,
-        max_tokens: int = None,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
         streaming: bool = True,
         echo: bool = True,
         callbacks: List[Callable] = [],
@@ -189,7 +262,7 @@ def get_OpenAI(
         temperature=temperature,
         max_tokens=max_tokens,
         echo=echo,
-        **kwargs
+        **kwargs,
     )
     try:
         if local_wrap:
@@ -211,13 +284,17 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
-        local_wrap: bool = False,  # use local wrapped api
+    embed_model: str = None,
+    local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
-    from langchain_openai import OpenAIEmbeddings
     from langchain_community.embeddings import OllamaEmbeddings
-    from chatchat.server.localai_embeddings import LocalAIEmbeddings  # TODO: fork of lc pr #17154
+    from langchain_openai import OpenAIEmbeddings
 
+    from chatchat.server.localai_embeddings import (
+        LocalAIEmbeddings,
+    )
+
+    embed_model = embed_model or get_default_embedding()
     model_info = get_model_info(model_name=embed_model)
     params = dict(model=embed_model)
     try:
@@ -235,22 +312,27 @@ def get_Embeddings(
         if model_info.get("platform_type") == "openai":
             return OpenAIEmbeddings(**params)
         elif model_info.get("platform_type") == "ollama":
-            return OllamaEmbeddings(base_url=model_info.get("api_base_url").replace('/v1', ''),
-                                    model=embed_model,
-                                    )
+            return OllamaEmbeddings(
+                base_url=model_info.get("api_base_url").replace("/v1", ""),
+                model=embed_model,
+            )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
-        logger.error(f"failed to create Embeddings for model: {embed_model}.", exc_info=True)
+        logger.error(
+            f"failed to create Embeddings for model: {embed_model}.", exc_info=True
+        )
 
 
-def check_embed_model(embed_model: str=DEFAULT_EMBEDDING_MODEL) -> bool:
+def check_embed_model(embed_model: str = get_default_embedding()) -> bool:
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
         return True
     except Exception as e:
-        logger.error(f"failed to access embed model '{embed_model}': {e}", exc_info=True)
+        logger.error(
+            f"failed to access embed model '{embed_model}': {e}", exc_info=True
+        )
         return False
 
 
@@ -259,13 +341,17 @@ def get_OpenAIClient(
         model_name: str = None,
         is_async: bool = True,
 ) -> Union[openai.Client, openai.AsyncClient]:
-    '''
+    """
     construct an openai Client for specified platform or model
-    '''
+    """
     if platform_name is None:
-        platform_info = get_model_info(model_name=model_name, platform_name=platform_name)
+        platform_info = get_model_info(
+            model_name=model_name, platform_name=platform_name
+        )
         if platform_info is None:
-            raise RuntimeError(f"cannot find configured platform for model: {model_name}")
+            raise RuntimeError(
+                f"cannot find configured platform for model: {model_name}"
+            )
         platform_name = platform_info.get("platform_name")
     platform_info = get_config_platforms().get(platform_name)
     assert platform_info, f"cannot find configured platform: {platform_name}"
@@ -360,9 +446,9 @@ class ChatMessage(BaseModel):
 
 
 def run_async(cor):
-    '''
+    """
     在同步环境中运行异步代码.
-    '''
+    """
     try:
         loop = asyncio.get_event_loop()
     except:
@@ -371,9 +457,9 @@ def run_async(cor):
 
 
 def iter_over_async(ait, loop=None):
-    '''
+    """
     将异步生成器封装成同步生成器.
-    '''
+    """
     ait = ait.__aiter__()
 
     async def get_next():
@@ -417,9 +503,9 @@ def MakeFastAPIOffline(
     swagger_ui_oauth2_redirect_url = app.swagger_ui_oauth2_redirect_url
 
     def remove_route(url: str) -> None:
-        '''
+        """
         remove original route from app
-        '''
+        """
         index = None
         for i, r in enumerate(app.routes):
             if r.path.lower() == url.lower():
@@ -512,47 +598,48 @@ def MakeFastAPIOffline(
 
 
 def api_address() -> str:
-    from chatchat.configs import API_SERVER
+    from chatchat.settings import Settings
 
-    host = API_SERVER["host"]
+    host = Settings.basic_settings.API_SERVER["host"]
     if host == "0.0.0.0":
         host = "127.0.0.1"
-    port = API_SERVER["port"]
+    port = Settings.basic_settings.API_SERVER["port"]
     return f"http://{host}:{port}"
 
 
 def webui_address() -> str:
-    from chatchat.configs import WEBUI_SERVER
+    from chatchat.settings import Settings
 
-    host = WEBUI_SERVER["host"]
-    port = WEBUI_SERVER["port"]
+    host = Settings.basic_settings.WEBUI_SERVER["host"]
+    port = Settings.basic_settings.WEBUI_SERVER["port"]
     return f"http://{host}:{port}"
 
 
 def get_prompt_template(type: str, name: str) -> Optional[str]:
-    '''
+    """
     从prompt_config中加载模板内容
     type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
-    '''
+    """
 
-    from chatchat.configs import PROMPT_TEMPLATES
+    from chatchat.settings import Settings
 
-    return PROMPT_TEMPLATES.get(type, {}).get(name)
+    return Settings.prompt_settings.model_dump().get(type, {}).get(name)
 
 
 def set_httpx_config(
-        timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
         proxy: Union[str, Dict] = None,
         unused_proxies: List[str] = [],
 ):
-    '''
+    """
     设置httpx默认timeout。httpx默认timeout是5秒，在请求LLM回答时不够用。
     将本项目相关服务加入无代理列表，避免fastchat的服务器请求错误。(windows下无效)
     对于chatgpt等在线API，如要使用代理需要手动配置。搜索引擎的代理如何处置还需考虑。
-    '''
+    """
+
+    import os
 
     import httpx
-    import os
 
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
@@ -574,7 +661,9 @@ def set_httpx_config(
         os.environ[k] = v
 
     # set host to bypass proxy
-    no_proxy = [x.strip() for x in os.environ.get("no_proxy", "").split(",") if x.strip()]
+    no_proxy = [
+        x.strip() for x in os.environ.get("no_proxy", "").split(",") if x.strip()
+    ]
     no_proxy += [
         # do not use proxy for locahost
         "http://127.0.0.1",
@@ -591,6 +680,7 @@ def set_httpx_config(
         return proxies
 
     import urllib.request
+
     urllib.request.getproxies = _get_proxies
 
 
@@ -598,10 +688,10 @@ def run_in_thread_pool(
         func: Callable,
         params: List[Dict] = [],
 ) -> Generator:
-    '''
+    """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    '''
+    """
     tasks = []
     with ThreadPoolExecutor() as pool:
         for kwargs in params:
@@ -618,14 +708,16 @@ def run_in_process_pool(
         func: Callable,
         params: List[Dict] = [],
 ) -> Generator:
-    '''
+    """
     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    '''
+    """
     tasks = []
     max_workers = None
     if sys.platform.startswith("win"):
-        max_workers = min(mp.cpu_count(), 60)  # max_workers should not exceed 60 on windows
+        max_workers = min(
+            mp.cpu_count(), 60
+        )  # max_workers should not exceed 60 on windows
     with ProcessPoolExecutor(max_workers=max_workers) as pool:
         for kwargs in params:
             tasks.append(pool.submit(func, **kwargs))
@@ -640,13 +732,13 @@ def run_in_process_pool(
 def get_httpx_client(
         use_async: bool = False,
         proxies: Union[str, Dict] = None,
-        timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
         unused_proxies: List[str] = [],
         **kwargs,
 ) -> Union[httpx.Client, httpx.AsyncClient]:
-    '''
+    """
     helper to get httpx client with default proxies that bypass local addesses.
-    '''
+    """
     default_proxies = {
         # do not use proxy for locahost
         "all://127.0.0.1": None,
@@ -659,21 +751,34 @@ def get_httpx_client(
 
     # get proxies from system envionrent
     # proxy not str empty string, None, False, 0, [] or {}
-    default_proxies.update({
-        "http://": (os.environ.get("http_proxy")
-                    if os.environ.get("http_proxy") and len(os.environ.get("http_proxy").strip())
-                    else None),
-        "https://": (os.environ.get("https_proxy")
-                     if os.environ.get("https_proxy") and len(os.environ.get("https_proxy").strip())
-                     else None),
-        "all://": (os.environ.get("all_proxy")
-                   if os.environ.get("all_proxy") and len(os.environ.get("all_proxy").strip())
-                   else None),
-    })
+    default_proxies.update(
+        {
+            "http://": (
+                os.environ.get("http_proxy")
+                if os.environ.get("http_proxy")
+                   and len(os.environ.get("http_proxy").strip())
+                else None
+            ),
+            "https://": (
+                os.environ.get("https_proxy")
+                if os.environ.get("https_proxy")
+                   and len(os.environ.get("https_proxy").strip())
+                else None
+            ),
+            "all://": (
+                os.environ.get("all_proxy")
+                if os.environ.get("all_proxy")
+                   and len(os.environ.get("all_proxy").strip())
+                else None
+            ),
+        }
+    )
     for host in os.environ.get("no_proxy", "").split(","):
         if host := host.strip():
             # default_proxies.update({host: None}) # Origin code
-            default_proxies.update({'all://' + host: None})  # PR 1838 fix, if not add 'all://', httpx will raise error
+            default_proxies.update(
+                {"all://" + host: None}
+            )  # PR 1838 fix, if not add 'all://', httpx will raise error
 
     # merge default proxies with user provided proxies
     if isinstance(proxies, str):
@@ -692,9 +797,9 @@ def get_httpx_client(
 
 
 def get_server_configs() -> Dict:
-    '''
+    """
     获取configs中的原始配置项，供前端使用
-    '''
+    """
     _custom = {
         "api_address": api_address(),
     }
@@ -703,19 +808,20 @@ def get_server_configs() -> Dict:
 
 
 def get_temp_dir(id: str = None) -> Tuple[str, str]:
-    '''
+    """
     创建一个临时目录，返回（路径，文件夹名称）
-    '''
-    from chatchat.configs import BASE_TEMP_DIR
+    """
     import uuid
 
+    from chatchat.settings import Settings
+
     if id is not None:  # 如果指定的临时目录已存在，直接返回
-        path = os.path.join(BASE_TEMP_DIR, id)
+        path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
         if os.path.isdir(path):
             return path, id
 
     id = uuid.uuid4().hex
-    path = os.path.join(BASE_TEMP_DIR, id)
+    path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
     os.mkdir(path)
     return path, id
 
@@ -723,26 +829,37 @@ def get_temp_dir(id: str = None) -> Tuple[str, str]:
 # 动态更新知识库信息
 def update_search_local_knowledgebase_tool():
     import re
+
     from chatchat.server.agent.tools_factory import tools_registry
     from chatchat.server.db.repository.knowledge_base_repository import list_kbs_from_db
-    kbs=list_kbs_from_db()
+
+    kbs = list_kbs_from_db()
     template = "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on this knowledge use this tool. The 'database' should be one of the above [{key}]."
-    KB_info_str = '\n'.join([f"{kb.kb_name}: {kb.kb_info}" for kb in kbs])
-    KB_name_info_str = '\n'.join([f"{kb.kb_name}" for kb in kbs])
+    KB_info_str = "\n".join([f"{kb.kb_name}: {kb.kb_info}" for kb in kbs])
+    KB_name_info_str = "\n".join([f"{kb.kb_name}" for kb in kbs])
     template_knowledge = template.format(KB_info=KB_info_str, key=KB_name_info_str)
 
-    search_local_knowledgebase_tool=tools_registry._TOOLS_REGISTRY.get("search_local_knowledgebase")
+    search_local_knowledgebase_tool = tools_registry._TOOLS_REGISTRY.get(
+        "search_local_knowledgebase"
+    )
     if search_local_knowledgebase_tool:
-        search_local_knowledgebase_tool.description = " ".join(re.split(r"\n+\s*", template_knowledge))
-        search_local_knowledgebase_tool.args["database"]["choices"]=[kb.kb_name for kb in kbs]
+        search_local_knowledgebase_tool.description = " ".join(
+            re.split(r"\n+\s*", template_knowledge)
+        )
+        search_local_knowledgebase_tool.args["database"]["choices"] = [
+            kb.kb_name for kb in kbs
+        ]
 
 
 def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
     import importlib
+
     from chatchat.server.agent import tools_factory
+
     importlib.reload(tools_factory)
 
     from chatchat.server.agent.tools_factory import tools_registry
+
     update_search_local_knowledgebase_tool()
     if name is None:
         return tools_registry._TOOLS_REGISTRY
@@ -752,11 +869,28 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
 
 def get_tool_config(name: str = None) -> Dict:
     import importlib
+
     # TODO 因为使用了变量更新，不支持重载
     # from chatchat.configs import model_config
     # importlib.reload(model_config)
-    from chatchat.configs import TOOL_CONFIG
+    from chatchat.settings import Settings
+
     if name is None:
-        return TOOL_CONFIG
+        return Settings.tool_settings.model_dump()
     else:
-        return TOOL_CONFIG.get(name, {})
+        return Settings.tool_settings.model_dump().get(name, {})
+
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        return sock.connect_ex(("localhost", port)) == 0
+
+
+if __name__ == "__main__":
+    # for debug
+    print(get_default_llm())
+    print(get_default_embedding())
+    platforms = get_config_platforms()
+    models = get_config_models()
+    model_info = get_model_info(platform_name="xinference-auto")
+    print(1)

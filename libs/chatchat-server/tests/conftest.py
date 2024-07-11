@@ -4,6 +4,11 @@ from importlib import util
 from typing import Dict, List, Sequence
 
 import pytest
+from chatchat.utils import (
+    get_config_dict,
+    get_log_file,
+    get_timestamp_ms,
+)
 from pytest import Config, Function, Parser
 
 
@@ -87,4 +92,13 @@ def pytest_collection_modifyitems(config: Config, items: Sequence[Function]) -> 
                     pytest.mark.skip(reason="Skipping not an extended test.")
                 )
 
+
+@pytest.fixture
+def logging_conf() -> dict:
+    return get_config_dict(
+        "INFO",
+        get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
+        1024 * 1024 * 1024 * 3,
+        1024 * 1024 * 1024 * 3,
+    )
 

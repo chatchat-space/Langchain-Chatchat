@@ -146,28 +146,29 @@ $ bash ./start_models_emb.sh
 $ conda activate ~/miniconda3/envs/chatchat
 $ chatchat-config basic --verbose true
 $ chatchat-config basic --data ~/chatchat-data
-$ cp ~/miniconda3/envs/chatchat/lib/python3.8/site-packages/chatchat/configs/model_providers.yaml ~/chatchat-data/
 ```
 
 - Set up the model
 
 ```shell
-$ vim ~/chatchat-data/model_providers.yaml
-# 修改model_providers.yaml文件，添加如下内容
+$ chatchat-config model --set_model_platforms "[{
+    \"platform_name\": \"xinference\",
+    \"platform_type\": \"xinference\",
+    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
+    \"api_key\": \"EMPT\",
+    \"api_concurrencies\": 5,
+    \"llm_models\": [
+        \"autodl-tmp-glm-4-9b-chat\"
+    ],
+    \"embed_models\": [
+        \"bge-large-zh-v1.5\"
+    ],
+    \"image_models\": [],
+    \"reranking_models\": [],
+    \"speech2text_models\": [],
+    \"tts_models\": []
+}]"
 
-xinference:
-  model_credential:
-    - model: 'autodl-tmp-glm-4-9b-chat'
-      model_type: 'llm'
-      model_credentials:
-        server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'autodl-tmp-glm-4-9b-chat'
-        completion_type: 'chat'
-    - model: 'bge-large-zh-v1.5'
-      model_type: 'embeddings'
-      model_credentials:
-        server_url: 'http://127.0.0.1:9997/'
-        model_uid: 'bge-large-zh-v1.5'
 ```
 
 - Initialize knowledge base
