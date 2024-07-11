@@ -30,14 +30,14 @@ chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2
 def save_session(conv_name: str = None):
     """save session state to chat context"""
     chat_box.context_from_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name"]
+        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
     )
 
 
 def restore_session(conv_name: str = None):
     """restore sesstion state from chat context"""
     chat_box.context_to_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name"]
+        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
     )
 
 
@@ -121,6 +121,7 @@ def add_conv(name: str = ""):
 def del_conv(name: str = None):
     conv_names = chat_box.get_chat_names()
     name = name or chat_box.cur_chat_name
+
     if len(conv_names) == 1:
         sac.alert(
             "删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True
@@ -131,8 +132,8 @@ def del_conv(name: str = None):
         )
     else:
         chat_box.del_chat_name(name)
-        restore_session()
-        st.session_state["cur_conv_name"] = chat_box.cur_chat_name
+        # restore_session()
+    st.session_state["cur_conv_name"] = chat_box.cur_chat_name
 
 
 def clear_conv(name: str = None):
@@ -298,7 +299,7 @@ def dialogue_page(
                 conv_names,
                 label="当前会话：",
                 key="cur_conv_name",
-                on_change=on_conv_change,
+                # on_change=on_conv_change, # not work
             )
             chat_box.use_chat_name(conversation_name)
             conversation_id = chat_box.context["uid"]
@@ -531,8 +532,6 @@ def dialogue_page(
                 extra_body=extra_body,
                 max_tokens=Settings.model_settings.MAX_TOKENS,
             )
-            import rich
-            rich.print(d)
             chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
 
         # if os.path.exists("tmp/image.jpg"):
