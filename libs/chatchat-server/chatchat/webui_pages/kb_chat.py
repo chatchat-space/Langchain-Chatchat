@@ -186,7 +186,6 @@ def kb_chat(api: ApiRequest):
         messages = history + [{"role": "user", "content": prompt}]
         chat_box.user_say(prompt)
 
-        client = openai.Client(base_url=f"{api_address()}/knowledge_base", api_key="NONE")
         extra_body = dict(
             top_k=kb_top_k,
             score_threshold=score_threshold,
@@ -196,7 +195,7 @@ def kb_chat(api: ApiRequest):
         )
     
         if dialogue_mode == "知识库问答":
-            extra_body["kb_name"] = selected_kb
+            client = openai.Client(base_url=f"{api_address()}/knowledge_base/local_kb/{selected_kb}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在查询知识库 `{selected_kb}` ...",
@@ -205,13 +204,14 @@ def kb_chat(api: ApiRequest):
             if st.session_state.get("file_chat_id") is None:
                 st.error("请先上传文件再进行对话")
                 st.stop()
-            extra_body["knowledge_id"] = st.session_state.get("file_chat_id")
+            knowledge_id=st.session_state.get("file_chat_id")
+            client = openai.Client(base_url=f"{api_address()}/knowledge_base/temp_kb/{knowledge_id}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在查询文件 `{st.session_state.get('file_chat_id')}` ...",
             ])
         else:
-            extra_body["search_engine_name"] = search_engine
+            client = openai.Client(base_url=f"{api_address()}/knowledge_base/search_engine/{search_engine}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在执行 `{search_engine}` 搜索...",
