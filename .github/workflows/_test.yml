@@ -6,10 +6,12 @@ on:
       working-directory:
         required: true
         type: string
+        default: './'
         description: "From which folder this pipeline executes"
       chatchat-location:
         required: false
         type: string
+        default: './libs/chatchat-server'
         description: "Relative path to the chatchat library folder"
 
 env:
