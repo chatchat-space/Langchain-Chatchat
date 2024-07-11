@@ -45,13 +45,20 @@ jobs:
         run: |
           make test
 
-
-      - name: Remove chatchat Test Untracked files
+      - name: Remove chatchat Test Untracked files (Linux/macOS)
+        if: runner.os != 'Windows'
         working-directory: ${{ inputs.working-directory }}
         run: |
           rm -rf tests/unit_tests/config/chatchat/
 
-      - name: Ensure the tests did not create any additional files
+      - name: Remove chatchat Test Untracked files (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          Remove-Item -Recurse -Force tests/unit_tests/config/chatchat/
+
+      - name: Ensure the tests did not create any additional files (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -eu
@@ -62,3 +69,13 @@ jobs:
           # grep will exit non-zero if the target message isn't found,
           # and `set -e` above will cause the step to fail.
           echo "$STATUS" | grep 'nothing to commit, working tree clean'
+
+      - name: Ensure the tests did not create any additional files (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $STATUS = git status
+          Write-Host $STATUS
+
+          # Select-String will exit non-zero if the target message isn't found.
+          $STATUS | Select-String 'nothing to commit, working tree clean'
