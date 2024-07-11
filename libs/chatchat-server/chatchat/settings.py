@@ -145,10 +145,10 @@ class KBSettings(BaseFileSettings):
     CACHED_MEMO_VS_NUM: int = 10
     """缓存临时向量库数量（针对FAISS），用于文件对话"""
 
-    CHUNK_SIZE: int = 250
+    CHUNK_SIZE: int = 750
     """知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)"""
 
-    OVERLAP_SIZE: int = 50
+    OVERLAP_SIZE: int = 150
     """知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)"""
 
     VECTOR_SEARCH_TOP_K: int = 3 # TODO: 与 tool 配置项重复
@@ -513,20 +513,18 @@ _default_tool_settings = {
         "search_engine_name": "duckduckgo",
         "search_engine_config": {
             "bing": {
-                "result_len": 3,
                 "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
                 "bing_key": "",
             },
             "metaphor": {
-                "result_len": 3,
                 "metaphor_api_key": "",
                 "split_result": False,
                 "chunk_size": 500,
                 "chunk_overlap": 0,
             },
-            "duckduckgo": {"result_len": 3},
+            "duckduckgo": {},
         },
-        "top_k": 10,
+        "top_k": 5,
         "verbose": "Origin",
         "conclude_prompt": "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
         "</指令>\n<已知信息>{{ context }}</已知信息>\n"
@@ -654,15 +652,21 @@ class PromptSettings(BaseFileSettings):
             "Human: {{input}}\n"
             "AI:"
             ),
-        "rag": (
+    }
+    '''普通 LLM 用模板'''
+
+    rag: dict = {
+        "default": (
             "【指令】根据已知信息，简洁和专业的来回答问题。"
             "如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。\n\n"
             "【已知信息】{{context}}\n\n"
             "【问题】{{question}}\n"
             ),
-        "rag_default": "{{question}}",
+        "empty": (
+            "请你回答我的问题:\n"
+            "{{question}}"
+        ),
     }
-    '''普通 LLM 用模板'''
 
     action_model: dict = {
         "GPT-4": (

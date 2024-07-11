@@ -6,8 +6,9 @@ from fastapi import APIRouter, Request
 from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
-from chatchat.server.api_server.api_schemas import AgentStatus, MsgType, OpenAIChatInput
+from chatchat.server.api_server.api_schemas import OpenAIChatInput
 from chatchat.server.chat.chat import chat
+from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
 from chatchat.server.db.repository import add_message_to_db
@@ -36,6 +37,8 @@ chat_router.post(
     summary="返回llm模型对话评分",
 )(chat_feedback)
 
+
+chat_router.post("/kb_chat", summary="知识库对话")(kb_chat)
 chat_router.post("/file_chat", summary="文件对话")(file_chat)
 
 
@@ -125,6 +128,7 @@ async def chat_completions(
             extra_json = {
                 "message_id": message_id,
                 "status": None,
+                "model": body.model,
             }
             header = [
                 {

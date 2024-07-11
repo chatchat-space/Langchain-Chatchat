@@ -3,6 +3,7 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlencode
 from typing import Dict, Generator, List, Tuple, Union
 
 import chardet
@@ -103,7 +104,7 @@ LOADER_DICT = {
     "CSVLoader": [".csv"],
     # "FilteredCSVLoader": [".csv"], 如果使用自定义分割csv
     "RapidOCRPDFLoader": [".pdf"],
-    "RapidOCRDocLoader": [".docx", ".doc"],
+    "RapidOCRDocLoader": [".docx"],
     "RapidOCRPPTLoader": [
         ".ppt",
         ".pptx",
@@ -131,7 +132,7 @@ LOADER_DICT = {
     "SRTLoader": [".srt"],
     "TomlLoader": [".toml"],
     "UnstructuredTSVLoader": [".tsv"],
-    "UnstructuredWordDocumentLoader": [".docx", ".doc"],
+    "UnstructuredWordDocumentLoader": [".docx"],
     "UnstructuredXMLLoader": [".xml"],
     "UnstructuredPowerPointLoader": [".ppt", ".pptx"],
     "EverNoteLoader": [".enex"],
@@ -456,6 +457,32 @@ def files2docs_in_thread(
         func=files2docs_in_thread_file2docs, params=kwargs_list
     ):
         yield result
+
+
+def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="") -> List[Dict]:
+    '''
+    将知识库检索结果格式化为参考文档的格式
+    '''
+    from chatchat.server.utils import api_address
+    api_base_url = api_base_url or api_address()
+
+    source_documents = []
+    for inum, doc in enumerate(docs):
+        filename = doc.get("metadata", {}).get("source")
+        parameters = urlencode(
+            {
+                "knowledge_base_name": kb_name,
+                "file_name": filename,
+            }
+        )
+        url = (
+            f"{api_base_url}/knowledge_base/download_doc?" + parameters
+        )
+        page_content = doc.get("page_content")
+        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{page_content}\n\n"""
+        source_documents.append(ref)
+    
+    return source_documents
 
 
 if __name__ == "__main__":

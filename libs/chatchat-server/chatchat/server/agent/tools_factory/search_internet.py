@@ -13,27 +13,28 @@ from chatchat.server.utils import get_tool_config
 from .tools_registry import BaseToolOutput, regist_tool, format_context
 
 
-def bing_search(text, config):
+def bing_search(text, config, top_k:int):
     search = BingSearchAPIWrapper(
         bing_subscription_key=config["bing_key"],
         bing_search_url=config["bing_search_url"],
     )
-    return search.results(text, config["result_len"])
+    return search.results(text, top_k)
 
 
-def duckduckgo_search(text, config):
+def duckduckgo_search(text, config, top_k:int):
     search = DuckDuckGoSearchAPIWrapper()
-    return search.results(text, config["result_len"])
+    return search.results(text, top_k)
 
 
 def metaphor_search(
     text: str,
     config: dict,
+    top_k:int
 ) -> List[Dict]:
     from metaphor_python import Metaphor
 
     client = Metaphor(config["metaphor_api_key"])
-    search = client.search(text, num_results=config["result_len"], use_autoprompt=True)
+    search = client.search(text, num_results=top_k, use_autoprompt=True)
     contents = search.get_contents().contents
     for x in contents:
         x.extract = markdownify(x.extract)
@@ -48,12 +49,12 @@ def metaphor_search(
             chunk_overlap=config["chunk_overlap"],
         )
         splitted_docs = text_splitter.split_documents(docs)
-        if len(splitted_docs) > config["result_len"]:
+        if len(splitted_docs) > top_k:
             normal = NormalizedLevenshtein()
             for x in splitted_docs:
                 x.metadata["score"] = normal.similarity(text, x.page_content)
             splitted_docs.sort(key=lambda x: x.metadata["score"], reverse=True)
-            splitted_docs = splitted_docs[: config["result_len"]]
+            splitted_docs = splitted_docs[: top_k]
 
         docs = [
             {
@@ -78,7 +79,7 @@ SEARCH_ENGINES = {
 }
 
 
-def search_result2docs(search_results):
+def search_result2docs(search_results) -> List[Document]:
     docs = []
     for result in search_results:
         doc = Document(
@@ -92,17 +93,20 @@ def search_result2docs(search_results):
     return docs
 
 
-def search_engine(query: str, config: dict):
-    search_engine_use = SEARCH_ENGINES[config["search_engine_name"]]
+def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={}):
+    config = config or get_tool_config("search_internet")
+    if top_k <= 0:
+        top_k = config.get("top_k", 3)
+    engine_name = engine_name or config.get("search_engine_name")
+    search_engine_use = SEARCH_ENGINES[engine_name]
     results = search_engine_use(
-        text=query, config=config["search_engine_config"][config["search_engine_name"]]
+        text=query, config=config["search_engine_config"][engine_name], top_k=top_k
     )
     docs = search_result2docs(results)
-    return {"docs": docs, "search_engine": config["search_engine_name"]}
+    return {"docs": docs, "search_engine": engine_name}
 
 
 @regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
     """Use this tool to use bing search engine to search the internet and get information."""
-    tool_config = get_tool_config("search_internet")
     return BaseToolOutput(search_engine(query=query, config=tool_config), format=format_context)

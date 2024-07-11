@@ -22,6 +22,7 @@ from chatchat.server.knowledge_base.utils import (
     list_files_from_folder,
     validate_kb_name,
 )
+from chatchat.server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from chatchat.server.utils import (
     BaseResponse,
     ListResponse,
@@ -35,6 +36,16 @@ from chatchat.utils import build_logger
 logger = build_logger()
 
 
+def search_temp_docs(knowledge_id: str, query: str, top_k:int, score_threshold: float) -> List[Dict]:
+    '''从临时 FAISS 知识库中检索文档，用于文件对话'''
+    with memo_faiss_pool.acquire(knowledge_id) as vs:
+        docs = vs.similarity_search_with_score(
+            query, k=top_k, score_threshold=score_threshold
+        )
+        docs = [x[0].dict() for x in docs]
+        return docs
+
+
 def search_docs(
     query: str = Body("", description="用户输入", examples=["你好"]),
     knowledge_base_name: str = Body(
@@ -45,9 +56,9 @@ def search_docs(
         Settings.kb_settings.SCORE_THRESHOLD,
         description="知识库匹配相关度阈值，取值范围在0-1之间，"
         "SCORE越小，相关度越高，"
-        "取到1相当于不筛选，建议设置在0.5左右",
+        "取到2相当于不筛选，建议设置在0.5左右",
         ge=0.0,
-        le=1.0,
+        le=2.0,
     ),
     file_name: str = Body("", description="文件名称，支持 sql 通配符"),
     metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
