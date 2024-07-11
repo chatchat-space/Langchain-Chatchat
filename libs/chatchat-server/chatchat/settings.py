@@ -549,9 +549,9 @@ class ToolSettings(BaseFileSettings):
 
     weather_check: dict = {
         "use": False,
-        "api_key": "S8vrB4U_-c5mvAMiK",
+        "api_key": "",
     }
-    '''本地知识库工具配置项'''
+    '''心知天气（https://www.seniverse.com/）工具配置项'''
 
     search_youtube: dict = {
         "use": False,
