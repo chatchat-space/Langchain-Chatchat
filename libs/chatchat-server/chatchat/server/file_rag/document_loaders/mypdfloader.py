@@ -6,7 +6,7 @@ import tqdm
 from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 from PIL import Image
 
-from chatchat.configs import PDF_OCR_THRESHOLD
+from chatchat.settings import Settings
 from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 
 
@@ -60,11 +60,11 @@ class RapidOCRPDFLoader(UnstructuredFileLoader):
                     if xref := img.get("xref"):
                         bbox = img["bbox"]
                         # 检查图片尺寸是否超过设定的阈值
-                        if (bbox[2] - bbox[0]) / (page.rect.width) < PDF_OCR_THRESHOLD[
+                        if (bbox[2] - bbox[0]) / (page.rect.width) < Settings.kb_settings.PDF_OCR_THRESHOLD[
                             0
                         ] or (bbox[3] - bbox[1]) / (
                             page.rect.height
-                        ) < PDF_OCR_THRESHOLD[1]:
+                        ) < Settings.kb_settings.PDF_OCR_THRESHOLD[1]:
                             continue
                         pix = fitz.Pixmap(doc, xref)
                         samples = pix.samples

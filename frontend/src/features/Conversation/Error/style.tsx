@@ -3,6 +3,7 @@ import { createStyles } from 'antd-style';
 import { ReactNode, memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
 import Avatar from '@/components/Avatar';
+
 export const useStyles = createStyles(({ css, token }) => ({
   container: css`
     color: ${token.colorText};

@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
 import Logo from '@/components/Logo';
+
 const FullscreenLoading = memo<{ title?: string }>(({ title }) => {
   return (
     <Flexbox height={'100%'} style={{ userSelect: 'none' }} width={'100%'}>

@@ -91,6 +91,10 @@ export const DEFAULT_LLM_CONFIG: GlobalLLMConfig = {
     apiKey: '',
     enabled: false,
   },
+  chatchat: {
+    enabled: false,
+    endpoint: ''
+  },
 };
 
 export const DEFAULT_AGENT: GlobalDefaultAgent = {

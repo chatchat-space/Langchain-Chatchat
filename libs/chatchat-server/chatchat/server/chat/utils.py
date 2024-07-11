@@ -5,8 +5,10 @@ from typing import Dict, List, Tuple, Union
 from langchain.prompts.chat import ChatMessagePromptTemplate
 
 from chatchat.server.pydantic_v2 import BaseModel, Field
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 class History(BaseModel):

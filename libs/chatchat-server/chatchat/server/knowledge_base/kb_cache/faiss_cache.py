@@ -4,10 +4,10 @@ from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.schema import Document
 from langchain.vectorstores.faiss import FAISS
 
-from chatchat.configs import CACHED_MEMO_VS_NUM, CACHED_VS_NUM
+from chatchat.settings import Settings
 from chatchat.server.knowledge_base.kb_cache.base import *
 from chatchat.server.knowledge_base.utils import get_vs_path
-from chatchat.server.utils import get_Embeddings
+from chatchat.server.utils import get_Embeddings, get_default_embedding
 
 
 # patch FAISS to include doc id in Document.metadata
@@ -55,7 +55,7 @@ class _FaissPool(CachePool):
     def new_vector_store(
         self,
         kb_name: str,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ) -> FAISS:
         # create an empty vector store
         embeddings = get_Embeddings(embed_model=embed_model)
@@ -67,7 +67,7 @@ class _FaissPool(CachePool):
 
     def new_temp_vector_store(
         self,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ) -> FAISS:
         # create an empty vector store
         embeddings = get_Embeddings(embed_model=embed_model)
@@ -93,11 +93,11 @@ class KBFaissPool(_FaissPool):
         kb_name: str,
         vector_name: str = None,
         create: bool = True,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         locked = True
-        vector_name = vector_name or embed_model
+        vector_name = vector_name or embed_model.replace(":", "_")
         cache = self.get((kb_name, vector_name))  # 用元组比拼接字符串好一些
         try:
             if cache is None:
@@ -150,7 +150,7 @@ class MemoFaissPool(_FaissPool):
     def load_vector_store(
         self,
         kb_name: str,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         cache = self.get(kb_name)
@@ -169,8 +169,8 @@ class MemoFaissPool(_FaissPool):
         return self.get(kb_name)
 
 
-kb_faiss_pool = KBFaissPool(cache_num=CACHED_VS_NUM)
-memo_faiss_pool = MemoFaissPool(cache_num=CACHED_MEMO_VS_NUM)
+kb_faiss_pool = KBFaissPool(cache_num=Settings.kb_settings.CACHED_VS_NUM)
+memo_faiss_pool = MemoFaissPool(cache_num=Settings.kb_settings.CACHED_MEMO_VS_NUM)
 #
 #
 # if __name__ == "__main__":

@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
 from langchain_core.output_parsers import StrOutputParser
 from sse_starlette.sse import EventSourceResponse
 
-from chatchat.configs import LLM_MODEL_CONFIG
+from chatchat.settings import Settings
 from chatchat.server.agent.agent_factory.agents_registry import agents_registry
 from chatchat.server.agent.container import container
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
@@ -30,28 +30,31 @@ from chatchat.server.utils import (
     get_prompt_template,
     get_tool,
     wrap_done,
+    get_default_llm,
 )
 
 
-def create_models_from_config(configs, callbacks, stream):
-    configs = configs or LLM_MODEL_CONFIG
+def create_models_from_config(configs, callbacks, stream, max_tokens):
+    configs = configs or Settings.model_settings.LLM_MODEL_CONFIG
     models = {}
     prompts = {}
-    for model_type, model_configs in configs.items():
-        for model_name, params in model_configs.items():
-            callbacks = callbacks if params.get("callbacks", False) else None
-            model_instance = get_ChatOpenAI(
-                model_name=model_name,
-                temperature=params.get("temperature", 0.5),
-                max_tokens=params.get("max_tokens", 1000),
-                callbacks=callbacks,
-                streaming=stream,
-                local_wrap=True,
-            )
-            models[model_type] = model_instance
-            prompt_name = params.get("prompt_name", "default")
-            prompt_template = get_prompt_template(type=model_type, name=prompt_name)
-            prompts[model_type] = prompt_template
+    for model_type, params in configs.items():
+        model_name = params.get("model", "").strip() or get_default_llm()
+        callbacks = callbacks if params.get("callbacks", False) else None
+        # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
+        max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
+        model_instance = get_ChatOpenAI(
+            model_name=model_name,
+            temperature=params.get("temperature", 0.5),
+            max_tokens=max_tokens_value,
+            callbacks=callbacks,
+            streaming=stream,
+            local_wrap=True,
+        )
+        models[model_type] = model_instance
+        prompt_name = params.get("prompt_name", "default")
+        prompt_template = get_prompt_template(type=model_type, name=prompt_name)
+        prompts[model_type] = prompt_template
     return models, prompts
 
 
@@ -82,17 +85,17 @@ def create_models_chains(
         )
         chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
-    llm = models["llm_model"]
-    llm.callbacks = callbacks
-    chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
-
-    if "action_model" in models and tools is not None:
+    if "action_model" in models and tools:
+        llm = models["action_model"]
+        llm.callbacks = callbacks
         agent_executor = agents_registry(
             llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
         )
         full_chain = {"input": lambda x: x["input"]} | agent_executor
     else:
-        chain.llm.callbacks = callbacks
+        llm = models["llm_model"]
+        llm.callbacks = callbacks
+        chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
         full_chain = {"input": lambda x: x["input"]} | chain
     return full_chain
 
@@ -116,6 +119,7 @@ async def chat(
     stream: bool = Body(True, description="流式输出"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
+    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
 
@@ -137,7 +141,7 @@ async def chat(
             callbacks.append(langfuse_handler)
 
         models, prompts = create_models_from_config(
-            callbacks=callbacks, configs=chat_model_config, stream=stream
+            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
         )
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]

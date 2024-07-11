@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from fastapi import APIRouter, Request
 from langchain.prompts.prompt import PromptTemplate
+from sse_starlette import EventSourceResponse
 
 from chatchat.server.api_server.api_schemas import AgentStatus, MsgType, OpenAIChatInput
 from chatchat.server.chat.chat import chat
@@ -16,15 +17,19 @@ from chatchat.server.utils import (
     get_tool,
     get_tool_config,
 )
+from chatchat.settings import Settings
+from chatchat.utils import build_logger
+from .openai_routes import openai_request, OpenAIChatOutput
 
-from .openai_routes import openai_request
+
+logger = build_logger()
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
-chat_router.post(
-    "/chat",
-    summary="与llm模型对话(通过LLMChain)",
-)(chat)
+# chat_router.post(
+#     "/chat",
+#     summary="与llm模型对话(通过LLMChain)",
+# )(chat)
 
 chat_router.post(
     "/feedback",
@@ -54,6 +59,13 @@ async def chat_completions(
     以后还要考虑其它的组合（如文件对话）
     返回与 openai 兼容的 Dict
     """
+    # import rich
+    # rich.print(body)
+
+    # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
+    if body.max_tokens == None:
+        body.max_tokens = Settings.model_settings.MAX_TOKENS
+
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}
     for key in list(extra):
@@ -122,16 +134,22 @@ async def chat_completions(
                 {
                     **extra_json,
                     "content": f"{tool_result}",
+                    "tool_call": tool.get_name(),
                     "tool_output": tool_result.data,
-                    "is_ref": True,
+                    "is_ref": False if tool.return_direct else True,
                 }
             ]
-            return await openai_request(
-                client.chat.completions.create,
-                body,
-                extra_json=extra_json,
-                header=header,
-            )
+            if tool.return_direct:
+                def temp_gen():
+                    yield OpenAIChatOutput(**header[0]).model_dump_json()
+                return EventSourceResponse(temp_gen())
+            else:
+                return await openai_request(
+                    client.chat.completions.create,
+                    body,
+                    extra_json=extra_json,
+                    header=header,
+                )
 
     # agent chat with tool calls
     if body.tools:
@@ -158,18 +176,24 @@ async def chat_completions(
             stream=body.stream,
             chat_model_config=extra.get("chat_model_config", chat_model_config),
             tool_config=extra.get("tool_config", tool_config),
+            max_tokens=body.max_tokens,
         )
         return result
     else:  # LLM chat directly
-        message_id = (
-            add_message_to_db(
-                chat_type="llm_chat",
-                query=body.messages[-1]["content"],
-                conversation_id=conversation_id,
+        try: # query is complex object that unable add to db when using qwen-vl-chat 
+            message_id = (
+                add_message_to_db(
+                    chat_type="llm_chat",
+                    query=body.messages[-1]["content"],
+                    conversation_id=conversation_id,
+                )
+                if conversation_id
+                else None
             )
-            if conversation_id
-            else None
-        )
+        except Exception as e:
+            logger.error(f"failed to add message to db")
+            message_id = None
+
         extra_json = {
             "message_id": message_id,
             "status": None,

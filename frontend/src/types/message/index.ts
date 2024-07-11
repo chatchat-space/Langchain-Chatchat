@@ -17,6 +17,11 @@ export interface ChatMessageError {
   type: ErrorType | IPluginErrorType | ILobeAgentRuntimeErrorType;
 }
 
+export interface ModelSelectorError {
+  message: string;
+  type: ErrorType;
+}
+
 export interface ChatTranslate extends Translate {
   content?: string;
 }
