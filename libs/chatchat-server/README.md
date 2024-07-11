@@ -35,7 +35,7 @@ Commands:
   model   模型配置
   server  服务配置
 
-``` 
+```
 
 ### 模型服务配置
 
@@ -81,7 +81,7 @@ chatchat -a
 ```
 
 ### 模型？
- 
+
 chatchat 0.3版本中，为保证平台、模型、及本地服务的兼容，在保证可扩展性的同时，
 我们对模型的加载进行了重新设计. chatchat 0.3之后的版本，我们将分离模型加载和服务启动. 
 您可以使用提供了`openaiEndpoint`任何服务,在MODEL_PLATFORMS这里直接配置
@@ -97,3 +97,8 @@ chatchat-config model --set_model_platforms TEXT      模型平台配置 as a JS
 ### 部署手册
 
 移步这里 [xinference环境配置手册](../../docs/install/README_xinference.md)
+
+
+### 其它配置
+
+1. 数据库对话配置请移步这里 [数据库对话配置说明](../../docs/install/README_text2sql.md)

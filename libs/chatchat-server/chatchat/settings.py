@@ -579,10 +579,12 @@ _default_tool_settings = {
     # 5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
     # 6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
     "text2sql": {
+        # 该工具需单独指定使用的大模型，与用户前端选择使用的模型无关
+        "model_name": "qwen-plus",
         "use": False,
         # SQLAlchemy连接字符串，支持的数据库有：
         # crate、duckdb、googlesql、mssql、mysql、mariadb、oracle、postgresql、sqlite、clickhouse、prestodb
-        # 不同的数据库请查询SQLAlchemy，修改sqlalchemy_connect_str，配置对应的数据库连接，如sqlite为sqlite:///数据库文件路径，下面示例为mysql
+        # 不同的数据库请查阅SQLAlchemy用法，修改sqlalchemy_connect_str，配置对应的数据库连接，如sqlite为sqlite:///数据库文件路径，下面示例为mysql
         # 如提示缺少对应数据库的驱动，请自行通过poetry安装
         "sqlalchemy_connect_str": "mysql+pymysql://用户名:密码@主机地址/数据库名称",
         # 务必评估是否需要开启read_only,开启后会对sql语句进行检查，请确认text2sql.py中的intercept_sql拦截器是否满足你使用的数据库只读要求
@@ -598,7 +600,7 @@ _default_tool_settings = {
         "table_comments": {
             # 如果出现大模型选错表的情况，可尝试根据实际情况填写表名和说明
             # "tableA":"这是一个用户表，存储了用户的基本信息",
-            # "tanleB":"角色表",
+            # "tableB":"角色表",
         },
     },
     "amap": {
