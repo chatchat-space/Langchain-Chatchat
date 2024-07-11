@@ -157,7 +157,7 @@ class KBSettings(BaseFileSettings):
     SCORE_THRESHOLD: float = 2.0
     """知识库匹配相关度阈值，取值范围在0-2之间，SCORE越小，相关度越高，取到2相当于不筛选，建议设置在0.5左右"""
 
-    DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor"] = "duckduckgo"
+    DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor", "searx"] = "duckduckgo"
     """默认搜索引擎"""
 
     SEARCH_ENGINE_TOP_K: int = 3
@@ -491,9 +491,7 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-
-_default_tool_settings = {
-    "search_local_knowledgebase": {
+    search_local_knowledgebase: dict = {
         "use": False,
         "top_k": 3,
         "score_threshold": 2.0,
@@ -506,8 +504,10 @@ _default_tool_settings = {
             "{{ question }}\n"
             "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
         },
-    },
-    "search_internet": {
+    }
+    '''本地知识库工具配置项'''
+
+    search_internet: dict = {
         "use": False,
         "search_engine_name": "duckduckgo",
         "search_engine_config": {
@@ -522,6 +522,11 @@ _default_tool_settings = {
                 "chunk_overlap": 0,
             },
             "duckduckgo": {},
+            "searx": {
+                "host": "",
+                "engines": [],
+                "categories": [],
+            }
         },
         "top_k": 5,
         "verbose": "Origin",
@@ -530,52 +535,61 @@ _default_tool_settings = {
         "<问题>\n"
         "{{ question }}\n"
         "</问题>\n",
-    },
-    "arxiv": {
+    }
+    '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
+
+    arxiv: dict = {
         "use": False,
-    },
-    "shell": {
+    }
+
+    shell: dict = {
         "use": False,
-    },
-    "weather_check": {
+    }
+
+    weather_check: dict = {
         "use": False,
-        "api_key": "S8vrB4U_-c5mvAMiK",
-    },
-    "search_youtube": {
+        "api_key": "",
+    }
+    '''心知天气（https://www.seniverse.com/）工具配置项'''
+
+    search_youtube: dict = {
         "use": False,
-    },
-    "wolfram": {
+    }
+
+    wolfram: dict = {
         "use": False,
         "appid": "",
-    },
-    "calculate": {
+    }
+
+    calculate: dict = {
         "use": False,
-    },
-    "vqa_processor": {
+    }
+    '''numexpr 数学计算工具配置项'''
+
+    vqa_processor: dict = {
         "use": False,
         "model_path": "your model path",
         "tokenizer_path": "your tokenizer path",
         "device": "cuda:1",
-    },
-    "aqa_processor": {
+    }
+    '''图片对话工具配置项。该工具依赖 torch，后续将删除。现在 WEBUI 已经支持图片对话功能。'''
+
+    aqa_processor: dict = {
         "use": False,
         "model_path": "your model path",
         "tokenizer_path": "yout tokenizer path",
         "device": "cuda:2",
-    },
-    "text2images": {
+    }
+    '''音频对话工具配置项。该工具依赖 torch，后续将删除。'''
+
+    text2images: dict = {
         "use": False,
         "model": "sd-turbo",
         "size": "256*256",
-    },
-    # text2sql使用建议
-    # 1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
-    # 2、生产环境中，对于查询操作，由于不确定查询效率，推荐数据库采用主从数据库架构，让text2sql连接从数据库，防止可能的慢查询影响主业务；
-    # 3、对于写操作应保持谨慎，如不需要写操作，设置read_only为True,最好再从数据库层面收回数据库用户的写权限，防止用户通过自然语言对数据库进行修改操作；
-    # 4、text2sql与大模型在意图理解、sql转换等方面的能力有关，可切换不同大模型进行测试；
-    # 5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
-    # 6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
-    "text2sql": {
+    }
+    '''图片生成工具配置项。model 必须是在 model_settings.yaml/MODEL_PLATFORMS 中配置过的。'''
+
+    text2sql: dict = {
         # 该工具需单独指定使用的大模型，与用户前端选择使用的模型无关
         "model_name": "qwen-plus",
         "use": False,
@@ -599,17 +613,24 @@ _default_tool_settings = {
             # "tableA":"这是一个用户表，存储了用户的基本信息",
             # "tableB":"角色表",
         },
-    },
-    "amap": {
+    }
+    '''
+    text2sql使用建议
+    1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
+    2、生产环境中，对于查询操作，由于不确定查询效率，推荐数据库采用主从数据库架构，让text2sql连接从数据库，防止可能的慢查询影响主业务；
+    3、对于写操作应保持谨慎，如不需要写操作，设置read_only为True,最好再从数据库层面收回数据库用户的写权限，防止用户通过自然语言对数据库进行修改操作；
+    4、text2sql与大模型在意图理解、sql转换等方面的能力有关，可切换不同大模型进行测试；
+    5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
+    6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
+    '''
+  
+    amap: dict = {
         "use": False,
         "api_key": "高德地图 API KEY",
     },
+    '''高德地图、天气相关工具配置项。'''
 
-    # text2promql 使用建议
-    # 1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
-    # 2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
-    # 3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
-    "text2promql": {
+    text2promql: dict = {
         "use": False,
         # <your_prometheus_ip>:<your_prometheus_port>
         "prometheus_endpoint": "http://127.0.0.1:9090",
@@ -617,8 +638,13 @@ _default_tool_settings = {
         "username": "",
         # <your_prometheus_password>
         "password": "",
-    },
-}
+    }
+    '''
+    text2promql 使用建议
+    1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
+    2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
+    3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
+    '''
 
 
 class PromptSettings(BaseFileSettings):
@@ -782,7 +808,7 @@ class SettingsContainer:
     basic_settings: BasicSettings = settings_property(BasicSettings())
     kb_settings: KBSettings = settings_property(KBSettings())
     model_settings: ApiModelSettings = settings_property(ApiModelSettings())
-    tool_settings: ToolSettings = settings_property(ToolSettings(**_default_tool_settings))
+    tool_settings: ToolSettings = settings_property(ToolSettings())
     prompt_settings: PromptSettings = settings_property(PromptSettings())
 
     def createl_all_templates(self):
@@ -792,7 +818,7 @@ class SettingsContainer:
             "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
                                 "is_entire_comment": True}},
             write_file=True)
-        self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings(**_default_tool_settings))
+        self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings())
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 
     def set_auto_reload(self, flag: bool=True):

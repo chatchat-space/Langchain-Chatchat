@@ -26,9 +26,7 @@ from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
 
 async def kb_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                 mode: Literal["local_kb", "temp_kb", "search_engine"] = Body("local_kb", description="知识来源"),
-                kb_name: str = Body("", description="知识库名称", examples=["samples"]),
-                knowledge_id: str = Body("", description="临时知识库ID"),
-                search_engine_name: str = Body("", description="搜索引擎"),
+                kb_name: str = Body("", description="mode=local_kb时为知识库名称；temp_kb时为临时知识库ID，search_engine时为搜索引擎名称", examples=["samples"]),
                 top_k: int = Body(Settings.kb_settings.VECTOR_SEARCH_TOP_K, description="匹配向量数"),
                 score_threshold: float = Body(
                     Settings.kb_settings.SCORE_THRESHOLD,
@@ -80,15 +78,15 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             source_documents = format_reference(kb_name, docs, request.base_url)
         elif mode == "temp_kb":
             docs = await run_in_threadpool(search_temp_docs,
-                                            knowledge_id,
+                                            kb_name,
                                             query=query,
                                             top_k=top_k,
                                             score_threshold=score_threshold)
-            source_documents = format_reference(knowledge_id, docs, request.base_url)
+            source_documents = format_reference(kb_name, docs, request.base_url)
         elif mode == "search_engine":
-            docs = await run_in_threadpool(search_engine,query, top_k, search_engine_name)
-            docs = [x.dict() for x in docs]
-            source_documents = [f"""出处 [{i + 1}] [{d['filename']}]({d['source']}) \n\n{d['page_content']}\n\n""" for i,d in enumerate(docs)]
+            result = await run_in_threadpool(search_engine, query, top_k, kb_name)
+            docs = [x.dict() for x in result.get("docs", [])]
+            source_documents = [f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" for i,d in enumerate(docs)]
         else:
             docs = []
             source_documents = []

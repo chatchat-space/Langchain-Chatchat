@@ -4,13 +4,24 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.utilities.bing_search import BingSearchAPIWrapper
 from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
+from langchain.utilities.searx_search import SearxSearchWrapper
 from markdownify import markdownify
 from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
+from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
 from .tools_registry import BaseToolOutput, regist_tool, format_context
+
+
+def searx_search(text ,config, top_k: int):
+    search = SearxSearchWrapper(
+        searx_host=config["host"],
+        engines=config["engines"],
+        categories=config["categories"],
+    )
+    return search.results(text, top_k)
 
 
 def bing_search(text, config, top_k:int):
@@ -76,6 +87,7 @@ SEARCH_ENGINES = {
     "bing": bing_search,
     "duckduckgo": duckduckgo_search,
     "metaphor": metaphor_search,
+    "searx": searx_search,
 }
 
 
@@ -96,7 +108,7 @@ def search_result2docs(search_results) -> List[Document]:
 def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={}):
     config = config or get_tool_config("search_internet")
     if top_k <= 0:
-        top_k = config.get("top_k", 3)
+        top_k = config.get("top_k", Settings.kb_settings.SEARCH_ENGINE_TOP_K)
     engine_name = engine_name or config.get("search_engine_name")
     search_engine_use = SEARCH_ENGINES[engine_name]
     results = search_engine_use(
@@ -109,4 +121,4 @@ def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={})
 @regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
     """Use this tool to use bing search engine to search the internet and get information."""
-    return BaseToolOutput(search_engine(query=query, config=tool_config), format=format_context)
+    return BaseToolOutput(search_engine(query=query), format=format_context)
