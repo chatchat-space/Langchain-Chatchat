@@ -104,7 +104,7 @@ LOADER_DICT = {
     "CSVLoader": [".csv"],
     # "FilteredCSVLoader": [".csv"], 如果使用自定义分割csv
     "RapidOCRPDFLoader": [".pdf"],
-    "RapidOCRDocLoader": [".docx", ".doc"],
+    "RapidOCRDocLoader": [".docx"],
     "RapidOCRPPTLoader": [
         ".ppt",
         ".pptx",
@@ -132,7 +132,7 @@ LOADER_DICT = {
     "SRTLoader": [".srt"],
     "TomlLoader": [".toml"],
     "UnstructuredTSVLoader": [".tsv"],
-    "UnstructuredWordDocumentLoader": [".docx", ".doc"],
+    "UnstructuredWordDocumentLoader": [".docx"],
     "UnstructuredXMLLoader": [".xml"],
     "UnstructuredPowerPointLoader": [".ppt", ".pptx"],
     "EverNoteLoader": [".enex"],

@@ -83,57 +83,61 @@ def kb_chat(api: ApiRequest):
 
     # 配置参数
     with st.sidebar:
-        dialogue_modes = ["知识库问答",
-                          "文件对话",
-                          "搜索引擎问答",
-                          ]
-        dialogue_mode = st.selectbox("请选择对话模式：",
-                                     dialogue_modes,
-                                     key="dialogue_mode",
-                                     )
-        # prompt_templates_kb_list = list(Settings.prompt_settings.rag)
-        # prompt_name = st.selectbox(
-        #     "请选择Prompt模板：",
-        #     prompt_templates_kb_list,
-        #     key="prompt_name",
-        # )
-        prompt_name="default"
-        history_len = st.number_input("历史对话轮数：", 0, 20, key="history_len")
-        kb_top_k = st.number_input("匹配知识条数：", 1, 20, key="kb_top_k")
-        ## Bge 模型会超过1
-        score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, step=0.01, key="score_threshold")
-        return_direct = st.checkbox("仅返回检索结果", key="return_direct")
+        tabs = st.tabs(["RAG 配置", "会话设置"])
+        with tabs[0]:
+            dialogue_modes = ["知识库问答",
+                              "文件对话",
+                              "搜索引擎问答",
+                              ]
+            dialogue_mode = st.selectbox("请选择对话模式：",
+                                         dialogue_modes,
+                                         key="dialogue_mode",
+                                         )
+            placeholder = st.empty()
+            st.divider()
+            # prompt_templates_kb_list = list(Settings.prompt_settings.rag)
+            # prompt_name = st.selectbox(
+            #     "请选择Prompt模板：",
+            #     prompt_templates_kb_list,
+            #     key="prompt_name",
+            # )
+            prompt_name="default"
+            history_len = st.number_input("历史对话轮数：", 0, 20, key="history_len")
+            kb_top_k = st.number_input("匹配知识条数：", 1, 20, key="kb_top_k")
+            ## Bge 模型会超过1
+            score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, step=0.01, key="score_threshold")
+            return_direct = st.checkbox("仅返回检索结果", key="return_direct")
 
-        st.divider()
 
-        def on_kb_change():
-            st.toast(f"已加载知识库： {st.session_state.selected_kb}")
 
-        if dialogue_mode == "知识库问答":
-            kb_list = [x["kb_name"] for x in api.list_knowledge_bases()]
-            selected_kb = st.selectbox(
-                "请选择知识库：",
-                kb_list,
-                on_change=on_kb_change,
-                key="selected_kb",
-            )
-        elif dialogue_mode == "文件对话":
-            files = st.file_uploader("上传知识文件：",
-                                    [i for ls in LOADER_DICT.values() for i in ls],
-                                    accept_multiple_files=True,
-                                    )
-            if st.button("开始上传", disabled=len(files) == 0):
-                st.session_state["file_chat_id"] = upload_temp_docs(files, api)
-        elif dialogue_mode == "搜索引擎问答":
-            search_engine_list = list(Settings.tool_settings.search_internet["search_engine_config"])
-            search_engine = st.selectbox(
-                label="请选择搜索引擎",
-                options=search_engine_list,
-                key="search_engine",
-            )
+            def on_kb_change():
+                st.toast(f"已加载知识库： {st.session_state.selected_kb}")
 
-        placeholder = st.expander("会话", False)
-        with placeholder:
+            with placeholder.container():
+                if dialogue_mode == "知识库问答":
+                    kb_list = [x["kb_name"] for x in api.list_knowledge_bases()]
+                    selected_kb = st.selectbox(
+                        "请选择知识库：",
+                        kb_list,
+                        on_change=on_kb_change,
+                        key="selected_kb",
+                    )
+                elif dialogue_mode == "文件对话":
+                    files = st.file_uploader("上传知识文件：",
+                                            [i for ls in LOADER_DICT.values() for i in ls],
+                                            accept_multiple_files=True,
+                                            )
+                    if st.button("开始上传", disabled=len(files) == 0):
+                        st.session_state["file_chat_id"] = upload_temp_docs(files, api)
+                elif dialogue_mode == "搜索引擎问答":
+                    search_engine_list = list(Settings.tool_settings.search_internet["search_engine_config"])
+                    search_engine = st.selectbox(
+                        label="请选择搜索引擎",
+                        options=search_engine_list,
+                        key="search_engine",
+                    )
+
+        with tabs[1]:
             # 会话
             cols = st.columns(3)
             conv_names = chat_box.get_chat_names()
@@ -227,7 +231,7 @@ def kb_chat(api: ApiRequest):
         chat_box.update_msg(text, streaming=False)
 
     now = datetime.now()
-    with placeholder:
+    with tabs[1]:
         cols = st.columns(2)
         export_btn = cols[0]
         if cols[1].button(
