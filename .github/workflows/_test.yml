@@ -49,6 +49,12 @@ jobs:
         run: |
           make test
 
+
+      - name: Remove Test Untracked files
+        run: |
+          rm -rf \
+            Langchain-Chatchat/libs/chatchat-server/tests/unit_tests/config/chatchat
+
       - name: Ensure the tests did not create any additional files
         shell: bash
         run: |
