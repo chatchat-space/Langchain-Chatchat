@@ -223,7 +223,7 @@
 
 - 本地知识库问答
     ```python3
-    base_url = "http://127.0.0.1:7861/knowledge_base"
+    base_url = "http://127.0.0.1:7861/knowledge_base/local_kb/samples"
     data = {
         "model": "qwen2-instruct",
         "messages": [
@@ -234,8 +234,6 @@
         "stream": True,
         "temperature": 0.7,
         "extra_body": {
-          "mode": "local_kb",
-          "kb_name": "samples",
           "top_k": 3,
           "score_threshold": 2.0,
           "return_direct": True,
@@ -252,4 +250,58 @@
     输出示例：
     ```shell
     ChatCompletionChunk(id='chat9973e445-8581-45ca-bde5-148fc724b30b', choices=[Choice(delta=None, finish_reason=None, index=None, logprobs=None, message={'role': 'assistant', 'content': '', 'finish_reason': 'stop', 'tool_calls': []})], created=1720592802, model=None, object='chat.completion', service_tier=None, system_fingerprint=None, usage=None, status=None, message_type=1, message_id=None, is_ref=False, docs=['出处 [1] [test_files/test.txt](http://127.0.0.1:7861//knowledge_base/download_doc?knowledge_base_name=samples&file_name=test_files%2Ftest.txt) \n\n[这就是那幅名画]: http://yesaiwen.com/art\nof\nasking\nchatgpt\nfor\nhigh\nquality\nansw\nengineering\ntechniques/#i\n3\t"《如何向ChatGPT提问并获得高质量的答案》"\n\n', '出处 [2] [test_files/test.txt](http://127.0.0.1:7861//knowledge_base/download_doc?knowledge_base_name=samples&file_name=test_files%2Ftest.txt) \n\nChatGPT是OpenAI开发的一个大型语言模型，可以提供各种主题的信息，\n# 如何向 ChatGPT 提问以获得高质量答案：提示技巧工程完全指南\n## 介绍\n我很高兴欢迎您阅读我的最新书籍《The Art of Asking ChatGPT for High-Quality Answers: A complete Guide to Prompt Engineering Techniques》。本书是一本全面指南，介绍了各种提示技术，用于从ChatGPT中生成高质量的答案。\n我们将探讨如何使用不同的提示工 程技术来实现不同的目标。ChatGPT是一款最先进的语言模型，能够生成类似人类的文本。然而，理解如何正确地向ChatGPT提问以获得我们所需的高质量输出非常重要。而这正是 本书的目的。\n无论您是普通人、研究人员、开发人员，还是只是想在自己的领域中将ChatGPT作为个人助手的人，本书都是为您编写的。我使用简单易懂的语言，提供实用的解释，并在每个提示技术中提供了示例和提示公式。通过本书，您将学习如何使用提示工程技术来控制ChatGPT的输出，并生成符合您特定需求的文本。\n在整本书中，我们还提供了如何结合不同的提示技术以实现更具体结果的示例。我希望您能像我写作时一样，享受阅读本书并从中获得知识。\n<div style="page\nbreak\nafter:always;"></div>\n## 第一章：Prompt 工程技术简介\n什么是 Prompt 工程？\nPrompt 工程是创建提示或指导像 ChatGPT 这样的语言模型输出的过程。它允许用户控制模型的输出并生成符合其特定需求的文本。\n\n', '出处 [3] [test_files/test.txt](http://127.0.0.1:7861//knowledge_base/download_doc?knowledge_base_name=samples&file_name=test_files%2Ftest.txt) \n\nPrompt 公式是提示的特定格式，通常由三个主要元素组成：**\n任务：对提示要求模型生成的内容进行清晰而简洁的陈述。\n指令：在生成文本时模型应遵循的指令。\n角色：模型在生成文本时应扮演的角色。\n在本书中，我们将探讨可用于 ChatGPT 的各种 Prompt 工程技术。我们将讨论不同类型的提示，以及如何使用它们实现您想要的特定目标。\n<div style="page\nbreak\nafter:always;"></div>\n## 第二章：指令提示技术\n现在，让我们开始探索“指令提示技术”，以及如何使用它从ChatGPT中生成高质量的文本。\n 指令提示技术是通过为模型提供具体指令来引导ChatGPT的输出的一种方法。这种技术对于确保输出相关和高质量非常有用。\n要使用指令提示技术，您需要为模型提供清晰简洁的任务，以及具体的指令以供模型遵循。\n例如，如果您正在生成客户服务响应，您将提供任务，例如“生成响应客户查询”的指令，例如“响应应该专业且提供准确的信息”。\n 提示公式：“按照以下指示生成[任务]：[指令]”\n示例：\n生成客户服务响应：**\n任务：生成响应客户查询\n指令：响应应该专业且提供准确的信息\n提示公式：“按照以下 指示生成专业且准确的客户查询响应：响应应该专业且提供准确的信息。”\n生成法律文件：**\n任务：生成法律文件\n指令：文件应符合相关法律法规\n提示公式：“按照以下 指示生成符合相关法律法规的法律文件：文件应符合相关法律法规。”\n使用指令提示技术时，重要的是要记住指令应该清晰具体。这将有助于确保输出相关和高质量。可以将指 令提示技术与下一章节中解释的“角色提示”和“种子词提示”相结合，以增强ChatGPT的输出。\n\n'])
+    ```
+
+- 文件对话
+    ```python3
+    # knowledge_id 为 /knowledge_base/upload_temp_docs 的返回值
+    base_url = "http://127.0.0.1:7861/knowledge_base/temp_kb/{knowledge_id}"
+    data = {
+        "model": "qwen2-instruct",
+        "messages": [
+            {"role": "user", "content": "你好"},
+            {"role": "assistant", "content": "你好，我是人工智能大模型"},
+            {"role": "user", "content": "如何高质量提问？"},
+        ],
+        "stream": True,
+        "temperature": 0.7,
+        "extra_body": {
+          "top_k": 3,
+          "score_threshold": 2.0,
+          "return_direct": True,
+        },
+    }
+
+    import openai
+    client = openai.Client(base_url=base_url, api_key="EMPTY")
+    resp = client.chat.completions.create(**data)
+    for r in resp:
+        print(r)
+    ```
+
+- 搜索引擎问答
+    ```python3
+    engine_name = "bing" # 可选值：bing, duckduckgo, metaphor, searx
+    base_url = f"http://127.0.0.1:7861/knowledge_base/search_engine/{engine_name}"
+    data = {
+        "model": "qwen2-instruct",
+        "messages": [
+            {"role": "user", "content": "你好"},
+            {"role": "assistant", "content": "你好，我是人工智能大模型"},
+            {"role": "user", "content": "如何高质量提问？"},
+        ],
+        "stream": True,
+        "temperature": 0.7,
+        "extra_body": {
+          "top_k": 3,
+          "score_threshold": 2.0,
+          "return_direct": True,
+        },
+    }
+
+    import openai
+    client = openai.Client(base_url=base_url, api_key="EMPTY")
+    resp = client.chat.completions.create(**data)
+    for r in resp:
+        print(r)
     ```

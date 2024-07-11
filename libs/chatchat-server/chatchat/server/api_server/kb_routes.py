@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Literal
 
 from fastapi import APIRouter, Request
 
@@ -33,17 +33,22 @@ kb_router = APIRouter(prefix="/knowledge_base", tags=["Knowledge Base Management
 
 
 @kb_router.post(
-    "/chat/completions", summary="知识库对话，openai 兼容，参数与 /chat/kb_chat 一致"
+    "/{mode}/{param}/chat/completions", summary="知识库对话，openai 兼容，参数与 /chat/kb_chat 一致"
 )
-async def kb_chat_endpoint(body: OpenAIChatInput, request: Request):
+async def kb_chat_endpoint(
+    mode: Literal["local_kb", "temp_kb", "search_engine"],
+    param: str,
+    body: OpenAIChatInput,
+    request: Request,
+):
     # import rich
     # rich.print(body)
 
     extra = body.model_extra
     ret = await kb_chat(
         query=body.messages[-1]["content"],
-        mode=extra.get("mode", "local_kb"),
-        kb_name=extra.get("kb_name"),
+        mode=mode,
+        kb_name=param,
         top_k=extra.get("top_k", Settings.kb_settings.VECTOR_SEARCH_TOP_K),
         score_threshold=extra.get("score_threshold", Settings.kb_settings.SCORE_THRESHOLD),
         history=body.messages[:-1],
