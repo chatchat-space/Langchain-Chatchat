@@ -190,8 +190,8 @@ def get_default_embedding():
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
         return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
     else:
-        logger.warning(f"default llm model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in available "
-                       f"embeddings, using {available_embeddings[0]} instead")
+        logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
+                       f"available embeddings, using {available_embeddings[0]} instead")
         return available_embeddings[0]
 
 
