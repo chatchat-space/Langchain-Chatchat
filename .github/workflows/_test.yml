@@ -10,7 +10,7 @@ on:
       chatchat-location:
         required: false
         type: string
-        description: "Relative path to the langchain library folder"
+        description: "Relative path to the chatchat library folder"
 
 env:
   POETRY_VERSION: "1.7.1"
@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: poetry install --with test
 
-      - name: Install langchain editable
+      - name: Install chatchat editable
         working-directory: ${{ inputs.working-directory }}
         if: ${{ inputs.chatchat-location }}
         env:
