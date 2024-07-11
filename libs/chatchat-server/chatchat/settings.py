@@ -542,10 +542,6 @@ class ToolSettings(BaseFileSettings):
         "use": False,
     }
 
-    shell: dict = {
-        "use": False,
-    }
-
     weather_check: dict = {
         "use": False,
         "api_key": "",
