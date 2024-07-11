@@ -6,13 +6,8 @@ on:
       working-directory:
         required: true
         type: string
-        default: './'
-        description: "From which folder this pipeline executes"
-      chatchat-location:
-        required: false
-        type: string
         default: './libs/chatchat-server'
-        description: "Relative path to the chatchat library folder"
+        description: "From which folder this pipeline executes"
 
 env:
   POETRY_VERSION: "1.7.1"
@@ -44,17 +39,10 @@ jobs:
           working-directory: ${{ inputs.working-directory }}
           cache-key: core
 
-      - name: Install dependencies
-        shell: bash
-        run: poetry install --with test
-
       - name: Install chatchat editable
         working-directory: ${{ inputs.working-directory }}
-        if: ${{ inputs.chatchat-location }}
-        env:
-          CHATCHAT_LOCATION: ${{ inputs.chatchat-location }}
-        run: |
-          poetry run pip install -e "$CHATCHAT_LOCATION"
+        shell: bash
+        run: poetry install --with test
 
       - name: Run core tests
         shell: bash
