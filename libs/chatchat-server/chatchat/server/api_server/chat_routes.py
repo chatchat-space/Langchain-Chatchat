@@ -38,8 +38,6 @@ chat_router.post(
 
 chat_router.post("/file_chat", summary="文件对话")(file_chat)
 
-# 定义全局model信息，用于给Text2Sql中的get_ChatOpenAI提供model_name
-global_model_name = None
 
 
 @chat_router.post("/chat/completions", summary="兼容 openai 的统一 chat 接口")
@@ -71,8 +69,6 @@ async def chat_completions(
     for key in list(extra):
         delattr(body, key)
 
-    global global_model_name
-    global_model_name = body.model
     # check tools & tool_choice in request body
     if isinstance(body.tool_choice, str):
         if t := get_tool(body.tool_choice):
