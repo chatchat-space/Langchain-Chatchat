@@ -92,7 +92,7 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
 
     def _load_config(self):
         try:
-            with open(self.workspace_config, "r") as f:
+            with open(self.workspace_config, "r", encoding="utf-8") as f:
                 return json.loads(f.read())
         except FileNotFoundError:
             return None
@@ -120,7 +120,7 @@ class ConfigWorkSpace(Generic[CF, F], ABC):
     def store_config(self):
         logger.info("Store workspace config.")
         _load_config = self._load_config()
-        with open(self.workspace_config, "w") as f:
+        with open(self.workspace_config, "w", encoding="utf-8")as f:
             config_json = self.get_config().to_dict()
 
             if _load_config is None:
