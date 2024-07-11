@@ -27,7 +27,7 @@ class ConfigKb(core_config.Config):
     VECTOR_SEARCH_TOP_K: Optional[int] = None
     """知识库匹配向量数量"""
     SCORE_THRESHOLD: Optional[float] = None
-    """知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右"""
+    """知识库匹配相关度阈值，取值范围在0-1之间，SCORE越大，相关度越高，取到0相当于不筛选，建议设置在0.5左右"""
     DEFAULT_SEARCH_ENGINE: Optional[str] = None
     """默认搜索引擎。可选：bing, duckduckgo, metaphor"""
     SEARCH_ENGINE_TOP_K: Optional[int] = None
@@ -90,7 +90,7 @@ class ConfigKbFactory(core_config.ConfigFactory[ConfigKb]):
         # 知识库匹配向量数量
         self.VECTOR_SEARCH_TOP_K = 3
 
-        # 知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右
+        # 知识库匹配相关度阈值，取值范围在0-1之间，SCORE越大，相关度越高，取到0相当于不筛选，建议设置在0.5左右
         self.SCORE_THRESHOLD = 1
 
         # 默认搜索引擎。可选：bing, duckduckgo, metaphor
