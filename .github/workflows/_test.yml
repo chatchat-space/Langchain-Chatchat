@@ -50,10 +50,10 @@ jobs:
           make test
 
 
-      - name: Remove Test Untracked files
+      - name: Remove chatchat Test Untracked files
+        working-directory: ${{ inputs.working-directory }}
         run: |
-          rm -rf \
-            Langchain-Chatchat/libs/chatchat-server/tests/unit_tests/config/chatchat
+          rm -rf tests/unit_tests/config/chatchat/
 
       - name: Ensure the tests did not create any additional files
         shell: bash
