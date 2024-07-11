@@ -628,7 +628,7 @@ class ToolSettings(BaseFileSettings):
     amap: dict = {
         "use": False,
         "api_key": "高德地图 API KEY",
-    },
+    }
     '''高德地图、天气相关工具配置项。'''
 
     text2promql: dict = {
