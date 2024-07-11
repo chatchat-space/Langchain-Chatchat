@@ -229,6 +229,7 @@ def kb_chat(api: ApiRequest):
             text += d.choices[0].delta.content or ""
             chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
         chat_box.update_msg(text, streaming=False)
+        # TODO: 搜索未配置API KEY时产生报错
 
     now = datetime.now()
     with tabs[1]:
