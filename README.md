@@ -288,6 +288,11 @@ chatchat start -a
 
 > </details>
 
+### 其它配置
+
+1. 数据库对话配置请移步这里 [数据库对话配置说明](docs/install/README_text2sql.md)
+
+
 ### 源码安装部署/开发部署
 
 源码安装部署请参考 [开发指南](docs/contributing/README_dev.md)
