@@ -15,11 +15,11 @@ from chatchat.server.agent.agent_factory.glm3_agent import (
 
 
 def agents_registry(
-    llm: BaseLanguageModel,
-    tools: Sequence[BaseTool] = [],
-    callbacks: List[BaseCallbackHandler] = [],
-    prompt: str = None,
-    verbose: bool = False,
+        llm: BaseLanguageModel,
+        tools: Sequence[BaseTool] = [],
+        callbacks: List[BaseCallbackHandler] = [],
+        prompt: str = None,
+        verbose: bool = False,
 ):
     # llm.callbacks = callbacks
     llm.streaming = False  # qwen agent not support streaming

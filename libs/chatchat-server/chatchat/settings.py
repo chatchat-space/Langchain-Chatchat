@@ -145,10 +145,10 @@ class KBSettings(BaseFileSettings):
     CACHED_MEMO_VS_NUM: int = 10
     """缓存临时向量库数量（针对FAISS），用于文件对话"""
 
-    CHUNK_SIZE: int = 250
+    CHUNK_SIZE: int = 750
     """知识库中单段文本长度(不适用MarkdownHeaderTextSplitter)"""
 
-    OVERLAP_SIZE: int = 50
+    OVERLAP_SIZE: int = 150
     """知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)"""
 
     VECTOR_SEARCH_TOP_K: int = 3 # TODO: 与 tool 配置项重复
@@ -157,7 +157,7 @@ class KBSettings(BaseFileSettings):
     SCORE_THRESHOLD: float = 2.0
     """知识库匹配相关度阈值，取值范围在0-2之间，SCORE越小，相关度越高，取到2相当于不筛选，建议设置在0.5左右"""
 
-    DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor"] = "duckduckgo"
+    DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor", "searx"] = "duckduckgo"
     """默认搜索引擎"""
 
     SEARCH_ENGINE_TOP_K: int = 3
@@ -310,7 +310,7 @@ class ApiModelSettings(BaseFileSettings):
     DEFAULT_LLM_MODEL: str = "glm4-chat"
     """默认选用的 LLM 名称"""
 
-    DEFAULT_EMBEDDING_MODEL: str = "bge-large-zh-v1.5"
+    DEFAULT_EMBEDDING_MODEL: str = "bge-m3"
     """默认选用的 Embedding 名称"""
 
     Agent_MODEL: str = "" # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
@@ -327,10 +327,9 @@ class ApiModelSettings(BaseFileSettings):
 
     SUPPORT_AGENT_MODELS: t.List[str] = [
             "chatglm3-6b",
+            "glm-4",
             "openai-api",
-            "Qwen-14B-Chat",
-            "Qwen-7B-Chat",
-            "qwen-turbo",
+            "Qwen-2",
             "qwen2-instruct",
             "gpt-3.5-turbo",
             "gpt-4o",
@@ -492,9 +491,7 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-
-_default_tool_settings = {
-    "search_local_knowledgebase": {
+    search_local_knowledgebase: dict = {
         "use": False,
         "top_k": 3,
         "score_threshold": 2.0,
@@ -507,82 +504,94 @@ _default_tool_settings = {
             "{{ question }}\n"
             "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
         },
-    },
-    "search_internet": {
+    }
+    '''本地知识库工具配置项'''
+
+    search_internet: dict = {
         "use": False,
         "search_engine_name": "duckduckgo",
         "search_engine_config": {
             "bing": {
-                "result_len": 3,
                 "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
                 "bing_key": "",
             },
             "metaphor": {
-                "result_len": 3,
                 "metaphor_api_key": "",
                 "split_result": False,
                 "chunk_size": 500,
                 "chunk_overlap": 0,
             },
-            "duckduckgo": {"result_len": 3},
+            "duckduckgo": {},
+            "searx": {
+                "host": "",
+                "engines": [],
+                "categories": [],
+            }
         },
-        "top_k": 10,
+        "top_k": 5,
         "verbose": "Origin",
         "conclude_prompt": "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
         "</指令>\n<已知信息>{{ context }}</已知信息>\n"
         "<问题>\n"
         "{{ question }}\n"
         "</问题>\n",
-    },
-    "arxiv": {
+    }
+    '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
+
+    arxiv: dict = {
         "use": False,
-    },
-    "shell": {
+    }
+
+    weather_check: dict = {
         "use": False,
-    },
-    "weather_check": {
+        "api_key": "",
+    }
+    '''心知天气（https://www.seniverse.com/）工具配置项'''
+
+    search_youtube: dict = {
         "use": False,
-        "api_key": "S8vrB4U_-c5mvAMiK",
-    },
-    "search_youtube": {
-        "use": False,
-    },
-    "wolfram": {
+    }
+
+    wolfram: dict = {
         "use": False,
         "appid": "",
-    },
-    "calculate": {
+    }
+
+    calculate: dict = {
         "use": False,
-    },
-    "vqa_processor": {
+    }
+    '''numexpr 数学计算工具配置项'''
+
+    vqa_processor: dict = {
         "use": False,
         "model_path": "your model path",
         "tokenizer_path": "your tokenizer path",
         "device": "cuda:1",
-    },
-    "aqa_processor": {
+    }
+    '''图片对话工具配置项。该工具依赖 torch，后续将删除。现在 WEBUI 已经支持图片对话功能。'''
+
+    aqa_processor: dict = {
         "use": False,
         "model_path": "your model path",
         "tokenizer_path": "yout tokenizer path",
         "device": "cuda:2",
-    },
-    "text2images": {
+    }
+    '''音频对话工具配置项。该工具依赖 torch，后续将删除。'''
+
+    text2images: dict = {
         "use": False,
         "model": "sd-turbo",
         "size": "256*256",
-    },
-    # text2sql使用建议
-    # 1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
-    # 2、生产环境中，对于查询操作，由于不确定查询效率，推荐数据库采用主从数据库架构，让text2sql连接从数据库，防止可能的慢查询影响主业务；
-    # 3、对于写操作应保持谨慎，如不需要写操作，设置read_only为True,最好再从数据库层面收回数据库用户的写权限，防止用户通过自然语言对数据库进行修改操作；
-    # 4、text2sql与大模型在意图理解、sql转换等方面的能力有关，可切换不同大模型进行测试；
-    # 5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
-    # 6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
-    "text2sql": {
+    }
+    '''图片生成工具配置项。model 必须是在 model_settings.yaml/MODEL_PLATFORMS 中配置过的。'''
+
+    text2sql: dict = {
+        # 该工具需单独指定使用的大模型，与用户前端选择使用的模型无关
+        "model_name": "qwen-plus",
         "use": False,
         # SQLAlchemy连接字符串，支持的数据库有：
         # crate、duckdb、googlesql、mssql、mysql、mariadb、oracle、postgresql、sqlite、clickhouse、prestodb
-        # 不同的数据库请查询SQLAlchemy，修改sqlalchemy_connect_str，配置对应的数据库连接，如sqlite为sqlite:///数据库文件路径，下面示例为mysql
+        # 不同的数据库请查阅SQLAlchemy用法，修改sqlalchemy_connect_str，配置对应的数据库连接，如sqlite为sqlite:///数据库文件路径，下面示例为mysql
         # 如提示缺少对应数据库的驱动，请自行通过poetry安装
         "sqlalchemy_connect_str": "mysql+pymysql://用户名:密码@主机地址/数据库名称",
         # 务必评估是否需要开启read_only,开启后会对sql语句进行检查，请确认text2sql.py中的intercept_sql拦截器是否满足你使用的数据库只读要求
@@ -598,19 +607,26 @@ _default_tool_settings = {
         "table_comments": {
             # 如果出现大模型选错表的情况，可尝试根据实际情况填写表名和说明
             # "tableA":"这是一个用户表，存储了用户的基本信息",
-            # "tanleB":"角色表",
+            # "tableB":"角色表",
         },
-    },
-    "amap": {
+    }
+    '''
+    text2sql使用建议
+    1、因大模型生成的sql可能与预期有偏差，请务必在测试环境中进行充分测试、评估；
+    2、生产环境中，对于查询操作，由于不确定查询效率，推荐数据库采用主从数据库架构，让text2sql连接从数据库，防止可能的慢查询影响主业务；
+    3、对于写操作应保持谨慎，如不需要写操作，设置read_only为True,最好再从数据库层面收回数据库用户的写权限，防止用户通过自然语言对数据库进行修改操作；
+    4、text2sql与大模型在意图理解、sql转换等方面的能力有关，可切换不同大模型进行测试；
+    5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
+    6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
+    '''
+  
+    amap: dict = {
         "use": False,
         "api_key": "高德地图 API KEY",
-    },
+    }
+    '''高德地图、天气相关工具配置项。'''
 
-    # text2promql 使用建议
-    # 1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
-    # 2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
-    # 3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
-    "text2promql": {
+    text2promql: dict = {
         "use": False,
         # <your_prometheus_ip>:<your_prometheus_port>
         "prometheus_endpoint": "http://127.0.0.1:9090",
@@ -618,8 +634,13 @@ _default_tool_settings = {
         "username": "",
         # <your_prometheus_password>
         "password": "",
-    },
-}
+    }
+    '''
+    text2promql 使用建议
+    1、因大模型生成的 promql 可能与预期有偏差, 请务必在测试环境中进行充分测试、评估;
+    2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
+    3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
+    '''
 
 
 class PromptSettings(BaseFileSettings):
@@ -652,15 +673,21 @@ class PromptSettings(BaseFileSettings):
             "Human: {{input}}\n"
             "AI:"
             ),
-        "rag": (
+    }
+    '''普通 LLM 用模板'''
+
+    rag: dict = {
+        "default": (
             "【指令】根据已知信息，简洁和专业的来回答问题。"
             "如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。\n\n"
             "【已知信息】{{context}}\n\n"
             "【问题】{{question}}\n"
             ),
-        "rag_default": "{{question}}",
+        "empty": (
+            "请你回答我的问题:\n"
+            "{{question}}"
+        ),
     }
-    '''普通 LLM 用模板'''
 
     action_model: dict = {
         "GPT-4": (
@@ -777,7 +804,7 @@ class SettingsContainer:
     basic_settings: BasicSettings = settings_property(BasicSettings())
     kb_settings: KBSettings = settings_property(KBSettings())
     model_settings: ApiModelSettings = settings_property(ApiModelSettings())
-    tool_settings: ToolSettings = settings_property(ToolSettings(**_default_tool_settings))
+    tool_settings: ToolSettings = settings_property(ToolSettings())
     prompt_settings: PromptSettings = settings_property(PromptSettings())
 
     def createl_all_templates(self):
@@ -787,7 +814,7 @@ class SettingsContainer:
             "MODEL_PLATFORMS": {"model_obj": PlatformConfig(),
                                 "is_entire_comment": True}},
             write_file=True)
-        self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings(**_default_tool_settings))
+        self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings())
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 
     def set_auto_reload(self, flag: bool=True):

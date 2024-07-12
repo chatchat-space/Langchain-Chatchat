@@ -157,10 +157,12 @@ class ESKBService(KBService):
                             kb_file.filepath
                         )
                     }
-                }
+                },
+                "track_total_hits": True,
             }
-            # 注意设置size，默认返回10个。
-            search_results = self.es_client_python.search(body=query, size=50)
+            # 注意设置size，默认返回10个，es检索设置track_total_hits为True返回数据库中真实的size。
+            size = self.es_client_python.search(body=query)["hits"]["total"]["value"]
+            search_results = self.es_client_python.search(body=query, size=size)
             delete_list = [hit["_id"] for hit in search_results["hits"]["hits"]]
             if len(delete_list) == 0:
                 return None
