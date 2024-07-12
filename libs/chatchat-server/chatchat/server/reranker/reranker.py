@@ -1,77 +1,77 @@
-from typing import Any, List, Optional, Sequence
-import torch
-from sentence_transformers import CrossEncoder
-from transformers import AutoTokenizer
-from langchain_core.documents import Document
-from langchain.callbacks.manager import Callbacks
-from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
-from llama_index.legacy.bridge.pydantic import Field, PrivateAttr
-from server.utils import embedding_device
-from configs import (LLM_MODELS,
-                     VECTOR_SEARCH_TOP_K,
-                     SCORE_THRESHOLD,
-                     TEMPERATURE,
-                     USE_RERANKER,
-                     RERANKER_MODEL,
-                     RERANKER_MAX_LENGTH,
-                     MODEL_PATH)
-class LangchainReranker(BaseDocumentCompressor):
-    """Document compressor that uses `Cohere Rerank API`."""
-    model_name_or_path: str = Field()
-    _model: Any = PrivateAttr()
-    top_n: int = Field()
-    device: str = Field()
-    max_length: int = Field()
-    batch_size: int = Field()
-    num_workers: int = Field()
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from chatchat.settings import Settings
 
-    def __init__(
-        self,
-        model_name_or_path: str,
-        top_n: int = 3,
-        device: str = "cuda",
-        max_length: int = 1024,
-        batch_size: int = 32,
-        num_workers: int = 0,
-    ):
-        self._model = CrossEncoder(model_name=model_name_or_path, device=device)
-        super().__init__(
-            top_n=top_n,
-            model_name_or_path=model_name_or_path,
-            device=device,
-            max_length=max_length,
-            batch_size=batch_size,
-            num_workers=num_workers,
-        )
-    def compress_documents(
-        self,
-        documents: List[Document],
-        query: str,
-        callbacks: Optional[Callbacks] = None,
-    ) -> Sequence[Document]:
-        if len(documents) == 0:
-            return []
-        
-        _docs = [d[0].page_content for d in documents]
-        sentence_pairs = [[query, _doc] for _doc in _docs]
-        # 批量处理文本数据，每个批次包含多个句子对
-        batch_results = []
-        for batch in self._get_batches(sentence_pairs, self.batch_size):
-            # CrossEncoder的predict方法可以接受列表形式的句子对，并自动处理批次
-            scores = self._model.predict(batch)
-            batch_results.extend(scores)
-        
-        # 根据得分选择top_n个文档
-        scores = torch.tensor(batch_results)
-        top_k = self.top_n if self.top_n < len(scores) else len(scores)
-        values, indices = scores.topk(top_k)
+from utils import logger
+import requests
+import numpy as np
+import json
+def reranker_passage_local(pairs: list[list[str]],topk=1,return_obj="score"):
+    """
+    用于本地rerank passage
+    pairs: list[list[str]]: 传入的passage对
+    return: list[str]: 返回的rerank结果
+    """
+    from FlagEmbedding import FlagReranker
+    reranker_model = FlagReranker(Settings.model_settings.RERANKER_CONFIG["local_path"], 
+                                  use_fp16=True,
+                                  device=Settings.model_settings.RERANKER_CONFIG['device']
+                                  )
+    scores = reranker_model.compute_score(pairs,batch_size=32)
+    if return_obj == "score":
 
-        final_results = []
-        for index in indices:
-            doc = documents[index]
-            doc[0].metadata["relevance_score"] = values[index].item()
-            final_results.append(doc)
-        return final_results
+        return scores
+    if return_obj == "index":
+        sorted_index = np.argsort(scores)[::-1][:topk]
 
-    def _get_batches(self, data, batch_size):
-        return [data[i:i + batch_size] for i in range(0, len(data), batch_size)]
+        return sorted_index
+    else:
+        result = [pairs[i][1] for i in sorted_index]
+        return result
+
+
+def reranker_passage_api(pairs,topk=1,return_obj="score"):
+    """
+    用于调用reranker api来对passage进行rerank
+    pairs: list[list[str]]: 传入的passage对
+    return_topk: int: 返回的topk
+    return: list[str]: 返回的rerank结果
+    """
+    host = Settings.basic_settings.DEFAULT_BIND_HOST
+    port = Settings.model_settings.RERANKER_CONFIG["port"]
+    url = f'http://{host}:{port}/v1/reranker'
+    headers = {'Content-Type': 'application/json'}
+    json_data = {"input": pairs}
+    try:
+        response = requests.post(
+                        url=url,
+                        headers=headers,
+                        json=json_data
+                        )
+        if response.status_code == 200:
+            scores = [i['score'] for i in  response.json()['data'] ] 
+            if return_obj == "score":
+
+                return scores
+            if return_obj == "index":
+                sorted_index = np.argsort(scores)[::-1][:topk]
+
+                return sorted_index
+            else:
+                result = [pairs[i][1] for i in sorted_index]
+                return result
+    
+    except Exception as e:
+        logger.error("调用reranker api失败.")
+        logger.error(e)
+        # return rerank_passage_local(pairs)
+    
+if __name__ == '__main__':
+    pairs = [
+    ["北京是中国的首都","北京是中国的首都"]
+        ]
+
+    print(reranker_passage_api(pairs))
+    print("done")
