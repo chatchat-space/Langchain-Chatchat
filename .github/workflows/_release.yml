@@ -91,7 +91,7 @@ jobs:
       # maximally sensitive to catching breakage.
       #
       # For example, here's a way that caching can cause a falsely-passing test:
-      # - Make the langchain package manifest no longer list a dependency package
+      # - Make the chatchat package manifest no longer list a dependency package
       #   as a requirement. This means it won't be installed by `pip install`,
       #   and attempting to use it would cause a crash.
       # - That dependency used to be required, so it may have been cached.

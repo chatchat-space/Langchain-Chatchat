@@ -1,0 +1,85 @@
+name: test
+
+on:
+  workflow_dispatch:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+        default: './libs/chatchat-server'
+        description: "From which folder this pipeline executes"
+
+env:
+  POETRY_VERSION: "1.7.1"
+
+jobs:
+  build:
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    name: "make test #${{ matrix.os }} Python ${{ matrix.python-version }}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }} + Poetry ${{ env.POETRY_VERSION }}
+        uses: "./.github/actions/poetry_setup"
+        with:
+          python-version: ${{ matrix.python-version }}
+          poetry-version: ${{ env.POETRY_VERSION }}
+          working-directory: ${{ inputs.working-directory }}
+          cache-key: core
+
+      - name: Install chatchat editable
+        working-directory: ${{ inputs.working-directory }}
+        shell: bash
+        run: poetry install --with test
+
+      - name: Run core tests
+        shell: bash
+        run: |
+          make test
+
+      - name: Remove chatchat Test Untracked files (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          if [ -d "tests/unit_tests/config/chatchat/" ]; then
+            rm -rf tests/unit_tests/config/chatchat/
+          fi
+
+      - name: Remove chatchat Test Untracked files (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          if (Test-Path -Path "tests/unit_tests/config/chatchat/") {
+            Remove-Item -Recurse -Force "tests/unit_tests/config/chatchat/"
+          }
+
+      - name: Ensure the tests did not create any additional files (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -eu
+
+          STATUS="$(git status)"
+          echo "$STATUS"
+
+          # grep will exit non-zero if the target message isn't found,
+          # and `set -e` above will cause the step to fail.
+          echo "$STATUS" | grep 'nothing to commit, working tree clean'
+
+      - name: Ensure the tests did not create any additional files (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $STATUS = git status
+          Write-Host $STATUS
+
+          # Select-String will exit non-zero if the target message isn't found.
+          $STATUS | Select-String 'nothing to commit, working tree clean'
