@@ -36,7 +36,7 @@ class MilvusRetriever(VectorStoreRetriever):
                 )
             if score_threshold is not None:
                 docs_and_similarities = [
-                (doc, similarity)
+                doc
                 for doc, similarity in docs_and_similarities
                 if similarity >= score_threshold
             ]
