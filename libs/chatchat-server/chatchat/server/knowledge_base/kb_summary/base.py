@@ -5,7 +5,8 @@ from typing import List
 
 from langchain.docstore.document import Document
 
-from chatchat.configs import DEFAULT_EMBEDDING_MODEL, KB_ROOT_PATH
+from chatchat.settings import Settings
+from chatchat.server.utils import get_default_embedding
 from chatchat.server.db.repository.knowledge_metadata_repository import (
     add_summary_to_db,
     delete_summary_from_db,
@@ -23,7 +24,7 @@ class KBSummaryService(ABC):
     kb_path: str
 
     def __init__(
-        self, knowledge_base_name: str, embed_model: str = DEFAULT_EMBEDDING_MODEL
+        self, knowledge_base_name: str, embed_model: str = get_default_embedding()
     ):
         self.kb_name = knowledge_base_name
         self.embed_model = embed_model
@@ -38,7 +39,7 @@ class KBSummaryService(ABC):
         return os.path.join(self.get_kb_path(), "summary_vector_store")
 
     def get_kb_path(self):
-        return os.path.join(KB_ROOT_PATH, self.kb_name)
+        return os.path.join(Settings.basic_settings.KB_ROOT_PATH, self.kb_name)
 
     def load_vector_store(self) -> ThreadSafeFaiss:
         return kb_faiss_pool.load_vector_store(

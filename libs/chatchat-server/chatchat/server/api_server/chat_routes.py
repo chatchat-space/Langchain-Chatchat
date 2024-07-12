@@ -6,8 +6,9 @@ from fastapi import APIRouter, Request
 from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
-from chatchat.server.api_server.api_schemas import AgentStatus, MsgType, OpenAIChatInput
+from chatchat.server.api_server.api_schemas import OpenAIChatInput
 from chatchat.server.chat.chat import chat
+from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
 from chatchat.server.db.repository import add_message_to_db
@@ -17,11 +18,12 @@ from chatchat.server.utils import (
     get_tool,
     get_tool_config,
 )
-from chatchat.configs import (
-    MAX_TOKENS,
-)
-
+from chatchat.settings import Settings
+from chatchat.utils import build_logger
 from .openai_routes import openai_request, OpenAIChatOutput
+
+
+logger = build_logger()
 
 chat_router = APIRouter(prefix="/chat", tags=["ChatChat 对话"])
 
@@ -35,10 +37,10 @@ chat_router.post(
     summary="返回llm模型对话评分",
 )(chat_feedback)
 
+
+chat_router.post("/kb_chat", summary="知识库对话")(kb_chat)
 chat_router.post("/file_chat", summary="文件对话")(file_chat)
 
-# 定义全局model信息，用于给Text2Sql中的get_ChatOpenAI提供model_name
-global_model_name = None
 
 
 @chat_router.post("/chat/completions", summary="兼容 openai 的统一 chat 接口")
@@ -63,15 +65,13 @@ async def chat_completions(
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
     if body.max_tokens == None:
-        body.max_tokens = MAX_TOKENS
+        body.max_tokens = Settings.model_settings.MAX_TOKENS
 
     client = get_OpenAIClient(model_name=body.model, is_async=True)
     extra = {**body.model_extra} or {}
     for key in list(extra):
         delattr(body, key)
 
-    global global_model_name
-    global_model_name = body.model
     # check tools & tool_choice in request body
     if isinstance(body.tool_choice, str):
         if t := get_tool(body.tool_choice):
@@ -128,6 +128,7 @@ async def chat_completions(
             extra_json = {
                 "message_id": message_id,
                 "status": None,
+                "model": body.model,
             }
             header = [
                 {
@@ -179,15 +180,20 @@ async def chat_completions(
         )
         return result
     else:  # LLM chat directly
-        message_id = (
-            add_message_to_db(
-                chat_type="llm_chat",
-                query=body.messages[-1]["content"],
-                conversation_id=conversation_id,
+        try: # query is complex object that unable add to db when using qwen-vl-chat 
+            message_id = (
+                add_message_to_db(
+                    chat_type="llm_chat",
+                    query=body.messages[-1]["content"],
+                    conversation_id=conversation_id,
+                )
+                if conversation_id
+                else None
             )
-            if conversation_id
-            else None
-        )
+        except Exception as e:
+            logger.error(f"failed to add message to db")
+            message_id = None
+
         extra_json = {
             "message_id": message_id,
             "status": None,

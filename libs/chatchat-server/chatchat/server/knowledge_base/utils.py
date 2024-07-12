@@ -1,9 +1,9 @@
 import importlib
 import json
-import logging
 import os
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlencode
 from typing import Dict, Generator, List, Tuple, Union
 
 import chardet
@@ -12,21 +12,15 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import MarkdownHeaderTextSplitter, TextSplitter
 from langchain_community.document_loaders import JSONLoader, TextLoader
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    KB_ROOT_PATH,
-    OVERLAP_SIZE,
-    TEXT_SPLITTER_NAME,
-    ZH_TITLE_ENHANCE,
-    log_verbose,
-    text_splitter_dict,
-)
+from chatchat.settings import Settings
 from chatchat.server.file_rag.text_splitter import (
     zh_title_enhance as func_zh_title_enhance,
 )
 from chatchat.server.utils import run_in_process_pool, run_in_thread_pool
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
@@ -37,7 +31,7 @@ def validate_kb_name(knowledge_base_id: str) -> bool:
 
 
 def get_kb_path(knowledge_base_name: str):
-    return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+    return os.path.join(Settings.basic_settings.KB_ROOT_PATH, knowledge_base_name)
 
 
 def get_doc_path(knowledge_base_name: str):
@@ -58,8 +52,8 @@ def get_file_path(knowledge_base_name: str, doc_name: str):
 def list_kbs_from_folder():
     return [
         f
-        for f in os.listdir(KB_ROOT_PATH)
-        if os.path.isdir(os.path.join(KB_ROOT_PATH, f))
+        for f in os.listdir(Settings.basic_settings.KB_ROOT_PATH)
+        if os.path.isdir(os.path.join(Settings.basic_settings.KB_ROOT_PATH, f))
     ]
 
 
@@ -110,7 +104,7 @@ LOADER_DICT = {
     "CSVLoader": [".csv"],
     # "FilteredCSVLoader": [".csv"], 如果使用自定义分割csv
     "RapidOCRPDFLoader": [".pdf"],
-    "RapidOCRDocLoader": [".docx", ".doc"],
+    "RapidOCRDocLoader": [".docx"],
     "RapidOCRPPTLoader": [
         ".ppt",
         ".pptx",
@@ -138,7 +132,7 @@ LOADER_DICT = {
     "SRTLoader": [".srt"],
     "TomlLoader": [".toml"],
     "UnstructuredTSVLoader": [".tsv"],
-    "UnstructuredWordDocumentLoader": [".docx", ".doc"],
+    "UnstructuredWordDocumentLoader": [".docx"],
     "UnstructuredXMLLoader": [".xml"],
     "UnstructuredPowerPointLoader": [".ppt", ".pptx"],
     "EverNoteLoader": [".enex"],
@@ -195,9 +189,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
         DocumentLoader = getattr(document_loaders_module, loader_name)
     except Exception as e:
         msg = f"为文件{file_path}查找加载器{loader_name}时出错：{e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         document_loaders_module = importlib.import_module(
             "langchain_community.document_loaders"
         )
@@ -235,7 +227,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
         if (
             splitter_name == "MarkdownHeaderTextSplitter"
         ):  # MarkdownHeaderTextSplitter特殊判定
-            headers_to_split_on = text_splitter_dict[splitter_name][
+            headers_to_split_on = Settings.kb_settings.text_splitter_dict[splitter_name][
                 "headers_to_split_on"
             ]
             text_splitter = MarkdownHeaderTextSplitter(
@@ -252,11 +244,11 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                 TextSplitter = getattr(text_splitter_module, splitter_name)
 
             if (
-                text_splitter_dict[splitter_name]["source"] == "tiktoken"
+                Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "tiktoken"
             ):  # 从tiktoken加载
                 try:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
-                        encoding_name=text_splitter_dict[splitter_name][
+                        encoding_name=Settings.kb_settings.text_splitter_dict[splitter_name][
                             "tokenizer_name_or_path"
                         ],
                         pipeline="zh_core_web_sm",
@@ -265,17 +257,17 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                     )
                 except:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
-                        encoding_name=text_splitter_dict[splitter_name][
+                        encoding_name=Settings.kb_settings.text_splitter_dict[splitter_name][
                             "tokenizer_name_or_path"
                         ],
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap,
                     )
             elif (
-                text_splitter_dict[splitter_name]["source"] == "huggingface"
+                Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "huggingface"
             ):  # 从huggingface加载
                 if (
-                    text_splitter_dict[splitter_name]["tokenizer_name_or_path"]
+                    Settings.kb_settings.text_splitter_dict[splitter_name]["tokenizer_name_or_path"]
                     == "gpt2"
                 ):
                     from langchain.text_splitter import CharacterTextSplitter
@@ -286,7 +278,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                     from transformers import AutoTokenizer
 
                     tokenizer = AutoTokenizer.from_pretrained(
-                        text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
+                        Settings.kb_settings.text_splitter_dict[splitter_name]["tokenizer_name_or_path"],
                         trust_remote_code=True,
                     )
                 text_splitter = TextSplitter.from_huggingface_tokenizer(
@@ -337,7 +329,7 @@ class KnowledgeFile:
         self.docs = None
         self.splited_docs = None
         self.document_loader_name = get_LoaderClass(self.ext)
-        self.text_splitter_name = TEXT_SPLITTER_NAME
+        self.text_splitter_name = Settings.kb_settings.TEXT_SPLITTER_NAME
 
     def file2docs(self, refresh: bool = False):
         if self.docs is None or refresh:
@@ -357,10 +349,10 @@ class KnowledgeFile:
     def docs2texts(
         self,
         docs: List[Document] = None,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
         refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
+        chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
         text_splitter: TextSplitter = None,
     ):
         docs = docs or self.file2docs(refresh=refresh)
@@ -389,10 +381,10 @@ class KnowledgeFile:
 
     def file2text(
         self,
-        zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+        zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
         refresh: bool = False,
-        chunk_size: int = CHUNK_SIZE,
-        chunk_overlap: int = OVERLAP_SIZE,
+        chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
         text_splitter: TextSplitter = None,
     ):
         if self.splited_docs is None or refresh:
@@ -424,17 +416,15 @@ def files2docs_in_thread_file2docs(
         return True, (file.kb_name, file.filename, file.file2text(**kwargs))
     except Exception as e:
         msg = f"从文件 {file.kb_name}/{file.filename} 加载文档时出错：{e}"
-        logger.error(
-            f"{e.__class__.__name__}: {msg}", exc_info=e if log_verbose else None
-        )
+        logger.error(f"{e.__class__.__name__}: {msg}")
         return False, (file.kb_name, file.filename, msg)
 
 
 def files2docs_in_thread(
     files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = OVERLAP_SIZE,
-    zh_title_enhance: bool = ZH_TITLE_ENHANCE,
+    chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+    chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
+    zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
 ) -> Generator:
     """
     利用多线程批量将磁盘文件转化成langchain Document.
@@ -467,6 +457,32 @@ def files2docs_in_thread(
         func=files2docs_in_thread_file2docs, params=kwargs_list
     ):
         yield result
+
+
+def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="") -> List[Dict]:
+    '''
+    将知识库检索结果格式化为参考文档的格式
+    '''
+    from chatchat.server.utils import api_address
+    api_base_url = api_base_url or api_address()
+
+    source_documents = []
+    for inum, doc in enumerate(docs):
+        filename = doc.get("metadata", {}).get("source")
+        parameters = urlencode(
+            {
+                "knowledge_base_name": kb_name,
+                "file_name": filename,
+            }
+        )
+        url = (
+            f"{api_base_url}/knowledge_base/download_doc?" + parameters
+        )
+        page_content = doc.get("page_content")
+        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{page_content}\n\n"""
+        source_documents.append(ref)
+    
+    return source_documents
 
 
 if __name__ == "__main__":

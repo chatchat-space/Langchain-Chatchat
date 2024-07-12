@@ -4,7 +4,10 @@ from typing import Any, List, Optional
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-logger = logging.getLogger(__name__)
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def _split_text_with_regex_from_end(

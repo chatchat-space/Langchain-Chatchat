@@ -1,3 +1,2 @@
 def test_sdk_import_unit():
-    from langchain_chatchat.configs import DEFAULT_EMBEDDING_MODEL, MODEL_PLATFORMS
-    from langchain_chatchat.server.utils import is_port_in_use
+    from langchain_chatchat.settings import Settings, XF_MODELS_TYPES

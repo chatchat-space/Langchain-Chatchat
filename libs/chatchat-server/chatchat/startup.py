@@ -8,8 +8,6 @@ import sys
 from contextlib import asynccontextmanager
 from multiprocessing import Process
 
-logger = logging.getLogger()
-
 # 设置numexpr最大线程数，默认为CPU核心数
 try:
     import numexpr
@@ -19,10 +17,15 @@ try:
 except:
     pass
 
-import argparse
+import click
 from typing import Dict, List
 
 from fastapi import FastAPI
+
+from chatchat.utils import build_logger
+
+
+logger = build_logger()
 
 
 def _set_app_event(app: FastAPI, started_event: mp.Event = None):
@@ -34,6 +37,7 @@ def _set_app_event(app: FastAPI, started_event: mp.Event = None):
 
     app.router.lifespan_context = lifespan
 
+
 def run_api_server(
     started_event: mp.Event = None, run_mode: str = None
 ):
@@ -44,21 +48,21 @@ def run_api_server(
         get_timestamp_ms,
     )
 
-    from chatchat.configs import API_SERVER, LOG_PATH, MODEL_PLATFORMS
+    from chatchat.settings import Settings
     from chatchat.server.api_server.server_app import create_app
     from chatchat.server.utils import set_httpx_config
 
-    logger.info(f"Api MODEL_PLATFORMS: {MODEL_PLATFORMS}")
+    logger.info(f"Api MODEL_PLATFORMS: {Settings.model_settings.MODEL_PLATFORMS}")
     set_httpx_config()
     app = create_app(run_mode=run_mode)
     _set_app_event(app, started_event)
 
-    host = API_SERVER["host"]
-    port = API_SERVER["port"]
+    host = Settings.basic_settings.API_SERVER["host"]
+    port = Settings.basic_settings.API_SERVER["port"]
 
     logging_conf = get_config_dict(
         "INFO",
-        get_log_file(log_path=LOG_PATH, sub_dir=f"run_api_server_{get_timestamp_ms()}"),
+        get_log_file(log_path=Settings.basic_settings.LOG_PATH, sub_dir=f"run_api_server_{get_timestamp_ms()}"),
         1024 * 1024 * 1024 * 3,
         1024 * 1024 * 1024 * 3,
     )
@@ -69,22 +73,15 @@ def run_api_server(
 def run_webui(
     started_event: mp.Event = None, run_mode: str = None
 ):
-    import sys
-
-    from chatchat.utils import (
-        get_config_dict,
-        get_log_file,
-        get_timestamp_ms,
-    )
-
-    from chatchat.configs import LOG_PATH, MODEL_PLATFORMS, WEBUI_SERVER
+    from chatchat.settings import Settings
     from chatchat.server.utils import set_httpx_config
+    from chatchat.utils import get_config_dict, get_log_file, get_timestamp_ms
 
-    logger.info(f"Webui MODEL_PLATFORMS: {MODEL_PLATFORMS}")
+    logger.info(f"Webui MODEL_PLATFORMS: {Settings.model_settings.MODEL_PLATFORMS}")
     set_httpx_config()
 
-    host = WEBUI_SERVER["host"]
-    port = WEBUI_SERVER["port"]
+    host = Settings.basic_settings.WEBUI_SERVER["host"]
+    port = Settings.basic_settings.WEBUI_SERVER["port"]
 
     script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui.py")
 
@@ -122,7 +119,7 @@ def run_webui(
         "runner_enforceSerializableSessionState": None,
         "runner_enumCoercion": None,
         "server_folderWatchBlacklist": None,
-        "server_fileWatcherType": None,
+        "server_fileWatcherType": "none",
         "server_headless": None,
         "server_runOnSave": None,
         "server_allowRunOnSave": None,
@@ -166,7 +163,7 @@ def run_webui(
 
     logging_conf = get_config_dict(
         "INFO",
-        get_log_file(log_path=LOG_PATH, sub_dir=f"run_webui_{get_timestamp_ms()}"),
+        get_log_file(log_path=Settings.basic_settings.LOG_PATH, sub_dir=f"run_webui_{get_timestamp_ms()}"),
         1024 * 1024 * 1024 * 3,
         1024 * 1024 * 1024 * 3,
     )
@@ -176,72 +173,32 @@ def run_webui(
     started_event.set()
 
 
-def parse_args() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-a",
-        "--all-webui",
-        action="store_true",
-        help="run api.py and webui.py",
-        dest="all_webui",
-    )
-    parser.add_argument(
-        "--all-api",
-        action="store_true",
-        help="run api.py",
-        dest="all_api",
-    )
-
-    parser.add_argument(
-        "--api",
-        action="store_true",
-        help="run api.py server",
-        dest="api",
-    )
-
-    parser.add_argument(
-        "-w",
-        "--webui",
-        action="store_true",
-        help="run webui.py server",
-        dest="webui",
-    )
-    parser.add_argument(
-        "-i",
-        "--lite",
-        action="store_true",
-        help="以Lite模式运行：仅支持在线API的LLM对话、搜索引擎对话",
-        dest="lite",
-    )
-    args = parser.parse_args()
-    return args, parser
-
-
 def dump_server_info(after_start=False, args=None):
     import platform
 
     import langchain
 
-    from chatchat.configs import DEFAULT_EMBEDDING_MODEL, TEXT_SPLITTER_NAME, VERSION
+    from chatchat import __version__
+    from chatchat.settings import Settings
     from chatchat.server.utils import api_address, webui_address
 
     print("\n")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print(f"操作系统：{platform.platform()}.")
     print(f"python版本：{sys.version}")
-    print(f"项目版本：{VERSION}")
+    print(f"项目版本：{__version__}")
     print(f"langchain版本：{langchain.__version__}")
+    print(f"数据目录：{Settings.CHATCHAT_ROOT}")
     print("\n")
 
-    print(f"当前使用的分词器：{TEXT_SPLITTER_NAME}")
+    print(f"当前使用的分词器：{Settings.kb_settings.TEXT_SPLITTER_NAME}")
 
-    print(f"默认选用的 Embedding 名称： {DEFAULT_EMBEDDING_MODEL}")
+    print(f"默认选用的 Embedding 名称： {Settings.model_settings.DEFAULT_EMBEDDING_MODEL}")
 
     if after_start:
         print("\n")
         print(f"服务端运行信息：")
         if args.api:
-
             print(f"    Chatchat Api Server: {api_address()}")
         if args.webui:
             print(f"    Chatchat WEBUI Server: {webui_address()}")
@@ -249,7 +206,7 @@ def dump_server_info(after_start=False, args=None):
     print("\n")
 
 
-async def start_main_server():
+async def start_main_server(args):
     import signal
     import time
 
@@ -259,12 +216,12 @@ async def start_main_server():
         get_timestamp_ms,
     )
 
-    from chatchat.configs import LOG_PATH
+    from chatchat.settings import Settings
 
     logging_conf = get_config_dict(
         "INFO",
         get_log_file(
-            log_path=LOG_PATH, sub_dir=f"start_main_server_{get_timestamp_ms()}"
+            log_path=Settings.basic_settings.LOG_PATH, sub_dir=f"start_main_server_{get_timestamp_ms()}"
         ),
         1024 * 1024 * 1024 * 3,
         1024 * 1024 * 1024 * 3,
@@ -290,30 +247,15 @@ async def start_main_server():
     manager = mp.Manager()
     run_mode = None
 
-    args, parser = parse_args()
-
-    if args.all_webui:
+    if args.all:
         args.api = True
-        args.api_worker = True
-        args.webui = True
-    elif args.all_api:
-        args.api = True
-        args.api_worker = True
-        args.webui = False
-    elif args.api:
-        args.api = True
-        args.api_worker = False
-        args.webui = False
-    if args.lite:
-        args.api = True
-        args.api_worker = False
         args.webui = True
 
     dump_server_info(args=args)
 
     if len(sys.argv) > 1:
         logger.info(f"正在启动服务：")
-        logger.info(f"如需查看 llm_api 日志，请前往 {LOG_PATH}")
+        logger.info(f"如需查看 llm_api 日志，请前往 {Settings.basic_settings.LOG_PATH}")
 
     processes = {}
 
@@ -346,48 +288,72 @@ async def start_main_server():
         )
         processes["webui"] = process
 
-    if process_count() == 0:
-        parser.print_help()
-    else:
-        try:
-            if p := processes.get("api"):
-                p.start()
-                p.name = f"{p.name} ({p.pid})"
-                api_started.wait()  # 等待api.py启动完成
+    try:
+        if p := processes.get("api"):
+            p.start()
+            p.name = f"{p.name} ({p.pid})"
+            api_started.wait()  # 等待api.py启动完成
 
-            if p := processes.get("webui"):
-                p.start()
-                p.name = f"{p.name} ({p.pid})"
-                webui_started.wait()  # 等待webui.py启动完成
+        if p := processes.get("webui"):
+            p.start()
+            p.name = f"{p.name} ({p.pid})"
+            webui_started.wait()  # 等待webui.py启动完成
 
-            dump_server_info(after_start=True, args=args)
+        dump_server_info(after_start=True, args=args)
 
-            # 等待所有进程退出
-            while processes:
-                for p in processes.values():
-                    p.join(2)
-                    if not p.is_alive():
-                        processes.pop(p.name)
-        except Exception as e:
-            logger.error(e)
-            logger.warning("Caught KeyboardInterrupt! Setting stop event...")
-        finally:
+        # 等待所有进程退出
+        while processes:
             for p in processes.values():
-                logger.warning("Sending SIGKILL to %s", p)
-                # Queues and other inter-process communication primitives can break when
-                # process is killed, but we don't care here
+                p.join(2)
+                if not p.is_alive():
+                    processes.pop(p.name)
+    except Exception as e:
+        logger.error(e)
+        logger.warning("Caught KeyboardInterrupt! Setting stop event...")
+    finally:
+        for p in processes.values():
+            logger.warning("Sending SIGKILL to %s", p)
+            # Queues and other inter-process communication primitives can break when
+            # process is killed, but we don't care here
 
-                if isinstance(p, dict):
-                    for process in p.values():
-                        process.kill()
-                else:
-                    p.kill()
+            if isinstance(p, dict):
+                for process in p.values():
+                    process.kill()
+            else:
+                p.kill()
 
-            for p in processes.values():
-                logger.info("Process status: %s", p)
+        for p in processes.values():
+            logger.info("Process status: %s", p)
 
 
-def main():
+@click.command(help="启动服务")
+@click.option(
+    "-a",
+    "--all",
+    "all",
+    is_flag=True,
+    help="run api.py and webui.py",
+)
+@click.option(
+    "--api",
+    "api",
+    is_flag=True,
+    help="run api.py",
+)
+@click.option(
+    "-w",
+    "--webui",
+    "webui",
+    is_flag=True,
+    help="run webui.py server",
+)
+def main(all, api, webui):
+    class args:
+        ...
+    args.all = all
+    args.api = api
+    args.webui = webui
+
     # 添加这行代码
     cwd = os.getcwd()
     sys.path.append(cwd)
@@ -405,7 +371,7 @@ def main():
             loop = asyncio.new_event_loop()
 
         asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_main_server())
+    loop.run_until_complete(start_main_server(args))
 
 
 if __name__ == "__main__":

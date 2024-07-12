@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from chatchat.configs import KB_INFO
+from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.tools_registry import (
     BaseToolOutput,
     regist_tool,
@@ -15,7 +15,7 @@ template = (
     "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on "
     "this knowledge use this tool. The 'database' should be one of the above [{key}]."
 )
-KB_info_str = "\n".join([f"{key}: {value}" for key, value in KB_INFO.items()])
+KB_info_str = "\n".join([f"{key}: {value}" for key, value in Settings.kb_settings.KB_INFO.items()])
 template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 
