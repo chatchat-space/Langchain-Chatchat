@@ -295,6 +295,11 @@ chatchat start -a
 > 如需通过机器ip 进行访问(如 Linux 系统), 需要到 `basic_settings.yaml` 中将监听地址修改为 0.0.0.0。
 > </details>
 
+### 其它配置
+
+1. 数据库对话配置请移步这里 [数据库对话配置说明](docs/install/README_text2sql.md)
+
+
 ### 源码安装部署/开发部署
 
 源码安装部署请参考 [开发指南](docs/contributing/README_dev.md)
