@@ -2,9 +2,13 @@ from typing import Literal
 
 from fastapi import APIRouter, Body
 
+from chatchat.settings import Settings
 from chatchat.server.utils import get_prompt_template, get_server_configs
 
 server_router = APIRouter(prefix="/server", tags=["Server State"])
+
+
+available_template_types = list(Settings.prompt_settings.model_fields.keys())
 
 
 # 服务器相关接口
@@ -16,8 +20,8 @@ server_router.post(
 
 @server_router.post("/get_prompt_template", summary="获取服务区配置的 prompt 模板")
 def get_server_prompt_template(
-    type: Literal["llm_chat", "knowledge_base_chat"] = Body(
-        "llm_chat", description="模板类型，可选值：llm_chat，knowledge_base_chat"
+    type: str = Body(
+        "llm_model", description="模板类型，可选值：{available_template_types}"
     ),
     name: str = Body("default", description="模板名称"),
 ) -> str:
