@@ -675,6 +675,7 @@ class PromptSettings(BaseFileSettings):
             "{{question}}"
         ),
     }
+    '''RAG 用模板，可用于知识库问答、文件对话、搜索引擎对话'''
 
     action_model: dict = {
         "GPT-4": (

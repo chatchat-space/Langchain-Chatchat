@@ -45,7 +45,7 @@ async def completion(
             local_wrap=True,
         )
 
-        prompt_template = get_prompt_template("completion", prompt_name)
+        prompt_template = get_prompt_template("llm_model", prompt_name)
         prompt = PromptTemplate.from_template(prompt_template, template_format="jinja2")
         chain = LLMChain(prompt=prompt, llm=model)
 
