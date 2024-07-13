@@ -71,8 +71,9 @@ def get_messages_history(
         }
 
     messages = chat_box.filter_history(history_len=history_len, filter=filter)
-    if sys_msg := st.session_state.get("system_message"):
+    if sys_msg := chat_box.context.get("system_message"):
         messages = [{"role": "system", "content": sys_msg}] + messages
+
     return messages
 
 
@@ -165,6 +166,7 @@ def dialogue_page(
 
     # st.write(chat_box.cur_chat_name)
     # st.write(st.session_state)
+    # st.write(chat_box.context)
 
     @st.experimental_dialog("模型配置", width="large")
     def llm_model_setting():

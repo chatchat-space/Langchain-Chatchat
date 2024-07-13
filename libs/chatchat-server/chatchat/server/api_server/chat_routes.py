@@ -60,8 +60,8 @@ async def chat_completions(
     以后还要考虑其它的组合（如文件对话）
     返回与 openai 兼容的 Dict
     """
-    # import rich
-    # rich.print(body)
+    import rich
+    rich.print(body)
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
     if body.max_tokens == None:
