@@ -13,4 +13,4 @@ curl 'http://127.0.0.1:9997/v1/models' \
   -H 'sec-ch-ua: "Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"' \
   -H 'sec-ch-ua-mobile: ?0' \
   -H 'sec-ch-ua-platform: "Linux"' \
-  --data-raw '{"model_uid":"bge-large-zh-v1.5","model_name":"autodl-tmp-bge-large-zh","model_type":"embedding","replica":1,"n_gpu":"auto","worker_ip":null,"gpu_idx":null}'
+  --data-raw '{"model_uid":"bge-large-zh-v1.5","model_name":"autodl-tmp-bge-large-zh","model_type":"embedding","replica":1,"n_gpu":null,"worker_ip":null,"gpu_idx":null}'
