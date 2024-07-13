@@ -266,6 +266,9 @@ class PlatformConfig(MyBaseModel):
     api_key: str = "EMPTY"
     """api key if available"""
 
+    api_proxy: str = ""
+    """API 代理"""
+
     api_concurrencies: int = 5
     """该平台单模型最大并发数"""
 
