@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   xinference:
-    image: xprobe/xinference:v0.12.1
+    image: xprobe/xinference:v0.12.3
     restart: always
     command: xinference-local -H 0.0.0.0
     # ports: # 不使用 host network 时可打开.
