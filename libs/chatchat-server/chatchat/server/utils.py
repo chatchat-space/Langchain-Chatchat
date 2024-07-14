@@ -868,11 +868,6 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
 
 
 def get_tool_config(name: str = None) -> Dict:
-    import importlib
-
-    # TODO 因为使用了变量更新，不支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
     from chatchat.settings import Settings
 
     if name is None:

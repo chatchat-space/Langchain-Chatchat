@@ -526,9 +526,10 @@ class ToolSettings(BaseFileSettings):
             },
             "duckduckgo": {},
             "searx": {
-                "host": "",
+                "host": "https://metasearx.com",
                 "engines": [],
                 "categories": [],
+                "language": "zh-CN",
             }
         },
         "top_k": 5,
