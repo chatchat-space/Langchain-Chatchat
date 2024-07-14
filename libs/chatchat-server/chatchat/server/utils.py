@@ -30,6 +30,7 @@ from langchain_openai.llms import OpenAI
 from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
 from chatchat.utils import build_logger
+import requests
 
 logger = build_logger()
 
@@ -137,6 +138,8 @@ def get_config_models(
                 except ImportError:
                     logger.warning('auto_detect_model needs xinference-client installed. '
                                    'Please try "pip install xinference-client". ')
+                except requests.exceptions.ConnectionError:
+                    logger.warning("Unable to connect to xinference server http://127.0.0.1:9997")
 
         for m_type in model_types:
             models = m.get(m_type, [])
