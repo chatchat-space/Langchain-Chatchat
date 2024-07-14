@@ -45,18 +45,18 @@ def intercept_sql(conn, cursor, statement, parameters, context, executemany):
 
 
 def query_database(query: str, config: dict):
+    model_name= config["model_name"]
     top_k = config["top_k"]
     return_intermediate_steps = config["return_intermediate_steps"]
     sqlalchemy_connect_str = config["sqlalchemy_connect_str"]
     read_only = config["read_only"]
     db = SQLDatabase.from_uri(sqlalchemy_connect_str)
 
-    from chatchat.server.api_server.chat_routes import global_model_name
     from chatchat.server.utils import get_ChatOpenAI
 
     llm = get_ChatOpenAI(
-        model_name=global_model_name,
-        temperature=0,
+        model_name=model_name,
+        temperature=0.1,
         streaming=True,
         local_wrap=True,
         verbose=True,
@@ -129,7 +129,7 @@ def query_database(query: str, config: dict):
     return context
 
 
-@regist_tool(title="Text2Sql")
+@regist_tool(title="数据库对话")
 def text2sql(
     query: str = Field(
         description="No need for SQL statements,just input the natural language that you want to chat with database"

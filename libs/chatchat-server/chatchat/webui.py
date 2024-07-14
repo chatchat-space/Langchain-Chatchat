@@ -3,9 +3,10 @@ import sys
 import streamlit as st
 import streamlit_antd_components as sac
 
-from chatchat.configs import VERSION
+from chatchat import __version__
 from chatchat.server.utils import api_address
-from chatchat.webui_pages.dialogue.dialogue import chat_box, dialogue_page
+from chatchat.webui_pages.dialogue.dialogue import  dialogue_page
+from chatchat.webui_pages.kb_chat import kb_chat
 from chatchat.webui_pages.knowledge_base.knowledge_base import knowledge_base_page
 from chatchat.webui_pages.utils import *
 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
         menu_items={
             "Get Help": "https://github.com/chatchat-space/Langchain-Chatchat",
             "Report a bug": "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            "About": f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！""",
+            "About": f"""欢迎使用 Langchain-Chatchat WebUI {__version__}！""",
         },
         layout="centered",
     )
@@ -48,13 +49,14 @@ if __name__ == "__main__":
             get_img_base64("logo-long-chatchat-trans-v2.png"), use_column_width=True
         )
         st.caption(
-            f"""<p align="right">当前版本：{VERSION}</p>""",
+            f"""<p align="right">当前版本：{__version__}</p>""",
             unsafe_allow_html=True,
         )
 
         selected_page = sac.menu(
             [
-                sac.MenuItem("对话", icon="chat"),
+                sac.MenuItem("多功能对话", icon="chat"),
+                sac.MenuItem("RAG 对话", icon="database"),
                 sac.MenuItem("知识库管理", icon="hdd-stack"),
             ],
             key="selected_page",
@@ -65,5 +67,7 @@ if __name__ == "__main__":
 
     if selected_page == "知识库管理":
         knowledge_base_page(api=api, is_lite=is_lite)
+    elif selected_page == "RAG 对话":
+        kb_chat(api=api)
     else:
         dialogue_page(api=api, is_lite=is_lite)

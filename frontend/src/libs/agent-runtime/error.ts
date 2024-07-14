@@ -34,6 +34,9 @@ export const AgentRuntimeErrorType = {
 
   InvalidAnthropicAPIKey: 'InvalidAnthropicAPIKey',
   AnthropicBizError: 'AnthropicBizError',
+
+  InvalidChatChatArgs: 'InvalidChatChatArgs',
+  ChatChatBizError: 'ChatChatBizError',
 } as const;
 
 export type ILobeAgentRuntimeErrorType =

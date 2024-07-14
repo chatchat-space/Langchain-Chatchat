@@ -10,24 +10,27 @@ from langchain_community.vectorstores.elasticsearch import (
     ElasticsearchStore,
 )
 
-from chatchat.configs import KB_ROOT_PATH, kbs_config
+from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import KBService, SupportedVSType
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 
 class ESKBService(KBService):
     def do_init(self):
         self.kb_path = self.get_kb_path(self.kb_name)
         self.index_name = os.path.split(self.kb_path)[-1]
-        self.IP = kbs_config[self.vs_type()]["host"]
-        self.PORT = kbs_config[self.vs_type()]["port"]
-        self.user = kbs_config[self.vs_type()].get("user", "")
-        self.password = kbs_config[self.vs_type()].get("password", "")
-        self.dims_length = kbs_config[self.vs_type()].get("dims_length", None)
+        kb_config = Settings.kb_settings.kbs_config[self.vs_type()]
+        self.IP = kb_config["host"]
+        self.PORT = kb_config["port"]
+        self.user = kb_config.get("user", "")
+        self.password = kb_config.get("password", "")
+        self.dims_length = kb_config.get("dims_length", None)
         self.embeddings_model = get_Embeddings(self.embed_model)
         try:
             # ES python客户端连接（仅连接）
@@ -97,7 +100,7 @@ class ESKBService(KBService):
 
     @staticmethod
     def get_kb_path(knowledge_base_name: str):
-        return os.path.join(KB_ROOT_PATH, knowledge_base_name)
+        return os.path.join(Settings.basic_settings.KB_ROOT_PATH, knowledge_base_name)
 
     @staticmethod
     def get_vs_path(knowledge_base_name: str):
@@ -154,10 +157,12 @@ class ESKBService(KBService):
                             kb_file.filepath
                         )
                     }
-                }
+                },
+                "track_total_hits": True,
             }
-            # 注意设置size，默认返回10个。
-            search_results = self.es_client_python.search(body=query, size=50)
+            # 注意设置size，默认返回10个，es检索设置track_total_hits为True返回数据库中真实的size。
+            size = self.es_client_python.search(body=query)["hits"]["total"]["value"]
+            search_results = self.es_client_python.search(body=query, size=size)
             delete_list = [hit["_id"] for hit in search_results["hits"]["hits"]]
             if len(delete_list) == 0:
                 return None

@@ -18,8 +18,10 @@ from langchain.tools.base import BaseTool
 from langchain_core.runnables import Runnable, RunnablePassthrough
 
 from chatchat.server.pydantic_v1 import Field, model_schema, typing
+from chatchat.utils import build_logger
 
-logger = logging.getLogger(__name__)
+
+logger = build_logger()
 
 SYSTEM_PROMPT = "Answer the following questions as best as you can. You have access to the following tools:\n{tools}"
 HUMAN_MESSAGE = "Let's start! Human:{input}\n\n{agent_scratchpad}"

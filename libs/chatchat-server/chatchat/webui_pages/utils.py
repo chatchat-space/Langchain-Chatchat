@@ -12,22 +12,12 @@ from typing import *
 
 import httpx
 
-from chatchat.configs import (
-    CHUNK_SIZE,
-    DEFAULT_EMBEDDING_MODEL,
-    DEFAULT_VS_TYPE,
-    HTTPX_DEFAULT_TIMEOUT,
-    IMG_DIR,
-    LLM_MODEL_CONFIG,
-    OVERLAP_SIZE,
-    SCORE_THRESHOLD,
-    VECTOR_SEARCH_TOP_K,
-    ZH_TITLE_ENHANCE,
-    log_verbose,
-)
-from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config
+from chatchat.settings import Settings
+from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config, get_default_embedding
+from chatchat.utils import build_logger
 
-logger = logging.getLogger()
+
+logger = build_logger()
 
 set_httpx_config()
 
@@ -40,7 +30,7 @@ class ApiRequest:
     def __init__(
         self,
         base_url: str = api_address(),
-        timeout: float = HTTPX_DEFAULT_TIMEOUT,
+        timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT,
     ):
         self.base_url = base_url
         self.timeout = timeout
@@ -71,10 +61,7 @@ class ApiRequest:
                     return self.client.get(url, params=params, **kwargs)
             except Exception as e:
                 msg = f"error when get {url}: {e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 retry -= 1
 
     def post(
@@ -97,10 +84,7 @@ class ApiRequest:
                     return self.client.post(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when post {url}: {e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 retry -= 1
 
     def delete(
@@ -122,10 +106,7 @@ class ApiRequest:
                     return self.client.delete(url, data=data, json=json, **kwargs)
             except Exception as e:
                 msg = f"error when delete {url}: {e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 retry -= 1
 
     def _httpx_stream2generator(
@@ -157,10 +138,7 @@ class ApiRequest:
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
-                                logger.error(
-                                    f"{e.__class__.__name__}: {msg}",
-                                    exc_info=e if log_verbose else None,
-                                )
+                                logger.error(f"{e.__class__.__name__}: {msg}")
 
                                 if chunk.startswith("data: "):
                                     chunk_cache += chunk[6:-2]
@@ -182,10 +160,7 @@ class ApiRequest:
                 yield {"code": 500, "msg": msg}
             except Exception as e:
                 msg = f"API通信遇到错误：{e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 yield {"code": 500, "msg": msg}
 
         def ret_sync(response, as_json):
@@ -208,10 +183,7 @@ class ApiRequest:
                                 yield data
                             except Exception as e:
                                 msg = f"接口返回json错误： ‘{chunk}’。错误信息是：{e}。"
-                                logger.error(
-                                    f"{e.__class__.__name__}: {msg}",
-                                    exc_info=e if log_verbose else None,
-                                )
+                                logger.error(f"{e.__class__.__name__}: {msg}")
 
                                 if chunk.startswith("data: "):
                                     chunk_cache += chunk[6:-2]
@@ -233,10 +205,7 @@ class ApiRequest:
                 yield {"code": 500, "msg": msg}
             except Exception as e:
                 msg = f"API通信遇到错误：{e}"
-                logger.error(
-                    f"{e.__class__.__name__}: {msg}",
-                    exc_info=e if log_verbose else None,
-                )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 yield {"code": 500, "msg": msg}
 
         if self._use_async:
@@ -261,11 +230,7 @@ class ApiRequest:
                 return r.json()
             except Exception as e:
                 msg = "API未能返回正确的JSON。" + str(e)
-                if log_verbose:
-                    logger.error(
-                        f"{e.__class__.__name__}: {msg}",
-                        exc_info=e if log_verbose else None,
-                    )
+                logger.error(f"{e.__class__.__name__}: {msg}")
                 return {"code": 500, "msg": msg, "data": None}
 
         if value_func is None:
@@ -340,12 +305,12 @@ class ApiRequest:
         self,
         files: List[Union[str, Path, bytes]],
         knowledge_id: str = None,
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=OVERLAP_SIZE,
-        zh_title_enhance=ZH_TITLE_ENHANCE,
+        chunk_size=Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
+        zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
     ):
         """
-        对应api.py/knowledge_base/upload_tmep_docs接口
+        对应api.py/knowledge_base/upload_temp_docs接口
         """
 
         def convert_file(file, filename=None):
@@ -377,8 +342,8 @@ class ApiRequest:
         self,
         query: str,
         knowledge_id: str,
-        top_k: int = VECTOR_SEARCH_TOP_K,
-        score_threshold: float = SCORE_THRESHOLD,
+        top_k: int = Settings.kb_settings.VECTOR_SEARCH_TOP_K,
+        score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
         history: List[Dict] = [],
         stream: bool = True,
         model: str = None,
@@ -425,8 +390,8 @@ class ApiRequest:
     def create_knowledge_base(
         self,
         knowledge_base_name: str,
-        vector_store_type: str = DEFAULT_VS_TYPE,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        vector_store_type: str = Settings.kb_settings.DEFAULT_VS_TYPE,
+        embed_model: str = get_default_embedding(),
     ):
         """
         对应api.py/knowledge_base/create_knowledge_base接口
@@ -475,8 +440,8 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         query: str = "",
-        top_k: int = VECTOR_SEARCH_TOP_K,
-        score_threshold: int = SCORE_THRESHOLD,
+        top_k: int = Settings.kb_settings.VECTOR_SEARCH_TOP_K,
+        score_threshold: int = Settings.kb_settings.SCORE_THRESHOLD,
         file_name: str = "",
         metadata: dict = {},
     ) -> List:
@@ -504,9 +469,9 @@ class ApiRequest:
         knowledge_base_name: str,
         override: bool = False,
         to_vector_store: bool = True,
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=OVERLAP_SIZE,
-        zh_title_enhance=ZH_TITLE_ENHANCE,
+        chunk_size=Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
+        zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
         docs: Dict = {},
         not_refresh_vs_cache: bool = False,
     ):
@@ -588,9 +553,9 @@ class ApiRequest:
         knowledge_base_name: str,
         file_names: List[str],
         override_custom_docs: bool = False,
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=OVERLAP_SIZE,
-        zh_title_enhance=ZH_TITLE_ENHANCE,
+        chunk_size=Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
+        zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
         docs: Dict = {},
         not_refresh_vs_cache: bool = False,
     ):
@@ -621,11 +586,11 @@ class ApiRequest:
         self,
         knowledge_base_name: str,
         allow_empty_kb: bool = True,
-        vs_type: str = DEFAULT_VS_TYPE,
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=OVERLAP_SIZE,
-        zh_title_enhance=ZH_TITLE_ENHANCE,
+        vs_type: str = Settings.kb_settings.DEFAULT_VS_TYPE,
+        embed_model: str = get_default_embedding(),
+        chunk_size=Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
+        zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
     ):
         """
         对应api.py/knowledge_base/recreate_vector_store接口
@@ -651,7 +616,7 @@ class ApiRequest:
     def embed_texts(
         self,
         texts: List[str],
-        embed_model: str = DEFAULT_EMBEDDING_MODEL,
+        embed_model: str = get_default_embedding(),
         to_query: bool = False,
     ) -> List[List[float]]:
         """
@@ -716,7 +681,7 @@ class ApiRequest:
 
 class AsyncApiRequest(ApiRequest):
     def __init__(
-        self, base_url: str = api_address(), timeout: float = HTTPX_DEFAULT_TIMEOUT
+        self, base_url: str = api_address(), timeout: float = Settings.basic_settings.HTTPX_DEFAULT_TIMEOUT
     ):
         super().__init__(base_url, timeout)
         self._use_async = True
@@ -753,7 +718,7 @@ def get_img_base64(file_name: str) -> str:
     get_img_base64 used in streamlit.
     absolute local path not working on windows.
     """
-    image = f"{IMG_DIR}/{file_name}"
+    image = f"{Settings.basic_settings.IMG_DIR}/{file_name}"
     # 读取图片
     with open(image, "rb") as f:
         buffer = BytesIO(f.read())

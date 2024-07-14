@@ -1,5 +1,8 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
 
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
+
 🌍 [READ THIS IN CHINESE](README.md)
 
 📃 **LangChain-Chatchat** (formerly Langchain-ChatGLM)
@@ -152,7 +155,7 @@ pip install langchain-chatchat -U
 > Xinference
 > framework:
 > ```shell
-> pip install langchain-chatchat[xinference] -U
+> pip install "langchain-chatchat[xinference]" -U
 > ```
 
 2. Model Inference Framework and Load Models
@@ -325,14 +328,18 @@ Framework and Load Models and select the model inference framework and loaded mo
 and [One API](https://github.com/songquanpeng/one-api), supporting new Chinese open-source models
 like [GLM-4-Chat](https://github.com/THUDM/GLM-4) and [Qwen2-Instruct](https://github.com/QwenLM/Qwen2)
 
-If you already have an address with the capability of an OpenAI endpoint, you can directly configure it in MODEL_PLATFORMS as follows:
+If you already have an address with the capability of an OpenAI endpoint, you can directly configure it in
+MODEL_PLATFORMS as follows:
 
 ```text
 chatchat-config model --set_model_platforms TEXT      Configure model platforms as a JSON string.
 ```
+
 - `platform_name` can be arbitrarily filled, just ensure it is unique.
-- `platform_type` might be used in the future for functional distinctions based on platform types, so it should match the platform_name.
-- List the models deployed on the framework in the corresponding list. Different frameworks can load models with the same name, and the project will automatically balance the load.
+- `platform_type` might be used in the future for functional distinctions based on platform types, so it should match
+  the platform_name.
+- List the models deployed on the framework in the corresponding list. Different frameworks can load models with the
+  same name, and the project will automatically balance the load.
 - Set up the model
 
 ```shell
@@ -401,6 +408,24 @@ step `3.2`:
 bge-large-zh-v1.5  text-embedding-3-small
 ```
 
+##### Frequently asked questions
+
+##### 1. Stuck when rebuilding the knowledge base or adding knowledge files under Windows
+
+This issue often occurs in newly created virtual environments and can be confirmed through the following methods:
+
+`from unstructured.partition.auto import partition`
+
+If the statement gets stuck and cannot be executed, the following command can be executed:
+
+```shell
+pip uninstall python-magic-bin
+# check the version of the uninstalled package
+pip install 'python-magic-bin=={version}'
+```
+
+Then follow the instructions in this section to recreate the knowledge base.
+
 #### 6. Start the Project
 
 ```shell
@@ -466,11 +491,11 @@ Successful startup output:
 > ```
 > </details>
 
-
 ### Migration from Older Versions
 
-* The structure of 0.3.x has changed significantly, it is strongly recommended to redeploy according to the documentation.
-The following guide does not guarantee 100% compatibility and success. Remember to backup important data in advance!
+* The structure of 0.3.x has changed significantly, it is strongly recommended to redeploy according to the
+  documentation.
+  The following guide does not guarantee 100% compatibility and success. Remember to backup important data in advance!
 
 - First configure the operating environment according to the steps in `Installation`.
 - Configure `DATA` and other options.
@@ -480,13 +505,16 @@ The following guide does not guarantee 100% compatibility and success. Remember 
 
 ## License
 
-The code of this project that does not involve *Additional License*  follows the [Apache-2.0](LICENSE) agreement.
+The code of this project follows the [Apache-2.0](LICENSE) agreement.
 
 ## Project Milestones
 
-+ `April 2023`: `Langchain-ChatGLM 0.1.0` released, supporting local knowledge base question and answer based on ChatGLM-6B model.
-+ `August 2023`: `Langchain-ChatGLM` renamed to `Langchain-Chatchat`, released `0.2.0` version, using `fastchat` as model loading solution, supporting more models and databases.
-+ `October 2023`: `Langchain-Chatchat 0.2.5` released, launching Agent content, open source project won the third prize in the hackathon held by `Founder Park & ​​Zhipu AI & Zilliz`.
++ `April 2023`: `Langchain-ChatGLM 0.1.0` released, supporting local knowledge base question and answer based on
+  ChatGLM-6B model.
++ `August 2023`: `Langchain-ChatGLM` renamed to `Langchain-Chatchat`, released `0.2.0` version, using `fastchat` as
+  model loading solution, supporting more models and databases.
++ `October 2023`: `Langchain-Chatchat 0.2.5` released, launching Agent content, open source project won the third prize
+  in the hackathon held by `Founder Park & ​​Zhipu AI & Zilliz`.
 + `December 2023`: `Langchain-Chatchat` open source project received more than **20K** stars.
 + `June 2024`: `Langchain-Chatchat 0.3.0` released, bringing a new project architecture.
 
@@ -502,7 +530,8 @@ The code of this project that does not involve *Additional License*  follows the
 
 <img src="docs/img/qr_code_109.jpg" alt="二维码" width="300" />
 
-🎉 Langchain-Chatchat project WeChat exchange group, if you are also interested in this project, welcome to join the group chat to participate in the discussion.
+🎉 Langchain-Chatchat project WeChat exchange group, if you are also interested in this project, welcome to join the
+group chat to participate in the discussion.
 
 ### Official Account
 
