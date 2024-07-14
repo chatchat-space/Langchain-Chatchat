@@ -51,6 +51,7 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 
 ### 初始化与配置
 
+项目运行需要特定的数据目录和配置文件，执行下列命令可以生成默认配置（您可以随时修改 yaml 配置文件）：
 ```shell
 # set the root path where storing data.
 # will use current directory if not set
@@ -59,11 +60,14 @@ export CHATCHAT_ROOT=/path/to/chatchat_data
 # initialize data and yaml configuration templates
 chatchat init
 ```
+
 在 `CHATCHAT_ROOT` 或当前目录可以找到 `*_settings.yaml` 文件，修改这些文件选择合适的模型配置，详见[初始化](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-ov-file#3-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95)
 
 ### 启动服务
 
+确保所有配置正确后（特别是 LLM 和 Embedding Model），执行下列命令创建默认知识库、启动服务：
 ```shell
+chatchat kb -r
 chatchat -a
 ```
 如无错误将自动弹出浏览器页面。
@@ -101,18 +105,6 @@ chatchat -a
 #### Telegram
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatchat")](https://t.me/+RjliQ3jnJ1YyN2E9)
-
-#### 项目交流群
-
-<img src="docs/img/qr_code_112.jpg" alt="二维码" width="300" />
-
-🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
-
-#### 公众号
-
-<img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
-
-🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
 
 ### 引用
 
