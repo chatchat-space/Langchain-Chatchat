@@ -47,9 +47,11 @@ def init(
     logger.info(f"开始初始化项目数据目录：{Settings.CHATCHAT_ROOT}")
     Settings.basic_settings.make_dirs()
     logger.info("创建所有数据目录：成功。")
-    shutil.copytree(bs.PACKAGE_ROOT / "data/knowledge_base/samples", Path(bs.KB_ROOT_PATH) / "samples", dirs_exist_ok=True)
+    if(bs.PACKAGE_ROOT / "data/knowledge_base/samples" != Path(bs.KB_ROOT_PATH) / "samples"):
+        shutil.copytree(bs.PACKAGE_ROOT / "data/knowledge_base/samples", Path(bs.KB_ROOT_PATH) / "samples", dirs_exist_ok=True)
     logger.info("复制 samples 知识库文件：成功。")
-    shutil.copytree(bs.PACKAGE_ROOT / "data/nltk_data", bs.NLTK_DATA_PATH, dirs_exist_ok=True)
+    if (bs.PACKAGE_ROOT / "data/nltk_data" != bs.NLTK_DATA_PATH):
+        shutil.copytree(bs.PACKAGE_ROOT / "data/nltk_data", bs.NLTK_DATA_PATH, dirs_exist_ok=True)
     logger.info("复制 nltl_data：成功。")
     create_tables()
     logger.info("初始化知识库数据库：成功。")
