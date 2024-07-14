@@ -21,6 +21,7 @@ def searx_search(text ,config, top_k: int):
         engines=config["engines"],
         categories=config["categories"],
     )
+    search.params["language"] = config.get("language", "zh-CN")
     return search.results(text, top_k)
 
 
@@ -114,7 +115,7 @@ def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={})
     results = search_engine_use(
         text=query, config=config["search_engine_config"][engine_name], top_k=top_k
     )
-    docs = search_result2docs(results)
+    docs = [x for x in search_result2docs(results) if x.page_content and x.page_content.strip()]
     return {"docs": docs, "search_engine": engine_name}
 
 
