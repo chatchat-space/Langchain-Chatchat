@@ -32,7 +32,7 @@ pip install langchain-chatchat
 
 2. 源码安装
 
-除了通过pypi安装外，您也可以选择使用[源码启动](../../docs/contributing/README_dev.md)。(Tips:
+除了通过pypi安装外，您也可以选择使用[源码启动](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/contributing/README_dev.md)。(Tips:
 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。我们不建议新手使用这个方式)
 
 3. Docker
@@ -42,7 +42,7 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 ```
 
 > [!important]
-> 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](docs/install/README_docker.md)
+> 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README_docker.md)
 
 4. AudoDL
 
@@ -113,7 +113,7 @@ chatchat -a
 ```
 @software{langchain_chatchat,
     title        = {{langchain-chatchat}},
-    author       = {Liu, Qian and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
+    author       = {Liu, Qian and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and Liu, Qingwei},
     year         = 2024,
     journal      = {GitHub repository},
     publisher    = {GitHub},
