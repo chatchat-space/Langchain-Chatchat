@@ -77,6 +77,7 @@ chatchat -a
   - prompt settings 错误导致 `KeyError: 'template'`([#4501](https://github.com/chatchat-space/Langchain-Chatchat/pull/4501))
   - searx 搜索引擎不支持中文([#4504](https://github.com/chatchat-space/Langchain-Chatchat/pull/4504))
   - init时默认去连 xinference，若默认 xinference 服务不存在会报错([#4508](https://github.com/chatchat-space/Langchain-Chatchat/issues/4508))
+  - init时，调用shutil.copytree，当src与dst一样时shutil报错的问题（[#4507](https://github.com/chatchat-space/Langchain-Chatchat/pull/4507))
 
 ### 项目里程碑
 
