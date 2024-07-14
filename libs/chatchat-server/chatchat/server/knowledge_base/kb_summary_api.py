@@ -16,7 +16,7 @@ from chatchat.utils import build_logger
 
 logger = build_logger()
 
-
+@post(url='/api/kb/recreate_summary_vector_store')
 def recreate_summary_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
     allow_empty_kb: bool = Body(True),
