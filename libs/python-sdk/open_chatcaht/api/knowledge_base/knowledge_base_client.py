@@ -40,10 +40,9 @@ API_URI_DELETE_KB_DOCS = "/knowledge_base/delete_docs"
 API_URI_KB_RECREATE_VECTOR_STORE = "/knowledge_base/recreate_vector_store"
 API_URI_KB_SEARCH_TEMP_DOCS = "/knowledge_base/search_temp_docs"
 
-API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE = "/kb_summary_api/summary_file_to_vector_store"
-API_URI_KB_SUMMARY_DOC_IDS_TO_VECTOR_STORE = "/kb_summary_api/summary_doc_ids_to_vector_store"
-API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE = "/kb_summary_api/recreate_summary_vector_store"
-
+API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE = "/knowledge_base/kb_summary_api/summary_file_to_vector_store"
+API_URI_KB_SUMMARY_DOC_IDS_TO_VECTOR_STORE = "/knowledge_base/kb_summary_api/summary_doc_ids_to_vector_store"
+API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE = "/knowledge_base/kb_summary_api/recreate_summary_vector_store"
 
 
 class KbClient(ApiClient):
