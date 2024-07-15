@@ -106,7 +106,7 @@ def detect_xf_models(xf_url: str) -> Dict[str, List[str]]:
     except requests.exceptions.ConnectionError:
         logger.warning(f"cannot connect to xinference host: {xf_url}, please check your configuration.")
     except Exception as e:
-        logger.error(f"error when connect to xinference server({xf_url}): {e}")
+        logger.warning(f"error when connect to xinference server({xf_url}): {e}")
     return models
 
 

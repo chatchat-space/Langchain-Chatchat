@@ -3,6 +3,8 @@ from pathlib import Path
 import shutil
 import typing as t
 
+import nltk
+
 from chatchat.startup import main as startup_main
 from chatchat.init_database import main as kb_main, create_tables, folder2db
 from chatchat.settings import Settings
@@ -50,9 +52,7 @@ def init(
     if(bs.PACKAGE_ROOT / "data/knowledge_base/samples" != Path(bs.KB_ROOT_PATH) / "samples"):
         shutil.copytree(bs.PACKAGE_ROOT / "data/knowledge_base/samples", Path(bs.KB_ROOT_PATH) / "samples", dirs_exist_ok=True)
     logger.info("复制 samples 知识库文件：成功。")
-    if (bs.PACKAGE_ROOT / "data/nltk_data" != bs.NLTK_DATA_PATH):
-        shutil.copytree(bs.PACKAGE_ROOT / "data/nltk_data", bs.NLTK_DATA_PATH, dirs_exist_ok=True)
-    logger.info("复制 nltl_data：成功。")
+    nltk.data.path.append(str(bs.PACKAGE_ROOT / "data/nltk_data"))
     create_tables()
     logger.info("初始化知识库数据库：成功。")
 
@@ -74,9 +74,9 @@ def init(
                   mode="recreate_vs",
                   vs_type=Settings.kb_settings.DEFAULT_VS_TYPE,
                   embed_model=get_default_embedding())
-        logger.success("所有初始化已完成，执行 chatchat start -a 启动服务。")
+        logger.success("<green>所有初始化已完成，执行 chatchat start -a 启动服务。</green>")
     else:
-        logger.warning("执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。")
+        logger.success("<green>执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。</green>")
 
 
 main.add_command(startup_main, "start")
