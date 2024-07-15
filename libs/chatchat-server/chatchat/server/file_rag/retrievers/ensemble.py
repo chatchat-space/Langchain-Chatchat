@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from langchain.retrievers import EnsembleRetriever
 from langchain.vectorstores import VectorStore
 from langchain_community.retrievers import BM25Retriever
@@ -20,7 +22,7 @@ class EnsembleRetrieverService(BaseRetrieverService):
     def from_vectorstore(
         vectorstore: VectorStore,
         top_k: int,
-        score_threshold: int or float,
+        score_threshold: int | float,
     ):
         faiss_retriever = vectorstore.as_retriever(
             search_type="similarity_score_threshold",
