@@ -14,7 +14,6 @@ from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
 from chatchat.server.agent.agent_factory.agents_registry import agents_registry
-from chatchat.server.agent.container import container
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
 from chatchat.server.callback_handler.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
@@ -63,7 +62,6 @@ def create_models_chains(
 ):
     memory = None
     chat_prompt = None
-    container.metadata = metadata
 
     if history:
         history = [History.from_data(h) for h in history]

@@ -1,104 +1,122 @@
-### 开始使用
+### 项目简介
+![](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/img/logo-long-chatchat-trans-v2.png)
+<a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-> 环境配置完成后，启动步骤为先启动chatchat-server，然后启动chatchat-frontend。
-> chatchat可通过pypi安装一键启动，您也可以选择使用[源码启动](../../docs/contributing/README_dev.md)。(Tips:
-> 源码配置可以帮助我们更快的寻找bug，或者改进基础设施。我们不建议新手使用这个方式)
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
 
-#### pypi安装一键启动
+🌍 [READ THIS IN ENGLISH](README_en.md)
 
-- 安装chatchat
+📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
+
+基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的 RAG 与 Agent 应用项目。
+
+点击[这里](https://github.com/chatchat-space/Langchain-Chatchat)了解项目详情。
+
+
+### 安装
+
+1. PYPI 安装
 
 ```shell
-pip install langchain-chatchat -U
+pip install langchain-chatchat
+
+# or if you use xinference to provide model API:
+# pip install langchain-chatchat[xinference]
 ```
+
+详见这里的[安装指引](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-ov-file#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)。
 
 > 注意：chatchat请放在独立的虚拟环境中，比如conda，venv，virtualenv等
->
-> 已知问题，不能跟xf一起安装，会让一些插件出bug，例如文件无法上传
+> 已知问题，不能跟xinference一起安装，会让一些插件出bug，例如文件无法上传
 
-> 工作空间配置
->
-> 操作指令` chatchat-config`
+2. 源码安装
 
-```text 
- 
-Usage: chatchat-config [OPTIONS] COMMAND [ARGS]...
+除了通过pypi安装外，您也可以选择使用[源码启动](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/contributing/README_dev.md)。(Tips:
+源码配置可以帮助我们更快的寻找bug，或者改进基础设施。我们不建议新手使用这个方式)
 
-  指令` chatchat-config` 工作空间配置
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  basic   基础配置
-  kb      知识库配置
-  model   模型配置
-  server  服务配置
-
-```
-
-### 模型服务配置
-
-如果您已经有了一个openai endpoint的能力的地址，可以在MODEL_PLATFORMS这里直接配置
-```text
-chatchat-config model --set_model_platforms TEXT      模型平台配置 as a JSON string.
-```
-- platform_name 可以任意填写，不要重复即可
-- platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
-- 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
-- 设置模型
-```shell
-$ chatchat-config model --set_model_platforms "[{
-    \"platform_name\": \"xinference\",
-    \"platform_type\": \"xinference\",
-    \"api_base_url\": \"http://127.0.0.1:9997/v1\",
-    \"api_key\": \"EMPT\",
-    \"api_concurrencies\": 5,
-    \"llm_models\": [
-        \"autodl-tmp-glm-4-9b-chat\"
-    ],
-    \"embed_models\": [
-        \"bge-large-zh-v1.5\"
-    ],
-    \"image2text_models\": [],
-    \"text2image_models\": [],
-    \"rerank_models\": [],
-    \"speech2text_models\": [],
-    \"text2speech_models\": []
-}]"
-```
-
-### 初始化知识库
+3. Docker
 
 ```shell
-chatchat-kb -r
+docker pull chatimage/chatchat:0.3.0-2024-0624
 ```
+
+> [!important]
+> 强烈建议: 使用 docker-compose 部署, 具体参考 [README_docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README_docker.md)
+
+4. AudoDL
+
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.3.0`
+版本所使用代码已更新至本项目 `v0.3.0` 版本。
+
+### 初始化与配置
+
+项目运行需要特定的数据目录和配置文件，执行下列命令可以生成默认配置（您可以随时修改 yaml 配置文件）：
+```shell
+# set the root path where storing data.
+# will use current directory if not set
+export CHATCHAT_ROOT=/path/to/chatchat_data
+
+# initialize data and yaml configuration templates
+chatchat init
+```
+
+在 `CHATCHAT_ROOT` 或当前目录可以找到 `*_settings.yaml` 文件，修改这些文件选择合适的模型配置，详见[初始化](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-ov-file#3-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95)
 
 ### 启动服务
 
+确保所有配置正确后（特别是 LLM 和 Embedding Model），执行下列命令创建默认知识库、启动服务：
 ```shell
+chatchat kb -r
 chatchat -a
 ```
+如无错误将自动弹出浏览器页面。
 
-### 模型？
+### 更新日志：
+#### 0.3.1.1 (2024-07-15)
+- 修复：
+  - WEBUI 中设置 system message 无效([#4491](https://github.com/chatchat-space/Langchain-Chatchat/pull/4491))
+  - 模型平台不支持代理([#4492](https://github.com/chatchat-space/Langchain-Chatchat/pull/4492))
+  - 移除失效的 vqa_processor & aqa_processor 工具([#4498](https://github.com/chatchat-space/Langchain-Chatchat/pull/4498))
+  - prompt settings 错误导致 `KeyError: 'template'`([#4501](https://github.com/chatchat-space/Langchain-Chatchat/pull/4501))
+  - searx 搜索引擎不支持中文([#4504](https://github.com/chatchat-space/Langchain-Chatchat/pull/4504))
+  - init时默认去连 xinference，若默认 xinference 服务不存在会报错([#4508](https://github.com/chatchat-space/Langchain-Chatchat/issues/4508))
+  - init时，调用shutil.copytree，当src与dst一样时shutil报错的问题（[#4507](https://github.com/chatchat-space/Langchain-Chatchat/pull/4507))
 
-chatchat 0.3版本中，为保证平台、模型、及本地服务的兼容，在保证可扩展性的同时，
-我们对模型的加载进行了重新设计. chatchat 0.3之后的版本，我们将分离模型加载和服务启动. 
-您可以使用提供了`openaiEndpoint`任何服务,在MODEL_PLATFORMS这里直接配置
-```text
-chatchat-config model --set_model_platforms TEXT      模型平台配置 as a JSON string.
+### 项目里程碑
+
++ `2023年4月`: `Langchain-ChatGLM 0.1.0` 发布，支持基于 ChatGLM-6B 模型的本地知识库问答。
++ `2023年8月`: `Langchain-ChatGLM` 改名为 `Langchain-Chatchat`，发布 `0.2.0` 版本，使用 `fastchat` 作为模型加载方案，支持更多的模型和数据库。
++ `2023年10月`: `Langchain-Chatchat 0.2.5` 发布，推出 Agent 内容，开源项目在`Founder Park & Zhipu AI & Zilliz`
+  举办的黑客马拉松获得三等奖。
++ `2023年12月`: `Langchain-Chatchat` 开源项目获得超过 **20K** stars.
++ `2024年6月`: `Langchain-Chatchat 0.3.0` 发布，带来全新项目架构。
+
++ 🔥 让我们一起期待未来 Chatchat 的故事 ···
+
+---
+
+### 协议
+
+本项目代码遵循 [Apache-2.0](LICENSE) 协议。
+
+### 联系我们
+
+#### Telegram
+
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white "langchain-chatchat")](https://t.me/+RjliQ3jnJ1YyN2E9)
+
+### 引用
+
+如果本项目有帮助到您的研究，请引用我们：
+
 ```
-- platform_name 可以任意填写，不要重复即可
-- platform_type 以后可能根据平台类型做一些功能区分,与platform_name一致即可
-- 将框架部署的模型填写到对应列表即可。不同框架可以加载同名模型，项目会自动做负载均衡。
-
-  
-
-### 部署手册
-
-移步这里 [xinference环境配置手册](../../docs/install/README_xinference.md)
-
-
-### 其它配置
-
-1. 数据库对话配置请移步这里 [数据库对话配置说明](../../docs/install/README_text2sql.md)
+@software{langchain_chatchat,
+    title        = {{langchain-chatchat}},
+    author       = {Liu, Qian and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and Liu, Qingwei},
+    year         = 2024,
+    journal      = {GitHub repository},
+    publisher    = {GitHub},
+    howpublished = {\url{https://github.com/chatchat-space/Langchain-Chatchat}}
+}
+```
