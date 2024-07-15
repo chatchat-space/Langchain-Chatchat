@@ -4,8 +4,8 @@ from open_chatcaht.api_client import ApiClient, get
 from open_chatcaht.types.standard_openai.audio_speech_input import OpenAIAudioSpeechInput
 from open_chatcaht.types.standard_openai.audio_transcriptions_input import OpenAIAudioTranscriptionsInput
 from open_chatcaht.types.standard_openai.audio_translations_input import OpenAIAudioTranslationsInput
-from open_chatcaht.types.standard_openai.chat_input import ChatInput, OpenAIChatInput
-from open_chatcaht.types.standard_openai.embeddings_Input import EmbeddingsInput, OpenAIEmbeddingsInput
+from open_chatcaht.types.standard_openai.chat_input import OpenAIChatInput
+from open_chatcaht.types.standard_openai.embeddings_Input import OpenAIEmbeddingsInput
 from open_chatcaht.types.standard_openai.image_edits_input import OpenAIImageEditsInput
 from open_chatcaht.types.standard_openai.image_generations_input import OpenAIImageGenerationsInput
 from open_chatcaht.types.standard_openai.image_variations_input import OpenAIImageVariationsInput

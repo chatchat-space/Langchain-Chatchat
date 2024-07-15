@@ -1,12 +1,8 @@
-from typing import Union, List
-
 from pydantic import BaseModel, Field
-from pathlib import Path
 from open_chatcaht._constants import CHUNK_SIZE, OVERLAP_SIZE, ZH_TITLE_ENHANCE
 
 
 class UploadKbDocsParam(BaseModel):
-    files: List[Union[str, Path, bytes]] = Field(..., description="上传文件，支持多文件"),
     knowledge_base_name: str = Field(
         ..., description="知识库名称", examples=["samples"]
     ),

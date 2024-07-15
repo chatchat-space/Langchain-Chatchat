@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from chatchat.server.api_server.api_schemas import OpenAIImageBaseInput
+from open_chatcaht.types.standard_openai.image_base_input import OpenAIImageBaseInput
 
 
 class OpenAIImageGenerationsInput(OpenAIImageBaseInput):

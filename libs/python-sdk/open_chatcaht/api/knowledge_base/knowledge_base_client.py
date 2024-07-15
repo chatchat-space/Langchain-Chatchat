@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from open_chatcaht._constants import EMBEDDING_MODEL, VS_TYPE, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, \
     OVERLAP_SIZE, ZH_TITLE_ENHANCE
 from open_chatcaht.api_client import ApiClient, post
@@ -10,7 +12,10 @@ from typing import *
 
 from open_chatcaht.types.knowledge_base.delete_knowledge_base_param import DeleteKnowledgeBaseParam
 from open_chatcaht.types.knowledge_base.doc.delete_kb_docs_param import DeleteKbDocsParam
+from open_chatcaht.types.knowledge_base.doc.download_kb_doc_param import DownloadKbDocParam
 from open_chatcaht.types.knowledge_base.doc.search_kb_docs_param import SearchKbDocsParam
+from open_chatcaht.types.knowledge_base.doc.upload_kb_docs_param import UploadKbDocsParam
+from open_chatcaht.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
 from open_chatcaht.types.knowledge_base.recreate_vector_store_param import RecreateVectorStoreParam
 from open_chatcaht.types.knowledge_base.summary.recreate_summary_vector_store_param import \
     RecreateSummaryVectorStoreParam
@@ -19,26 +24,33 @@ from open_chatcaht.types.knowledge_base.summary.summary_doc_ids_to_vector_store_
 from open_chatcaht.types.knowledge_base.summary.summary_file_to_vector_store_param import SummaryFileToVectorStoreParam
 from open_chatcaht.types.knowledge_base.update_kb_info_param import UpdateKbInfoParam
 from open_chatcaht.types.response.base import BaseResponse
+from open_chatcaht.utils import convert_file
 
-API_URI_CREATE_KNOWLEDGE_BASE = "/knowledge_base/create_knowledge_base"
-API_URI_DELETE_KNOWLEDGE_BASE = "/knowledge_base/delete_knowledge_base"
+API_URI_CREATE_KB = "/knowledge_base/create_knowledge_base"
+API_URI_DELETE_KB = "/knowledge_base/delete_knowledge_base"
+API_URI_KB_UPDATE_INFO = "/knowledge_base/update_info"
+API_URI_LIST_KB = "/knowledge_base/list_knowledge_bases"
+
 API_URI_URI_LIST_KB_FILE = "/knowledge_base/list_files"
 API_URI_SEARCH_KB_DOCS = "/knowledge_base/search_docs"
-API_URI_KNOWLEDGE_BASE_UPDATE_INFO = "/knowledge_base/update_info"
-API_URI_RECREATE_VECTOR_STORE = "/knowledge_base/recreate_vector_store"
 
+API_URI_KB_UPLOAD_DOCS = "/knowledge_base/upload_docs"
+API_URI_KB_DOWNLOAD_DOC = "/knowledge_base/download_doc"
 API_URI_DELETE_KB_DOCS = "/knowledge_base/delete_docs"
+API_URI_KB_RECREATE_VECTOR_STORE = "/knowledge_base/recreate_vector_store"
+API_URI_KB_SEARCH_TEMP_DOCS = "/knowledge_base/search_temp_docs"
 
-API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE = "/kb_summary_api/recreate_vector_store"
 API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE = "/kb_summary_api/summary_file_to_vector_store"
 API_URI_KB_SUMMARY_DOC_IDS_TO_VECTOR_STORE = "/kb_summary_api/summary_doc_ids_to_vector_store"
+API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE = "/kb_summary_api/recreate_summary_vector_store"
+
 
 
 class KbClient(ApiClient):
 
-    @post(url=API_URI_CREATE_KNOWLEDGE_BASE
+    @post(url=API_URI_CREATE_KB
         , body_model=CreateKnowledgeBaseParam)
-    def create_knowledge_base(
+    def create_kb(
             self,
             knowledge_base_name: str,
             kb_info: str = "",
@@ -60,15 +72,19 @@ class KbClient(ApiClient):
     #         vector_store_type=vector_store_type,
     #         embed_model=embed_model,
     #     ).dict()
-    #     response = self.post(API_URI_CREATE_KNOWLEDGE_BASE, json=data)
+    #     response = self.post(API_URI_CREATE_KB, json=data)
     #     return self._get_response_value(response, as_json=True)
 
-    def delete_knowledge_base(
+    def delete_kb(
             self,
             knowledge_base_name: str,
     ):
-        response = self._post(API_URI_DELETE_KNOWLEDGE_BASE, json=knowledge_base_name)
+        response = self._post(API_URI_DELETE_KB, json=knowledge_base_name)
         return self._get_response_value(response, as_json=True)
+
+    def list_kb(self):
+        response = self._get(API_URI_LIST_KB)
+        return self._get_response_value(response, as_json=True, value_func=lambda r: r.get("data", []))
 
     def list_kb_docs_file(
             self,
@@ -110,35 +126,19 @@ class KbClient(ApiClient):
             docs: Dict = {},
             not_refresh_vs_cache: bool = False,
     ):
-        def convert_file(file, filename=None):
-            if isinstance(file, bytes):  # raw bytes
-                file = BytesIO(file)
-            elif hasattr(file, "read"):  # a file io like object
-                filename = filename or file.name
-            else:  # a local path
-                file = Path(file).absolute().open("rb")
-                filename = filename or os.path.split(file.name)[-1]
-            return filename, file
-
         files = [convert_file(file) for file in files]
-        data = {
-            "knowledge_base_name": knowledge_base_name,
-            "override": override,
-            "to_vector_store": to_vector_store,
-            "chunk_size": chunk_size,
-            "chunk_overlap": chunk_overlap,
-            "zh_title_enhance": zh_title_enhance,
-            "docs": docs,
-            "not_refresh_vs_cache": not_refresh_vs_cache,
-        }
-
-        if isinstance(data["docs"], dict):
-            data["docs"] = json.dumps(data["docs"], ensure_ascii=False)
-        response = self._post(
-            "/knowledge_base/upload_docs",
-            data=data,
-            files=[("files", (filename, file)) for filename, file in files],
-        )
+        data = UploadKbDocsParam(
+            knowledge_base_name=knowledge_base_name,
+            override=override,
+            to_vector_store=to_vector_store,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            zh_title_enhance=zh_title_enhance,
+            docs=json.dumps(docs, ensure_ascii=False),
+            not_refresh_vs_cache=not_refresh_vs_cache,
+        ).dict()
+        response = self._post(API_URI_KB_UPLOAD_DOCS, data=data,
+                              files=[("files", (filename, file)) for filename, file in files])
         return self._get_response_value(response, as_json=True)
 
     def delete_kb_docs(
@@ -162,7 +162,7 @@ class KbClient(ApiClient):
             knowledge_base_name=knowledge_base_name,
             kb_info=kb_info,
         ).dict()
-        response = self._post(API_URI_KNOWLEDGE_BASE_UPDATE_INFO, json=data)
+        response = self._post(API_URI_KB_UPDATE_INFO, json=data)
         return self._get_response_value(response, as_json=True)
 
     def recreate_vector_store(
@@ -184,7 +184,7 @@ class KbClient(ApiClient):
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance,
         ).dict()
-        response = self._post(API_URI_RECREATE_VECTOR_STORE, json=data, stream=True, timeout=None)
+        response = self._post(API_URI_KB_RECREATE_VECTOR_STORE, json=data, stream=True, timeout=None)
         return self._httpx_stream2generator(response, as_json=True)
 
     def recreate_summary_vector_store(self,
@@ -254,11 +254,32 @@ class KbClient(ApiClient):
         response = self._post(API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE, json=data)
         return self._get_response_value(response, as_json=True)
 
-    def upload_kb_docs_file(self):
-        pass
+    def upload_temp_docs(self,
+                         files: List[str] = Field(..., description="上传文件，支持多文件"),
+                         prev_id: str = Field(None, description="前知识库ID"),
+                         chunk_size: int = Field(CHUNK_SIZE, description="知识库中单段文本最大长度"),
+                         chunk_overlap: int = Field(OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
+                         zh_title_enhance: bool = Field(ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
+                         ):
+        data = UploadTempDocsParam(
+            prev_id=prev_id,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            zh_title_enhance=zh_title_enhance
+        ).dict()
+        response = self._post(API_URI_KB_UPLOAD_DOCS, data=data,
+                              files=[("files", (filename, file)) for filename, file in files])
+        return self._get_response_value(response, as_json=True)
 
-    def download_kb_doc_file(self):
-        pass
-
-    def delete_kb_docs_file(self):
-        pass
+    def download_kb_doc_file(self,
+                             knowledge_base_name: str = Field(..., description="知识库名称"),
+                             file_name: str = Field(..., description="文件名称"),
+                             preview: bool = Field(False, description="是：浏览器内预览；否：下载"),
+                             ):
+        params = DownloadKbDocParam(
+            knowledge_base_name=knowledge_base_name,
+            file_name=file_name,
+            preview=preview
+        ).dict()
+        response = self._get(API_URI_URI_LIST_KB_FILE, params=params)
+        return self._get_response_value(response, as_json=True, value_func=lambda r: r.get("data", []))

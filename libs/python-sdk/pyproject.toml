@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "langchain-chatchat-sdk"
+name = "open_langchain_chatchat"
 version = "0.3.0.20240708"
 description = "Langchain-Chatchat sdk"
 authors = ["chatchat"]
 packages = [
-    {include = "python-sdk"}
+    {include = "open_chatcaht"}
 ]
 
 

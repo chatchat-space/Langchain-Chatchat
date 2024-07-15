@@ -1,4 +1,4 @@
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Union
 
 from pydantic import Field
 
@@ -40,7 +40,7 @@ class ChatClient(ApiClient):
                                                ge=0,
                                                le=2,
                                                ),
-                history: List[ChatMessage, dict] = Field(
+                history: List[Union[ChatMessage, dict]] = Field(
                     [],
                     description="历史对话",
                     examples=[[
@@ -84,7 +84,7 @@ class ChatClient(ApiClient):
                       ge=0,
                       le=2,
                   ),
-                  history: List[dict, ChatMessage] = Field(
+                  history: List[Union[dict, ChatMessage]] = Field(
                       [],
                       description="历史对话",
                       examples=[

@@ -2,6 +2,7 @@ import base64
 import inspect
 import os
 from io import BytesIO
+from pathlib import Path
 from typing import Union, List, Dict
 
 import httpx
@@ -240,3 +241,14 @@ def merge_dicts(dict1, dict2) -> dict:
             merged_dict[key] = value2
 
     return merged_dict
+
+
+def convert_file(file, filename=None):
+    if isinstance(file, bytes):  # raw bytes
+        file = BytesIO(file)
+    elif hasattr(file, "read"):  # a file io like object
+        filename = filename or file.name
+    else:  # a local path
+        file = Path(file).absolute().open("rb")
+        filename = filename or os.path.split(file.name)[-1]
+    return filename, file

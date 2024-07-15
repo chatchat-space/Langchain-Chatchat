@@ -2,7 +2,7 @@ from typing import Any, Union
 
 from pydantic import AnyUrl
 
-from chatchat.server.api_server.api_schemas import OpenAIImageVariationsInput
+from open_chatcaht.types.standard_openai.image_variations_input import OpenAIImageVariationsInput
 
 
 class OpenAIImageEditsInput(OpenAIImageVariationsInput):
