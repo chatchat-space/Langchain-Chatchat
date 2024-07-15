@@ -27,6 +27,7 @@ pip install langchain-chatchat
 ```
 Please refer to the [Installation Guide](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-OVfile#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B) for details.
 >Attention: Chatchat should be placed in a separate virtual environment, such as conda, venv, virtualienv, etc
+
 >Known issue, cannot be installed together with xinference, which may cause some plugins to have bugs, such as file upload issues
 
 2. Source code installation
@@ -59,7 +60,7 @@ You can find the `*_ settings.yaml` files in CHATCHAT-ROOT or the current direct
 After ensuring that all configurations are correct (especially LLM and Embedding Model), execute the following commands to create the default knowledge base and start the service:
 ```shell
 chatchat kb -r
-chatchat -a
+chatchat start -a
 ```
 If there are no errors, the browser page will automatically pop up.
 ### Update log:
