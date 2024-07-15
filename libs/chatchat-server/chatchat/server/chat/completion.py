@@ -7,7 +7,10 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from sse_starlette.sse import EventSourceResponse
 
-from chatchat.server.utils import get_OpenAI, get_prompt_template, wrap_done
+from chatchat.server.utils import get_OpenAI, get_prompt_template, wrap_done, build_logger
+
+
+logger = build_logger()
 
 
 async def completion(
@@ -31,40 +34,44 @@ async def completion(
         prompt_name: str = prompt_name,
         echo: bool = echo,
     ) -> AsyncIterable[str]:
-        nonlocal max_tokens
-        callback = AsyncIteratorCallbackHandler()
-        if isinstance(max_tokens, int) and max_tokens <= 0:
-            max_tokens = None
+        try:
+            nonlocal max_tokens
+            callback = AsyncIteratorCallbackHandler()
+            if isinstance(max_tokens, int) and max_tokens <= 0:
+                max_tokens = None
 
-        model = get_OpenAI(
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            callbacks=[callback],
-            echo=echo,
-            local_wrap=True,
-        )
+            model = get_OpenAI(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=[callback],
+                echo=echo,
+                local_wrap=True,
+            )
 
-        prompt_template = get_prompt_template("llm_model", prompt_name)
-        prompt = PromptTemplate.from_template(prompt_template, template_format="jinja2")
-        chain = LLMChain(prompt=prompt, llm=model)
+            prompt_template = get_prompt_template("llm_model", prompt_name)
+            prompt = PromptTemplate.from_template(prompt_template, template_format="jinja2")
+            chain = LLMChain(prompt=prompt, llm=model)
 
-        # Begin a task that runs in the background.
-        task = asyncio.create_task(
-            wrap_done(chain.acall({"input": query}), callback.done),
-        )
+            # Begin a task that runs in the background.
+            task = asyncio.create_task(
+                wrap_done(chain.acall({"input": query}), callback.done),
+            )
 
-        if stream:
-            async for token in callback.aiter():
-                # Use server-sent-events to stream the response
-                yield token
-        else:
-            answer = ""
-            async for token in callback.aiter():
-                answer += token
-            yield answer
+            if stream:
+                async for token in callback.aiter():
+                    # Use server-sent-events to stream the response
+                    yield token
+            else:
+                answer = ""
+                async for token in callback.aiter():
+                    answer += token
+                yield answer
 
-        await task
+            await task
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     return EventSourceResponse(
         completion_iterator(

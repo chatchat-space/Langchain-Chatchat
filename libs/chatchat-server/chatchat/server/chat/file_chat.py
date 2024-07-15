@@ -152,81 +152,85 @@ async def file_chat(
     history = [History.from_data(h) for h in history]
 
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
-        nonlocal max_tokens
-        callback = AsyncIteratorCallbackHandler()
-        if isinstance(max_tokens, int) and max_tokens <= 0:
-            max_tokens = None
+        try:
+            nonlocal max_tokens
+            callback = AsyncIteratorCallbackHandler()
+            if isinstance(max_tokens, int) and max_tokens <= 0:
+                max_tokens = None
 
-        callbacks = [callback]
-        # Enable langchain-chatchat to support langfuse
-        import os
+            callbacks = [callback]
+            # Enable langchain-chatchat to support langfuse
+            import os
 
-        langfuse_secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
-        langfuse_public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
-        langfuse_host = os.environ.get("LANGFUSE_HOST")
-        if langfuse_secret_key and langfuse_public_key and langfuse_host:
-            from langfuse import Langfuse
-            from langfuse.callback import CallbackHandler
+            langfuse_secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+            langfuse_public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+            langfuse_host = os.environ.get("LANGFUSE_HOST")
+            if langfuse_secret_key and langfuse_public_key and langfuse_host:
+                from langfuse import Langfuse
+                from langfuse.callback import CallbackHandler
 
-            langfuse_handler = CallbackHandler()
-            callbacks.append(langfuse_handler)
+                langfuse_handler = CallbackHandler()
+                callbacks.append(langfuse_handler)
 
-        model = get_ChatOpenAI(
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            callbacks=callbacks,
-        )
-        embed_func = get_Embeddings()
-        embeddings = await embed_func.aembed_query(query)
-        with memo_faiss_pool.acquire(knowledge_id) as vs:
-            docs = vs.similarity_search_with_score_by_vector(
-                embeddings, k=top_k, score_threshold=score_threshold
+            model = get_ChatOpenAI(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=callbacks,
             )
-            docs = [x[0] for x in docs]
+            embed_func = get_Embeddings()
+            embeddings = await embed_func.aembed_query(query)
+            with memo_faiss_pool.acquire(knowledge_id) as vs:
+                docs = vs.similarity_search_with_score_by_vector(
+                    embeddings, k=top_k, score_threshold=score_threshold
+                )
+                docs = [x[0] for x in docs]
 
-        context = "\n".join([doc.page_content for doc in docs])
-        if len(docs) == 0:  # 如果没有找到相关文档，使用Empty模板
-            prompt_template = get_prompt_template("rag", "empty")
-        else:
-            prompt_template = get_prompt_template("rag", "default")
-        input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg]
-        )
-
-        chain = LLMChain(prompt=chat_prompt, llm=model)
-
-        # Begin a task that runs in the background.
-        task = asyncio.create_task(
-            wrap_done(
-                chain.acall({"context": context, "question": query}), callback.done
-            ),
-        )
-
-        source_documents = []
-        for inum, doc in enumerate(docs):
-            filename = doc.metadata.get("source")
-            text = f"""出处 [{inum + 1}] [{filename}] \n\n{doc.page_content}\n\n"""
-            source_documents.append(text)
-
-        if len(source_documents) == 0:  # 没有找到相关文档
-            source_documents.append(
-                f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>"""
+            context = "\n".join([doc.page_content for doc in docs])
+            if len(docs) == 0:  # 如果没有找到相关文档，使用Empty模板
+                prompt_template = get_prompt_template("rag", "empty")
+            else:
+                prompt_template = get_prompt_template("rag", "default")
+            input_msg = History(role="user", content=prompt_template).to_msg_template(False)
+            chat_prompt = ChatPromptTemplate.from_messages(
+                [i.to_msg_template() for i in history] + [input_msg]
             )
 
-        if stream:
-            async for token in callback.aiter():
-                # Use server-sent-events to stream the response
-                yield json.dumps({"answer": token}, ensure_ascii=False)
-            yield json.dumps({"docs": source_documents}, ensure_ascii=False)
-        else:
-            answer = ""
-            async for token in callback.aiter():
-                answer += token
-            yield json.dumps(
-                {"answer": answer, "docs": source_documents}, ensure_ascii=False
+            chain = LLMChain(prompt=chat_prompt, llm=model)
+
+            # Begin a task that runs in the background.
+            task = asyncio.create_task(
+                wrap_done(
+                    chain.acall({"context": context, "question": query}), callback.done
+                ),
             )
-        await task
+
+            source_documents = []
+            for inum, doc in enumerate(docs):
+                filename = doc.metadata.get("source")
+                text = f"""出处 [{inum + 1}] [{filename}] \n\n{doc.page_content}\n\n"""
+                source_documents.append(text)
+
+            if len(source_documents) == 0:  # 没有找到相关文档
+                source_documents.append(
+                    f"""<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>"""
+                )
+
+            if stream:
+                async for token in callback.aiter():
+                    # Use server-sent-events to stream the response
+                    yield json.dumps({"answer": token}, ensure_ascii=False)
+                yield json.dumps({"docs": source_documents}, ensure_ascii=False)
+            else:
+                answer = ""
+                async for token in callback.aiter():
+                    answer += token
+                yield json.dumps(
+                    {"answer": answer, "docs": source_documents}, ensure_ascii=False
+                )
+            await task
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     return EventSourceResponse(knowledge_base_chat_iterator())
