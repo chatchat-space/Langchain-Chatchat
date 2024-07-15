@@ -206,6 +206,8 @@ def dialogue_page(
             use_agent = st.checkbox(
                 "启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent"
             )
+            output_agent = st.checkbox("显示 Agent 过程", key="output_agent")
+
             # 选择工具
             tools = list_tools(api)
             tool_names = ["None"] + list(tools)
@@ -447,14 +449,20 @@ def dialogue_page(
                 if d.status == AgentStatus.error:
                     st.error(d.choices[0].delta.content)
                 elif d.status == AgentStatus.llm_start:
+                    if not output_agent:
+                        continue
                     chat_box.insert_msg("正在解读工具输出结果...")
                     text = d.choices[0].delta.content or ""
                 elif d.status == AgentStatus.llm_new_token:
+                    if not output_agent:
+                        continue
                     text += d.choices[0].delta.content or ""
                     chat_box.update_msg(
                         text.replace("\n", "\n\n"), streaming=True, metadata=metadata
                     )
                 elif d.status == AgentStatus.llm_end:
+                    if not output_agent:
+                        continue
                     text += d.choices[0].delta.content or ""
                     chat_box.update_msg(
                         text.replace("\n", "\n\n"), streaming=False, metadata=metadata

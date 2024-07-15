@@ -73,32 +73,36 @@ async def openai_request(
     """
 
     async def generator():
-        for x in header:
-            if isinstance(x, str):
-                x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
-            elif isinstance(x, dict):
-                x = OpenAIChatOutput.model_validate(x)
-            else:
-                raise RuntimeError(f"unsupported value: {header}")
-            for k, v in extra_json.items():
-                setattr(x, k, v)
-            yield x.model_dump_json()
+        try:
+            for x in header:
+                if isinstance(x, str):
+                    x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
+                elif isinstance(x, dict):
+                    x = OpenAIChatOutput.model_validate(x)
+                else:
+                    raise RuntimeError(f"unsupported value: {header}")
+                for k, v in extra_json.items():
+                    setattr(x, k, v)
+                yield x.model_dump_json()
 
-        async for chunk in await method(**params):
-            for k, v in extra_json.items():
-                setattr(chunk, k, v)
-            yield chunk.model_dump_json()
+            async for chunk in await method(**params):
+                for k, v in extra_json.items():
+                    setattr(chunk, k, v)
+                yield chunk.model_dump_json()
 
-        for x in tail:
-            if isinstance(x, str):
-                x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
-            elif isinstance(x, dict):
-                x = OpenAIChatOutput.model_validate(x)
-            else:
-                raise RuntimeError(f"unsupported value: {tail}")
-            for k, v in extra_json.items():
-                setattr(x, k, v)
-            yield x.model_dump_json()
+            for x in tail:
+                if isinstance(x, str):
+                    x = OpenAIChatOutput(content=x, object="chat.completion.chunk")
+                elif isinstance(x, dict):
+                    x = OpenAIChatOutput.model_validate(x)
+                else:
+                    raise RuntimeError(f"unsupported value: {tail}")
+                for k, v in extra_json.items():
+                    setattr(x, k, v)
+                yield x.model_dump_json()
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     params = body.model_dump(exclude_unset=True)
 
