@@ -41,6 +41,11 @@ def init(
     recreate_kb: bool = False,
     kb_names: str = "",
 ):
+    # 提前下载nltk library，避免Unstructured抛出BadZipFile: File is not a zip file异常
+    import nltk
+    for pkg in ['punkt', 'averaged_perceptron_tagger']:
+        nltk.download(pkg)
+
     Settings.set_auto_reload(False)
     bs = Settings.basic_settings
     kb_names = [x.strip() for x in kb_names.split(",")]
