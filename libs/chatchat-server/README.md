@@ -23,6 +23,10 @@ pip install langchain-chatchat
 
 # or if you use xinference to provide model API:
 # pip install langchain-chatchat[xinference]
+
+# if you update from an old version, we suggest to run init again to update yaml templates:
+# pip install -U langchain-chatchat
+# chatchat init
 ```
 
 详见这里的[安装指引](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-ov-file#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)。

@@ -17,8 +17,13 @@ Click [here](https://github.com/chatchat-space/Langchain-Chatchat）to Understan
 1. PYPI installation
 ```shell
 pip install langchain-chatchat
+
 # or if you use xinference to provide model API:
 # pip install langchain-chatchat[xinference]
+
+# if you update from an old version, we suggest to run init again to update yaml templates:
+# pip install -U langchain-chatchat
+# chatchat init
 ```
 Please refer to the [Installation Guide](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-OVfile#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B) for details.
 >Attention: Chatchat should be placed in a separate virtual environment, such as conda, venv, virtualienv, etc
