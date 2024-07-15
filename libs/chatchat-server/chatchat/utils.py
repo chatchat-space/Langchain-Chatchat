@@ -6,9 +6,12 @@ import typing as t
 
 import loguru
 import loguru._logger
+from memoization import cached, CachingAlgorithmFlag
 from chatchat.settings import Settings
 
 
+# 默认每调用一次 build_logger 就会添加一次 hanlder，导致 chatchat.log 里重复输出
+@cached(max_size=100, algorithm=CachingAlgorithmFlag.LRU)
 def build_logger(log_file: str = "chatchat"):
     """
     build a logger with colorized output and a log file, for example:
