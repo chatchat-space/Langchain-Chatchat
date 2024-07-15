@@ -1,0 +1,173 @@
+,title,file,url,detail,id
+0,加油~以及一些建议,2023-03-31.0002,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/2,加油，我认为你的方向是对的。,0
+1,当前的运行环境是什么，windows还是Linux,2023-04-01.0003,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/3,当前的运行环境是什么，windows还是Linux，python是什么版本？,1
+2,请问这是在CLM基础上运行吗？,2023-04-01.0004,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/4,请问是不是需要本地安装好clm并正常运行的情况下，再按文中的步骤执行才能运行起来？,2
+3,[复现问题] 构造 prompt 时从知识库中提取的文字乱码,2023-04-01.0005,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/5,hi，我在尝试复现 README 中的效果，也使用了 ChatGLM-6B 的 README 作为输入文本，但发现从知识库中提取的文字是乱码，导致构造的 prompt 不可用。想了解如何解决这个问题。,3
+4,后面能否加入上下文对话功能？,2023-04-02.0006,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/6,目前的get_wiki_agent_answer函数中已经实现了历史消息传递的功能，后面我再确认一下是否有langchain中model调用过程中是否传递了chat_history。,4
+5,请问：纯cpu可以吗？,2023-04-03.0007,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/7,很酷的实现，极大地开拓了我的眼界！很顺利的在gpu机器上运行了,5
+6,运行报错：AttributeError: 'NoneType' object has no attribute 'message_types_by_name',2023-04-03.0008,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/8,报错：,6
+7,运行环境：GPU需要多大的？,2023-04-03.0009,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/9,如果按照THUDM/ChatGLM-6B的说法，使用的GPU大小应该在13GB左右，但运行脚本后，占用了24GB还不够。,7
+8,请问本地知识的格式是什么？,2023-04-03.0010,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/10,已测试格式包括docx、md文件中的文本信息，具体格式可以参考 [langchain文档](https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/unstructured_file.html?highlight=pdf#),8
+9,24G的显存还是爆掉了，是否支持双卡运行,2023-04-03.0011,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/11,RuntimeError: CUDA out of memory. Tried to allocate 96.00 MiB (GPU 0; 23.70 GiB total capacity; 22.18 GiB already allocated; 12.75 MiB free; 22.18 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF,9
+10,你怎么知道embeddings方式和模型训练时候的方式是一样的?,2023-04-03.0012,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/12,embedding和LLM的方式不用一致，embedding能够解决语义检索的需求就行。这个项目里用到embedding是在对本地知识建立索引和对问句转换成向量的过程。,10
+11,是否能提供本地知识文件的格式？,2023-04-04.0013,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/13,是否能提供本地知识文件的格式？,11
+12,是否可以像清华原版跑在8G一以下的卡？,2023-04-04.0016,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/16,是否可以像清华原版跑在8G一以下的卡？我的8G卡爆显存了,12
+13,请教一下langchain协调使用向量库和chatGLM工作的,2023-04-05.0018,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/18,代码里面这段是创建问答模型的，会接入ChatGLM和本地语料的向量库，langchain回答的时候是怎么个优先顺序？先搜向量库，没有再找chatglm么？ 还是什么机制？,13
+14,在mac m2max上抛出了ValueError: 150001 is not in list这个异常,2023-04-05.0019,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/19,我把chatglm_llm.py加载模型的代码改成如下,14
+15,程序运行后一直卡住,2023-04-05.0020,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/20,感谢作者的付出，不过本人在运行时出现了问题，请大家帮助。,15
+16,问一下chat_history的逻辑,2023-04-06.0022,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/22,感谢开源。,16
+17,为什么每次运行都会loading checkpoint,2023-04-06.0023,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/23,我把这个embeding模型下载到本地后，无法正常启动。,17
+18,本地知识文件能否上传一些示例？,2023-04-06.0025,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/25,如题，怎么构造知识文件，效果更好？能否提供一个样例,18
+19,What version of you are using?,2023-04-06.0026,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/26,"Hi Panda, I saw the `pip install -r requirements` command in README, and want to confirm you are using python2 or python3? because my pip and pip3 version are all is 22.3.",19
+20,有兴趣交流本项目应用的朋友可以加一下微信群,2023-04-07.0027,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/27,![IMG_1630](https://user-images.githubusercontent.com/5668498/230533162-8b9bfcdd-249c-4efe-b066-4f9ba2ce9f23.jpeg),20
+21,本地知识越多，回答时检索的时间是否会越长,2023-04-07.0029,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/29,是的 因为需要进行向量匹配检索,21
+22,爲啥最後還是報錯 哭。。,2023-04-07.0030,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/30,Failed to import transformers.models.t5.configuration_t5 because of the following error (look up to see,22
+23,对话到第二次的时候就报错UnicodeDecodeError: 'utf-8' codec can't decode,2023-04-07.0031,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/31,对话第一次是没问题的，模型返回输出后又给到请输入你的问题，我再输入问题就报错,23
+24,用的in4的量化版本，推理的时候显示需要申请10Gb的显存,2023-04-07.0033,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/33,"File ""/root/.cache/huggingface/modules/transformers_modules/chatglm-6b-int4-qe/modeling_chatglm.py"", line 581, in forward",24
+25,使用colab运行，python3.9，提示包导入有问题,2023-04-07.0034,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/34,"from ._util import is_directory, is_path",25
+26,运行失败，Loading checkpoint未达到100%被kill了，请问下是什么原因？,2023-04-07.0035,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/35,日志如下：,26
+27,弄了个交流群，自己弄好多细节不会，大家技术讨论 加connection-image 我来拉你,2023-04-08.0036,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/36,自己搞好多不清楚的，一起来弄吧。。准备搞个部署问题的解决文档出来,27
+28,Error using the new version with langchain,2023-04-09.0043,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/43,Error with the new changes:,28
+29,程序报错torch.cuda.OutOfMemoryError如何解决？,2023-04-10.0044,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/44,报错详细信息如下：,29
+30,qa的训练数据格式是如何设置的,2023-04-10.0045,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/45,本项目不是使用微调的方式，所以并不涉及到训练过程。,30
+31,The FileType.UNK file type is not supported in partition. 解决办法,2023-04-10.0046,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/46,ValueError: Invalid file /home/yawu/Documents/langchain-ChatGLM-master/data. The FileType.UNK file type is not supported in partition.,31
+32,如何读取多个txt文档？,2023-04-10.0047,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/47,如题，请教一下如何读取多个txt文档？示例代码中只给了读一个文档的案例，这个input我换成string之后也只能指定一个文档，无法用通配符指定多个文档，也无法传入多个文件路径的列表。,32
+33,nltk package unable to either download or load local nltk_data folder,2023-04-10.0049,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/49,I'm running this project on an offline Windows Server environment so I download the Punkt and averaged_perceptron_tagger tokenizer in this directory:,33
+34,requirements.txt中需要指定langchain版本,2023-04-11.0055,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/55,langchain版本0.116下无法引入RetrievalQA，需要指定更高版本（0.136版本下无问题）,34
+35,Demo演示无法给出输出内容,2023-04-12.0059,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/59,你好，测试了项目自带新闻稿示例和自行上传的一个文本，可以加载进去，但是无法给出答案，请问属于什么情况，如何解决，谢谢。PS: 1、今天早上刚下载全部代码；2、硬件服务器满足要求；3、按操作说明正常操作。,35
+36,群人数过多无法进群，求帮忙拉进群,2023-04-12.0061,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/61,您好，您的群人数超过了200人，目前无法通过二维码加群，请问您方便加我微信拉我进群吗？万分感谢,36
+37,群人数已满，求大佬拉入群,2023-04-12.0062,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/62,已在README中更新拉群二维码,37
+38,requirements中langchain版本错误,2023-04-12.0065,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/65,langchain版本应该是0.0.12而不是0.0.120,38
+39,Linux : Searchd in,2023-04-13.0068,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/68,import nltk,39
+40,No sentence-transformers model found,2023-04-13.0069,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/69,加载不了这个模型，错误原因是找不到这个模型，但是路径是配置好了的,40
+41,Error loading punkt: <urlopen error [Errno 111] Connection,2023-04-13.0070,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/70,运行knowledge_based_chatglm.py，出现nltk报错，具体情况如下：,41
+42,[不懂就问] ptuning数据集格式,2023-04-13.0072,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/72,大家好请教 微调数据集的格式有什么玄机吗？我看 ChatGLM-6B/ptuning/readme.md的demo数据集ADGEN里content为啥都写成 类型#裙*风格#简约  这种格式的？这里面有啥玄机的？ 特此请教,42
+43,Embedding model请教,2023-04-13.0074,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/74,您好，我看到项目里的embedding模型用的是：GanymedeNil/text2vec-large-chinese，请问这个项目里的embedding模型可以直接用ChatGLM嘛？,43
+44,Macbook M1 运行 webui.py 时报错，请问是否可支持M系列芯片,2023-04-13.0080,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/80,```,44
+45,new feature: 添加对P-tunningv2微调后的模型支持,2023-04-14.0099,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/99,能否添加新的功能，对使用[P-tunningv2](https://github.com/THUDM/ChatGLM-6B/tree/main/ptuning)微调chatglm后的模型提供加载支持,45
+46,txt文件加载成功，但读取报错,2023-04-15.0106,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/106,最新版的代码。比较诡异的是我的电脑是没有D盘的，报错信息里怎么有个D盘出来了...,46
+47,模型加载成功？文件无法导入。,2023-04-15.0107,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/107,所有模型均在本地。,47
+48,请问用的什么操作系统呢？,2023-04-16.0110,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/110,ubuntu、centos还是windows？,48
+49,报错ModuleNotFoundError: No module named 'configs.model_config',2023-04-17.0112,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/112,更新代码后，运行webui.py，报错ModuleNotFoundError: No module named 'configs.model_config'。未查得解决方法。,49
+50,问特定问题会出现爆显存,2023-04-17.0116,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/116,正常提问没问题。,50
+51,loading进不去？,2023-04-18.0127,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/127,在linux系统上python webui.py之后打开网页，一直在loading，是不是跟我没装detectron2有关呢？,51
+52,本地知识内容数量限制？,2023-04-18.0129,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/129,本地知识文件类型是txt，超过5条以上的数据，提问的时候就爆显存了。,52
+53,我本来也计划做一个类似的产品，看来不用从头开始做了,2023-04-18.0130,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/130,文本切割，还有优化空间吗？微信群已经加不进去了。,53
+54,load model failed. 加载模型失败,2023-04-18.0132,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/132,```,54
+55,如何在webui里回答时同时返回引用的本地数据内容？,2023-04-18.0133,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/133,如题,55
+56,交流群满200人加不了了，能不能给个负责人的联系方式拉我进群？,2023-04-20.0143,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/143,同求,56
+57,No sentence-transformers model found with name ‘/text2vec/‘，但是再路径下面确实有模型文件,2023-04-20.0145,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/145,另外：The dtype of attention mask (torch.int64) is not bool,57
+58,请问加载模型的路径在哪里修改，默认好像前面会带上transformers_modules.,2023-04-20.0148,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/148,"<img width=""1181"" alt=""1681977897052"" src=""https://user-images.githubusercontent.com/30926001/233301106-3846680a-d842-41d2-874e-5b6514d732c4.png"">",58
+59,为啥放到方法调用会出错，这个怎么处理？,2023-04-20.0150,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/150,```python,59
+60,No sentence-transformers model found with name C:\Users\Administrator/.cache\torch\sentence_transformers\GanymedeNil_text2vec-large-chinese. Creating a new one with MEAN pooling.,2023-04-21.0154,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/154,卡在这块很久是正常现象吗,60
+61,微信群需要邀请才能加入,2023-04-21.0155,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/155,RT，给个个人联系方式白,61
+62,No sentence-transformers model found with name GanymedeNil/text2vec-large-chinese. Creating a new one with MEAN pooling,2023-04-21.0156,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/156,ls GanymedeNil/text2vec-large-chinese,62
+63,embedding会加载两次,2023-04-23.0159,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/159,你好，为什么要这样设置呢，这样会加载两次呀。,63
+64,扫二维码加的那个群，群成员满了进不去了,2023-04-23.0160,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/160,如题,64
+65,执行python3 cli_demo.py 报错AttributeError: 'NoneType' object has no attribute 'chat',2023-04-24.0163,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/163,"刚开始怀疑是内存不足问题，换成int4,int4-qe也不行，有人知道是什么原因吗",65
+66,匹配得分,2023-04-24.0167,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/167,在示例cli_demo.py中返回的匹配文本没有对应的score，可以加上这个feature吗,66
+67,大佬有计划往web_ui.py加入打字机功能吗,2023-04-25.0170,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/170,目前在载入了知识库后，单张V100 32G在回答垂直领域的问题时也需要20S以上，没有打字机逐字输出的使用体验还是比较煎熬的....,67
+68,Is it possible to use a verctorDB for the embedings?,2023-04-25.0171,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/171,"when I play, I have to load the local data again and again when to start. I wonder if it is possible to use",68
+69,请问通过lora训练官方模型得到的微调模型文件该如何加载？,2023-04-25.0173,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/173,通过lora训练的方式得到以下文件:,69
+70,from langchain.chains import RetrievalQA的代码在哪里？,2023-04-25.0174,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/174,local_doc_qa.py,70
+71,哪里有knowledge_based_chatglm.py文件？怎么找不到了？？是被替换成cli_demo.py文件了吗？,2023-04-26.0175,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/175,哪里有knowledge_based_chatglm.py文件？怎么找不到了？？是被替换成cli_demo.py文件了吗？,71
+72,AttributeError: 'Chatbot' object has no attribute 'value',2023-04-26.0177,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/177,Traceback (most recent call last):,72
+73,控制台调api.py报警告,2023-04-26.0178,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/178,"you must pass the application as an import string to enable ""reload"" or ""workers""",73
+74,如何加入群聊,2023-04-27.0183,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/183,微信群超过200人了，需要邀请，如何加入呢？,74
+75,如何将Chatglm和本地知识相结合,2023-04-27.0185,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/185,您好，我想请教一下怎么才能让知识库匹配到的文本和chatglm生成的相结合，而不是说如果没搜索到，就说根据已知信息无法回答该问题，谢谢,75
+76,一点建议,2023-04-27.0189,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/189,1.weiui的get_vector_store方法里面添加一个判断以兼容gradio版本导致的上传异常,76
+77,windows环境下，按照教程，配置好conda环境，git完项目，修改完模型路径相关内容后，运行demo报错缺少,2023-04-28.0194,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/194,报错代码如下：,77
+78,ValueError: too many values to unpack (expected 2),2023-04-28.0198,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/198,"When i tried to use the non-streaming, `ValueError: too many values to unpack (expected 2)` error came out.",78
+79,加载doc后覆盖原本知识,2023-04-28.0201,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/201,加载较大量级的私有知识库后，原本的知识会被覆盖,79
+80,自定义知识库回答效果很差,2023-04-28.0203,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/203,"请问加了自定义知识库知识库,回答效果很差，是因为数据量太小的原因么",80
+81,python310下，安装pycocotools失败，提示低版本cython，实际已安装高版本,2023-04-29.0208,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/208,RT，纯离线环境安装，依赖安装的十分艰难，最后碰到pycocotools，始终无法安装上，求教方法！,81
+82,[FEATURE] 支持 RWKV 模型（目前已有 pip package & rwkv.cpp 等等）,2023-05-01.0216,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/216,您好，我是 RWKV 的作者，介绍见：https://zhuanlan.zhihu.com/p/626083366,82
+83,[BUG] 为啥主机/服务器不联网不能正常启动服务？,2023-05-02.0220,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/220,**问题描述 / Problem Description**,83
+84,[BUG] 简洁阐述问题 / Concise description of the issue,2023-05-03.0222,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/222,**local variable 'torch' referenced before assignment**,84
+85,不支持txt文件的中文输入,2023-05-04.0235,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/235,"vs_path, _ = local_doc_qa.init_knowledge_vector_store(filepath)",85
+86,文件均未成功加载，请检查依赖包或替换为其他文件再次上传。 文件未成功加载，请重新上传文件,2023-05-05.0237,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/237,请大佬帮忙解决，谢谢！,86
+87,[BUG] 使用多卡时chatglm模型加载两次,2023-05-05.0241,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/241,chatglm_llm.py文件下第129行先加载了一次chatglm模型，第143行又加载了一次,87
+88,[BUG] similarity_search_with_score_by_vector函数返回多个doc时的score结果错误,2023-05-06.0252,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/252,**问题描述 / Problem Description**,88
+89,可以再建一个交流群吗，这个群满了进不去。,2023-05-06.0255,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/255,上午应该已经在readme里更新过了，如果不能添加可能是网页缓存问题，可以试试看直接扫描img/qr_code_12.jpg,89
+90,请问这是什么错误哇？KeyError: 'serialized_input',2023-05-06.0257,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/257,运行“python webui.py” 后这是什么错误？怎么解决啊？,90
+91,修改哪里的代码，可以再cpu上跑？,2023-05-06.0258,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/258,**问题描述 / Problem Description**,91
+92,ModuleNotFoundError: No module named 'modelscope',2023-05-07.0266,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/266,安装这个,92
+93,加载lora微调模型时，lora参数加载成功，但显示模型未成功加载？,2023-05-08.0270,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/270,什么原因呀？,93
+94,[BUG] 运行webui.py报错：name 'EMBEDDING_DEVICE' is not defined,2023-05-08.0274,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/274,解决了，我修改model_config时候把这个变量改错了,94
+95,基于ptuning训练完成，新老模型都进行了加载，但是只有新的,2023-05-08.0280,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/280,licitly passing a `revision` is encouraged when loading a model with custom code to ensure no malicious code has been contributed in a newer revision.,95
+96,[BUG] 使用chatyuan模型时，对话Error，has no attribute 'stream_chat',2023-05-08.0282,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/282,**问题描述 / Problem Description**,96
+97,chaglm调用过程中 _call提示有一个 stop,2023-05-09.0286,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/286,**功能描述 / Feature Description**,97
+98,Logger._log() got an unexpected keyword argument 'end',2023-05-10.0295,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/295,使用cli_demo的时候，加载一个普通txt文件，输入问题后，报错：“TypeError: Logger._log() got an unexpected keyword argument 'end'”,98
+99,[BUG] 请问可以解释下这个FAISS.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector的目的吗,2023-05-10.0296,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/296,我不太明白这个库自己写的similarity_search_with_score_by_vector方法做的事情，因为langchain原版的similarity_search_with_score_by_vector只是search faiss之后把返回的topk句子组合起来。我觉得原版理解起来没什么问题，但是这个库里自己写的我就没太看明白多做了什么其他的事情，因为没有注释。,99
+100,[BUG] Windows下上传中文文件名文件，faiss无法生成向量数据库文件,2023-05-11.0318,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/318,**问题描述 / Problem Description**,100
+101,cli_demo中的流式输出能否接着前一答案输出?,2023-05-11.0320,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/320,现有流式输出结果样式为:,101
+102,内网部署时网页无法加载，能否增加离线静态资源,2023-05-12.0326,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/326,内网部署时网页无法加载，能否增加离线静态资源,102
+103,我想把文件字符的编码格式改为encoding='utf-8'在哪修改呢，因为会有ascii codec can't decode byte报错,2023-05-14.0360,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/360,上传中文的txt文件时报错，编码格式为utf-8,103
+104,Batches的进度条是在哪里设置的?能否关闭显示?,2023-05-15.0366,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/366,"使用cli_demo.py进行命令行测试时,每句回答前都有个Batches的进度条",104
+105,ImportError: dlopen: cannot load any more object with static TLS or Segmentation fault,2023-05-15.0368,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/368,**问题描述 / Problem Description**,105
+106,读取PDF时报错,2023-05-16.0373,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/373,在Colab上执行cli_demo.py时，在路径文件夹里放了pdf文件，在加载的过程中会显示错误，然后无法加载PDF文件,106
+107,[BUG] webui报错 InvalidURL,2023-05-16.0375,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/375,python 版本：3.8.16,107
+108,[FEATURE] 如果让回答不包含出处，应该怎么处理,2023-05-16.0380,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/380,**功能描述 / Feature Description**,108
+109,加载PDF文件时，出现 unsupported colorspace for 'png',2023-05-16.0381,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/381,**问题描述 / Problem Description**,109
+110,'ascii' codec can't encode characters in position 14-44: ordinal not in range(128) 经典bug,2023-05-16.0382,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/382,添加了知识库之后进行对话，之后再新增知识库就会出现这个问题。,110
+111,微信群人数超过200了，扫码进不去了，群主可以再创建一个新群吗,2023-05-17.0391,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/391,**功能描述 / Feature Description**,111
+112,TypeError: 'ListDocsResponse' object is not subscriptable,2023-05-17.0393,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/393,应该是用remain_docs.code和remain_docs.data吧？吗？,112
+113,[BUG]  加载chatglm模型报错：'NoneType' object has no attribute 'message_types_by_name',2023-05-17.0398,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/398,**问题描述 / Problem Description**,113
+114,[BUG] 执行 python webui.py 没有报错，但是ui界面提示 Something went wrong Expecting value: line 1 column 1 (char 0,2023-05-18.0399,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/399,**环境配置**,114
+115,启动后调用api接口正常，过一会就不断的爆出 Since the angle classifier is not initialized,2023-05-18.0404,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/404,**问题描述 / Problem Description**,115
+116,[BUG] write_check_file方法中，open函数未指定编码,2023-05-18.0408,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/408,"def write_check_file(filepath, docs):",116
+117,导入的PDF中存在图片，有大概率出现 “unsupported colorspace for 'png'”异常,2023-05-18.0409,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/409,"pix = fitz.Pixmap(doc, img[0])",117
+118,请问流程图是用什么软件画的,2023-05-18.0410,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/410,draw.io,118
+119,mac 加载模型失败,2023-05-19.0417,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/417,Explicitly passing a `revision` is encouraged when loading a model with custom code to ensure no malicious code has been contributed in a newer revision.,119
+120,使用GPU本地运行知识库问答，提问第一个问题出现异常。,2023-05-20.0419,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/419,配置文件model_config.py为：,120
+121,想加入讨论群,2023-05-20.0420,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/420,OK,121
+122,有没有直接调用LLM的API，目前只有知识库的API？,2023-05-22.0426,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/426,-------------------------------------------------------------------------------,122
+123,上传文件后出现 ERROR __init__() got an unexpected keyword argument 'autodetect_encoding',2023-05-22.0428,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/428,"上传文件后出现这个问题：ERROR 2023-05-22 11:46:19,568-1d: __init__() got an unexpected keyword argument 'autodetect_encoding'",123
+124,想问下README中用到的流程图用什么软件画的,2023-05-22.0431,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/431,**功能描述 / Feature Description**,124
+125,No matching distribution found for langchain==0.0.174,2023-05-23.0436,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/436,ERROR: Could not find a version that satisfies the requirement langchain==0.0.174 ,125
+126,[FEATURE] bing是必须的么？,2023-05-23.0437,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/437,从这个[脚步](https://github.com/imClumsyPanda/langchain-ChatGLM/blob/master/configs/model_config.py#L129)里面发现需要申请bing api，如果不申请，纯用模型推理不可吗？,126
+127,同一台环境下部署了5.22号更新的langchain-chatglm v0.1.13和之前的版本，回复速度明显变慢,2023-05-23.0442,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/442,新langchain-chatglm v0.1.13版本速度很慢,127
+128,Error reported during startup,2023-05-23.0443,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/443,Traceback (most recent call last):,128
+129,"ValueError: not enough values to unpack (expected 2, got 1)on of the issue",2023-05-24.0449,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/449,"File "".cache\huggingface\modules\transformers_modules\chatglm-6b-int4\modeling_chatglm.py"", line 1280, in chat",129
+130,[BUG] API部署，流式输出的函数，少了个question,2023-05-24.0451,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/451,**问题描述 / Problem Description**,130
+131,项目结构的简洁性保持,2023-05-24.0454,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/454,**功能描述 / Feature Description**,131
+132,项目群扫码进不去了,2023-05-24.0455,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/455,项目群扫码进不去了，是否可以加一下微信拉我进群，谢谢！微信号：daniel-0527,132
+133,请求拉我入群讨论，海硕一枚，专注于LLM等相关技术,2023-05-24.0461,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/461,**功能描述 / Feature Description**,133
+134,[BUG] chatglm-6b模型报错OSError: Error no file named pytorch_model.bin found in directory /chatGLM/model/model-6b,2023-05-26.0474,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/474,**1、简述：**,134
+135,现在本项目交流群二维码扫描不进去了，需要群主通过,2023-05-27.0478,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/478,现在本项目交流群二维码扫描不进去了，需要群主通过,135
+136,RuntimeError: Only Tensors of floating point and complex dtype can require gradients,2023-05-28.0483,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/483,刚更新了最新版本：,136
+137,"RuntimeError: ""LayerNormKernelImpl"" not implemented for 'Half'",2023-05-28.0484,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/484,"已经解决了 params 只用两个参数 {'trust_remote_code': True, 'torch_dtype': torch.float16}",137
+138,[BUG] 文件未成功加载，请重新上传文件,2023-05-31.0504,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/504,webui.py,138
+139,[BUG] bug 17 ，pdf和pdf为啥还不一样呢？为啥有的pdf能识别？有的pdf识别不了呢？,2023-05-31.0506,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/506,bug 17 ，pdf和pdf为啥还不一样呢？为啥有的pdf能识别？有的pdf识别不了呢？,139
+140,[FEATURE] 简洁阐述功能 / Concise description of the feature,2023-05-31.0513,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/513,**功能描述 / Feature Description**,140
+141,[BUG] webui.py 加载chatglm-6b-int4 失败,2023-06-02.0524,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/524,**问题描述 / Problem Description**,141
+142,[BUG] webui.py  加载chatglm-6b模型异常,2023-06-02.0525,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/525,**问题描述 / Problem Description**,142
+143,增加对chatgpt的embedding和api调用的支持,2023-06-02.0531,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/531,能否支持openai的embedding api和对话的api？,143
+144,[FEATURE] 调整模型下载的位置,2023-06-02.0537,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/537,模型默认下载到 $HOME/.cache/huggingface/，当 C 盘空间不足时无法完成模型的下载。configs/model_config.py 中也没有调整模型位置的参数。,144
+145,[BUG] langchain=0.0.174 出错,2023-06-04.0543,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/543,**问题描述 / Problem Description**,145
+146,[BUG] 更新后加载本地模型路径不正确,2023-06-05.0545,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/545,**问题描述 / Problem Description**,146
+147,SystemError: 8bit 模型需要 CUDA 支持，或者改用量化后模型！,2023-06-06.0550,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/550,"docker 部署后,启动docker,过会儿容器会自动退出,logs报错 SystemError: 8bit 模型需要 CUDA 支持，或者改用量化后模型！ [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) 也已经安装了",147
+148,[BUG] 上传知识库超过1M报错,2023-06-06.0556,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/556,**问题描述 / Problem Description**,148
+149,打开跨域访问后仍然报错，不能请求,2023-06-06.0560,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/560,报错信息：,149
+150,dialogue_answering 里面的代码是不是没有用到？，没有看到调用,2023-06-07.0571,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/571,dialogue_answering 是干啥的,150
+151,[BUG] 响应速度极慢，应从哪里入手优化？48C/128G/8卡,2023-06-07.0573,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/573,运行环境：ubuntu20.04,151
+152,纯CPU环境下运行cli_demo时报错，提示找不到nvcuda.dll,2023-06-08.0576,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/576,本地部署环境是纯CPU，之前的版本在纯CPU环境下能正常运行，但上传本地知识库经常出现encode问题。今天重新git项目后，运行时出现如下问题，请问该如何解决。,152
+153,如何加载本地的embedding模型（text2vec-large-chinese模型文件）,2023-06-08.0582,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/582,"因为需要离线部署，所以要把模型放到本地，我修改了chains/local_doc_qa.py中的HuggingFaceEmbeddings()，在其中加了一个cache_folder的参数，保证下载的文件在cache_folder中，model_name是text2vec-large-chinese。如cache_folder='/home/xx/model/text2vec-large-chinese', model_name='text2vec-large-chinese'，这样仍然需要联网下载报错，请问大佬如何解决该问题？",153
+154,ChatGLM-6B 在另外服务器安装好了，请问如何修改model.cofnig.py 来使用它的接口呢？？,2023-06-09.0588,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/588,我本来想在这加一个api base url 但是运行web.py 发现  还是会去连huggingface 下载模型,154
+155,[BUG] raise partially initialized module 'charset_normalizer' has no attribute 'md__mypyc' when call interface `upload_file`,2023-06-10.0591,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/591,**问题描述 / Problem Description**,155
+156,[BUG] raise OSError: [Errno 101] Network is unreachable when call interface upload_file and upload .pdf files,2023-06-10.0592,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/592,**问题描述 / Problem Description**,156
+157,如果直接用vicuna作为基座大模型，需要修改的地方有哪些？,2023-06-12.0596,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/596,vicuna模型有直接转换好的没有？也就是llama转换之后的vicuna。,157
+158,[BUG] 通过cli.py调用api时抛出AttributeError: 'NoneType' object has no attribute 'get'错误,2023-06-12.0598,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/598,通过`python cli.py start api --ip localhost --port 8001` 命令调用api时，抛出：,158
+159,[BUG] 通过cli.py调用api时直接报错`langchain-ChatGLM: error: unrecognized arguments: start cli`,2023-06-12.0601,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/601,通过python cli.py start cli启动cli_demo时，报错：,159
+160,[BUG] error: unrecognized arguments: --model-dir conf/models/,2023-06-12.0602,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/602,关键字参数修改了吗？有没有文档啊？大佬,160
+161,[BUG] 上传文件全部失败,2023-06-12.0603,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/603,ERROR:    Exception in ASGI application,161
+162,[BUG] config 使用  chatyuan  无法启动,2023-06-12.0604,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/604,"""chatyuan"": {",162
+163,使用fashchat api之后，后台报错APIError 如图所示,2023-06-12.0606,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/606,我按照https://github.com/imClumsyPanda/langchain-ChatGLM/blob/master/docs/fastchat.md,163
+164,[BUG] 启用上下文关联，每次embedding搜索到的内容都会比前一次多一段,2023-06-13.0613,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/613,**问题描述 / Problem Description**,164
+165,local_doc_qa.py中MyFAISS.from_documents() 这个语句看不太懂。MyFAISS类中没有这个方法，其父类FAISS和VectorStore中也只有from_texts方法[BUG] 简洁阐述问题 / Concise description of the issue,2023-06-14.0619,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/619,local_doc_qa.py中MyFAISS.from_documents() 这个语句看不太懂。MyFAISS类中没有这个方法，其父类FAISS和VectorStore中也只有from_texts方法,165
+166,[BUG] TypeError: similarity_search_with_score_by_vector() got an unexpected keyword argument 'filter',2023-06-14.0624,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/624,**问题描述 / Problem Description**,166
+167,please delete this issue,2023-06-15.0633,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/633,"sorry, incorrect submission. Please remove this issue!",167
+168,[BUG] vue前端镜像构建失败,2023-06-15.0635,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/635,**问题描述 / Problem Description**,168
+169,ChatGLM-6B模型能否回答英文问题？,2023-06-15.0640,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/640,大佬，请问一下，如果本地知识文档是英文，ChatGLM-6B模型能否回答英文问题？不能的话，有没有替代的模型推荐，期待你的回复，谢谢,169
+170,[BUG] 简洁阐述问题 / Concise description of the issue,2023-06-16.0644,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/644,**问题描述 / Problem Description**,170
+171,KeyError: 3224,2023-06-16.0645,https://github.com/imClumsyPanda/langchain-ChatGLM/issues/645,```,171
