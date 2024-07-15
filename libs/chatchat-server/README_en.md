@@ -37,11 +37,13 @@ In addition to installing through Pypi, you can also choose to use [source code 
 
 3. Docker
 ```shell
-docker pull chatimage/chatchat:0.3.0-2024-0624
+docker pull chatimage/chatchat:0.3.1.1-2024-0714
+
+docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.1-2024-0714 # 国内镜像
 ```
 > [!important]
-> Strong recommendation: Use docker compose for deployment, refer to [README.docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README.docker.md) for details 
-4. AudoDL
+> Strong recommendation: Use docker compose for deployment, refer to [README.docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README_docker.md) for details 
+1. AudoDL
 🌐  [AutoDL Image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat）Medium ` 0.3.0`
 The code used in the version has been updated to version v0.3.0 of this project.
 
