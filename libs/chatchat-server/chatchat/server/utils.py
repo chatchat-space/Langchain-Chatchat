@@ -1,6 +1,7 @@
 import asyncio
 import multiprocessing as mp
 import os
+import requests
 import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -30,6 +31,7 @@ from langchain_openai.llms import OpenAI
 from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
 from chatchat.utils import build_logger
+import requests
 
 logger = build_logger()
 
@@ -137,6 +139,10 @@ def get_config_models(
                 except ImportError:
                     logger.warning('auto_detect_model needs xinference-client installed. '
                                    'Please try "pip install xinference-client". ')
+                except requests.exceptions.ConnectionError:
+                    logger.error(f"cannot connect to xinference host: {xf_url}")
+                except Exception as e:
+                    logger.error(f"error when connect to xinference server({xf_url}): {e}")
 
         for m_type in model_types:
             models = m.get(m_type, [])
@@ -618,7 +624,7 @@ def webui_address() -> str:
 def get_prompt_template(type: str, name: str) -> Optional[str]:
     """
     从prompt_config中加载模板内容
-    type: "llm_chat","knowledge_base_chat","search_engine_chat"的其中一种，如果有新功能，应该进行加入。
+    type: 对应于 model_settings.llm_model_config 模型类别其中的一种，以及 "rag"，如果有新功能，应该进行加入。
     """
 
     from chatchat.settings import Settings
@@ -868,11 +874,6 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
 
 
 def get_tool_config(name: str = None) -> Dict:
-    import importlib
-
-    # TODO 因为使用了变量更新，不支持重载
-    # from chatchat.configs import model_config
-    # importlib.reload(model_config)
     from chatchat.settings import Settings
 
     if name is None:

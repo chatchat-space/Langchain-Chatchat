@@ -14,7 +14,7 @@ from chatchat.webui_pages.utils import ApiRequest
 api = ApiRequest()
 
 
-@pytest.mark.parametrize("type", ["llm_chat"])
+@pytest.mark.parametrize("type", ["llm_model"])
 def test_get_prompt_template(type):
     print(f"prompt template for: {type}")
     template = api.get_prompt_template(type=type)
