@@ -220,16 +220,19 @@ def kb_chat(api: ApiRequest):
         text = ""
         first = True
 
-        for d in client.chat.completions.create(messages=messages, model=llm_model, stream=True, extra_body=extra_body):
-            if first:
-                chat_box.update_msg("\n\n".join(d.docs), element_index=0, streaming=False, state="complete")
-                chat_box.update_msg("", streaming=False)
-                first = False
-                continue
-            text += d.choices[0].delta.content or ""
-            chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
-        chat_box.update_msg(text, streaming=False)
-        # TODO: 搜索未配置API KEY时产生报错
+        try:
+            for d in client.chat.completions.create(messages=messages, model=llm_model, stream=True, extra_body=extra_body):
+                if first:
+                    chat_box.update_msg("\n\n".join(d.docs), element_index=0, streaming=False, state="complete")
+                    chat_box.update_msg("", streaming=False)
+                    first = False
+                    continue
+                text += d.choices[0].delta.content or ""
+                chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
+            chat_box.update_msg(text, streaming=False)
+            # TODO: 搜索未配置API KEY时产生报错
+        except Exception as e:
+            st.error(e.body)
 
     now = datetime.now()
     with tabs[1]:
