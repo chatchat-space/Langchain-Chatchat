@@ -10,6 +10,16 @@ from memoization import cached, CachingAlgorithmFlag
 from chatchat.settings import Settings
 
 
+def _filter_logs(record: dict) -> bool:
+    # hide debug logs if Settings.basic_settings.log_verbose=False 
+    if record["level"].no <= 10 and not Settings.basic_settings.log_verbose:
+        return False
+    # hide traceback logs if Settings.basic_settings.log_verbose=False 
+    if record["level"].no == 40 and not Settings.basic_settings.log_verbose:
+        record["exception"] = None
+    return True
+
+
 # 默认每调用一次 build_logger 就会添加一次 hanlder，导致 chatchat.log 里重复输出
 @cached(max_size=100, algorithm=CachingAlgorithmFlag.LRU)
 def build_logger(log_file: str = "chatchat"):
@@ -20,27 +30,19 @@ def build_logger(log_file: str = "chatchat"):
     logger.info("<green>some message</green>")
 
     user can set basic_settings.log_verbose=True to output debug logs
+    use logger.exception to log errors with exceptions
     """
+    loguru.logger._core.handlers[0]._filter = _filter_logs
     logger = loguru.logger.opt(colors=True)
     logger.opt = partial(loguru.logger.opt, colors=True)
+    # logger.error = partial(logger.exception)
 
     if log_file:
         if not log_file.endswith(".log"):
             log_file = f"{log_file}.log"
         if not os.path.isabs(log_file):
             log_file = str((Settings.basic_settings.LOG_PATH / log_file).resolve())
-        logger.add(log_file, colorize=False)
-
-    logger.error = logger.opt(exception=True).error
-
-    _debug = logger.debug
-
-    def debug(*args, **kwds):
-        if (Settings.basic_settings.log_verbose
-                and _debug is not debug):
-            _debug(*args, **kwds)
-
-    logger.debug = debug
+        logger.add(log_file, colorize=False, filter=_filter_logs)
 
     return logger
 

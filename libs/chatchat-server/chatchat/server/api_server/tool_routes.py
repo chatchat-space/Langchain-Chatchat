@@ -41,7 +41,7 @@ async def call_tool(
             return {"data": result}
         except Exception:
             msg = f"failed to call tool '{name}'"
-            logger.error(msg, exc_info=True)
+            logger.exception(msg)
             return {"code": 500, "msg": msg}
     else:
         return {"code": 500, "msg": f"no tool named '{name}'"}

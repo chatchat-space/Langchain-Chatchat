@@ -42,7 +42,6 @@ chat_router.post("/kb_chat", summary="知识库对话")(kb_chat)
 chat_router.post("/file_chat", summary="文件对话")(file_chat)
 
 
-
 @chat_router.post("/chat/completions", summary="兼容 openai 的统一 chat 接口")
 async def chat_completions(
     request: Request,
@@ -106,15 +105,19 @@ async def chat_completions(
                 }
             ]
         if tool_input := extra.get("tool_input"):
-            message_id = (
-                add_message_to_db(
-                    chat_type="tool_call",
-                    query=body.messages[-1]["content"],
-                    conversation_id=conversation_id,
+            try:
+                message_id = (
+                    add_message_to_db(
+                        chat_type="tool_call",
+                        query=body.messages[-1]["content"],
+                        conversation_id=conversation_id,
+                    )
+                    if conversation_id
+                    else None
                 )
-                if conversation_id
-                else None
-            )
+            except Exception as e:
+                logger.warning(f"failed to add message to db: {e}")
+                message_id = None
 
             tool_result = await tool.ainvoke(tool_input)
             prompt_template = PromptTemplate.from_template(
@@ -153,15 +156,19 @@ async def chat_completions(
 
     # agent chat with tool calls
     if body.tools:
-        message_id = (
-            add_message_to_db(
-                chat_type="agent_chat",
-                query=body.messages[-1]["content"],
-                conversation_id=conversation_id,
+        try:
+            message_id = (
+                add_message_to_db(
+                    chat_type="agent_chat",
+                    query=body.messages[-1]["content"],
+                    conversation_id=conversation_id,
+                )
+                if conversation_id
+                else None
             )
-            if conversation_id
-            else None
-        )
+        except Exception as e:
+            logger.warning(f"failed to add message to db: {e}")
+            message_id = None
 
         chat_model_config = {}  # TODO: 前端支持配置模型
         tool_names = [x["function"]["name"] for x in body.tools]
@@ -191,7 +198,7 @@ async def chat_completions(
                 else None
             )
         except Exception as e:
-            logger.error(f"failed to add message to db")
+            logger.warning(f"failed to add message to db: {e}")
             message_id = None
 
         extra_json = {

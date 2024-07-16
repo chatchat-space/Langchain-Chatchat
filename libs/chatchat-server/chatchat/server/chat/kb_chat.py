@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio, json
-from urllib.parse import urlencode
 import uuid
 from typing import AsyncIterable, List, Optional, Literal
 
@@ -20,7 +19,8 @@ from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.kb_doc_api import search_docs, search_temp_docs
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
-                                   BaseResponse, get_prompt_template, build_logger
+                                   BaseResponse, get_prompt_template, build_logger,
+                                   check_embed_model
                                 )
 
 
@@ -72,6 +72,10 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             history = [History.from_data(h) for h in history]
 
             if mode == "local_kb":
+                kb = KBServiceFactory.get_service_by_name(kb_name)
+                ok, msg = kb.check_embed_model()
+                if not ok:
+                    raise ValueError(msg)
                 docs = await run_in_threadpool(search_docs,
                                                 query=query,
                                                 knowledge_base_name=kb_name,
@@ -81,6 +85,9 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 metadata={})
                 source_documents = format_reference(kb_name, docs, request.base_url)
             elif mode == "temp_kb":
+                ok, msg = check_embed_model()
+                if not ok:
+                    raise ValueError(msg)
                 docs = await run_in_threadpool(search_temp_docs,
                                                 kb_name,
                                                 query=query,
@@ -206,6 +213,10 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             await task
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
+            return
+        except Exception as e:
+            logger.error(f"error in knowledge chat: {e}")
+            yield {"data": json.dumps({"error": str(e)})}
             return
 
     if stream:

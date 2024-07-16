@@ -255,9 +255,7 @@ def get_ChatOpenAI(
             )
         model = ChatOpenAI(**params)
     except Exception as e:
-        logger.error(
-            f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True
-        )
+        logger.exception(f"failed to create ChatOpenAI for model: {model_name}.")
         model = None
     return model
 
@@ -299,7 +297,7 @@ def get_OpenAI(
             )
         model = OpenAI(**params)
     except Exception as e:
-        logger.error(f"failed to create OpenAI for model: {model_name}.", exc_info=True)
+        logger.exception(f"failed to create OpenAI for model: {model_name}.")
         model = None
     return model
 
@@ -340,21 +338,22 @@ def get_Embeddings(
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
-        logger.error(
-            f"failed to create Embeddings for model: {embed_model}.", exc_info=True
-        )
+        logger.exception(f"failed to create Embeddings for model: {embed_model}.")
 
 
-def check_embed_model(embed_model: str = get_default_embedding()) -> bool:
+def check_embed_model(embed_model: str = None) -> Tuple[bool, str]:
+    '''
+    check weather embed_model accessable, use default embed model if None
+    '''
+    embed_model = embed_model or get_default_embedding()
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
-        return True
+        return True, ""
     except Exception as e:
-        logger.error(
-            f"failed to access embed model '{embed_model}': {e}", exc_info=True
-        )
-        return False
+        msg = f"failed to access embed model '{embed_model}': {e}"
+        logger.error(msg)
+        return False, msg
 
 
 def get_OpenAIClient(
@@ -722,7 +721,7 @@ def run_in_thread_pool(
             try:
                 yield obj.result()
             except Exception as e:
-                logger.error(f"error in sub thread: {e}", exc_info=True)
+                logger.exception(f"error in sub thread: {e}")
 
 
 def run_in_process_pool(
@@ -747,7 +746,7 @@ def run_in_process_pool(
             try:
                 yield obj.result()
             except Exception as e:
-                logger.error(f"error in sub process: {e}", exc_info=True)
+                logger.exception(f"error in sub process: {e}")
 
 
 def get_httpx_client(

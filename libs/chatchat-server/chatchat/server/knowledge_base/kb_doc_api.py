@@ -418,11 +418,9 @@ def recreate_vector_store(
             if not kb.exists() and not allow_empty_kb:
                 yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
             else:
-                error_msg = (
-                    f"could not recreate vector store because failed to access embed model."
-                )
-                if not kb.check_embed_model(error_msg):
-                    yield {"code": 404, "msg": error_msg}
+                ok, msg = kb.check_embed_model()
+                if not ok:
+                    yield {"code": 404, "msg": msg}
                 else:
                     if kb.exists():
                         kb.clear_vs()
