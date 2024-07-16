@@ -424,17 +424,22 @@ def dialogue_page(
             upload_image=upload_image,
         )
         stream = not is_vision_chat
+        params = dict(
+            messages=messages,
+            model=llm_model,
+            stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
+            extra_body=extra_body,
+        )
+        if tools:
+            params["tools"] = tools
+        if tool_choice:
+            params["tool_choice"] = tool_choice
+        if Settings.model_settings.MAX_TOKENS:
+            params["max_tokens"] = Settings.model_settings.MAX_TOKENS
+
         if stream:
             try:
-                for d in client.chat.completions.create(
-                    messages=messages,
-                    model=llm_model,
-                    stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
-                    tools=tools or openai.NOT_GIVEN,
-                    tool_choice=tool_choice,
-                    extra_body=extra_body,
-                    max_tokens=Settings.model_settings.MAX_TOKENS,
-                ):
+                for d in client.chat.completions.create(**params):
                     # import rich
                     # rich.print(d)
                     message_id = d.message_id
@@ -537,15 +542,7 @@ def dialogue_page(
                 st.error(e.body)
         else:
             try:
-                d =client.chat.completions.create(
-                    messages=messages,
-                    model=llm_model,
-                    stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
-                    tools=tools or openai.NOT_GIVEN,
-                    tool_choice=tool_choice,
-                    extra_body=extra_body,
-                    max_tokens=Settings.model_settings.MAX_TOKENS,
-                )
+                d =client.chat.completions.create(**params)
                 chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
             except Exception as e:
                 st.error(e.body)
