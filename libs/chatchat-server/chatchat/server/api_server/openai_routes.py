@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import logging
 import os
 import shutil
 from contextlib import asynccontextmanager
@@ -10,11 +9,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import AsyncGenerator, Dict, Iterable, Tuple
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import FileResponse
 from openai import AsyncClient
-from openai.types.file_object import FileObject
-from sse_starlette.sse import EventSourceResponse
+from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
 from chatchat.settings import Settings
 from chatchat.server.utils import get_config_platforms, get_model_info, get_OpenAIClient
@@ -60,7 +58,7 @@ async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
         await semaphore.acquire()
         yield get_OpenAIClient(platform_name=selected_platform, is_async=True)
     except Exception:
-        logger.error(f"failed when request to {key}", exc_info=True)
+        logger.exception(f"failed when request to {key}")
     finally:
         semaphore.release()
 
@@ -103,6 +101,9 @@ async def openai_request(
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
+        except Exception as e:
+            logger.error(f"openai request error: {e}")
+            yield {"data": json.dumps({"error": str(e)})}
 
     params = body.model_dump(exclude_unset=True)
 
@@ -127,7 +128,7 @@ async def list_models() -> Dict:
             models = await client.models.list()
             return [{**x.model_dump(), "platform_name": name} for x in models.data]
         except Exception:
-            logger.error(f"failed request to platform: {name}", exc_info=True)
+            logger.exception(f"failed request to platform: {name}")
             return []
 
     result = []
@@ -146,7 +147,6 @@ async def create_chat_completions(
     request: Request,
     body: OpenAIChatInput,
 ):
-    logger.debug(body)
     async with get_model_client(body.model) as client:
         result = await openai_request(client.chat.completions.create, body)
         return result

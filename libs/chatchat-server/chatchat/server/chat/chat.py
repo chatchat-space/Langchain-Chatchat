@@ -240,6 +240,10 @@ async def chat(
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
+        except Exception as e:
+            logger.error(f"error in chat: {e}")
+            yield {"data": json.dumps({"error": str(e)})}
+            return
 
     if stream:
         return EventSourceResponse(chat_iterator())
