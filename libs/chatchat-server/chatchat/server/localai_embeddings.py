@@ -156,7 +156,7 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
     disallowed_special: Union[Literal["all"], Set[str], Sequence[str]] = "all"
     chunk_size: int = 1000
     """Maximum number of texts to embed in each batch"""
-    max_retries: int = 6
+    max_retries: int = 3
     """Maximum number of retries to make when generating."""
     request_timeout: Union[float, Tuple[float, float], Any, None] = Field(
         default=None, alias="timeout"

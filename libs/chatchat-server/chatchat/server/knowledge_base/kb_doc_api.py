@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import urllib
@@ -412,57 +413,59 @@ def recreate_vector_store(
     """
 
     def output():
-        kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
-        if not kb.exists() and not allow_empty_kb:
-            yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
-        else:
-            error_msg = (
-                f"could not recreate vector store because failed to access embed model."
-            )
-            if not kb.check_embed_model(error_msg):
-                yield {"code": 404, "msg": error_msg}
+        try:
+            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+            if not kb.exists() and not allow_empty_kb:
+                yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
             else:
-                if kb.exists():
-                    kb.clear_vs()
-                kb.create_kb()
-                files = list_files_from_folder(knowledge_base_name)
-                kb_files = [(file, knowledge_base_name) for file in files]
-                i = 0
-                for status, result in files2docs_in_thread(
-                    kb_files,
-                    chunk_size=chunk_size,
-                    chunk_overlap=chunk_overlap,
-                    zh_title_enhance=zh_title_enhance,
-                ):
-                    if status:
-                        kb_name, file_name, docs = result
-                        kb_file = KnowledgeFile(
-                            filename=file_name, knowledge_base_name=kb_name
-                        )
-                        kb_file.splited_docs = docs
-                        yield json.dumps(
-                            {
-                                "code": 200,
-                                "msg": f"({i + 1} / {len(files)}): {file_name}",
-                                "total": len(files),
-                                "finished": i + 1,
-                                "doc": file_name,
-                            },
-                            ensure_ascii=False,
-                        )
-                        kb.add_doc(kb_file, not_refresh_vs_cache=True)
-                    else:
-                        kb_name, file_name, error = result
-                        msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
-                        logger.error(msg)
-                        yield json.dumps(
-                            {
-                                "code": 500,
-                                "msg": msg,
-                            }
-                        )
-                    i += 1
-                if not not_refresh_vs_cache:
-                    kb.save_vector_store()
+                ok, msg = kb.check_embed_model()
+                if not ok:
+                    yield {"code": 404, "msg": msg}
+                else:
+                    if kb.exists():
+                        kb.clear_vs()
+                    kb.create_kb()
+                    files = list_files_from_folder(knowledge_base_name)
+                    kb_files = [(file, knowledge_base_name) for file in files]
+                    i = 0
+                    for status, result in files2docs_in_thread(
+                        kb_files,
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap,
+                        zh_title_enhance=zh_title_enhance,
+                    ):
+                        if status:
+                            kb_name, file_name, docs = result
+                            kb_file = KnowledgeFile(
+                                filename=file_name, knowledge_base_name=kb_name
+                            )
+                            kb_file.splited_docs = docs
+                            yield json.dumps(
+                                {
+                                    "code": 200,
+                                    "msg": f"({i + 1} / {len(files)}): {file_name}",
+                                    "total": len(files),
+                                    "finished": i + 1,
+                                    "doc": file_name,
+                                },
+                                ensure_ascii=False,
+                            )
+                            kb.add_doc(kb_file, not_refresh_vs_cache=True)
+                        else:
+                            kb_name, file_name, error = result
+                            msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"
+                            logger.error(msg)
+                            yield json.dumps(
+                                {
+                                    "code": 500,
+                                    "msg": msg,
+                                }
+                            )
+                        i += 1
+                    if not not_refresh_vs_cache:
+                        kb.save_vector_store()
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     return EventSourceResponse(output())

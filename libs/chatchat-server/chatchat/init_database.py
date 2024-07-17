@@ -58,7 +58,7 @@ def worker(args: dict):
         end_time = datetime.now()
         print(f"总计用时\t：{end_time-start_time}\n")
     except Exception as e:
-        logger.error(e, exc_info=True)
+        logger.exception(e)
 
 
 @click.command(help="知识库相关功能")

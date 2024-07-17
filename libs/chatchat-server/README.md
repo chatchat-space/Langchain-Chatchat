@@ -23,11 +23,16 @@ pip install langchain-chatchat
 
 # or if you use xinference to provide model API:
 # pip install langchain-chatchat[xinference]
+
+# if you update from an old version, we suggest to run init again to update yaml templates:
+# pip install -U langchain-chatchat
+# chatchat init
 ```
 
 详见这里的[安装指引](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-ov-file#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B)。
 
 > 注意：chatchat请放在独立的虚拟环境中，比如conda，venv，virtualenv等
+> 
 > 已知问题，不能跟xinference一起安装，会让一些插件出bug，例如文件无法上传
 
 2. 源码安装
@@ -38,7 +43,9 @@ pip install langchain-chatchat
 3. Docker
 
 ```shell
-docker pull chatimage/chatchat:0.3.0-2024-0624
+docker pull chatimage/chatchat:0.3.1.1-2024-0714
+
+docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.1-2024-0714 # 国内镜像
 ```
 
 > [!important]
@@ -68,9 +75,11 @@ chatchat init
 确保所有配置正确后（特别是 LLM 和 Embedding Model），执行下列命令创建默认知识库、启动服务：
 ```shell
 chatchat kb -r
-chatchat -a
+chatchat start -a
 ```
 如无错误将自动弹出浏览器页面。
+
+更多命令可以通过 `chatchat --help` 查看。
 
 ### 更新日志：
 #### 0.3.1.1 (2024-07-15)

@@ -275,18 +275,10 @@ class PlatformConfig(MyBaseModel):
     auto_detect_model: bool = False
     """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型可自动检测"""
 
-    llm_models: t.Union[t.Literal["auto"], t.List[str]] = [
-        "glm4-chat",
-        "qwen1.5-chat",
-        "qwen2-instruct",
-        "gpt-3.5-turbo",
-        "gpt-4o",
-    ]
+    llm_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的大语言模型列表，auto_detect_model 设为 True 时自动检测"""
 
-    embed_models: t.Union[t.Literal["auto"], t.List[str]] = [
-        "bge-large-zh-v1.5",
-    ]
+    embed_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的嵌入模型列表，auto_detect_model 设为 True 时自动检测"""
 
     text2image_models: t.Union[t.Literal["auto"], t.List[str]] = []
@@ -385,7 +377,7 @@ class ApiModelSettings(BaseFileSettings):
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
             PlatformConfig(**{
-                "platform_name": "xinference-auto",
+                "platform_name": "xinference",
                 "platform_type": "xinference",
                 "api_base_url": "http://127.0.0.1:9997/v1",
                 "api_key": "EMPTY",
@@ -393,26 +385,6 @@ class ApiModelSettings(BaseFileSettings):
                 "auto_detect_model": True,
                 "llm_models": [],
                 "embed_models": [],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://127.0.0.1:9997/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "glm4-chat",
-                    "qwen1.5-chat",
-                    "qwen2-instruct",
-                ],
-                "embed_models": [
-                    "bge-large-zh-v1.5",
-                ],
                 "text2image_models": [],
                 "image2text_models": [],
                 "rerank_models": [],
