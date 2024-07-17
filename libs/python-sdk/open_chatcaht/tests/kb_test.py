@@ -22,11 +22,11 @@ chatchat = ChatChat(log_level=logging.DEBUG)
 #     embed_model="embedding-2",
 #     model_name="glm-4",
 # ))
-# print('summary_file_to_vector_store', chatchat.knowledge.summary_file_to_vector_store(
-#     knowledge_base_name="samples",
-#     file_name="data/upload_file1.txt",
-#     embed_model="embedding-2",
-# ))
+print('summary_file_to_vector_store', chatchat.knowledge.summary_file_to_vector_store(
+    knowledge_base_name="samples",
+    file_name="data/upload_file1.txt",
+    embed_model="embedding-2",
+))
 # print('summary_file_to_vector_store', chatchat.knowledge.summary_doc_ids_to_vector_store(
 #     knowledge_base_name="samples",
 #     file_name="data/upload_file1.txt",
@@ -37,4 +37,4 @@ chatchat = ChatChat(log_level=logging.DEBUG)
 # ))
 
 # print(chatchat.tool.list())
-print(chatchat.tool.call('calculate', {"text": "3+5/2"}))
+# print(chatchat.tool.call('calculate', {"text": "3+5/2"}))

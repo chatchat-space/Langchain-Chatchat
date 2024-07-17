@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from open_chatcaht._constants import EMBEDDING_MODEL, VS_TYPE, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, CHUNK_SIZE, \
-    OVERLAP_SIZE, ZH_TITLE_ENHANCE
+    OVERLAP_SIZE, ZH_TITLE_ENHANCE, LLM_MODEL
 from open_chatcaht.api_client import ApiClient, post
 from open_chatcaht.types.knowledge_base.create_knowledge_base_param import CreateKnowledgeBaseParam
 import json
@@ -236,7 +236,7 @@ class KbClient(ApiClient):
                                      vs_type: str = VS_TYPE,
                                      embed_model: str = EMBEDDING_MODEL,
                                      file_description: str = "",
-                                     model_name: str = None,
+                                     model_name: str = LLM_MODEL,
                                      temperature: float = 0.01,
                                      max_tokens: Optional[int] = None):
         data = SummaryFileToVectorStoreParam(
