@@ -48,6 +48,6 @@ chatchat = ChatChat()
 # ))
 # print(chatchat.knowledge.upload_temp_docs(
 #     files=["README.md", ],
-#     prev_id='1',
+#     knowledge_id="4",
 # ))
-print(chatchat.knowledge.search_temp_kb_docs(knowledge_id="example_kb", query="hello"))
+# print(chatchat.knowledge.search_temp_kb_docs(knowledge_id="cf414f74bca24fbdaece1ae8bb4d3970", query="hello"))
