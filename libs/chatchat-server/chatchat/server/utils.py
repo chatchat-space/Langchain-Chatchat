@@ -617,13 +617,22 @@ def MakeFastAPIOffline(
 #         return path_str  # THUDM/chatglm06b
 
 
-def api_address() -> str:
+def api_address(is_public: bool = False) -> str:
+    '''
+    允许用户在 basic_settings.API_SERVER 中配置 public_host, public_port
+    以便使用云服务器或反向代理时生成正确的公网 API 地址（如知识库文档下载链接）
+    '''
     from chatchat.settings import Settings
 
-    host = Settings.basic_settings.API_SERVER["host"]
-    if host == "0.0.0.0":
-        host = "127.0.0.1"
-    port = Settings.basic_settings.API_SERVER["port"]
+    server = Settings.basic_settings.API_SERVER
+    if is_public:
+        host = server.get("public_host", "127.0.0.1")
+        port = server.get("public_port", "7861")
+    else:
+        host = server.get("host", "127.0.0.1")
+        port = server.get("port", "7861")
+        if host == "0.0.0.0":
+            host = "127.0.0.1"
     return f"http://{host}:{port}"
 
 

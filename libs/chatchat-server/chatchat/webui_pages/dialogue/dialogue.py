@@ -19,8 +19,8 @@ from streamlit_paste_button import paste_image_button
 from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
-from chatchat.webui_pages.dialogue.utils import process_files
 from chatchat.webui_pages.utils import *
 
 
@@ -501,23 +501,9 @@ def dialogue_page(
                             context = str(d.tool_output)
                             if isinstance(d.tool_output, dict):
                                 docs = d.tool_output.get("docs", [])
-                                source_documents = []
-                                for inum, doc in enumerate(docs):
-                                    doc = DocumentWithVSId.parse_obj(doc)
-                                    filename = doc.metadata.get("source")
-                                    parameters = urlencode(
-                                        {
-                                            "knowledge_base_name": d.tool_output.get(
-                                                "knowledge_base"
-                                            ),
-                                            "file_name": filename,
-                                        }
-                                    )
-                                    url = (
-                                        f"{api.base_url}knowledge_base/download_doc?" + parameters
-                                    )
-                                    ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-                                    source_documents.append(ref)
+                                source_documents = format_reference(kb_name=d.tool_output.get("knowledge_base"),
+                                                                    docs=docs,
+                                                                    api_base_url=api_address(is_public=True))
                                 context = "\n".join(source_documents)
 
                             chat_box.insert_msg(
