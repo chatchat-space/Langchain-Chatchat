@@ -20,7 +20,7 @@ from chatchat.server.knowledge_base.kb_doc_api import search_docs, search_temp_d
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
                                    BaseResponse, get_prompt_template, build_logger,
-                                   check_embed_model
+                                   check_embed_model, api_address
                                 )
 
 
@@ -83,7 +83,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 score_threshold=score_threshold,
                                                 file_name="",
                                                 metadata={})
-                source_documents = format_reference(kb_name, docs, request.base_url)
+                source_documents = format_reference(kb_name, docs, api_address(is_public=True))
             elif mode == "temp_kb":
                 ok, msg = check_embed_model()
                 if not ok:
@@ -93,7 +93,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 query=query,
                                                 top_k=top_k,
                                                 score_threshold=score_threshold)
-                source_documents = format_reference(kb_name, docs, request.base_url)
+                source_documents = format_reference(kb_name, docs, api_address(is_public=True))
             elif mode == "search_engine":
                 result = await run_in_threadpool(search_engine, query, top_k, kb_name)
                 docs = [x.dict() for x in result.get("docs", [])]

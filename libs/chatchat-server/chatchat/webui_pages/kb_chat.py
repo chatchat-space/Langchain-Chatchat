@@ -10,7 +10,7 @@ from streamlit_extras.bottom_container import bottom
 
 from chatchat.settings import Settings
 from chatchat.server.knowledge_base.utils import LOADER_DICT
-from chatchat.server.utils import get_config_models, get_config_platforms, get_default_llm
+from chatchat.server.utils import get_config_models, get_config_platforms, get_default_llm, api_address
 from chatchat.webui_pages.dialogue.dialogue import (save_session, restore_session, rerun,
                                                     get_messages_history, upload_temp_docs,
                                                     add_conv, del_conv, clear_conv)
@@ -194,8 +194,9 @@ def kb_chat(api: ApiRequest):
             return_direct=return_direct,
         )
     
+        api_url = api_address(is_public=True)
         if dialogue_mode == "知识库问答":
-            client = openai.Client(base_url=f"{api_address()}/knowledge_base/local_kb/{selected_kb}", api_key="NONE")
+            client = openai.Client(base_url=f"{api_url}/knowledge_base/local_kb/{selected_kb}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在查询知识库 `{selected_kb}` ...",
@@ -205,13 +206,13 @@ def kb_chat(api: ApiRequest):
                 st.error("请先上传文件再进行对话")
                 st.stop()
             knowledge_id=st.session_state.get("file_chat_id")
-            client = openai.Client(base_url=f"{api_address()}/knowledge_base/temp_kb/{knowledge_id}", api_key="NONE")
+            client = openai.Client(base_url=f"{api_url}/knowledge_base/temp_kb/{knowledge_id}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在查询文件 `{st.session_state.get('file_chat_id')}` ...",
             ])
         else:
-            client = openai.Client(base_url=f"{api_address()}/knowledge_base/search_engine/{search_engine}", api_key="NONE")
+            client = openai.Client(base_url=f"{api_url}/knowledge_base/search_engine/{search_engine}", api_key="NONE")
             chat_box.ai_say([
                 Markdown("...", in_expander=True, title="知识库匹配结果", state="running", expanded=return_direct),
                 f"正在执行 `{search_engine}` 搜索...",

@@ -23,7 +23,8 @@ XF_MODELS_TYPES = {
 class BasicSettings(BaseFileSettings):
     """
     服务器基本配置信息
-    除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效，其它配置项修改后都需要重启服务器才能生效
+    除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效
+    其它配置项修改后都需要重启服务器才能生效，服务运行期间请勿修改
     """
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "basic_settings.yaml")
@@ -33,9 +34,6 @@ class BasicSettings(BaseFileSettings):
 
     log_verbose: bool = False
     """是否开启日志详细信息"""
-
-    LOG_FORMAT: str = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
-    """日志格式"""
 
     HTTPX_DEFAULT_TIMEOUT: float = 300
     """httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。"""
@@ -101,14 +99,14 @@ class BasicSettings(BaseFileSettings):
     OPEN_CROSS_DOMAIN: bool = False
     """API 是否开启跨域"""
 
-    DEFAULT_BIND_HOST: str = "127.0.0.1" if sys.platform != "win32" else "127.0.0.1"
+    DEFAULT_BIND_HOST: str = "0.0.0.0" if sys.platform != "win32" else "127.0.0.1"
     """
     各服务器默认绑定host。如改为"0.0.0.0"需要修改下方所有XX_SERVER的host
     Windows 下 WEBUI 自动弹出浏览器时，如果地址为 "0.0.0.0" 是无法访问的，需要手动修改地址栏
     """
 
-    API_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 7861}
-    """API 服务器地址"""
+    API_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 7861, "public_host": "127.0.0.1", "public_port": 7861}
+    """API 服务器地址。其中 public_host 用于生成云服务公网访问链接（如知识库文档链接）"""
 
     WEBUI_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 8501}
     """WEBUI 服务器地址"""
