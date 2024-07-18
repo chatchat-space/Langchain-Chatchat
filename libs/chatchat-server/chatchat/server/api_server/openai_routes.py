@@ -106,7 +106,7 @@ async def openai_request(
             yield {"data": json.dumps({"error": str(e)})}
 
     params = body.model_dump(exclude_unset=True)
-    if params.get("max_tokens") == 0L
+    if params.get("max_tokens") == 0:
         params["max_tokens"] = Settings.model_settings.MAX_TOKENS
 
     if hasattr(body, "stream") and body.stream:
