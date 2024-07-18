@@ -537,7 +537,7 @@ def dialogue_page(
                             chat_box.update_msg(
                                 text.replace("\n", "\n\n"), streaming=True, metadata=metadata
                             )
-                chat_box.update_msg(text, streaming=False, metadata=metadata)
+                    chat_box.update_msg(text, streaming=False, metadata=metadata)
             except Exception as e:
                 st.error(e.body)
         else:
