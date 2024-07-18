@@ -248,7 +248,7 @@ def summary_doc_ids_to_vector_store(
         doc_infos = kb.get_doc_by_ids(ids=doc_ids)
         # doc_infos转换成DocumentWithVSId包装的对象
         doc_info_with_ids = [
-            DocumentWithVSId(**doc.dict(), id=with_id)
+            DocumentWithVSId(**{**doc.dict(), "id":with_id})
             for with_id, doc in zip(doc_ids, doc_infos)
         ]
 

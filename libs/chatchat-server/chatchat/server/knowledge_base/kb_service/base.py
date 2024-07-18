@@ -249,7 +249,7 @@ class KBService(ABC):
             doc_info = self.get_doc_by_ids([x["id"]])[0]
             if doc_info is not None:
                 # 处理非空的情况
-                doc_with_id = DocumentWithVSId(**doc_info.dict(), id=x["id"])
+                doc_with_id = DocumentWithVSId(**{**doc_info.dict(), "id":x["id"]})
                 docs.append(doc_with_id)
             else:
                 # 处理空的情况

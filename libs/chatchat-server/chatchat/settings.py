@@ -602,6 +602,14 @@ class ToolSettings(BaseFileSettings):
     3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
     '''
 
+    url_reader: dict = {
+        "use": False,
+        "timeout": "10000",
+    }
+    '''URL内容阅读（https://r.jina.ai/）工具配置项
+    请确保部署的网络环境良好，以免造成超时等问题'''
+
+
 
 class PromptSettings(BaseFileSettings):
     """Prompt 模板.除 Agent 模板使用 f-string 外，其它均使用 jinja2 格式"""
