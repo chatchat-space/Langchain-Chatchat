@@ -19,7 +19,7 @@ chatchat = ChatChat()
 #     knowledge_base_name="samples",
 # ))
 # print('recreate_summary_vector_store', chatchat.knowledge.recreate_summary_vector_store(
-#     knowledge_base_name="samples",
+#     knowledge_base_name="example_kb",
 #     embed_model="embedding-2",
 #     model_name="glm-4",
 # ))
@@ -38,7 +38,16 @@ chatchat = ChatChat()
 #     file_names=["upload_file1.txt"],
 # ))
 
-print(chatchat.knowledge.upload_temp_docs(
-    files=['data/README.md'],
-    prev_id='1',
-))
+# print(chatchat.knowledge.download_kb_doc_file(
+#     knowledge_base_name='example_kb',
+#     file_name='README.md'
+# ))
+# print(chatchat.knowledge.kb_doc_file_content(
+#     knowledge_base_name='example_kb',
+#     file_name='README.md'
+# ))
+# print(chatchat.knowledge.upload_temp_docs(
+#     files=["README.md", ],
+#     prev_id='1',
+# ))
+print(chatchat.knowledge.search_temp_kb_docs(knowledge_id="example_kb", query="hello"))

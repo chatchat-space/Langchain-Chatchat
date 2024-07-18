@@ -14,6 +14,7 @@ from open_chatcaht.types.knowledge_base.delete_knowledge_base_param import Delet
 from open_chatcaht.types.knowledge_base.doc.delete_kb_docs_param import DeleteKbDocsParam
 from open_chatcaht.types.knowledge_base.doc.download_kb_doc_param import DownloadKbDocParam
 from open_chatcaht.types.knowledge_base.doc.search_kb_docs_param import SearchKbDocsParam
+from open_chatcaht.types.knowledge_base.doc.search_temp_docs_param import SearchTempDocsParam
 from open_chatcaht.types.knowledge_base.doc.upload_kb_docs_param import UploadKbDocsParam
 from open_chatcaht.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
 from open_chatcaht.types.knowledge_base.recreate_vector_store_param import RecreateVectorStoreParam
@@ -99,7 +100,7 @@ class KbClient(ApiClient):
             knowledge_base_name: str,
             query: str = "",
             top_k: int = VECTOR_SEARCH_TOP_K,
-            score_threshold: int = SCORE_THRESHOLD,
+            score_threshold: float = SCORE_THRESHOLD,
             file_name: str = "",
             metadata: dict = {},
     ) -> List:
@@ -256,13 +257,13 @@ class KbClient(ApiClient):
 
     def upload_temp_docs(self,
                          files: List[Union[str, Path, bytes]],
-                         prev_id: str = None,
+                         knowledge_id: str = None,
                          chunk_size: int = CHUNK_SIZE,
                          chunk_overlap: int = OVERLAP_SIZE,
                          zh_title_enhance: bool = ZH_TITLE_ENHANCE,
                          ):
         data = UploadTempDocsParam(
-            prev_id=prev_id,
+            prev_id=knowledge_id,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance
@@ -279,15 +280,42 @@ class KbClient(ApiClient):
         #                       files=[("files", (filename, file)) for filename, file in _files])
         # return self._get_response_value(response, as_json=True)
 
-    def download_kb_doc_file(self,
-                             knowledge_base_name: str = Field(..., description="知识库名称"),
-                             file_name: str = Field(..., description="文件名称"),
-                             preview: bool = Field(False, description="是：浏览器内预览；否：下载"),
-                             ):
+    def search_temp_kb_docs(
+            self,
+            knowledge_id: str,
+            query: str,
+            top_k: int = VECTOR_SEARCH_TOP_K,
+            score_threshold: float = SCORE_THRESHOLD,
+    ) -> List:
+        data = SearchTempDocsParam(
+            knowledge_id=knowledge_id,
+            query=query,
+            top_k=top_k,
+            score_threshold=score_threshold,
+        ).dict()
+        response = self._post(API_URI_KB_SEARCH_TEMP_DOCS, json=data)
+        return self._get_response_value(response, as_json=True)
+
+    def download_kb_doc_file(self, knowledge_base_name: str, file_name: str, file_path: Optional[str] = None):
         params = DownloadKbDocParam(
             knowledge_base_name=knowledge_base_name,
             file_name=file_name,
-            preview=preview
+            preview=False
         ).dict()
-        response = self._get(API_URI_URI_LIST_KB_FILE, params=params)
-        return self._get_response_value(response, as_json=True, value_func=lambda r: r.get("data", []))
+        response = self._get(API_URI_KB_DOWNLOAD_DOC, params=params)
+        file_content = self._get_response_value(response, as_json=False, value_func=lambda r: r.content)
+        if file_path is None:
+            file_path = file_name
+        with open(file_path, 'wb') as file:
+            file.write(file_content)
+        return file_path
+
+    def kb_doc_file_content(self, knowledge_base_name: str, file_name: str):
+        params = DownloadKbDocParam(
+            knowledge_base_name=knowledge_base_name,
+            file_name=file_name,
+            preview=True
+        ).dict()
+        response = self._get(API_URI_KB_DOWNLOAD_DOC, params=params)
+        file_content = self._get_response_value(response, as_json=False, value_func=lambda r: r.content)
+        return file_content.decode('utf-8')
