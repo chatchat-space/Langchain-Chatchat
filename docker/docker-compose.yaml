@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   xinference:
-    image: xprobe/xinference:v0.12.1
+    image: xprobe/xinference:v0.12.3
     restart: always
     command: xinference-local -H 0.0.0.0
     # ports: # 不使用 host network 时可打开.
@@ -25,12 +25,13 @@ services:
     # environment:
     #   - XINFERENCE_MODEL_SRC=modelscope
   chatchat:
-    image: chatimage/chatchat:0.3.0-2024-0624
+    image: chatimage/chatchat:0.3.1.1-2024-0714
+    # image: ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.1-2024-0714
     restart: always
     # ports: # 不使用 host network 时可打开.
     #   - "7861:7861"
     #   - "8501:8501"
     network_mode: "host"
-    # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
+    # 将本地路径(~/chatchat)挂载到容器默认数据路径($CHATCHAT_ROOT)中
     # volumes:
-    #   - ~/chatchat/data:/usr/local/lib/python3.11/site-packages/chatchat/data
+    #   - /root/chatchat:/root/chatchat_data

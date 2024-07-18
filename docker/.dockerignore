@@ -17,3 +17,7 @@ requirements_webui.txt
 # bge-large-zh-v1.5
 bge-large-zh-v1.5/README.md
 # chatglm3-6b
+../docs/contributing/
+../docs/install/
+../README.md
+../README_en.md
