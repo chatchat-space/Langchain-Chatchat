@@ -63,7 +63,7 @@ async def chat_completions(
     # rich.print(body)
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
-    if body.max_tokens == None:
+    if body.max_tokens in [None, 0]:
         body.max_tokens = Settings.model_settings.MAX_TOKENS
 
     client = get_OpenAIClient(model_name=body.model, is_async=True)
