@@ -1,8 +1,9 @@
 import logging
 
 from open_chatcaht.chatchat_api import ChatChat
+from open_chatcaht.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
 
-chatchat = ChatChat(log_level=logging.DEBUG)
+chatchat = ChatChat()
 # print('create_kb', chatchat.knowledge.create_kb(knowledge_base_name="example_kb"))
 # print('update_kb_info', chatchat.knowledge.update_kb_info(knowledge_base_name="example_kb", kb_info='aaaaaaa'))
 # print('list_kb', chatchat.knowledge.list_kb())
@@ -11,7 +12,7 @@ chatchat = ChatChat(log_level=logging.DEBUG)
 # print('search_kb_docs', chatchat.knowledge.search_kb_docs(knowledge_base_name="example_kb", query="hello"))
 # print('upload_kb_docs', chatchat.knowledge.upload_kb_docs(
 #     files=["data/upload_file1.txt", "data/upload_file2.txt"],
-#     knowledge_base_name="samples",
+#     knowledge_base_name="example_kb",
 # ))
 # print('search_kb_docs', chatchat.knowledge.search_kb_docs(knowledge_base_name="example_kb", query="hello"))
 # print('recreate_vector_store', chatchat.knowledge.recreate_vector_store(
@@ -22,11 +23,12 @@ chatchat = ChatChat(log_level=logging.DEBUG)
 #     embed_model="embedding-2",
 #     model_name="glm-4",
 # ))
-print('summary_file_to_vector_store', chatchat.knowledge.summary_file_to_vector_store(
-    knowledge_base_name="samples",
-    file_name="data/upload_file1.txt",
-    embed_model="embedding-2",
-))
+# for data in chatchat.knowledge.summary_file_to_vector_store(
+#         knowledge_base_name="samples",
+#         file_name="data/upload_file1.txt",
+#         embed_model="embedding-2",
+#         max_tokens=10000):
+#     print(data)
 # print('summary_file_to_vector_store', chatchat.knowledge.summary_doc_ids_to_vector_store(
 #     knowledge_base_name="samples",
 #     file_name="data/upload_file1.txt",
@@ -36,5 +38,7 @@ print('summary_file_to_vector_store', chatchat.knowledge.summary_file_to_vector_
 #     file_names=["upload_file1.txt"],
 # ))
 
-# print(chatchat.tool.list())
-# print(chatchat.tool.call('calculate', {"text": "3+5/2"}))
+print(chatchat.knowledge.upload_temp_docs(
+    files=['data/README.md'],
+    prev_id='1',
+))

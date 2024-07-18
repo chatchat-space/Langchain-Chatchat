@@ -1,4 +1,4 @@
-from chatchat.server.api_server.api_schemas import OpenAIChatInput
+from chatchat.server.api.api_schemas import OpenAIChatInput
 
 
 class ChatCompletions(OpenAIChatInput):
