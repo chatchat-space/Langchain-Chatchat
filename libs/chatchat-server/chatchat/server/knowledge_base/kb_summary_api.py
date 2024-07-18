@@ -42,6 +42,8 @@ def recreate_summary_vector_store(
     :param embed_model:
     :return:
     """
+    if max_tokens in [None, 0]:
+        max_tokens = Settings.model_settings.MAX_TOKENS
 
     def output():
         try:

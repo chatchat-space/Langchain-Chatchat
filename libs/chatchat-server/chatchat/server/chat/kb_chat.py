@@ -67,7 +67,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
     
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
         try:
-            nonlocal history, prompt_name
+            nonlocal history, prompt_name, max_tokens
 
             history = [History.from_data(h) for h in history]
 
@@ -135,6 +135,9 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 from langfuse.callback import CallbackHandler
                 langfuse_handler = CallbackHandler()
                 callbacks.append(langfuse_handler)
+
+            if max_tokens in [None, 0]:
+                max_tokens = Settings.model_settings.MAX_TOKENS
 
             llm = get_ChatOpenAI(
                 model_name=model,
