@@ -1,4 +1,4 @@
-from open_chatcaht.chatchat_api import ChatChat
+from open_chatchat.chatchat_api import ChatChat
 
 chatchat = ChatChat()
 print(chatchat.tool.list())

@@ -1,4 +1,4 @@
-from open_chatcaht.chatchat_api import ChatChat
+from open_chatchat.chatchat_api import ChatChat
 
 # todo 之后改为标准测试
 # chatchat = ChatChat()
