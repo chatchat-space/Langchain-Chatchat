@@ -46,8 +46,8 @@ chatchat = ChatChat()
 #     knowledge_base_name='example_kb',
 #     file_name='README.md'
 # ))
-# print(chatchat.knowledge.upload_temp_docs(
-#     files=["README.md", ],
-#     knowledge_id="4",
-# ))
+print(chatchat.knowledge.upload_temp_docs(
+    files=["README.md", ],
+    knowledge_id="4",
+))
 # print(chatchat.knowledge.search_temp_kb_docs(knowledge_id="cf414f74bca24fbdaece1ae8bb4d3970", query="hello"))

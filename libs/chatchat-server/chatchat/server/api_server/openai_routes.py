@@ -146,7 +146,6 @@ async def list_models() -> Dict:
 
 @openai_router.post("/chat/completions")
 async def create_chat_completions(
-    request: Request,
     body: OpenAIChatInput,
 ):
     async with get_model_client(body.model) as client:

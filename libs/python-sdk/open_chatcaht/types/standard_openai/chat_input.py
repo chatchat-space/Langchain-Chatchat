@@ -11,10 +11,10 @@ from openai.types.chat import (
 
 
 class OpenAIChatInput(OpenAIBaseInput):
-    messages: List[ChatCompletionMessageParam]
+    messages: List[Union[Dict, ChatCompletionMessageParam]] = []
     model: str = LLM_MODEL
     frequency_penalty: Optional[float] = None
-    function_call: Optional[completion_create_params.FunctionCall] = None
+    function_call: Optional[completion_create_params.FunctionCall] = []
     functions: List[completion_create_params.Function] = None
     logit_bias: Optional[Dict[str, int]] = None
     logprobs: Optional[bool] = None
