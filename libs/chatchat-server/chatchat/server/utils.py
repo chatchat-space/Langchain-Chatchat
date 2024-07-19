@@ -140,9 +140,9 @@ def get_config_models(
                     logger.warning('auto_detect_model needs xinference-client installed. '
                                    'Please try "pip install xinference-client". ')
                 except requests.exceptions.ConnectionError:
-                    logger.error(f"cannot connect to xinference host: {xf_url}")
+                    logger.warning(f"cannot connect to xinference host: {xf_url}")
                 except Exception as e:
-                    logger.error(f"error when connect to xinference server({xf_url}): {e}")
+                    logger.warning(f"error when connect to xinference server({xf_url}): {e}")
 
         for m_type in model_types:
             models = m.get(m_type, [])

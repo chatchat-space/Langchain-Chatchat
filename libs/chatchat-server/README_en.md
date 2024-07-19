@@ -17,11 +17,17 @@ Click [here](https://github.com/chatchat-space/Langchain-Chatchat）to Understan
 1. PYPI installation
 ```shell
 pip install langchain-chatchat
+
 # or if you use xinference to provide model API:
 # pip install langchain-chatchat[xinference]
+
+# if you update from an old version, we suggest to run init again to update yaml templates:
+# pip install -U langchain-chatchat
+# chatchat init
 ```
 Please refer to the [Installation Guide](https://github.com/chatchat-space/Langchain-Chatchat/tree/master?tab=readme-OVfile#%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B) for details.
 >Attention: Chatchat should be placed in a separate virtual environment, such as conda, venv, virtualienv, etc
+
 >Known issue, cannot be installed together with xinference, which may cause some plugins to have bugs, such as file upload issues
 
 2. Source code installation
@@ -31,11 +37,13 @@ In addition to installing through Pypi, you can also choose to use [source code 
 
 3. Docker
 ```shell
-docker pull chatimage/chatchat:0.3.0-2024-0624
+docker pull chatimage/chatchat:0.3.1.1-2024-0714
+
+docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.1-2024-0714 # 国内镜像
 ```
 > [!important]
-> Strong recommendation: Use docker compose for deployment, refer to [README.docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README.docker.md) for details 
-4. AudoDL
+> Strong recommendation: Use docker compose for deployment, refer to [README.docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README_docker.md) for details 
+1. AudoDL
 🌐  [AutoDL Image](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat）Medium ` 0.3.0`
 The code used in the version has been updated to version v0.3.0 of this project.
 
@@ -54,7 +62,7 @@ You can find the `*_ settings.yaml` files in CHATCHAT-ROOT or the current direct
 After ensuring that all configurations are correct (especially LLM and Embedding Model), execute the following commands to create the default knowledge base and start the service:
 ```shell
 chatchat kb -r
-chatchat -a
+chatchat start -a
 ```
 If there are no errors, the browser page will automatically pop up.
 ### Update log:

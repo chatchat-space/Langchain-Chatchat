@@ -202,7 +202,6 @@ def folder2db(
             )
         )
         print("-" * 100 + "\n")
-        return result
 
 
 def prune_db_docs(kb_names: List[str]):
