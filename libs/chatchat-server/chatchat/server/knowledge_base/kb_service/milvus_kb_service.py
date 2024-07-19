@@ -80,7 +80,7 @@ class MilvusKBService(KBService):
         # embed_func = get_Embeddings(self.embed_model)
         # embeddings = embed_func.embed_query(query)
         # docs = self.milvus.similarity_search_with_score_by_vector(embeddings, top_k)
-        retriever = get_Retriever("vectorstore").from_vectorstore(
+        retriever = get_Retriever("milvusvectorstore").from_vectorstore(
             self.milvus,
             top_k=top_k,
             score_threshold=score_threshold,

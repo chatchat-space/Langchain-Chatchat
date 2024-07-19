@@ -1,6 +1,6 @@
 #!/bin/bash
 
-conda run -n chatchat  --no-capture-output chatchat -a > >(tee chatchat-output.log) 2>&1 &
+conda run -n chatchat  --no-capture-output export CHATCHAT_ROOT=/root/chatchat-data && chatchat start -a > >(tee chatchat-output.log) 2>&1 &
 PID=$!
 echo "Started chatchat with PID $PID"
 

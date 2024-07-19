@@ -59,7 +59,7 @@ docker-compose up -d
 ```text
 WARN[0000] /root/docker-compose.yaml: `version` is obsolete 
 NAME                IMAGE                           COMMAND                  SERVICE      CREATED         STATUS         PORTS
-root-chatchat-1     chatimage/chatchat:0.3.1.1-2024-0714   "chatchat -a"            chatchat     3 minutes ago   Up 3 minutes   
+root-chatchat-1     chatimage/chatchat:0.3.1.2-2024-0720   "chatchat -a"            chatchat     3 minutes ago   Up 3 minutes   
 root-xinference-1   xprobe/xinference:v0.12.1       "/opt/nvidia/nvidia_…"   xinference   3 minutes ago   Up 3 minutes
 ```
 ```shell
@@ -95,7 +95,7 @@ mkdir -p ~/chatchat
 ```yaml
   (上文 ...)
   chatchat:
-    image: chatimage/chatchat:0.3.1.1-2024-0714
+    image: chatimage/chatchat:0.3.1.2-2024-0720
     (省略 ...)
     # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
     # volumes:
@@ -106,7 +106,7 @@ mkdir -p ~/chatchat
 ```yaml
   (上文 ...)
   chatchat:
-    image: chatimage/chatchat:0.3.1.1-2024-0714
+    image: chatimage/chatchat:0.3.1.2-2024-0720
     (省略 ...)
     # 将本地路径(~/chatchat/data)挂载到容器默认数据路径(/usr/local/lib/python3.11/site-packages/chatchat/data)中
     volumes:
@@ -163,7 +163,7 @@ WARN[0000] /root/docker-compose.yaml: `version` is obsolete
 [root@VM-2-15-centos ~]# docker-compose ps
 WARN[0000] /root/docker-compose.yaml: `version` is obsolete 
 NAME                IMAGE                           COMMAND                  SERVICE      CREATED          STATUS          PORTS
-root-chatchat-1     chatimage/chatchat:0.3.1.1-2024-0714   "chatchat -a"            chatchat     33 seconds ago   Up 32 seconds   
+root-chatchat-1     chatimage/chatchat:0.3.1.2-2024-0720   "chatchat -a"            chatchat     33 seconds ago   Up 32 seconds   
 root-xinference-1   xprobe/xinference:v0.12.1       "/opt/nvidia/nvidia_…"   xinference   45 minutes ago   Up 45 minutes   
 [root@VM-2-15-centos ~]# ss -anptl | grep -E '(8501|7861|9997)'
 LISTEN 0      128          0.0.0.0:9997       0.0.0.0:*    users:(("pt_main_thread",pid=1489804,fd=21))

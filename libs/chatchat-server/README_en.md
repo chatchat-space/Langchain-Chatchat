@@ -37,9 +37,9 @@ In addition to installing through Pypi, you can also choose to use [source code 
 
 3. Docker
 ```shell
-docker pull chatimage/chatchat:0.3.1.1-2024-0714
+docker pull chatimage/chatchat:0.3.1.2-2024-0720
 
-docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.1-2024-0714 # 国内镜像
+docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.2-2024-0720 # 国内镜像
 ```
 > [!important]
 > Strong recommendation: Use docker compose for deployment, refer to [README.docker](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/install/README_docker.md) for details 
@@ -66,6 +66,7 @@ chatchat start -a
 ```
 If there are no errors, the browser page will automatically pop up.
 ### Update log:
+ 
 #### 0.3.1.1 (2024-07-15)
 - Fix:
   - Invalid system message setting in WEBUI ([# 4491](https://github.com/chatchat-space/Langchain-Chatchat/pull/4491 ))

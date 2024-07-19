@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List, Optional
 
@@ -15,7 +16,6 @@ from chatchat.utils import build_logger
 
 
 logger = build_logger()
-
 
 def recreate_summary_vector_store(
     knowledge_base_name: str = Body(..., examples=["samples"]),
@@ -41,71 +41,77 @@ def recreate_summary_vector_store(
     :param embed_model:
     :return:
     """
+    if max_tokens in [None, 0]:
+        max_tokens = Settings.model_settings.MAX_TOKENS
 
     def output():
-        kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
-        if not kb.exists() and not allow_empty_kb:
-            yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
-        else:
-            error_msg = f"could not recreate summary vector store because failed to access embed model."
-            if not kb.check_embed_model(error_msg):
-                yield {"code": 404, "msg": error_msg}
+        try:
+            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+            if not kb.exists() and not allow_empty_kb:
+                yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
             else:
-                # 重新创建知识库
-                kb_summary = KBSummaryService(knowledge_base_name, embed_model)
-                kb_summary.drop_kb_summary()
-                kb_summary.create_kb_summary()
+                ok, msg = kb.check_embed_model()
+                if not ok:
+                    yield {"code": 404, "msg": msg}
+                else:
+                    # 重新创建知识库
+                    kb_summary = KBSummaryService(knowledge_base_name, embed_model)
+                    kb_summary.drop_kb_summary()
+                    kb_summary.create_kb_summary()
 
-                llm = get_ChatOpenAI(
-                    model_name=model_name,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    local_wrap=True,
-                )
-                reduce_llm = get_ChatOpenAI(
-                    model_name=model_name,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    local_wrap=True,
-                )
-                # 文本摘要适配器
-                summary = SummaryAdapter.form_summary(
-                    llm=llm, reduce_llm=reduce_llm, overlap_size=Settings.kb_settings.OVERLAP_SIZE
-                )
-                files = list_files_from_folder(knowledge_base_name)
-
-                i = 0
-                for i, file_name in enumerate(files):
-                    doc_infos = kb.list_docs(file_name=file_name)
-                    docs = summary.summarize(
-                        file_description=file_description, docs=doc_infos
+                    llm = get_ChatOpenAI(
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        local_wrap=True,
                     )
-
-                    status_kb_summary = kb_summary.add_kb_summary(
-                        summary_combine_docs=docs
+                    reduce_llm = get_ChatOpenAI(
+                        model_name=model_name,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        local_wrap=True,
                     )
-                    if status_kb_summary:
-                        logger.info(f"({i + 1} / {len(files)}): {file_name} 总结完成")
-                        yield json.dumps(
-                            {
-                                "code": 200,
-                                "msg": f"({i + 1} / {len(files)}): {file_name}",
-                                "total": len(files),
-                                "finished": i + 1,
-                                "doc": file_name,
-                            },
-                            ensure_ascii=False,
+                    # 文本摘要适配器
+                    summary = SummaryAdapter.form_summary(
+                        llm=llm, reduce_llm=reduce_llm, overlap_size=Settings.kb_settings.OVERLAP_SIZE
+                    )
+                    files = list_files_from_folder(knowledge_base_name)
+
+                    i = 0
+                    for i, file_name in enumerate(files):
+                        doc_infos = kb.list_docs(file_name=file_name)
+                        docs = summary.summarize(
+                            file_description=file_description, docs=doc_infos
                         )
-                    else:
-                        msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
-                        logger.error(msg)
-                        yield json.dumps(
-                            {
-                                "code": 500,
-                                "msg": msg,
-                            }
+
+                        status_kb_summary = kb_summary.add_kb_summary(
+                            summary_combine_docs=docs
                         )
-                    i += 1
+                        if status_kb_summary:
+                            logger.info(f"({i + 1} / {len(files)}): {file_name} 总结完成")
+                            yield json.dumps(
+                                {
+                                    "code": 200,
+                                    "msg": f"({i + 1} / {len(files)}): {file_name}",
+                                    "total": len(files),
+                                    "finished": i + 1,
+                                    "doc": file_name,
+                                },
+                                ensure_ascii=False,
+                            )
+                        else:
+                            msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
+                            logger.error(msg)
+                            yield json.dumps(
+                                {
+                                    "code": 500,
+                                    "msg": msg,
+                                }
+                            )
+                        i += 1
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     return EventSourceResponse(output())
 
@@ -138,54 +144,58 @@ def summary_file_to_vector_store(
     """
 
     def output():
-        kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
-        if not kb.exists() and not allow_empty_kb:
-            yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
-        else:
-            # 重新创建知识库
-            kb_summary = KBSummaryService(knowledge_base_name, embed_model)
-            kb_summary.create_kb_summary()
-
-            llm = get_ChatOpenAI(
-                model_name=model_name,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                local_wrap=True,
-            )
-            reduce_llm = get_ChatOpenAI(
-                model_name=model_name,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                local_wrap=True,
-            )
-            # 文本摘要适配器
-            summary = SummaryAdapter.form_summary(
-                llm=llm, reduce_llm=reduce_llm, overlap_size=Settings.kb_settings.OVERLAP_SIZE
-            )
-
-            doc_infos = kb.list_docs(file_name=file_name)
-            docs = summary.summarize(file_description=file_description, docs=doc_infos)
-
-            status_kb_summary = kb_summary.add_kb_summary(summary_combine_docs=docs)
-            if status_kb_summary:
-                logger.info(f" {file_name} 总结完成")
-                yield json.dumps(
-                    {
-                        "code": 200,
-                        "msg": f"{file_name} 总结完成",
-                        "doc": file_name,
-                    },
-                    ensure_ascii=False,
-                )
+        try:
+            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+            if not kb.exists() and not allow_empty_kb:
+                yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
             else:
-                msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
-                logger.error(msg)
-                yield json.dumps(
-                    {
-                        "code": 500,
-                        "msg": msg,
-                    }
+                # 重新创建知识库
+                kb_summary = KBSummaryService(knowledge_base_name, embed_model)
+                kb_summary.create_kb_summary()
+
+                llm = get_ChatOpenAI(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    local_wrap=True,
                 )
+                reduce_llm = get_ChatOpenAI(
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    local_wrap=True,
+                )
+                # 文本摘要适配器
+                summary = SummaryAdapter.form_summary(
+                    llm=llm, reduce_llm=reduce_llm, overlap_size=Settings.kb_settings.OVERLAP_SIZE
+                )
+
+                doc_infos = kb.list_docs(file_name=file_name)
+                docs = summary.summarize(file_description=file_description, docs=doc_infos)
+
+                status_kb_summary = kb_summary.add_kb_summary(summary_combine_docs=docs)
+                if status_kb_summary:
+                    logger.info(f" {file_name} 总结完成")
+                    yield json.dumps(
+                        {
+                            "code": 200,
+                            "msg": f"{file_name} 总结完成",
+                            "doc": file_name,
+                        },
+                        ensure_ascii=False,
+                    )
+                else:
+                    msg = f"知识库'{knowledge_base_name}'总结文件‘{file_name}’时出错。已跳过。"
+                    logger.error(msg)
+                    yield json.dumps(
+                        {
+                            "code": 500,
+                            "msg": msg,
+                        }
+                    )
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
 
     return EventSourceResponse(output())
 
@@ -240,7 +250,7 @@ def summary_doc_ids_to_vector_store(
         doc_infos = kb.get_doc_by_ids(ids=doc_ids)
         # doc_infos转换成DocumentWithVSId包装的对象
         doc_info_with_ids = [
-            DocumentWithVSId(**doc.dict(), id=with_id)
+            DocumentWithVSId(**{**doc.dict(), "id":with_id})
             for with_id, doc in zip(doc_ids, doc_infos)
         ]
 

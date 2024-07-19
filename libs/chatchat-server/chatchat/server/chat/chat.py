@@ -1,15 +1,12 @@
 import asyncio
 import json
-import time
 import uuid
 from typing import AsyncIterable, List
 
 from fastapi import Body
 from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import ChatPromptTemplate
 from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
-from langchain_core.output_parsers import StrOutputParser
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
@@ -30,7 +27,11 @@ from chatchat.server.utils import (
     get_tool,
     wrap_done,
     get_default_llm,
+    build_logger,
 )
+
+
+logger = build_logger()
 
 
 def create_models_from_config(configs, callbacks, stream, max_tokens):
@@ -122,119 +123,127 @@ async def chat(
     """Agent 对话"""
 
     async def chat_iterator() -> AsyncIterable[OpenAIChatOutput]:
-        callback = AgentExecutorAsyncIteratorCallbackHandler()
-        callbacks = [callback]
+        try:
+            callback = AgentExecutorAsyncIteratorCallbackHandler()
+            callbacks = [callback]
 
-        # Enable langchain-chatchat to support langfuse
-        import os
+            # Enable langchain-chatchat to support langfuse
+            import os
 
-        langfuse_secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
-        langfuse_public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
-        langfuse_host = os.environ.get("LANGFUSE_HOST")
-        if langfuse_secret_key and langfuse_public_key and langfuse_host:
-            from langfuse import Langfuse
-            from langfuse.callback import CallbackHandler
+            langfuse_secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+            langfuse_public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+            langfuse_host = os.environ.get("LANGFUSE_HOST")
+            if langfuse_secret_key and langfuse_public_key and langfuse_host:
+                from langfuse import Langfuse
+                from langfuse.callback import CallbackHandler
 
-            langfuse_handler = CallbackHandler()
-            callbacks.append(langfuse_handler)
+                langfuse_handler = CallbackHandler()
+                callbacks.append(langfuse_handler)
 
-        models, prompts = create_models_from_config(
-            callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
-        )
-        all_tools = get_tool().values()
-        tools = [tool for tool in all_tools if tool.name in tool_config]
-        tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-        full_chain = create_models_chains(
-            prompts=prompts,
-            models=models,
-            conversation_id=conversation_id,
-            tools=tools,
-            callbacks=callbacks,
-            history=history,
-            history_len=history_len,
-            metadata=metadata,
-        )
-
-        _history = [History.from_data(h) for h in history]
-        chat_history = [h.to_msg_tuple() for h in _history]
-
-        history_message = convert_to_messages(chat_history)
-
-        task = asyncio.create_task(
-            wrap_done(
-                full_chain.ainvoke(
-                    {
-                        "input": query,
-                        "chat_history": history_message,
-                    }
-                ),
-                callback.done,
+            models, prompts = create_models_from_config(
+                callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
             )
-        )
+            all_tools = get_tool().values()
+            tools = [tool for tool in all_tools if tool.name in tool_config]
+            tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
+            full_chain = create_models_chains(
+                prompts=prompts,
+                models=models,
+                conversation_id=conversation_id,
+                tools=tools,
+                callbacks=callbacks,
+                history=history,
+                history_len=history_len,
+                metadata=metadata,
+            )
 
-        last_tool = {}
-        async for chunk in callback.aiter():
-            data = json.loads(chunk)
-            data["tool_calls"] = []
-            data["message_type"] = MsgType.TEXT
+            _history = [History.from_data(h) for h in history]
+            chat_history = [h.to_msg_tuple() for h in _history]
 
-            if data["status"] == AgentStatus.tool_start:
-                last_tool = {
-                    "index": 0,
-                    "id": data["run_id"],
-                    "type": "function",
-                    "function": {
-                        "name": data["tool"],
-                        "arguments": data["tool_input"],
-                    },
-                    "tool_output": None,
-                    "is_error": False,
-                }
-                data["tool_calls"].append(last_tool)
-            if data["status"] in [AgentStatus.tool_end]:
-                last_tool.update(
-                    tool_output=data["tool_output"],
-                    is_error=data.get("is_error", False),
+            history_message = convert_to_messages(chat_history)
+
+            task = asyncio.create_task(
+                wrap_done(
+                    full_chain.ainvoke(
+                        {
+                            "input": query,
+                            "chat_history": history_message,
+                        }
+                    ),
+                    callback.done,
                 )
-                data["tool_calls"] = [last_tool]
-                last_tool = {}
-                try:
-                    tool_output = json.loads(data["tool_output"])
-                    if message_type := tool_output.get("message_type"):
-                        data["message_type"] = message_type
-                except:
-                    ...
-            elif data["status"] == AgentStatus.agent_finish:
-                try:
-                    tool_output = json.loads(data["text"])
-                    if message_type := tool_output.get("message_type"):
-                        data["message_type"] = message_type
-                except:
-                    ...
-
-            ret = OpenAIChatOutput(
-                id=f"chat{uuid.uuid4()}",
-                object="chat.completion.chunk",
-                content=data.get("text", ""),
-                role="assistant",
-                tool_calls=data["tool_calls"],
-                model=models["llm_model"].model_name,
-                status=data["status"],
-                message_type=data["message_type"],
-                message_id=message_id,
             )
-            yield ret.model_dump_json()
-        # yield OpenAIChatOutput( # return blank text lastly
-        #         id=f"chat{uuid.uuid4()}",
-        #         object="chat.completion.chunk",
-        #         content="",
-        #         role="assistant",
-        #         model=models["llm_model"].model_name,
-        #         status = data["status"],
-        #         message_type = data["message_type"],
-        #         message_id=message_id,
-        # )
-        await task
+
+            last_tool = {}
+            async for chunk in callback.aiter():
+                data = json.loads(chunk)
+                data["tool_calls"] = []
+                data["message_type"] = MsgType.TEXT
+
+                if data["status"] == AgentStatus.tool_start:
+                    last_tool = {
+                        "index": 0,
+                        "id": data["run_id"],
+                        "type": "function",
+                        "function": {
+                            "name": data["tool"],
+                            "arguments": data["tool_input"],
+                        },
+                        "tool_output": None,
+                        "is_error": False,
+                    }
+                    data["tool_calls"].append(last_tool)
+                if data["status"] in [AgentStatus.tool_end]:
+                    last_tool.update(
+                        tool_output=data["tool_output"],
+                        is_error=data.get("is_error", False),
+                    )
+                    data["tool_calls"] = [last_tool]
+                    last_tool = {}
+                    try:
+                        tool_output = json.loads(data["tool_output"])
+                        if message_type := tool_output.get("message_type"):
+                            data["message_type"] = message_type
+                    except:
+                        ...
+                elif data["status"] == AgentStatus.agent_finish:
+                    try:
+                        tool_output = json.loads(data["text"])
+                        if message_type := tool_output.get("message_type"):
+                            data["message_type"] = message_type
+                    except:
+                        ...
+
+                ret = OpenAIChatOutput(
+                    id=f"chat{uuid.uuid4()}",
+                    object="chat.completion.chunk",
+                    content=data.get("text", ""),
+                    role="assistant",
+                    tool_calls=data["tool_calls"],
+                    model=models["llm_model"].model_name,
+                    status=data["status"],
+                    message_type=data["message_type"],
+                    message_id=message_id,
+                )
+                yield ret.model_dump_json()
+            # yield OpenAIChatOutput( # return blank text lastly
+            #         id=f"chat{uuid.uuid4()}",
+            #         object="chat.completion.chunk",
+            #         content="",
+            #         role="assistant",
+            #         model=models["llm_model"].model_name,
+            #         status = data["status"],
+            #         message_type = data["message_type"],
+            #         message_id=message_id,
+            # )
+            await task
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
+        except Exception as e:
+            logger.error(f"error in chat: {e}")
+            yield {"data": json.dumps({"error": str(e)})}
+            return
 
     if stream:
         return EventSourceResponse(chat_iterator())

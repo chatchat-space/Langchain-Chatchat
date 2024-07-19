@@ -19,8 +19,8 @@ from streamlit_paste_button import paste_image_button
 from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
+from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
-from chatchat.webui_pages.dialogue.utils import process_files
 from chatchat.webui_pages.utils import *
 
 
@@ -206,6 +206,8 @@ def dialogue_page(
             use_agent = st.checkbox(
                 "启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent"
             )
+            output_agent = st.checkbox("显示 Agent 过程", key="output_agent")
+
             # 选择工具
             tools = list_tools(api)
             tool_names = ["None"] + list(tools)
@@ -422,119 +424,114 @@ def dialogue_page(
             upload_image=upload_image,
         )
         stream = not is_vision_chat
+        params = dict(
+            messages=messages,
+            model=llm_model,
+            stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
+            extra_body=extra_body,
+        )
+        if tools:
+            params["tools"] = tools
+        if tool_choice:
+            params["tool_choice"] = tool_choice
+        if Settings.model_settings.MAX_TOKENS:
+            params["max_tokens"] = Settings.model_settings.MAX_TOKENS
+
         if stream:
-            for d in client.chat.completions.create(
-                messages=messages,
-                model=llm_model,
-                stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
-                tools=tools or openai.NOT_GIVEN,
-                tool_choice=tool_choice,
-                extra_body=extra_body,
-                max_tokens=Settings.model_settings.MAX_TOKENS,
-            ):
-                # import rich
-                # rich.print(d)
-                message_id = d.message_id
-                metadata = {
-                    "message_id": message_id,
-                }
+            try:
+                for d in client.chat.completions.create(**params):
+                    # import rich
+                    # rich.print(d)
+                    message_id = d.message_id
+                    metadata = {
+                        "message_id": message_id,
+                    }
 
-                # clear initial message
-                if not started:
-                    chat_box.update_msg("", streaming=False)
-                    started = True
+                    # clear initial message
+                    if not started:
+                        chat_box.update_msg("", streaming=False)
+                        started = True
 
-                if d.status == AgentStatus.error:
-                    st.error(d.choices[0].delta.content)
-                elif d.status == AgentStatus.llm_start:
-                    chat_box.insert_msg("正在解读工具输出结果...")
-                    text = d.choices[0].delta.content or ""
-                elif d.status == AgentStatus.llm_new_token:
-                    text += d.choices[0].delta.content or ""
-                    chat_box.update_msg(
-                        text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                    )
-                elif d.status == AgentStatus.llm_end:
-                    text += d.choices[0].delta.content or ""
-                    chat_box.update_msg(
-                        text.replace("\n", "\n\n"), streaming=False, metadata=metadata
-                    )
-                # tool 的输出与 llm 输出重复了
-                # elif d.status == AgentStatus.tool_start:
-                #     formatted_data = {
-                #         "Function": d.choices[0].delta.tool_calls[0].function.name,
-                #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
-                #     }
-                #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                #     text = """\n```{}\n```\n""".format(formatted_json)
-                #     chat_box.insert_msg( # TODO: insert text directly not shown
-                #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
-                # elif d.status == AgentStatus.tool_end:
-                #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
-                #     if d.message_type == MsgType.IMAGE:
-                #         for url in json.loads(tool_output).get("images", []):
-                #             url = f"{api.base_url}/media/{url}"
-                #             chat_box.insert_msg(Image(url))
-                #         chat_box.update_msg(expanded=False, state="complete")
-                #     else:
-                #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
-                #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
-                elif d.status == AgentStatus.agent_finish:
-                    text = d.choices[0].delta.content or ""
-                    chat_box.update_msg(text.replace("\n", "\n\n"))
-                elif d.status is None:  # not agent chat
-                    if getattr(d, "is_ref", False):
-                        context = str(d.tool_output)
-                        if isinstance(d.tool_output, dict):
-                            docs = d.tool_output.get("docs", [])
-                            source_documents = []
-                            for inum, doc in enumerate(docs):
-                                doc = DocumentWithVSId.parse_obj(doc)
-                                filename = doc.metadata.get("source")
-                                parameters = urlencode(
-                                    {
-                                        "knowledge_base_name": d.tool_output.get(
-                                            "knowledge_base"
-                                        ),
-                                        "file_name": filename,
-                                    }
-                                )
-                                url = (
-                                    f"{api.base_url}/knowledge_base/download_doc?" + parameters
-                                )
-                                ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
-                                source_documents.append(ref)
-                            context = "\n".join(source_documents)
-
-                        chat_box.insert_msg(
-                            Markdown(
-                                context,
-                                in_expander=True,
-                                state="complete",
-                                title="参考资料",
-                            )
-                        )
-                        chat_box.insert_msg("")
-                    elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
-                        for img in d.tool_output.get("images", []):
-                            chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
-                    else:
+                    if d.status == AgentStatus.error:
+                        st.error(d.choices[0].delta.content)
+                    elif d.status == AgentStatus.llm_start:
+                        if not output_agent:
+                            continue
+                        chat_box.insert_msg("正在解读工具输出结果...")
+                        text = d.choices[0].delta.content or ""
+                    elif d.status == AgentStatus.llm_new_token:
+                        if not output_agent:
+                            continue
                         text += d.choices[0].delta.content or ""
                         chat_box.update_msg(
                             text.replace("\n", "\n\n"), streaming=True, metadata=metadata
                         )
-            chat_box.update_msg(text, streaming=False, metadata=metadata)
+                    elif d.status == AgentStatus.llm_end:
+                        if not output_agent:
+                            continue
+                        text += d.choices[0].delta.content or ""
+                        chat_box.update_msg(
+                            text.replace("\n", "\n\n"), streaming=False, metadata=metadata
+                        )
+                    # tool 的输出与 llm 输出重复了
+                    # elif d.status == AgentStatus.tool_start:
+                    #     formatted_data = {
+                    #         "Function": d.choices[0].delta.tool_calls[0].function.name,
+                    #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+                    #     }
+                    #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                    #     text = """\n```{}\n```\n""".format(formatted_json)
+                    #     chat_box.insert_msg( # TODO: insert text directly not shown
+                    #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
+                    # elif d.status == AgentStatus.tool_end:
+                    #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
+                    #     if d.message_type == MsgType.IMAGE:
+                    #         for url in json.loads(tool_output).get("images", []):
+                    #             url = f"{api.base_url}/media/{url}"
+                    #             chat_box.insert_msg(Image(url))
+                    #         chat_box.update_msg(expanded=False, state="complete")
+                    #     else:
+                    #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
+                    #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
+                    elif d.status == AgentStatus.agent_finish:
+                        text = d.choices[0].delta.content or ""
+                        chat_box.update_msg(text.replace("\n", "\n\n"))
+                    elif d.status is None:  # not agent chat
+                        if getattr(d, "is_ref", False):
+                            context = str(d.tool_output)
+                            if isinstance(d.tool_output, dict):
+                                docs = d.tool_output.get("docs", [])
+                                source_documents = format_reference(kb_name=d.tool_output.get("knowledge_base"),
+                                                                    docs=docs,
+                                                                    api_base_url=api_address(is_public=True))
+                                context = "\n".join(source_documents)
+
+                            chat_box.insert_msg(
+                                Markdown(
+                                    context,
+                                    in_expander=True,
+                                    state="complete",
+                                    title="参考资料",
+                                )
+                            )
+                            chat_box.insert_msg("")
+                        elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
+                            for img in d.tool_output.get("images", []):
+                                chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
+                        else:
+                            text += d.choices[0].delta.content or ""
+                            chat_box.update_msg(
+                                text.replace("\n", "\n\n"), streaming=True, metadata=metadata
+                            )
+                    chat_box.update_msg(text, streaming=False, metadata=metadata)
+            except Exception as e:
+                st.error(e.body)
         else:
-            d =client.chat.completions.create(
-                messages=messages,
-                model=llm_model,
-                stream=stream, # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
-                tools=tools or openai.NOT_GIVEN,
-                tool_choice=tool_choice,
-                extra_body=extra_body,
-                max_tokens=Settings.model_settings.MAX_TOKENS,
-            )
-            chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
+            try:
+                d =client.chat.completions.create(**params)
+                chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
+            except Exception as e:
+                st.error(e.body)
 
         # if os.path.exists("tmp/image.jpg"):
         #     with open("tmp/image.jpg", "rb") as image_file:
