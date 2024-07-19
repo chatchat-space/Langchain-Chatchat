@@ -24,7 +24,7 @@ class OpenAIChatInput(OpenAIBaseInput):
     response_format: completion_create_params.ResponseFormat = None
     seed: Optional[int] = None
     stop: Union[Optional[str], List[str]] = None
-    stream: Optional[bool] = None
+    stream: Optional[bool] = True
     temperature: Optional[float] = TEMPERATURE
     tool_choice: Optional[Union[ChatCompletionToolChoiceOptionParam, str]] = None
     tools: List[Union[ChatCompletionToolParam, str]] = None

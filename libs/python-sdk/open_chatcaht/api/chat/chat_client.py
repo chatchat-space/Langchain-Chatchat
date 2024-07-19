@@ -18,18 +18,18 @@ class ChatClient(ApiClient):
 
     def chat_feedback(self,
                       message_id: str,
-                      score: int = Field(0, max=100, description="用户评分，满分100，越大表示评价越高"),
-                      reason: str = Field("", description="用户评分理由，比如不符合事实等"), ):
+                      score: int = 100,
+                      reason: str = ""):
         data = ChatFeedbackParam(
             message_id=message_id,
             score=score,
             reason=reason,
         ).dict()
-        resp = self._post(API_URI_CHAT_FEEDBACK, data)
-        return self._get_response_value(resp)
+        resp = self._post(API_URI_CHAT_FEEDBACK, json=data)
+        return self._get_response_value(resp, as_json=True)
 
     def kb_chat(self,
-                query: str ,
+                query: str,
                 mode: Literal["local_kb", "temp_kb", "search_engine"] = "local_kb",
                 kb_name: str = "",
                 top_k: int = VECTOR_SEARCH_TOP_K,
@@ -61,7 +61,7 @@ class ChatClient(ApiClient):
 
     def file_chat(self,
                   query: str,
-                  knowledge_id: str ,
+                  knowledge_id: str,
                   top_k: int = VECTOR_SEARCH_TOP_K,
                   score_threshold: float = SCORE_THRESHOLD,
                   history: List[Union[dict, ChatMessage]] = [],

@@ -3,7 +3,7 @@ import logging
 from open_chatcaht.chatchat_api import ChatChat
 from open_chatcaht.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
 
-chatchat = ChatChat()
+# chatchat = ChatChat()
 # print('create_kb', chatchat.knowledge.create_kb(knowledge_base_name="example_kb"))
 # print('update_kb_info', chatchat.knowledge.update_kb_info(knowledge_base_name="example_kb", kb_info='aaaaaaa'))
 # print('list_kb', chatchat.knowledge.list_kb())
@@ -46,8 +46,8 @@ chatchat = ChatChat()
 #     knowledge_base_name='example_kb',
 #     file_name='README.md'
 # ))
-print(chatchat.knowledge.upload_temp_docs(
-    files=["README.md", ],
-    knowledge_id="4",
-))
+# print(chatchat.knowledge.upload_temp_docs(
+#     files=["README.md", ],
+#     knowledge_id="4",
+# ))
 # print(chatchat.knowledge.search_temp_kb_docs(knowledge_id="cf414f74bca24fbdaece1ae8bb4d3970", query="hello"))
