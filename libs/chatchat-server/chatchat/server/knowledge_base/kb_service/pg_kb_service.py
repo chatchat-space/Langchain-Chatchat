@@ -90,13 +90,20 @@ class PGKBService(KBService):
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
+        select_query = text("SELECT uuid FROM langchain_pg_collection WHERE name = :name;")
+        delete_query = text("""
+            DELETE FROM langchain_pg_embedding
+            WHERE cmetadata::jsonb @> :cmetadata
+            AND collection_id = :collection_id;
+        """)
         with Session(PGKBService.engine) as session:
+            collection_id = session.execute(select_query, {"name": kb_file.kb_name}).fetchone()[0]
             session.execute(
-                text(
-                    """ DELETE FROM langchain_pg_embedding WHERE cmetadata::jsonb @> '{"source": "filepath"}'::jsonb;""".replace(
-                        "filepath", self.get_relative_source_path(kb_file.filepath)
-                    )
-                )
+                delete_query, 
+                {
+                    "cmetadata": '{"source": "%s"}' % self.get_relative_source_path(kb_file.filepath),
+                    "collection_id": collection_id
+                }
             )
             session.commit()
 

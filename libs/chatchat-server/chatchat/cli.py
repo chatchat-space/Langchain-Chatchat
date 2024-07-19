@@ -75,7 +75,7 @@ def init(
                   mode="recreate_vs",
                   vs_type=Settings.kb_settings.DEFAULT_VS_TYPE,
                   embed_model=get_default_embedding())
-        logger.success("所有初始化已完成，执行 chatchat start -a 启动服务。")
+        logger.success("<green>所有初始化已完成，执行 chatchat start -a 启动服务。</green>")
     else:
         logger.success("执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。")
 
