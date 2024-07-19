@@ -27,6 +27,7 @@ from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
+from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
@@ -62,11 +63,58 @@ def get_config_platforms() -> Dict[str, Dict]:
     return {m["platform_name"]: m for m in platforms}
 
 
+@cached(max_size=10, ttl=60, algorithm=CachingAlgorithmFlag.LRU)
+def detect_xf_models(xf_url: str) -> Dict[str, List[str]]:
+    '''
+    use cache for xinference model detecting to avoid:
+    - too many requests in short intervals
+    - multiple requests to one platform for every model
+    the cache will be invalidated after one minute
+    '''
+    xf_model_type_maps = {
+        "llm_models": lambda xf_models: [k for k, v in xf_models.items()
+                                        if "LLM" == v["model_type"]
+                                        and "vision" not in v["model_ability"]],
+        "embed_models": lambda xf_models: [k for k, v in xf_models.items()
+                                        if "embedding" == v["model_type"]],
+        "text2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "image" == v["model_type"]],
+        "image2image_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "image" == v["model_type"]],
+        "image2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if "LLM" == v["model_type"]
+                                                and "vision" in v["model_ability"]],
+        "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
+                                            if "rerank" == v["model_type"]],
+        "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
+                                                in XF_MODELS_TYPES["speech2text"].values()],
+        "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
+                                                if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
+                                                in XF_MODELS_TYPES["text2speech"].values()],
+    }
+    models = {}
+    try:
+        from xinference_client import RESTfulClient as Client
+        xf_client = Client(xf_url)
+        xf_models = xf_client.list_models()
+        for m_type, filter in xf_model_type_maps.items():
+            models[m_type] = filter(xf_models)
+    except ImportError:
+        logger.warning('auto_detect_model needs xinference-client installed. '
+                        'Please try "pip install xinference-client". ')
+    except requests.exceptions.ConnectionError:
+        logger.warning(f"cannot connect to xinference host: {xf_url}, please check your configuration.")
+    except Exception as e:
+        logger.warning(f"error when connect to xinference server({xf_url}): {e}")
+    return models
+
+
 def get_config_models(
         model_name: str = None,
-        model_type: Literal[
+        model_type: Optional[Literal[
             "llm", "embed", "text2image", "image2image", "image2text", "rerank", "speech2text", "text2speech"
-        ] = None,
+        ]] = None,
         platform_name: str = None,
 ) -> Dict[str, Dict]:
     """
@@ -96,29 +144,6 @@ def get_config_models(
     else:
         model_types = [f"{model_type}_models"]
 
-    xf_model_type_maps = {
-        "llm_models": lambda xf_models: [k for k, v in xf_models.items()
-                                         if "LLM" == v["model_type"]
-                                         and "vision" not in v["model_ability"]],
-        "embed_models": lambda xf_models: [k for k, v in xf_models.items()
-                                           if "embedding" == v["model_type"]],
-        "text2image_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                if "image" == v["model_type"]],
-        "image2image_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if "image" == v["model_type"]],
-        "image2text_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                if "LLM" == v["model_type"]
-                                                and "vision" in v["model_ability"]],
-        "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
-                                            if "rerank" == v["model_type"]],
-        "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
-                                                 in XF_MODELS_TYPES["speech2text"].values()],
-        "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                 if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
-                                                 in XF_MODELS_TYPES["text2speech"].values()],
-    }
-
     for m in list(get_config_platforms().values()):
         if platform_name is not None and platform_name != m.get("platform_name"):
             continue
@@ -127,22 +152,12 @@ def get_config_models(
             if not m.get("platform_type") == "xinference":  # TODO：当前仅支持 xf 自动检测模型
                 logger.warning(f"auto_detect_model not supported for {m.get('platform_type')} yet")
                 continue
+            xf_url = get_base_url(m.get("api_base_url"))
+            xf_models = detect_xf_models(xf_url)
             for m_type in model_types:
                 # if m.get(m_type) != "auto":
                 #     continue
-                try:
-                    from xinference_client import RESTfulClient as Client
-                    xf_url = get_base_url(m.get("api_base_url"))
-                    xf_client = Client(xf_url)
-                    xf_models = xf_client.list_models()
-                    m[m_type] = xf_model_type_maps[m_type](xf_models)
-                except ImportError:
-                    logger.warning('auto_detect_model needs xinference-client installed. '
-                                   'Please try "pip install xinference-client". ')
-                except requests.exceptions.ConnectionError:
-                    logger.warning(f"cannot connect to xinference host: {xf_url}")
-                except Exception as e:
-                    logger.warning(f"error when connect to xinference server({xf_url}): {e}")
+                m[m_type] = xf_models.get(m_type, [])
 
         for m_type in model_types:
             models = m.get(m_type, [])
@@ -240,9 +255,7 @@ def get_ChatOpenAI(
             )
         model = ChatOpenAI(**params)
     except Exception as e:
-        logger.error(
-            f"failed to create ChatOpenAI for model: {model_name}.", exc_info=True
-        )
+        logger.exception(f"failed to create ChatOpenAI for model: {model_name}.")
         model = None
     return model
 
@@ -284,7 +297,7 @@ def get_OpenAI(
             )
         model = OpenAI(**params)
     except Exception as e:
-        logger.error(f"failed to create OpenAI for model: {model_name}.", exc_info=True)
+        logger.exception(f"failed to create OpenAI for model: {model_name}.")
         model = None
     return model
 
@@ -325,21 +338,22 @@ def get_Embeddings(
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
-        logger.error(
-            f"failed to create Embeddings for model: {embed_model}.", exc_info=True
-        )
+        logger.exception(f"failed to create Embeddings for model: {embed_model}.")
 
 
-def check_embed_model(embed_model: str = get_default_embedding()) -> bool:
+def check_embed_model(embed_model: str = None) -> Tuple[bool, str]:
+    '''
+    check weather embed_model accessable, use default embed model if None
+    '''
+    embed_model = embed_model or get_default_embedding()
     embeddings = get_Embeddings(embed_model=embed_model)
     try:
         embeddings.embed_query("this is a test")
-        return True
+        return True, ""
     except Exception as e:
-        logger.error(
-            f"failed to access embed model '{embed_model}': {e}", exc_info=True
-        )
-        return False
+        msg = f"failed to access embed model '{embed_model}': {e}"
+        logger.error(msg)
+        return False, msg
 
 
 def get_OpenAIClient(
@@ -603,13 +617,22 @@ def MakeFastAPIOffline(
 #         return path_str  # THUDM/chatglm06b
 
 
-def api_address() -> str:
+def api_address(is_public: bool = False) -> str:
+    '''
+    允许用户在 basic_settings.API_SERVER 中配置 public_host, public_port
+    以便使用云服务器或反向代理时生成正确的公网 API 地址（如知识库文档下载链接）
+    '''
     from chatchat.settings import Settings
 
-    host = Settings.basic_settings.API_SERVER["host"]
-    if host == "0.0.0.0":
-        host = "127.0.0.1"
-    port = Settings.basic_settings.API_SERVER["port"]
+    server = Settings.basic_settings.API_SERVER
+    if is_public:
+        host = server.get("public_host", "127.0.0.1")
+        port = server.get("public_port", "7861")
+    else:
+        host = server.get("host", "127.0.0.1")
+        port = server.get("port", "7861")
+        if host == "0.0.0.0":
+            host = "127.0.0.1"
     return f"http://{host}:{port}"
 
 
@@ -707,7 +730,7 @@ def run_in_thread_pool(
             try:
                 yield obj.result()
             except Exception as e:
-                logger.error(f"error in sub thread: {e}", exc_info=True)
+                logger.exception(f"error in sub thread: {e}")
 
 
 def run_in_process_pool(
@@ -732,7 +755,7 @@ def run_in_process_pool(
             try:
                 yield obj.result()
             except Exception as e:
-                logger.error(f"error in sub process: {e}", exc_info=True)
+                logger.exception(f"error in sub process: {e}")
 
 
 def get_httpx_client(

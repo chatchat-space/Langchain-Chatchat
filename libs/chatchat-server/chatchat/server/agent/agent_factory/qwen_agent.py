@@ -92,6 +92,12 @@ class QwenChatAgentPromptTemplate(BaseChatPromptTemplate):
         formatted = self.template.format(**kwargs)
         return [HumanMessage(content=formatted)]
 
+def validate_json(json_data: str):
+    try:
+        json.loads(json_data)
+        return True
+    except ValueError:
+        return False
 
 class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
     """Output parser with retries for the structured chat agent with custom qwen prompt."""
@@ -109,9 +115,26 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
                 # ollama部署的qwen，返回的json键值可能为单引号，可能缺少最后的引号和括号
                 if not json_string.endswith('"}'):
                     print("尝试修复格式不正确的json输出:" + json_string)
-                    json_string = (json_string + '"}').replace("'", '"')
-                    print("修复后的json:" + json_string)
+                    fixed_json_string = (json_string + '"}').replace("'", '"')
+
+                    fixed = True
+                    if not validate_json(fixed_json_string):
+                        # ollama部署的qwen，返回的json可能有注释，需要去掉注释
+                        fixed_json_string = (re.sub(r'//.*', '', (json_string + '"}').replace("'", '"'))
+                                             .strip()
+                                             .replace('\n', ''))
+                        if not validate_json(fixed_json_string):
+                            fixed = False
+                            print("尝试修复json格式失败：" + json_string)
+                    if fixed:
+                        json_string = fixed_json_string
+                        print("修复后的json输出:" + json_string)
+
                     json_input = json.loads(json_string)
+            # 有概率key为command而非query，需修改
+            if "command" in json_input:
+                json_input["query"] = json_input.pop("command")
+
             return AgentAction(tool=s[0].strip(), tool_input=json_input, log=text)
         elif s := re.findall(r"\nFinal\sAnswer:\s*(.+)", text, flags=re.DOTALL):
             s = s[-1]

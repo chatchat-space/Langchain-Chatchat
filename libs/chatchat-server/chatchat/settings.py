@@ -23,7 +23,8 @@ XF_MODELS_TYPES = {
 class BasicSettings(BaseFileSettings):
     """
     服务器基本配置信息
-    除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效，其它配置项修改后都需要重启服务器才能生效
+    除 log_verbose/HTTPX_DEFAULT_TIMEOUT 修改后即时生效
+    其它配置项修改后都需要重启服务器才能生效，服务运行期间请勿修改
     """
 
     model_config = SettingsConfigDict(yaml_file=CHATCHAT_ROOT / "basic_settings.yaml")
@@ -33,9 +34,6 @@ class BasicSettings(BaseFileSettings):
 
     log_verbose: bool = False
     """是否开启日志详细信息"""
-
-    LOG_FORMAT: str = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
-    """日志格式"""
 
     HTTPX_DEFAULT_TIMEOUT: float = 300
     """httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。"""
@@ -101,14 +99,14 @@ class BasicSettings(BaseFileSettings):
     OPEN_CROSS_DOMAIN: bool = False
     """API 是否开启跨域"""
 
-    DEFAULT_BIND_HOST: str = "127.0.0.1" if sys.platform != "win32" else "127.0.0.1"
+    DEFAULT_BIND_HOST: str = "0.0.0.0" if sys.platform != "win32" else "127.0.0.1"
     """
     各服务器默认绑定host。如改为"0.0.0.0"需要修改下方所有XX_SERVER的host
     Windows 下 WEBUI 自动弹出浏览器时，如果地址为 "0.0.0.0" 是无法访问的，需要手动修改地址栏
     """
 
-    API_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 7861}
-    """API 服务器地址"""
+    API_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 7861, "public_host": "127.0.0.1", "public_port": 7861}
+    """API 服务器地址。其中 public_host 用于生成云服务公网访问链接（如知识库文档链接）"""
 
     WEBUI_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 8501}
     """WEBUI 服务器地址"""
@@ -275,18 +273,10 @@ class PlatformConfig(MyBaseModel):
     auto_detect_model: bool = False
     """是否自动获取平台可用模型列表。设为 True 时下方不同模型类型可自动检测"""
 
-    llm_models: t.Union[t.Literal["auto"], t.List[str]] = [
-        "glm4-chat",
-        "qwen1.5-chat",
-        "qwen2-instruct",
-        "gpt-3.5-turbo",
-        "gpt-4o",
-    ]
+    llm_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的大语言模型列表，auto_detect_model 设为 True 时自动检测"""
 
-    embed_models: t.Union[t.Literal["auto"], t.List[str]] = [
-        "bge-large-zh-v1.5",
-    ]
+    embed_models: t.Union[t.Literal["auto"], t.List[str]] = []
     """该平台支持的嵌入模型列表，auto_detect_model 设为 True 时自动检测"""
 
     text2image_models: t.Union[t.Literal["auto"], t.List[str]] = []
@@ -385,7 +375,7 @@ class ApiModelSettings(BaseFileSettings):
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
             PlatformConfig(**{
-                "platform_name": "xinference-auto",
+                "platform_name": "xinference",
                 "platform_type": "xinference",
                 "api_base_url": "http://127.0.0.1:9997/v1",
                 "api_key": "EMPTY",
@@ -393,26 +383,6 @@ class ApiModelSettings(BaseFileSettings):
                 "auto_detect_model": True,
                 "llm_models": [],
                 "embed_models": [],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://127.0.0.1:9997/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "glm4-chat",
-                    "qwen1.5-chat",
-                    "qwen2-instruct",
-                ],
-                "embed_models": [
-                    "bge-large-zh-v1.5",
-                ],
                 "text2image_models": [],
                 "image2text_models": [],
                 "rerank_models": [],
@@ -629,6 +599,14 @@ class ToolSettings(BaseFileSettings):
     2、text2promql 与大模型在意图理解、metric 选择、promql 转换等方面的能力有关, 可切换不同大模型进行测试;
     3、当前仅支持 单prometheus 查询, 后续考虑支持 多prometheus 查询.
     '''
+
+    url_reader: dict = {
+        "use": False,
+        "timeout": "10000",
+    }
+    '''URL内容阅读（https://r.jina.ai/）工具配置项
+    请确保部署的网络环境良好，以免造成超时等问题'''
+
 
 
 class PromptSettings(BaseFileSettings):

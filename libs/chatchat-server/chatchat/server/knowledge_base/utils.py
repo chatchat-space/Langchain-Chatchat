@@ -475,6 +475,7 @@ def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="") -> Li
                 "file_name": filename,
             }
         )
+        api_base_url = api_base_url.strip(" /")
         url = (
             f"{api_base_url}/knowledge_base/download_doc?" + parameters
         )

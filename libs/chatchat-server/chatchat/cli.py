@@ -46,15 +46,16 @@ def init(
     Settings.set_auto_reload(False)
     bs = Settings.basic_settings
     kb_names = [x.strip() for x in kb_names.split(",")]
-    logger.info(f"开始初始化项目数据目录：{Settings.CHATCHAT_ROOT}")
+    logger.success(f"开始初始化项目数据目录：{Settings.CHATCHAT_ROOT}")
     Settings.basic_settings.make_dirs()
-    logger.info("创建所有数据目录：成功。")
+    logger.success("创建所有数据目录：成功。")
     if(bs.PACKAGE_ROOT / "data/knowledge_base/samples" != Path(bs.KB_ROOT_PATH) / "samples"):
         shutil.copytree(bs.PACKAGE_ROOT / "data/knowledge_base/samples", Path(bs.KB_ROOT_PATH) / "samples", dirs_exist_ok=True)
-    logger.info("复制 samples 知识库文件：成功。")
+    logger.success("复制 samples 知识库文件：成功。")
     nltk.data.path.append(str(bs.PACKAGE_ROOT / "data/nltk_data"))
+    logger.success("设置 nltk_data 路径：成功。")
     create_tables()
-    logger.info("初始化知识库数据库：成功。")
+    logger.success("初始化知识库数据库：成功。")
 
     if xf_endpoint:
         Settings.model_settings.MODEL_PLATFORMS[0].api_base_url = xf_endpoint
@@ -66,8 +67,8 @@ def init(
     Settings.createl_all_templates()
     Settings.set_auto_reload(True)
 
-    logger.info("生成默认配置文件：成功。")
-    logger.warning("<red>请先检查 model_settings.yaml 里模型平台、LLM模型和Embed模型信息正确</red>")
+    logger.success("生成默认配置文件：成功。")
+    logger.success("请先检查确认 model_settings.yaml 里模型平台、LLM模型和Embed模型信息已经正确")
 
     if recreate_kb:
         folder2db(kb_names=kb_names,
@@ -76,7 +77,7 @@ def init(
                   embed_model=get_default_embedding())
         logger.success("<green>所有初始化已完成，执行 chatchat start -a 启动服务。</green>")
     else:
-        logger.success("<green>执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。</green>")
+        logger.success("执行 chatchat kb -r 初始化知识库，然后 chatchat start -a 启动服务。")
 
 
 main.add_command(startup_main, "start")
