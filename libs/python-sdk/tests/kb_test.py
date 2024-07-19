@@ -1,7 +1,7 @@
 import logging
 
-from open_chatcaht.chatchat_api import ChatChat
-from open_chatcaht.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
+from open_chatchat.chatchat_api import ChatChat
+from open_chatchat.types.knowledge_base.doc.upload_temp_docs_param import UploadTempDocsParam
 
 # chatchat = ChatChat()
 # print('create_kb', chatchat.knowledge.create_kb(knowledge_base_name="example_kb"))
