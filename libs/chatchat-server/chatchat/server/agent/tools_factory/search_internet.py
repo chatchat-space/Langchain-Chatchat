@@ -2,9 +2,9 @@ from typing import Dict, List
 
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.utilities.bing_search import BingSearchAPIWrapper
-from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
-from langchain.utilities.searx_search import SearxSearchWrapper
+from langchain_community.utilities.bing_search import BingSearchAPIWrapper
+from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
+from langchain_community.utilities.searx_search import SearxSearchWrapper
 from markdownify import markdownify
 from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
