@@ -188,72 +188,72 @@ class KbClient(ApiClient):
         response = self._post(API_URI_KB_RECREATE_VECTOR_STORE, json=data, stream=True, timeout=None)
         return self._httpx_stream2generator(response, as_json=True)
 
-    # def recreate_summary_vector_store(self,
-    #                                   knowledge_base_name: str,
-    #                                   allow_empty_kb: bool = True,
-    #                                   vs_type: str = VS_TYPE,
-    #                                   embed_model: str = EMBEDDING_MODEL,
-    #                                   file_description: str = "",
-    #                                   model_name: str = None,
-    #                                   temperature: float = 0.01,
-    #                                   max_tokens: Optional[int] = None):
-    #     data = RecreateSummaryVectorStoreParam(
-    #         knowledge_base_name=knowledge_base_name,
-    #         allow_empty_kb=allow_empty_kb,
-    #         vs_type=vs_type,
-    #         embed_model=embed_model,
-    #         file_description=file_description,
-    #         model_name=model_name,
-    #         temperature=temperature,
-    #         max_tokens=max_tokens).dict()
-    #     response = self._post(API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE, json=data)
-    #     return self._get_response_value(response, as_json=True)
-    #
-    # def summary_doc_ids_to_vector_store(self,
-    #                                     knowledge_base_name: str,
-    #                                     doc_ids: List = [],
-    #                                     vs_type: str = VS_TYPE,
-    #                                     embed_model: str = EMBEDDING_MODEL,
-    #                                     file_description: str = "",
-    #                                     model_name: str = None,
-    #                                     temperature: float = 0.01,
-    #                                     max_tokens: Optional[int] = None,
-    #                                     ):
-    #     data = SummaryDocIdsToVectorStoreParam(
-    #         knowledge_base_name=knowledge_base_name,
-    #         doc_ids=doc_ids,
-    #         vs_type=vs_type,
-    #         embed_model=embed_model,
-    #         file_description=file_description,
-    #         model_name=model_name,
-    #         temperature=temperature,
-    #         max_tokens=max_tokens,
-    #     ).dict()
-    #     response = self._post(API_URI_KB_SUMMARY_DOC_IDS_TO_VECTOR_STORE, json=data)
-    #     return self._get_response_value(response, as_json=True)
-    #
-    # def summary_file_to_vector_store(self, knowledge_base_name: str,
-    #                                  file_name: str,
-    #                                  allow_empty_kb: bool = True,
-    #                                  vs_type: str = VS_TYPE,
-    #                                  embed_model: str = EMBEDDING_MODEL,
-    #                                  file_description: str = "",
-    #                                  model_name: str = LLM_MODEL,
-    #                                  temperature: float = 0.01,
-    #                                  max_tokens: Optional[int] = 1000):
-    #     data = SummaryFileToVectorStoreParam(
-    #         knowledge_base_name=knowledge_base_name,
-    #         file_name=file_name,
-    #         allow_empty_kb=allow_empty_kb,
-    #         vs_type=vs_type,
-    #         embed_model=embed_model,
-    #         file_description=file_description,
-    #         model_name=model_name,
-    #         temperature=temperature,
-    #         max_tokens=max_tokens,
-    #     ).dict()
-    #     response = self._post(API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE, json=data,stream=True)
-    #     return self._httpx_stream2generator(response, as_json=True)
+    def recreate_summary_vector_store(self,
+                                      knowledge_base_name: str,
+                                      allow_empty_kb: bool = True,
+                                      vs_type: str = VS_TYPE,
+                                      embed_model: str = EMBEDDING_MODEL,
+                                      file_description: str = "",
+                                      model_name: str = None,
+                                      temperature: float = 0.01,
+                                      max_tokens: Optional[int] = None):
+        data = RecreateSummaryVectorStoreParam(
+            knowledge_base_name=knowledge_base_name,
+            allow_empty_kb=allow_empty_kb,
+            vs_type=vs_type,
+            embed_model=embed_model,
+            file_description=file_description,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens).dict()
+        response = self._post(API_URI_KB_SUMMARY_RECREATE_VECTOR_STORE, json=data)
+        return self._get_response_value(response, as_json=True)
+
+    def summary_doc_ids_to_vector_store(self,
+                                        knowledge_base_name: str,
+                                        doc_ids: List = [],
+                                        vs_type: str = VS_TYPE,
+                                        embed_model: str = EMBEDDING_MODEL,
+                                        file_description: str = "",
+                                        model_name: str = None,
+                                        temperature: float = 0.01,
+                                        max_tokens: Optional[int] = None,
+                                        ):
+        data = SummaryDocIdsToVectorStoreParam(
+            knowledge_base_name=knowledge_base_name,
+            doc_ids=doc_ids,
+            vs_type=vs_type,
+            embed_model=embed_model,
+            file_description=file_description,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        ).dict()
+        response = self._post(API_URI_KB_SUMMARY_DOC_IDS_TO_VECTOR_STORE, json=data)
+        return self._get_response_value(response, as_json=True)
+
+    def summary_file_to_vector_store(self, knowledge_base_name: str,
+                                     file_name: str,
+                                     allow_empty_kb: bool = True,
+                                     vs_type: str = VS_TYPE,
+                                     embed_model: str = EMBEDDING_MODEL,
+                                     file_description: str = "",
+                                     model_name: str = LLM_MODEL,
+                                     temperature: float = 0.01,
+                                     max_tokens: Optional[int] = 1000):
+        data = SummaryFileToVectorStoreParam(
+            knowledge_base_name=knowledge_base_name,
+            file_name=file_name,
+            allow_empty_kb=allow_empty_kb,
+            vs_type=vs_type,
+            embed_model=embed_model,
+            file_description=file_description,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        ).dict()
+        response = self._post(API_URI_KB_SUMMARY_FILE_TO_VECTOR_STORE, json=data,stream=True)
+        return self._httpx_stream2generator(response, as_json=True)
 
     def upload_temp_docs(self,
                          files: List[Union[str, Path, bytes]],
