@@ -3,8 +3,6 @@ from pathlib import Path
 import shutil
 import typing as t
 
-import nltk
-
 from chatchat.startup import main as startup_main
 from chatchat.init_database import main as kb_main, create_tables, folder2db
 from chatchat.settings import Settings
@@ -52,8 +50,6 @@ def init(
     if(bs.PACKAGE_ROOT / "data/knowledge_base/samples" != Path(bs.KB_ROOT_PATH) / "samples"):
         shutil.copytree(bs.PACKAGE_ROOT / "data/knowledge_base/samples", Path(bs.KB_ROOT_PATH) / "samples", dirs_exist_ok=True)
     logger.success("复制 samples 知识库文件：成功。")
-    nltk.data.path.append(str(bs.PACKAGE_ROOT / "data/nltk_data"))
-    logger.success("设置 nltk_data 路径：成功。")
     create_tables()
     logger.success("初始化知识库数据库：成功。")
 
