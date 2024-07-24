@@ -43,7 +43,10 @@ def create_app(run_mode: str = None):
     app.include_router(tool_router)
     app.include_router(openai_router)
     app.include_router(server_router)
+    if Settings.basic_settings.USE_RERANKER:
+        from chatchat.server.api_server.reranker_routes import reranker_router
 
+        app.include_router(reranker_router)
     # 其它接口
     app.post(
         "/other/completion",
