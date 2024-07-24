@@ -101,10 +101,10 @@ def test_kb_chat_mannual():
         "extra_body": {"tool_input": {"database": "samples", "query": "如何提问以获得高质量答案"}},
         "stream": True,
     }
-    dump_input(data, "KB Chat (auto parameters)")
+    dump_input(data, "KB Chat (mannual parameters)")
     response = requests.post(url, headers=headers, json=data, stream=True)
     print("\n")
-    print("=" * 30 + "KB Chat (auto parameters)" + "  output" + "=" * 30)
+    print("=" * 30 + "KB Chat (mannual parameters)" + "  output" + "=" * 30)
     for line in response.iter_content(None, decode_unicode=True):
         if line.startswith("data: "):
             data = json.loads(line[6:])
