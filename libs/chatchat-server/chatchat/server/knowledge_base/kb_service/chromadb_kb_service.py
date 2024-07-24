@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple
 import chromadb
 from chromadb.api.types import GetResult, QueryResult
 from langchain.docstore.document import Document
+from langchain_chroma import Chroma
 
 from chatchat.settings import Settings
 from chatchat.server.file_rag.utils import get_Retriever
@@ -49,9 +50,9 @@ def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
 class ChromaKBService(KBService):
     vs_path: str
     kb_path: str
+    chroma: Chroma
 
     client = None
-    collection = None
 
     def vs_type(self) -> str:
         return SupportedVSType.CHROMADB
@@ -61,16 +62,23 @@ class ChromaKBService(KBService):
 
     def get_kb_path(self) -> str:
         return get_kb_path(self.kb_name)
+    
+    def _load_chroma(self):
+        self.chroma = Chroma(
+            client=self.client,
+            collection_name=self.kb_name,
+            embedding_function=get_Embeddings(self.embed_model),
+        )
 
     def do_init(self) -> None:
         self.kb_path = self.get_kb_path()
         self.vs_path = self.get_vs_path()
         self.client = chromadb.PersistentClient(path=self.vs_path)
-        self.collection = self.client.get_or_create_collection(self.kb_name)
+        collection = self.client.get_or_create_collection(self.kb_name)
+        self._load_chroma()
 
     def do_create_kb(self) -> None:
-        # In ChromaDB, creating a KB is equivalent to creating a collection
-        self.collection = self.client.get_or_create_collection(self.kb_name)
+        pass
 
     def do_drop_kb(self):
         # Dropping a KB is equivalent to deleting a collection in ChromaDB
@@ -84,7 +92,7 @@ class ChromaKBService(KBService):
         self, query: str, top_k: int, score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD
     ) -> List[Tuple[Document, float]]:
         retriever = get_Retriever("vectorstore").from_vectorstore(
-            self.collection,
+            self.chroma,
             top_k=top_k,
             score_threshold=score_threshold,
         )
@@ -99,18 +107,18 @@ class ChromaKBService(KBService):
         embeddings = embed_func.embed_documents(texts=texts)
         ids = [str(uuid.uuid1()) for _ in range(len(texts))]
         for _id, text, embedding, metadata in zip(ids, texts, embeddings, metadatas):
-            self.collection.add(
+            self.chroma._collection.add(
                 ids=_id, embeddings=embedding, metadatas=metadata, documents=text
             )
             doc_infos.append({"id": _id, "metadata": metadata})
         return doc_infos
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
-        get_result: GetResult = self.collection.get(ids=ids)
+        get_result: GetResult = self.chroma._collection.get(ids=ids)
         return _get_result_to_documents(get_result)
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
-        self.collection.delete(ids=ids)
+        self.chroma._collection.delete(ids=ids)
         return True
 
     def do_clear_vs(self):
@@ -118,4 +126,4 @@ class ChromaKBService(KBService):
         self.do_drop_kb()
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
-        return self.collection.delete(where={"source": kb_file.filepath})
+        return self.chroma._collection.delete(where={"source": kb_file.filepath})

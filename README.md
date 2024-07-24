@@ -114,7 +114,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 | 可用模型               | [Xinference 已支持模型](https://inference.readthedocs.io/en/latest/models/builtin/index.html) | [LocalAI 已支持模型](https://localai.io/model-compatibility/#/) | [Ollama 已支持模型](https://ollama.com/library#/)                                   | [FastChat 已支持模型](https://github.com/lm-sys/FastChat/blob/main/docs/model_support.md) |
 
 除上述本地模型加载框架外，项目中也为可接入在线 API 的 [One API](https://github.com/songquanpeng/one-api)
-框架接入提供了支持，支持包括 [OpenAI ChatGPT](https://platform.openai.com/docs/guides/gpt/chat-completions-api)、[Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)、[Anthropic Claude](https://anthropic.com/)、[智谱请言](https://bigmodel.cn/)、[百川](https://platform.baichuan-ai.com/)
+框架接入提供了支持，支持包括 [OpenAI ChatGPT](https://platform.openai.com/docs/guides/gpt/chat-completions-api)、[Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)、[Anthropic Claude](https://anthropic.com/)、[智谱清言](https://bigmodel.cn/)、[百川](https://platform.baichuan-ai.com/)
 等常用在线 API 的接入使用。
 
 > [!Note]
@@ -186,10 +186,6 @@ set CHATCHAT_ROOT=/path/to/chatchat_data
 
 ```shell
 chatchat init
-# 如果你已经启动了 Xinference 服务，可以直接指定 Xinference API 地址、LLM 模型、Embedding 模型，可以跳过第3、4步，直接按第5步启动服务：
-# chatchat init -x http://127.0.0.1:9999/v1 -l qwen2-instruct -e bce -r
-# chatchat start -a
-# 具体查看 chatchat init --help
 ```
 
 该命令会执行以下操作：
@@ -307,7 +303,9 @@ chatchat start -a
 ### Docker 部署
 
 ```shell
-docker pull chatimage/chatchat:0.3.0-2024-0624
+docker pull chatimage/chatchat:0.3.1.2
+
+docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.2 # 国内镜像
 ```
 
 > [!important]
@@ -347,7 +345,7 @@ docker pull chatimage/chatchat:0.3.0-2024-0624
 
 ### 项目交流群
 
-<img src="docs/img/qr_code_112.jpg" alt="二维码" width="300" />
+<img src="docs/img/qr_code_113.jpg" alt="二维码" width="300" />
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 

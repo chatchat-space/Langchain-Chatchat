@@ -44,6 +44,9 @@ async def kb_chat_endpoint(
     # import rich
     # rich.print(body)
 
+    if body.max_tokens in [None, 0]:
+        body.max_tokens = Settings.model_settings.MAX_TOKENS
+
     extra = body.model_extra
     ret = await kb_chat(
         query=body.messages[-1]["content"],

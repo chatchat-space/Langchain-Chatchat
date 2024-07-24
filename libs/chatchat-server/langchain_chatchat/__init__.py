@@ -26,7 +26,7 @@ def import_submodule(name):
 
 
 # 需要的子模块列表，自己添加
-submodules = ["configs", "server", "startup", "webui_pages"]
+submodules = ["settings", "server", "startup", "webui_pages"]
 
 # 导入所有子模块
 for submodule in submodules:

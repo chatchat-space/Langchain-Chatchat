@@ -1,8 +1,8 @@
 import os
 
-from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.schema import Document
-from langchain.vectorstores.faiss import FAISS
+from langchain_community.vectorstores.faiss import FAISS
+from langchain_community.docstore.in_memory import InMemoryDocstore
 
 from chatchat.settings import Settings
 from chatchat.server.knowledge_base.kb_cache.base import *
@@ -137,7 +137,7 @@ class KBFaissPool(_FaissPool):
         except Exception as e:
             if locked:  # we don't know exception raised before or after atomic.release
                 self.atomic.release()
-            logger.error(e, exc_info=True)
+            logger.exception(e)
             raise RuntimeError(f"向量库 {kb_name} 加载失败。")
         return self.get((kb_name, vector_name))
 

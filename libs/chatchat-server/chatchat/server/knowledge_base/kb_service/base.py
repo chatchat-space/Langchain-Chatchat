@@ -80,12 +80,8 @@ class KBService(ABC):
         """
         pass
 
-    def check_embed_model(self, error_msg: str) -> bool:
-        if not _check_embed_model(self.embed_model):
-            logger.error(error_msg, exc_info=True)
-            return False
-        else:
-            return True
+    def check_embed_model(self) -> Tuple[bool, str]:
+        return _check_embed_model(self.embed_model)
 
     def create_kb(self):
         """
@@ -123,9 +119,7 @@ class KBService(ABC):
         向知识库添加文件
         如果指定了docs，则不再将文本向量化，并将数据库对应条目标为custom_docs=True
         """
-        if not self.check_embed_model(
-            f"could not add docs because failed to access embed model."
-        ):
+        if not self.check_embed_model()[0]:
             return False
 
         if docs:
@@ -186,9 +180,7 @@ class KBService(ABC):
         使用content中的文件更新向量库
         如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
         """
-        if not self.check_embed_model(
-            f"could not update docs because failed to access embed model."
-        ):
+        if not self.check_embed_model()[0]:
             return False
 
         if os.path.exists(kb_file.filepath):
@@ -212,10 +204,9 @@ class KBService(ABC):
         top_k: int = Settings.kb_settings.VECTOR_SEARCH_TOP_K,
         score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
     ) -> List[Document]:
-        if not self.check_embed_model(
-            f"could not search docs because failed to access embed model."
-        ):
+        if not self.check_embed_model()[0]:
             return []
+
         docs = self.do_search(query, top_k, score_threshold)
         return docs
 
@@ -230,9 +221,7 @@ class KBService(ABC):
         传入参数为： {doc_id: Document, ...}
         如果对应 doc_id 的值为 None，或其 page_content 为空，则删除该文档
         """
-        if not self.check_embed_model(
-            f"could not update docs because failed to access embed model."
-        ):
+        if not self.check_embed_model()[0]:
             return False
 
         self.del_doc_by_ids(list(docs.keys()))
@@ -260,7 +249,7 @@ class KBService(ABC):
             doc_info = self.get_doc_by_ids([x["id"]])[0]
             if doc_info is not None:
                 # 处理非空的情况
-                doc_with_id = DocumentWithVSId(**doc_info.dict(), id=x["id"])
+                doc_with_id = DocumentWithVSId(**{**doc_info.dict(), "id":x["id"]})
                 docs.append(doc_with_id)
             else:
                 # 处理空的情况
