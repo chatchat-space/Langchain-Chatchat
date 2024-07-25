@@ -323,9 +323,8 @@ class ApiModelSettings(BaseFileSettings):
     RERANKER_CONFIG: t.Dict[str, t.Any] = {
             "model": "bge-reranker-v2-m3",
             "topk": 5,
-            "return_obj": "index",
+            # "return_obj": "index",
             "local_path":"./model_hub/bge-reranker-v2-m3",
-            "port": 8394,
             "num_workers":1,
             "device":"cpu",
             "limit_concurrency": 100

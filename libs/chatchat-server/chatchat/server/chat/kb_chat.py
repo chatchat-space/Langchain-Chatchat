@@ -99,6 +99,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 docs = [x.dict() for x in result.get("docs", [])]
                 source_documents = [f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" for i,d in enumerate(docs)]
             else:
+                logger.warning(f"mode {mode} not supported")
                 docs = []
                 source_documents = []
             # import rich
