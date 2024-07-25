@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field
 
 from sse_starlette.sse import EventSourceResponse
 from FlagEmbedding import FlagReranker
-import torch
 # Set up limit request time
 EventSourceResponse.DEFAULT_PING_INTERVAL = 1000
 from chatchat.settings import Settings
@@ -62,7 +61,7 @@ async def health() -> Response:
     return Response(status_code=200)
 
 
-@reranker_router.post("/get_scores", response_model=RerankerResponse)
+@reranker_router.post("/reranker_passage", response_model=RerankerResponse)
 async def rerank_answers(request: RerankerRequest):
 
     scores = reranker_model.compute_score(request.input,batch_size=32)

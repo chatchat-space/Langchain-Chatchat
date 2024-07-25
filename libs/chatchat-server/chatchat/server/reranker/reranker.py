@@ -32,16 +32,17 @@ def reranker_passage_local(pairs: list[list[str]],topk=1,return_obj="score"):
         return result
 
 
-def reranker_passage_api(pairs,topk=1,return_obj="score"):
+def reranker_passage_api(pairs,topk=1,return_obj="obj"):
     """
     用于调用reranker api来对passage进行rerank
     pairs: list[list[str]]: 传入的passage对
-    return_topk: int: 返回的topk
+    topk: int: 返回的topk
+    return_obj: str: 返回的对象类型, score: 返回的rerank分数, index: 返回的rerank结果索引, obj: 返回的rerank结果
     return: list[str]: 返回的rerank结果
     """
     host = Settings.basic_settings.DEFAULT_BIND_HOST
     port = Settings.model_settings.RERANKER_CONFIG["port"]
-    url = f'http://{host}:{port}/v1/reranker'
+    url = f'http://{host}:{port}/reranker/rerank_passage'
     headers = {'Content-Type': 'application/json'}
     json_data = {"input": pairs}
     try:
@@ -59,14 +60,37 @@ def reranker_passage_api(pairs,topk=1,return_obj="score"):
                 sorted_index = np.argsort(scores)[::-1][:topk]
 
                 return sorted_index
-            else:
+            elif "obj":
+                sorted_index = np.argsort(scores)[::-1][:topk]
                 result = [pairs[i][1] for i in sorted_index]
                 return result
-    
+            else:
+                raise ValueError("return_obj参数错误")
     except Exception as e:
         logger.error("调用reranker api失败.")
         logger.error(e)
-        # return rerank_passage_local(pairs)
+
+
+def reranker_docs(query:str,corpus,top_k:int=3):
+    """rerank retrieved docs
+
+    Args:
+        query (_type_): target query
+        corpus (_type_): retrieved docs
+        top_k (_type_): _description_
+
+    Returns:
+        _type_: a list-like object of reranked docs, with length of top_k, 
+                whose element is same as the input corpus's element
+    """
+    if hasattr(corpus[0],"text"):
+        pairs = [[query, doc.text] for doc in corpus]
+    elif isinstance(corpus[0],str):
+        pairs = [[query, doc] for doc in corpus]
+    corpus_index = reranker_passage_api(pairs=pairs, topk=len(corpus), return_obj="index")
+    return [corpus[i] for i in corpus_index][: top_k]
+    
+
     
 if __name__ == '__main__':
     pairs = [
