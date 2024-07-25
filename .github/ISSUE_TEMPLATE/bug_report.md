@@ -23,13 +23,15 @@ assignees: ''
 描述实际发生的结果 / Describe the actual result.
 
 **环境信息 / Environment Information**
-- langchain-ChatGLM 版本/commit 号：(例如：v2.0.1 或 commit 123456) / langchain-ChatGLM version/commit number: (e.g., v2.0.1 or commit 123456)
-- 是否使用 Docker 部署（是/否）：是 / Is Docker deployment used (yes/no): yes
-- 使用的模型（ChatGLM2-6B / Qwen-7B 等）：ChatGLM-6B / Model used (ChatGLM2-6B / Qwen-7B, etc.): ChatGLM2-6B
-- 使用的 Embedding 模型（moka-ai/m3e-base 等）：moka-ai/m3e-base / Embedding model used (moka-ai/m3e-base, etc.): moka-ai/m3e-base
+- Langchain-Chatchat 版本 / commit 号：(例如：0.3.1 或 commit 123456) / Langchain-Chatchat version / commit number: (e.g., 0.3.1 or commit 123456)
+- 部署方式（pypi 安装 / 源码部署 / docker 部署）：pypi 安装 / Deployment method (pypi installation / dev deployment / docker deployment): pypi installation
+- 使用的模型推理框架（Xinference / Ollama / OpenAI API 等）：Xinference / Model serve method（Xinference / Ollama / OpenAI API, etc.): Xinference 
+- 使用的 LLM 模型（GLM-4-9B / Qwen2-7B-Instruct 等）：GLM-4-9B / LLM used (GLM-4-9B / Qwen2-7B-Instruct, etc.): GLM-4-9B
+- 使用的 Embedding 模型（bge-large-zh-v1.5 / m3e-base 等）：bge-large-zh-v1.5 / Embedding model used (bge-large-zh-v1.5 / m3e-base, etc.): bge-large-zh-v1.5
 - 使用的向量库类型 (faiss / milvus / pg_vector 等)： faiss / Vector library used (faiss, milvus, pg_vector, etc.): faiss
-- 操作系统及版本 / Operating system and version:
-- Python 版本 / Python version:
+- 操作系统及版本 / Operating system and version: MacOS
+- Python 版本 / Python version: 3.8
+- 推理使用的硬件（GPU / CPU / MPS / NPU 等） / Inference hardware (GPU / CPU / MPS / NPU, etc.): GPU 
 - 其他相关环境信息 / Other relevant environment information:
 
 **附加信息 / Additional Information**
