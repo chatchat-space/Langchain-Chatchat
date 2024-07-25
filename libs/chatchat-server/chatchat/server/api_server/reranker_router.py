@@ -4,12 +4,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import time
-import uvicorn
 
 from fastapi import APIRouter, HTTPException, Response
-from fastapi.middleware.cors import CORSMiddleware
-
-from contextlib import asynccontextmanager
 from typing import List,  Optional, Union
 
 from pydantic import BaseModel, Field
@@ -63,7 +59,8 @@ async def health() -> Response:
 
 @reranker_router.post("/reranker_passage", response_model=RerankerResponse)
 async def rerank_answers(request: RerankerRequest):
-
+    
+    logger.info(f"reranker request.input: {request.input}")
     scores = reranker_model.compute_score(request.input,batch_size=32)
     if isinstance(scores, float):
         scores = [scores]

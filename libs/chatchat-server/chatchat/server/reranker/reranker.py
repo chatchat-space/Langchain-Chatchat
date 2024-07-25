@@ -3,11 +3,10 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from chatchat.settings import Settings
-
-from utils import logger
+from chatchat.utils import build_logger
+logger = build_logger()
 import requests
 import numpy as np
-import json
 def reranker_passage_local(pairs: list[list[str]],topk=1,return_obj="score"):
     """
     用于本地rerank passage
@@ -85,13 +84,23 @@ def reranker_docs(query:str,corpus,top_k:int=3):
     """
     if hasattr(corpus[0],"text"):
         pairs = [[query, doc.text] for doc in corpus]
+    elif isinstance(corpus[0],dict) and "page_content" in corpus[0]:
+        pairs = [[query, doc["page_content"]] for doc in corpus]
+    elif isinstance(corpus[0],dict) and "content" in corpus[0]:
+        pairs = [[query, doc["content"]] for doc in corpus]
+    elif isinstance(corpus[0],dict) and "text" in corpus[0]:
+        pairs = [[query, doc["text"]] for doc in corpus]
+    elif hasattr(corpus[0],"page_content"):
+        pairs = [[query, doc.page_content] for doc in corpus]
+    elif hasattr(corpus[0],"content"):
+        pairs = [[query, doc.content] for doc in corpus]
     elif isinstance(corpus[0],str):
         pairs = [[query, doc] for doc in corpus]
     corpus_index = reranker_passage_api(pairs=pairs, topk=len(corpus), return_obj="index")
     return [corpus[i] for i in corpus_index][: top_k]
     
 
-    
+
 if __name__ == '__main__':
     pairs = [
     ["北京是中国的首都","北京是中国的首都"]
