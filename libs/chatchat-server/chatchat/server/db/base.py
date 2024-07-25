@@ -8,7 +8,8 @@ from chatchat.settings import Settings
 
 
 engine = create_engine(
-    Settings.basic_settings.SQLALCHEMY_DATABASE_URI,
+    # Settings.basic_settings.SQLALCHEMY_DATABASE_URI,
+    r'sqlite:///D:\job\kaiyuan\Langchain-Chatchat\libs\chatchat-server\chatchat\data\knowledge_base\info.db',
     json_serializer=lambda obj: json.dumps(obj, ensure_ascii=False),
 )
 
