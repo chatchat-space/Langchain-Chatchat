@@ -12,6 +12,8 @@ on:
   pull_request:
     branches:
       - master
+    types:
+      - closed
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
