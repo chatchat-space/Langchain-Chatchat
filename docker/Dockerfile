@@ -37,7 +37,7 @@ WORKDIR /root/Langchain-Chatchat/libs/chatchat-server/chatchat
 RUN python cli.py init
 
 # 初始化知识库文件
-ADD /docker/data.tar.gz $CHATCHAT_ROOT/
+ADD data.tar.gz $CHATCHAT_ROOT/
 
 EXPOSE 7861 8501
 ENTRYPOINT ["python", "cli.py", "start", "-a"]
