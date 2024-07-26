@@ -33,6 +33,9 @@ Langchain-Chatchat 自 0.3.0 版本起，为方便支持用户使用 pip 方式�
 ```shell
 cd  Langchain-Chatchat/libs/chatchat-server/
 poetry install --with lint,test -E xinference
+
+# or use pip to install in editing mode:
+pip install -e .
 ```
 
 > [!Note]
@@ -68,7 +71,8 @@ export CHATCHAT_ROOT=/parth/to/chatchat_data
 
 执行以下命令初始化项目配置文件和数据目录：
 ```shell
-python cli.py init
+cd libs/chatchat-server
+python chatchat/cli.py init
 ```
 
 ## 4. 初始化知识库
@@ -77,14 +81,16 @@ python cli.py init
 > 这个命令会清空数据库、删除已有的配置文件，如果您有重要数据，请备份。
 
 ```shell
-python cli.py kb --recreate-vs
+cd libs/chatchat-server
+python chatchat/cli.py kb --recreate-vs
 ```
-如需使用其它 Embedding 模型，或者重建特定的知识库，请查看 `python cli.py kb --help` 了解更多的参数。
+如需使用其它 Embedding 模型，或者重建特定的知识库，请查看 `python chatchat/cli.py kb --help` 了解更多的参数。
 
 ## 5. 启动服务
 
 ```shell
-python cli.py start -a
+cd libs/chatchat-server
+python chatchat/cli.py start -a
 ```
 
 如需调用 API，请参考 [API 使用说明](api.md)
