@@ -142,8 +142,8 @@ jobs:
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
           git push
 
-      - name: Push README_en.md
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          branch: ${{ github.ref }}
+#      - name: Push README_en.md
+#        uses: ad-m/github-push-action@master
+#        with:
+#          github_token: ${{ secrets.GH_PAT }}
+#          branch: ${{ github.ref }}
