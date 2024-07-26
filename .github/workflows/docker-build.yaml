@@ -2,28 +2,28 @@ name: docker-build
 on:
   push:
     branches:
-      - main
-      - feat/dockerfile
-    paths-ignore:
-      - 'README.md'
-      - 'README_en.md'
-      - 'docs/**'
-#      - '.github/**'
-  pull_request:
-    branches:
-      - main
+      - master
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
       - 'docs/**'
       - '.github/**'
+      - 'docker/docker-compose.yaml'
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - 'README_en.md'
+      - 'docs/**'
+      - '.github/**'
+      - 'docker/docker-compose.yaml'
 env:
   TZ: Asia/Shanghai
   RELEASE_VERSION: 0.3.1
 jobs:
   docker-build:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged == true
     steps:
       - name: Optimize Disk Space
         uses: hugoalh/disk-space-optimizer-ghaction@v0.8.0
@@ -141,9 +141,3 @@ jobs:
           git config --local user.name "GitHub Action"
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
           git push
-
-#      - name: Push README_en.md
-#        uses: ad-m/github-push-action@master
-#        with:
-#          github_token: ${{ secrets.GH_PAT }}
-#          branch: ${{ github.ref }}
