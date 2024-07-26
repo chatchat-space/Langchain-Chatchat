@@ -124,7 +124,18 @@ jobs:
           tags: | 
             chatimage/chatchat:${{ env.image_tag }}
             ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
+          platforms: |
+            linux/amd64,
+            linux/arm/v5,
+            linux/arm/v6,
+            linux/arm/v7,
+            linux/arm64,
+            linux/386,
+            linux/mips64le,
+            linux/ppc64le,
+            linux/riscv64,
+            linux/s390x,
+            windows/amd64
 
       - name: Logout from Docker Hub
         run: docker logout
