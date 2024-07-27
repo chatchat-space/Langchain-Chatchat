@@ -14,6 +14,7 @@ class DistributedLockModel(Base):
     lock_key = Column(String, unique=True, nullable=False, comment="锁的key")
     owner = Column(String, comment="拥有者")
     lock_status = Column(Boolean, nullable=False, default=False, comment="锁的状态")
+    version = Column(Integer, nullable=False, default=0, comment="版本号")
     start_lock_time = Column(DateTime, default=func.now(), comment="开始加锁时间")
     update_lock_time = Column(DateTime, nullable=True, comment="更新锁的时间")
     expire_time = Column(DateTime, nullable=True, comment="锁的过期时间")

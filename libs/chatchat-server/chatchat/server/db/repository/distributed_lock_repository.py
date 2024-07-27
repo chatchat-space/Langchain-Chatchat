@@ -36,6 +36,25 @@ def update_lock(session, lock_key, lock_status, update_lock_time):
 
 
 @with_session
+def check_and_delete_expired_lock(session, lock_key):
+    """
+    检查锁是否过期，如果过期则删除
+    """
+    current_time = datetime.utcnow()
+    lock = session.query(DistributedLockModel).filter_by(lock_key=lock_key).first()
+
+    if lock is None:
+        return False
+
+    if lock.expire_time and lock.expire_time < current_time:
+        session.delete(lock)
+        session.commit()
+        return True
+
+    return False
+
+
+@with_session
 def check_lock_expiry(session, lock_key):
     """
     检查锁是否过期
@@ -48,5 +67,38 @@ def check_lock_expiry(session, lock_key):
         return False
 
 
+@with_session
+def attempt_to_acquire_lock(session, lock_key, owner, expire_interval=timedelta(minutes=5)):
+    current_time = datetime.utcnow()
+    lock = session.query(DistributedLockModel).filter_by(lock_key=lock_key).first()
+
+    if lock is None:
+        # 如果锁不存在，创建一个新锁
+        new_lock = DistributedLockModel(
+            lock_key=lock_key,
+            owner=owner,
+            lock_status=True,
+            start_lock_time=current_time,
+            update_lock_time=current_time,
+            expire_time=current_time + expire_interval
+        )
+        session.add(new_lock)
+        session.commit()
+        return True
+
+    if not lock.lock_status:
+        # 如果当前未锁定该锁，则获取该锁
+        lock.owner = owner
+        lock.lock_status = True
+        lock.start_lock_time = current_time
+        lock.update_lock_time = current_time
+        lock.expire_time = current_time + expire_interval  # 设置锁在5分钟内过期
+        session.commit()
+        return True
+
+    return False
+
+
 create_tables()
-add_lock('2', '1',30)
+# add_lock('2', '1',30)
+print(check_lock_expiry('2'))
