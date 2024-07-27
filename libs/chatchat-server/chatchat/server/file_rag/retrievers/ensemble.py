@@ -45,10 +45,5 @@ class EnsembleRetrieverService(BaseRetrieverService):
         return EnsembleRetrieverService(retriever=ensemble_retriever)
 
     def get_relevant_documents(self, query: str):
-        # * ----------------add reranker --------------------------------------------
-        if Settings.model_settings.USE_RERANKER:
-            from chatchat.server.reranker.reranker import reranker_docs
-            return reranker_docs(query, self.retriever.get_relevant_documents(query), self.top_k)
-        # * -------------------------------------------------------------------------
-        else:
-            return self.retriever.get_relevant_documents(query)[: self.top_k]
+
+        return self.retriever.get_relevant_documents(query)[: self.top_k]

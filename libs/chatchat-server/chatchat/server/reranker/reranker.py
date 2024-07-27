@@ -51,7 +51,7 @@ def reranker_passage_api(pairs,topk=1,return_obj="obj"):
                         url=url,
                         headers=headers,
                         json=json_data,
-                        timeout=120
+                        timeout=360
                         )
         if response.status_code == 200:
             scores = [i['score'] for i in  response.json()['data'] ] 
