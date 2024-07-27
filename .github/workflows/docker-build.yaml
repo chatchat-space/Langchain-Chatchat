@@ -82,11 +82,6 @@ jobs:
           remove-docker-images: 'true'
       - name: Checkout Repository
         uses: actions/checkout@v4
-#      - name: Get Latest Release
-#        id: get_version
-#        run: |
-#          VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
-#          echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
       - name: Set DockerImage Tag
         id: imageTag
         run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)" >> $GITHUB_ENV
@@ -107,13 +102,24 @@ jobs:
           password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
       - name: Show Runner Disk
         run: df -hT
+#      - name: Build and push Docker image
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: ./docker
+#          file: ./docker/Dockerfile
+#          push: true
+#          tags: |
+#            chatimage/chatchat:${{ env.image_tag }}
+#            ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
+#          platforms: |
+#            linux/amd64, linux/arm64
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: ./docker
           file: ./docker/Dockerfile
           push: true
-          tags: | 
+          tags: |
             chatimage/chatchat:${{ env.image_tag }}
             ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
           platforms: |
@@ -124,9 +130,6 @@ jobs:
         run: docker logout ccr.ccs.tencentyun.com
       - name: Update README and docker-compose.yaml
         run: |
-          # 拉取远程仓库的最新更改
-          git pull origin master
-      
           # 更新文件内容
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
@@ -134,13 +137,23 @@ jobs:
           # 配置 Git 用户信息
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-      
+          
+          # 创建新的分支
+          git checkout -b update-docker-image-tag-${{ env.image_tag }}
+          
           # 提交更改
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
-      
-          # 推送更改到远程仓库
-          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master || {
-            echo "Push failed. Attempting to pull remote changes and re-push..."
-            git pull --rebase origin master
-            git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master
-          }
+          
+          # 推送到新的分支
+          git push origin update-docker-image-tag-${{ env.image_tag }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: update docker image tag to ${{ env.image_tag }}"
+          branch: update-docker-image-tag-${{ env.image_tag }}
+          title: "Update Docker image tag to ${{ env.image_tag }}"
+          body: "This PR updates the Docker image tag to ${{ env.image_tag }}."
+          labels: |
+            docker
+            automated-pr
