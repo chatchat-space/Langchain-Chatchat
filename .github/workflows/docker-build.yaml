@@ -124,11 +124,23 @@ jobs:
         run: docker logout ccr.ccs.tencentyun.com
       - name: Update README and docker-compose.yaml
         run: |
-          git pull
+          # 拉取远程仓库的最新更改
+          git pull origin master
+      
+          # 更新文件内容
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
+      
+          # 配置 Git 用户信息
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+      
+          # 提交更改
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
-          # git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/chatchat-space/Langchain-Chatchat.git HEAD:master
-          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master
+      
+          # 推送更改到远程仓库
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master || {
+            echo "Push failed. Attempting to pull remote changes and re-push..."
+            git pull --rebase origin master
+            git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master
+          }
