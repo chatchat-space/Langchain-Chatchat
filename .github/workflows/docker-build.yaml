@@ -48,7 +48,6 @@ jobs:
           npm_prune: "True"
           npm_clean: "True"
           os_swap: "True"
-
       - name: Remove Unnecessary Tools And Files
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -71,7 +70,6 @@ jobs:
           sudo apt-get clean
           rm -rf /opt/hostedtoolcache
           sudo timedatectl set-timezone "$TZ"
-
       - name: Free Up Disk Space
         uses: easimon/maximize-build-space@master
         with:
@@ -82,42 +80,33 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-
       - name: Checkout Repository
         uses: actions/checkout@v4
-
 #      - name: Get Latest Release
 #        id: get_version
 #        run: |
 #          VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
 #          echo "RELEASE_VERSION=${VERSION}" >> $GITHUB_ENV
-
       - name: Set DockerImage Tag
         id: imageTag
         run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)" >> $GITHUB_ENV
-
       - name: Set Up QEMU
         uses: docker/setup-qemu-action@v2
-
       - name: Set Up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
       - name: Login To Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKERHUB_REGISTRY_PASSWORD }}
-
       - name: Login To Tencent CCR
         uses: docker/login-action@v2
         with:
           registry: ccr.ccs.tencentyun.com
           username: ${{ secrets.CCR_REGISTRY_USERNAME }}
           password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
-
       - name: Show Runner Disk
         run: df -hT
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -129,13 +118,10 @@ jobs:
             ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
           platforms: |
             linux/amd64, linux/arm64
-
       - name: Logout from Docker Hub
         run: docker logout
-
       - name: Logout from Tencent Cloud Container Registry
         run: docker logout ccr.ccs.tencentyun.com
-
       - name: Update README and docker-compose.yaml
         run: |
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
@@ -143,5 +129,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
-#          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/chatchat-space/Langchain-Chatchat.git HEAD:master
+          # git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/chatchat-space/Langchain-Chatchat.git HEAD:master
           git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master
