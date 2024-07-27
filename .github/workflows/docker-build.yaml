@@ -124,6 +124,7 @@ jobs:
         run: docker logout ccr.ccs.tencentyun.com
       - name: Update README and docker-compose.yaml
         run: |
+          git pull
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           git config --local user.email "action@github.com"
