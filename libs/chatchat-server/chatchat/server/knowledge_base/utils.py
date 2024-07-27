@@ -464,7 +464,7 @@ def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="") -> Li
     将知识库检索结果格式化为参考文档的格式
     '''
     from chatchat.server.utils import api_address
-    api_base_url = api_base_url or api_address()
+    api_base_url = api_base_url or api_address(is_public=True)
 
     source_documents = []
     for inum, doc in enumerate(docs):

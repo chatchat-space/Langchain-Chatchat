@@ -1,23 +1,13 @@
-.idea
-# Langchain-Chatchat
-docs
-.github
-tests
+.idea/
+.github/
 Dockerfile
 .dockerignore
-.gitignore
-.gitmodules
-README.md
-README_en.md
-README_ja.md
-LICENSE
-requirements_api.txt
-requirements_lite.txt
-requirements_webui.txt
-# bge-large-zh-v1.5
-bge-large-zh-v1.5/README.md
-# chatglm3-6b
-../docs/contributing/
-../docs/install/
+../.gitignore
+../.gitmodules
+../LICENSE
+../poetry.lock
+../poetry.toml
+../pyproject.toml
+../docs/
 ../README.md
 ../README_en.md

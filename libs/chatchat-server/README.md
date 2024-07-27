@@ -1,6 +1,5 @@
 ### 项目简介
 ![](https://github.com/chatchat-space/Langchain-Chatchat/blob/master/docs/img/logo-long-chatchat-trans-v2.png)
-<a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
 [![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
@@ -53,8 +52,8 @@ docker pull ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.2-2024-0720 # 国内�
 
 4. AudoDL
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.3.0`
-版本所使用代码已更新至本项目 `v0.3.0` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/chatchat-space/Langchain-Chatchat/Langchain-Chatchat) 中 `0.3.1`
+版本所使用代码已更新至本项目 `v0.3.1` 版本。
 
 ### 初始化与配置
 
@@ -82,6 +81,11 @@ chatchat start -a
 更多命令可以通过 `chatchat --help` 查看。
 
 ### 更新日志：
+
+#### 0.3.1.3 (2024-07-23)
+- 修复：
+  - 修复 nltk_data 未能在项目初始化时复制的问题
+  - 在项目依赖包中增加 python-docx 以满足知识库初始化时 docx 格式文件处理需求
 
 #### 0.3.1.2 (2024-07-20)
 - 新功能：

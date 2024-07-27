@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import typing as t
 
+import nltk
+
 from chatchat import __version__
 from chatchat.pydantic_settings_file import *
 
@@ -793,6 +795,7 @@ class SettingsContainer:
 
 
 Settings = SettingsContainer()
+nltk.data.path.append(str(Settings.basic_settings.NLTK_DATA_PATH))
 
 
 if __name__ == "__main__":

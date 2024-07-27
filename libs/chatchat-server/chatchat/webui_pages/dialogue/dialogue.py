@@ -95,7 +95,7 @@ def upload_image_file(file_name: str, content: bytes) -> dict:
 
 def get_image_file_url(upload_file: dict) -> str:
     file_id = upload_file.get("id")
-    return f"{api_address()}/v1/files/{file_id}/content"
+    return f"{api_address(True)}/v1/files/{file_id}/content"
 
 
 def add_conv(name: str = ""):
