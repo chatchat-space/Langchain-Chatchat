@@ -151,7 +151,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             # * -----------------add reranker---------------------------- 
             if Settings.model_settings.USE_RERANKER:
                 from chatchat.server.reranker.reranker import reranker_docs
-                docs = reranker_docs(query, docs, top_k)
+                docs = await reranker_docs(query, docs, top_k)
             # * -----------------------------------------------------------
             context = "\n\n".join([doc["page_content"] for doc in docs])
 

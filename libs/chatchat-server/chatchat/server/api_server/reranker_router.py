@@ -58,8 +58,7 @@ async def health() -> Response:
 
 
 @reranker_router.post("/rerank_passage", response_model=RerankerResponse)
-async def rerank_answers(request: RerankerRequest):
-    
+def rerank_answers(request: RerankerRequest):
     scores = reranker_model.compute_score(request.input,batch_size=32)
     if isinstance(scores, float):
         scores = [scores]

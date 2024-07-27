@@ -4,10 +4,13 @@ sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from chatchat.settings import Settings
 from chatchat.utils import build_logger
+from chatchat.server.utils import api_address
+
 logger = build_logger()
-import requests
 import numpy as np
-# import httpx
+import httpx
+
+
 # def reranker_passage_local(pairs: list[list[str]],topk=1,return_obj="score"):
 #     """
 #     用于本地rerank passage
@@ -32,7 +35,7 @@ import numpy as np
 #         return result
 
 
-def reranker_passage_api(pairs,topk=1,return_obj="obj"):
+async def reranker_passage_api(pairs,topk=1,return_obj="obj"):
     """
     用于调用reranker api来对passage进行rerank
     pairs: list[list[str]]: 传入的passage对
@@ -40,19 +43,18 @@ def reranker_passage_api(pairs,topk=1,return_obj="obj"):
     return_obj: str: 返回的对象类型, score: 返回的rerank分数, index: 返回的rerank结果索引, obj: 返回的rerank结果
     return: list[str]: 返回的rerank结果
     """
-    host = Settings.basic_settings.DEFAULT_BIND_HOST
-    port = Settings.basic_settings.API_SERVER['port']
-    url = f'http://{host}:{port}/reranker/rerank_passage'
+    url = f'{api_address()}/reranker/rerank_passage'
     headers = {'Content-Type': 'application/json'}
 
     json_data = {"input": pairs}
     try:
-        response = requests.post(
-                        url=url,
-                        headers=headers,
-                        json=json_data,
-                        timeout=360
-                        )
+        client = httpx.AsyncClient()
+        response = await client.post(
+                            url,
+                            headers=headers,
+                            json=json_data,
+                            timeout=360,
+                            )
         if response.status_code == 200:
             scores = [i['score'] for i in  response.json()['data'] ] 
             if return_obj == "score":
@@ -74,7 +76,7 @@ def reranker_passage_api(pairs,topk=1,return_obj="obj"):
         return None
 
 
-def reranker_docs(query:str,corpus,top_k:int=3):
+async def reranker_docs(query:str,corpus,top_k:int=3):
     """rerank retrieved docs
 
     Args:
@@ -105,7 +107,7 @@ def reranker_docs(query:str,corpus,top_k:int=3):
         pairs = [[query, doc.content] for doc in corpus]
     elif isinstance(corpus[0],str):
         pairs = [[query, doc] for doc in corpus]
-    corpus_index = reranker_passage_api(pairs=pairs, topk=len(corpus), return_obj="index")
+    corpus_index = await reranker_passage_api(pairs=pairs, topk=len(corpus), return_obj="index")
     if corpus_index is not None:
 
         result = [corpus[i] for i in corpus_index][: top_k]
@@ -119,9 +121,22 @@ def reranker_docs(query:str,corpus,top_k:int=3):
 
 
 if __name__ == '__main__':
+    import asyncio
+    from chatchat.server.knowledge_base.kb_doc_api import search_docs
     pairs = [
     ["北京是中国的首都","北京是中国的首都"]
         ]
 
-    print(reranker_passage_api(pairs))
+    # print(reranker_passage_api(pairs))
+    docs = search_docs(
+        query="如何高质量提问",
+        knowledge_base_name="samples",
+        top_k=3,
+        score_threshold=2.0,
+        file_name="",
+        metadata={},
+    )
+    print(docs)
+    reranked_docs = asyncio.run(reranker_docs("如何高质量提问", docs))
+    print(reranked_docs)
     print("done")
