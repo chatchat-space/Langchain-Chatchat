@@ -3,11 +3,12 @@ on:
   push:
     branches:
       - master
+      - feat/docker-action
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
       - 'docs/**'
-      - '.github/**'
+#      - '.github/**'
       - 'docker/docker-compose.yaml'
   pull_request:
     branches:
@@ -74,7 +75,7 @@ jobs:
       - name: Free Up Disk Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 62464 # 给 / 预留 61GiB 空间( docker 预留)
+          root-reserve-mb: 20480 # 给 / 预留 20GiB 空间( docker 预留)
           swap-size-mb: 1
           remove-dotnet: 'true'
           remove-android: 'true'
@@ -142,4 +143,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -am "feat: update docker image tag to ${{ env.image_tag }}"
-          git push
+#          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/chatchat-space/Langchain-Chatchat.git HEAD:master
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/yuehua-s/Langchain-Chatchat.git HEAD:master
