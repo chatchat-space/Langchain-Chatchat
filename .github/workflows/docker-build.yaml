@@ -7,7 +7,8 @@ on:
       - 'README.md'
       - 'README_en.md'
       - 'docs/**'
-      - '.github/**'
+      - '.github/actions/**'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'docker/docker-compose.yaml'
   pull_request:
     branches:
@@ -18,7 +19,8 @@ on:
       - 'README.md'
       - 'README_en.md'
       - 'docs/**'
-#      - '.github/**'
+      - '.github/actions/**'
+      - '.github/ISSUE_TEMPLATE/**'
       - 'docker/docker-compose.yaml'
 env:
   TZ: Asia/Shanghai
