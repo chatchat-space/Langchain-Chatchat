@@ -82,12 +82,9 @@ jobs:
 #          remove-docker-images: 'true'
       - name: Checkout Repository
         uses: actions/checkout@v4
-#      - name: Set DockerImage Tag
-#        id: imageTag
-#        run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)" >> $GITHUB_ENV
       - name: Set DockerImage Tag
         id: imageTag
-        run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)-1" >> $GITHUB_ENV
+        run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)" >> $GITHUB_ENV
       - name: Set Up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set Up Docker Buildx
@@ -155,7 +152,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "feat: update docker image to ${{ env.image_tag }}"
-          branch: update-docker-image-tag-${{ env.image_tag }}
+          branch: update-docker-image-${{ env.image_tag }}
           base: master  # 确保 base 是目标分支
           title: "Update Docker image to ${{ env.image_tag }}"
           body: "This PR updates the Docker image to ${{ env.image_tag }}."
