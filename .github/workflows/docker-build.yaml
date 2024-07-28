@@ -133,7 +133,7 @@ jobs:
           # 更新文件内容
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
-      
+
           # 配置 Git 用户信息
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -146,14 +146,16 @@ jobs:
           
           # 推送到新的分支
           git push origin update-docker-image-tag-${{ env.image_tag }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "feat: update docker image tag to ${{ env.image_tag }}"
+          commit-message: "feat: update docker image to ${{ env.image_tag }}"
           branch: update-docker-image-tag-${{ env.image_tag }}
-          title: "Update Docker image tag to ${{ env.image_tag }}"
-          body: "This PR updates the Docker image tag to ${{ env.image_tag }}."
+          base: master  # 确保 base 是目标分支
+          title: "Update Docker image to ${{ env.image_tag }}"
+          body: "This PR updates the Docker image to ${{ env.image_tag }}."
           labels: |
             docker
             automated-pr
