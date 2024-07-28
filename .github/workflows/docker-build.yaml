@@ -83,6 +83,11 @@ jobs:
           remove-docker-images: 'true'
       - name: Checkout Repository
         uses: actions/checkout@v4
+      - name: Get Version
+        id: version
+        run: |
+          VERSION=$(awk -F'"' '/__version__ =/ {print $2}' libs/chatchat-server/chatchat/__init__.py)
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
       - name: Set DockerImage Tag
         id: imageTag
         run: echo "image_tag=${RELEASE_VERSION}-$(git rev-parse --short HEAD)-$(date +%Y%m%d)" >> $GITHUB_ENV
