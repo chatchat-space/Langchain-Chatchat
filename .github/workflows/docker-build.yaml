@@ -127,7 +127,7 @@ jobs:
         run: docker logout
       - name: Logout from Tencent Cloud Container Registry
         run: docker logout ccr.ccs.tencentyun.com
-      - name: Update README and docker-compose.yaml
+      - name: Update README and docker-compose.yaml and Create Pull Request
         run: |
           # 更新文件内容
           sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
@@ -137,25 +137,13 @@ jobs:
           git config --local user.name "GitHub Action"
           # 创建新的分支
           git checkout -b update-docker-image-${{ env.image_tag }}
-          # 检查是否有更改
-          if git diff --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
           # 提交更改
           git commit -am "feat: update docker image to ${{ env.image_tag }}"
           # 推送到新的分支
           git push origin update-docker-image-${{ env.image_tag }}
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "feat: update docker image to ${{ env.image_tag }}"
-          branch: update-docker-image-${{ env.image_tag }}
-          base: master  # 确保 base 是目标分支
-          title: "Update Docker image to ${{ env.image_tag }}"
-          body: "This PR updates the Docker image to ${{ env.image_tag }}."
-          labels: |
-            docker
-            automated-pr
+          # 安装 hub 命令行工具
+          wget -qO- https://github.com/github/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz | tar xvz
+          sudo ./hub-linux-amd64-2.14.2/install
+          # 使用 hub 命令行工具创建 PR
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          hub pull-request -b master -h update-docker-image-${{ env.image_tag }} -m "Update Docker image to ${{ env.image_tag }}" -l docker,automated-pr
