@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - feat/docker-action
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
@@ -25,7 +24,6 @@ on:
       - 'docker/docker-compose.yaml'
 env:
   TZ: Asia/Shanghai
-  RELEASE_VERSION: 0.3.1
 jobs:
   docker-build:
     runs-on: ubuntu-latest
