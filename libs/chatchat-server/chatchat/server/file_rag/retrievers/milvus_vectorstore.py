@@ -21,8 +21,10 @@ class MilvusRetriever(VectorStoreRetriever):
         if self.search_type == "similarity":
             docs = self.vectorstore.similarity_search(query, **self.search_kwargs)
         elif self.search_type == "similarity_score_threshold":
-            docs_and_similarities = self.vectorstore.similarity_search_with_score(query, **self.search_kwargs)
+            docs_and_similarities = self.vectorstore.similarity_search_with_score(query)
+            
             score_threshold = self.search_kwargs.get("score_threshold", None)
+            k = self.search_kwargs.get("k", 4)
             
             if any(
                 similarity < 0.0 or similarity > 1.0
@@ -32,8 +34,7 @@ class MilvusRetriever(VectorStoreRetriever):
                     "Relevance scores must be between"
                     f" 0 and 1, got {docs_and_similarities}"
                 )
-
-            if score_threshold is not None:  # can be 0, but not None
+            if score_threshold is not None:
                 docs_and_similarities = [
                 doc
                 for doc, similarity in docs_and_similarities
@@ -62,9 +63,11 @@ class MilvusRetriever(VectorStoreRetriever):
             )
         elif self.search_type == "similarity_score_threshold":
             docs_and_similarities = (
-                await self.vectorstore.asimilarity_search_with_score(query, **self.search_kwargs)
+                await self.vectorstore.asimilarity_search_with_score(query)
             )
+            
             score_threshold = self.search_kwargs.get("score_threshold", None)
+            k = self.search_kwargs.get("k", 4)
             
             if any(
                 similarity < 0.0 or similarity > 1.0
@@ -74,8 +77,7 @@ class MilvusRetriever(VectorStoreRetriever):
                     "Relevance scores must be between"
                     f" 0 and 1, got {docs_and_similarities}"
                 )
-
-            if score_threshold is not None:  # can be 0, but not None
+            if score_threshold is not None:
                 docs_and_similarities = [
                 (doc, similarity)
                 for doc, similarity in docs_and_similarities
@@ -116,7 +118,7 @@ class MilvusVectorstoreRetrieverService(BaseRetrieverService):
                                     search_kwargs={"score_threshold": score_threshold, "k": top_k}
                                     )
         
-        return MilvusVectorstoreRetrieverService(retriever=retriever, top_k=top_k)
+        return MilvusVectorstoreRetrieverService(retriever=retriever)
 
     def get_relevant_documents(self, query: str):
         return self.retriever.get_relevant_documents(query)[: self.top_k]
