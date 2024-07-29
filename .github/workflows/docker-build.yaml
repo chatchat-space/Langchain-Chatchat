@@ -117,7 +117,7 @@ jobs:
           push: true
           tags: |
             chatimage/chatchat:${{ env.image_tag }}
-            ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
+#            ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
           platforms: |
             linux/amd64, linux/arm64
       - name: Logout from Docker Hub
