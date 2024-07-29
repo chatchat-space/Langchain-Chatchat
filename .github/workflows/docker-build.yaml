@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - feat/docker-action
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
