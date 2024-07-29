@@ -117,7 +117,7 @@ jobs:
           push: true
           tags: |
             chatimage/chatchat:${{ env.image_tag }}
-#            ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
+            ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:${{ env.image_tag }}
           platforms: |
             linux/amd64, linux/arm64
       - name: Logout from Docker Hub
@@ -144,6 +144,3 @@ jobs:
           # 使用 hub 命令行工具创建 PR
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           hub pull-request -b master -h update-docker-image-${{ env.image_tag }} -m "Update Docker image to ${{ env.image_tag }}" -l docker,automated-pr
-      - name: test
-        run: |
-          echo "test1"
