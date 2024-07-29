@@ -146,4 +146,4 @@ jobs:
           hub pull-request -b master -h update-docker-image-${{ env.image_tag }} -m "Update Docker image to ${{ env.image_tag }}" -l docker,automated-pr
       - name: test
         run: |
-          echo "test"
+          echo "test1"
