@@ -39,15 +39,19 @@ logger = build_logger()
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+    print("@@@yuehua wrap_done started")
+    print(f"@@@yuehua Received fn: {fn}, event: {event}")
     try:
         await fn
+        print("@@@yuehua Awaitable fn completed successfully")
     except Exception as e:
         msg = f"Caught exception: {e}"
         logger.error(f"{e.__class__.__name__}: {msg}")
     finally:
         # Signal the aiter to stop.
         event.set()
-
+        print("@@@yuehua Event set to signal completion")
+    print("@@@yuehua wrap_done finished")
 
 def get_base_url(url):
     parsed_url = urlparse(url)  # 解析url
