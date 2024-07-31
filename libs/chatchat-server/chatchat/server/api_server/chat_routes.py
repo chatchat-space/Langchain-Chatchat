@@ -92,6 +92,7 @@ async def chat_completions(
 
     # chat based on result from one choiced tool
     if body.tool_choice:
+        print(f"@@@yuehua this is llm chat with one choiced tool")
         tool = get_tool(body.tool_choice["function"]["name"])
         if not body.tools:
             body.tools = [
@@ -156,6 +157,7 @@ async def chat_completions(
 
     # agent chat with tool calls
     if body.tools:
+        print(f"@@@yuehua this is agent chat")
         try:
             message_id = (
                 add_message_to_db(
@@ -185,8 +187,12 @@ async def chat_completions(
             tool_config=extra.get("tool_config", tool_config),
             max_tokens=body.max_tokens,
         )
+        print(f"@@@yuehua this is agent chat result: {result}")
+        print(f"@@@yuehua Result type: {type(result)}")
+        print(f"@@@yuehua Result dir: {dir(result)}")
         return result
     else:  # LLM chat directly
+        print(f"@@@yuehua this is llm chat directly")
         try: # query is complex object that unable add to db when using qwen-vl-chat 
             message_id = (
                 add_message_to_db(

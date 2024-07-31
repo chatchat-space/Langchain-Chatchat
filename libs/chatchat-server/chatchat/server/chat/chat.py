@@ -146,6 +146,7 @@ async def chat(
             all_tools = get_tool().values()
             tools = [tool for tool in all_tools if tool.name in tool_config]
             tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
+            print(f"@@@yuehua Models: {models}, Prompts: {prompts}")
             full_chain = create_models_chains(
                 prompts=prompts,
                 models=models,
@@ -159,8 +160,8 @@ async def chat(
 
             _history = [History.from_data(h) for h in history]
             chat_history = [h.to_msg_tuple() for h in _history]
-
             history_message = convert_to_messages(chat_history)
+            print(f"@@@yuehua chat.history_message: {history_message}")
 
             task = asyncio.create_task(
                 wrap_done(
@@ -173,10 +174,12 @@ async def chat(
                     callback.done,
                 )
             )
+            print(f"@@@yuehua Task created: {task}")
 
             last_tool = {}
             async for chunk in callback.aiter():
                 data = json.loads(chunk)
+                print(f"@@@yuehua chunk data: {data}")
                 data["tool_calls"] = []
                 data["message_type"] = MsgType.TEXT
 
@@ -225,6 +228,7 @@ async def chat(
                     message_type=data["message_type"],
                     message_id=message_id,
                 )
+                print(f"@@@yuehua Yielding chunk: {ret.model_dump_json()}")
                 yield ret.model_dump_json()
             # yield OpenAIChatOutput( # return blank text lastly
             #         id=f"chat{uuid.uuid4()}",
@@ -242,6 +246,7 @@ async def chat(
             return
         except Exception as e:
             logger.error(f"error in chat: {e}")
+            print(f"@@@yuehua Exception: {e}")
             yield {"data": json.dumps({"error": str(e)})}
             return
 
@@ -262,6 +267,7 @@ async def chat(
 
         async for chunk in chat_iterator():
             data = json.loads(chunk)
+            print(f"@@@yuehua Chunk data: {data}")
             if text := data["choices"][0]["delta"]["content"]:
                 ret.content += text
             if data["status"] == AgentStatus.tool_end:
@@ -269,4 +275,31 @@ async def chat(
             ret.model = data["model"]
             ret.created = data["created"]
 
+            print(f"@@yuehua Accumulated ret: {ret.model_dump()}")
+
+        print(f"@@@yuehua chat stream(no) result: {ret.model_dump()}")
         return ret.model_dump()
+
+
+# async def chatgraph(
+#     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+#     metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
+#     conversation_id: str = Body("", description="对话框ID"),
+#     message_id: str = Body(None, description="数据库消息ID"),
+#     history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
+#     history: List[History] = Body(
+#         [],
+#         description="历史对话，设为一个整数可以从数据库中读取历史消息",
+#         examples=[
+#             [
+#                 {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+#                 {"role": "assistant", "content": "虎头虎脑"},
+#             ]
+#         ],
+#     ),
+#     stream: bool = Body(True, description="流式输出"),
+#     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
+#     tool_config: dict = Body({}, description="工具配置", examples=[]),
+#     max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
+# ):
+#     """Agent 对话"""

@@ -95,7 +95,7 @@ class BasicSettings(BaseFileSettings):
     DB_ROOT_PATH: str = str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。"""
 
-    SQLALCHEMY_DATABASE_URI:str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
+    SQLALCHEMY_DATABASE_URI: str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """知识库信息数据库连接URI"""
 
     OPEN_CROSS_DOMAIN: bool = False
@@ -112,6 +112,9 @@ class BasicSettings(BaseFileSettings):
 
     WEBUI_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 8501}
     """WEBUI 服务器地址"""
+
+    LANG_SMITH: dict = {"OPEN_LANGSMITH": bool, "LANGCHAIN_API_KEY": "lsv2_sk_", "LANGCHAIN_PROJECT": str}
+    """LangSmith 是否开启"""
 
     def make_dirs(self):
         '''创建所有数据目录'''
@@ -328,6 +331,7 @@ class ApiModelSettings(BaseFileSettings):
             "qwen2-instruct",
             "gpt-3.5-turbo",
             "gpt-4o",
+            "gpt-4o-mini",
         ]
     """支持的Agent模型"""
 
@@ -448,6 +452,7 @@ class ApiModelSettings(BaseFileSettings):
                 "api_key": "sk-proj-",
                 "api_concurrencies": 5,
                 "llm_models": [
+                    "gpt-4o-mini",
                     "gpt-4o",
                     "gpt-3.5-turbo",
                 ],

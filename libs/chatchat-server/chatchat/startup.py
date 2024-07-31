@@ -67,6 +67,13 @@ def run_api_server(
         1024 * 1024 * 1024 * 3,
     )
     logging.config.dictConfig(logging_conf)  # type: ignore
+
+    if Settings.basic_settings.LANG_SMITH["OPEN_LANGSMITH"] is True:
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGSMITH_API_KEY"] = Settings.basic_settings.LANG_SMITH["LANGCHAIN_API_KEY"]
+        os.environ["LANGCHAIN_PROJECT"] = Settings.basic_settings.LANG_SMITH["LANGCHAIN_PROJECT"]
+    logger.info(f"LANG_SMITH CONFIG: {Settings.basic_settings.LANG_SMITH}")
+
     uvicorn.run(app, host=host, port=port)
 
 
