@@ -99,6 +99,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 docs = [x.dict() for x in result.get("docs", [])]
                 source_documents = [f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" for i,d in enumerate(docs)]
             else:
+                logger.warning(f"mode {mode} not supported")
                 docs = []
                 source_documents = []
             # import rich
@@ -147,19 +148,11 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             )
             # TODO： 视情况使用 API
             # # 加入reranker
-            # if Settings.kb_settings.USE_RERANKER:
-            #     reranker_model_path = get_model_path(Settings.kb_settings.RERANKER_MODEL)
-            #     reranker_model = LangchainReranker(top_n=top_k,
-            #                                     device=embedding_device(),
-            #                                     max_length=Settings.kb_settings.RERANKER_MAX_LENGTH,
-            #                                     model_name_or_path=reranker_model_path
-            #                                     )
-            #     print("-------------before rerank-----------------")
-            #     print(docs)
-            #     docs = reranker_model.compress_documents(documents=docs,
-            #                                              query=query)
-            #     print("------------after rerank------------------")
-            #     print(docs)
+            # * -----------------add reranker---------------------------- 
+            if Settings.model_settings.USE_RERANKER:
+                from chatchat.server.reranker.reranker import reranker_docs
+                docs = await reranker_docs(query, docs, top_k)
+            # * -----------------------------------------------------------
             context = "\n\n".join([doc["page_content"] for doc in docs])
 
             if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板

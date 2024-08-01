@@ -73,6 +73,9 @@ xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
 ollama = ["ollama"]
 
+# add reranker dependencies here
+reranker = ["flagembedding"] 
+
 # An extra used to be able to add extended testing.
 # Please use new-line on formatting to make it easier to add new packages without
 # merge-conflicts
