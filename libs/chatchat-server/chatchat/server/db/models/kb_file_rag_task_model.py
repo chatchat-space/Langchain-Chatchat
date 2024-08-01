@@ -7,11 +7,15 @@ from sqlalchemy import Column, DateTime, Integer, String, func, Boolean
 from chatchat.server.db.base import Base
 
 
-class KbFileRagTask(Base):
+
+
+
+class KbFileRagTaskModel(Base):
     __tablename__ = 'kb_file_rag_task'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     field_id = Column(String, comment="文件id")
+    kb_id = Column(String, comment="kb id")
     #  0: 未开始 1: 进行中 2: 已完成 3: 失败 4: 待取消 5: 已经取消
     task_status = Column(String, comment="任务状态")
     version = Column(Integer, default=0, comment="版本号")

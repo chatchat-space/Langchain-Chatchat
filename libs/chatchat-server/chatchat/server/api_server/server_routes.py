@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Body
 
-from chatchat.server.types.server.response.base import BaseResponse
+from chatchat.server._types.server.response.base import BaseResponse
 from chatchat.settings import Settings
 from chatchat.server.utils import get_prompt_template, get_server_configs
 

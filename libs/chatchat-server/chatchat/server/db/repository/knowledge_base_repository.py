@@ -62,6 +62,16 @@ def load_kb_from_db(session, kb_name):
 
 
 @with_session
+def get_kb_by_kb_id(session, kb_id):
+    kb = (
+        session.query(KnowledgeBaseModel)
+        .filter(KnowledgeBaseModel.kb_name.ilike(kb_id))
+        .first()
+    )
+    return kb
+
+
+@with_session
 def delete_kb_from_db(session, kb_name):
     kb = (
         session.query(KnowledgeBaseModel)

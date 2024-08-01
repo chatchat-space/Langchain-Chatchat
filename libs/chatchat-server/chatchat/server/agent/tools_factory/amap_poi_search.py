@@ -9,7 +9,7 @@ def amap_poi_search_engine(keywords: str,types: str,config: dict):
     API_KEY = config["api_key"]
     params = {
         "keywords": keywords,
-        "types": types,
+        "_types": types,
         "key": API_KEY
     }
     response = requests.get(BASE_URL, params=params)

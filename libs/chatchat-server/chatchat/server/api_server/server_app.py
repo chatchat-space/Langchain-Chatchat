@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
 from chatchat import __version__
+from chatchat.server.task.kb_file_rag_task import def_task_for_default_scheduler
 from chatchat.settings import Settings
 from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.kb_routes import kb_router
@@ -22,6 +23,7 @@ from chatchat.server.utils import MakeFastAPIOffline
 def create_app(run_mode: str = None):
     app = FastAPI(title="Langchain-Chatchat API Server", version=__version__)
     MakeFastAPIOffline(app)
+    def_task_for_default_scheduler()
     # Add CORS middleware to allow all origins
     # 在config.py中设置OPEN_DOMAIN=True，允许跨域
     # set OPEN_DOMAIN=True in config.py to allow cross-domain
@@ -33,6 +35,7 @@ def create_app(run_mode: str = None):
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
 
     @app.get("/", summary="swagger 文档", include_in_schema=False)
     async def document():
@@ -76,12 +79,11 @@ def run_api(host, port, **kwargs):
 
 app = create_app()
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="langchain-ChatGLM",
         description="About langchain-ChatGLM, local knowledge based ChatGLM with langchain"
-        " ｜ 基于本地知识库的 ChatGLM 问答",
+                    " ｜ 基于本地知识库的 ChatGLM 问答",
     )
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=7861)
