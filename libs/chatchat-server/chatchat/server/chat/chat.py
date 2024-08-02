@@ -316,13 +316,6 @@ async def chatgraph(
     max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
-
-    import os
-    os.environ["OPENAI_API_KEY"] = "sk-proj-"
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGSMITH_API_KEY"] = "lsv2_sk_"
-    os.environ["LANGCHAIN_PROJECT"] = ""
-
     print(f"\n@@@yuehua chatgraph query: {query}\n")
     print(f"\n@@@yuehua chatgraph metadata: {metadata}\n")
     print(f"\n@@@yuehua chatgraph conversation_id: {conversation_id}\n")
