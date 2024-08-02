@@ -175,7 +175,22 @@ async def chat_completions(
         chat_model_config = {}  # TODO: 前端支持配置模型
         tool_names = [x["function"]["name"] for x in body.tools]
         tool_config = {name: get_tool_config(name) for name in tool_names}
-        result = await chat(
+        # result = await chat(
+        #     query=body.messages[-1]["content"],
+        #     metadata=extra.get("metadata", {}),
+        #     conversation_id=extra.get("conversation_id", ""),
+        #     message_id=message_id,
+        #     history_len=-1,
+        #     history=body.messages[:-1],
+        #     stream=body.stream,
+        #     chat_model_config=extra.get("chat_model_config", chat_model_config),
+        #     tool_config=extra.get("tool_config", tool_config),
+        #     max_tokens=body.max_tokens,
+        # )
+        # print(f"@@@yuehua this is agent chat result: {result}")
+        # print(f"@@@yuehua Result type: {type(result)}")
+        # print(f"@@@yuehua Result dir: {dir(result)}")
+        result2 = await chatgraph(
             query=body.messages[-1]["content"],
             metadata=extra.get("metadata", {}),
             conversation_id=extra.get("conversation_id", ""),
@@ -187,22 +202,10 @@ async def chat_completions(
             tool_config=extra.get("tool_config", tool_config),
             max_tokens=body.max_tokens,
         )
-        await chatgraph(
-            query=body.messages[-1]["content"],
-            metadata=extra.get("metadata", {}),
-            conversation_id=extra.get("conversation_id", ""),
-            message_id=message_id,
-            history_len=-1,
-            history=body.messages[:-1],
-            stream=body.stream,
-            chat_model_config=extra.get("chat_model_config", chat_model_config),
-            tool_config=extra.get("tool_config", tool_config),
-            max_tokens=body.max_tokens,
-        )
-        print(f"@@@yuehua this is agent chat result: {result}")
-        print(f"@@@yuehua Result type: {type(result)}")
-        print(f"@@@yuehua Result dir: {dir(result)}")
-        return result
+        print(f"@@@yuehua this is agent chat result: {result2}")
+        print(f"@@@yuehua Result type: {type(result2)}")
+        print(f"@@@yuehua Result dir: {dir(result2)}")
+        return result2
     else:  # LLM chat directly
         print(f"@@@yuehua this is llm chat directly")
         try: # query is complex object that unable add to db when using qwen-vl-chat 

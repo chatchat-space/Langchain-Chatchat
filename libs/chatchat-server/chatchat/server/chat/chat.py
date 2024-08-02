@@ -328,9 +328,6 @@ async def chatgraph(
     print(f"\n@@@yuehua chatgraph max_tokens: {max_tokens}\n")
 
     class State(TypedDict):
-        # Messages have the type "list". The `add_messages` function
-        # in the annotation defines how this state key should be updated
-        # (in this case, it appends messages to the list, rather than overwriting them)
         messages: Annotated[list, add_messages]
 
     graph_builder = StateGraph(State)
@@ -342,20 +339,14 @@ async def chatgraph(
     tools = [tool for tool in all_tools if tool.name in tool_config]
     print(f"@@@yuehua graph tools1: {tools}")
 
-    # Choose the LLM that will drive the agent
     llm = ChatOpenAI(model="gpt-4o-mini", streaming=stream,
                      base_url="https://1251707795-iqjwb4t5xx-sg.scf.tencentcs.com/v1")
-    # llm = ChatOpenAI(model="qwen2-instruct", streaming=True, base_url="http://129.226.91.63:9997/v1")
     print(f"llm: {llm}")
-    # Modification: tell the LLM which tools it can call
     llm_with_tools = llm.bind_tools(tools)
 
     def chatbot(state: State):
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-    # The first argument is the unique node name
-    # The second argument is the function or object that will be called whenever
-    # the node is used.
     graph_builder.add_node("chatbot", chatbot)
 
     tool_node = ToolNode(tools=tools)
@@ -366,7 +357,6 @@ async def chatgraph(
         tools_condition,
     )
 
-    # Any time a tool is called, we return to the chatbot to decide the next step
     graph_builder.add_edge("tools", "chatbot")
 
     graph_builder.set_entry_point("chatbot")
@@ -375,21 +365,61 @@ async def chatgraph(
 
     graph = graph_builder.compile(checkpointer=memory)
 
-    # user_input = "I'm learning LangGraph. Could you do some research on it for me?"
     user_input = query
     inputs = {"messages": ("user", user_input)}
     config = {"configurable": {"thread_id": conversation_id}}
 
-    # The config is the **second positional argument** to stream() or invoke()!
-    events = graph.stream(inputs, config, stream_mode="values")
+    async def chatgraph_iterator() -> AsyncIterable[str]:
+        try:
+            events = graph.stream(inputs, config, stream_mode="values")
+            for event in events:
+                for key, value in event.items():
+                    # 如果 value 是列表，提取其中的 content 字段并连接成字符串
+                    if isinstance(value, list):
+                        content = " ".join([msg.content for msg in value if hasattr(msg, 'content') and msg.content])
+                    else:
+                        content = value
 
-    for event in events:
-        # stream() yields dictionaries with output keyed by node name
-        print("******")
-        print(f"event: {event}")
-        print("******")
-        for key, value in event.items():
-            print(f"Output from node '{key}':")
-            print("---")
-            print(value)
-        print("\n---\n")
+                    ret = OpenAIChatOutput(
+                        id=f"chat{uuid.uuid4()}",
+                        object="chat.completion.chunk",
+                        content=content,
+                        role="assistant",
+                        tool_calls=[],
+                        model=llm.model_name,
+                        status=AgentStatus.agent_finish,
+                        message_type=MsgType.TEXT,
+                        message_id=message_id,
+                    )
+                    yield ret.model_dump_json()
+        except asyncio.exceptions.CancelledError:
+            logger.warning("streaming progress has been interrupted by user.")
+            return
+        except Exception as e:
+            logger.error(f"error in chatgraph: {e}")
+            yield json.dumps({"error": str(e)})
+            return
+
+    if stream:
+        return EventSourceResponse(chatgraph_iterator())
+    else:
+        ret = OpenAIChatOutput(
+            id=f"chat{uuid.uuid4()}",
+            object="chat.completion",
+            content="",
+            role="assistant",
+            finish_reason="stop",
+            tool_calls=[],
+            status=AgentStatus.agent_finish,
+            message_type=MsgType.TEXT,
+            message_id=message_id,
+        )
+
+        async for chunk in chatgraph_iterator():
+            data = json.loads(chunk)
+            if text := data.get("content"):
+                ret.content += text
+            ret.model = data.get("model")
+            ret.created = data.get("created")
+
+        return ret.model_dump()
