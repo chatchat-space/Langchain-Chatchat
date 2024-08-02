@@ -29,7 +29,15 @@ from chatchat.server.utils import (
     get_default_llm,
     build_logger,
 )
+from typing import Annotated
 
+from typing_extensions import TypedDict
+
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langchain_openai.chat_models import ChatOpenAI
+from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 logger = build_logger()
 
@@ -143,9 +151,14 @@ async def chat(
             models, prompts = create_models_from_config(
                 callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
             )
+            print(f"@@@yuehua tool_config: {tool_config}")
             all_tools = get_tool().values()
+            print(f"@@@yuehua all_tools: {all_tools}")
+
             tools = [tool for tool in all_tools if tool.name in tool_config]
+            print(f"@@@yuehua tools1: {tools}")
             tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
+            print(f"@@@yuehua tools2: {tools}")
             print(f"@@@yuehua Models: {models}, Prompts: {prompts}")
             full_chain = create_models_chains(
                 prompts=prompts,
@@ -281,25 +294,109 @@ async def chat(
         return ret.model_dump()
 
 
-# async def chatgraph(
-#     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-#     metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
-#     conversation_id: str = Body("", description="对话框ID"),
-#     message_id: str = Body(None, description="数据库消息ID"),
-#     history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-#     history: List[History] = Body(
-#         [],
-#         description="历史对话，设为一个整数可以从数据库中读取历史消息",
-#         examples=[
-#             [
-#                 {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-#                 {"role": "assistant", "content": "虎头虎脑"},
-#             ]
-#         ],
-#     ),
-#     stream: bool = Body(True, description="流式输出"),
-#     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
-#     tool_config: dict = Body({}, description="工具配置", examples=[]),
-#     max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
-# ):
-#     """Agent 对话"""
+async def chatgraph(
+    query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+    metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
+    conversation_id: str = Body("", description="对话框ID"),
+    message_id: str = Body(None, description="数据库消息ID"),
+    history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
+    history: List[History] = Body(
+        [],
+        description="历史对话，设为一个整数可以从数据库中读取历史消息",
+        examples=[
+            [
+                {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                {"role": "assistant", "content": "虎头虎脑"},
+            ]
+        ],
+    ),
+    stream: bool = Body(True, description="流式输出"),
+    chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
+    tool_config: dict = Body({}, description="工具配置", examples=[]),
+    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
+):
+    """Agent 对话"""
+
+    import os
+    os.environ["OPENAI_API_KEY"] = "sk-proj-"
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGSMITH_API_KEY"] = "lsv2_sk_"
+    os.environ["LANGCHAIN_PROJECT"] = ""
+
+    print(f"\n@@@yuehua chatgraph query: {query}\n")
+    print(f"\n@@@yuehua chatgraph metadata: {metadata}\n")
+    print(f"\n@@@yuehua chatgraph conversation_id: {conversation_id}\n")
+    print(f"\n@@@yuehua chatgraph message_id: {message_id}\n")
+    print(f"\n@@@yuehua chatgraph history_len: {history_len}\n")
+    print(f"\n@@@yuehua chatgraph history: {history}\n")
+    print(f"\n@@@yuehua chatgraph stream: {stream}\n")
+    print(f"\n@@@yuehua chatgraph chat_model_config: {chat_model_config}\n")
+    print(f"\n@@@yuehua chatgraph tool_config: {tool_config}\n")
+    print(f"\n@@@yuehua chatgraph max_tokens: {max_tokens}\n")
+
+    class State(TypedDict):
+        # Messages have the type "list". The `add_messages` function
+        # in the annotation defines how this state key should be updated
+        # (in this case, it appends messages to the list, rather than overwriting them)
+        messages: Annotated[list, add_messages]
+
+    graph_builder = StateGraph(State)
+
+    print(f"@@@yuehua graph tool_config: {tool_config}")
+    all_tools = get_tool().values()
+    print(f"@@@yuehua graph all_tools: {all_tools}")
+
+    tools = [tool for tool in all_tools if tool.name in tool_config]
+    print(f"@@@yuehua graph tools1: {tools}")
+
+    # Choose the LLM that will drive the agent
+    llm = ChatOpenAI(model="gpt-4o-mini", streaming=stream,
+                     base_url="https://1251707795-iqjwb4t5xx-sg.scf.tencentcs.com/v1")
+    # llm = ChatOpenAI(model="qwen2-instruct", streaming=True, base_url="http://129.226.91.63:9997/v1")
+    print(f"llm: {llm}")
+    # Modification: tell the LLM which tools it can call
+    llm_with_tools = llm.bind_tools(tools)
+
+    def chatbot(state: State):
+        return {"messages": [llm_with_tools.invoke(state["messages"])]}
+
+    # The first argument is the unique node name
+    # The second argument is the function or object that will be called whenever
+    # the node is used.
+    graph_builder.add_node("chatbot", chatbot)
+
+    tool_node = ToolNode(tools=tools)
+    graph_builder.add_node("tools", tool_node)
+
+    graph_builder.add_conditional_edges(
+        "chatbot",
+        tools_condition,
+    )
+
+    # Any time a tool is called, we return to the chatbot to decide the next step
+    graph_builder.add_edge("tools", "chatbot")
+
+    graph_builder.set_entry_point("chatbot")
+
+    memory = SqliteSaver.from_conn_string(":memory:")
+
+    graph = graph_builder.compile(checkpointer=memory)
+
+    # user_input = "I'm learning LangGraph. Could you do some research on it for me?"
+    user_input = query
+    inputs = {"messages": ("user", user_input)}
+    config = {"configurable": {"thread_id": conversation_id}}
+
+    # The config is the **second positional argument** to stream() or invoke()!
+    events = graph.stream(inputs, config, stream_mode="values")
+
+    for event in events:
+        # stream() yields dictionaries with output keyed by node name
+        print("******")
+        print(f"event: {event}")
+        print("******")
+        for key, value in event.items():
+            print(f"Output from node '{key}':")
+            print("---")
+            print(value)
+        print("\n---\n")
