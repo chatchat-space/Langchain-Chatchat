@@ -322,7 +322,18 @@ class ApiModelSettings(BaseFileSettings):
 
     TEMPERATURE: float = 0.7
     """LLM通用对话参数"""
-
+    # 新增重排序模型
+    USE_RERANKER: bool = False
+    """是否使用重排模型"""
+    RERANKER_CONFIG: t.Dict[str, t.Any] = {
+            "model": "bge-reranker-v2-m3",
+            "topk": 5,
+            # "return_obj": "index",
+            "local_path":"./model_hub/bge-reranker-v2-m3",
+            "num_workers":1,
+            "device":"cpu",
+            "limit_concurrency": 100
+        }
     SUPPORT_AGENT_MODELS: t.List[str] = [
             "chatglm3-6b",
             "glm-4",
