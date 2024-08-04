@@ -28,17 +28,10 @@ from chatchat.server.utils import (
     wrap_done,
     get_default_llm,
     build_logger,
+    get_graph,
 )
-from typing import Annotated
 
-from typing_extensions import TypedDict
-
-from langgraph.graph import StateGraph, START, END
-from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import ChatOpenAI
-from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.checkpoint.sqlite import SqliteSaver
-from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
 
 logger = build_logger()
 
@@ -344,7 +337,7 @@ async def graph_chat(
             yield json.dumps({"error": str(e)})
             return
 
-        llm_with_tools = llm.bind_tools(tools)
+        graph = get_graph("base_graph", llm=llm, tools=tools)
 
         logger.info(f"this agent conversation info:\n"
                     f"id: {conversation_id}\n"
@@ -352,25 +345,6 @@ async def graph_chat(
                     f"llm: {llm}\n"
                     f"tools: {tools}")
 
-        class State(TypedDict):
-            messages: Annotated[list, add_messages]
-
-        def chatbot(state: State):
-            return {"messages": [llm_with_tools.invoke(state["messages"])]}
-
-        graph_builder = StateGraph(State)
-        graph_builder.add_node("chatbot", chatbot)
-        tool_node = ToolNode(tools=tools)
-        graph_builder.add_node("tools", tool_node)
-        graph_builder.add_conditional_edges(
-            "chatbot",
-            tools_condition,
-        )
-        graph_builder.add_edge("tools", "chatbot")
-        graph_builder.set_entry_point("chatbot")
-        memory = SqliteSaver.from_conn_string(":memory:")
-        # memory = AsyncSqliteSaver.from_conn_string(":memory:")
-        graph = graph_builder.compile(checkpointer=memory)
         inputs = {"messages": ("user", query)}
         config = {"configurable": {"thread_id": conversation_id}}
 

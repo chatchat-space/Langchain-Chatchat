@@ -27,6 +27,7 @@ from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
+from langgraph.graph.graph import CompiledGraph
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
@@ -898,6 +899,21 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY
     else:
         return tools_registry._TOOLS_REGISTRY.get(name)
+
+
+def get_graph(name: str, *, llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
+    """
+    获取已注册的图
+    :param name: 图的名称
+    :param llm: llm
+    :param tools: 需要调用的 tool 列表
+    :return: 已注册的图或图的注册表
+    """
+    from chatchat.server.agent.graphs_factory import graphs_registry
+    if name in graphs_registry._GRAPHS_REGISTRY:
+        return graphs_registry._GRAPHS_REGISTRY[name](llm=llm, tools=tools)
+    else:
+        raise ValueError(f"Graph '{name}' is not registered.")
 
 
 def get_tool_config(name: str = None) -> Dict:

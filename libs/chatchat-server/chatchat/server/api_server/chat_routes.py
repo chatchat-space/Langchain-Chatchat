@@ -7,7 +7,7 @@ from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
 from chatchat.server.api_server.api_schemas import OpenAIChatInput
-from chatchat.server.chat.chat import chat, graph_chat
+from chatchat.server.chat.chat import graph_chat
 from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
