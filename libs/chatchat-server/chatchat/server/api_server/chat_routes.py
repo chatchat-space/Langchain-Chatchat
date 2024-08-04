@@ -7,7 +7,7 @@ from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
 from chatchat.server.api_server.api_schemas import OpenAIChatInput
-from chatchat.server.chat.chat import chat, chatgraph
+from chatchat.server.chat.chat import chat, graph_chat
 from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
@@ -187,7 +187,7 @@ async def chat_completions(
         #     tool_config=extra.get("tool_config", tool_config),
         #     max_tokens=body.max_tokens,
         # )
-        result = await chatgraph(
+        result = await graph_chat(
             query=body.messages[-1]["content"],
             model=body.model,
             metadata=extra.get("metadata", {}),
@@ -197,6 +197,7 @@ async def chat_completions(
             chat_model_config=extra.get("chat_model_config", chat_model_config),
             tool_config=extra.get("tool_config", tool_config),
             max_tokens=body.max_tokens,
+            temperature=body.temperature,
             stream=body.stream,
         )
         return result
