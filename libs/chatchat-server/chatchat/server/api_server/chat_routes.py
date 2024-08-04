@@ -92,7 +92,7 @@ async def chat_completions(
 
     # chat based on result from one choiced tool
     if body.tool_choice:
-        print(f"@@@yuehua this is llm chat with one choiced tool")
+        print(f"✅✅✅@@@yuehua this is llm chat with one choiced tool")
         tool = get_tool(body.tool_choice["function"]["name"])
         if not body.tools:
             body.tools = [
@@ -157,7 +157,7 @@ async def chat_completions(
 
     # agent chat with tool calls
     if body.tools:
-        print(f"@@@yuehua this is agent chat")
+        print(f"✅✅✅@@@yuehua this is agent chat")
         try:
             message_id = (
                 add_message_to_db(
@@ -187,27 +187,21 @@ async def chat_completions(
         #     tool_config=extra.get("tool_config", tool_config),
         #     max_tokens=body.max_tokens,
         # )
-        # print(f"@@@yuehua this is agent chat result: {result}")
-        # print(f"@@@yuehua Result type: {type(result)}")
-        # print(f"@@@yuehua Result dir: {dir(result)}")
-        result2 = await chatgraph(
+        result = await chatgraph(
             query=body.messages[-1]["content"],
+            model=body.model,
             metadata=extra.get("metadata", {}),
             conversation_id=extra.get("conversation_id", ""),
             message_id=message_id,
             history_len=-1,
-            history=body.messages[:-1],
-            stream=body.stream,
             chat_model_config=extra.get("chat_model_config", chat_model_config),
             tool_config=extra.get("tool_config", tool_config),
             max_tokens=body.max_tokens,
+            stream=body.stream,
         )
-        print(f"@@@yuehua this is agent chat result: {result2}")
-        print(f"@@@yuehua Result type: {type(result2)}")
-        print(f"@@@yuehua Result dir: {dir(result2)}")
-        return result2
+        return result
     else:  # LLM chat directly
-        print(f"@@@yuehua this is llm chat directly")
+        print(f"✅✅✅@@@yuehua this is llm chat directly")
         try: # query is complex object that unable add to db when using qwen-vl-chat 
             message_id = (
                 add_message_to_db(

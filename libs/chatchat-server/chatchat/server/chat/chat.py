@@ -38,6 +38,7 @@ from langgraph.graph.message import add_messages
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
 
 logger = build_logger()
 
@@ -129,6 +130,7 @@ async def chat(
     max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
+    print(f"❌❌❌@@@yuehua this is ERROR chat !!!")
 
     async def chat_iterator() -> AsyncIterable[OpenAIChatOutput]:
         try:
@@ -151,15 +153,12 @@ async def chat(
             models, prompts = create_models_from_config(
                 callbacks=callbacks, configs=chat_model_config, stream=stream, max_tokens=max_tokens
             )
-            print(f"@@@yuehua tool_config: {tool_config}")
+
             all_tools = get_tool().values()
-            print(f"@@@yuehua all_tools: {all_tools}")
 
             tools = [tool for tool in all_tools if tool.name in tool_config]
-            print(f"@@@yuehua tools1: {tools}")
             tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-            print(f"@@@yuehua tools2: {tools}")
-            print(f"@@@yuehua Models: {models}, Prompts: {prompts}")
+
             full_chain = create_models_chains(
                 prompts=prompts,
                 models=models,
@@ -174,8 +173,6 @@ async def chat(
             _history = [History.from_data(h) for h in history]
             chat_history = [h.to_msg_tuple() for h in _history]
             history_message = convert_to_messages(chat_history)
-            print(f"@@@yuehua chat.history_message: {history_message}")
-
             task = asyncio.create_task(
                 wrap_done(
                     full_chain.ainvoke(
@@ -187,12 +184,10 @@ async def chat(
                     callback.done,
                 )
             )
-            print(f"@@@yuehua Task created: {task}")
 
             last_tool = {}
             async for chunk in callback.aiter():
                 data = json.loads(chunk)
-                print(f"@@@yuehua chunk data: {data}")
                 data["tool_calls"] = []
                 data["message_type"] = MsgType.TEXT
 
@@ -241,7 +236,6 @@ async def chat(
                     message_type=data["message_type"],
                     message_id=message_id,
                 )
-                print(f"@@@yuehua Yielding chunk: {ret.model_dump_json()}")
                 yield ret.model_dump_json()
             # yield OpenAIChatOutput( # return blank text lastly
             #         id=f"chat{uuid.uuid4()}",
@@ -259,7 +253,6 @@ async def chat(
             return
         except Exception as e:
             logger.error(f"error in chat: {e}")
-            print(f"@@@yuehua Exception: {e}")
             yield {"data": json.dumps({"error": str(e)})}
             return
 
@@ -280,7 +273,6 @@ async def chat(
 
         async for chunk in chat_iterator():
             data = json.loads(chunk)
-            print(f"@@@yuehua Chunk data: {data}")
             if text := data["choices"][0]["delta"]["content"]:
                 ret.content += text
             if data["status"] == AgentStatus.tool_end:
@@ -288,110 +280,133 @@ async def chat(
             ret.model = data["model"]
             ret.created = data["created"]
 
-            print(f"@@yuehua Accumulated ret: {ret.model_dump()}")
-
-        print(f"@@@yuehua chat stream(no) result: {ret.model_dump()}")
         return ret.model_dump()
+
+
+def _create_models(configs, model, max_tokens, stream) -> ChatOpenAI:
+    configs = configs or Settings.model_settings.LLM_MODEL_CONFIG
+    # 获取 LLM_MODEL_CONFIG.action_model 的配置
+    agent_configs = next(iter(configs["action_model"].values()))
+    model = model or agent_configs["model"] or get_default_llm()
+    max_tokens = max_tokens or agent_configs["max_tokens"]
+    # 考虑到不同来源的请求 agent 的表现, temperature 默认最高优先级使用 LLM_MODEL_CONFIG.action_model 的配置.
+    # 开发者们如有需要可以将此顺序对调.
+    temperature = agent_configs["temperature"]
+
+    print(f"d✅✅@@@yuehua _create_models model: {model}, temperature: {temperature}, max_tokens: {max_tokens}, streaming: {stream}")
+    try:
+        # 假设 get_ChatOpenAI 是一个函数，用于创建模型实例
+        model_instance = get_ChatOpenAI(
+            model_name=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            callbacks=[],
+            streaming=stream,
+            local_wrap=False,
+        )
+        # 检查 model_instance 是否为 None
+        if model_instance is None:
+            raise Exception(f"failed to create ChatOpenAI for model: {model}.")
+    except Exception as e:
+        logger.exception(f"failed to create ChatOpenAI for model: {model}.")
+        return None
+
+    return model_instance
 
 
 async def chatgraph(
     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+    model: str = Body(None, description="llm", example="gpt-4o-mini"),
     metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
     conversation_id: str = Body("", description="对话框ID"),
     message_id: str = Body(None, description="数据库消息ID"),
     history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-    history: List[History] = Body(
-        [],
-        description="历史对话，设为一个整数可以从数据库中读取历史消息",
-        examples=[
-            [
-                {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                {"role": "assistant", "content": "虎头虎脑"},
-            ]
-        ],
-    ),
-    stream: bool = Body(True, description="流式输出"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
     max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
+    stream: bool = Body(True, description="流式输出"),
 ):
     """Agent 对话"""
-    print(f"\n@@@yuehua chatgraph query: {query}\n")
-    print(f"\n@@@yuehua chatgraph metadata: {metadata}\n")
-    print(f"\n@@@yuehua chatgraph conversation_id: {conversation_id}\n")
-    print(f"\n@@@yuehua chatgraph message_id: {message_id}\n")
-    print(f"\n@@@yuehua chatgraph history_len: {history_len}\n")
-    print(f"\n@@@yuehua chatgraph history: {history}\n")
-    print(f"\n@@@yuehua chatgraph stream: {stream}\n")
-    print(f"\n@@@yuehua chatgraph chat_model_config: {chat_model_config}\n")
-    print(f"\n@@@yuehua chatgraph tool_config: {tool_config}\n")
-    print(f"\n@@@yuehua chatgraph max_tokens: {max_tokens}\n")
-
-    class State(TypedDict):
-        messages: Annotated[list, add_messages]
-
-    graph_builder = StateGraph(State)
-
-    print(f"@@@yuehua graph tool_config: {tool_config}")
-    all_tools = get_tool().values()
-    print(f"@@@yuehua graph all_tools: {all_tools}")
-
-    tools = [tool for tool in all_tools if tool.name in tool_config]
-    print(f"@@@yuehua graph tools1: {tools}")
-
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=stream,
-                     base_url="https://1251707795-iqjwb4t5xx-sg.scf.tencentcs.com/v1")
-    print(f"llm: {llm}")
-    llm_with_tools = llm.bind_tools(tools)
-
-    def chatbot(state: State):
-        return {"messages": [llm_with_tools.invoke(state["messages"])]}
-
-    graph_builder.add_node("chatbot", chatbot)
-
-    tool_node = ToolNode(tools=tools)
-    graph_builder.add_node("tools", tool_node)
-
-    graph_builder.add_conditional_edges(
-        "chatbot",
-        tools_condition,
-    )
-
-    graph_builder.add_edge("tools", "chatbot")
-
-    graph_builder.set_entry_point("chatbot")
-
-    memory = SqliteSaver.from_conn_string(":memory:")
-
-    graph = graph_builder.compile(checkpointer=memory)
-
-    user_input = query
-    inputs = {"messages": ("user", user_input)}
-    config = {"configurable": {"thread_id": conversation_id}}
-
     async def chatgraph_iterator() -> AsyncIterable[str]:
+        all_tools = get_tool().values()
+        tools = [tool for tool in all_tools if tool.name in tool_config]
+
+        try:
+            llm = _create_models(configs=chat_model_config,
+                                 model=model,
+                                 max_tokens=max_tokens,
+                                 stream=stream)
+            # 检查 llm 是否为 None
+            if llm is None:
+                raise Exception(f"failed to create ChatOpenAI for model: {model}.")
+        except Exception as e:
+            logger.error(f"error in chatgraph: {e}")
+            yield json.dumps({"error": str(e)})
+            return
+        llm_with_tools = llm.bind_tools(tools)
+
+        logger.info(f"this agent conversation info:\n"
+                    f"id: {conversation_id}\n"
+                    f"query: {query}\n"
+                    f"llm: {llm}\n"
+                    f"tools: {tools}")
+
+        class State(TypedDict):
+            messages: Annotated[list, add_messages]
+
+        def chatbot(state: State):
+            return {"messages": [llm_with_tools.invoke(state["messages"])]}
+
+        graph_builder = StateGraph(State)
+        graph_builder.add_node("chatbot", chatbot)
+        tool_node = ToolNode(tools=tools)
+        graph_builder.add_node("tools", tool_node)
+        graph_builder.add_conditional_edges(
+            "chatbot",
+            tools_condition,
+        )
+        graph_builder.add_edge("tools", "chatbot")
+        graph_builder.set_entry_point("chatbot")
+        memory = SqliteSaver.from_conn_string(":memory:")
+        # memory = AsyncSqliteSaver.from_conn_string(":memory:")
+        graph = graph_builder.compile(checkpointer=memory)
+        inputs = {"messages": ("user", query)}
+        config = {"configurable": {"thread_id": conversation_id}}
+
         try:
             events = graph.stream(inputs, config, stream_mode="values")
+            res_content = ""
             for event in events:
-                for key, value in event.items():
-                    # 如果 value 是列表，提取其中的 content 字段并连接成字符串
-                    if isinstance(value, list):
-                        content = " ".join([msg.content for msg in value if hasattr(msg, 'content') and msg.content])
-                    else:
-                        content = value
+                messages = event.get("messages", [])
+                for message in messages:
+                    # 直接访问 message 对象的属性
+                    content = getattr(message, "content", "")
+                    message_type = getattr(message, "type", "")
 
-                    ret = OpenAIChatOutput(
-                        id=f"chat{uuid.uuid4()}",
-                        object="chat.completion.chunk",
-                        content=content,
-                        role="assistant",
-                        tool_calls=[],
-                        model=llm.model_name,
-                        status=AgentStatus.agent_finish,
-                        message_type=MsgType.TEXT,
-                        message_id=message_id,
-                    )
-                    yield ret.model_dump_json()
+                    # 处理 content 是列表的情况
+                    if isinstance(content, list):
+                        content = "\n".join([f"- {item}" for item in content])
+
+                    # 确保 Type 和 Content 之间有换行
+                    res = (f"Type: {message_type}\n"
+                           f"Content:\n{content}\n"
+                           f"{'-' * 40}\n")  # 添加分隔符
+
+                    res_content += res
+
+            graphret = OpenAIChatOutput(
+                id=f"chat{uuid.uuid4()}",
+                object="chat.completion.chunk",
+                content=res_content,
+                role="assistant",
+                tool_calls=[],
+                model=llm.model_name,
+                status=AgentStatus.agent_finish,
+                message_type=MsgType.TEXT,
+                message_id=message_id,
+            )
+            yield graphret.model_dump_json()
+
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return

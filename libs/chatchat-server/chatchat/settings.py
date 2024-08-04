@@ -573,7 +573,6 @@ class ToolSettings(BaseFileSettings):
         # 务必评估是否需要开启read_only,开启后会对sql语句进行检查，请确认text2sql.py中的intercept_sql拦截器是否满足你使用的数据库只读要求
         # 优先推荐从数据库层面对用户权限进行限制
         "read_only": False,
-        # 限定返回的行数
         "top_k": 50,
         # 是否返回中间步骤
         "return_intermediate_steps": True,
