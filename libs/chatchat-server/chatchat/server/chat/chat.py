@@ -306,7 +306,7 @@ def _create_agent_models(configs, model, max_tokens, temperature, stream) -> Cha
     return model_instance
 
 
-async def graph_chat(
+async def chat(
     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
     model: str = Body(None, description="llm", example="gpt-4o-mini"),
     graph: str = Body(None, description="使用的 graph 名称", example="base_graph"),
@@ -376,8 +376,6 @@ async def graph_chat(
                                 tool_calls_content += f"  - type: {tool_call.get('type')}  \n"
                                 tool_calls_content += f"    name: {tool_call.get('name')}  \n"
                                 tool_calls_content += f"    args: {tool_call.get('args')}  \n"
-                                # tool_calls_content += f"    ID: {tool_call.get('id')}  \n"
-                                # 将 tool_calls 的内容追加到 content 中
                                 content += f"{tool_calls_content}"
 
                         if name:
@@ -395,7 +393,7 @@ async def graph_chat(
                                 f"result event:\n"
                                 f"{res_content}\n")
 
-                    graphret = OpenAIChatOutput(
+                    graph_res = OpenAIChatOutput(
                         id=f"chat{uuid.uuid4()}",
                         object="chat.completion.chunk",
                         content=res_content,
@@ -406,7 +404,7 @@ async def graph_chat(
                         message_type=MsgType.TEXT,
                         message_id=message_id,
                     )
-                    yield graphret.model_dump_json()
+                    yield graph_res.model_dump_json()
 
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")

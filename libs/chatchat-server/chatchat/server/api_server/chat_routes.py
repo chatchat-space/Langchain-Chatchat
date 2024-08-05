@@ -7,7 +7,7 @@ from langchain.prompts.prompt import PromptTemplate
 from sse_starlette import EventSourceResponse
 
 from chatchat.server.api_server.api_schemas import OpenAIChatInput
-from chatchat.server.chat.chat import graph_chat
+from chatchat.server.chat.chat import chat
 from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
@@ -173,20 +173,8 @@ async def chat_completions(
         chat_model_config = {}  # TODO: 前端支持配置模型
         tool_names = [x["function"]["name"] for x in body.tools]
         tool_config = {name: get_tool_config(name) for name in tool_names}
-        # result = await chat(
-        #     query=body.messages[-1]["content"],
-        #     metadata=extra.get("metadata", {}),
-        #     conversation_id=extra.get("conversation_id", ""),
-        #     message_id=message_id,
-        #     history_len=-1,
-        #     history=body.messages[:-1],
-        #     stream=body.stream,
-        #     chat_model_config=extra.get("chat_model_config", chat_model_config),
-        #     tool_config=extra.get("tool_config", tool_config),
-        #     max_tokens=body.max_tokens,
-        # )
         graph = ""  # todo 支持 body 传入 graph
-        result = await graph_chat(
+        result = await chat(
             query=body.messages[-1]["content"],
             model=body.model,
             graph=graph,
