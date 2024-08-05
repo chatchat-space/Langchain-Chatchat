@@ -1,7 +1,6 @@
 import asyncio
 import multiprocessing as mp
 import os
-import requests
 import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -27,7 +26,6 @@ from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_openai.llms import OpenAI
-from langgraph.graph.graph import CompiledGraph
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
@@ -48,6 +46,7 @@ async def wrap_done(fn: Awaitable, event: asyncio.Event):
     finally:
         # Signal the aiter to stop.
         event.set()
+
 
 def get_base_url(url):
     parsed_url = urlparse(url)  # 解析url
@@ -907,17 +906,25 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
-def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
+def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool]) -> Dict[str, Any]:
     """
     获取已注册的图
     :param name: 图的名称
     :param llm: llm
     :param tools: 需要调用的 tool 列表
-    :return: 已注册的图或图的注册表
+    :return: 包含已注册的图实例、InputHandler 和 EventHandler 的字典
     """
     from chatchat.server.agent.graphs_factory import graphs_registry
     if name in graphs_registry._GRAPHS_REGISTRY:
-        return graphs_registry._GRAPHS_REGISTRY[name](llm=llm, tools=tools)
+        graph_info = graphs_registry._GRAPHS_REGISTRY[name]
+        graph_instance = graph_info["func"](llm=llm, tools=tools)
+        input_handler = graph_info["input_handler"]()
+        event_handler = graph_info["event_handler"]()
+        return {
+            "graph_instance": graph_instance,
+            "input_handler": input_handler,
+            "event_handler": event_handler
+        }
     else:
         raise ValueError(f"Graph '{name}' is not registered.")
 

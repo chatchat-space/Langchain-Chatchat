@@ -1,17 +1,58 @@
-from langchain_core.tools import BaseTool
-from langgraph.graph.graph import CompiledGraph
-from .graphs_registry import regist_graph
+from typing import Annotated, Callable, Any, Dict, Optional, Type, Union
 from typing_extensions import TypedDict
-from typing import Annotated
-from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import ToolNode, tools_condition
+
+from langchain_core.tools import BaseTool
 from langchain_openai.chat_models import ChatOpenAI
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
-from typing import Callable, Any, Dict, Optional, Type, Union
+
+from .graphs_registry import regist_graph, InputHandler, EventHandler
 
 
-@regist_graph(name="base_graph")
+class BaseGraphInputHandler(InputHandler):
+    def create_inputs(self, query: str, metadata: dict) -> Dict[str, Any]:
+        return {"messages": ("user", query)}
+
+
+class BaseGraphEventHandler(EventHandler):
+    def handle_event(self, event: Dict[str, Any]) -> str:
+        res_content = ""
+        messages = event.get('messages', [])
+        for message in messages:
+            content = getattr(message, "content", "")
+            message_type = getattr(message, "type", "")
+            name = getattr(message, "name", "")
+            tool_calls = getattr(message, "tool_calls", [])
+
+            if isinstance(content, list):
+                content = "  \n".join([f"- {item}" for item in content])
+
+            if tool_calls:
+                tool_calls_content = "tool_calls:  \n"
+                for tool_call in tool_calls:
+                    tool_calls_content += f"  - type: {tool_call.get('type')}  \n"
+                    tool_calls_content += f"    name: {tool_call.get('name')}  \n"
+                    tool_calls_content += f"    args: {tool_call.get('args')}  \n"
+                    content += f"{tool_calls_content}"
+
+            if name:
+                res = (f"type: {message_type}  \n"
+                       f"name: {name}  \n"
+                       f"content: {content}  \n")
+            else:
+                res = (f"type: {message_type}  \n"
+                       f"content: {content}  \n")
+
+            res_content += f"{res}  \n"
+        return res_content
+
+
+@regist_graph(name="base_graph",
+              input_handler=BaseGraphInputHandler,
+              event_handler=BaseGraphEventHandler)
 def base_graph(llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
     if not isinstance(llm, ChatOpenAI):
         raise TypeError("llm must be an instance of ChatOpenAI")
