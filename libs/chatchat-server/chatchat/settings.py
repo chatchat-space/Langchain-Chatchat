@@ -482,6 +482,14 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
+    DEFAULT_GRAPH: str = "base_graph"
+    '''默认使用的 graph'''
+
+    SUPPORT_GRAPHS: list[str] = [
+        "base_graph",
+    ]
+    '''支持的 graph'''
+
     search_local_knowledgebase: dict = {
         "use": False,
         "top_k": 3,

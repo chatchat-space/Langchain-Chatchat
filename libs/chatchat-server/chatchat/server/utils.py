@@ -40,19 +40,14 @@ logger = build_logger()
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-    print("@@@yuehua wrap_done started")
-    print(f"@@@yuehua Received fn: {fn}, event: {event}")
     try:
         await fn
-        print("@@@yuehua Awaitable fn completed successfully")
     except Exception as e:
         msg = f"Caught exception: {e}"
         logger.error(f"{e.__class__.__name__}: {msg}")
     finally:
         # Signal the aiter to stop.
         event.set()
-        print("@@@yuehua Event set to signal completion")
-    print("@@@yuehua wrap_done finished")
 
 def get_base_url(url):
     parsed_url = urlparse(url)  # 解析url
@@ -211,6 +206,7 @@ def get_default_llm():
                        f"using {available_llms[0]} instead")
         return available_llms[0]
 
+
 def get_default_embedding():
     available_embeddings = list(get_config_models(model_type="embed").keys())
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
@@ -219,6 +215,16 @@ def get_default_embedding():
         logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
                        f"available embeddings, using {available_embeddings[0]} instead")
         return available_embeddings[0]
+
+
+def get_default_graph():
+    available_graphs = Settings.tool_settings.SUPPORT_GRAPHS
+    if Settings.model_settings.DEFAULT_LLM_MODEL in available_graphs:
+        return Settings.tool_settings.DEFAULT_GRAPH
+    else:
+        logger.warning(f"default graph {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available graphs, "
+                       f"using {available_graphs[0]} instead")
+        return available_graphs[0]
 
 
 def get_ChatOpenAI(
@@ -901,7 +907,7 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
-def get_graph(name: str, *, llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
+def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
     """
     获取已注册的图
     :param name: 图的名称

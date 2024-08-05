@@ -27,6 +27,7 @@ from chatchat.server.utils import (
     get_tool,
     wrap_done,
     get_default_llm,
+    get_default_graph,
     build_logger,
     get_graph,
 )
@@ -308,6 +309,7 @@ def _create_agent_models(configs, model, max_tokens, temperature, stream) -> Cha
 async def graph_chat(
     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
     model: str = Body(None, description="llm", example="gpt-4o-mini"),
+    graph: str = Body(None, description="使用的 graph 名称", example="base_graph"),
     metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
     conversation_id: str = Body("", description="对话框ID"),
     message_id: str = Body(None, description="数据库消息ID"),
@@ -337,7 +339,8 @@ async def graph_chat(
             yield json.dumps({"error": str(e)})
             return
 
-        graph = get_graph("base_graph", llm=llm, tools=tools)
+        graph_name = graph or get_default_graph()
+        graph_instance = get_graph(name=graph_name, llm=llm, tools=tools)
 
         logger.info(f"this agent conversation info:\n"
                     f"id: {conversation_id}\n"
@@ -345,51 +348,51 @@ async def graph_chat(
                     f"llm: {llm}\n"
                     f"tools: {tools}")
 
-        inputs = {"messages": ("user", query)}
+        inputs = {"messages": ("user", query)}  # todo 支持不同类型 graph 的输入
         config = {"configurable": {"thread_id": conversation_id}}
 
         try:
-            events = graph.stream(inputs, config, stream_mode="values")
+            events = graph_instance.stream(inputs, config, stream_mode="values")
             for event in events:
                 res_content = ""
-                messages = event['messages']
+                messages = event['messages']  # todo 支持不同类型 graph 的内容提取
                 if messages is None:
                     logger.error("Event does not have 'messages' attribute")
                 else:
                     for message in messages:
-                        # 直接访问 message 对象的属性
                         content = getattr(message, "content", "")
                         message_type = getattr(message, "type", "")
-                        # additional_kwargs = getattr(message, "additional_kwargs", {})
-                        # response_metadata = getattr(message, "response_metadata", {})
+                        name = getattr(message, "name", "")
                         tool_calls = getattr(message, "tool_calls", [])
 
                         # 处理 content 是列表的情况
                         if isinstance(content, list):
-                            content = "\n".join([f"- {item}" for item in content])
-                        # 确保 Type 和 Content 之间有换行
-                        res = (f"Type: {message_type}\n"
-                               f"Content:\n{content}\n")
-                        # 处理 additional_kwargs
-                        # if additional_kwargs:
-                        #     res += f"Additional Kwargs:\n{additional_kwargs}\n"
-                        # 处理 response_metadata
-                        # if response_metadata:
-                        #     res += f"Response Metadata:\n{response_metadata}\n"
+                            content = "  \n".join([f"- {item}" for item in content])
+
                         # 处理 tool_calls
                         if tool_calls:
-                            res += "Tool Calls:\n"
+                            tool_calls_content = "tool_calls:  \n"
                             for tool_call in tool_calls:
-                                res += f"  - Name: {tool_call.get('name')}\n"
-                                res += f"    Args: {tool_call.get('args')}\n"
-                                res += f"    ID: {tool_call.get('id')}\n"
-                                res += f"    Type: {tool_call.get('type')}\n"
-                        res += f"{'-' * 40}\n"  # 添加分隔符
-                        res_content += res
+                                tool_calls_content += f"  - type: {tool_call.get('type')}  \n"
+                                tool_calls_content += f"    name: {tool_call.get('name')}  \n"
+                                tool_calls_content += f"    args: {tool_call.get('args')}  \n"
+                                # tool_calls_content += f"    ID: {tool_call.get('id')}  \n"
+                                # 将 tool_calls 的内容追加到 content 中
+                                content += f"{tool_calls_content}"
+
+                        if name:
+                            res = (f"type: {message_type}  \n"
+                                   f"name: {name}  \n"
+                                   f"content: {content}  \n")
+                        else:
+                            res = (f"type: {message_type}  \n"
+                                   f"content: {content}  \n")
+
+                        res_content += f"{res}  \n"
 
                     logger.info(f"this agent conversation info:\n"
                                 f"id: {conversation_id}\n"
-                                f"result event: "
+                                f"result event:\n"
                                 f"{res_content}\n")
 
                     graphret = OpenAIChatOutput(

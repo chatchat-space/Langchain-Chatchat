@@ -59,8 +59,8 @@ async def chat_completions(
     以后还要考虑其它的组合（如文件对话）
     返回与 openai 兼容的 Dict
     """
-    # import rich
-    # rich.print(body)
+    import rich
+    rich.print(body)
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
     if body.max_tokens in [None, 0]:
@@ -92,7 +92,6 @@ async def chat_completions(
 
     # chat based on result from one choiced tool
     if body.tool_choice:
-        print(f"✅✅✅@@@yuehua this is llm chat with one choiced tool")
         tool = get_tool(body.tool_choice["function"]["name"])
         if not body.tools:
             body.tools = [
@@ -157,7 +156,6 @@ async def chat_completions(
 
     # agent chat with tool calls
     if body.tools:
-        print(f"✅✅✅@@@yuehua this is agent chat")
         try:
             message_id = (
                 add_message_to_db(
@@ -187,9 +185,11 @@ async def chat_completions(
         #     tool_config=extra.get("tool_config", tool_config),
         #     max_tokens=body.max_tokens,
         # )
+        graph = ""  # todo 支持 body 传入 graph
         result = await graph_chat(
             query=body.messages[-1]["content"],
             model=body.model,
+            graph=graph,
             metadata=extra.get("metadata", {}),
             conversation_id=extra.get("conversation_id", ""),
             message_id=message_id,
@@ -202,8 +202,7 @@ async def chat_completions(
         )
         return result
     else:  # LLM chat directly
-        print(f"✅✅✅@@@yuehua this is llm chat directly")
-        try: # query is complex object that unable add to db when using qwen-vl-chat 
+        try: # query is complex object that unable add to db when using qwen-vl-chat
             message_id = (
                 add_message_to_db(
                     chat_type="llm_chat",
