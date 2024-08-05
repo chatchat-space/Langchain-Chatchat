@@ -314,8 +314,8 @@ async def graph_chat(
     history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
-    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
-    temperature: float = Body(None, description="temperature", example=0.01),
+    max_tokens: int = Body(None, description="LLM 最大 token 数配置", example=4096),
+    temperature: float = Body(None, description="LLM temperature 配置", example=0.01),
     stream: bool = Body(True, description="流式输出"),
 ):
     """Agent 对话"""
@@ -350,43 +350,66 @@ async def graph_chat(
 
         try:
             events = graph.stream(inputs, config, stream_mode="values")
-            res_content = ""
             for event in events:
-                messages = event.get("messages", [])
-                for message in messages:
-                    # 直接访问 message 对象的属性
-                    content = getattr(message, "content", "")
-                    message_type = getattr(message, "type", "")
+                res_content = ""
+                messages = event['messages']
+                if messages is None:
+                    logger.error("Event does not have 'messages' attribute")
+                else:
+                    for message in messages:
+                        # 直接访问 message 对象的属性
+                        content = getattr(message, "content", "")
+                        message_type = getattr(message, "type", "")
+                        # additional_kwargs = getattr(message, "additional_kwargs", {})
+                        # response_metadata = getattr(message, "response_metadata", {})
+                        tool_calls = getattr(message, "tool_calls", [])
 
-                    # 处理 content 是列表的情况
-                    if isinstance(content, list):
-                        content = "\n".join([f"- {item}" for item in content])
+                        # 处理 content 是列表的情况
+                        if isinstance(content, list):
+                            content = "\n".join([f"- {item}" for item in content])
+                        # 确保 Type 和 Content 之间有换行
+                        res = (f"Type: {message_type}\n"
+                               f"Content:\n{content}\n")
+                        # 处理 additional_kwargs
+                        # if additional_kwargs:
+                        #     res += f"Additional Kwargs:\n{additional_kwargs}\n"
+                        # 处理 response_metadata
+                        # if response_metadata:
+                        #     res += f"Response Metadata:\n{response_metadata}\n"
+                        # 处理 tool_calls
+                        if tool_calls:
+                            res += "Tool Calls:\n"
+                            for tool_call in tool_calls:
+                                res += f"  - Name: {tool_call.get('name')}\n"
+                                res += f"    Args: {tool_call.get('args')}\n"
+                                res += f"    ID: {tool_call.get('id')}\n"
+                                res += f"    Type: {tool_call.get('type')}\n"
+                        res += f"{'-' * 40}\n"  # 添加分隔符
+                        res_content += res
 
-                    # 确保 Type 和 Content 之间有换行
-                    res = (f"Type: {message_type}\n"
-                           f"Content:\n{content}\n"
-                           f"{'-' * 40}\n")  # 添加分隔符
+                    logger.info(f"this agent conversation info:\n"
+                                f"id: {conversation_id}\n"
+                                f"result event: "
+                                f"{res_content}\n")
 
-                    res_content += res
-
-            graphret = OpenAIChatOutput(
-                id=f"chat{uuid.uuid4()}",
-                object="chat.completion.chunk",
-                content=res_content,
-                role="assistant",
-                tool_calls=[],
-                model=llm.model_name,
-                status=AgentStatus.agent_finish,
-                message_type=MsgType.TEXT,
-                message_id=message_id,
-            )
-            yield graphret.model_dump_json()
+                    graphret = OpenAIChatOutput(
+                        id=f"chat{uuid.uuid4()}",
+                        object="chat.completion.chunk",
+                        content=res_content,
+                        role="assistant",
+                        tool_calls=[],
+                        model=llm.model_name,
+                        status=AgentStatus.agent_finish,
+                        message_type=MsgType.TEXT,
+                        message_id=message_id,
+                    )
+                    yield graphret.model_dump_json()
 
         except asyncio.exceptions.CancelledError:
-            logger.warning("streaming progress has been interrupted by user.")
+            logger.warning("Streaming progress has been interrupted by user.")
             return
         except Exception as e:
-            logger.error(f"error in chatgraph: {e}")
+            logger.error(f"Error in chatgraph: {e}")
             yield json.dumps({"error": str(e)})
             return
 
