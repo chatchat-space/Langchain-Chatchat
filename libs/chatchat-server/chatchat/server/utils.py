@@ -218,7 +218,7 @@ def get_default_embedding():
 
 def get_default_graph():
     available_graphs = Settings.tool_settings.SUPPORT_GRAPHS
-    if Settings.model_settings.DEFAULT_LLM_MODEL in available_graphs:
+    if Settings.tool_settings.DEFAULT_GRAPH in available_graphs:
         return Settings.tool_settings.DEFAULT_GRAPH
     else:
         logger.warning(f"default graph {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available graphs, "
@@ -947,6 +947,7 @@ if __name__ == "__main__":
     # for debug
     print(get_default_llm())
     print(get_default_embedding())
+    print(get_default_graph())
     platforms = get_config_platforms()
     models = get_config_models()
     model_info = get_model_info(platform_name="xinference-auto")
