@@ -1,0 +1,30 @@
+profiles:
+  activate: dev
+
+
+storage:
+  storage_type: local-storage
+  upload_folder: uploads
+
+database:
+  uri: sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\chatchat_openai.db
+
+
+models:
+  - model_id: embedding-2
+    platform: zhipuai
+    model_type: embedding_model
+    model_name: embedding-2
+    config:
+    model_class: ZhipuaiEmbeddingModel
+  - model_id: embedding-3
+    platform: zhipuai
+    model_type: embedding_model
+    model_name: embedding-3
+    config:
+  # 基于模型路由的模型(自定义套娃)
+  - model_id: app-moder-router-embedding_model
+    platform: app
+    model_type: embedding_model
+    model_name: embedding-3
+    config:
