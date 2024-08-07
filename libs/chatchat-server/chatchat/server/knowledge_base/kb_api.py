@@ -20,7 +20,7 @@ def list_kbs():
 
 def create_kb(
     knowledge_base_name: str = Body(..., examples=["samples"]),
-    vector_store_type: str = Body("faiss"),
+    vector_store_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
     kb_info: str = Body("", description="知识库内容简介，用于Agent选择知识库。"),
     embed_model: str = Body(get_default_embedding()),
 ) -> BaseResponse:

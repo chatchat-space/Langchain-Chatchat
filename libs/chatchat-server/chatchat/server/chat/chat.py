@@ -311,7 +311,6 @@ async def chat(
     temperature: float = Body(None, description="LLM temperature 配置", example=0.01),
     stream: bool = Body(True, description="流式输出"),
 ):
-    print(f'✅ chat input graph: {graph}')
     """Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
         all_tools = get_tool().values()
@@ -337,9 +336,6 @@ async def chat(
                     f"tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
-
-        print(f'✅ chat use graph: {graph_name}')
-
         graph_info = get_graph(name=graph_name, llm=llm, tools=tools)
         if not graph_info:
             raise ValueError(f"Graph '{graph_name}' is not registered.")
