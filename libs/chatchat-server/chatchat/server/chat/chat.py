@@ -213,11 +213,12 @@ async def chat(
                             data["message_type"] = message_type
                     except:
                         ...
-
+                text_value = data.get("text", "")
+                content = text_value if isinstance(text_value, str) else str(text_value)
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
                     object="chat.completion.chunk",
-                    content=data.get("text", ""),
+                    content=content,
                     role="assistant",
                     tool_calls=data["tool_calls"],
                     model=models["llm_model"].model_name,
