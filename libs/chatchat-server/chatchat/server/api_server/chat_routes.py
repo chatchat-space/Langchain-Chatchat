@@ -54,13 +54,14 @@ async def chat_completions(
     - tool_choice
         - extra_body 中包含 tool_input: 直接调用 tool_choice(tool_input)
         - extra_body 中不包含 tool_input: 通过 agent 调用 tool_choice
+        - extra_body 中包含 graph: 指定 agent 运行时使用的 graph
     - tools: agent 对话
     - 其它：LLM 对话
     以后还要考虑其它的组合（如文件对话）
     返回与 openai 兼容的 Dict
     """
-    # import rich
-    # rich.print(body)
+    import rich
+    rich.print(body)
 
     # 当调用本接口且 body 中没有传入 "max_tokens" 参数时, 默认使用配置中定义的值
     if body.max_tokens in [None, 0]:
@@ -70,7 +71,9 @@ async def chat_completions(
     extra = {**body.model_extra} or {}
     for key in list(extra):
         delattr(body, key)
-
+    if graph := extra.get("graph"):
+        print(f'✅ body input graph: {graph}')
+        pass
     # check tools & tool_choice in request body
     if isinstance(body.tool_choice, str):
         if t := get_tool(body.tool_choice):
@@ -87,9 +90,7 @@ async def chat_completions(
                             "parameters": t.args,
                         },
                     }
-
     conversation_id = extra.get("conversation_id")
-
     # chat based on result from one choiced tool
     if body.tool_choice:
         tool = get_tool(body.tool_choice["function"]["name"])
@@ -153,7 +154,6 @@ async def chat_completions(
                     extra_json=extra_json,
                     header=header,
                 )
-
     # agent chat with tool calls
     if body.tools:
         try:
@@ -173,7 +173,6 @@ async def chat_completions(
         chat_model_config = {}  # TODO: 前端支持配置模型
         tool_names = [x["function"]["name"] for x in body.tools]
         tool_config = {name: get_tool_config(name) for name in tool_names}
-        graph = ""  # todo 支持 body 传入 graph
         result = await chat(
             query=body.messages[-1]["content"],
             model=body.model,
@@ -190,7 +189,7 @@ async def chat_completions(
         )
         return result
     else:  # LLM chat directly
-        try: # query is complex object that unable add to db when using qwen-vl-chat
+        try:  # query is complex object that unable add to db when using qwen-vl-chat
             message_id = (
                 add_message_to_db(
                     chat_type="llm_chat",

@@ -277,33 +277,24 @@ logger = build_logger()
 
 
 def _create_agent_models(configs, model, max_tokens, temperature, stream) -> ChatOpenAI:
-    configs = configs or Settings.model_settings.LLM_MODEL_CONFIG
-    # 获取 LLM_MODEL_CONFIG.action_model 的配置
-    agent_configs = next(iter(configs["action_model"].values()))
-    model = model or agent_configs["model"] or get_default_llm()
-    max_tokens = max_tokens or agent_configs["max_tokens"]
-    # 考虑到不同来源请求时 agent 的表现, temperature 默认最高优先级使用开发组推荐配置(LLM_MODEL_CONFIG.action_model.temperature).
-    # 开发者们如有需要可以将此顺序交换.
-    temperature = agent_configs["temperature"] or temperature
+    # Settings.model_settings.LLM_MODEL_CONFIG 数据结构 与 UI 传入 configs 数据结构不同, 故分开处理
+    if not configs:
+        configs = Settings.model_settings.LLM_MODEL_CONFIG
+        agent_configs = configs.get("action_model", {})
+        model = model or agent_configs["model"] or get_default_llm()
+        max_tokens = max_tokens or agent_configs["max_tokens"]
+        # 考虑到不同来源请求时 agent 的表现, temperature 默认最高优先级使用开发组推荐配置(LLM_MODEL_CONFIG.action_model.temperature).
+        # 开发者们如有需要可以将此顺序交换.
+        temperature = agent_configs["temperature"] or temperature
+    else:
+        agent_configs = configs.get("action_model", {})
+        model = model or agent_configs["model"] or get_default_llm()
+        for _, agent_model_config in agent_configs.items():
+            max_tokens = max_tokens or agent_model_config.get("max_tokens")
+            temperature = agent_model_config.get("temperature") or temperature
 
-    try:
-        # 假设 get_ChatOpenAI 是一个函数，用于创建模型实例
-        model_instance = get_ChatOpenAI(
-            model_name=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            callbacks=[],
-            streaming=stream,
-            local_wrap=False,
-        )
-        # 检查 model_instance 是否为 None
-        if model_instance is None:
-            raise Exception(f"failed to create ChatOpenAI for model: {model}.")
-    except Exception as e:
-        logger.exception(f"failed to create ChatOpenAI for model: {model}.")
-        return None
-
-    return model_instance
+    return get_ChatOpenAI(model_name=model, temperature=temperature, max_tokens=max_tokens, callbacks=[],
+                          streaming=stream, local_wrap=False)
 
 
 async def chat(
@@ -320,11 +311,11 @@ async def chat(
     temperature: float = Body(None, description="LLM temperature 配置", example=0.01),
     stream: bool = Body(True, description="流式输出"),
 ):
+    print(f'✅ chat input graph: {graph}')
     """Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]
-
         try:
             llm = _create_agent_models(configs=chat_model_config,
                                        model=model,
@@ -335,7 +326,7 @@ async def chat(
             if llm is None:
                 raise Exception(f"failed to create ChatOpenAI for model: {model}.")
         except Exception as e:
-            logger.error(f"error in chatgraph: {e}")
+            logger.error(f"error in create ChatOpenAI: {e}")
             yield json.dumps({"error": str(e)})
             return
 
@@ -345,7 +336,10 @@ async def chat(
                     f"llm: {llm}\n"
                     f"tools: {tools}")
 
-        graph_name = graph or get_default_graph()
+        graph_name = graph or get_default_graph() or "base_graph"
+
+        print(f'✅ chat use graph: {graph_name}')
+
         graph_info = get_graph(name=graph_name, llm=llm, tools=tools)
         if not graph_info:
             raise ValueError(f"Graph '{graph_name}' is not registered.")
@@ -358,6 +352,7 @@ async def chat(
         config = {"configurable": {"thread_id": conversation_id}}
 
         try:
+            # 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
             events = graph_instance.stream(inputs, config, stream_mode="values")
             for event in events:
                 res_content = event_handler.handle_event(event)

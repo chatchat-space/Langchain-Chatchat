@@ -39,11 +39,11 @@ class BaseGraphEventHandler(EventHandler):
                     content += f"{tool_calls_content}"
 
             if name:
-                res = (f"type: {message_type}  \n"
+                res = (f"node: {message_type}  \n"
                        f"name: {name}  \n"
                        f"content: {content}  \n")
             else:
-                res = (f"type: {message_type}  \n"
+                res = (f"node: {message_type}  \n"
                        f"content: {content}  \n")
 
             res_content += f"{res}  \n"
