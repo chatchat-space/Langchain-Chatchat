@@ -943,6 +943,21 @@ def is_port_in_use(port):
         return sock.connect_ex(("localhost", port)) == 0
 
 
+# langgraph checkpointer 使用的全局 memory
+AGENT_MEMORY = None
+
+
+def set_agent_memory():
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    global AGENT_MEMORY  # 声明使用全局 memory
+    AGENT_MEMORY = SqliteSaver.from_conn_string(":memory:")
+
+
+def get_agent_memory():
+    global AGENT_MEMORY  # 声明使用全局 memory
+    return AGENT_MEMORY
+
+
 if __name__ == "__main__":
     # for debug
     print(get_default_llm())

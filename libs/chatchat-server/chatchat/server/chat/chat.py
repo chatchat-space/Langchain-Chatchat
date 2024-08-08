@@ -30,6 +30,7 @@ from chatchat.server.utils import (
     get_default_graph,
     build_logger,
     get_graph,
+    get_agent_memory,
 )
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -346,6 +347,11 @@ async def chat(
 
         inputs = input_handler.create_inputs(query, metadata)
         config = {"configurable": {"thread_id": conversation_id}}
+
+        # Run a graph, then list the checkpoints
+        memory = get_agent_memory()
+        checkpoints = list(memory.list(config, limit=2))
+        print(f"✅✅✅ checkpoints: {checkpoints}")
 
         try:
             # 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream

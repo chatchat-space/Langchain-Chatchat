@@ -10,6 +10,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from .graphs_registry import regist_graph, InputHandler, EventHandler
+from chatchat.server.utils import get_agent_memory
 
 
 class BaseGraphInputHandler(InputHandler):
@@ -59,17 +60,20 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
     if not all(isinstance(tool, BaseTool) for tool in tools):
         raise TypeError("All items in tools must be instances of BaseTool")
 
-    llm_with_tools = llm.bind_tools(tools)
+    memory = get_agent_memory()
 
     class State(TypedDict):
         messages: Annotated[list, add_messages]
 
+    graph_builder = StateGraph(State)
+
+    llm_with_tools = llm.bind_tools(tools)
+
     def chatbot(state: State) -> Dict[str, Any]:
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-    graph_builder = StateGraph(State)
-
     graph_builder.add_node("chatbot", chatbot)
+
     tool_node = ToolNode(tools=tools)
     graph_builder.add_node("tools", tool_node)
 
@@ -77,14 +81,8 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
         "chatbot",
         tools_condition,
     )
-    graph_builder.add_edge(
-        "tools",
-        "chatbot")
-
+    graph_builder.add_edge("tools", "chatbot")
     graph_builder.set_entry_point("chatbot")
-
-    memory = SqliteSaver.from_conn_string(":memory:")
-
     graph = graph_builder.compile(checkpointer=memory)
 
     return graph
