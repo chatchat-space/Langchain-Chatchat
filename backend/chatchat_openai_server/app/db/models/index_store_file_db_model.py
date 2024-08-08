@@ -11,8 +11,8 @@ from app.utils.base import gen_id
 ID_PREFIX = "file_"
 
 
-class KnowledgeBaseFileDbModel(Base):
-    __tablename__ = "knowledge_base_file"
+class VectorStoreFileDbModel(Base):
+    __tablename__ = "vector_store_file"
 
     id = Column(String, primary_key=True, index=True, default=lambda: gen_id())
     org_id = Column(String, default="")

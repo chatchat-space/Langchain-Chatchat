@@ -3,14 +3,30 @@ profiles:
 
 
 storage:
-  storage_type: local-storage
-  upload_folder: uploads
+  #  storage_type: local-storage
+  #  upload_folder: D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home\uploads
+  storage_type: minio-storage
+  endpoint: 127.0.0.1:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  secure: false
+  default_bucket: test-bucket
 
 database:
-  uri: sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\chatchat_openai.db
+  uri: sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home\chatchat_openai.db
+
+cache:
+  cache_type: local_cache
+  directory: D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home
+#  cache_type: redis_cache
+#  directory: ./
+mq:
+  mq_type: local_mq
+
 
 
 models:
+#  供应商配置
   - model_id: embedding-2
     platform: zhipuai
     model_type: embedding_model

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.configs.app_config import app_config
+from app.extensions.ext_cache import init_cache
 from app.extensions.ext_database import init_database
+from app.extensions.ext_mq import init_mq
 
 from app.extensions.ext_storage import init_storage
 
@@ -14,6 +16,8 @@ def init_app():
     _app = FastAPI()
     init_database(app_config.database)
     init_storage(app_config.storage)
+    init_cache(app_config.cache)
+    init_mq(app_config.mq)
     init_router(_app, app_config)
     return _app
 

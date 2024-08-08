@@ -4,17 +4,11 @@ import yaml
 from pydantic import BaseModel
 
 
-class MinioConfig(BaseModel):
-    endpoint: str
-    access_key: str
-    secret_key: str
-    secure: bool
-
-
 class AppConfig(BaseModel):
-    minio: MinioConfig = None
     storage: dict = None
     database: dict = None
+    cache: dict = None
+    mq: dict = None
 
 
 with open("conf/app.yml", "r") as file:
