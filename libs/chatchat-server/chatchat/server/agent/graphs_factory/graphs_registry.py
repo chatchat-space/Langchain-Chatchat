@@ -20,11 +20,11 @@ class EventHandler(ABC):
 
 def regist_graph(name: str, input_handler: Type[InputHandler], event_handler: Type[EventHandler]) -> Callable:
     """
-    装饰器, 用于注册 graph 到注册表中
-    :param name: 图的名称
+    graph 注册工厂类
+    :param name: graph 的名称
     :param input_handler: 输入数据结构
     :param event_handler: 输出数据结构
-    :return: 被装饰的函数
+    :return: graph 实例
     """
     def wrapper(func: Callable) -> Callable:
         _GRAPHS_REGISTRY[name] = {

@@ -31,6 +31,7 @@ from chatchat.server.utils import (
     build_logger,
     get_graph,
     get_agent_memory,
+    get_history_len,
 )
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -305,7 +306,6 @@ async def chat(
     metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
     conversation_id: str = Body("", description="对话框ID"),
     message_id: str = Body(None, description="数据库消息ID"),
-    history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
     chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
     tool_config: dict = Body({}, description="工具配置", examples=[]),
     max_tokens: int = Body(None, description="LLM 最大 token 数配置", example=4096),
@@ -337,7 +337,8 @@ async def chat(
                     f"tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
-        graph_info = get_graph(name=graph_name, llm=llm, tools=tools)
+        history_len = get_history_len()
+        graph_info = get_graph(name=graph_name, llm=llm, tools=tools, history_len=history_len)
         if not graph_info:
             raise ValueError(f"Graph '{graph_name}' is not registered.")
 
@@ -347,11 +348,6 @@ async def chat(
 
         inputs = input_handler.create_inputs(query, metadata)
         config = {"configurable": {"thread_id": conversation_id}}
-
-        # Run a graph, then list the checkpoints
-        memory = get_agent_memory()
-        checkpoints = list(memory.list(config, limit=2))
-        print(f"✅✅✅ checkpoints: {checkpoints}")
 
         try:
             # 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream

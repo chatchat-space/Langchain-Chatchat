@@ -1,16 +1,22 @@
-from typing import Annotated, Callable, Any, Dict, Optional, Type, Union
+from typing import Annotated, Any, Dict
 from typing_extensions import TypedDict
 
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
-from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import (
+    AIMessage,
+    ToolMessage,
+    filter_messages,
+)
+from langgraph.graph import StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.checkpoint.sqlite import SqliteSaver
 
+from chatchat.server.utils import get_agent_memory, build_logger
 from .graphs_registry import regist_graph, InputHandler, EventHandler
-from chatchat.server.utils import get_agent_memory
+
+logger = build_logger()
 
 
 class BaseGraphInputHandler(InputHandler):
@@ -54,7 +60,7 @@ class BaseGraphEventHandler(EventHandler):
 @regist_graph(name="base_graph",
               input_handler=BaseGraphInputHandler,
               event_handler=BaseGraphEventHandler)
-def base_graph(llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
+def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledGraph:
     if not isinstance(llm, ChatOpenAI):
         raise TypeError("llm must be an instance of ChatOpenAI")
     if not all(isinstance(tool, BaseTool) for tool in tools):
@@ -69,20 +75,34 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool]) -> CompiledGraph:
 
     llm_with_tools = llm.bind_tools(tools)
 
+    def memory_manager(state: State) -> Dict[str, Any]:
+        try:
+            # 考虑到成本, 默认将 Function Calling 相关内容过滤掉
+            filtered_messages = []
+            for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
+                if isinstance(message, AIMessage) and message.tool_calls:
+                    continue
+                filtered_messages.append(message)
+            return {"messages": filtered_messages[-history_len:]}
+        except Exception as e:
+            raise Exception(f"filtering messages error: {e}")
+
     def chatbot(state: State) -> Dict[str, Any]:
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-    graph_builder.add_node("chatbot", chatbot)
-
     tool_node = ToolNode(tools=tools)
+
+    graph_builder.add_node("memory_manager", memory_manager)
+    graph_builder.add_node("chatbot", chatbot)
     graph_builder.add_node("tools", tool_node)
 
     graph_builder.add_conditional_edges(
         "chatbot",
         tools_condition,
     )
+    graph_builder.add_edge("memory_manager", "chatbot")
     graph_builder.add_edge("tools", "chatbot")
-    graph_builder.set_entry_point("chatbot")
+    graph_builder.set_entry_point("memory_manager")
     graph = graph_builder.compile(checkpointer=memory)
 
     return graph

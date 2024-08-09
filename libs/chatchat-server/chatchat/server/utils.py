@@ -216,7 +216,7 @@ def get_default_embedding():
         return available_embeddings[0]
 
 
-def get_default_graph():
+def get_default_graph() -> str:
     available_graphs = Settings.tool_settings.SUPPORT_GRAPHS
     if Settings.tool_settings.DEFAULT_GRAPH in available_graphs:
         return Settings.tool_settings.DEFAULT_GRAPH
@@ -224,6 +224,11 @@ def get_default_graph():
         logger.warning(f"default graph {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available graphs, "
                        f"using {available_graphs[0]} instead")
         return available_graphs[0]
+
+
+def get_history_len() -> int:
+    return (Settings.model_settings.HISTORY_LEN or
+            Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
 def get_ChatOpenAI(
@@ -906,18 +911,19 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
-def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool]) -> Dict[str, Any]:
+def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Dict[str, Any]:
     """
     获取已注册的图
     :param name: 图的名称
     :param llm: llm
     :param tools: 需要调用的 tool 列表
-    :return: 包含已注册的图实例、InputHandler 和 EventHandler 的字典
+    :param history_len: 默认历史对话轮数
+    :return: 包含已注册的 graph 实例、InputHandler 和 EventHandler
     """
     from chatchat.server.agent.graphs_factory import graphs_registry
     if name in graphs_registry._GRAPHS_REGISTRY:
         graph_info = graphs_registry._GRAPHS_REGISTRY[name]
-        graph_instance = graph_info["func"](llm=llm, tools=tools)
+        graph_instance = graph_info["func"](llm=llm, tools=tools, history_len=history_len)
         input_handler = graph_info["input_handler"]()
         event_handler = graph_info["event_handler"]()
         return {
