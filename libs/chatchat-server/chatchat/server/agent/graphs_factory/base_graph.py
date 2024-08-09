@@ -28,7 +28,9 @@ class BaseGraphEventHandler(EventHandler):
     def handle_event(self, event: Dict[str, Any]) -> str:
         res_content = ""
         messages = event.get('messages', [])
-        for message in messages:
+        if messages:
+            # 只处理最后一条 message，即当前的 input 和 output
+            message = messages[-1]
             content = getattr(message, "content", "")
             message_type = getattr(message, "type", "")
             name = getattr(message, "name", "")
@@ -83,11 +85,17 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
                 if isinstance(message, AIMessage) and message.tool_calls:
                     continue
                 filtered_messages.append(message)
-            return {"messages": filtered_messages[-history_len:]}
+            print(f"history_len: {history_len}")
+            # 更新 state 中的 messages
+            state["messages"] = filtered_messages[-history_len:]
+
+            return {"messages": state["messages"]}
         except Exception as e:
             raise Exception(f"filtering messages error: {e}")
 
     def chatbot(state: State) -> Dict[str, Any]:
+        a = state["messages"]
+        print(f"✅ ❌ current chatbot messages: {a}")
         return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
     tool_node = ToolNode(tools=tools)
