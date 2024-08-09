@@ -42,7 +42,7 @@ class EnsembleRetrieverService(BaseRetrieverService):
         ensemble_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, faiss_retriever], weights=[0.5, 0.5]
         )
-        return EnsembleRetrieverService(retriever=ensemble_retriever)
+        return EnsembleRetrieverService(retriever=ensemble_retriever, top_k=top_k)
 
     def get_relevant_documents(self, query: str):
         return self.retriever.get_relevant_documents(query)[: self.top_k]
