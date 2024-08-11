@@ -96,12 +96,11 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
             raise Exception(f"filtering messages error: {e}")
 
     def chatbot(state: State) -> Dict[str, list[BaseMessage]]:
-        # ToolMessage 默认为 return {"messages": outputs}, 需要在 history 中追加 ToolMessage 结果
+        # ToolMessage 默认 return {"messages": outputs}, 需要在 history 中追加 ToolMessage 结果, 否则报错
         if isinstance(state["messages"][-1], ToolMessage):
             state["history"].append(state["messages"][-1])
 
         print(f"✅ ❌ before chatbot state: {state}")
-
         messages = llm_with_tools.invoke(state["history"])
         state["messages"] = [messages]
         state["history"].append(messages)
