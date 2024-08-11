@@ -954,9 +954,10 @@ AGENT_MEMORY = None
 
 
 def set_agent_memory():
-    from langgraph.checkpoint.sqlite import SqliteSaver
+    # todo 支持多种类型 checkpointer
+    from langgraph.checkpoint.memory import MemorySaver
     global AGENT_MEMORY  # 声明使用全局 memory
-    AGENT_MEMORY = SqliteSaver.from_conn_string(":memory:")
+    AGENT_MEMORY = MemorySaver()
 
 
 def get_agent_memory():
