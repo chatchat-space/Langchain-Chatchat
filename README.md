@@ -71,7 +71,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 | 功能        | 0.2.x                            | 0.3.x                                                               |
 |-----------|----------------------------------|---------------------------------------------------------------------|
 | 模型接入      | 本地：fastchat<br>在线：XXXModelWorker | 本地：model_provider,支持大部分主流模型加载框架<br>在线：oneapi<br>所有模型接入均兼容openai sdk |
-| Agent     | ❌不稳定                             | ✅针对ChatGLM3和QWen进行优化,Agent能力显著提升                                    ||
+| Agent     | ❌不稳定                             | ✅针对ChatGLM3和Qwen进行优化,Agent能力显著提升                                    ||
 | LLM对话     | ✅                                | ✅                                                                   ||
 | 知识库对话     | ✅                                | ✅                                                                   ||
 | 搜索引擎对话    | ✅                                | ✅                                                                   ||
@@ -303,9 +303,9 @@ chatchat start -a
 ### Docker 部署
 
 ```shell
-docker pull chatimage/chatchat:0.3.1.3-0f4eb00-20240729
+docker pull chatimage/chatchat:0.3.1.3-10eb8e9-20240807
 
-docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-0f4eb00-20240729 # 国内镜像
+docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-10eb8e9-20240807 # 国内镜像
 ```
 
 > [!important]
