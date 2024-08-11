@@ -30,7 +30,6 @@ from chatchat.server.utils import (
     get_default_graph,
     build_logger,
     get_graph,
-    get_agent_memory,
     get_history_len,
 )
 
@@ -353,7 +352,6 @@ async def chat(
             # 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
             events = graph_instance.stream(inputs, config, stream_mode="values")
             for event in events:
-                print(f"✅❌ event: {event}")
                 res_content = event_handler.handle_event(event)
                 logger.info(f"this agent conversation info:\n"
                             f"id: {conversation_id}\n"
@@ -380,6 +378,9 @@ async def chat(
             logger.error(f"Error in chatgraph: {e}")
             yield json.dumps({"error": str(e)})
             return
+
+        # snapshot = graph_instance.get_state(config)  # debug
+        # print(f"snapshot: {snapshot}")
 
     if stream:
         return EventSourceResponse(graph_chat_iterator())
