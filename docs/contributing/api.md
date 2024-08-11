@@ -108,6 +108,7 @@
     ```
 - Agent 对话  
     以下示例仅展示使用 `requests` 的情况，可以自行尝试使用 `openai sdk` 进行请求，参数和输出内容是一样的。
+    - 示例1:
     ```python3
     base_url = "http://127.0.0.1:7861/chat"
     tools = list(requests.get(f"http://127.0.0.1:7861/tools").json()["data"])
@@ -157,6 +158,35 @@
         IMAGE = 2
         AUDIO = 3
         VIDEO = 4
+    ```
+    - 示例2:
+    ```python3
+    base_url = "http://127.0.0.1:7861/chat"
+    data = {
+        "messages": [
+            {'role': 'user', 'content': 'The youtube video of langchain?'},
+        ],
+        "model": "gpt-4o-mini",
+        "tools": ["search_internet", "search_youtube"],
+        "stream": True,
+        "temperature": 0.01,
+        "graph": "base_graph",  # 可选, 用来指定 agent 使用 graph
+        "conversation_id": 1,  # 可选, 用来记录历史记录
+    }
+
+    import requests
+    response = requests.post(f"{base_url}/chat/completions", json=data, stream=True)
+    for line in response.iter_content(None, decode_unicode=True):
+        print(line)
+    ```
+
+    ```shell
+    # 输出：
+    data: {"id": "chatcd512421-6913-400b-8552-ba135d4bce8c", "object": "chat.completion.chunk", "model": "gpt-4o-mini", "created": 1723365890, "status": 5, "message_type": 1, "message_id": "34f814cead5a481a8ea17aaa0be6c2be", "is_ref": false, "choices": [{"delta": {"content": "node: human  \ncontent: The youtube video of langchain?", "tool_calls": []}, "role": "assistant"}]}
+    data: {"id": "chatf5ee7d5d-496e-4064-91d2-ad41bdb71bc7", "object": "chat.completion.chunk", "model": "gpt-4o-mini", "created": 1723365890, "status": 5, "message_type": 1, "message_id": "34f814cead5a481a8ea17aaa0be6c2be", "is_ref": false, "choices": [{"delta": {"content": "node: human  \ncontent: The youtube video of langchain?", "tool_calls": []}, "role": "assistant"}]}
+    data: {"id": "chatecb3878a-360f-44e2-9104-3ecdbeff5fb9", "object": "chat.completion.chunk", "model": "gpt-4o-mini", "created": 1723365893, "status": 5, "message_type": 1, "message_id": "34f814cead5a481a8ea17aaa0be6c2be", "is_ref": false, "choices": [{"delta": {"content": "node: ai  \ncontent: tool_calls:  \n  - type: tool_call  \n    name: search_youtube  \n    args: {'query': 'langchain'}", "tool_calls": []}, "role": "assistant"}]}
+    data: {"id": "chata5b8c7ea-3272-4b2a-9565-4aced51b34ff", "object": "chat.completion.chunk", "model": "gpt-4o-mini", "created": 1723365894, "status": 5, "message_type": 1, "message_id": "34f814cead5a481a8ea17aaa0be6c2be", "is_ref": false, "choices": [{"delta": {"content": "node: tool  \nname: search_youtube  \ncontent: ['https://www.youtube.com/watch?v=1bUy-1hGZpI&pp=ygUJbGFuZ2NoYWlu', 'https://www.youtube.com/watch?v=aywZrzNaKjs&pp=ygUJbGFuZ2NoYWlu']", "tool_calls": []}, "role": "assistant"}]}
+    data: {"id": "chat29ca42fa-8939-4071-801d-1363ea942d47", "object": "chat.completion.chunk", "model": "gpt-4o-mini", "created": 1723365896, "status": 5, "message_type": 1, "message_id": "34f814cead5a481a8ea17aaa0be6c2be", "is_ref": false, "choices": [{"delta": {"content": "node: ai  \ncontent: Here are some YouTube videos related to Langchain:\n\n1. [Langchain Overview](https://www.youtube.com/watch?v=1bUy-1hGZpI&pp=ygUJbGFuZ2NoYWlu)\n2. [Langchain Tutorial](https://www.youtube.com/watch?v=aywZrzNaKjs&pp=ygUJbGFuZ2NoYWlu)\n\nFeel free to check them out!", "tool_calls": []}, "role": "assistant"}]}
     ```
 - 知识库对话（LLM 自动解析参数）  
     直接指定 `tool_choice` 为 `"search_local_knowledgebase"`工具即可使用知识库对话功能。其它工具对话类似。

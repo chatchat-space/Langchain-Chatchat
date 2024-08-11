@@ -38,7 +38,7 @@ class BaseGraphEventHandler(EventHandler):
             tool_calls = getattr(message, "tool_calls", [])
 
             if isinstance(content, list):
-                content = "  \n".join([f"- {item}" for item in content])
+                content = "".join([f"- {item}" for item in content])
 
             if tool_calls:
                 tool_calls_content = "tool_calls:  \n"
@@ -56,7 +56,7 @@ class BaseGraphEventHandler(EventHandler):
                 res = (f"node: {message_type}  \n"
                        f"content: {content}")
 
-            res_content += f"{res}  \n"
+            res_content += f"{res}"
         return res_content
 
 
@@ -81,8 +81,6 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
 
     def history_manager(state: State) -> Dict[str, list[BaseMessage]]:
         try:
-            print(f"✅ ❌ history_len: {history_len}")
-            print(f"✅ ❌ before history_manager state: {state}")
             # 为节省成本, 默认在给 llm 传递历史上下文时把 Function Calling 相关内容过滤, 并只保留 history_len 长度的历史上下文
             filtered_messages = []
             for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
@@ -90,7 +88,6 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
                     continue
                 filtered_messages.append(message)
             state["history"] = filtered_messages[-history_len-1:]
-            print(f"✅ ❌ after history_manager state: {state}")
             return state
         except Exception as e:
             raise Exception(f"filtering messages error: {e}")
@@ -100,11 +97,9 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
         if isinstance(state["messages"][-1], ToolMessage):
             state["history"].append(state["messages"][-1])
 
-        print(f"✅ ❌ before chatbot state: {state}")
         messages = llm_with_tools.invoke(state["history"])
         state["messages"] = [messages]
         state["history"].append(messages)
-        print(f"✅ ❌ after chatbot state: {state}")
         return state
 
     tool_node = ToolNode(tools=tools)
