@@ -1,7 +1,7 @@
 import asyncio
 import json
 import uuid
-from typing import AsyncIterable, List
+from typing import AsyncIterable
 
 from fastapi import Body
 from langchain_openai import ChatOpenAI
@@ -23,8 +23,8 @@ from chatchat.server.utils import (
     get_history_len,
 )
 
-
 logger = build_logger()
+
 
 def _create_agent_models(configs, model, max_tokens, temperature, stream) -> ChatOpenAI:
     # Settings.model_settings.LLM_MODEL_CONFIG 数据结构 与 UI 传入 configs 数据结构不同, 故分开处理
@@ -47,7 +47,7 @@ def _create_agent_models(configs, model, max_tokens, temperature, stream) -> Cha
                           streaming=stream, local_wrap=False)
 
 
-async def chat(
+async def graph_chat(
     query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
     model: str = Body(None, description="llm", example="gpt-4o-mini"),
     graph: str = Body(None, description="使用的 graph 名称", example="base_graph"),
@@ -58,7 +58,7 @@ async def chat(
     tool_config: dict = Body({}, description="工具配置", examples=[]),
     max_tokens: int = Body(None, description="LLM 最大 token 数配置", example=4096),
     temperature: float = Body(None, description="LLM temperature 配置", example=0.01),
-    stream: bool = Body(True, description="流式输出"),
+    stream: bool = Body(False, description="流式输出"),
 ):
     """Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
@@ -98,14 +98,14 @@ async def chat(
         config = {"configurable": {"thread_id": conversation_id}}
 
         try:
-            # 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
+            # todo: 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
             events = graph_instance.stream(inputs, config, stream_mode="values")
             for event in events:
                 res_content = event_handler.handle_event(event)
                 logger.info(f"this agent conversation info:\n"
                             f"id: {conversation_id}\n"
                             f"result event:\n"
-                            f"{res_content}\n")
+                            f"{res_content}")
 
                 graph_res = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
@@ -148,9 +148,9 @@ async def chat(
 
         async for chunk in graph_chat_iterator():
             data = json.loads(chunk)
-            if text := data.get("content"):
-                ret.content += text
-            ret.model = data.get("model")
-            ret.created = data.get("created")
+            if choices := data.get("choices"):
+                ret.content += choices[0]["delta"].get("content", "")
+            ret.model = data.get('model')
+            ret.created = data.get('created')
 
         return ret.model_dump()

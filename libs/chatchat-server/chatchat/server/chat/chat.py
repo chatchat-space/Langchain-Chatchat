@@ -6,7 +6,7 @@ from typing import AsyncIterable, List
 from fastapi import Body
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
-from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
+from langchain_core.messages import convert_to_messages
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
@@ -29,8 +29,6 @@ from chatchat.server.utils import (
     get_default_llm,
     build_logger,
 )
-
-from langchain_openai.chat_models import ChatOpenAI
 
 logger = build_logger()
 

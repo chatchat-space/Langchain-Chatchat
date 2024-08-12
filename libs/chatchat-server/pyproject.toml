@@ -84,8 +84,8 @@ reranker = ["flagembedding"]
 # dependencies for langgraph (need python >= 3.9)
 graph = [
     "langgraph==0.2.3",
-    "langgraph-checkpoint=+1.0.2"
-    "langgraph-checkpoint-sqlite==1.0.0"
+    "langgraph-checkpoint=+1.0.2",
+    "langgraph-checkpoint-sqlite==1.0.0",
     "langgraph-checkpoint-postgres==1.0.3"
     ]
 

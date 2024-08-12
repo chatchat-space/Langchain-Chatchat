@@ -45,16 +45,16 @@ class BaseGraphEventHandler(EventHandler):
                 for tool_call in tool_calls:
                     tool_calls_content += f"  - type: {tool_call.get('type')}  \n"
                     tool_calls_content += f"    name: {tool_call.get('name')}  \n"
-                    tool_calls_content += f"    args: {tool_call.get('args')}"
+                    tool_calls_content += f"    args: {tool_call.get('args')}  \n"
                     content += f"{tool_calls_content}"
 
             if name:
                 res = (f"node: {message_type}  \n"
                        f"name: {name}  \n"
-                       f"content: {content}")
+                       f"content: {content}  \n")
             else:
                 res = (f"node: {message_type}  \n"
-                       f"content: {content}")
+                       f"content: {content}  \n")
 
             res_content += f"{res}"
         return res_content
