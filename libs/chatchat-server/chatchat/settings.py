@@ -113,7 +113,7 @@ class BasicSettings(BaseFileSettings):
     WEBUI_SERVER: dict = {"host": DEFAULT_BIND_HOST, "port": 8501}
     """WEBUI 服务器地址"""
 
-    LANG_SMITH: dict = {"OPEN_LANGSMITH": bool, "LANGCHAIN_API_KEY": "lsv2_sk_", "LANGCHAIN_PROJECT": str}
+    LANG_SMITH: dict = {"OPEN_LANGSMITH": False, "LANGCHAIN_API_KEY": "lsv2_sk_xxx", "LANGCHAIN_PROJECT": ""}
     """LangSmith 是否开启"""
 
     def make_dirs(self):
@@ -489,6 +489,13 @@ class ToolSettings(BaseFileSettings):
         "base_graph",
     ]
     '''支持的 graph'''
+
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
+    """
+    langgraph 历史记录类型。
+    默认为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
+    如果设为 sqlite/postgres，则自动使用 SQLALCHEMY_DATABASE_URI
+    """
 
     search_local_knowledgebase: dict = {
         "use": False,

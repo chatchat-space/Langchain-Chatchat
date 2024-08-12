@@ -216,6 +216,14 @@ def get_default_embedding():
         return available_embeddings[0]
 
 
+def is_graph_enabled() -> bool:
+    try:
+        import langgraph
+        return True
+    except ImportError:
+        return False
+
+
 def get_default_graph() -> str:
     available_graphs = Settings.tool_settings.SUPPORT_GRAPHS
     if Settings.tool_settings.DEFAULT_GRAPH in available_graphs:
@@ -950,19 +958,39 @@ def is_port_in_use(port):
 
 
 # langgraph checkpointer 使用的全局 memory
-AGENT_MEMORY = None
+_AGENT_MEMORY = None
 
 
-def set_agent_memory():
-    # todo 支持多种类型 checkpointer
-    from langgraph.checkpoint.memory import MemorySaver
-    global AGENT_MEMORY  # 声明使用全局 memory
-    AGENT_MEMORY = MemorySaver()
+def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None):
+    import sqlalchemy as sa
+    global _AGENT_MEMORY  # 声明使用全局 memory
+
+    if memory_type is None:
+        memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
+
+    if hasattr(_AGENT_MEMORY, "conn"):
+        _AGENT_MEMORY.conn.close()
+
+    if memory_type == "memory":
+        from langgraph.checkpoint.memory import MemorySaver
+        _AGENT_MEMORY = MemorySaver()
+    elif memory_type == "sqlite":
+        from langgraph.checkpoint.sqlite import SqliteSaver
+
+        engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+        conn = engine.connect().connection
+        _AGENT_MEMORY = SqliteSaver(conn)
+    elif memory_type == "postgres":
+        from langgraph.checkpoint.postgres import PostgresSaver
+
+        engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+        conn = engine.connect().connection
+        _AGENT_MEMORY = PostgresSaver(conn)
 
 
-def get_agent_memory():
-    global AGENT_MEMORY  # 声明使用全局 memory
-    return AGENT_MEMORY
+def get_graph_memory():
+    global _AGENT_MEMORY  # 声明使用全局 memory
+    return _AGENT_MEMORY
 
 
 if __name__ == "__main__":

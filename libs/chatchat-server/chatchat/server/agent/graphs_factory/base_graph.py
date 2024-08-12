@@ -14,7 +14,7 @@ from langgraph.graph.graph import CompiledGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from chatchat.server.utils import get_agent_memory, build_logger
+from chatchat.server.utils import get_graph_memory, build_logger
 from .graphs_registry import regist_graph, InputHandler, EventHandler
 
 logger = build_logger()
@@ -69,7 +69,7 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
     if not all(isinstance(tool, BaseTool) for tool in tools):
         raise TypeError("All items in tools must be instances of BaseTool")
 
-    memory = get_agent_memory()
+    memory = get_graph_memory()
 
     class State(TypedDict):
         messages: Annotated[list, add_messages]
