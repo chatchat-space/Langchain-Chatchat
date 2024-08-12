@@ -314,8 +314,9 @@ class ApiModelSettings(BaseFileSettings):
     # Agent_MODEL: str = ""  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     # """AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是 DEFAULT_LLM_MODEL)"""
 
-    HISTORY_LEN: int = 3
+    HISTORY_LEN: int = 6
     """默认历史对话轮数"""
+    """LangGraph Agent 单轮对话可能包含 4 个 Node, 故默认设置为 6"""
 
     MAX_TOKENS: t.Optional[int] = None  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     """大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度"""
@@ -337,10 +338,8 @@ class ApiModelSettings(BaseFileSettings):
     SUPPORT_AGENT_MODELS: t.List[str] = [
             "chatglm3-6b",
             "glm-4",
-            "openai-api",
             "Qwen-2",
             "qwen2-instruct",
-            "gpt-3.5-turbo",
             "gpt-4o",
             "gpt-4o-mini",
         ]
@@ -465,7 +464,6 @@ class ApiModelSettings(BaseFileSettings):
                 "llm_models": [
                     "gpt-4o-mini",
                     "gpt-4o",
-                    "gpt-3.5-turbo",
                 ],
                 "embed_models": [
                     "text-embedding-3-small",
