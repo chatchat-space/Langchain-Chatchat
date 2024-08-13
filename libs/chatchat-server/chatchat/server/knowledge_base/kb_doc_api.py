@@ -122,8 +122,8 @@ def _save_files_in_thread(
                     and os.path.getsize(file_path) == len(file_content)
             ):
                 file_status = f"文件 {filename} 已存在。"
-                logger.warn(file_status)
-                return dict(code=404, msg=file_status, data=data)
+                logger.warning(file_status)
+                return dict(code=200, msg=file_status, data=data)
 
             if not os.path.isdir(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
