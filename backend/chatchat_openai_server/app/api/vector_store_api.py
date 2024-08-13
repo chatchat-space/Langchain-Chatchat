@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from app.services.vector_store_service import VectorStoreService
-from app.types.vector_store_object import VectorStoreObject, VectorStoreDeletedObject, ListVectorStoreObject
+from app._types.vector_store_object import VectorStoreObject, VectorStoreDeletedObject, ListVectorStoreObject
 
 router = APIRouter(prefix="/vector_stores", tags=["vector_stores"])
 

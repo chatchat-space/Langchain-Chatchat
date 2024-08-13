@@ -3,13 +3,14 @@ from typing import Union, List
 from zhipuai import ZhipuAI
 
 from app.core.models.platform.embedding_model import EmbeddingModel
-from app.types.embedding_object import ListEmbedding, Usage, EmbeddingObject
+from app._types.embedding_object import ListEmbedding, Usage, EmbeddingObject
 
 
 class ZhipuaiEmbeddingModel(EmbeddingModel):
     client: ZhipuAI
 
     def __init__(self, config, client: ZhipuAI = None):
+        super().__init__(config)
         if client:
             self.client = client
         else:

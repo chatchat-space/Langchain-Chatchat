@@ -1,9 +1,9 @@
 from fastapi import UploadFile, File
 
 from app.db.dao.file_record_dao import FileRecordDao
-from app.extensions.ext_storage import storage
+from app.depends.depend_storage import storage
 from app.services.exceptions.file_exception import FileNotExistsException
-from app.types.file_object import FilePurpose, FileObject, ListFileObject, FileDeletedObject
+from app._types.file_object import FilePurpose, FileObject, ListFileObject, FileDeletedObject
 from app.utils.base import gen_id, get_valid_var
 
 

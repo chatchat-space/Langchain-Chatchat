@@ -5,9 +5,10 @@ from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
 from app.db.models.vector_store_db_model import VectorStoreDbModel
-from app.extensions.ext_database import with_session
-from app.types.vector_store_object import VectorStoreObject, ListVectorStoreObject, VectorStoreDeletedObject, \
+
+from app._types.vector_store_object import VectorStoreObject, ListVectorStoreObject, VectorStoreDeletedObject, \
     FileCountsObject
+from app.depends.depend_database import with_session
 from app.utils.base import gen_id
 
 ID_PREFIX = "vs_"
@@ -75,7 +76,7 @@ class VectorStoreDao:
 
     @staticmethod
     @with_session
-    def retrieve_vector_store(db: Session, vector_store_id: str):
+    def retrieve_vector_store(db: Session, vector_store_id: str) -> VectorStoreObject:
         vector_store = db.query(VectorStoreDbModel).filter(VectorStoreDbModel.vs_id == vector_store_id).first()
         if not vector_store:
             return None

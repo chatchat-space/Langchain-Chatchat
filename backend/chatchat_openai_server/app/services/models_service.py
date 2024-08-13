@@ -1,7 +1,7 @@
 from typing import List
 
 from app.db.dao.model_record_dao import ModelRecordDao
-from app.types.model_object import ModelDeletedObject, ModelObject
+from app._types.model_object import ModelDeletedObject, ModelObject
 
 
 class ModelsService:

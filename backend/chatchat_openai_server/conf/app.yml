@@ -1,0 +1,52 @@
+profiles:
+  activate: dev
+
+
+storage:
+  storage_type: local_storage
+  upload_folder: D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home\uploads
+#  storage_type: minio_storage
+#  endpoint: 127.0.0.1:9000
+#  access_key: minioadmin
+#  secret_key: minioadmin
+#  secure: false
+#  default_bucket: test-bucket
+
+database:
+  uri: sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\chatchat_openai.db
+
+cache:
+  cache_type: local_cache
+  directory: D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home
+#  cache_type: redis_cache
+#  directory: ./
+mq:
+  mq_type: local_mq
+  path: D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\app\data_home\mq
+
+celery:
+  broker_url: sqlalchemy+sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\chatchat_openai.db
+  backend_url: db+sqlite:///D:\job\kaiyuan\Langchain-Chatchat\backend\chatchat_openai_server\chatchat_openai.db
+#  broker_url: redis://127.0.0.1:6379/0
+#  backend_url: redis://127.0.0.1:6379/0
+
+
+models:
+  #  供应商配置
+  - model_id: embedding-2
+    platform: zhipuai
+    model_type: embedding_model
+    model_name: embedding-2
+    config:
+    model_class: ZhipuaiEmbeddingModel
+  - model_id: embedding-3
+    platform: zhipuai
+    model_type: embedding_model
+    model_name: embedding-3
+    config:
+  # 基于模型路由的模型(自定义套娃)
+  - model_id: app-moder-router-embedding_model
+    platform: app
+    model_type: embedding_model
+    model_name: embedding-3
+    config:

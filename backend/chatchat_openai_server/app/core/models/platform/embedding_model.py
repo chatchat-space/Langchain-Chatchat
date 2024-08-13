@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List, Union
 
-from app.types.embedding_object import ListEmbedding
+from app._types.embedding_object import ListEmbedding
 
 
 class EmbeddingModel:

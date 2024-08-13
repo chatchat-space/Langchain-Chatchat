@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.db.models import FileRecordDbModel
-from app.extensions.ext_database import with_session
-from app.types.file_object import FilePurpose, ListFileObject, FileObject, FileDeletedObject
+from app.depends.depend_database import with_session
+from app._types.file_object import FilePurpose, ListFileObject, FileObject, FileDeletedObject
 
 
 class FileRecordDao:

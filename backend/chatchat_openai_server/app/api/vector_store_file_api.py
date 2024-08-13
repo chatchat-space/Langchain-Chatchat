@@ -1,8 +1,11 @@
+from typing import Union, Annotated
+
 from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi.params import Body, Query
+from pydantic import BaseModel, Field
 
 from app.services.vector_store_file_service import VectorStoreFileService
-from app.types.vector_store_file_object import VectorStoreFileObject, ListVectorStoreFileObject
+from app._types.vector_store_file_object import VectorStoreFileObject, ListVectorStoreFileObject
 
 router = APIRouter(prefix="/vector_stores", tags=["vector_stores file"])
 
@@ -31,3 +34,8 @@ def retrieve_vector_store_file(vector_store_id: str, file_id: str):
 @router.delete("/{vector_store_id}/files/{file_id}")
 def delete_vector_store_file(vector_store_id: str, file_id: str):
     return VectorStoreFileService.delete_vector_store_file(vector_store_id, file_id)
+
+
+@router.post("/process_vector_store_file/")
+def process_vector_store_file(vector_store_id: str, file_id: str):
+    return VectorStoreFileService.process_vector_store_file(vector_store_id, file_id)

@@ -3,8 +3,8 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.db.models.model_record_db_model import ModelRecordDbModel
-from app.extensions.ext_database import with_session
-from app.types.model_object import ModelDeletedObject, ModelObject
+from app.depends.depend_database import with_session
+from app._types.model_object import ModelDeletedObject, ModelObject
 
 
 class ModelRecordDao:

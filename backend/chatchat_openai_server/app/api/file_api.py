@@ -3,7 +3,7 @@ from fastapi.params import Form
 
 from app.api.exceptions.base import NotFoundException
 from app.services.file_service import FileService
-from app.types.file_object import FileObject, FilePurpose, ListFileObject, FileDeletedObject
+from app._types.file_object import FileObject, FilePurpose, ListFileObject, FileDeletedObject
 
 router = APIRouter(prefix="/files", tags=["files"])
 

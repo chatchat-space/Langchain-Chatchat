@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.services.models_service import ModelsService
-from app.types.model_object import ModelObject, ModelDeletedObject
+from app._types.model_object import ModelObject, ModelDeletedObject
 
 router = APIRouter(prefix="/models", tags=["models"])
 

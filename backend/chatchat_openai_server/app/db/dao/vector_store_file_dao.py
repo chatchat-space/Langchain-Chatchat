@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.db.models import VectorStoreFileDbModel
-from app.extensions.ext_database import with_session
-from app.types.vector_store_file_object import VectorStoreFileStatus, VectorStoreFileDeletedObject, \
+from app.depends.depend_database import with_session
+from app._types.vector_store_file_object import VectorStoreFileStatus, VectorStoreFileDeletedObject, \
     VectorStoreFileObject, ListVectorStoreFileObject
 
 
@@ -35,7 +35,7 @@ class VectorStoreFileDao:
 
     @staticmethod
     @with_session
-    def retrieve_vector_store_file(db: Session, vector_store_id: str, file_id: str):
+    def retrieve_vector_store_file(db: Session, vector_store_id: str, file_id: str) -> VectorStoreFileObject:
         vs_file = db.query(VectorStoreFileDbModel).filter(VectorStoreFileDbModel.vector_store_id == vector_store_id,
                                                           VectorStoreFileDbModel.file_id == file_id).first()
         if not vs_file:

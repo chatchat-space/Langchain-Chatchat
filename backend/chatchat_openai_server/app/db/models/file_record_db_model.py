@@ -1,27 +1,25 @@
 import json
 
-from sqlalchemy import Column, Integer, String, JSON, DateTime
-from sqlalchemy.sql.functions import now
+from sqlalchemy import Column, Integer, String, JSON
 
-from app.extensions.ext_database import Base
-from app.types.file_object import FileObject
+from app.core.base.base_db_model import BaseDbModelMixin
+from app._types.file_object import FileObject
+from app.depends.depend_database import Base
 from app.utils.base import gen_id
 
 ID_PREFIX = "file_"
 
 
-class FileRecordDbModel(Base):
+class FileRecordDbModel(Base, BaseDbModelMixin):
     __tablename__ = "file_record"
 
-    id = Column(String, primary_key=True, index=True, default=lambda: gen_id())
-    org_id = Column(String, default="")
     file_id = Column(String, index=True, default=lambda: gen_id(ID_PREFIX))
-    filename = Column(String, index=True)
+    filename = Column(String)
+    extension = Column(String)
     store_file_path = Column(String)
     bytes = Column(Integer)
     purpose = Column(String)
     metadata_ = Column('metadata', JSON, default={})
-    created_at = Column(DateTime, default=now())
 
     def to_object(self) -> FileObject:
         if isinstance(self.metadata_, str):

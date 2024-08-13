@@ -3,21 +3,18 @@ import json
 from sqlalchemy import Column, String, JSON, DateTime
 from sqlalchemy.sql.functions import now
 
-from app.extensions.ext_database import Base
-from app.types.model_object import ModelObject
-from app.utils.base import gen_id
+from app.core.base.base_db_model import BaseDbModelMixin
+from app.depends.depend_database import Base
+from app._types.model_object import ModelObject
 
 
-class ModelRecordDbModel(Base):
+class ModelRecordDbModel(Base, BaseDbModelMixin):
     __tablename__ = "model_record"
 
-    id = Column(String, primary_key=True, index=True, default=lambda: gen_id())
-    org_id = Column(String, default="")
     model_id = Column(String, index=True)
     model_name = Column(String)
     model_platform = Column(String)
     created = Column(DateTime, default=now())
-    owned_by = Column(String)
     metadata_ = Column('metadata', JSON, default={})
 
     def to_object(self) -> ModelObject:
