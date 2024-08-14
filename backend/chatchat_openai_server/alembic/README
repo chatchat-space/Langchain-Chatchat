@@ -1,0 +1,7 @@
+Generic single-database configuration.
+alembic revision --autogenerate -m "init"
+
+# Apply the changes
+alembic upgrade head
+
+alembic revision --autogenerate -m "first add commit"

@@ -1,0 +1,7 @@
+alembic
+minio
+diskcache
+redis
+persist-queue
+eventlet
+celery
