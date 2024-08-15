@@ -8,7 +8,7 @@ from chatchat.settings import Settings
 from chatchat.server.utils import is_graph_enabled, get_default_graph, BaseResponse
 
 
-graph_router = APIRouter(prefix="/graph", tags=["LangGraph"])
+graph_router = APIRouter(prefix="/graphs", tags=["LangGraph"])
 
 @graph_router.get("/graph_enabled")
 def get_graph_enabled():

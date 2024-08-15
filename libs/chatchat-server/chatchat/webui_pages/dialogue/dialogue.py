@@ -146,6 +146,10 @@ def list_tools(_api: ApiRequest):
     return _api.list_tools() or {}
 
 
+def list_graphs(_api: ApiRequest):
+    return _api.list_graphs() or {}
+
+
 def dialogue_page(
     api: ApiRequest,
     is_lite: bool = False,
@@ -235,6 +239,14 @@ def dialogue_page(
                 for name, tool in tools.items()
                 if name in selected_tools
             }
+
+            graph_names = ["None"] + list_graphs(api)
+            selected_graph = st.selectbox(
+                "选择Graph",
+                graph_names,
+                format_func=lambda x: "None" if x == "None" else x,
+                key="selected_graph",
+            )
 
             if "None" in selected_tools:
                 selected_tools.remove("None")
@@ -416,13 +428,18 @@ def dialogue_page(
             if tool_input[k] in [None, ""]:
                 tool_input[k] = prompt
 
-        extra_body = dict(
-            metadata=files_upload,
-            chat_model_config=chat_model_config,
-            conversation_id=conversation_id,
-            tool_input=tool_input,
-            upload_image=upload_image,
-        )
+        extra_body = {
+            "metadata": files_upload,
+            "chat_model_config": chat_model_config,
+            "conversation_id": conversation_id,
+            "tool_input": tool_input,
+            "upload_image": upload_image,
+        }
+
+        # 如果用户选择了图表，则添加 'graph' 键
+        if selected_graph != "None":
+            extra_body["graph"] = selected_graph
+
         stream = not is_vision_chat
         params = dict(
             messages=messages,
