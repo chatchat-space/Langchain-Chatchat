@@ -17,7 +17,36 @@ from chatchat.server.callback_handler.agent_callback_handler import AgentStatus 
 from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
+#for build_flow API
+class InputArg(BaseModel):
+    param_name: str
+    refrence_state_name: str
 
+class Node(BaseModel):
+    name: str
+    input_args: List[InputArg]
+    output_args: List[str]
+
+class Edge(BaseModel):
+    from_node: str
+    to: str
+
+class Condition(BaseModel):
+    refrence_state_name: str
+    operator: str
+    value: str
+    next_path: str
+
+class ConditionalEdge(BaseModel):
+    source: str
+    condition: List[Condition]
+
+class FlowParams(BaseModel):
+    nodes: List[Node]
+    edges: List[Edge]
+    conditional_edges: List[ConditionalEdge]
+    question: str
+    
 class OpenAIBaseInput(BaseModel):
     user: Optional[str] = None
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
