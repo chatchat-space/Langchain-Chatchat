@@ -15,6 +15,10 @@ chatchat = 'chatchat.cli:main'
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.12,!=3.9.7"
 langchain = { version = "0.2.10", python = ">=3.9.1,<3.12,!=3.9.7" }
+langgraph = { version = "0.2.3", python = ">=3.9" }
+langgraph-checkpoint = { version = "1.0.2", python = ">=3.9" }
+langgraph-checkpoint-sqlite = { version = "1.0.0", python = ">=3.9" }
+langgraph-checkpoint-postgres = { version = "1.0.3", python = ">=3.9" }
 langchainhub = "0.1.20"
 langchain-community = "0.2.9"
 langchain-openai = { version = "0.1.17", python = ">=3.9.1,<3.12,!=3.9.7" }
@@ -66,7 +70,6 @@ pydantic_settings = "2.3.4"
 ruamel_yaml = "0.18.6"
 loguru = "^0.7.2"
 streamlit-paste-button = "0.1.2"
-python-docx = "1.1.2"
 
 duckduckgo-search = "^6.2.5"
 youtube-search = "^2.1.2"
@@ -83,11 +86,11 @@ reranker = ["flagembedding"]
 
 # dependencies for langgraph (need python >= 3.9)
 graph = [
-    "langgraph==0.2.3",
-    "langgraph-checkpoint=+1.0.2",
-    "langgraph-checkpoint-sqlite==1.0.0",
-    "langgraph-checkpoint-postgres==1.0.3"
-    ]
+    "langgraph",
+    "langgraph-checkpoint",
+    "langgraph-checkpoint-sqlite",
+    "langgraph-checkpoint-postgres"
+]
 
 # An extra used to be able to add extended testing.
 # Please use new-line on formatting to make it easier to add new packages without
