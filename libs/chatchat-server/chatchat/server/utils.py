@@ -283,6 +283,43 @@ def get_ChatOpenAI(
     return model
 
 
+def get_ChatPlatformAIParams(
+        model_name: str = get_default_llm(),
+        temperature: float = Settings.model_settings.TEMPERATURE,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        local_wrap: bool = False,  # use local wrapped api
+        **kwargs: Any,
+) -> Dict:
+    model_info = get_model_info(model_name)
+    params = dict(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        model=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **kwargs,
+    )
+    # remove paramters with None value to avoid openai validation error
+    for k in list(params):
+        if params[k] is None:
+            params.pop(k)
+
+    try:
+        params.update(
+            api_base=model_info.get("api_base_url"),
+            api_key=model_info.get("api_key"),
+            proxy=model_info.get("api_proxy"),
+        )
+        return params
+    except Exception as e:
+        logger.exception(f"failed to create for model: {model_name}.")
+        return {}
+
+
 def get_OpenAI(
         model_name: str,
         temperature: float,
@@ -676,6 +713,28 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
     from chatchat.settings import Settings
 
     return Settings.prompt_settings.model_dump().get(type, {}).get(name)
+
+
+def get_prompt_template_dict(type: str, name: str) -> Optional[Dict]:
+    """
+    从prompt_config中加载模板内容
+    type: 对应于 model_settings.llm_model_config 模型类别其中的一种，以及 "rag"，如果有新功能，应该进行加入。
+    返回：定义的对象特点字典“SYSTEM_PROMPT”，“HUMAN_MESSAGE”
+    """
+
+    from chatchat.settings import Settings
+
+    return Settings.prompt_settings.model_dump().get(type, {}).get(name)
+
+
+def get_model_dump_dict(type: str) -> Optional[Dict]:
+    """
+    从prompt_config中加载模板内容
+    """
+
+    from chatchat.settings import Settings
+
+    return Settings.prompt_settings.model_dump().get(type, {})
 
 
 def set_httpx_config(

@@ -10,7 +10,6 @@ import nltk
 from chatchat import __version__
 from chatchat.pydantic_settings_file import *
 
-
 # chatchat 数据目录，必须通过环境变量设置。如未设置则自动使用当前目录。
 CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
@@ -154,7 +153,7 @@ class KBSettings(BaseFileSettings):
     OVERLAP_SIZE: int = 150
     """知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)"""
 
-    VECTOR_SEARCH_TOP_K: int = 3 # TODO: 与 tool 配置项重复
+    VECTOR_SEARCH_TOP_K: int = 3  # TODO: 与 tool 配置项重复
     """知识库匹配向量数量"""
 
     SCORE_THRESHOLD: float = 0.7
@@ -175,73 +174,73 @@ class KBSettings(BaseFileSettings):
     这样可以避免 PDF 中一些小图片的干扰，提高非扫描版 PDF 处理速度
     """
 
-    KB_INFO: t.Dict[str, str] = {"samples": "关于本项目issue的解答"} # TODO: 都存在数据库了，这个配置项还有必要吗？
+    KB_INFO: t.Dict[str, str] = {"samples": "关于本项目issue的解答"}  # TODO: 都存在数据库了，这个配置项还有必要吗？
     """每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。"""
 
     kbs_config: t.Dict[str, t.Dict] = {
-            "faiss": {},
-            "milvus": {
-                "host": "127.0.0.1",
-                "port": "19530",
-                "user": "",
-                "password": "",
-                "secure": False
+        "faiss": {},
+        "milvus": {
+            "host": "127.0.0.1",
+            "port": "19530",
+            "user": "",
+            "password": "",
+            "secure": False
+        },
+        "zilliz": {
+            "host": "in01-a7ce524e41e3935.ali-cn-hangzhou.vectordb.zilliz.com.cn",
+            "port": "19530",
+            "user": "",
+            "password": "",
+            "secure": True
+        },
+        "pg": {
+            "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat"
+        },
+        "relyt": {
+            "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat"
+        },
+        "es": {
+            "host": "127.0.0.1",
+            "port": "9200",
+            "index_name": "test_index",
+            "user": "",
+            "password": ""
+        },
+        "milvus_kwargs": {
+            "search_params": {
+                "metric_type": "L2"
             },
-            "zilliz": {
-                "host": "in01-a7ce524e41e3935.ali-cn-hangzhou.vectordb.zilliz.com.cn",
-                "port": "19530",
-                "user": "",
-                "password": "",
-                "secure": True
-            },
-            "pg": {
-                "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat"
-            },
-            "relyt": {
-                "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat"
-            },
-            "es": {
-                "host": "127.0.0.1",
-                "port": "9200",
-                "index_name": "test_index",
-                "user": "",
-                "password": ""
-            },
-            "milvus_kwargs": {
-                "search_params": {
-                    "metric_type": "L2"
-                },
-                "index_params": {
-                    "metric_type": "L2",
-                    "index_type": "HNSW"
-                }
-            },
-            "chromadb": {}
-        }
+            "index_params": {
+                "metric_type": "L2",
+                "index_type": "HNSW"
+            }
+        },
+        "chromadb": {}
+    }
     """可选向量库类型及对应配置"""
 
     text_splitter_dict: t.Dict[str, t.Dict[str, t.Any]] = {
-            "ChineseRecursiveTextSplitter": {
-                "source": "",
-                "tokenizer_name_or_path": "",
-            },
-            "SpacyTextSplitter": {
-                "source": "huggingface",
-                "tokenizer_name_or_path": "gpt2",
-            },
-            "RecursiveCharacterTextSplitter": {
-                "source": "tiktoken",
-                "tokenizer_name_or_path": "cl100k_base",
-            },
-            "MarkdownHeaderTextSplitter": {
-                "headers_to_split_on": [
-                    ("#", "head1"),
-                    ("##", "head2"),
-                    ("###", "head3"),
-                    ("####", "head4"),
-                ]
-            },
-        }
+        "ChineseRecursiveTextSplitter": {
+            "source": "",
+            "tokenizer_name_or_path": "",
+        },
+        "SpacyTextSplitter": {
+            "source": "huggingface",
+            "tokenizer_name_or_path": "gpt2",
+        },
+        "RecursiveCharacterTextSplitter": {
+            "source": "tiktoken",
+            "tokenizer_name_or_path": "cl100k_base",
+        },
+        "MarkdownHeaderTextSplitter": {
+            "headers_to_split_on": [
+                ("#", "head1"),
+                ("##", "head2"),
+                ("###", "head3"),
+                ("####", "head4"),
+            ]
+        },
+    }
     """
     TextSplitter配置项，如果你不明白其中的含义，就不要修改。
     source 如果选择tiktoken则使用openai的方法 "huggingface"
@@ -327,150 +326,150 @@ class ApiModelSettings(BaseFileSettings):
     USE_RERANKER: bool = False
     """是否使用重排模型"""
     RERANKER_CONFIG: t.Dict[str, t.Any] = {
-            "model": "bge-reranker-v2-m3",
-            "topk": 5,
-            # "return_obj": "index",
-            "local_path":"./model_hub/bge-reranker-v2-m3",
-            "num_workers":1,
-            "device":"cpu",
-            "limit_concurrency": 100
-        }
+        "model": "bge-reranker-v2-m3",
+        "topk": 5,
+        # "return_obj": "index",
+        "local_path": "./model_hub/bge-reranker-v2-m3",
+        "num_workers": 1,
+        "device": "cpu",
+        "limit_concurrency": 100
+    }
     SUPPORT_AGENT_MODELS: t.List[str] = [
-            "chatglm3-6b",
-            "glm-4",
-            "Qwen-2",
-            "qwen2-instruct",
-            "gpt-4o",
-            "gpt-4o-mini",
-        ]
+        "chatglm3-6b",
+        "glm-4",
+        "Qwen-2",
+        "qwen2-instruct",
+        "gpt-4o",
+        "gpt-4o-mini",
+    ]
     """支持的Agent模型"""
 
     LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {
-            # 意图识别不需要输出，模型后台知道就行
-            "preprocess_model": {
-                "model": "",
-                "temperature": 0.05,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": False,
-            },
-            "llm_model": {
-                "model": "",
-                "temperature": 0.9,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": True,
-            },
-            "action_model": {
-                "model": "",
-                "temperature": 0.01,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "ChatGLM3",
-                "callbacks": True,
-            },
-            "postprocess_model": {
-                "model": "",
-                "temperature": 0.01,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": True,
-            },
-            "image_model": {
-                "model": "sd-turbo",
-                "size": "256*256",
-            },
-        }
+        # 意图识别不需要输出，模型后台知道就行
+        "preprocess_model": {
+            "model": "",
+            "temperature": 0.05,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": False,
+        },
+        "llm_model": {
+            "model": "",
+            "temperature": 0.9,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": True,
+        },
+        "action_model": {
+            "model": "",
+            "temperature": 0.01,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "ChatGLM3",
+            "callbacks": True,
+        },
+        "postprocess_model": {
+            "model": "",
+            "temperature": 0.01,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": True,
+        },
+        "image_model": {
+            "model": "sd-turbo",
+            "size": "256*256",
+        },
+    }
     """
     LLM模型配置，包括了不同模态初始化参数。
     `model` 如果留空则自动使用 DEFAULT_LLM_MODEL
     """
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
-            PlatformConfig(**{
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://127.0.0.1:9997/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "auto_detect_model": True,
-                "llm_models": [],
-                "embed_models": [],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "ollama",
-                "platform_type": "ollama",
-                "api_base_url": "http://127.0.0.1:11434/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "qwen:7b",
-                    "qwen2:7b",
-                ],
-                "embed_models": [
-                    "quentinz/bge-large-zh-v1.5",
-                ],
-            }),
-            PlatformConfig(**{
-                "platform_name": "oneapi",
-                "platform_type": "oneapi",
-                "api_base_url": "http://127.0.0.1:3000/v1",
-                "api_key": "sk-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    # 智谱 API
-                    "chatglm_pro",
-                    "chatglm_turbo",
-                    "chatglm_std",
-                    "chatglm_lite",
-                    # 千问 API
-                    "qwen-turbo",
-                    "qwen-plus",
-                    "qwen-max",
-                    "qwen-max-longcontext",
-                    # 千帆 API
-                    "ERNIE-Bot",
-                    "ERNIE-Bot-turbo",
-                    "ERNIE-Bot-4",
-                    # 星火 API
-                    "SparkDesk",
-                ],
-                "embed_models": [
-                    # 千问 API
-                    "text-embedding-v1",
-                    # 千帆 API
-                    "Embedding-V1",
-                ],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "openai",
-                "platform_type": "openai",
-                "api_base_url": "https://api.openai.com/v1",
-                "api_key": "sk-proj-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "gpt-4o-mini",
-                    "gpt-4o",
-                ],
-                "embed_models": [
-                    "text-embedding-3-small",
-                    "text-embedding-3-large",
-                ],
-            }),
-        ]
+        PlatformConfig(**{
+            "platform_name": "xinference",
+            "platform_type": "xinference",
+            "api_base_url": "http://127.0.0.1:9997/v1",
+            "api_key": "EMPTY",
+            "api_concurrencies": 5,
+            "auto_detect_model": True,
+            "llm_models": [],
+            "embed_models": [],
+            "text2image_models": [],
+            "image2text_models": [],
+            "rerank_models": [],
+            "speech2text_models": [],
+            "text2speech_models": [],
+        }),
+        PlatformConfig(**{
+            "platform_name": "ollama",
+            "platform_type": "ollama",
+            "api_base_url": "http://127.0.0.1:11434/v1",
+            "api_key": "EMPTY",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "qwen:7b",
+                "qwen2:7b",
+            ],
+            "embed_models": [
+                "quentinz/bge-large-zh-v1.5",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "oneapi",
+            "platform_type": "oneapi",
+            "api_base_url": "http://127.0.0.1:3000/v1",
+            "api_key": "sk-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                # 智谱 API
+                "chatglm_pro",
+                "chatglm_turbo",
+                "chatglm_std",
+                "chatglm_lite",
+                # 千问 API
+                "qwen-turbo",
+                "qwen-plus",
+                "qwen-max",
+                "qwen-max-longcontext",
+                # 千帆 API
+                "ERNIE-Bot",
+                "ERNIE-Bot-turbo",
+                "ERNIE-Bot-4",
+                # 星火 API
+                "SparkDesk",
+            ],
+            "embed_models": [
+                # 千问 API
+                "text-embedding-v1",
+                # 千帆 API
+                "Embedding-V1",
+            ],
+            "text2image_models": [],
+            "image2text_models": [],
+            "rerank_models": [],
+            "speech2text_models": [],
+            "text2speech_models": [],
+        }),
+        PlatformConfig(**{
+            "platform_name": "openai",
+            "platform_type": "openai",
+            "api_base_url": "https://api.openai.com/v1",
+            "api_key": "sk-proj-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "gpt-4o-mini",
+                "gpt-4o",
+            ],
+            "embed_models": [
+                "text-embedding-3-small",
+                "text-embedding-3-large",
+            ],
+        }),
+    ]
     """模型平台配置"""
 
 
@@ -501,12 +500,12 @@ class ToolSettings(BaseFileSettings):
         "score_threshold": 2.0,
         "conclude_prompt": {
             "with_result": '<指令>根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 "根据已知信息无法回答该问题"，'
-            "不允许在答案中添加编造成分，答案请使用中文。 </指令>\n"
-            "<已知信息>{{ context }}</已知信息>\n"
-            "<问题>{{ question }}</问题>\n",
+                           "不允许在答案中添加编造成分，答案请使用中文。 </指令>\n"
+                           "<已知信息>{{ context }}</已知信息>\n"
+                           "<问题>{{ question }}</问题>\n",
             "without_result": "请你根据我的提问回答我的问题:\n"
-            "{{ question }}\n"
-            "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
+                              "{{ question }}\n"
+                              "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
         },
     }
     '''本地知识库工具配置项'''
@@ -536,10 +535,10 @@ class ToolSettings(BaseFileSettings):
         "top_k": 5,
         "verbose": "Origin",
         "conclude_prompt": "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
-        "</指令>\n<已知信息>{{ context }}</已知信息>\n"
-        "<问题>\n"
-        "{{ question }}\n"
-        "</问题>\n",
+                           "</指令>\n<已知信息>{{ context }}</已知信息>\n"
+                           "<问题>\n"
+                           "{{ question }}\n"
+                           "</问题>\n",
     }
     '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
 
@@ -607,7 +606,7 @@ class ToolSettings(BaseFileSettings):
     5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
     6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
     '''
-  
+
     amap: dict = {
         "use": False,
         "api_key": "高德地图 API KEY",
@@ -638,7 +637,6 @@ class ToolSettings(BaseFileSettings):
     请确保部署的网络环境良好，以免造成超时等问题'''
 
 
-
 class PromptSettings(BaseFileSettings):
     """Prompt 模板.除 Agent 模板使用 f-string 外，其它均使用 jinja2 格式"""
 
@@ -654,7 +652,7 @@ class PromptSettings(BaseFileSettings):
             "3. 需要查询实时性的内容\n"
             "如果我的输入满足这几种情况，返回1。其他输入，请你回复0，你只要返回一个数字\n"
             "这是我的问题:"
-            ),
+        ),
     }
     """意图识别用模板"""
 
@@ -668,7 +666,7 @@ class PromptSettings(BaseFileSettings):
             "{{history}}\n"
             "Human: {{input}}\n"
             "AI:"
-            ),
+        ),
     }
     '''普通 LLM 用模板'''
 
@@ -678,7 +676,7 @@ class PromptSettings(BaseFileSettings):
             "如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。\n\n"
             "【已知信息】{{context}}\n\n"
             "【问题】{{question}}\n"
-            ),
+        ),
         "empty": (
             "请你回答我的问题:\n"
             "{{question}}"
@@ -687,105 +685,99 @@ class PromptSettings(BaseFileSettings):
     '''RAG 用模板，可用于知识库问答、文件对话、搜索引擎对话'''
 
     action_model: dict = {
-        "GPT-4": (
-            "Answer the following questions as best you can. You have access to the following tools:\n"
-            "The way you use the tools is by specifying a json blob.\n"
-            "Specifically, this json should have a `action` key (with the name of the tool to use) and a `action_input` key (with the input to the tool going here).\n"
-            'The only values that should be in the "action" field are: {tool_names}\n'
-            "The $JSON_BLOB should only contain a SINGLE action, do NOT return a list of multiple actions. Here is an example of a valid $JSON_BLOB:\n"
-            "```\n\n"
-            "{{{{\n"
-            '  "action": $TOOL_NAME,\n'
-            '  "action_input": $INPUT\n'
-            "}}}}\n"
-            "```\n\n"
-            "ALWAYS use the following format:\n"
-            "Question: the input question you must answer\n"
-            "Thought: you should always think about what to do\n"
-            "Action:\n"
-            "```\n\n"
-            "$JSON_BLOB"
-            "```\n\n"
-            "Observation: the result of the action\n"
-            "... (this Thought/Action/Observation can repeat N times)\n"
-            "Thought: I now know the final answer\n"
-            "Final Answer: the final answer to the original input question\n"
-            "Begin! Reminder to always use the exact characters `Final Answer` when responding.\n"
-            "Question:{input}\n"
-            "Thought:{agent_scratchpad}\n"
+        "default": {
+            "SYSTEM_PROMPT": (
+                "You are a helpful assistant"
             ),
-        "ChatGLM3": (
-            "You can answer using the tools.Respond to the human as helpfully and accurately as possible.\n"
-            "You have access to the following tools:\n"
-            "{tools}\n"
-            "Use a json blob to specify a tool by providing an action key (tool name)\n"
-            "and an action_input key (tool input).\n"
-            'Valid "action" values: "Final Answer" or  [{tool_names}]\n'
-            "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
-            "```\n"
-            "{{{{\n"
-            '  "action": $TOOL_NAME,\n'
-            '  "action_input": $INPUT\n'
-            "}}}}\n"
-            "```\n\n"
-            "Follow this format:\n\n"
-            "Question: input question to answer\n"
-            "Thought: consider previous and subsequent steps\n"
-            "Action:\n"
-            "```\n"
-            "$JSON_BLOB\n"
-            "```\n"
-            "Observation: action result\n"
-            "... (repeat Thought/Action/Observation N times)\n"
-            "Thought: I know what to respond\n"
-            "Action:\n"
-            "```\n"
-            "{{{{\n"
-            '  "action": "Final Answer",\n'
-            '  "action_input": "Final response to human"\n'
-            "}}}}\n"
-            "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary.\n"
-            "Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.\n"
-            "Question: {input}\n\n"
-            "{agent_scratchpad}\n"
+        },
+        "openai-functions": {
+            "SYSTEM_PROMPT": (
+                "Answer the following questions as best you can. You have access to the following tools:\n"
+                "The way you use the tools is by specifying a json blob.\n"
+                "Specifically, this json should have a `action` key (with the name of the tool to use) and a `action_input` key (with the input to the tool going here).\n"
+                'The only values that should be in the "action" field are: {tool_names}\n'
+                "The $JSON_BLOB should only contain a SINGLE action, do NOT return a list of multiple actions. Here is an example of a valid $JSON_BLOB:\n"
+                "```\n\n"
+                "{{{{\n"
+                '  "action": $TOOL_NAME,\n'
+                '  "action_input": $INPUT\n'
+                "}}}}\n"
+                "```\n\n"
+                "ALWAYS use the following format:\n"
+                "Question: the input question you must answer\n"
+                "Thought: you should always think about what to do\n"
+                "Action:\n"
+                "```\n\n"
+                "$JSON_BLOB"
+                "```\n\n"
+                "Observation: the result of the action\n"
+                "... (this Thought/Action/Observation can repeat N times)\n"
+                "Thought: I now know the final answer\n"
+                "Final Answer: the final answer to the original input question\n"
+                "Begin! Reminder to always use the exact characters `Final Answer` when responding.\n"
             ),
-        "qwen": (
-            "Answer the following questions as best you can. You have access to the following APIs:\n\n"
-            "{tools}\n\n"
-            "Use the following format:\n\n"
-            "Question: the input question you must answer\n"
-            "Thought: you should always think about what to do\n"
-            "Action: the action to take, should be one of [{tool_names}]\n"
-            "Action Input: the input to the action\n"
-            "Observation: the result of the action\n"
-            "... (this Thought/Action/Action Input/Observation can be repeated zero or more times)\n"
-            "Thought: I now know the final answer\n"
-            "Final Answer: the final answer to the original input question\n\n"
-            "Format the Action Input as a JSON object.\n\n"
-            "Begin!\n\n"
-            "Question: {input}\n\n"
-            "{agent_scratchpad}\n\n"
+            "HUMAN_MESSAGE": (
+                "Question:{input}\n"
+                "Thought:{agent_scratchpad}\n"
+            )
+        },
+        "glm3": {
+            "SYSTEM_PROMPT": ("\nAnswer the following questions as best as you can. You have access to the following "
+                              "tools:\n{tools}"),
+            "HUMAN_MESSAGE": "Let's start! Human:{input}\n\n{agent_scratchpad}"
+
+        },
+        "qwen": {
+            "SYSTEM_PROMPT": (
+                "Answer the following questions as best you can. You have access to the following APIs:\n\n"
+                "{tools}\n\n"
+                "Use the following format:\n\n"
+                "Question: the input question you must answer\n"
+                "Thought: you should always think about what to do\n"
+                "Action: the action to take, should be one of [{tool_names}]\n"
+                "Action Input: the input to the action\n"
+                "Observation: the result of the action\n"
+                "... (this Thought/Action/Action Input/Observation can be repeated zero or more times)\n"
+                "Thought: I now know the final answer\n"
+                "Final Answer: the final answer to the original input question\n\n"
+                "Format the Action Input as a JSON object.\n\n"
+                "Begin!\n\n"),
+            "HUMAN_MESSAGE": (
+                "Question: {input}\n\n"
+                "{agent_scratchpad}\n\n")
+        },
+        "structured-chat-agent": {
+            "SYSTEM_PROMPT": (
+                "Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n"
+                "{tools}\n\n"
+                "Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\n"
+                'Valid "action" values: "Final Answer" or {tool_names}\n\n'
+                "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
+                '```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\n'
+                "Follow this format:\n\n"
+                "Question: input question to answer\n"
+                "Thought: consider previous and subsequent steps\n"
+                "Action:\n```\n$JSON_BLOB\n```\n"
+                "Observation: action result\n"
+                "... (repeat Thought/Action/Observation N times)\n"
+                "Thought: I know what to respond\n"
+                'Action:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n\n'
+                "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation\n"
             ),
-        "structured-chat-agent": (
-            "Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n"
-            "{tools}\n\n"
-            "Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\n"
-            'Valid "action" values: "Final Answer" or {tool_names}\n\n'
-            "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
-            '```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\n'
-            "Follow this format:\n\n"
-            "Question: input question to answer\n"
-            "Thought: consider previous and subsequent steps\n"
-            "Action:\n```\n$JSON_BLOB\n```\n"
-            "Observation: action result\n"
-            "... (repeat Thought/Action/Observation N times)\n"
-            "Thought: I know what to respond\n"
-            'Action:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n\n'
-            "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation\n"
-            "{input}\n\n"
-            "{agent_scratchpad}\n\n"
+            "HUMAN_MESSAGE": (
+                "{input}\n\n"
+                "{agent_scratchpad}\n\n"
+            )
             # '(reminder to respond in a JSON blob no matter what)')
+        },
+        "platform-agent": {
+            "SYSTEM_PROMPT": (
+                "You are a helpful assistant"
             ),
+            "HUMAN_MESSAGE": (
+                "{input}\n\n"
+            )
+        },
     }
     """Agent 模板"""
 
@@ -814,7 +806,7 @@ class SettingsContainer:
         self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings())
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 
-    def set_auto_reload(self, flag: bool=True):
+    def set_auto_reload(self, flag: bool = True):
         self.basic_settings.auto_reload = flag
         self.kb_settings.auto_reload = flag
         self.model_settings.auto_reload = flag
@@ -824,7 +816,6 @@ class SettingsContainer:
 
 Settings = SettingsContainer()
 nltk.data.path.append(str(Settings.basic_settings.NLTK_DATA_PATH))
-
 
 if __name__ == "__main__":
     Settings.createl_all_templates()

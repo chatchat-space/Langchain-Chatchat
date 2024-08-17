@@ -10,7 +10,7 @@ from langchain_core.messages import convert_to_messages
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
-from chatchat.server.agent.agent_factory.agents_registry import agents_registry
+from langchain_chatchat.agents.agents_registry.agents_registry import agents_registry
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
 from chatchat.server.callback_handler.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
