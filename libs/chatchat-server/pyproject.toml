@@ -53,6 +53,7 @@ pydantic = "~2.7.4"
 httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
 python-docx = "~1.1.2"
+json-repair = "^0.26.0"
 
 # webui
 streamlit = "1.36.0"
