@@ -1,11 +1,14 @@
 import base64
 import hashlib
 import io
+import json
 import os
 import time
 import uuid
 from datetime import datetime
+from dataclasses import dataclass, asdict
 from PIL import Image as PILImage
+from langchain_core.messages import BaseMessage
 from typing import Dict, List
 from urllib.parse import urlencode
 
@@ -26,6 +29,30 @@ from chatchat.webui_pages.utils import *
 
 
 chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
+
+
+@dataclass
+class Response:
+    node: str
+    content: BaseMessage
+
+
+def to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
+    if isinstance(obj, BaseMessage):
+        return {
+            "content": obj.content,
+            "additional_kwargs": to_serializable_dict(obj.additional_kwargs),
+            "response_metadata": to_serializable_dict(obj.response_metadata),
+            "type": obj.type,
+            "name": obj.name,
+            "id": obj.id,
+        }
+    elif isinstance(obj, dict):
+        return {key: to_serializable_dict(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [to_serializable_dict(item) for item in obj]
+    else:
+        return obj
 
 
 def save_session(conv_name: str = None):
@@ -475,14 +502,15 @@ def dialogue_page(
         if stream:
             # graph agent chat
             if selected_graph != "None":
+                text_finally = ""
                 try:
                     for d in client.chat.completions.create(**params):
                         # import rich
                         # rich.print(d)
+
                         # clear initial message
-                        message_id = d.message_id
                         metadata = {
-                            "message_id": message_id,
+                            "message_id": d.message_id,
                         }
 
                         # clear initial message
@@ -492,12 +520,37 @@ def dialogue_page(
 
                         if d.status == AgentStatus.error:
                             st.error(d.choices[0].delta.content)
-                        elif d.status == AgentStatus.agent_finish:
-                            text = d.choices[0].delta.content or ""
 
+                        # 为方便处理及展示 graph chat 接口返回内容, 转换为 Response 结构
+                        data = json.loads(d.choices[0].delta.content)
+                        response = Response(
+                            node=data['node'],
+                            content=BaseMessage(**data['content'])
+                        )
+
+                        # import rich  # debug
+                        # rich.print(response)
+
+                        if response.node == "tools":
+                            title = "Function Call: " + response.content.name
+                        elif response.node == "chatbot":
+                            title = "Chat Bot"
+                        else:
+                            title = response.node
+
+                        # 根据不同的 message.type 来定制化展示内容, 最终转换为 str
+                        content_dict = to_serializable_dict(response.content)
+                        text = json.dumps(content_dict, indent=2)
+
+                        # import rich  # debug
+                        # rich.print(text)
+
+                        text_finally = response.content.content
+
+                        # 前端展示
                         chat_box.insert_msg(Markdown(
                             content="",
-                            title="Function call",
+                            title=title,
                             in_expander=True,
                             expanded=True,
                             state="running")
@@ -505,7 +558,7 @@ def dialogue_page(
                         time.sleep(1)
                         chat_box.update_msg(Markdown(
                             content=text,
-                            title="Function call",
+                            title=title,
                             expanded=True,
                         ),
                             streaming=True,
@@ -514,7 +567,7 @@ def dialogue_page(
                         time.sleep(1)
                         chat_box.update_msg(Markdown(
                             content=text,
-                            title="Function call",
+                            title=title,
                             expanded=False,
                         ),
                             expanded=False,
@@ -523,14 +576,15 @@ def dialogue_page(
                             state="complete")
 
                     # st.write_stream(response_generator(text))
+
                     chat_box.insert_msg("")
                     chat_box.update_msg(Markdown(
-                            content=text,
+                            content=text_finally,
                         ),
                             streaming=True,
                             metadata=metadata)
                     chat_box.update_msg(Markdown(
-                            content=text,
+                            content=text_finally,
                         ),
                             streaming=False,
                             metadata=metadata)
