@@ -178,19 +178,6 @@ def list_graphs(_api: ApiRequest):
     return _api.list_graphs() or {}
 
 
-def response_generator(text: str):
-    # response = random.choice(
-    #     [
-    #         "Hello there! How can I assist you today?",
-    #         "Hi, human! Is there anything I can help you with?",
-    #         "Do you need help?",
-    #     ]
-    # )
-    for word in text.split():
-        yield word + " "
-        time.sleep(0.05)
-
-
 def dialogue_page(
     api: ApiRequest,
     is_lite: bool = False,
@@ -503,6 +490,7 @@ def dialogue_page(
             # graph agent chat
             if selected_graph != "None":
                 text_finally = ""
+                batch_size = 10  # 可以根据实际情况调整这个大小
                 try:
                     for d in client.chat.completions.create(**params):
                         # import rich
@@ -541,53 +529,62 @@ def dialogue_page(
                         # 根据不同的 message.type 来定制化展示内容, 最终转换为 str
                         content_dict = to_serializable_dict(response.content)
                         text = json.dumps(content_dict, indent=2)
+                        text_finally = response.content.content
 
                         # import rich  # debug
                         # rich.print(text)
 
-                        text_finally = response.content.content
-
-                        # 前端展示
+                        # 前端展示 node 返回细节
                         chat_box.insert_msg(Markdown(
                             content="",
                             title=title,
                             in_expander=True,
                             expanded=True,
-                            state="running")
+                        ))
+                        # todo: 使用 for 循环实现类似于 st.write_stream(response_generator(text)) 的效果,
+                        #  待 streamlit_chatbox 支持后更换
+                        text_output = ""
+                        # 使用range和步长来控制批处理
+                        for i in range(0, len(text), batch_size):
+                            batch_text = text[i:i + batch_size]
+                            text_output += batch_text
+                            chat_box.update_msg(Markdown(
+                                content=text_output,
+                                title=title,
+                            ),
+                                expanded=True,
+                                streaming=True,
+                                metadata=metadata,
+                                state="running"
+                            )
+                        chat_box.update_msg(Markdown(
+                            content=text,
+                            title=title,
+                        ),
+                            expanded=False,
+                            streaming=False,
+                            metadata=metadata,
+                            state="complete"
                         )
-                        time.sleep(1)
+
+                    # 前端展示 agent chat 最终结果
+                    chat_box.insert_msg(Markdown(content=""))
+                    # todo: 使用 for 循环实现类似于 st.write_stream(response_generator(text)) 的效果,
+                    #  待 streamlit_chatbox 支持后更换
+                    text_finally_output = ""
+                    for i in range(0, len(text_finally), batch_size):
+                        batch_text_finally = text_finally[i:i + batch_size]
+                        text_finally_output += batch_text_finally
                         chat_box.update_msg(Markdown(
-                            content=text,
-                            title=title,
-                            expanded=True,
+                            content=text_finally_output,
                         ),
                             streaming=True,
-                            metadata=metadata,
-                            state="running")
-                        time.sleep(1)
-                        chat_box.update_msg(Markdown(
-                            content=text,
-                            title=title,
-                            expanded=False,
-                        ),
-                            expanded=False,
-                            streaming=False,
-                            metadata=metadata,
-                            state="complete")
-
-                    # st.write_stream(response_generator(text))
-
-                    chat_box.insert_msg("")
-                    chat_box.update_msg(Markdown(
-                            content=text_finally,
-                        ),
-                            streaming=True,
-                            metadata=metadata)
+                        )
                     chat_box.update_msg(Markdown(
                             content=text_finally,
                         ),
                             streaming=False,
-                            metadata=metadata)
+                    )
                 except Exception as e:
                     st.error(str(e))
             else:
