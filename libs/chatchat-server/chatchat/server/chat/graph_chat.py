@@ -1,10 +1,12 @@
 import asyncio
 import json
 import uuid
-from typing import AsyncIterable
+from dataclasses import dataclass, asdict
+from typing import AsyncIterable, Dict, Any
 
 from fastapi import Body
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import BaseMessage
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
@@ -24,6 +26,16 @@ from chatchat.server.utils import (
 )
 
 logger = build_logger()
+
+
+@dataclass
+class Response:
+    node: str
+    content: Dict[str, Any]
+
+    def __post_init__(self):
+        if isinstance(self.content, BaseMessage):
+            self.content = self.content.__dict__
 
 
 def _create_agent_models(configs, model, max_tokens, temperature, stream) -> ChatOpenAI:
@@ -60,7 +72,7 @@ async def graph_chat(
     temperature: float = Body(None, description="LLM temperature 配置", example=0.01),
     stream: bool = Body(False, description="流式输出"),
 ):
-    """Agent 对话"""
+    """Langgraph Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]
@@ -78,11 +90,7 @@ async def graph_chat(
             yield json.dumps({"error": str(e)})
             return
 
-        logger.info(f"this agent conversation info:\n"
-                    f"id: {conversation_id}\n"
-                    f"query: {query}\n"
-                    f"llm: {llm}\n"
-                    f"tools: {tools}")
+        logger.info(f"conversation id: {conversation_id} query: {query} llm: {llm} tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
         history_len = get_history_len()
@@ -99,27 +107,25 @@ async def graph_chat(
 
         try:
             # todo: 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
-            events = graph_instance.stream(inputs, config, stream_mode="values")
-            for event in events:
-                res_content = event_handler.handle_event(event)
-                logger.info(f"this agent conversation info:\n"
-                            f"id: {conversation_id}\n"
-                            f"result event:\n"
-                            f"{res_content}")
+            async for chunk2 in graph_instance.astream(inputs, config, stream_mode="updates"):
+                for node, values in chunk2.items():
+                    if node == "history_manager":  # history_manager 为内部处理逻辑, 不外显
+                        continue
+                    response = Response(node=node, content=event_handler.handle_event(values))
+                    logger.info(f"conversation id: {conversation_id} result: {json.dumps(asdict(response))}")
 
-                graph_res = OpenAIChatOutput(
-                    id=f"chat{uuid.uuid4()}",
-                    object="chat.completion.chunk",
-                    content=res_content,
-                    role="assistant",
-                    tool_calls=[],
-                    model=llm.model_name,
-                    status=AgentStatus.agent_finish,
-                    message_type=MsgType.TEXT,
-                    message_id=message_id,
-                )
-                yield graph_res.model_dump_json()
-
+                    graph_res = OpenAIChatOutput(
+                        id=f"chat{uuid.uuid4()}",
+                        object="chat.completion.chunk",
+                        content=json.dumps(asdict(response)),
+                        role="assistant",
+                        tool_calls=[],
+                        model=llm.model_name,
+                        status=AgentStatus.agent_finish,
+                        message_type=MsgType.TEXT,
+                        message_id=message_id,
+                    )
+                    yield graph_res.model_dump_json()
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")
             return

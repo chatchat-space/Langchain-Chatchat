@@ -8,13 +8,13 @@ _GRAPHS_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
 class InputHandler(ABC):
     @abstractmethod
-    def create_inputs(self, query: str, metadata: dict) -> Dict[str, Any]:
+    def create_inputs(self, query: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         pass
 
 
 class EventHandler(ABC):
     @abstractmethod
-    def handle_event(self, event: Dict[str, Any]) -> str:
+    def handle_event(self, event: Any) -> str:
         pass
 
 
