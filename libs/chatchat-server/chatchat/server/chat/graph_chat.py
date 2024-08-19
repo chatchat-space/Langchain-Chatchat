@@ -90,11 +90,7 @@ async def graph_chat(
             yield json.dumps({"error": str(e)})
             return
 
-        logger.info(f"this agent conversation info:\n"
-                    f"id: {conversation_id}\n"
-                    f"query: {query}\n"
-                    f"llm: {llm}\n"
-                    f"tools: {tools}")
+        logger.info(f"conversation id: {conversation_id} query: {query} llm: {llm} tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
         history_len = get_history_len()
@@ -115,11 +111,8 @@ async def graph_chat(
                 for node, values in chunk2.items():
                     if node == "history_manager":  # history_manager 为内部处理逻辑, 不外显
                         continue
-                    print(f"{node}: {values}")
                     response = Response(node=node, content=event_handler.handle_event(values))
-                    r = asdict(response)
-                    print(f"Response: {r}")
-                    logger.info(f"conversation id: {conversation_id} result: {json.dumps(r)}")
+                    logger.info(f"conversation id: {conversation_id} result: {json.dumps(asdict(response))}")
 
                     graph_res = OpenAIChatOutput(
                         id=f"chat{uuid.uuid4()}",

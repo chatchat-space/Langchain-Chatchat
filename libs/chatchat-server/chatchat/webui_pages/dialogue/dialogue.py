@@ -31,30 +31,6 @@ from chatchat.webui_pages.utils import *
 chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
 
 
-@dataclass
-class Response:
-    node: str
-    content: BaseMessage
-
-
-def to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
-    if isinstance(obj, BaseMessage):
-        return {
-            "content": obj.content,
-            "additional_kwargs": to_serializable_dict(obj.additional_kwargs),
-            "response_metadata": to_serializable_dict(obj.response_metadata),
-            "type": obj.type,
-            "name": obj.name,
-            "id": obj.id,
-        }
-    elif isinstance(obj, dict):
-        return {key: to_serializable_dict(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [to_serializable_dict(item) for item in obj]
-    else:
-        return obj
-
-
 def save_session(conv_name: str = None):
     """save session state to chat context"""
     chat_box.context_from_session(
@@ -176,6 +152,45 @@ def list_tools(_api: ApiRequest):
 
 def list_graphs(_api: ApiRequest):
     return _api.list_graphs() or {}
+
+
+@dataclass
+class Response:
+    node: str
+    content: BaseMessage
+
+
+class Json(OutputElement):
+    def __init__(
+        self,
+        content: Union[str, bytes] = "",
+        title: str = "",
+        in_expander: bool = False,
+        expanded: bool = False,
+        state: Literal["running", "complete", "error"] = "running",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(content, output_method="json", title=title,
+                         in_expander=in_expander, expanded=expanded,
+                         state=state, **kwargs)
+
+
+def to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
+    if isinstance(obj, BaseMessage):
+        return {
+            "content": obj.content,
+            "additional_kwargs": to_serializable_dict(obj.additional_kwargs),
+            "response_metadata": to_serializable_dict(obj.response_metadata),
+            "type": obj.type,
+            "name": obj.name,
+            "id": obj.id,
+        }
+    elif isinstance(obj, dict):
+        return {key: to_serializable_dict(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [to_serializable_dict(item) for item in obj]
+    else:
+        return obj
 
 
 def dialogue_page(
@@ -557,7 +572,7 @@ def dialogue_page(
                                 metadata=metadata,
                                 state="running"
                             )
-                        chat_box.update_msg(Markdown(
+                        chat_box.update_msg(Json(
                             content=text,
                             title=title,
                         ),
@@ -567,8 +582,13 @@ def dialogue_page(
                             state="complete"
                         )
 
-                    # 前端展示 agent chat 最终结果
-                    chat_box.insert_msg(Markdown(content=""))
+                    # 前端展示 agent chat 最终结论(最后一条消息)
+                    # chat_box.insert_msg(Markdown(content=""))
+                    chat_box.insert_msg(Markdown(
+                        content="",
+                        in_expander=False,
+                        expanded=False,
+                    ))
                     # todo: 使用 for 循环实现类似于 st.write_stream(response_generator(text)) 的效果,
                     #  待 streamlit_chatbox 支持后更换
                     text_finally_output = ""
