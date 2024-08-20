@@ -46,7 +46,7 @@ def create_app(run_mode: str = None):
     app.include_router(openai_router)
     app.include_router(server_router)
     if Settings.model_settings.USE_RERANKER:
-        from chatchat.server.api_server.reranker_router import reranker_router
+        from chatchat.server.api_server.reranker_routes import reranker_router
         app.include_router(reranker_router)
     # 其它接口
     app.post(
