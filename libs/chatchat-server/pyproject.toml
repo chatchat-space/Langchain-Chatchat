@@ -76,6 +76,7 @@ youtube-search = "^2.1.2"
 langfuse = "^2.40.0"
 aiosqlite = "^0.20.0"
 
+arxiv = "2.1.0"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
