@@ -6,12 +6,13 @@ on:
       - opened
 
 jobs:
-  label_issue:
+  label_ad_issue:
     runs-on: ubuntu-latest
 
+    environment: Scheduled GITHUB_OWNER publish
     steps:
       - env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_OWNER_TOKEN }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
