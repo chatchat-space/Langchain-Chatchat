@@ -1,4 +1,4 @@
-name: label_issue
+name: label_ad_issue
 
 on:
   issues:
