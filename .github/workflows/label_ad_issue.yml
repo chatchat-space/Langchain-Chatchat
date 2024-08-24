@@ -1,4 +1,4 @@
-name: label_issue
+name: label_ad_issue
 
 on:
   issues:
@@ -16,7 +16,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
         run: |
           stat=no
-          AD_KEYWORDS=(Download Crack "Serial Key" "License Key" "Product Key" "Free Download" "Full Version" "Full Crack" "Full Keygen" "Full License" "Full Activation" "Full Serial")
+          AD_KEYWORDS=(download crack "serial key" "license key" "product key" "free download" "full version" "full crack" "full keygen" "full license" "full activation" "full serial")
           ISSUE_TITLE_LOWER=$(echo $ISSUE_TITLE | tr '[:upper:]' '[:lower:]')
           for KEYWORD in ${AD_KEYWORDS[@]}; do
             if [[ $ISSUE_TITLE_LOWER == *$KEYWORD* ]] && [[ $ISSUE_TITLE_LOWER != *input* ]]; then
