@@ -520,6 +520,9 @@ class ToolSettings(BaseFileSettings):
                 "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
                 "bing_key": "",
             },
+            "tavily": {
+                "tavily_key": "",
+            },
             "metaphor": {
                 "metaphor_api_key": "",
                 "split_result": False,
