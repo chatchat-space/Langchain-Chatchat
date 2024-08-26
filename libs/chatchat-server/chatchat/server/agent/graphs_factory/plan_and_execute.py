@@ -16,6 +16,7 @@ from langchain_core.messages import (
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langgraph.graph import StateGraph, START
 from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition, create_react_agent
 
 from chatchat.server.utils import get_graph_memory, build_logger
@@ -39,6 +40,7 @@ class PlanAndExecuteInputHandler(InputHandler):
         self.query = query
         self.metadata = metadata
         return {"messages": asdict(Message(role="user", content=self.query))}
+        # return {"input": query}
 
 
 @dataclass
@@ -73,11 +75,41 @@ class PlanAndExecuteEventHandler(EventHandler):
         return event.messages[0]
 
 
-class PlanExecute(TypedDict):
-    input: str
-    plan: List[str]
-    past_steps: Annotated[List[Tuple], operator.add]
+class Plan(BaseModel):
+    """Plan to follow in future"""
+
+    steps: List[str] = Field(
+        description="different steps to follow, should be in sorted order"
+    )
+
+
+class Response(BaseModel):
+    """Response to user."""
+
     response: str
+
+
+class Act(BaseModel):
+    """Action to perform."""
+
+    action: Union[Response, Plan] = Field(
+        description="Action to perform. If you want to respond to user, use Response. "
+                    "If you need to further use tools to get the answer, use Plan."
+    )
+
+
+class PlanStepExecuteResult(BaseModel):
+    step: str
+    result: str
+
+
+class PlanExecute(BaseModel):
+    messages: Annotated[list, add_messages]
+    history: Optional[List[BaseMessage]] = None
+    input: str
+    plan: Optional[Plan] = None
+    past_steps: Optional[List[PlanStepExecuteResult]] = None
+    response: Optional[str] = None
 
 
 @regist_graph(name="plan_and_execute",
@@ -89,6 +121,8 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     if not all(isinstance(tool, BaseTool) for tool in tools):
         raise TypeError("All items in tools must be instances of BaseTool")
 
+    import rich  # debug
+
     memory = get_graph_memory()
 
     # Get the prompt to use - you can modify this!
@@ -98,12 +132,20 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     # Choose the LLM that will drive the agent
     agent_executor = create_react_agent(llm, tools, messages_modifier=prompt)
 
-    class Plan(BaseModel):
-        """Plan to follow in future"""
-
-        steps: List[str] = Field(
-            description="different steps to follow, should be in sorted order"
-        )
+    async def history_manager(state: PlanExecute) -> PlanExecute:
+        try:
+            # 目的: 降本. 做法: 给 llm 传递历史上下文时, 把 Function Calling 相关内容过滤, 只保留 history_len 长度的历史上下文.
+            # todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
+            #  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
+            filtered_messages = []
+            for message in filter_messages(state.messages, exclude_types=[ToolMessage]):
+                if isinstance(message, AIMessage) and message.tool_calls:
+                    continue
+                filtered_messages.append(message)
+            state.history = filtered_messages[-history_len-1:]
+            return state
+        except Exception as e:
+            raise Exception(f"filtering messages error: {e}")
 
     planner_prompt = ChatPromptTemplate.from_messages(
         [
@@ -118,18 +160,33 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     )
     planner = planner_prompt | llm.with_structured_output(Plan)
 
-    class Response(BaseModel):
-        """Response to user."""
+    async def plan_step(state: PlanExecute) -> PlanExecute:
+        rich.print(f"\nplan_step 1: {state}\n")
+        plan_list = await planner.ainvoke({"messages": state.history})
+        plan = Plan(steps=plan_list.steps)
+        state.plan = plan
+        rich.print(f"\nplan_step 2: {state}\n")
+        return state
 
-        response: str
-
-    class Act(BaseModel):
-        """Action to perform."""
-
-        action: Union[Response, Plan] = Field(
-            description="Action to perform. If you want to respond to user, use Response. "
-                        "If you need to further use tools to get the answer, use Plan."
+    async def execute_step(state: PlanExecute) -> PlanExecute:
+        rich.print(f"\nexecute_step 1: {state}\n")
+        plan = state.plan
+        plan_str = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan.steps))
+        task = plan.steps[0]
+        task_formatted = f"""For the following plan:
+    {plan_str}\n\nYou are tasked with executing step {1}, {task}."""
+        agent_response = await agent_executor.ainvoke(
+            {"messages": [("user", task_formatted)]}
         )
+        plan_step_execute_result = PlanStepExecuteResult(step=task, result=agent_response["messages"][-1].content)
+
+        # Ensure past_steps is initialized
+        if state.past_steps is None:
+            state.past_steps = []
+
+        state.past_steps.append(plan_step_execute_result)
+        rich.print(f"\nexecute_step 2: {state}\n")
+        return state
 
     replanner_prompt = ChatPromptTemplate.from_template(
         """For the given objective, come up with a simple step by step plan. \
@@ -147,40 +204,34 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
 
     Update your plan accordingly. If no more steps are needed and you can return to the user, then respond with that. Otherwise, fill out the plan. Only add steps to the plan that still NEED to be done. Do not return previously done steps as part of the plan."""
     )
-
     replanner = replanner_prompt | llm.with_structured_output(Act)
 
-    async def execute_step(state: PlanExecute):
-        plan = state["plan"]
-        plan_str = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan))
-        task = plan[0]
-        task_formatted = f"""For the following plan:
-    {plan_str}\n\nYou are tasked with executing step {1}, {task}."""
-        agent_response = await agent_executor.ainvoke(
-            {"messages": [("user", task_formatted)]}
-        )
-        return {
-            "past_steps": (task, agent_response["messages"][-1].content),
-        }
-
-    async def plan_step(state: PlanExecute):
-        plan = await planner.ainvoke({"messages": [("user", state["input"])]})
-        return {"plan": plan.steps}
-
-    async def replan_step(state: PlanExecute):
-        output = await replanner.ainvoke(state)
+    async def replan_step(state: PlanExecute) -> PlanExecute:
+        rich.print(f"\nreplan_step 1: {state}\n")
+        # 将 PlanExecute 对象转换为字典
+        # state_dict = state.dict()
+        output = await replanner.ainvoke(state.dict())
+        print(f"\nreplan_step output :{output}\n")
         if isinstance(output.action, Response):
-            return {"response": output.action.response}
+            state.response = output.action.response
+            state.messages = output.action.response
+            state.history.append(AIMessage(output.action.response))
         else:
-            return {"plan": output.action.steps}
+            plan = Plan(steps=output.action.steps)
+            state.plan = plan
+        rich.print(f"\nreplan_step2: {state}\n")
+        return state
 
     def should_end(state: PlanExecute) -> Literal["agent", "__end__"]:
-        if "response" in state and state["response"]:
+        # if "response" in state and state.response:
+        if state.response:
             return "__end__"
         else:
             return "agent"
 
     graph_builder = StateGraph(PlanExecute)
+
+    graph_builder.add_node("history_manager", history_manager)
 
     # Add the plan node
     graph_builder.add_node("planner", plan_step)
@@ -191,7 +242,9 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     # Add a replan node
     graph_builder.add_node("replan", replan_step)
 
-    graph_builder.add_edge(START, "planner")
+    graph_builder.add_edge(START, "history_manager")
+
+    graph_builder.add_edge("history_manager", "planner")
 
     # From plan we go to agent
     graph_builder.add_edge("planner", "agent")

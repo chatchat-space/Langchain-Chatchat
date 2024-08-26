@@ -103,29 +103,31 @@ async def graph_chat(
         event_handler = graph_info["event_handler"]
 
         inputs = input_handler.create_inputs(query, metadata)
-        config = {"configurable": {"thread_id": conversation_id}}
-
+        # config = {"configurable": {"thread_id": conversation_id}}
+        config = {"configurable": {"thread_id": conversation_id}, "recursion_limit": 20}
+        import rich
         try:
             # todo: 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream
-            async for chunk2 in graph_instance.astream(inputs, config, stream_mode="updates"):
-                for node, values in chunk2.items():
-                    if node == "history_manager":  # history_manager 为内部处理逻辑, 不外显
-                        continue
-                    response = Response(node=node, content=event_handler.handle_event(values))
-                    logger.info(f"conversation id: {conversation_id} result: {json.dumps(asdict(response))}")
-
-                    graph_res = OpenAIChatOutput(
-                        id=f"chat{uuid.uuid4()}",
-                        object="chat.completion.chunk",
-                        content=json.dumps(asdict(response)),
-                        role="assistant",
-                        tool_calls=[],
-                        model=llm.model_name,
-                        status=AgentStatus.agent_finish,
-                        message_type=MsgType.TEXT,
-                        message_id=message_id,
-                    )
-                    yield graph_res.model_dump_json()
+            async for _chunk in graph_instance.astream(inputs, config, stream_mode="updates"):
+                rich.print(f"chunk: {_chunk}")
+                # for node, values in _chunk.items():
+                #     if node == "history_manager":  # history_manager 为内部处理逻辑, 不外显
+                #         continue
+                #     response = Response(node=node, content=event_handler.handle_event(values))
+                #     logger.info(f"conversation id: {conversation_id} result: {json.dumps(asdict(response))}")
+                #
+                #     graph_res = OpenAIChatOutput(
+                #         id=f"chat{uuid.uuid4()}",
+                #         object="chat.completion.chunk",
+                #         content=json.dumps(asdict(response)),
+                #         role="assistant",
+                #         tool_calls=[],
+                #         model=llm.model_name,
+                #         status=AgentStatus.agent_finish,
+                #         message_type=MsgType.TEXT,
+                #         message_id=message_id,
+                #     )
+                #     yield graph_res.model_dump_json()
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")
             return
@@ -134,8 +136,9 @@ async def graph_chat(
             yield json.dumps({"error": str(e)})
             return
 
-        # snapshot = graph_instance.get_state(config)  # debug
-        # print(f"snapshot: {snapshot}")
+        import rich
+        snapshot = graph_instance.get_state(config)  # debug
+        rich.print(snapshot)
 
     if stream:
         return EventSourceResponse(graph_chat_iterator())

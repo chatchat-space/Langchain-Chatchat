@@ -485,6 +485,7 @@ class ToolSettings(BaseFileSettings):
 
     SUPPORT_GRAPHS: list[str] = [
         "base_graph",
+        "plan_and_execute",
     ]
     '''支持的 graph'''
 
