@@ -249,20 +249,16 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             if Settings.model_settings.USE_RERANKER:
                 from chatchat.server.reranker.reranker import reranker_docs
                 docs = await reranker_docs(query, docs, top_k)
-            
-            docs = await adaptive_docs(
-                                       docs, 
-                                       model=model,
-                                       temperature=temperature,
-                                       max_tokens=max_tokens,
-                                       query=query,
-                                       lang='zh'
-                                       )
-            print("docs after adaptive:",len(docs))
-            for doc in docs:
-                print(doc['page_content'])
-                print("\n\n")
-            print("-"*50)
+            if Settings.kb_settings.ADAPTIVE_DOCUMENTS:
+                docs = await adaptive_docs(
+                                        docs, 
+                                        model=model,
+                                        temperature=temperature,
+                                        max_tokens=max_tokens,
+                                        query=query,
+                                        lang='zh'
+                                        )
+
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
