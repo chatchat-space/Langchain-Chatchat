@@ -27,10 +27,13 @@ from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
 logger = build_logger()
 
 
-async def adaptive_docs(docs:List[str],
-                  llm:ChatOpenAI,
-                  query:str,
-                  lang="zh",
+async def adaptive_docs(
+        docs:List[str],
+        model:str,
+        temperature:float,
+        max_tokens:int,
+        query:str,
+        lang="zh",
                   ):
     """
     select related documents to send to LLM by self-criticize
@@ -40,6 +43,12 @@ async def adaptive_docs(docs:List[str],
     lang: language, "zh" or "en"
 
     """
+    llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+
+            )
     prompt_en = (
                 "You’ll be provided with an instruction, along with evidence and possibly some preceding"
                 "sentences. When there are preceding sentences, your focus should be on the sentence that"
@@ -106,6 +115,9 @@ async def adaptive_docs(docs:List[str],
 
     results = await llm.abatch(messages)
     results_key = [result.content for result in results]
+    print("-"*50)
+    print("results_key:", results_key)
+    print("-"*50)
     filter_word = "不相关" if lang == "zh" else "Irrelevant"
     relevance = [0 if result.endswith(filter_word) else 1 for result in results_key]
     relevance_idx = [i for i, r in enumerate(relevance) if r == 1]
@@ -232,12 +244,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             if max_tokens in [None, 0]:
                 max_tokens = Settings.model_settings.MAX_TOKENS
 
-            llm = get_ChatOpenAI(
-                model_name=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                callbacks=callbacks,
-            )
+
             # TODO： 视情况使用 API
             # # 加入reranker
             # * -----------------add reranker---------------------------- 
@@ -247,7 +254,25 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             # * -----------------------------------------------------------
 
             # * add self-criticize to select related documents
-            docs = await adaptive_docs(docs, llm, query)
+            print("docs before adaptive:",len(docs))
+            for doc in docs:
+                print(doc['page_content'])
+                print("\n\n")
+            print("-"*50)
+            
+            docs = await adaptive_docs(
+                                       docs, 
+                                       model=model,
+                                       temperature=temperature,
+                                       max_tokens=max_tokens,
+                                       query=query,
+                                       lang='zh'
+                                       )
+            print("docs after adaptive:",len(docs))
+            for doc in docs:
+                print(doc['page_content'])
+                print("\n\n")
+            print("-"*50)
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
@@ -260,7 +285,12 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
-
+            llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=callbacks,
+            )
             chain = chat_prompt | llm
 
             # Begin a task that runs in the background.
