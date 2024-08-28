@@ -107,10 +107,6 @@ async def reranker_docs(query:str,corpus,top_k:int=3):
     if corpus_index is not None:
 
         result = [corpus[i] for i in corpus_index][: top_k]
-        #! 打印信息，别忘了删除
-        print("result:",result)
-        print("+"*100)
-        #! 打印信息，别忘了删除
         return result
     else:
         return corpus[:top_k]
