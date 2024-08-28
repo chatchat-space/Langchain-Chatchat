@@ -115,9 +115,7 @@ async def adaptive_docs(
 
     results = await llm.abatch(messages)
     results_key = [result.content for result in results]
-    print("-"*50)
-    print("results_key:", results_key)
-    print("-"*50)
+
     filter_word = "不相关" if lang == "zh" else "Irrelevant"
     relevance = [0 if result.endswith(filter_word) else 1 for result in results_key]
     relevance_idx = [i for i, r in enumerate(relevance) if r == 1]
@@ -251,14 +249,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             if Settings.model_settings.USE_RERANKER:
                 from chatchat.server.reranker.reranker import reranker_docs
                 docs = await reranker_docs(query, docs, top_k)
-            # * -----------------------------------------------------------
-
-            # * add self-criticize to select related documents
-            print("docs before adaptive:",len(docs))
-            for doc in docs:
-                print(doc['page_content'])
-                print("\n\n")
-            print("-"*50)
             
             docs = await adaptive_docs(
                                        docs, 
