@@ -919,20 +919,29 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
-def get_graph(name: str, llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Dict[str, Any]:
+def get_graph(
+        name: str,
+        llm: ChatOpenAI,
+        tools: list[BaseTool],
+        history_len: int,
+        query: str,
+        metadata: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     获取已注册的图
-    :param name: 图的名称
-    :param llm: llm
+    :param name: 选用 graph 的名称(工作流)
+    :param llm: ChatOpenAI 对象
     :param tools: 需要调用的 tool 列表
     :param history_len: 默认历史对话轮数
-    :return: 包含已注册的 graph 实例、InputHandler 和 EventHandler
+    :param query: 用户输入
+    :param metadata: 用户输入元信息
+    :return: 包含已注册的 graph 实例, InputHandler 和 EventHandler
     """
     from chatchat.server.agent.graphs_factory import graphs_registry
     if name in graphs_registry._GRAPHS_REGISTRY:
         graph_info = graphs_registry._GRAPHS_REGISTRY[name]
         graph_instance = graph_info["func"](llm=llm, tools=tools, history_len=history_len)
-        input_handler = graph_info["input_handler"]()
+        input_handler = graph_info["input_handler"](query=query, metadata=metadata)
         event_handler = graph_info["event_handler"]()
         return {
             "graph_instance": graph_instance,

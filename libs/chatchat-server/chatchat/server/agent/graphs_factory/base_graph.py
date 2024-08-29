@@ -1,55 +1,23 @@
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Annotated, Union, Optional
-from typing_extensions import TypedDict
-
+import rich
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
-from langchain_core.messages import (
-    BaseMessage,
-    AIMessage,
-    ToolMessage,
-    filter_messages,
-)
+from langchain_core.messages import BaseMessage, AIMessage, ToolMessage, filter_messages
 from langgraph.graph import StateGraph
 from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from chatchat.server.utils import get_graph_memory, build_logger
-from .graphs_registry import regist_graph, InputHandler, EventHandler
+from .graphs_registry import regist_graph, InputHandler, EventHandler, State
 
 logger = build_logger()
 
 
-@dataclass
-class Message:
-    role: str
-    content: str
-
-
-class BaseGraphInputHandler(InputHandler):
-    def __init__(self):
-        self.query = None
-        self.metadata = None
-
-    def create_inputs(self, query: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        self.query = query
-        self.metadata = metadata
-        return {"messages": asdict(Message(role="user", content=self.query))}
-
-
-@dataclass
-class Event:
-    messages: List[BaseMessage]
-    history: Optional[List[BaseMessage]] = None
-
-
 class BaseGraphEventHandler(EventHandler):
     def __init__(self):
-        self.event = None
+        pass
 
-    def handle_event(self, event_data: Union[Event, Dict[str, Any]]) -> BaseMessage:
-        '''
+    def handle_event(self, node: str, events: State) -> BaseMessage:
+        """
         event example:
         {
             'messages': [HumanMessage(
@@ -59,19 +27,14 @@ class BaseGraphEventHandler(EventHandler):
                             content='The youtube video of Xiao Yixian in Fights Break Sphere?',
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
-        '''
-        if isinstance(event_data, dict):
-            event = Event(
-                messages=[BaseMessage(**msg.__dict__) for msg in event_data['messages']],
-                history=[BaseMessage(**msg.__dict__) for msg in event_data.get('history', [])]
-            )
-        else:
-            event = event_data
-        return event.messages[0]
+        """
+        for message in events["messages"]:
+            rich.print(message)
+        return events["messages"][0]
 
 
 @regist_graph(name="base_graph",
-              input_handler=BaseGraphInputHandler,
+              input_handler=InputHandler,
               event_handler=BaseGraphEventHandler)
 def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledGraph:
     if not isinstance(llm, ChatOpenAI):
@@ -81,17 +44,14 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
 
     memory = get_graph_memory()
 
-    class State(TypedDict):
-        messages: Annotated[list, add_messages]
-        history: list[BaseMessage]
-
     graph_builder = StateGraph(State)
 
     llm_with_tools = llm.bind_tools(tools)
 
-    def history_manager(state: State) -> Dict[str, list[BaseMessage]]:
+    def history_manager(state: State) -> State:
         try:
-            # 目的: 降本. 做法: 给 llm 传递历史上下文时, 把 Function Calling 相关内容过滤, 只保留 history_len 长度的历史上下文.
+            # 目的: 节约成本.
+            # 做法: 给 llm 传递历史上下文时, 把 AIMessage(Function Call) 和 ToolMessage 过滤, 只保留 history_len 长度的 AIMessage 作为历史上下文.
             # todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
             #  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
             filtered_messages = []
@@ -104,13 +64,23 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
         except Exception as e:
             raise Exception(f"filtering messages error: {e}")
 
-    def chatbot(state: State) -> Dict[str, list[BaseMessage]]:
-        # ToolMessage 默认 return {"messages": outputs}, 需要在 history 中追加 ToolMessage 结果, 否则报错
+    def chatbot(state: State) -> State:
+        # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
+        # Error code: 400 -
+        # {
+        #     "error": {
+        #         "message": "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.",
+        #         "type": "invalid_request_error",
+        #         "param": "messages.[1].role",
+        #         "code": null
+        #     }
+        # }
         if isinstance(state["messages"][-1], ToolMessage):
             state["history"].append(state["messages"][-1])
 
         messages = llm_with_tools.invoke(state["history"])
         state["messages"] = [messages]
+        # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
         state["history"].append(messages)
         return state
 

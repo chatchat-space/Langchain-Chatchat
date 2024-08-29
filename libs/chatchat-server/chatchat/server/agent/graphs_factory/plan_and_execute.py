@@ -1,78 +1,19 @@
-import operator
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Annotated, Union, Optional, Tuple, Literal
-from typing_extensions import TypedDict
+from typing import List, Any, Union, Optional, Literal
 
 from langchain import hub
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import (
-    BaseMessage,
-    AIMessage,
-    ToolMessage,
-    filter_messages,
-)
 from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.messages import AIMessage, ToolMessage, filter_messages
 from langgraph.graph import StateGraph, START
 from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode, tools_condition, create_react_agent
+from langgraph.prebuilt import create_react_agent
 
 from chatchat.server.utils import get_graph_memory, build_logger
-from .graphs_registry import regist_graph, InputHandler, EventHandler
+from .graphs_registry import regist_graph, InputHandler, EventHandler, State
 
 logger = build_logger()
-
-
-@dataclass
-class Message:
-    role: str
-    content: str
-
-
-class PlanAndExecuteInputHandler(InputHandler):
-    def __init__(self):
-        self.query = None
-        self.metadata = None
-
-    def create_inputs(self, query: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        self.query = query
-        self.metadata = metadata
-        return {"messages": asdict(Message(role="user", content=self.query))}
-        # return {"input": query}
-
-
-@dataclass
-class Event:
-    messages: List[BaseMessage]
-    history: Optional[List[BaseMessage]] = None
-
-
-class PlanAndExecuteEventHandler(EventHandler):
-    def __init__(self):
-        self.event = None
-
-    def handle_event(self, event_data: Union[Event, Dict[str, Any]]) -> BaseMessage:
-        '''
-        event example:
-        {
-            'messages': [HumanMessage(
-                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
-                            id='b9c5468a-7340-425b-ae6f-2f584a961014')],
-            'history': [HumanMessage(
-                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
-                            id='b9c5468a-7340-425b-ae6f-2f584a961014')]
-        }
-        '''
-        if isinstance(event_data, dict):
-            event = Event(
-                messages=[BaseMessage(**msg.__dict__) for msg in event_data['messages']],
-                history=[BaseMessage(**msg.__dict__) for msg in event_data.get('history', [])]
-            )
-        else:
-            event = event_data
-        return event.messages[0]
 
 
 class Plan(BaseModel):
@@ -103,17 +44,73 @@ class PlanStepExecuteResult(BaseModel):
     result: str
 
 
-class PlanExecute(BaseModel):
-    messages: Annotated[list, add_messages]
-    history: Optional[List[BaseMessage]] = None
-    input: str
-    plan: Optional[Plan] = None
-    past_steps: Optional[List[PlanStepExecuteResult]] = None
-    response: Optional[str] = None
+class PlanExecute(State):
+    """
+    plan_and_execute 的核心 state, 其中:
+    1. plan
+    2. past_steps
+    3. response
+    """
+    plan: Optional[Plan]
+    past_steps: Optional[List[PlanStepExecuteResult]]
+    response: Optional[Response]
+
+
+class PlanAndExecuteEventHandler(EventHandler):
+    def __init__(self):
+        pass
+
+    def handle_event(self, node: str, events: PlanExecute) -> Any:
+        '''
+        event example:
+        {'planner': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':
+        Plan(steps=['Identify the winner of the 2024 Australian Open.', 'Determine the hometown of the identified winner.'])}}
+
+        {'agent': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':
+        Plan(steps=['Identify the winner of the 2024 Australian Open.', 'Determine the hometown of the identified winner.']), 'past_steps': [PlanStepExecuteResult(step='Identify the winner of the 2024 Australian Open.', result="The winner of the 2024 Australian Open men's singles is Jannik Sinner.")]}}
+
+        {'replan': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':
+        Plan(steps=["Determine the hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles."]), 'past_steps': [PlanStepExecuteResult(step='Identify the winner of the 2024 Australian Open.', result="The winner of the 2024 Australian Open men's singles is Jannik Sinner.")]}}
+
+        {'agent': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':
+        Plan(steps=["Determine the hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles."]), 'past_steps': [PlanStepExecuteResult(step='Identify the winner of the 2024 Australian Open.', result="The winner of the 2024 Australian Open men's singles is Jannik Sinner."),
+        PlanStepExecuteResult(step="Determine the hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles.", result="Jannik Sinner, the winner of the 2024 Australian Open men's singles, is from San Candido, Italy.")]}}
+
+        {'replan': {'messages': "The hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles, is San Candido, Italy.", 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d'), AIMessage(content="The
+        hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles, is San Candido, Italy.")], 'plan': Plan(steps=["Determine the hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles."]), 'past_steps': [PlanStepExecuteResult(step='Identify the winner of the 2024
+        Australian Open.', result="The winner of the 2024 Australian Open men's singles is Jannik Sinner."), PlanStepExecuteResult(step="Determine the hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles.", result="Jannik Sinner, the winner of the 2024 Australian Open men's singles, is
+        from San Candido, Italy.")], 'response': "The hometown of Jannik Sinner, the winner of the 2024 Australian Open men's singles, is San Candido, Italy."}}
+        '''
+        handler_map = {
+            "planner": self.handle_planner,
+            "agent": self.handle_agent,
+            "replan": self.handle_replan
+        }
+
+        handler = handler_map.get(node)
+        if handler:
+            return handler(events)
+        else:
+            raise ValueError(f"Unsupported plan_and_execute node type: {node}")
+
+    @staticmethod
+    def handle_planner(event_data: PlanExecute) -> Plan:
+        return event_data["plan"]
+
+    @staticmethod
+    def handle_agent(event_data: PlanExecute) -> List[PlanStepExecuteResult]:
+        return event_data["past_steps"]
+
+    @staticmethod
+    def handle_replan(event_data: PlanExecute) -> Union[Plan, Response]:
+        if event_data["response"] is None:
+            return event_data["plan"]
+        else:
+            return event_data["response"]
 
 
 @regist_graph(name="plan_and_execute",
-              input_handler=PlanAndExecuteInputHandler,
+              input_handler=InputHandler,
               event_handler=PlanAndExecuteEventHandler)
 def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledGraph:
     if not isinstance(llm, ChatOpenAI):
@@ -121,28 +118,27 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     if not all(isinstance(tool, BaseTool) for tool in tools):
         raise TypeError("All items in tools must be instances of BaseTool")
 
-    import rich  # debug
-
     memory = get_graph_memory()
 
     # Get the prompt to use - you can modify this!
     prompt = hub.pull("wfh/react-agent-executor")
-    prompt.pretty_print()
+    # prompt.pretty_print()
 
     # Choose the LLM that will drive the agent
     agent_executor = create_react_agent(llm, tools, messages_modifier=prompt)
 
     async def history_manager(state: PlanExecute) -> PlanExecute:
         try:
-            # 目的: 降本. 做法: 给 llm 传递历史上下文时, 把 Function Calling 相关内容过滤, 只保留 history_len 长度的历史上下文.
+            # 目的: 节约成本.
+            # 做法: 给 llm 传递历史上下文时, 把 AIMessage(Function Call) 和 ToolMessage 过滤, 只保留 history_len 长度的 AIMessage 作为历史上下文.
             # todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
             #  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
             filtered_messages = []
-            for message in filter_messages(state.messages, exclude_types=[ToolMessage]):
+            for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
                 if isinstance(message, AIMessage) and message.tool_calls:
                     continue
                 filtered_messages.append(message)
-            state.history = filtered_messages[-history_len-1:]
+            state["history"] = filtered_messages[-history_len-1:]
             return state
         except Exception as e:
             raise Exception(f"filtering messages error: {e}")
@@ -161,16 +157,13 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     planner = planner_prompt | llm.with_structured_output(Plan)
 
     async def plan_step(state: PlanExecute) -> PlanExecute:
-        rich.print(f"\nplan_step 1: {state}\n")
-        plan_list = await planner.ainvoke({"messages": state.history})
-        plan = Plan(steps=plan_list.steps)
-        state.plan = plan
-        rich.print(f"\nplan_step 2: {state}\n")
+        plan_steps = await planner.ainvoke({"messages": state["history"]})
+        plan = Plan(steps=plan_steps.steps)
+        state["plan"] = plan
         return state
 
     async def execute_step(state: PlanExecute) -> PlanExecute:
-        rich.print(f"\nexecute_step 1: {state}\n")
-        plan = state.plan
+        plan = state["plan"]
         plan_str = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan.steps))
         task = plan.steps[0]
         task_formatted = f"""For the following plan:
@@ -179,13 +172,9 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
             {"messages": [("user", task_formatted)]}
         )
         plan_step_execute_result = PlanStepExecuteResult(step=task, result=agent_response["messages"][-1].content)
-
-        # Ensure past_steps is initialized
-        if state.past_steps is None:
-            state.past_steps = []
-
-        state.past_steps.append(plan_step_execute_result)
-        rich.print(f"\nexecute_step 2: {state}\n")
+        if state["past_steps"] is None:
+            state["past_steps"] = []
+        state["past_steps"].append(plan_step_execute_result)
         return state
 
     replanner_prompt = ChatPromptTemplate.from_template(
@@ -194,7 +183,7 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     The result of the final step should be the final answer. Make sure that each step has all the information needed - do not skip steps.
 
     Your objective was this:
-    {input}
+    {history}
 
     Your original plan was this:
     {plan}
@@ -207,24 +196,20 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     replanner = replanner_prompt | llm.with_structured_output(Act)
 
     async def replan_step(state: PlanExecute) -> PlanExecute:
-        rich.print(f"\nreplan_step 1: {state}\n")
-        # 将 PlanExecute 对象转换为字典
-        # state_dict = state.dict()
-        output = await replanner.ainvoke(state.dict())
-        print(f"\nreplan_step output :{output}\n")
+        output = await replanner.ainvoke(state)
+        # 检查 output.action 是否是 Response 类型
         if isinstance(output.action, Response):
-            state.response = output.action.response
-            state.messages = output.action.response
-            state.history.append(AIMessage(output.action.response))
+            state["response"] = Response(response=output.action.response)
+            state["messages"] = [AIMessage(content=output.action.response)]
+        # 检查 output.action 是否是 Plan 类型
+        elif isinstance(output.action, Plan):
+            state["plan"] = Plan(steps=output.action.steps)
         else:
-            plan = Plan(steps=output.action.steps)
-            state.plan = plan
-        rich.print(f"\nreplan_step2: {state}\n")
+            raise ValueError("Unexpected action type in replan_step output")
         return state
 
     def should_end(state: PlanExecute) -> Literal["agent", "__end__"]:
-        # if "response" in state and state.response:
-        if state.response:
+        if state["response"]:
             return "__end__"
         else:
             return "agent"

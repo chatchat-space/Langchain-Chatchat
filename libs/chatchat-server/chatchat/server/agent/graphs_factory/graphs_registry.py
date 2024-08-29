@@ -1,20 +1,57 @@
-from typing import Callable, Any, Dict, Optional, Type, Union
+from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict
 from abc import ABC, abstractmethod
+from langgraph.graph.message import add_messages
+from langchain_core.messages import BaseMessage
+from langchain_core.pydantic_v1 import BaseModel
 
-__all__ = ["regist_graph", "InputHandler", "EventHandler"]
+__all__ = ["regist_graph", "InputHandler", "EventHandler", "State", "Response", "serialize_content"]
 
 _GRAPHS_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
 
+class State(TypedDict):
+    """
+    定义一个基础 State 供 各类 graph 继承, 其中:
+    1. messages 为所有 graph 的核心信息队列, 所有聊天工作流均应该将关键信息补充到此队列中;
+    2. history 为所有工作流单次启动时获取 history_len 的 messages 所用(节约成本, 及防止单轮对话 tokens 占用长度达到 llm 支持上限),
+    history 中的信息理应是可以被丢弃的.
+    """
+    messages: Annotated[List[BaseMessage], add_messages]
+    history: Optional[List[BaseMessage]]
+
+
+class Response(TypedDict):
+    node: str
+    content: Any
+
+
+def serialize_content(content: Any) -> Any:
+    if isinstance(content, BaseModel):
+        return content.dict()
+    elif isinstance(content, list):
+        return [serialize_content(item) for item in content]
+    elif isinstance(content, dict):
+        return {key: serialize_content(value) for key, value in content.items()}
+    return content
+
+
+class Message(TypedDict):
+    role: str
+    content: str
+
+
 class InputHandler(ABC):
-    @abstractmethod
-    def create_inputs(self, query: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        pass
+    def __init__(self, query: str, metadata: Dict[str, Any]):
+        self.query = query
+        self.metadata = metadata  # 暂未使用
+
+    def create_inputs(self) -> Dict[str, Any]:
+        return {"messages": Message(role="user", content=self.query)}
 
 
 class EventHandler(ABC):
     @abstractmethod
-    def handle_event(self, event: Any) -> str:
+    def handle_event(self, node: str, events: Any) -> str:
         pass
 
 
