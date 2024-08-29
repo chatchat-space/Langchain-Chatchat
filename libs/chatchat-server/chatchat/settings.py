@@ -172,6 +172,9 @@ class KBSettings(BaseFileSettings):
     ADAPTIVE_DOCUMENTS: bool = False
     """是否开启利用LLM的自评估机制筛选召回的文档"""
 
+    SELF_VERIFY_EVIDENCE: bool = False
+    """是否开启利用LLM的自评估机制筛选召回的证据"""
+
     PDF_OCR_THRESHOLD: t.Tuple[float, float] = (0.6, 0.6)
     """
     PDF OCR 控制：只对宽高超过页面一定比例（图片宽/页面宽，图片高/页面高）的图片进行 OCR。

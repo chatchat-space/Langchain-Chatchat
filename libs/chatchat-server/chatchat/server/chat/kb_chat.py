@@ -43,12 +43,7 @@ async def adaptive_docs(
     lang: language, "zh" or "en"
 
     """
-    llm = get_ChatOpenAI(
-                model_name=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
 
-            )
     prompt_en = (
                 "You’ll be provided with an instruction, along with evidence and possibly some preceding"
                 "sentences. When there are preceding sentences, your focus should be on the sentence that"
@@ -112,7 +107,12 @@ async def adaptive_docs(
     prompts = [prompt.format(query, doc['page_content']) for doc in docs]
     # parallel generation with async
     messages = [[("human",prompt)] for prompt in prompts]
+    llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
 
+            )
     results = await llm.abatch(messages)
     results_key = [result.content for result in results]
     logger.info(f"adaptive_docs results_key: {results_key}")
@@ -122,6 +122,121 @@ async def adaptive_docs(
     docs_adaptive = [docs[i] for i in relevance_idx]
     return docs_adaptive
     
+
+async def self_verify_evidence(
+    docs:List[str],
+    answer:str,
+    model:str,
+    temperature:float,
+    max_tokens:int,
+    query:str,
+    lang="zh",
+    ):
+    """
+    select related documents accroding to answer by self-verify whether the evidence support the answer
+    """
+    prompt_en = (
+    "You will receive an instruction, evidence, and output, and optional preceding sentences. If the"
+    "preceding sentence is given, the output should be the sentence that follows those preceding"
+    "sentences. Your task is to evaluate if the output is fully supported by the information provided"
+    "in the evidence."
+    "Use the following entailment scale to generate a score:"
+    "- [Fully supported] - All information in output is supported by the evidence, or extractions"
+    "from the evidence. This is only applicable when the output and part of the evidence are"
+    "almost identical."
+    "- [Partially supported] - The output is supported by the evidence to some extent, but there"
+    "is major information in the output that is not discussed in the evidence. For example, if an"
+    "instruction asks about two concepts and the evidence only discusses either of them, it should"
+    "be considered a [Partially supported]."
+    "- [No support / Contradictory] - The output completely ignores evidence, is unrelated to the"
+    "evidence, or contradicts the evidence. This can also happen if the evidence is irrelevant to the"
+    "instruction."
+    "Make sure to not use any external information/knowledge to judge whether the output is true or not. "
+    "Only check whether the output is supported by the evidence, and not"
+    "whether the output follows the instructions or not."
+    "Here's one example to help you understand the task better:\n\n"
+    "Example:\n\n"
+    "Instruction: Explain the use of word embeddings in Natural Language Processing."
+    "Preceding sentences Word embeddings are one of the most powerful tools available for"
+    "Natural Language Processing (NLP). They are mathematical representations of words or"
+    "phrases in a vector space, allowing similarities between words and the context in which they"
+    "are used to be measured."
+    "Output Word embeddings are useful for tasks such as sentiment analysis, text classification,"
+    "predicting the next word in a sequence, and understanding synonyms and analogies."
+    "Evidence: Word embedding"
+    "Word embedding is the collective name for a set of language modeling and feature learning"
+    "techniques in natural language processing (NLP) where words or phrases from the vocabulary"
+    "are mapped to vectors of real numbers. Conceptually it involves a mathematical embedding"
+    "from a space with one dimension per word to a continuous vector space with a much lower"
+    "dimension. Methods to generate this mapping include neural networks, dimensionality"
+    "reduction on the word co-occurrence matrix, probabilistic models, explainable knowledge"
+    "base method, and explicit representation in terms of the context in which words appear. Word"
+    "and phrase embeddings, when used as the underlying input representation, have been shown"
+    "to boost the performance in NLP tasks such as syntactic parsing, sentiment analysis, next"
+    "token predictions as well and analogy detection."
+    "**Score**: [Fully supported]"
+    "Explanation: The output sentence discusses the application of word embeddings, and the"
+    "evidence mentions all of the applications syntactic parsing, sentiment analysis, next token"
+    "predictions as well as analogy detection as the applications. Therefore, the score should be"
+    "[Fully supported]."
+    "Examples completed.\n\n"
+    "Please provide your response to the evidence in the following format: [Fully supported], [Partially supported], or [No support / Contradictory]."
+    "Instruction: {}"
+    "Output: {}"
+    "Evidence: {}"
+    "Score: "
+    )
+    prompt_zh = (
+    "你将收到一个指令、证据、输出和可选的前述句子。如果给出了前述句子，输出应该是跟在这些前述句子后面的句子。"
+    "你的任务是评估输出是否完全由证据中提供的信息支持。"
+    "使用以下蕴涵量表生成分数："
+    "- [完全支持] - 输出中的所有信息都由证据或证据的提取支持。仅当输出和部分证据几乎相同时才适用。"
+    "- [部分支持] - 输出在某种程度上由证据支持，但输出中有主要信息在证据中没有讨论。例如，如果指令询问两个概念，"
+    "而证据只讨论其中一个，那么应该被视为[部分支持]。"
+    "- [无支持/矛盾] - 输出完全忽略证据，与证据无关，或与证据矛盾。"
+    "请确保不使用任何外部信息/知识来判断输出是否正确。只检查输出是否由证据支持，而不是检查输出是否遵循指令。"
+    "以下是一个示例，帮助你更好地理解任务："
+    "示例：\n\n"
+    "指令：解释自然语言处理中词嵌入的使用。"
+    "前述句子：词嵌入是自然语言处理（NLP）中最强大的工具之一。它们是词或短语在向量空间中的数学表示，"
+    "允许测量单词之间的相似性以及它们的上下文。"
+    "输出：词嵌入对情感分析、文本分类、预测序列中的下一个词以及理解同义词和类比等任务非常有用。"
+    "证据：词嵌入"
+    "词嵌入是自然语言处理（NLP）中一组语言建模和特征学习技术的统称，其中词汇表中的词或短语被映射到实数向量。"
+    "从概念上讲，它涉及从每个词一个维度的空间到一个具有更低维度的连续向量空间的数学嵌入。生成此映射的方法包括"
+    "神经网络、词共现矩阵的降维、概率模型、可解释的知识库方法以及根据单词出现的上下文的显式表示。"
+    "当用作底层输入表示时，词和短语嵌入已被证明可以提高NLP任务的性能，例如句法分析、情感分析、下一个令牌预测以及类比检测。"
+    "**评分**: [完全支持]"
+    "解释：输出句子讨论了词嵌入的应用，证据提到了所有的应用，如句法分析、情感分析、下一个令牌预测以及类比检测。"
+    "因此，分数应该是[完全支持]。"
+    "示例完成。\n\n"
+    "请按照以下格式提供你对证据的回应：[完全支持]、[部分支持]或[无支持/矛盾]。"
+    "指令：{}"
+    "输出：{}"
+    "证据：{}"
+    "评分："
+    )
+
+    prompt = prompt_zh if lang == "zh" else prompt_en
+    prompts = [prompt.format(query, answer, doc['page_content']) for doc in docs]
+    # parallel generation with async
+    messages = [[("human",prompt)] for prompt in prompts]
+    llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+
+            )
+    results = await llm.abatch(messages)
+    results_key = [result.content for result in results]
+    logger.info(f"self_verify results_key: {results_key}")
+    filter_word = "完全支持" if lang == "zh" else "Fully supported"
+    support = [1 if filter_word in result else 0 for result in results_key]
+    support_idx = [i for i, r in enumerate(support) if r == 1]
+    docs_self_verify = [docs[i] for i in support_idx]
+    return docs_self_verify
+
+
 
 async def kb_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                 mode: Literal["local_kb", "temp_kb", "search_engine"] = Body("local_kb", description="知识来源"),
@@ -262,6 +377,21 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         )
                 end = time.time()
                 logger.info(f"adaptive_docs time: {end-start}s")
+            # filter evidence with self-verify evidence
+            if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
+                start = time.time()
+                docs = await self_verify_evidence(
+                                        docs, 
+                                        answer=query,
+                                        model=model,
+                                        temperature=temperature,
+                                        max_tokens=max_tokens,
+                                        query=query,
+                                        lang='zh'
+                                        )
+                end = time.time()
+                logger.info(f"self_verify_evidence time: {end-start}s")
+                
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
