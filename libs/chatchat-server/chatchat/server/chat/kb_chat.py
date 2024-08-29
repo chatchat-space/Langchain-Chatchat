@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio, json
 import uuid
 from typing import AsyncIterable, List, Optional, Literal
-
+import time
 from fastapi import Body, Request
 from fastapi.concurrency import run_in_threadpool
 from sse_starlette.sse import EventSourceResponse
@@ -115,9 +115,9 @@ async def adaptive_docs(
 
     results = await llm.abatch(messages)
     results_key = [result.content for result in results]
-
+    logger.info(f"adaptive_docs results_key: {results_key}")
     filter_word = "不相关" if lang == "zh" else "Irrelevant"
-    relevance = [0 if result.endswith(filter_word) else 1 for result in results_key]
+    relevance = [0 if filter_word in result else 1 for result in results_key]
     relevance_idx = [i for i, r in enumerate(relevance) if r == 1]
     docs_adaptive = [docs[i] for i in relevance_idx]
     return docs_adaptive
@@ -156,6 +156,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 return_direct: bool = Body(False, description="直接返回检索结果，不送入 LLM"),
                 request: Request = None,
                 ):
+    start = time.time()
     if mode == "local_kb":
         kb = KBServiceFactory.get_service_by_name(kb_name)
         if kb is None:
@@ -250,6 +251,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 from chatchat.server.reranker.reranker import reranker_docs
                 docs = await reranker_docs(query, docs, top_k)
             if Settings.kb_settings.ADAPTIVE_DOCUMENTS:
+                start = time.time()
                 docs = await adaptive_docs(
                                         docs, 
                                         model=model,
@@ -258,7 +260,8 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         query=query,
                                         lang='zh'
                                         )
-
+                end = time.time()
+                logger.info(f"adaptive_docs time: {end-start}s")
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
@@ -309,6 +312,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                         model=model,
                     )
                     yield ret.model_dump_json()
+
             else:
                 answer = ""
                 async for token in callback.aiter():
@@ -320,8 +324,11 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                     role="assistant",
                     model=model,
                 )
+                end = time.time()
+                logger.info(f"chat time: {end-start}s")
                 yield ret.model_dump_json()
             await task
+
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
@@ -329,7 +336,8 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             logger.error(f"error in knowledge chat: {e}")
             yield {"data": json.dumps({"error": str(e)})}
             return
-
+    end = time.time()
+    logger.info(f"chat time: {end-start}s")
     if stream:
         return EventSourceResponse(knowledge_base_chat_iterator())
     else:
