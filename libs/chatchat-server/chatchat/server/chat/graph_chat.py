@@ -20,6 +20,7 @@ from chatchat.server.utils import (
     build_logger,
     get_graph,
     get_history_len,
+    get_recursion_limit,
 )
 
 logger = build_logger()
@@ -81,12 +82,11 @@ async def graph_chat(
         logger.info(f"graph_chat_meta_info id: {conversation_id} query: {query} llm: {llm} tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
-        history_len = get_history_len()
         graph_obj = get_graph(
             name=graph_name,
             llm=llm,
             tools=tools,
-            history_len=history_len,
+            history_len=get_history_len(),
             query=query,
             metadata=metadata,
         )
@@ -97,8 +97,12 @@ async def graph_chat(
         input_handler = graph_obj["input_handler"]
         event_handler = graph_obj["event_handler"]
 
-        # todo: 提交代码前将 recursion_limit 写到配置中
-        config = {"configurable": {"thread_id": conversation_id}, "recursion_limit": 20}
+        config = {
+            "configurable": {
+                "thread_id": conversation_id
+            },
+            "recursion_limit": get_recursion_limit()
+        }
 
         try:
             # todo: 因 stream_log 输出处理太过复杂, 将来考虑是否支持, 目前暂时使用 stream

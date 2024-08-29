@@ -239,6 +239,10 @@ def get_history_len() -> int:
             Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
+def get_recursion_limit() -> int:
+    return Settings.tool_settings.RECURSION_LIMIT or 50
+
+
 def get_ChatOpenAI(
         model_name: str = get_default_llm(),
         temperature: float = Settings.model_settings.TEMPERATURE,

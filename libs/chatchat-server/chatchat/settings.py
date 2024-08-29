@@ -484,13 +484,19 @@ class ToolSettings(BaseFileSettings):
                                       extra="allow")
 
     DEFAULT_GRAPH: str = "base_graph"
-    '''默认使用的 graph'''
+    """默认使用的 graph"""
 
     SUPPORT_GRAPHS: list[str] = [
         "base_graph",
         "plan_and_execute",
     ]
-    '''支持的 graph'''
+    """支持的 graph"""
+
+    RECURSION_LIMIT: int = 50
+    """
+    工作流允许 agent 推理最大轮数, 设定数值 = 单次执行限制最大推理轮数 * 2
+    如果不设置或设置为 0 则取 50 (25轮)
+    """
 
     GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
     """
