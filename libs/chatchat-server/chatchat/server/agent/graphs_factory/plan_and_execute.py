@@ -5,13 +5,13 @@ from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.messages import AIMessage, ToolMessage, filter_messages
+from langchain_core.messages import AIMessage
 from langgraph.graph import StateGraph, START
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
 from chatchat.server.utils import get_graph_memory, build_logger
-from .graphs_registry import regist_graph, InputHandler, EventHandler, State
+from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
 
 logger = build_logger()
 
@@ -127,21 +127,9 @@ def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -
     # Choose the LLM that will drive the agent
     agent_executor = create_react_agent(llm, tools, messages_modifier=prompt)
 
-    async def history_manager(state: PlanExecute) -> PlanExecute:
-        try:
-            # 目的: 节约成本.
-            # 做法: 给 llm 传递历史上下文时, 把 AIMessage(Function Call) 和 ToolMessage 过滤, 只保留 history_len 长度的 AIMessage 作为历史上下文.
-            # todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
-            #  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
-            filtered_messages = []
-            for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
-                if isinstance(message, AIMessage) and message.tool_calls:
-                    continue
-                filtered_messages.append(message)
-            state["history"] = filtered_messages[-history_len-1:]
-            return state
-        except Exception as e:
-            raise Exception(f"filtering messages error: {e}")
+    async def history_manager(state: PlanExecute) -> State:
+        state = await async_history_manager(state, history_len)
+        return state
 
     planner_prompt = ChatPromptTemplate.from_messages(
         [

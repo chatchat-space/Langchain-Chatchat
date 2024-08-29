@@ -1,10 +1,18 @@
-from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict
+from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict, TypeVar
 from abc import ABC, abstractmethod
 from langgraph.graph.message import add_messages
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, ToolMessage, AIMessage, filter_messages
 from langchain_core.pydantic_v1 import BaseModel
 
-__all__ = ["regist_graph", "InputHandler", "EventHandler", "State", "Response", "serialize_content"]
+__all__ = [
+    "regist_graph",
+    "InputHandler",
+    "EventHandler",
+    "State",
+    "Response",
+    "async_history_manager",
+    "serialize_content"
+]
 
 _GRAPHS_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
@@ -53,6 +61,30 @@ class EventHandler(ABC):
     @abstractmethod
     def handle_event(self, node: str, events: Any) -> str:
         pass
+
+
+# 定义一个类型变量，可以是各种 GraphState
+T = TypeVar('T')
+
+
+# 目的: 节约成本.
+# 做法: 给 llm 传递历史上下文时, 把 AIMessage(Function Call) 和 ToolMessage 过滤, 只保留 history_len 长度的 AIMessage 作为历史上下文.
+# todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
+#  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
+async def async_history_manager(state: T, history_len: int, exclude_types: Optional[List[Type[BaseMessage]]] = None) \
+        -> T:
+    try:
+        if exclude_types is None:
+            exclude_types = [ToolMessage]
+        filtered_messages = []
+        for message in filter_messages(state["messages"], exclude_types=exclude_types):
+            if isinstance(message, AIMessage) and message.tool_calls:
+                continue
+            filtered_messages.append(message)
+        state["history"] = filtered_messages[-history_len:]
+        return state
+    except Exception as e:
+        raise Exception(f"Filtering messages error: {e}")
 
 
 def regist_graph(name: str, input_handler: Type[InputHandler], event_handler: Type[EventHandler]) -> Callable:

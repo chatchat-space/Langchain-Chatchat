@@ -1,13 +1,12 @@
-import rich
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
-from langchain_core.messages import BaseMessage, AIMessage, ToolMessage, filter_messages
+from langchain_core.messages import BaseMessage, ToolMessage
 from langgraph.graph import StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from chatchat.server.utils import get_graph_memory, build_logger
-from .graphs_registry import regist_graph, InputHandler, EventHandler, State
+from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
 
 logger = build_logger()
 
@@ -28,8 +27,6 @@ class BaseGraphEventHandler(EventHandler):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        for message in events["messages"]:
-            rich.print(message)
         return events["messages"][0]
 
 
@@ -48,23 +45,11 @@ def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Comp
 
     llm_with_tools = llm.bind_tools(tools)
 
-    def history_manager(state: State) -> State:
-        try:
-            # 目的: 节约成本.
-            # 做法: 给 llm 传递历史上下文时, 把 AIMessage(Function Call) 和 ToolMessage 过滤, 只保留 history_len 长度的 AIMessage 作为历史上下文.
-            # todo: """目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
-            #  原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话."""
-            filtered_messages = []
-            for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
-                if isinstance(message, AIMessage) and message.tool_calls:
-                    continue
-                filtered_messages.append(message)
-            state["history"] = filtered_messages[-history_len-1:]
-            return state
-        except Exception as e:
-            raise Exception(f"filtering messages error: {e}")
+    async def history_manager(state: State) -> State:
+        state = await async_history_manager(state, history_len)
+        return state
 
-    def chatbot(state: State) -> State:
+    async def chatbot(state: State) -> State:
         # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
         # Error code: 400 -
         # {
