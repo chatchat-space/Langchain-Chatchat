@@ -10,7 +10,7 @@ from sse_starlette.sse import EventSourceResponse
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.prompts.chat import ChatPromptTemplate
 
-
+from langchain_openai.chat_models import ChatOpenAI
 from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.search_internet import search_engine
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
@@ -26,6 +26,102 @@ from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
 
 logger = build_logger()
 
+
+async def adaptive_docs(
+        docs:List[str],
+        model:str,
+        temperature:float,
+        max_tokens:int,
+        query:str,
+        lang="zh",
+                  ):
+    """
+    select related documents to send to LLM by self-criticize
+    source_documents: list of documents
+    llm: LLM model
+    query: user query
+    lang: language, "zh" or "en"
+
+    """
+    llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+
+            )
+    prompt_en = (
+                "You’ll be provided with an instruction, along with evidence and possibly some preceding"
+                "sentences. When there are preceding sentences, your focus should be on the sentence that"
+                "comes after them. Your job is to determine if the evidence is relevant to the initial instruction"
+                "and the preceding context, and provides useful information to complete the task described in"
+                "the instruction. If the evidence meets this requirement, respond with [Relevant]; otherwise,"
+                "generate [Irrelevant]. Here's two examples to help you understand the task better:\n\n"
+                "Example 1:\n\n"
+                "Instruction: Given four answer options, A, B, C, and D, choose the best answer."
+                "Input Earth’s rotating causes"
+                "A: the cycling of AM and PM"
+                "B: the creation of volcanic eruptions"
+                "C: the cycling of the tides"
+                "D: the creation of gravity"
+                "Evidence: Rotation causes the day-night cycle which also creates a corresponding cycle of"
+                "temperature and humidity creates a corresponding cycle of temperature and humidity. Sea"
+                "level rises and falls twice a day as the earth rotates."
+                "**Rating** [Relevant]"
+                "Explanation: The evidence explicitly mentions that the rotation causes a day-night cycle, as"
+                "described in the answer option A."
+                "Example 2:\n\n"
+                "Instruction: age to run for US House of Representatives"
+                "Evidence: The Constitution sets three qualifications for service in the U.S. Senate: age (at"
+                "least thirty years of age); U.S. citizenship (at least nine years); and residency in the state a"
+                "senator represents at the time of election."
+                "**Rating** [Irrelevant]"
+                "Explanation: The evidence only discusses the ages to run for the US Senate, not for the"
+                "House of Representatives."
+                "Examples completed.\n\n"
+                "Please provide your response to the evidence in the following format: [Relevant] or [Irrelevant]."
+                "Instruction: {}"
+                "Evidence: {}"
+                "Rating: "
+                )
+    prompt_zh = (
+                "你将会收到一个指令，以及证据和可能的一些前述句子。当有前述句子时，你的重点应该放在它们之后的句子上。"
+                "你的任务是判断证据是否与最初的指令和前述的上下文相关，并提供有用的信息来完成指令中描述的任务。"
+                "如果证据符合这个要求，请回复[相关]；否则，请生成[不相关]。以下是两个示例，帮助你更好地理解任务："
+                "示例1："
+                "指令：在四个答案选项A、B、C和D中，选择最佳答案。"
+                "输入：地球的旋转导致"
+                "A: AM和PM的循环"
+                "B: 火山喷发的形成"
+                "C: 潮汐的循环"
+                "D: 重力的形成"
+                "证据：旋转导致昼夜循环，这也会产生相应的温度和湿度循环。随着地球的旋转，海平面每天上升和下降两次。"
+                "**评级** [相关]"
+                "解释：证据明确提到旋转导致昼夜循环，如答案选项A所述。"
+                "示例2："
+                "指令：竞选美国众议院的年龄"
+                "证据：宪法为在美国参议院服务设定了三个资格：年龄（至少三十岁）；美国公民身份（至少九年）；以及在选举时参议员代表的州的居住权。"
+                "**评级** [不相关]"
+                "解释：证据只讨论了竞选美国参议院的年龄，而不是众议院。"
+                "示例完成。"
+                "请按照以下格式提供你对证据的回应：[相关]或[不相关]。直接输出评级，不要添加任何内容！"
+                "指令：{}"
+                "证据：{}"
+                "评级："
+                )
+    prompt = prompt_zh if lang == "zh" else prompt_en
+    prompts = [prompt.format(query, doc['page_content']) for doc in docs]
+    # parallel generation with async
+    messages = [[("human",prompt)] for prompt in prompts]
+
+    results = await llm.abatch(messages)
+    results_key = [result.content for result in results]
+
+    filter_word = "不相关" if lang == "zh" else "Irrelevant"
+    relevance = [0 if result.endswith(filter_word) else 1 for result in results_key]
+    relevance_idx = [i for i, r in enumerate(relevance) if r == 1]
+    docs_adaptive = [docs[i] for i in relevance_idx]
+    return docs_adaptive
+    
 
 async def kb_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                 mode: Literal["local_kb", "temp_kb", "search_engine"] = Body("local_kb", description="知识来源"),
@@ -83,7 +179,8 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 score_threshold=score_threshold,
                                                 file_name="",
                                                 metadata={})
-                source_documents = format_reference(kb_name, docs, api_address(is_public=True))
+                # source_documents = format_reference(kb_name, docs, api_address(is_public=True))
+                doc_source = "kb"
             elif mode == "temp_kb":
                 ok, msg = check_embed_model()
                 if not ok:
@@ -93,11 +190,16 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 query=query,
                                                 top_k=top_k,
                                                 score_threshold=score_threshold)
-                source_documents = format_reference(kb_name, docs, api_address(is_public=True))
+                doc_source = "kb"
+                # source_documents = format_reference(kb_name, docs, api_address(is_public=True))
             elif mode == "search_engine":
                 result = await run_in_threadpool(search_engine, query, top_k, kb_name)
                 docs = [x.dict() for x in result.get("docs", [])]
-                source_documents = [f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" for i,d in enumerate(docs)]
+                # source_documents = [
+                #         f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" 
+                #                         for i,d in enumerate(docs)
+                #                         ]
+                doc_source = "se"
             else:
                 logger.warning(f"mode {mode} not supported")
                 docs = []
@@ -140,19 +242,27 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             if max_tokens in [None, 0]:
                 max_tokens = Settings.model_settings.MAX_TOKENS
 
-            llm = get_ChatOpenAI(
-                model_name=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                callbacks=callbacks,
-            )
+
             # TODO： 视情况使用 API
             # # 加入reranker
             # * -----------------add reranker---------------------------- 
             if Settings.model_settings.USE_RERANKER:
                 from chatchat.server.reranker.reranker import reranker_docs
                 docs = await reranker_docs(query, docs, top_k)
-            # * -----------------------------------------------------------
+            if Settings.kb_settings.ADAPTIVE_DOCUMENTS:
+                docs = await adaptive_docs(
+                                        docs, 
+                                        model=model,
+                                        temperature=temperature,
+                                        max_tokens=max_tokens,
+                                        query=query,
+                                        lang='zh'
+                                        )
+
+            source_documents = format_reference(kb_name, 
+                                                docs, 
+                                                api_address(is_public=True), 
+                                                doc_source=doc_source)
             context = "\n\n".join([doc["page_content"] for doc in docs])
 
             if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
@@ -161,7 +271,12 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
             chat_prompt = ChatPromptTemplate.from_messages(
                 [i.to_msg_template() for i in history] + [input_msg])
-
+            llm = get_ChatOpenAI(
+                model_name=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                callbacks=callbacks,
+            )
             chain = chat_prompt | llm
 
             # Begin a task that runs in the background.

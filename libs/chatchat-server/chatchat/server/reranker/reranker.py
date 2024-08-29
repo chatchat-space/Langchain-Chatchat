@@ -88,11 +88,7 @@ async def reranker_docs(query:str,corpus,top_k:int=3):
         _type_: a list-like object of reranked docs, with length of top_k, 
                 whose element is same as the input corpus's element
     """
-    #! 打印信息，别忘了删除
-    print("start to call reranker_docs")
-    print("corpus:",corpus)
-    print("="*100)
-    #! 打印信息，别忘了删除
+
     if hasattr(corpus[0],"text"):
         pairs = [[query, doc.text] for doc in corpus]
     elif isinstance(corpus[0],dict) and "page_content" in corpus[0]:
@@ -111,10 +107,6 @@ async def reranker_docs(query:str,corpus,top_k:int=3):
     if corpus_index is not None:
 
         result = [corpus[i] for i in corpus_index][: top_k]
-        #! 打印信息，别忘了删除
-        print("result:",result)
-        print("+"*100)
-        #! 打印信息，别忘了删除
         return result
     else:
         return corpus[:top_k]
