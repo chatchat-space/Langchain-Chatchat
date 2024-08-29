@@ -170,10 +170,10 @@ class KBSettings(BaseFileSettings):
     """是否开启中文标题加强，以及标题增强的相关配置"""
 
     ADAPTIVE_DOCUMENTS: bool = False
-    """是否开启利用LLM的自评估机制筛选召回的文档"""
+    """是否开启利用LLM的生成前自评估机制筛选召回的文档"""
 
     SELF_VERIFY_EVIDENCE: bool = False
-    """是否开启利用LLM的自评估机制筛选召回的证据"""
+    """是否开启利用LLM的生成后自验证机制筛选召回的证据"""
 
     PDF_OCR_THRESHOLD: t.Tuple[float, float] = (0.6, 0.6)
     """
