@@ -35,6 +35,7 @@ def build_logger(log_file: str = "chatchat"):
     loguru.logger._core.handlers[0]._filter = _filter_logs
     logger = loguru.logger.opt(colors=True)
     logger.opt = partial(loguru.logger.opt, colors=True)
+    logger.warn = logger.warning
     # logger.error = partial(logger.exception)
 
     if log_file:

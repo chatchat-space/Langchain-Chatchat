@@ -64,7 +64,7 @@ class BasicSettings(BaseFileSettings):
     @cached_property
     def NLTK_DATA_PATH(self) -> Path:
         """nltk 模型存储路径"""
-        p = self.DATA_PATH / "nltk_data"
+        p = self.PACKAGE_ROOT / "data/nltk_data"
         return p
 
     # @computed_field
@@ -120,7 +120,6 @@ class BasicSettings(BaseFileSettings):
         '''创建所有数据目录'''
         for p in [
             self.DATA_PATH,
-            self.NLTK_DATA_PATH,
             self.MEDIA_PATH,
             self.LOG_PATH,
             self.BASE_TEMP_DIR,

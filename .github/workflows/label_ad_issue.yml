@@ -1,0 +1,32 @@
+name: label_ad_issue
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  label_ad_issue:
+    runs-on: ubuntu-latest
+
+    environment: Scheduled GITHUB_OWNER publish
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_OWNER_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          stat=no
+          AD_KEYWORDS=(download crack "serial key" "license key" "product key" "free download" "full version" "full crack" "full keygen" "full license" "full activation" "full serial")
+          ISSUE_TITLE_LOWER=$(echo $ISSUE_TITLE | tr '[:upper:]' '[:lower:]')
+          for KEYWORD in ${AD_KEYWORDS[@]}; do
+            if [[ $ISSUE_TITLE_LOWER == *$KEYWORD* ]] && [[ $ISSUE_TITLE_LOWER != *input* ]]; then
+              stat=yes
+              break
+            fi
+          done
+          if [[ $stat == yes ]]; then
+            echo "Issue title contains advertisement keywords."
+          
+            gh issue delete $ISSUE_URL --yes 
+          fi
