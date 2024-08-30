@@ -1,3 +1,4 @@
+import json
 import uuid
 
 
@@ -10,3 +11,11 @@ def get_valid_var(*objs):
         if var:
             return var
     return None
+
+
+def to_dict(_data) -> dict:
+    if isinstance(_data, str):
+        data = json.loads(_data)
+    else:
+        data = _data
+    return data

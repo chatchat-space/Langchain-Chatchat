@@ -6,7 +6,7 @@ from sqlalchemy.sql.functions import now
 from app.core.base.base_db_model import BaseDbModelMixin
 from app.depends.depend_database import Base, with_session
 from app._types.vector_store_object import VectorStoreStatus, VectorStoreObject, FileCountsObject
-from app.utils.base import gen_id
+from app.utils.base import gen_id, to_dict
 
 ID_PREFIX = "vs_"
 
@@ -31,10 +31,6 @@ class VectorStoreDbModel(Base, BaseDbModelMixin):
     last_used_at = Column(DateTime, default=now())
 
     def to_object(self) -> VectorStoreObject:
-        if isinstance(self.metadata_, str):
-            _metadata = json.loads(self.metadata_)
-        else:
-            _metadata = self.metadata_
         return VectorStoreObject(
             id=self.vs_id,
             name=self.name,
@@ -46,8 +42,9 @@ class VectorStoreDbModel(Base, BaseDbModelMixin):
                 failed=self.file_counts_failed,
                 total=self.file_counts_total,
             ),
-            vector_store_config=self.vector_store_config,
-            metadata=_metadata,
+            vector_store_class=self.vector_store_class,
+            vector_store_config=to_dict(self.vector_store_config),
+            metadata=to_dict(self.metadata_),
             created_at=self.created_at.timestamp(),
             usage_bytes=self.usage_bytes,
             last_active_at=self.last_active_at.timestamp(),

@@ -25,6 +25,7 @@ class FileCountsObject(BaseModel):
 class VectorStoreObject(BaseModel):
     id: str
     object: str = 'vector_store'
+    vector_store_class: str
     vector_store_config: dict
     created_at: int = 0
     usage_bytes: int = 0
