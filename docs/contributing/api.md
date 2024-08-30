@@ -62,7 +62,7 @@
 - 使用 Agent 功能时，`stream` 参数必须指定为 `True`。因为 Agent 是分步执行的，必须通过 SSE 把每个步骤逐一输出。注意：此时 SSE 的单元是执行步骤，LLM 的输出是非流式的。
 
 调用示例：
-- 纯 LLM 对话：
+- LLM 对话：
     ```python3
     base_url = "http://127.0.0.1:7861/chat"
     data = {
@@ -162,19 +162,20 @@
     - langgraph agent 对话示例:
     ```python3
     base_url = "http://127.0.0.1:7861/chat"
+    tools = list(requests.get(f"http://127.0.0.1:7861/tools").json()["data"])
     data = {
         "messages": [
             {'role': 'user', 'content': 'The youtube video of Xiao Yixian in Fights Break Sphere?'},
         ],
-        "model": "gpt-4o-mini",
-        "tools": ["search_internet", "search_youtube"],
+        "model": "gpt-4o",      # 必填, 部分模型推理能力有限, 可能无法实现较复杂的推理过程, 如有条件请尽量选在线 api.
+        "tools": tools,         # 必填, agent 可使用 tools.
         "stream": False,        # 可选, 默认为 False,
                                 # 原因: 部分模型推理平台在"不使用 vllm 启动 llm 时"的场景下不支持 "stream = Ture".
                                 # 为考虑兼容性, 默认为 False, 使用在线 API 或满足条件的用户可设置为 True.
         "temperature": 0.01,    # 可选, 但为保障大部分用户使用体验, 代码中优先指定为 `LLM_MODEL_CONFIG.action_model.temperature`, 
                                 # 即 0.0.1, 硬性需求接口传入 temperature 的开发者请查看 graph_chat._create_agent_models.
-        "graph": "base_graph",  # 可选, 用来启动 graph agent, 且指定 agent 使用的 graph 流程.
-        "conversation_id": 1,   # 可选, 建议使用, 用来供 checkpoint 记录历史记录
+        "graph": "base_graph",  # 必填, 用来启动 graph agent, 且指定 agent 使用的 graph 流程, 目前支持: base_graph 和 plan_and_execute.
+        "conversation_id": 1,   # 必填, checkpoint 以 conversation_id 为纬度记录历史上下文.
     }
 
     import requests

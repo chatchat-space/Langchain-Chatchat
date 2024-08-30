@@ -1,15 +1,9 @@
-import base64
 import hashlib
 import io
-import json
-import os
-import time
 import uuid
 from datetime import datetime
-from dataclasses import dataclass, asdict
 from PIL import Image as PILImage
 from langchain_core.messages import BaseMessage
-from typing import Dict, List
 from urllib.parse import urlencode
 
 # from audio_recorder_streamlit import audio_recorder
@@ -20,6 +14,7 @@ from streamlit_chatbox import *
 from streamlit_extras.bottom_container import bottom
 from streamlit_paste_button import paste_image_button
 
+from chatchat.server.agent.graphs_factory import Response
 from chatchat.settings import Settings
 from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
@@ -154,12 +149,6 @@ def list_graphs(_api: ApiRequest):
     return _api.list_graphs() or {}
 
 
-@dataclass
-class Response:
-    node: str
-    content: BaseMessage
-
-
 class Json(OutputElement):
     def __init__(
         self,
@@ -175,20 +164,20 @@ class Json(OutputElement):
                          state=state, **kwargs)
 
 
-def to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
+def _to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
     if isinstance(obj, BaseMessage):
         return {
             "content": obj.content,
-            "additional_kwargs": to_serializable_dict(obj.additional_kwargs),
-            "response_metadata": to_serializable_dict(obj.response_metadata),
+            "additional_kwargs": _to_serializable_dict(obj.additional_kwargs),
+            "response_metadata": _to_serializable_dict(obj.response_metadata),
             "type": obj.type,
             "name": obj.name,
             "id": obj.id,
         }
     elif isinstance(obj, dict):
-        return {key: to_serializable_dict(value) for key, value in obj.items()}
+        return {key: _to_serializable_dict(value) for key, value in obj.items()}
     elif isinstance(obj, list):
-        return [to_serializable_dict(item) for item in obj]
+        return [_to_serializable_dict(item) for item in obj]
     else:
         return obj
 
@@ -505,12 +494,10 @@ def dialogue_page(
             # graph agent chat
             if selected_graph != "None":
                 text_finally = ""
-                batch_size = 10  # 可以根据实际情况调整这个大小
+                batch_size = 10  # 步长, 可以根据实际情况调整这个大小
                 try:
                     for d in client.chat.completions.create(**params):
-                        # import rich
-                        # rich.print(d)
-
+                        # import rich  # debug
                         # clear initial message
                         metadata = {
                             "message_id": d.message_id,
@@ -527,27 +514,44 @@ def dialogue_page(
                         # 为方便处理及展示 graph chat 接口返回内容, 转换为 Response 结构
                         data = json.loads(d.choices[0].delta.content)
                         response = Response(
-                            node=data['node'],
-                            content=BaseMessage(**data['content'])
+                            node=data["node"],
+                            content=data["content"]
                         )
 
-                        # import rich  # debug
-                        # rich.print(response)
-
-                        if response.node == "tools":
-                            title = "Function Call: " + response.content.name
-                        elif response.node == "chatbot":
-                            title = "Chat Bot"
+                        # 定义 UI 展示 Node 的标题
+                        if response["node"] == "tools":
+                            title = "Function Call: " + response["content"]["name"]
+                        elif response["node"] == "chatbot":
+                            title = "ChatBot"
+                        elif response["node"] == "planner":
+                            title = "Planner"
+                        elif response["node"] == "replan":
+                            title = "Replan"
+                        elif response["node"] == "agent":
+                            title = "Agent"
                         else:
-                            title = response.node
+                            title = response["node"]
 
-                        # 根据不同的 message.type 来定制化展示内容, 最终转换为 str
-                        content_dict = to_serializable_dict(response.content)
-                        text = json.dumps(content_dict, indent=2)
-                        text_finally = response.content.content
-
-                        # import rich  # debug
-                        # rich.print(text)
+                        # 根据不同的 selected_graph 来定制化 UI 展示内容
+                        if selected_graph == "base_graph":
+                            content_dict = _to_serializable_dict(response["content"])
+                            text = json.dumps(content_dict, indent=2)
+                            text_finally = response["content"]["content"]
+                        elif selected_graph == "plan_and_execute":
+                            # 检查 response.content 是否是字典, node == planner|replan
+                            if isinstance(response["content"], dict):
+                                content_dict = response["content"]
+                            # 检查 response.content 是否是列表, node == agent
+                            elif isinstance(response["content"], list):
+                                content_dict = {}
+                                for item in response["content"]:
+                                    if isinstance(item, dict):
+                                        content_dict.update(item)
+                            else:
+                                content_dict = {}
+                            text = json.dumps(content_dict, indent=2)
+                            if "response" in response["content"]:
+                                text_finally = response["content"]["response"]
 
                         # 前端展示 node 返回细节
                         chat_box.insert_msg(Markdown(
@@ -582,8 +586,7 @@ def dialogue_page(
                             state="complete"
                         )
 
-                    # 前端展示 agent chat 最终结论(最后一条消息)
-                    # chat_box.insert_msg(Markdown(content=""))
+                    # 前端展示 graph chat 最终结论(最后一条消息)
                     chat_box.insert_msg(Markdown(
                         content="",
                         in_expander=False,
