@@ -320,7 +320,7 @@ class ApiModelSettings(BaseFileSettings):
     # Agent_MODEL: str = ""  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     # """AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是 DEFAULT_LLM_MODEL)"""
 
-    HISTORY_LEN: int = 6
+    HISTORY_LEN: int = 10
     """默认历史对话轮数"""
     """LangGraph Agent 单轮对话可能包含 4 个 Node, 故默认设置为 6"""
 
