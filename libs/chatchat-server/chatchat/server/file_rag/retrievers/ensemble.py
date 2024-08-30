@@ -6,7 +6,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_core.retrievers import BaseRetriever
 
 from chatchat.server.file_rag.retrievers.base import BaseRetrieverService
-
+from chatchat.settings import Settings
 
 class EnsembleRetrieverService(BaseRetrieverService):
     def do_init(
@@ -42,7 +42,8 @@ class EnsembleRetrieverService(BaseRetrieverService):
         ensemble_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, faiss_retriever], weights=[0.5, 0.5]
         )
-        return EnsembleRetrieverService(retriever=ensemble_retriever)
+        return EnsembleRetrieverService(retriever=ensemble_retriever, top_k=top_k)
 
     def get_relevant_documents(self, query: str):
+
         return self.retriever.get_relevant_documents(query)[: self.top_k]
