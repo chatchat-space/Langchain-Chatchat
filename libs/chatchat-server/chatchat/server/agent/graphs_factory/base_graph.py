@@ -34,6 +34,9 @@ class BaseGraphEventHandler(EventHandler):
               input_handler=InputHandler,
               event_handler=BaseGraphEventHandler)
 def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledGraph:
+    """
+    description: https://langchain-ai.github.io/langgraph/tutorials/introduction/
+    """
     if not isinstance(llm, ChatOpenAI):
         raise TypeError("llm must be an instance of ChatOpenAI")
     if not all(isinstance(tool, BaseTool) for tool in tools):

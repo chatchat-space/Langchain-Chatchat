@@ -113,6 +113,9 @@ class PlanAndExecuteEventHandler(EventHandler):
               input_handler=InputHandler,
               event_handler=PlanAndExecuteEventHandler)
 def plan_and_execute(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledGraph:
+    """
+    description: https://langchain-ai.github.io/langgraph/tutorials/plan-and-execute/plan-and-execute/
+    """
     if not isinstance(llm, ChatOpenAI):
         raise TypeError("llm must be an instance of ChatOpenAI")
     if not all(isinstance(tool, BaseTool) for tool in tools):
