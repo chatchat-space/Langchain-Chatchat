@@ -219,7 +219,11 @@ class KBSettings(BaseFileSettings):
                 },
                 "index_params": {
                     "metric_type": "L2",
-                    "index_type": "HNSW"
+                    "index_type": "HNSW",
+                    "params": {
+                        "efConstruction": 128,
+                        "M": 16,
+                        "efSearch": 128}
                 }
             },
             "chromadb": {}
