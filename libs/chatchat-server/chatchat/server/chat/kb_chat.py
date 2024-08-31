@@ -416,7 +416,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 ),
                 return_direct: bool = Body(False, description="直接返回检索结果，不送入 LLM"),
                 request: Request = None,
-                lang: str = Body("zh", description="语言"),
                 ):
     start = time.time()
     if mode == "local_kb":
@@ -490,7 +489,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         temperature=temperature,
                                         max_tokens=max_tokens,
                                         query=query,
-                                        lang=lang
+                                        lang="zh"
                                         )
                 end = time.time()
                 logger.info(f"adaptive_docs time: {end-start}s")
@@ -504,7 +503,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         temperature=temperature,
                                         max_tokens=max_tokens,
                                         query=query,
-                                        lang=lang
+                                        lang="zh"
                                         )
                 end = time.time()
                 logger.info(f"self_verify_evidence time: {end-start}s")
