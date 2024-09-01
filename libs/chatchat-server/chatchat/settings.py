@@ -493,7 +493,7 @@ class ToolSettings(BaseFileSettings):
     DEFAULT_GRAPH: str = "base_graph"
     """默认使用的 graph"""
 
-    SUPPORT_GRAPHS: list[str] = [
+    SUPPORT_GRAPHS: t.List[str] = [
         "base_graph",
         "plan_and_execute",
     ]
