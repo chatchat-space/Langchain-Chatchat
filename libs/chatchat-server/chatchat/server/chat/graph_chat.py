@@ -62,7 +62,7 @@ async def graph_chat(
 ):
     """Langgraph Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
-        # import rich  # debug
+        import rich  # debug
 
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]
@@ -110,26 +110,30 @@ async def graph_chat(
                 for node, events in _chunk.items():
                     if node == "history_manager":  # history_manager node 为内部实现, 不外显
                         continue
-                    content = event_handler.handle_event(node=node, events=events)
-                    serialized_content = serialize_content(content)
-                    response = Response(node=node, content=serialized_content)
-                    logger.info(f"graph_chat_result conversation id: {conversation_id} result: {json.dumps(response)}")
+                    print(f"\nnode: {node}")
+                    print(f"events:")
+                    rich.print(events)
+                    print("\n")
+                    # content = event_handler.handle_event(node=node, events=events)
+                    # serialized_content = serialize_content(content)
+                    # response = Response(node=node, content=serialized_content)
+                    # logger.info(f"graph_chat_result conversation id: {conversation_id} result: {json.dumps(response)}")
 
                     # snapshot = graph_instance.get_state(config)  # debug
                     # rich.print(snapshot)
 
-                    graph_res = OpenAIChatOutput(
-                        id=f"chat{uuid.uuid4()}",
-                        object="chat.completion.chunk",
-                        content=json.dumps(response),
-                        role="assistant",
-                        tool_calls=[],
-                        model=llm.model_name,
-                        status=AgentStatus.agent_finish,
-                        message_type=MsgType.TEXT,
-                        message_id=message_id,
-                    )
-                    yield graph_res.model_dump_json()
+                    # graph_res = OpenAIChatOutput(
+                    #     id=f"chat{uuid.uuid4()}",
+                    #     object="chat.completion.chunk",
+                    #     content=json.dumps(response),
+                    #     role="assistant",
+                    #     tool_calls=[],
+                    #     model=llm.model_name,
+                    #     status=AgentStatus.agent_finish,
+                    #     message_type=MsgType.TEXT,
+                    #     message_id=message_id,
+                    # )
+                    # yield graph_res.model_dump_json()
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")
             return
