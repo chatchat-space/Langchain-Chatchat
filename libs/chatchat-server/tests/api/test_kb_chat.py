@@ -9,7 +9,7 @@ import requests
 from pprint import pprint
 
 def test_kb_chat(
-        url: str="http://10.210.0.91:7863/",
+        url: str="http://localhost:7861/",
         api: str="chat/kb_chat",
         file_name: str="/home/huangzg/codes/chat_instance/koca问题集.xlsx",
         top_k: int=10,
