@@ -58,7 +58,7 @@ class ResponderWithRetries:
         messages = state["messages"]
         print(f"Responding with {len(messages)}")
         validation_error_count = 0  # 初始化计数器
-        count = 10
+        count = 3
         for attempt in range(count):
             response = self.runnable.invoke(
                 {"messages": messages},
