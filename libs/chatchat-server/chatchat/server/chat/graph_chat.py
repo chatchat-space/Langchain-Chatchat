@@ -62,7 +62,7 @@ async def graph_chat(
 ):
     """Langgraph Agent 对话"""
     async def graph_chat_iterator() -> AsyncIterable[str]:
-        import rich  # debug
+        # import rich  # debug
 
         all_tools = get_tool().values()
         tools = [tool for tool in all_tools if tool.name in tool_config]

@@ -98,7 +98,7 @@ class ReflexionEventHandler(EventHandler):
         """
         event example:
         """
-        import rich
+        # import rich
         if node == "revise":
             revise_answer = ReviseAnswer(
                 question=events["question"],
