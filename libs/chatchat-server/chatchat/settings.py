@@ -219,7 +219,11 @@ class KBSettings(BaseFileSettings):
                 },
                 "index_params": {
                     "metric_type": "L2",
-                    "index_type": "HNSW"
+                    "index_type": "HNSW",
+                    "params": {
+                        "efConstruction": 128,
+                        "M": 16,
+                        "efSearch": 128}
                 }
             },
             "chromadb": {}
@@ -320,7 +324,7 @@ class ApiModelSettings(BaseFileSettings):
     # Agent_MODEL: str = ""  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     # """AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是 DEFAULT_LLM_MODEL)"""
 
-    HISTORY_LEN: int = 6
+    HISTORY_LEN: int = 10
     """默认历史对话轮数"""
     """LangGraph Agent 单轮对话可能包含 4 个 Node, 故默认设置为 6"""
 
@@ -489,7 +493,7 @@ class ToolSettings(BaseFileSettings):
     DEFAULT_GRAPH: str = "base_graph"
     """默认使用的 graph"""
 
-    SUPPORT_GRAPHS: list[str] = [
+    SUPPORT_GRAPHS: t.List[str] = [
         "base_graph",
         "plan_and_execute",
     ]

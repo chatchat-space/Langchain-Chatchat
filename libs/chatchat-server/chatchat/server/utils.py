@@ -926,7 +926,7 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
 def get_graph(
         name: str,
         llm: ChatOpenAI,
-        tools: list[BaseTool],
+        tools: List[BaseTool],
         history_len: int,
         query: str,
         metadata: Dict[str, Any],

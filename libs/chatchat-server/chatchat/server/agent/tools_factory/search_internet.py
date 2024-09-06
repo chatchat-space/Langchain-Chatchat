@@ -33,6 +33,7 @@ def bing_search(text, config, top_k:int):
     )
     return search.results(text, top_k)
 
+
 def tavily_search(text, config, top_k: int):
     search = TavilySearchAPIWrapper(
         tavily_api_key=config["tavily_key"],
@@ -40,7 +41,7 @@ def tavily_search(text, config, top_k: int):
     return search.results(text, top_k)
 
 
-def duckduckgo_search(text, config, top_k:int):
+def duckduckgo_search(text, config, top_k: int):
     search = DuckDuckGoSearchAPIWrapper()
     return search.results(text, top_k)
 
