@@ -496,6 +496,7 @@ class ToolSettings(BaseFileSettings):
     SUPPORT_GRAPHS: t.List[str] = [
         "base_graph",
         "plan_and_execute",
+        "reflexion",
     ]
     """支持的 graph"""
 

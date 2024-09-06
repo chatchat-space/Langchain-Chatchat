@@ -113,7 +113,6 @@ async def graph_chat(
                     content = event_handler.handle_event(node=node, events=events)
                     serialized_content = serialize_content(content)
                     response = Response(node=node, content=serialized_content)
-                    logger.info(f"graph_chat_result conversation id: {conversation_id} result: {json.dumps(response)}")
 
                     # snapshot = graph_instance.get_state(config)  # debug
                     # rich.print(snapshot)
