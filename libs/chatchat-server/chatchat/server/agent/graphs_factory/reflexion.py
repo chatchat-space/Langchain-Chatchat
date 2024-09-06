@@ -5,20 +5,18 @@ from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
-
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langchain_openai.chat_models import ChatOpenAI
 
-from chatchat.server.utils import get_graph_memory, build_logger
-from chatchat.server.agent.tools_factory import search_internet
+from chatchat.server.utils import get_graph_memory, build_logger, get_tool
 from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
 
 logger = build_logger()
-
-MAX_ITERATIONS = 2
 num_iterations = 0
+# 设置反省轮数
+MAX_ITERATIONS = 2
 
 
 class Reflection(BaseModel):
@@ -38,7 +36,7 @@ class AnswerQuestion(BaseModel):
 
     answer: Optional[str] = Field(
         None,
-        description="~250 word detailed answer to the question."
+        description="Your answer to the question."
     )
     reflection: Optional[Reflection] = Field(
         None,
@@ -129,7 +127,7 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
     """
     description: https://langchain-ai.github.io/langgraph/tutorials/reflexion/reflexion/
     """
-    # import rich
+    import rich
 
     if not isinstance(llm, ChatOpenAI):
         raise TypeError("llm must be an instance of ChatOpenAI")
@@ -154,17 +152,26 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
             [
                 (
                     "system",
-                    """You are an excellent robot, good at invoking multiple functions (or the same function multiple times) to help users solve problems.
-        Current time: {time}
+                    """
+You are an advanced AI capable of identifying and calling appropriate functions to solve various problems. 
+You can call multiple functions simultaneously or the same function multiple times as needed.
 
-        The following is a list of problems. Please call the appropriate tools in order and return the results:
-        {search_queries}
+Current time: {time}
+
+Below is a list of questions. For each question, identify the appropriate function(s), call them, and return the results in the order of the questions. 
+If no suitable function is found, return 'No suitable function found'.
+
+Questions:
+{search_queries}
         """
                 ),
             ]
         ).partial(time=lambda: datetime.datetime.now().isoformat())
-        # 担心用户没有选择任何 tools, 为保证效果, 强行追加一个 duckduckgo 搜索, 如开发者不需要可注释此行代码
-        tools.append(search_internet)
+
+        # 担心用户没有选择任何 tool 而造成 agent 逻辑无效, 为保证效果, 强行追加一个 search_internet 工具, 如开发者不需要可注释此行代码.
+        # search_internet = get_tool(name="search_internet")
+        # tools.append(search_internet)
+
         llm_with_tools = tool_node_template | llm.bind_tools(tools)
         func_call = llm_with_tools.invoke(state)
         state["messages"] = [func_call]
@@ -205,28 +212,36 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
             (
                 "system",
                 """
-    You are an expert researcher.
-    Current time: {time}
-    User's question: {question}
+You are an expert researcher.
+Current time: {time}
+User's question: {question}
 
-    Actions taken so far:
-    {history}
+Actions and Results so far:
+{history}
 
-    Initial Answer:
-    {answer}
+Initial Answer:
+{answer}
 
-    Reflection on the initial answer:
-    {reflection}
+Reflection on the Initial Answer:
+{reflection}
 
-    Steps:
-    1. {first_instruction}
-    2. Reflect and critique your answer based on the user's question and the actions taken so far. Be severe to maximize improvement.
-    3. List information that needs further collection. Provide solutions only, no execution needed.
-    4. Respond using the {function_name} struct to provide an updated response.
+Steps:
+1. {first_instruction}
+2. Reflect and critique your initial answer based on the user's question, the actions and results so far, and the reflection. Be thorough to maximize improvement.
+   - For the `missing` field: Identify and describe any important information or perspectives that are absent from the initial answer. For example, if the question is about the benefits of a healthy diet and the initial answer doesn't mention mental health benefits, this should be noted.
+   - For the `superfluous` field: Identify and describe any information or details in the initial answer that are unnecessary or irrelevant. For example, if the initial answer includes a lengthy history of dietary guidelines that doesn't directly address the question, this should be noted.
+3. List any additional information that needs to be collected. Provide requirements only, no execution needed.
+4. Provide an updated response using the {function_name} struct. This should include:
+   - Updated Answer: Incorporate insights from the actions and results so far, initial answer, and reflection.
+   - Updated Reflection: Reflect on the new answer, ensuring to fill in the `missing` and `superfluous` fields accurately.
+     - For the `missing` field: Ensure all critical information and perspectives are included.
+     - For the `superfluous` field: Ensure all unnecessary or irrelevant information is removed.
+   - Search Queries: List any additional information that needs to be collected.
+   - References: Include any supporting references used.
 
-    Supporting References:
-    {references}
-    """,
+Supporting References:
+{references}
+""",
             ),
         ]
     ).partial(
@@ -234,6 +249,8 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
     )
 
     async def process_reflexion_result(state: ReflexionState, result) -> ReflexionState:
+        rich.print(result)
+
         if hasattr(result, 'reflection') and result.reflection is not None:
             if not isinstance(result.reflection, dict):
                 result.reflection = result.reflection.dict()
@@ -258,6 +275,11 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
         ) | llm.with_structured_output(AnswerQuestion)
 
         initial_result = initial_answer_chain.invoke(state)
+
+        if hasattr(initial_result, 'reflection') and initial_result.reflection is not None:
+            if not isinstance(initial_result.reflection, dict):
+                initial_result.reflection = initial_result.reflection.dict()
+
         return await process_reflexion_result(state, initial_result)
 
     # Revision
@@ -265,20 +287,28 @@ def reflexion(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Compi
         global num_iterations
         num_iterations += 1
 
-        revise_instructions = """Revise your previous answer using the new information.
-        - You should use the previous critique to add important information to your answer.
-            - You MUST include numerical citations in your revised answer to ensure it can be verified.
-            - Add a "References" section to the bottom of your answer (which does not count towards the word limit). In form of:
-                - https://example.com
-                - https://example.com
-        - You should use the previous critique to remove superfluous information from your answer.
-        """
+        revise_instructions = """
+Revise your previous answer using the new information.
+- Use the previous critique to add important information to your answer.
+- Include numerical citations in your revised answer to ensure it can be verified.
+- If you use any external sources or functions to gather information, add a "References" section at the bottom of your answer (which does not count towards the word limit) in the following format:
+    - https://example.com
+    - https://example.com
+- If no external sources or functions are used, include a "References" section with an empty list.
+- Use the previous critique to remove superfluous information from your answer.
+- Ensure the revised answer is clear, concise, and well-structured.
+"""
         revision_chain = actor_prompt_template.partial(
             first_instruction=revise_instructions,
             function_name=ReviseAnswer.__name__,
         ) | llm.with_structured_output(ReviseAnswer)
 
         revised_result = revision_chain.invoke(state)
+
+        if hasattr(revised_result, 'reflection') and revised_result.reflection is not None:
+            if not isinstance(revised_result.reflection, dict):
+                revised_result.reflection = revised_result.reflection.dict()
+
         return await process_reflexion_result(state, revised_result)
 
     async def event_loop(state: ReflexionState) -> Literal["function_call_loop", "__end__"]:

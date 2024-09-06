@@ -79,7 +79,6 @@ async def graph_chat(
             logger.error(f"error in create ChatOpenAI: {e}")
             yield json.dumps({"error": str(e)})
             return
-        logger.info(f"graph_chat_meta_info id: {conversation_id} query: {query} llm: {llm} tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
         graph_obj = get_graph(
