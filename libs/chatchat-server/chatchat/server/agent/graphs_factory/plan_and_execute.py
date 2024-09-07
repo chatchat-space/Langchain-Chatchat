@@ -1,5 +1,6 @@
 from typing import List, Any, Union, Optional, Literal
 
+import rich
 from langchain import hub
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool

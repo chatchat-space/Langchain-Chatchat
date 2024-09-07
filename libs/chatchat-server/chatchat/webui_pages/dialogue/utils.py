@@ -2,6 +2,8 @@ import base64
 import json
 import os
 from io import BytesIO
+
+import rich
 from langchain_core.messages import BaseMessage
 
 
@@ -92,7 +94,7 @@ def process_content_by_graph(selected_graph, response):
             content_dict = {item.get("key", idx): item for idx, item in enumerate(content) if isinstance(item, dict)}
         else:
             content_dict = {}
-        final_text = content.get("response", "")
+        final_text = content.get("response", "") if response.get("node") == "replan" else ""
     elif selected_graph == "reflexion":
         if isinstance(content, list):
             content_dict = [item for item in content if isinstance(item, dict)]
