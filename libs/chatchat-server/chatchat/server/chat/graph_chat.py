@@ -79,7 +79,6 @@ async def graph_chat(
             logger.error(f"error in create ChatOpenAI: {e}")
             yield json.dumps({"error": str(e)})
             return
-        logger.info(f"graph_chat_meta_info id: {conversation_id} query: {query} llm: {llm} tools: {tools}")
 
         graph_name = graph or get_default_graph() or "base_graph"
         graph_obj = get_graph(
@@ -113,7 +112,6 @@ async def graph_chat(
                     content = event_handler.handle_event(node=node, events=events)
                     serialized_content = serialize_content(content)
                     response = Response(node=node, content=serialized_content)
-                    logger.info(f"graph_chat_result conversation id: {conversation_id} result: {json.dumps(response)}")
 
                     # snapshot = graph_instance.get_state(config)  # debug
                     # rich.print(snapshot)

@@ -496,6 +496,7 @@ class ToolSettings(BaseFileSettings):
     SUPPORT_GRAPHS: t.List[str] = [
         "base_graph",
         "plan_and_execute",
+        "reflexion",
     ]
     """支持的 graph"""
 
@@ -652,11 +653,10 @@ class ToolSettings(BaseFileSettings):
 
     url_reader: dict = {
         "use": False,
-        "timeout": "10000",
+        "timeout": 10000,
     }
     '''URL内容阅读（https://r.jina.ai/）工具配置项
     请确保部署的网络环境良好，以免造成超时等问题'''
-
 
 
 class PromptSettings(BaseFileSettings):
