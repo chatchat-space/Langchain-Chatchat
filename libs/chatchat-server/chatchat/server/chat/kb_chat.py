@@ -424,6 +424,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             return BaseResponse(code=404, msg=f"未找到知识库 {kb_name}")
     
     async def knowledge_base_chat_iterator() -> AsyncIterable[str]:
+        start = time.time()
         try:
             nonlocal history, prompt_name, max_tokens
 
@@ -483,6 +484,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 docs = await reranker_docs(query, docs, top_k)
             if Settings.kb_settings.ADAPTIVE_DOCUMENTS:
                 start = time.time()
+
                 docs = await adaptive_docs(
                                         docs, 
                                         model=model,
@@ -496,6 +498,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             # filter evidence with self-verify evidence
             if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
                 start = time.time()
+
                 docs = await self_verify_evidence(
                                         docs, 
                                         answer=query,
@@ -511,6 +514,12 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
+                                                doc_source=doc_source)
+            # return filtered documents
+            docs_filtered = [doc for doc in docs if doc not in docs_original]
+            source_documents_filtered = format_reference(kb_name,
+                                                docs_filtered,
+                                                api_address(is_public=True),
                                                 doc_source=doc_source)
             if return_direct:
                 yield OpenAIChatOutput(
@@ -602,7 +611,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                     role="assistant",
                     model=model,
                     docs=source_documents,
-                    docs_original=docs_original,
+                    filtered_docs=source_documents_filtered,
                 )
                 end = time.time()
                 logger.info(f"chat time: {end-start}s")
