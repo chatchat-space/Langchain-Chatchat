@@ -516,7 +516,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                                 api_address(is_public=True), 
                                                 doc_source=doc_source)
             # return filtered documents
-            docs_filtered = [doc for doc in docs if doc not in docs_original]
+            docs_filtered = [doc for doc in docs_original if doc not in docs]
             source_documents_filtered = format_reference(kb_name,
                                                 docs_filtered,
                                                 api_address(is_public=True),
