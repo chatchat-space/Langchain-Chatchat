@@ -495,22 +495,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         )
                 end = time.time()
                 logger.info(f"adaptive_docs time: {end-start}s")
-            # filter evidence with self-verify evidence
-            if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
-                start = time.time()
-
-                docs = await self_verify_evidence(
-                                        docs, 
-                                        answer=query,
-                                        model=model,
-                                        temperature=temperature,
-                                        max_tokens=max_tokens,
-                                        query=query,
-                                        lang="zh"
-                                        )
-                end = time.time()
-                logger.info(f"self_verify_evidence time: {end-start}s")
-                
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
@@ -579,31 +563,84 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
 
             if stream:
-                # yield documents first
-                ret = OpenAIChatOutput(
-                    id=f"chat{uuid.uuid4()}",
-                    object="chat.completion.chunk",
-                    content="",
-                    role="assistant",
-                    model=model,
-                    docs=source_documents,
-                )
-                yield ret.model_dump_json()
-
+                answer = ""
                 async for token in callback.aiter():
+                    answer += token
                     ret = OpenAIChatOutput(
                         id=f"chat{uuid.uuid4()}",
                         object="chat.completion.chunk",
                         content=token,
                         role="assistant",
                         model=model,
+                        docs=source_documents,
+                        filtered_docs=source_documents_filtered,
+                    )
+
+                    yield ret.model_dump_json()
+                if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
+                    start = time.time()
+                        
+                    docs = await self_verify_evidence(
+                                            docs, 
+                                            answer=answer,
+                                            model=model,
+                                            temperature=temperature,
+                                            max_tokens=max_tokens,
+                                            query=query,
+                                            lang="zh"
+                                            )
+                    end = time.time()
+                    logger.info(f"self_verify_evidence time: {end-start}s")
+                    source_documents = format_reference(kb_name, 
+                                                    docs, 
+                                                    api_address(is_public=True), 
+                                                    doc_source=doc_source)
+                    # return filtered documents
+                    docs_filtered = [doc for doc in docs_original if doc not in docs]
+                    source_documents_filtered = format_reference(kb_name,
+                                                        docs_filtered,
+                                                        api_address(is_public=True),
+                                                        doc_source=doc_source)
+                    ret = OpenAIChatOutput(
+                    id=f"chat{uuid.uuid4()}",
+                    object="chat.completion.chunk",
+                    content="",
+                    role="assistant",
+                    model=model,
+                    docs=source_documents,
+                    filtered_docs=source_documents_filtered,
                     )
                     yield ret.model_dump_json()
-
             else:
                 answer = ""
                 async for token in callback.aiter():
                     answer += token
+                            # filter evidence with self-verify evidence
+                if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
+                    start = time.time()
+
+                    docs = await self_verify_evidence(
+                                            docs, 
+                                            answer=answer,
+                                            model=model,
+                                            temperature=temperature,
+                                            max_tokens=max_tokens,
+                                            query=query,
+                                            lang="zh"
+                                            )
+                    end = time.time()
+                    logger.info(f"self_verify_evidence time: {end-start}s")
+                    
+                    source_documents = format_reference(kb_name, 
+                                                        docs, 
+                                                        api_address(is_public=True), 
+                                                        doc_source=doc_source)
+                    # return filtered documents
+                    docs_filtered = [doc for doc in docs_original if doc not in docs]
+                    source_documents_filtered = format_reference(kb_name,
+                                                        docs_filtered,
+                                                        api_address(is_public=True),
+                                                        doc_source=doc_source)
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
                     object="chat.completion",
