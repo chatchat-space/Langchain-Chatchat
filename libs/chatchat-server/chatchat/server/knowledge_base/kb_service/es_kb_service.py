@@ -26,6 +26,7 @@ class ESKBService(KBService):
         self.kb_path = self.get_kb_path(self.kb_name)
         self.index_name = os.path.split(self.kb_path)[-1]
         kb_config = Settings.kb_settings.kbs_config[self.vs_type()]
+        self.scheme = kb_config.get("scheme", "http")
         self.IP = kb_config["host"]
         self.PORT = kb_config["port"]
         self.user = kb_config.get("user", "")
@@ -36,12 +37,12 @@ class ESKBService(KBService):
             # ES python客户端连接（仅连接）
             if self.user != "" and self.password != "":
                 self.es_client_python = Elasticsearch(
-                    f"http://{self.IP}:{self.PORT}",
+                    f"{self.scheme}://{self.IP}:{self.PORT}",
                     basic_auth=(self.user, self.password),
                 )
             else:
                 logger.warning("ES未配置用户名和密码")
-                self.es_client_python = Elasticsearch(f"http://{self.IP}:{self.PORT}")
+                self.es_client_python = Elasticsearch(f"{self.scheme}://{self.IP}:{self.PORT}")
         except ConnectionError:
             logger.error("连接到 Elasticsearch 失败！")
             raise ConnectionError
@@ -69,7 +70,7 @@ class ESKBService(KBService):
         try:
             # langchain ES 连接、创建索引
             params = dict(
-                es_url=f"http://{self.IP}:{self.PORT}",
+                es_url=f"{self.scheme}://{self.IP}:{self.PORT}",
                 index_name=self.index_name,
                 query_field="context",
                 vector_query_field="dense_vector",
