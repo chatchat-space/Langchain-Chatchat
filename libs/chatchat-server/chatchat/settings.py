@@ -197,6 +197,7 @@ class KBSettings(BaseFileSettings):
                 "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat"
             },
             "es": {
+                "scheme": "http",
                 "host": "127.0.0.1",
                 "port": "9200",
                 "index_name": "test_index",
