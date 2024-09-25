@@ -29,8 +29,8 @@ from .utils import get_title, process_content_by_graph
 
 chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"),
                 use_rich_markdown=Settings.basic_settings.USE_RICH_MARKDOWN,
-                user_theme="green",
-                assistant_theme="blue",
+                user_theme="null",
+                assistant_theme="null",
                 )
 
 
