@@ -27,7 +27,11 @@ from chatchat.webui_pages.utils import *
 from .utils import get_title, process_content_by_graph
 
 
-chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
+chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"),
+                use_rich_markdown=Settings.basic_settings.USE_RICH_MARKDOWN,
+                user_theme="green",
+                assistant_theme="blue",
+                )
 
 
 def save_session(conv_name: str = None):
@@ -62,7 +66,7 @@ def get_messages_history(
 
     def filter(msg):
         content = [
-            x for x in msg["elements"] if x._output_method in ["markdown", "text"]
+            x for x in msg["elements"] if x._output_method in ["markdown", "text", "richmd"]
         ]
         if not content_in_expander:
             content = [x for x in content if not x._in_expander]
@@ -208,7 +212,7 @@ def dialogue_page(
     # st.write(st.session_state)
     # st.write(chat_box.context)
 
-    @st.experimental_dialog("模型配置", width="large")
+    @st.dialog("模型配置", width="large")
     def llm_model_setting():
         # 模型
         cols = st.columns(3)
@@ -230,7 +234,7 @@ def dialogue_page(
         if st.button("OK"):
             rerun()
 
-    @st.experimental_dialog("重命名会话")
+    @st.dialog("重命名会话")
     def rename_conversation():
         name = st.text_input("会话名称")
         if st.button("OK"):
@@ -591,7 +595,6 @@ def dialogue_page(
                         metadata = {
                             "message_id": message_id,
                         }
-
                         # clear initial message
                         if not started:
                             chat_box.update_msg("", streaming=False)
