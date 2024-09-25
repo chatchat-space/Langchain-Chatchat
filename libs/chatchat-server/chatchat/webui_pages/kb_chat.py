@@ -50,7 +50,7 @@ def kb_chat(api: ApiRequest):
     # st.write(chat_box.cur_chat_name)
     # st.write(st.session_state)
 
-    @st.experimental_dialog("模型配置", width="large")
+    @st.dialog("模型配置", width="large")
     def llm_model_setting():
         # 模型
         cols = st.columns(3)
@@ -72,7 +72,7 @@ def kb_chat(api: ApiRequest):
         if st.button("OK"):
             rerun()
 
-    @st.experimental_dialog("重命名会话")
+    @st.dialog("重命名会话")
     def rename_conversation():
         name = st.text_input("会话名称")
         if st.button("OK"):
