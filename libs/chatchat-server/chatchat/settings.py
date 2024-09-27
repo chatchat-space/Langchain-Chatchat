@@ -92,11 +92,14 @@ class BasicSettings(BaseFileSettings):
         (p / "openai_files").mkdir(parents=True, exist_ok=True)
         return p
 
+    @cached_property
+    def DB_ROOT_PATH(self) -> Path:
+        """sqlite数据库默认存储路径。如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。"""
+        p = self.KB_ROOT_PATH / "info.db"
+        return p
+
     KB_ROOT_PATH: str = str(CHATCHAT_ROOT / "data/knowledge_base")
     """知识库默认存储路径"""
-
-    DB_ROOT_PATH: str = str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
-    """数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。"""
 
     SQLALCHEMY_DATABASE_URI: str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """知识库信息数据库连接URI"""
@@ -142,7 +145,7 @@ class KBSettings(BaseFileSettings):
     DEFAULT_KNOWLEDGE_BASE: str = "samples"
     """默认使用的知识库"""
 
-    DEFAULT_VS_TYPE: t.Literal["faiss", "milvus", "zilliz", "pg", "es", "relyt", "chromadb"] = "faiss"
+    DEFAULT_VS_TYPE: t.Literal["faiss", "milvus", "zilliz", "pg", "es", "relyt", "chromadb", "sqlite"] = "faiss"
     """默认向量库/全文检索引擎类型"""
 
     CACHED_VS_NUM: int = 1
@@ -229,7 +232,8 @@ class KBSettings(BaseFileSettings):
                         "efSearch": 128}
                 }
             },
-            "chromadb": {}
+            "chromadb": {},
+            "sqlite": {"uri": None},
         }
     """可选向量库类型及对应配置"""
 
