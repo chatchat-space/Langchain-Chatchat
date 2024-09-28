@@ -69,7 +69,7 @@ class SqliteKBService(KBService):
                                                top_k=top_k,
                                                score_threshold=score_threshold)
         import jieba
-        query = jieba.lcut_for_search(query)
+        query = [x.lower() for x in jieba.lcut_for_search(query)]
         query = " OR ".join(query)
         docs2 = self.sqlite_vs.search_by_bm25(query=query,
                                                top_k=top_k,
