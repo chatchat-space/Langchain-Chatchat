@@ -42,7 +42,7 @@ requests = "~2.31.0"
 pathlib = "~1.0.1"
 pyjwt = "~2.8.0"
 elasticsearch = "*"
-sqlalchemy-vectorstores[sqlite] = "~0.1.2"
+sqlalchemy-vectorstores = {version="~0.1.2", extras=["sqlite"]}
 numexpr = ">=1" #test
 strsimpy = ">=0.2.1"
 markdownify = ">=0.11.6"
