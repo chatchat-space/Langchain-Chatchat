@@ -31,18 +31,29 @@ class ESKBService(KBService):
         self.PORT = kb_config["port"]
         self.user = kb_config.get("user", "")
         self.password = kb_config.get("password", "")
+        self.verify_certs = kb_config.get("verify_certs", True)
+        self.ca_certs = kb_config.get("ca_certs", None)
+        self.client_key = kb_config.get("client_key", None)
+        self.client_cert = kb_config.get("client_cert", None)
         self.dims_length = kb_config.get("dims_length", None)
         self.embeddings_model = get_Embeddings(self.embed_model)
         try:
-            # ES python客户端连接（仅连接）
+            connection_info = dict(
+                host=f"{self.scheme}://{self.IP}:{self.PORT}"
+            )
             if self.user != "" and self.password != "":
-                self.es_client_python = Elasticsearch(
-                    f"{self.scheme}://{self.IP}:{self.PORT}",
-                    basic_auth=(self.user, self.password),
-                )
+                connection_info.update(basic_auth=(self.user, self.password))
             else:
                 logger.warning("ES未配置用户名和密码")
-                self.es_client_python = Elasticsearch(f"{self.scheme}://{self.IP}:{self.PORT}")
+            if self.scheme == "https":
+                connection_info.update(verify_certs=self.verify_certs)
+                if self.ca_certs:
+                    connection_info.update(ca_certs=self.ca_certs)
+                if self.client_key and self.client_cert:
+                    connection_info.update(client_key=self.client_key)
+                    connection_info.update(client_cert=self.client_cert)
+            # ES python客户端连接（仅连接）
+            self.es_client_python = Elasticsearch(**connection_info)
         except ConnectionError:
             logger.error("连接到 Elasticsearch 失败！")
             raise ConnectionError
@@ -82,6 +93,13 @@ class ESKBService(KBService):
             )
             if self.user != "" and self.password != "":
                 params.update(es_user=self.user, es_password=self.password)
+            if self.scheme == "https":
+                params["es_params"].update(verify_certs=self.verify_certs)
+                if self.ca_certs:
+                    params["es_params"].update(ca_certs=self.ca_certs)
+                if self.client_key and self.client_cert:
+                    params["es_params"].update(client_key=self.client_key)
+                    params["es_params"].update(client_cert=self.client_cert)
             self.db = ElasticsearchStore(**params)
         except ConnectionError:
             logger.error("### 初始化 Elasticsearch 失败！")

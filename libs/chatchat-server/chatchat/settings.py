@@ -202,7 +202,11 @@ class KBSettings(BaseFileSettings):
                 "port": "9200",
                 "index_name": "test_index",
                 "user": "",
-                "password": ""
+                "password": "",
+                "verify_certs": True,
+                "ca_certs": None,
+                "client_cert": None,
+                "client_key": None
             },
             "milvus_kwargs": {
                 "search_params": {
