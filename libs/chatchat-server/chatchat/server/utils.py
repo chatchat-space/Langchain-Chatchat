@@ -62,7 +62,7 @@ def get_config_platforms() -> Dict[str, Dict]:
     return {m["platform_name"]: m for m in platforms}
 
 
-@cached(max_size=10, ttl=60, algorithm=CachingAlgorithmFlag.LRU)
+@cached(max_size=10, ttl=10, algorithm=CachingAlgorithmFlag.LRU)
 def detect_xf_models(xf_url: str) -> Dict[str, List[str]]:
     '''
     use cache for xinference model detecting to avoid:
