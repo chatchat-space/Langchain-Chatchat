@@ -673,13 +673,13 @@ def dialogue_page(
                                 )
                         chat_box.update_msg(text, streaming=False, metadata=metadata)
                 except Exception as e:
-                    st.error(e.body)
+                    st.error(str(e))
         else:
             try:
                 d = client.chat.completions.create(**params)
                 chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
             except Exception as e:
-                st.error(e.body)
+                st.error(str(e))
 
         # if os.path.exists("tmp/image.jpg"):
         #     with open("tmp/image.jpg", "rb") as image_file:
