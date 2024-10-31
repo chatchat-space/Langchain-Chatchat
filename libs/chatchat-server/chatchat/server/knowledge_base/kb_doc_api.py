@@ -400,8 +400,8 @@ def download_doc(
 def recreate_vector_store(
         knowledge_base_name: str = Body(..., examples=["samples"]),
         allow_empty_kb: bool = Body(True),
-        vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
-        embed_model: str = Body(get_default_embedding()),
+        vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE, description="为空知识库指定向量库类型。已有知识库默认使用原向量库类型。"),
+        embed_model: str = Body(get_default_embedding(), description="为空知识库指定Embedding模型。已有知识库默认使用原Embedding模型。"),
         chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
@@ -416,7 +416,9 @@ def recreate_vector_store(
 
     def output():
         try:
-            kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
+            kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+            if kb is None:
+                kb = KBServiceFactory.get_service(knowledge_base_name, vs_type, embed_model)
             if not kb.exists() and not allow_empty_kb:
                 yield {"code": 404, "msg": f"未找到知识库 ‘{knowledge_base_name}’"}
             else:
