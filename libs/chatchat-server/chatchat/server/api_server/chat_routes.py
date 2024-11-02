@@ -174,6 +174,7 @@ async def chat_completions(
         tool_config = {name: get_tool_config(name) for name in tool_names}
 
         # todo: 目前需要同时兼容 graph agent 和传统 agent 两种方式聊天接口, 后续方案待确定
+        # TODO 是否可以放入到 单独的业务中，这里只负责调用标准接口？
         if graph := extra.get("graph"):
             result = await graph_chat(
                 query=body.messages[-1]["content"],
