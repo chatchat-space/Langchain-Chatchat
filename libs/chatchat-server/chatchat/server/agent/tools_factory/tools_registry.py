@@ -45,7 +45,7 @@ def regist_tool(
         # set a default title for human
         if not title:
             title = "".join([x.capitalize() for x in t.name.split("_")])
-        t.title = title
+        t.tags = title
 
     def wrapper(def_func: Callable) -> BaseTool:
         partial_ = tool(

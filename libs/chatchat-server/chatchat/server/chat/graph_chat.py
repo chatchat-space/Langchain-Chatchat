@@ -9,7 +9,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
-from chatchat.server.callback_handler.agent_callback_handler import (
+from langchain_chatchat.callbacks.agent_callback_handler import (
     AgentStatus,
 )
 from chatchat.server.utils import (

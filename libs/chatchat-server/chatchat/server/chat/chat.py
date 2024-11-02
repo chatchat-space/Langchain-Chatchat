@@ -12,10 +12,6 @@ from sse_starlette.sse import EventSourceResponse
 from chatchat.server.agents_registry.agents_registry import agents_registry
 from chatchat.settings import Settings
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
-from chatchat.server.callback_handler.agent_callback_handler import (
-    AgentExecutorAsyncIteratorCallbackHandler,
-    AgentStatus,
-)
 from chatchat.server.chat.utils import History
 from chatchat.server.memory.conversation_db_buffer_memory import (
     ConversationBufferDBMemory,
@@ -30,6 +26,9 @@ from chatchat.server.utils import (
     build_logger, get_prompt_template_dict, get_ChatPlatformAIParams,
 )
 from langchain_chatchat import ChatPlatformAI, PlatformToolsRunnable
+from langchain_chatchat.agents.platform_tools import PlatformToolsAction, PlatformToolsFinish, \
+    PlatformToolsActionToolStart, PlatformToolsActionToolEnd, PlatformToolsLLMStatus
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
 
 logger = build_logger()
 
@@ -59,7 +58,7 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
 
 
 def create_models_chains(
-    history, history_len, prompts, models, tools, callbacks, conversation_id, metadata
+        history, history_len, prompts, models, tools, callbacks, conversation_id, metadata
 ):
     memory = None
     chat_prompt = None
@@ -89,7 +88,7 @@ def create_models_chains(
         llm.callbacks = callbacks
 
         llm_params = get_ChatPlatformAIParams(
-            model_name="glm-4",
+            model_name="glm-4-plus",
             temperature=0.01,
             max_tokens=100,
         )
@@ -100,9 +99,10 @@ def create_models_chains(
             agents_registry=agents_registry,
             llm=llm,
             tools=tools,
+            history=history,
         )
 
-        full_chain = {"input": lambda x: x["input"]} | agent_executor
+        full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
     else:
         llm = models["llm_model"]
         llm.callbacks = callbacks
@@ -112,32 +112,31 @@ def create_models_chains(
 
 
 async def chat(
-    query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-    metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
-    conversation_id: str = Body("", description="对话框ID"),
-    message_id: str = Body(None, description="数据库消息ID"),
-    history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-    history: List[History] = Body(
-        [],
-        description="历史对话，设为一个整数可以从数据库中读取历史消息",
-        examples=[
-            [
-                {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                {"role": "assistant", "content": "虎头虎脑"},
-            ]
-        ],
-    ),
-    stream: bool = Body(True, description="流式输出"),
-    chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
-    tool_config: dict = Body({}, description="工具配置", examples=[]),
-    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
+        query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+        metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
+        conversation_id: str = Body("", description="对话框ID"),
+        message_id: str = Body(None, description="数据库消息ID"),
+        history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
+        history: List[History] = Body(
+            [],
+            description="历史对话，设为一个整数可以从数据库中读取历史消息",
+            examples=[
+                [
+                    {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                    {"role": "assistant", "content": "虎头虎脑"},
+                ]
+            ],
+        ),
+        stream: bool = Body(True, description="流式输出"),
+        chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
+        tool_config: dict = Body({}, description="工具配置", examples=[]),
+        max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
 
-    async def chat_iterator() -> AsyncIterable[OpenAIChatOutput]:
+    async def chat_iterator_event() -> AsyncIterable[OpenAIChatOutput]:
         try:
-            callback = AgentExecutorAsyncIteratorCallbackHandler()
-            callbacks = [callback]
+            callbacks = []
 
             # Enable langchain-chatchat to support langfuse
             import os
@@ -172,60 +171,85 @@ async def chat(
                 metadata=metadata,
             )
 
-            _history = [History.from_data(h) for h in history]
-            chat_history = [h.to_msg_tuple() for h in _history]
-            history_message = convert_to_messages(chat_history)
-            task = asyncio.create_task(
-                wrap_done(
-                    full_chain.ainvoke(
-                        {
-                            "input": query,
-                            "chat_history": history_message,
-                        }
-                    ),
-                    callback.done,
-                )
-            )
-
+            chat_iterator = full_chain.invoke({
+                "input": query
+            })
             last_tool = {}
-            async for chunk in callback.aiter():
-                data = json.loads(chunk)
+            async for item in chat_iterator:
+
+                data = {}
+
+                data["status"] = item.status
                 data["tool_calls"] = []
                 data["message_type"] = MsgType.TEXT
-
-                if data["status"] == AgentStatus.tool_start:
-                    last_tool = {
+                if isinstance(item, PlatformToolsAction):
+                    print("PlatformToolsAction:" + str(item.to_json()))
+                    data["text"] = item.log
+                    tool_call = {
                         "index": 0,
-                        "id": data["run_id"],
+                        "id": item.run_id,
                         "type": "function",
                         "function": {
-                            "name": data["tool"],
-                            "arguments": data["tool_input"],
+                            "name": item.tool,
+                            "arguments": item.tool_input,
+                        },
+                        "tool_output": None,
+                        "is_error": False,
+                    }
+                    data["tool_calls"].append(tool_call)
+
+                elif isinstance(item, PlatformToolsFinish):
+                    print("PlatformToolsFinish:" + str(item.to_json()))
+                    data["text"] = item.log
+
+                    last_tool.update(
+                        tool_output=item.return_values["output"],
+                    )
+                    data["tool_calls"].append(last_tool)
+
+                    try:
+                        tool_output = json.loads(item.return_values["output"])
+                        if message_type := tool_output.get("message_type"):
+                            data["message_type"] = message_type
+                    except:
+                        ...
+
+                elif isinstance(item, PlatformToolsActionToolStart):
+                    print("PlatformToolsActionToolStart:" + str(item.to_json()))
+
+                    last_tool = {
+                        "index": 0,
+                        "id": item.run_id,
+                        "type": "function",
+                        "function": {
+                            "name": item.tool,
+                            "arguments": item.tool_input,
                         },
                         "tool_output": None,
                         "is_error": False,
                     }
                     data["tool_calls"].append(last_tool)
-                if data["status"] in [AgentStatus.tool_end]:
+
+                elif isinstance(item, PlatformToolsActionToolEnd):
+                    print("PlatformToolsActionToolEnd:" + str(item.to_json()))
                     last_tool.update(
-                        tool_output=data["tool_output"],
-                        is_error=data.get("is_error", False),
+                        tool_output=item.tool_output,
+                        is_error=False,
                     )
                     data["tool_calls"] = [last_tool]
+
                     last_tool = {}
                     try:
-                        tool_output = json.loads(data["tool_output"])
+                        tool_output = json.loads(item.tool_output)
                         if message_type := tool_output.get("message_type"):
                             data["message_type"] = message_type
                     except:
                         ...
-                elif data["status"] == AgentStatus.agent_finish:
-                    try:
-                        tool_output = json.loads(data["text"])
-                        if message_type := tool_output.get("message_type"):
-                            data["message_type"] = message_type
-                    except:
-                        ...
+                elif isinstance(item, PlatformToolsLLMStatus):
+
+                    if item.status == AgentStatus.llm_end:
+                        print("llm_end:" + item.text)
+                        data["text"] = item.text
 
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
@@ -239,27 +263,18 @@ async def chat(
                     message_id=message_id,
                 )
                 yield ret.model_dump_json()
-            # yield OpenAIChatOutput( # return blank text lastly
-            #         id=f"chat{uuid.uuid4()}",
-            #         object="chat.completion.chunk",
-            #         content="",
-            #         role="assistant",
-            #         model=models["llm_model"].model_name,
-            #         status = data["status"],
-            #         message_type = data["message_type"],
-            #         message_id=message_id,
-            # )
-            await task
+
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
         except Exception as e:
             logger.error(f"error in chat: {e}")
+            e.printStackTrace()
             yield {"data": json.dumps({"error": str(e)})}
             return
 
     if stream:
-        return EventSourceResponse(chat_iterator())
+        return EventSourceResponse(chat_iterator_event())
     else:
         ret = OpenAIChatOutput(
             id=f"chat{uuid.uuid4()}",

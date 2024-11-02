@@ -208,15 +208,16 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
         )
 
     def invoke(
-            self, chat_input: str, config: Optional[RunnableConfig] = None
+            self, chat_input: str,
+            config: Optional[RunnableConfig] = None
     ) -> AsyncIterable[OutputType]:
         async def chat_iterator() -> AsyncIterable[OutputType]:
             history_message = []
             if self.history:
                 _history = [History.from_data(h) for h in self.history]
-                chat_history = [h.to_msg_tuple() for h in _history]
+                _chat_history = [h.to_msg_tuple() for h in _history]
 
-                history_message = convert_to_messages(chat_history)
+                history_message.extend(convert_to_messages(_chat_history))
 
             task = asyncio.create_task(
                 wrap_done(

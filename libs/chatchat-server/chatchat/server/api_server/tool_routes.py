@@ -19,7 +19,7 @@ async def list_tools():
     data = {
         t.name: {
             "name": t.name,
-            "title": t.title,
+            "title": t.tags,
             "description": t.description,
             "args": t.args,
             "config": get_tool_config(t.name),

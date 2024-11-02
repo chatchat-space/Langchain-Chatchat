@@ -17,7 +17,7 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_paste_button import paste_image_button
 
 from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
@@ -542,13 +542,13 @@ def dialogue_page(
                             )
                     chat_box.update_msg(text, streaming=False, metadata=metadata)
             except Exception as e:
-                st.error(e.body)
+                st.error(str(e))
         else:
             try:
                 d =client.chat.completions.create(**params)
                 chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
             except Exception as e:
-                st.error(e.body)
+                st.error(str(e))
 
         # if os.path.exists("tmp/image.jpg"):
         #     with open("tmp/image.jpg", "rb") as image_file:
