@@ -42,14 +42,23 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
         callbacks = callbacks if params.get("callbacks", False) else None
         # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
         max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
-        model_instance = get_ChatOpenAI(
-            model_name=model_name,
-            temperature=params.get("temperature", 0.5),
-            max_tokens=max_tokens_value,
-            callbacks=callbacks,
-            streaming=stream,
-            local_wrap=True,
-        )
+        if model_type == "action_model":
+
+            llm_params = get_ChatPlatformAIParams(
+                model_name=model_name,
+                temperature=params.get("temperature", 0.5),
+                max_tokens=max_tokens_value,
+            )
+            model_instance = ChatPlatformAI(**llm_params)
+        else:
+            model_instance = get_ChatOpenAI(
+                model_name=model_name,
+                temperature=params.get("temperature", 0.5),
+                max_tokens=max_tokens_value,
+                callbacks=callbacks,
+                streaming=stream,
+                local_wrap=True,
+            )
         models[model_type] = model_instance
         prompt_name = params.get("prompt_name", "default")
         prompt_template = get_prompt_template(type=model_type, name=prompt_name)
@@ -86,14 +95,6 @@ def create_models_chains(
     if "action_model" in models and tools:
         llm = models["action_model"]
         llm.callbacks = callbacks
-
-        llm_params = get_ChatPlatformAIParams(
-            model_name="glm-4-plus",
-            temperature=0.01,
-            max_tokens=100,
-        )
-        llm = ChatPlatformAI(**llm_params)
-
         agent_executor = PlatformToolsRunnable.create_agent_executor(
             agent_type="platform-agent",
             agents_registry=agents_registry,
