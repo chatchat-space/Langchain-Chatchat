@@ -5,6 +5,7 @@ import logging.config
 import pytest
 from langchain.agents import tool
 
+from chatchat.server.agents_registry.agents_registry import agents_registry
 from chatchat.server.utils import get_ChatPlatformAIParams
 from langchain_chatchat import ChatPlatformAI
 from langchain_chatchat.agents import PlatformToolsRunnable
@@ -37,13 +38,14 @@ async def test_openai_functions_tools(logging_conf):
     logging.config.dictConfig(logging_conf)  # type: ignore
 
     llm_params = get_ChatPlatformAIParams(
-        model_name="glm-4",
+        model_name="glm-4-plus",
         temperature=0.01,
         max_tokens=100,
     )
     llm = ChatPlatformAI(**llm_params)
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="openai-functions",
+        agents_registry=agents_registry,
         llm=llm,
         tools=[multiply, exp, add],
     )
@@ -76,8 +78,10 @@ async def test_platform_tools(logging_conf):
         max_tokens=100,
     )
     llm = ChatPlatformAI(**llm_params)
+
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="platform-agent",
+        agents_registry=agents_registry,
         llm=llm,
         tools=[multiply, exp, add],
     )
@@ -112,6 +116,7 @@ async def test_chatglm3_chat_agent_tools(logging_conf):
     llm = ChatPlatformAI(**llm_params)
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="glm3",
+        agents_registry=agents_registry,
         llm=llm,
         tools=[multiply, exp, add],
     )
@@ -146,6 +151,7 @@ async def test_qwen_chat_agent_tools(logging_conf):
     llm = ChatPlatformAI(**llm_params)
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="qwen",
+        agents_registry=agents_registry,
         llm=llm,
         tools=[multiply, exp, add],
     )
@@ -180,6 +186,7 @@ async def test_qwen_structured_chat_agent_tools(logging_conf):
     llm = ChatPlatformAI(**llm_params)
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="structured-chat-agent",
+        agents_registry=agents_registry,
         llm=llm,
         tools=[multiply, exp, add],
     )

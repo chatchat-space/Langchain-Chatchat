@@ -27,9 +27,9 @@ from langchain_core.runnables.base import RunnableBindingBase
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import Field, validator
+from openai import BaseModel
+from openai._compat import PYDANTIC_V2, ConfigDict
 from typing_extensions import ClassVar
-from zhipuai.core import PYDANTIC_V2, BaseModel, ConfigDict
 
 from langchain_chatchat.agent_toolkits.all_tools.registry import (
     TOOL_STRUCT_TYPE_TO_TOOL_CLASS,
@@ -41,7 +41,6 @@ from langchain_chatchat.agent_toolkits.all_tools.tool import (
     AdapterAllTool,
     BaseToolOutput,
 )
-from langchain_chatchat.agents.agents_registry.agents_registry import agents_registry
 from langchain_chatchat.agents.all_tools_agent import PlatformToolsAgentExecutor
 from langchain_chatchat.agents.format_scratchpad.all_tools import (
     format_to_platform_tool_messages,
@@ -149,6 +148,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
     def create_agent_executor(
             cls,
             agent_type: str,
+            agents_registry: Callable,
             llm: BaseLanguageModel,
             *,
             intermediate_steps: List[Tuple[AgentAction, BaseToolOutput]] = [],

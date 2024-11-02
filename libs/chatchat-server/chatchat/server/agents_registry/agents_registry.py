@@ -4,7 +4,7 @@ from langchain_core.messages import SystemMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel
 
-from chatchat.server.utils import get_prompt_template_dict, get_model_dump_dict
+from chatchat.server.utils import get_prompt_template_dict
 from langchain_chatchat.agents.all_tools_agent import PlatformToolsAgentExecutor
 from langchain_chatchat.agents.react.create_prompt_template import create_prompt_glm3_template, \
     create_prompt_structured_react_template, create_prompt_platform_template, create_prompt_gpt_tool_template
@@ -50,7 +50,8 @@ def agents_registry(
     # TODO agent params of PlatformToolsAgentExecutor or AgentExecutor  enable return_intermediate_steps=True,
     if "glm3" == agent_type:
         # An optimized method of langchain Agent that uses the glm3 series model
-        prompt = create_prompt_glm3_template(agent_type)
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_glm3_template(agent_type, template=template)
         agent = create_structured_glm3_chat_agent(llm=llm,
                                                   tools=tools,
                                                   prompt=prompt,
@@ -67,7 +68,9 @@ def agents_registry(
         return agent_executor
     elif "qwen" == agent_type:
         llm.streaming = False  # qwen agent not support streaming
-        prompt = create_prompt_structured_react_template(agent_type)
+
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_structured_react_template(agent_type, template=template)
         agent = create_qwen_chat_agent(llm=llm,
                                        tools=tools,
                                        prompt=prompt,
@@ -83,7 +86,8 @@ def agents_registry(
         return agent_executor
     elif "platform-agent" == agent_type:
 
-        prompt = create_prompt_platform_template(agent_type)
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_platform_template(agent_type, template=template)
         agent = create_platform_tools_agent(llm=llm,
                                             tools=tools,
                                             prompt=prompt,
@@ -99,7 +103,8 @@ def agents_registry(
         return agent_executor
     elif agent_type == 'structured-chat-agent':
 
-        prompt = create_prompt_structured_react_template(agent_type)
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_structured_react_template(agent_type,template=template)
         agent = create_chat_agent(llm=llm,
                                   tools=tools,
                                   prompt=prompt,
@@ -117,8 +122,7 @@ def agents_registry(
     elif agent_type == 'default':
         # this agent single chat
         template = get_prompt_template_dict("action_model", "default")
-        SYSTEM_PROMPT = template.get("SYSTEM_PROMPT")
-        prompt = ChatPromptTemplate.from_messages([SystemMessage(content=SYSTEM_PROMPT)])
+        prompt = ChatPromptTemplate.from_messages([SystemMessage(content=template.get("SYSTEM_PROMPT"))])
 
         agent = create_chat_agent(llm=llm,
                                   tools=tools,
@@ -136,7 +140,8 @@ def agents_registry(
 
     elif agent_type == "openai-functions":
         # agent only tools agent_scratchpad chat ,this runnable supper history message
-        prompt = create_prompt_gpt_tool_template(agent_type)
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_gpt_tool_template(agent_type, template=template)
 
         # prompt pre partial "tool_names" var
         prompt = prompt.partial(

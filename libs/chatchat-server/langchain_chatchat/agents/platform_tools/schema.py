@@ -6,8 +6,9 @@ from enum import Enum, auto
 from numbers import Number
 from typing import Any, Dict, List, Optional, Union
 
+from openai import BaseModel
+from openai._compat import ConfigDict, PYDANTIC_V2
 from typing_extensions import ClassVar, Self
-from zhipuai.core import PYDANTIC_V2, BaseModel, ConfigDict
 
 
 class MsgType:

@@ -9,8 +9,8 @@ from langchain.prompts.chat import ChatPromptTemplate
 from langchain_core.messages import convert_to_messages
 from sse_starlette.sse import EventSourceResponse
 
+from chatchat.server.agents_registry.agents_registry import agents_registry
 from chatchat.settings import Settings
-from langchain_chatchat.agents.agents_registry.agents_registry import agents_registry
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
 from chatchat.server.callback_handler.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
@@ -27,8 +27,9 @@ from chatchat.server.utils import (
     get_tool,
     wrap_done,
     get_default_llm,
-    build_logger,
+    build_logger, get_prompt_template_dict, get_ChatPlatformAIParams,
 )
+from langchain_chatchat import ChatPlatformAI, PlatformToolsRunnable
 
 logger = build_logger()
 
@@ -86,9 +87,21 @@ def create_models_chains(
     if "action_model" in models and tools:
         llm = models["action_model"]
         llm.callbacks = callbacks
-        agent_executor = agents_registry(
-            llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
+
+        llm_params = get_ChatPlatformAIParams(
+            model_name="glm-4",
+            temperature=0.01,
+            max_tokens=100,
         )
+        llm = ChatPlatformAI(**llm_params)
+
+        agent_executor = PlatformToolsRunnable.create_agent_executor(
+            agent_type="platform-agent",
+            agents_registry=agents_registry,
+            llm=llm,
+            tools=tools,
+        )
+
         full_chain = {"input": lambda x: x["input"]} | agent_executor
     else:
         llm = models["llm_model"]

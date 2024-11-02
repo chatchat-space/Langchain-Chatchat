@@ -5,11 +5,9 @@ import langchain_core.prompts
 from langchain.prompts.chat import ChatPromptTemplate
 
 from chatchat.server.pydantic_v1 import Field, model_schema, typing
-from chatchat.server.utils import get_prompt_template_dict
 
 
-def create_prompt_glm3_template(model_name: str):
-    template = get_prompt_template_dict("action_model", model_name)
+def create_prompt_glm3_template(model_name: str, template: dict):
     SYSTEM_PROMPT = template.get("SYSTEM_PROMPT")
     HUMAN_MESSAGE = template.get("HUMAN_MESSAGE")
     prompt = ChatPromptTemplate(
@@ -46,8 +44,7 @@ def create_prompt_glm3_template(model_name: str):
     return prompt
 
 
-def create_prompt_platform_template(model_name: str):
-    template = get_prompt_template_dict("action_model", model_name)
+def create_prompt_platform_template(model_name: str, template: dict):
     SYSTEM_PROMPT = template.get("SYSTEM_PROMPT")
     HUMAN_MESSAGE = template.get("HUMAN_MESSAGE")
     prompt = ChatPromptTemplate(
@@ -86,8 +83,7 @@ def create_prompt_platform_template(model_name: str):
     return prompt
 
 
-def create_prompt_structured_react_template(model_name: str):
-    template = get_prompt_template_dict("action_model", model_name)
+def create_prompt_structured_react_template(model_name: str, template: dict):
     SYSTEM_PROMPT = template.get("SYSTEM_PROMPT")
     HUMAN_MESSAGE = template.get("HUMAN_MESSAGE")
     prompt = ChatPromptTemplate(
@@ -125,8 +121,7 @@ def create_prompt_structured_react_template(model_name: str):
     return prompt
 
 
-def create_prompt_gpt_tool_template(model_name: str):
-    template = get_prompt_template_dict("action_model", model_name)
+def create_prompt_gpt_tool_template(model_name: str, template: dict):
     SYSTEM_PROMPT = template.get("SYSTEM_PROMPT")
     HUMAN_MESSAGE = template.get("HUMAN_MESSAGE")
     prompt = ChatPromptTemplate(

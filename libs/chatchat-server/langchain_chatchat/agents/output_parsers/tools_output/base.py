@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Any, Dict, Optional
 
-from zhipuai.core import BaseModel
+from openai import BaseModel
 
 
 class PlatformToolsMessageToolCall(BaseModel):

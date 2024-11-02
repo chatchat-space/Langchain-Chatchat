@@ -20,7 +20,7 @@ from langchain_core.messages import (
     ToolMessage,
     ToolMessageChunk,
 )
-from zhipuai.core import BaseModel
+from openai import BaseModel
 
 logger = logging.getLogger()
 

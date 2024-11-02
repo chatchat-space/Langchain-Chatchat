@@ -77,8 +77,9 @@ from langchain_core.utils.function_calling import (
 )
 from langchain_core.utils.json import parse_partial_json
 from langchain_core.utils.utils import build_extra_kwargs
+from openai import BaseModel
+from openai._compat import PYDANTIC_V2, ConfigDict
 from typing_extensions import ClassVar
-from zhipuai.core import PYDANTIC_V2, ConfigDict
 
 from langchain_chatchat.chat_models.platform_tools_message import (
     PlatformToolsMessageChunk,
@@ -88,7 +89,6 @@ from langchain_chatchat.chat_models.platform_tools_message import (
 if TYPE_CHECKING:
     from langchain_core.runnables import Runnable, RunnableConfig
     from langchain_core.tools import BaseTool
-    from zhipuai.core import BaseModel
 
 logger = logging.getLogger(__name__)
 
