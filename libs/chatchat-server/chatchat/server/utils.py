@@ -33,6 +33,8 @@ from chatchat.server.pydantic_v2 import BaseModel, Field
 from chatchat.utils import build_logger
 import requests
 
+from langchain_chatchat.embeddings.zhipuai import ZhipuAIEmbeddings
+
 logger = build_logger()
 
 
@@ -395,10 +397,18 @@ def get_Embeddings(
                 base_url=model_info.get("api_base_url").replace("/v1", ""),
                 model=embed_model,
             )
+        elif model_info.get("platform_type") == "zhipuai":
+            return ZhipuAIEmbeddings(
+                base_url=model_info.get("api_base_url"),
+                api_key=model_info.get("api_key"),
+                zhipuai_proxy=model_info.get("api_proxy"),
+                model=embed_model,
+            )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
         logger.exception(f"failed to create Embeddings for model: {embed_model}.")
+        raise e
 
 
 def check_embed_model(embed_model: str = None) -> Tuple[bool, str]:

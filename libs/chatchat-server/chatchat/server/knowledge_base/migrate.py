@@ -128,13 +128,18 @@ def folder2db(
         ):
             if success:
                 _, filename, docs = res
-                print(
-                    f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档"
-                )
-                kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
-                kb_file.splited_docs = docs
-                kb.add_doc(kb_file=kb_file, not_refresh_vs_cache=True)
-                result.append({"kb_name": kb_name, "file": filename, "docs": docs})
+                try:
+                    print(
+                        f"正在将 {kb_name}/{filename} 添加到向量库，共包含{len(docs)}条文档"
+                    )
+                    kb_file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
+                    kb_file.splited_docs = docs
+                    kb.add_doc(kb_file=kb_file, not_refresh_vs_cache=True)
+                    result.append({"kb_name": kb_name, "file": filename, "docs": docs})
+
+                except Exception as e:
+                    msg = f"{e}，已跳过，{filename}"
+                    logger.error(f"{e.__class__.__name__}: {msg}")
             else:
                 print(res)
         return result

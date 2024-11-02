@@ -259,7 +259,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "custom openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "zhipuai", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
