@@ -184,7 +184,7 @@ async def chat(
                 data["tool_calls"] = []
                 data["message_type"] = MsgType.TEXT
                 if isinstance(item, PlatformToolsAction):
-                    print("PlatformToolsAction:" + str(item.to_json()))
+                    logger.info("PlatformToolsAction:" + str(item.to_json()))
                     data["text"] = item.log
                     tool_call = {
                         "index": 0,
@@ -200,7 +200,7 @@ async def chat(
                     data["tool_calls"].append(tool_call)
 
                 elif isinstance(item, PlatformToolsFinish):
-                    print("PlatformToolsFinish:" + str(item.to_json()))
+                    logger.info("PlatformToolsFinish:" + str(item.to_json()))
                     data["text"] = item.log
 
                     last_tool.update(
@@ -216,7 +216,7 @@ async def chat(
                         ...
 
                 elif isinstance(item, PlatformToolsActionToolStart):
-                    print("PlatformToolsActionToolStart:" + str(item.to_json()))
+                    logger.info("PlatformToolsActionToolStart:" + str(item.to_json()))
 
                     last_tool = {
                         "index": 0,
@@ -232,7 +232,7 @@ async def chat(
                     data["tool_calls"].append(last_tool)
 
                 elif isinstance(item, PlatformToolsActionToolEnd):
-                    print("PlatformToolsActionToolEnd:" + str(item.to_json()))
+                    logger.info("PlatformToolsActionToolEnd:" + str(item.to_json()))
                     last_tool.update(
                         tool_output=item.tool_output,
                         is_error=False,
@@ -249,7 +249,7 @@ async def chat(
                 elif isinstance(item, PlatformToolsLLMStatus):
 
                     if item.status == AgentStatus.llm_end:
-                        print("llm_end:" + item.text)
+                        logger.info("llm_end:" + item.text)
                         data["text"] = item.text
 
                 ret = OpenAIChatOutput(
@@ -270,7 +270,6 @@ async def chat(
             return
         except Exception as e:
             logger.error(f"error in chat: {e}")
-            e.printStackTrace()
             yield {"data": json.dumps({"error": str(e)})}
             return
 
