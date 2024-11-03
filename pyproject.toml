@@ -10,6 +10,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.12,!=3.9.7"
+zhipuai = "^2.1.5.20230904"
 
 
 [tool.ruff]

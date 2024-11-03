@@ -16,6 +16,7 @@ from chatchat.server.api_server.kb_routes import kb_router
 from chatchat.server.api_server.openai_routes import openai_router
 from chatchat.server.api_server.server_routes import server_router
 from chatchat.server.api_server.tool_routes import tool_router
+from chatchat.server.api_server.api_routes import api_router
 from chatchat.server.chat.completion import completion
 from chatchat.server.utils import MakeFastAPIOffline
 from chatchat.server.api_server.flow_routes import flow_router
@@ -46,6 +47,7 @@ def create_app(run_mode: str = None):
     app.include_router(graph_router)
     app.include_router(openai_router)
     app.include_router(server_router)
+    app.include_router(api_router)
     if Settings.model_settings.USE_RERANKER:
         from chatchat.server.api_server.reranker_router import reranker_router
         app.include_router(reranker_router)

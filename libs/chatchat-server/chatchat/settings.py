@@ -97,7 +97,7 @@ class BasicSettings(BaseFileSettings):
     SQLALCHEMY_DATABASE_URI: str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """知识库信息数据库连接URI"""
 
-    OPEN_CROSS_DOMAIN: bool = False
+    OPEN_CROSS_DOMAIN: bool = True
     """API 是否开启跨域"""
 
     DEFAULT_BIND_HOST: str = "0.0.0.0" if sys.platform != "win32" else "127.0.0.1"
