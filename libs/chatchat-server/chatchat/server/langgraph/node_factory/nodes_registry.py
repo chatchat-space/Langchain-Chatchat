@@ -11,7 +11,7 @@ def regist_nodes(
     add node to regstiry automatically
     """
     def decorator(def_func: Callable):
-        _NODES_REGISTRY[def_func.__name__] = def_func
+        _NODES_REGISTRY[title] = def_func
         # def wrapper(*args, **kwargs):
         #     result = def_func(*args, **kwargs)
         #     return result

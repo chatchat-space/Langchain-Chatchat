@@ -12,6 +12,7 @@ from chatchat.server.chat.graph_chat import graph_chat
 from chatchat.server.chat.kb_chat import kb_chat
 from chatchat.server.chat.feedback import chat_feedback
 from chatchat.server.chat.file_chat import file_chat
+from chatchat.server.chat.flow_chat import flow_chat
 from chatchat.server.db.repository import add_message_to_db
 from chatchat.server.utils import (
     get_OpenAIClient,
@@ -90,6 +91,36 @@ async def chat_completions(
                         },
                     }
     conversation_id = extra.get("conversation_id")
+
+    # chat based on graph
+    if flow:= extra.get("flow"):
+        try:
+            message_id = (
+                add_message_to_db(
+                    chat_type="agent_chat",
+                    query=body.messages[-1]["content"],
+                    conversation_id=conversation_id,
+                )
+                if conversation_id
+                else None
+            )
+        except Exception as e:
+            logger.warning(f"failed to add message to db: {e}")
+            message_id = None
+        result = await flow_chat(
+                query=body.messages[-1]["content"],
+                model=body.model,
+                flow=flow,
+                metadata=extra.get("metadata", {}),
+                conversation_id=conversation_id,
+                message_id=message_id,
+                flow_thread_id=extra.get("thread_id"),
+                node_id=extra.get("node_id"),
+                max_tokens=body.max_tokens,
+                temperature=body.temperature,
+                stream=body.stream,
+            )
+        return result
     # chat based on result from one choiced tool
     if body.tool_choice:
         tool = get_tool(body.tool_choice["function"]["name"])
