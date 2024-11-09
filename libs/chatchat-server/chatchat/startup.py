@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import logging.config
-import multiprocessing
 import multiprocessing as mp
 import os
 import sys
@@ -357,7 +356,7 @@ def main(all, api, webui):
     # 添加这行代码
     cwd = os.getcwd()
     sys.path.append(cwd)
-    multiprocessing.freeze_support()
+    mp.freeze_support()
     print("cwd:" + cwd)
     from chatchat.server.knowledge_base.migrate import create_tables
 
