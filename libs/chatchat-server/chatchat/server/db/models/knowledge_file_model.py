@@ -23,7 +23,10 @@ class KnowledgeFileModel(Base):
     create_time = Column(DateTime, default=func.now(), comment="创建时间")
 
     def __repr__(self):
-        return f"<KnowledgeFile(id='{self.id}', file_name='{self.file_name}', file_ext='{self.file_ext}', kb_name='{self.kb_name}', document_loader_name='{self.document_loader_name}', text_splitter_name='{self.text_splitter_name}', file_version='{self.file_version}', create_time='{self.create_time}')>"
+        return (f"<KnowledgeFile(id='{self.id}', file_name='{self.file_name}', file_ext='{self.file_ext}', kb_name='{self.kb_name}',"
+                f" document_loader_name='{self.document_loader_name}', text_splitter_name='{self.text_splitter_name}', "
+                f" file_version='{self.file_version}', file_mtime='{self.file_mtime}', file_size='{self.file_size}',"
+                f" custom_docs='{self.custom_docs}', docs_count='{self.docs_count}', create_time='{self.create_time}')>")
 
 
 class FileDocModel(Base):

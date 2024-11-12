@@ -5,7 +5,7 @@ from chatchat.server.db.base import Base
 
 class SummaryChunkModel(Base):
     """
-    chunk summary模型，用于存储file_doc中每个doc_id的chunk 片段，
+    chunk summary模型，用于存储file_doc中每个doc_id的chunk片段，
     数据来源:
         用户输入: 用户上传文件，可填写文件的描述，生成的file_doc中的doc_id，存入summary_chunk中
         程序自动切分 对file_doc表meta_data字段信息中存储的页码信息，按每页的页码切分，自定义prompt生成总结文本，将对应页码关联的doc_id存入summary_chunk中
@@ -27,5 +27,5 @@ class SummaryChunkModel(Base):
     def __repr__(self):
         return (
             f"<SummaryChunk(id='{self.id}', kb_name='{self.kb_name}', summary_context='{self.summary_context}',"
-            f" doc_ids='{self.doc_ids}', metadata='{self.metadata}')>"
+            f" summary_id='{self.summary_id}', doc_ids='{self.doc_ids}', metadata='{self.metadata}')>"
         )
