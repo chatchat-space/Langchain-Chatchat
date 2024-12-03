@@ -2,10 +2,10 @@ import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from NorthinfoChat.server.db.base import Base
 
-username = 'root'
-hostname = '192.168.102.7'
-database_name = 'northinfo'
-password = "123456"
+username = ''
+hostname = ''
+database_name = ''
+password = ""
 
 SQLALCHEMY_DATABASE_URI = f"mysql+asyncmy://{username}:{password}@{hostname}/{database_name}?charset=utf8mb4"
 
