@@ -1,8 +1,7 @@
-from chatchat.server.db.models.knowledge_base_model import (
-    KnowledgeBaseModel,
-    KnowledgeBaseSchema,
-)
-from chatchat.server.db.session import with_session
+from chatchat.server.db.model.knowledge_base_model import KnowledgeBaseModel, KnowledgeBaseSchema
+from sqlalchemy import select, delete
+from chatchat.server.db.session import with_async_session, async_session_scope
+import asyncio
 
 
 @with_async_session
@@ -101,6 +100,11 @@ async def load_kb_from_db(session, kb_name):
     else:
         kb_name, vs_type, embed_model = None, None, None
     return kb_name, vs_type, embed_model
+
+
+if __name__ == '__main__':
+    r = asyncio.run(list_kbs_from_db())
+    print(r)
 
 
 if __name__ == '__main__':
