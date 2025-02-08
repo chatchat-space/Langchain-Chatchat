@@ -219,6 +219,7 @@ def kb_chat(api: ApiRequest):
             ])
 
         text = ""
+        reasoning_text=""
         first = True
 
         try:
@@ -228,8 +229,23 @@ def kb_chat(api: ApiRequest):
                     chat_box.update_msg("", streaming=False)
                     first = False
                     continue
-                text += d.choices[0].delta.content or ""
-                chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
+                reasoning_content = getattr(d.choices[0].delta, "reasoning_content", None)
+                if reasoning_content:
+                    if reasoning_text=="":
+                        chat_box.insert_msg(
+                            Markdown("...", in_expander=True, title="深度思考", state="running", expanded=True)
+                        )
+                    reasoning_text += reasoning_content
+                    chat_box.update_msg(reasoning_text, streaming=True, state="running")
+                    continue
+                else:
+                    content = getattr(d.choices[0].delta, "content", None)
+                    if content:
+                        if text=="" and reasoning_text!="":
+                            chat_box.update_msg(reasoning_text,  streaming=False, state="complete")
+                            chat_box.insert_msg("")
+                        text += content
+                        chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
             chat_box.update_msg(text, streaming=False)
             # TODO: 搜索未配置API KEY时产生报错
         except Exception as e:

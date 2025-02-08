@@ -395,6 +395,7 @@ def dialogue_page(
 
         chat_box.ai_say("正在思考...")
         text = ""
+        reasoning_text= ""
         started = False
 
         client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE")
@@ -519,10 +520,24 @@ def dialogue_page(
                             for img in d.tool_output.get("images", []):
                                 chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
                         else:
-                            text += d.choices[0].delta.content or ""
-                            chat_box.update_msg(
-                                text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                            )
+                            reasoning_content = getattr(d.choices[0].delta, "reasoning_content", None)
+                            if reasoning_content:
+                                if reasoning_text=="":
+                                    chat_box.insert_msg(
+                                        Markdown("...", in_expander=True, title="深度思考", state="running", expanded=True)
+                                    )
+                                reasoning_text += reasoning_content
+                                chat_box.update_msg(reasoning_text, streaming=True, state="running")
+                                continue
+                            else:
+                                content = getattr(d.choices[0].delta, "content", None)
+                                if content:
+                                    if text=="" and reasoning_text!="":
+                                        #正式答案开始首次输出后，结束之前的深度思考
+                                        chat_box.update_msg(reasoning_text,  streaming=False, state="complete")
+                                        chat_box.insert_msg("")
+                                    text += content
+                                    chat_box.update_msg(text.replace("\n", "\n\n"), streaming=True)
                     chat_box.update_msg(text, streaming=False, metadata=metadata)
             except Exception as e:
                 st.error(e.body)
