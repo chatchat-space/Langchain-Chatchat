@@ -25,6 +25,7 @@ Langchain-Chatchat 自 0.3.0 版本起，为方便支持用户使用 pip 方式�
 > [!Note]
 > 如果您使用 Conda 或 Pyenv 作为您的环境/包管理器，在安装Poetry之后，
 > 使用如下命令使 Poetry 使用 virtualenv python environment (`poetry config virtualenvs.prefer-active-python true`)
+> (注意：从Poetry2.0.0版本开始virtualenvs.prefer-active-python被virtualenvs.use-poetry-python替代，并且默认使用active Python环境)
 
 ### 1.2 安装源代码/开发部署所需依赖库
 
