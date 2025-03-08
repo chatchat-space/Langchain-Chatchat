@@ -39,20 +39,21 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
     models = {}
     prompts = {}
     for model_type, params in configs.items():
-        model_name = params.get("model", "").strip() or get_default_llm()
-        callbacks = callbacks if params.get("callbacks", False) else None
+        model_name = list(params.keys())[0].strip() or get_default_llm()
+        params_model = params[model_name]
+        callbacks = callbacks if params_model.get("callbacks", False) else None
         # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
-        max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
+        max_tokens_value = max_tokens if max_tokens is not None else params_model.get("max_tokens", 1000)
         model_instance = get_ChatOpenAI(
             model_name=model_name,
-            temperature=params.get("temperature", 0.5),
+            temperature=params_model.get("temperature", 0.5),
             max_tokens=max_tokens_value,
             callbacks=callbacks,
             streaming=stream,
             local_wrap=True,
         )
         models[model_type] = model_instance
-        prompt_name = params.get("prompt_name", "default")
+        prompt_name = params_model.get("prompt_name", "default")
         prompt_template = get_prompt_template(type=model_type, name=prompt_name)
         prompts[model_type] = prompt_template
     return models, prompts
