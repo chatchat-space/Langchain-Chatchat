@@ -318,8 +318,9 @@ class ApiModelSettings(BaseFileSettings):
     HISTORY_LEN: int = 3
     """默认历史对话轮数"""
 
-    MAX_TOKENS: t.Optional[int] = None # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
-    """大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度"""
+    MAX_TOKENS: t.Optional[int] = 4096 # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
+    """ 大模型支持的最大长度。填写后，如果调用模型时请求体中设置了 `max_tokens`，则优先使用请求体中的 `max_tokens` 值；否则，将使用此默认值。"""
+
 
     TEMPERATURE: float = 0.7
     """LLM通用对话参数"""
