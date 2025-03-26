@@ -104,10 +104,11 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
         if s := re.findall(
-            r"\nAction:\s*(.+)\nAction\sInput:\s*(.+)", text, flags=re.DOTALL
+            r"\*{0,2}Action:\*{0,2}\s*(.+?)\s*\*{0,2}Action Input:\*{0,2}\s*(?:```(?:json\n)?)?({.*?})(?:```)?", text, flags=re.DOTALL
         ):
             s = s[-1]
-            json_string: str = s[1]
+            tool_name: str = s[0].replace("[", "").replace("]", "").replace("*", "").strip()
+            json_string: str = s[1].replace("\n", "").replace(" ", "").replace("*", "").strip()
             json_input = None
             try:
                 json_input = json.loads(json_string)
@@ -135,7 +136,7 @@ class QwenChatAgentOutputParserCustom(StructuredChatOutputParser):
             if "command" in json_input:
                 json_input["query"] = json_input.pop("command")
 
-            return AgentAction(tool=s[0].strip(), tool_input=json_input, log=text)
+            return AgentAction(tool=tool_name.strip(), tool_input=json_input, log=text)
         elif s := re.findall(r"\nFinal\sAnswer:\s*(.+)", text, flags=re.DOTALL):
             s = s[-1]
             return AgentFinish({"output": s}, log=text)
@@ -192,7 +193,7 @@ def create_structured_qwen_chat_agent(
         RunnablePassthrough.assign(agent_scratchpad=itemgetter("intermediate_steps"))
         | prompt
         | llm.bind(
-            stop=["<|endoftext|>", "<|im_start|>", "<|im_end|>", "\nObservation:"]
+            stop=["<|endoftext|>", "<|im_start|>", "<|im_end|>", "\nObservation:", "\n**Observation:**"]
         )
         | output_parser
     )
