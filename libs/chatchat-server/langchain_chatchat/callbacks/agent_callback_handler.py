@@ -60,16 +60,18 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
                     "status": AgentStatus.llm_new_token,
                     "text": before_action + "\n",
                 }
+                self.done.clear()
                 self.queue.put_nowait(dumps(data))
-                self.out = False
+
                 break
 
-        if token is not None and token != "" and not self.out:
+        if token is not None and token != "":
             data = {
                 "run_id": str(kwargs["run_id"]),
                 "status": AgentStatus.llm_new_token,
                 "text": token,
             }
+            self.done.clear()
             self.queue.put_nowait(dumps(data))
 
     async def on_chat_model_start(

@@ -164,8 +164,8 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
             raise ValueError
 
         callback = AgentExecutorAsyncIteratorCallbackHandler()
-        callbacks = [callback]
-
+        callbacks = [callback] +  llm.callbacks
+        llm.callbacks = callbacks
         llm_with_all_tools = None
 
         temp_tools = []
@@ -245,6 +245,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                     )
 
                 elif data["status"] == AgentStatus.llm_new_token:
+                    print(data["text"])
                     class_status = PlatformToolsLLMStatus(
                         run_id=data["run_id"],
                         status=data["status"],

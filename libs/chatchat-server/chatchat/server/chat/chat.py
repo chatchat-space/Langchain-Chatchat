@@ -249,9 +249,7 @@ async def chat(
                         ...
                 elif isinstance(item, PlatformToolsLLMStatus):
 
-                    if item.status == AgentStatus.llm_end:
-                        logger.info("llm_end:" + item.text)
-                        data["text"] = item.text
+                    data["text"] = item.text
 
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
@@ -263,6 +261,7 @@ async def chat(
                     status=data["status"],
                     message_type=data["message_type"],
                     message_id=message_id,
+                    class_name=item.class_name()
                 )
                 yield ret.model_dump_json()
 
