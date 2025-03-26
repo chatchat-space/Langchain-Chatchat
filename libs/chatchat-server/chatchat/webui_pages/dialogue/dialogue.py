@@ -17,7 +17,7 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_paste_button import paste_image_button
 
 from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
@@ -397,7 +397,7 @@ def dialogue_page(
         text = ""
         started = False
 
-        client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE")
+        client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE", timeout=100000)
         if is_vision_chat: # multimodal chat
             content = [
                 {"type": "text", "text": prompt},

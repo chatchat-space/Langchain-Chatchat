@@ -663,105 +663,99 @@ class PromptSettings(BaseFileSettings):
     '''RAG 用模板，可用于知识库问答、文件对话、搜索引擎对话'''
 
     action_model: dict = {
-        "GPT-4": (
-            "Answer the following questions as best you can. You have access to the following tools:\n"
-            "The way you use the tools is by specifying a json blob.\n"
-            "Specifically, this json should have a `action` key (with the name of the tool to use) and a `action_input` key (with the input to the tool going here).\n"
-            'The only values that should be in the "action" field are: {tool_names}\n'
-            "The $JSON_BLOB should only contain a SINGLE action, do NOT return a list of multiple actions. Here is an example of a valid $JSON_BLOB:\n"
-            "```\n\n"
-            "{{{{\n"
-            '  "action": $TOOL_NAME,\n'
-            '  "action_input": $INPUT\n'
-            "}}}}\n"
-            "```\n\n"
-            "ALWAYS use the following format:\n"
-            "Question: the input question you must answer\n"
-            "Thought: you should always think about what to do\n"
-            "Action:\n"
-            "```\n\n"
-            "$JSON_BLOB"
-            "```\n\n"
-            "Observation: the result of the action\n"
-            "... (this Thought/Action/Observation can repeat N times)\n"
-            "Thought: I now know the final answer\n"
-            "Final Answer: the final answer to the original input question\n"
-            "Begin! Reminder to always use the exact characters `Final Answer` when responding.\n"
-            "Question:{input}\n"
-            "Thought:{agent_scratchpad}\n"
+        "default": {
+            "SYSTEM_PROMPT": (
+                "You are a helpful assistant"
             ),
-        "ChatGLM3": (
-            "You can answer using the tools.Respond to the human as helpfully and accurately as possible.\n"
-            "You have access to the following tools:\n"
-            "{tools}\n"
-            "Use a json blob to specify a tool by providing an action key (tool name)\n"
-            "and an action_input key (tool input).\n"
-            'Valid "action" values: "Final Answer" or  [{tool_names}]\n'
-            "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
-            "```\n"
-            "{{{{\n"
-            '  "action": $TOOL_NAME,\n'
-            '  "action_input": $INPUT\n'
-            "}}}}\n"
-            "```\n\n"
-            "Follow this format:\n\n"
-            "Question: input question to answer\n"
-            "Thought: consider previous and subsequent steps\n"
-            "Action:\n"
-            "```\n"
-            "$JSON_BLOB\n"
-            "```\n"
-            "Observation: action result\n"
-            "... (repeat Thought/Action/Observation N times)\n"
-            "Thought: I know what to respond\n"
-            "Action:\n"
-            "```\n"
-            "{{{{\n"
-            '  "action": "Final Answer",\n'
-            '  "action_input": "Final response to human"\n'
-            "}}}}\n"
-            "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary.\n"
-            "Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.\n"
-            "Question: {input}\n\n"
-            "{agent_scratchpad}\n"
+        },
+        "openai-functions": {
+            "SYSTEM_PROMPT": (
+                "Answer the following questions as best you can. You have access to the following tools:\n"
+                "The way you use the tools is by specifying a json blob.\n"
+                "Specifically, this json should have a `action` key (with the name of the tool to use) and a `action_input` key (with the input to the tool going here).\n"
+                'The only values that should be in the "action" field are: {tool_names}\n'
+                "The $JSON_BLOB should only contain a SINGLE action, do NOT return a list of multiple actions. Here is an example of a valid $JSON_BLOB:\n"
+                "```\n\n"
+                "{{{{\n"
+                '  "action": $TOOL_NAME,\n'
+                '  "action_input": $INPUT\n'
+                "}}}}\n"
+                "```\n\n"
+                "ALWAYS use the following format:\n"
+                "Question: the input question you must answer\n"
+                "Thought: you should always think about what to do\n"
+                "Action:\n"
+                "```\n\n"
+                "$JSON_BLOB"
+                "```\n\n"
+                "Observation: the result of the action\n"
+                "... (this Thought/Action/Observation can repeat N times)\n"
+                "Thought: I now know the final answer\n"
+                "Final Answer: the final answer to the original input question\n"
+                "Begin! Reminder to always use the exact characters `Final Answer` when responding.\n"
             ),
-        "qwen": (
-            "Answer the following questions as best you can. You have access to the following APIs:\n\n"
-            "{tools}\n\n"
-            "Use the following format:\n\n"
-            "Question: the input question you must answer\n"
-            "Thought: you should always think about what to do\n"
-            "Action: the action to take, should be one of [{tool_names}]\n"
-            "Action Input: the input to the action\n"
-            "Observation: the result of the action\n"
-            "... (this Thought/Action/Action Input/Observation can be repeated zero or more times)\n"
-            "Thought: I now know the final answer\n"
-            "Final Answer: the final answer to the original input question\n\n"
-            "Format the Action Input as a JSON object.\n\n"
-            "Begin!\n\n"
-            "Question: {input}\n\n"
-            "{agent_scratchpad}\n\n"
+            "HUMAN_MESSAGE": (
+                "Question:{input}\n"
+                "Thought:{agent_scratchpad}\n"
+            )
+        },
+        "glm3": {
+            "SYSTEM_PROMPT": ("\nAnswer the following questions as best as you can. You have access to the following "
+                              "tools:\n{tools}"),
+            "HUMAN_MESSAGE": "Let's start! Human:{input}\n\n{agent_scratchpad}"
+
+        },
+        "qwen": {
+            "SYSTEM_PROMPT": (
+                "Answer the following questions as best you can. You have access to the following APIs:\n\n"
+                "{tools}\n\n"
+                "Use the following format:\n\n"
+                "Question: the input question you must answer\n"
+                "Thought: you should always think about what to do\n"
+                "Action: the action to take, should be one of [{tool_names}]\n"
+                "Action Input: the input to the action\n"
+                "Observation: the result of the action\n"
+                "... (this Thought/Action/Action Input/Observation can be repeated zero or more times)\n"
+                "Thought: I now know the final answer\n"
+                "Final Answer: the final answer to the original input question\n\n"
+                "Format the Action Input as a JSON object.\n\n"
+                "Begin!\n\n"),
+            "HUMAN_MESSAGE": (
+                "Question: {input}\n\n"
+                "{agent_scratchpad}\n\n")
+        },
+        "structured-chat-agent": {
+            "SYSTEM_PROMPT": (
+                "Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n"
+                "{tools}\n\n"
+                "Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\n"
+                'Valid "action" values: "Final Answer" or {tool_names}\n\n'
+                "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
+                '```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\n'
+                "Follow this format:\n\n"
+                "Question: input question to answer\n"
+                "Thought: consider previous and subsequent steps\n"
+                "Action:\n```\n$JSON_BLOB\n```\n"
+                "Observation: action result\n"
+                "... (repeat Thought/Action/Observation N times)\n"
+                "Thought: I know what to respond\n"
+                'Action:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n\n'
+                "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation\n"
             ),
-        "structured-chat-agent": (
-            "Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n"
-            "{tools}\n\n"
-            "Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\n"
-            'Valid "action" values: "Final Answer" or {tool_names}\n\n'
-            "Provide only ONE action per $JSON_BLOB, as shown:\n\n"
-            '```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\n'
-            "Follow this format:\n\n"
-            "Question: input question to answer\n"
-            "Thought: consider previous and subsequent steps\n"
-            "Action:\n```\n$JSON_BLOB\n```\n"
-            "Observation: action result\n"
-            "... (repeat Thought/Action/Observation N times)\n"
-            "Thought: I know what to respond\n"
-            'Action:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n\n'
-            "Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation\n"
-            "{input}\n\n"
-            "{agent_scratchpad}\n\n"
+            "HUMAN_MESSAGE": (
+                "{input}\n\n"
+                "{agent_scratchpad}\n\n"
+            )
             # '(reminder to respond in a JSON blob no matter what)')
+        },
+        "platform-agent": {
+            "SYSTEM_PROMPT": (
+                "You are a helpful assistant"
             ),
+            "HUMAN_MESSAGE": (
+                "{input}\n\n"
+            )
+        },
     }
     """Agent 模板"""
 

@@ -13,7 +13,7 @@ from openai.types.chat import (
 )
 
 from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus  # noaq
 from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
