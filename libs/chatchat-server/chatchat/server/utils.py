@@ -26,6 +26,7 @@ from fastapi import FastAPI
 from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
+from chatchat.server.chat.deepseek import DeepseekChatOpenAI
 from langchain_openai.llms import OpenAI
 from memoization import cached, CachingAlgorithmFlag
 
@@ -225,7 +226,7 @@ def get_ChatOpenAI(
         verbose: bool = True,
         local_wrap: bool = False,  # use local wrapped api
         **kwargs: Any,
-) -> ChatOpenAI:
+) -> DeepseekChatOpenAI:
     model_info = get_model_info(model_name)
     params = dict(
         streaming=streaming,
@@ -253,7 +254,7 @@ def get_ChatOpenAI(
                 openai_api_key=model_info.get("api_key"),
                 openai_proxy=model_info.get("api_proxy"),
             )
-        model = ChatOpenAI(**params)
+        model = DeepseekChatOpenAI(**params)
     except Exception as e:
         logger.exception(f"failed to create ChatOpenAI for model: {model_name}.")
         model = None
@@ -817,7 +818,7 @@ def get_httpx_client(
         default_proxies.update(proxies)
 
     # construct Client
-    kwargs.update(timeout=timeout, proxies=default_proxies)
+    kwargs.update(timeout=timeout)
 
     if use_async:
         return httpx.AsyncClient(**kwargs)

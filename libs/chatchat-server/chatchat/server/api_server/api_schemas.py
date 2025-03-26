@@ -115,6 +115,7 @@ class OpenAIAudioSpeechInput(OpenAIBaseInput):
 class OpenAIBaseOutput(BaseModel):
     id: Optional[str] = None
     content: Optional[str] = None
+    reasoning_content: Optional[str] = None
     model: Optional[str] = None
     object: Literal[
         "chat.completion", "chat.completion.chunk"
@@ -150,6 +151,7 @@ class OpenAIBaseOutput(BaseModel):
                 {
                     "delta": {
                         "content": self.content,
+                        "reasoning_content": self.reasoning_content,
                         "tool_calls": self.tool_calls,
                     },
                     "role": self.role,
