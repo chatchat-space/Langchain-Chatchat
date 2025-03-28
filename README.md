@@ -1,8 +1,8 @@
 ![](docs/img/logo-long-chatchat-trans-v2.png)
 <a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
+[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://pypi.org/project/langchain-chatchat/)
+[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://www.python.org/)
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 
