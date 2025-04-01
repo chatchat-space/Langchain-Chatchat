@@ -9,7 +9,7 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
+    Tuple, Union,
 )
 
 from langchain.agents.agent import AgentExecutor
@@ -264,13 +264,23 @@ class PlatformToolsAgentExecutor(AgentExecutor):
             )
         return AgentStep(action=agent_action, observation=observation)
 
+    def _consume_next_step(
+            self, values: NextStepOutput
+    ) -> Union[AgentFinish, List[Tuple[AgentAction, str]]]:
+        if isinstance(values[-1], AgentFinish):
+            return values[-1]
+        else:
+            return [
+                (a.action, a.observation) for a in values if isinstance(a, AgentStep)
+            ]
+
     async def _aperform_agent_action(
         self,
         name_to_tool_map: Dict[str, BaseTool],
         color_mapping: Dict[str, str],
         agent_action: AgentAction,
         run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
-    ) -> AgentStep:
+    ) -> Union[AgentFinish, AgentAction, AgentStep]:
         if run_manager:
             await run_manager.on_agent_action(
                 agent_action, verbose=self.verbose, color="green"
@@ -305,6 +315,8 @@ class PlatformToolsAgentExecutor(AgentExecutor):
                     callbacks=run_manager.get_child() if run_manager else None,
                     **tool_run_kwargs,
                 )
+        elif agent_action.tool == 'approved':
+            return AgentFinish(return_values={"output": "approved"}, log=agent_action.log)
         else:
             tool_run_kwargs = self.agent.tool_run_logging_kwargs()
             observation = await InvalidTool().arun(

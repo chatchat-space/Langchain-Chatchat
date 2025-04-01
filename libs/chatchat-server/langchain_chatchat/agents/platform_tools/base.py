@@ -245,7 +245,6 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                     )
 
                 elif data["status"] == AgentStatus.llm_new_token:
-                    print(data["text"])
                     class_status = PlatformToolsLLMStatus(
                         run_id=data["run_id"],
                         status=data["status"],

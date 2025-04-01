@@ -13,9 +13,13 @@ from langchain_chatchat.agents.platform_tools import PlatformToolsAction, Platfo
     PlatformToolsActionToolStart, \
     PlatformToolsActionToolEnd, PlatformToolsLLMStatus
 from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
+from humanlayer import HumanLayer
+
+hl = HumanLayer(verbose=True)
 
 
 @tool
+@hl.require_approval()
 def multiply(first_int: int, second_int: int) -> int:
     """Multiply two integers together."""
     return first_int * second_int

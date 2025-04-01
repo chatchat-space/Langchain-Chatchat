@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from typing import Sequence, Union, List, Dict, Any
 
+from langchain.agents.agent import NextStepOutput
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnablePassthrough
 from langchain_core.tools import BaseTool, ToolsRenderer, render_text_description
+from langchain_core.agents import AgentAction, AgentFinish
 
 from langchain_chatchat.agents.format_scratchpad.all_tools import (
     format_to_platform_tool_messages,
@@ -73,6 +75,26 @@ def create_platform_tools_agent(
     else:
         llm_with_stop = llm
 
+    def human_approval(values: NextStepOutput) -> NextStepOutput:
+        if isinstance(values, AgentFinish):
+            values = [values]
+        else:
+            values = values
+        if isinstance(values[-1], AgentFinish):
+            assert len(values) == 1
+            return values[-1]
+        tool_strs = "\n\n".join(
+            tool_call.tool for tool_call in values
+        )
+        input_msg = (
+            f"Do you approve of the following tool invocations\n\n{tool_strs}\n\n"
+            "Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no."
+        )
+        resp = input(input_msg)
+        if resp.lower() not in ("yes", "y"):
+            return [AgentAction(tool="approved", tool_input=resp, log= f"Tool invocations not approved:\n\n{tool_strs}")]
+        return values
+
     agent = (
             RunnablePassthrough.assign(
                 agent_scratchpad=lambda x: format_to_platform_tool_messages(
@@ -82,6 +104,7 @@ def create_platform_tools_agent(
             | prompt
             | llm_with_stop
             | PlatformToolsAgentOutputParser(instance_type="platform-agent")
+            | human_approval
     )
 
     return agent
