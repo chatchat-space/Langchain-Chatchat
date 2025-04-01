@@ -474,25 +474,28 @@ def dialogue_page(
                             text.replace("\n", "\n\n"), streaming=False, metadata=metadata
                         )
                     # tool 的输出与 llm 输出重复了
-                    # elif d.status == AgentStatus.tool_start:
-                    #     formatted_data = {
-                    #         "Function": d.choices[0].delta.tool_calls[0].function.name,
-                    #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
-                    #     }
-                    #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                    #     text = """\n```{}\n```\n""".format(formatted_json)
-                    #     chat_box.insert_msg( # TODO: insert text directly not shown
-                    #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
-                    # elif d.status == AgentStatus.tool_end:
-                    #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
-                    #     if d.message_type == MsgType.IMAGE:
-                    #         for url in json.loads(tool_output).get("images", []):
-                    #             url = f"{api.base_url}/media/{url}"
-                    #             chat_box.insert_msg(Image(url))
-                    #         chat_box.update_msg(expanded=False, state="complete")
-                    #     else:
-                    #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
-                    #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
+                    elif d.status == AgentStatus.tool_start:
+                        formatted_data = {
+                            "Function": d.choices[0].delta.tool_calls[0].function.name,
+                            "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+                        }
+                        formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                        text = """\n```{}\n```\n""".format(formatted_json)
+                        chat_box.insert_msg( # TODO: insert text directly not shown
+                            Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
+                    elif d.status == AgentStatus.tool_end:
+                        tool_output = d.choices[0].delta.tool_calls[0].tool_output
+                        if d.message_type == MsgType.IMAGE:
+                            for url in json.loads(tool_output).get("images", []):
+                                # 判断是否携带域名
+                                if not url.startswith("http"):
+                                    url = f"{api.base_url}/media/{url}"
+                                # md语法不支持，所以pos 跳过
+                                chat_box.insert_msg(Image(url), pos=-2)
+                            chat_box.update_msg(text, streaming=False, expanded=True, state="complete")
+                        else:
+                            text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
+                            chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
                     elif d.status == AgentStatus.agent_finish:
                         text = d.choices[0].delta.content or ""
                         chat_box.update_msg(text.replace("\n", "\n\n"))

@@ -104,7 +104,7 @@ def create_platform_tools_agent(
             | prompt
             | llm_with_stop
             | PlatformToolsAgentOutputParser(instance_type="platform-agent")
-            | human_approval
+            # | human_approval
     )
 
     return agent
