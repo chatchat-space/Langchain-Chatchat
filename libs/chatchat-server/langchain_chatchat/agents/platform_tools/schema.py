@@ -55,6 +55,20 @@ class PlatformToolsBaseComponent(BaseModel):
         return cls.from_dict(data, **kwargs)
 
 
+class PlatformToolsApprove(PlatformToolsBaseComponent):
+    """Approve or reject a tool input."""
+
+    run_id: str
+    status: int  # AgentStatus
+    tool: str
+    tool_input: Union[str, Dict[str, Any]]
+    log: str
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "PlatformToolsApprove"
+
+
 class PlatformToolsAction(PlatformToolsBaseComponent):
     """AgentFinish with run and thread metadata."""
 

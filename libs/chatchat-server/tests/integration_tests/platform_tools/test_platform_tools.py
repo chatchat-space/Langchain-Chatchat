@@ -19,7 +19,7 @@ hl = HumanLayer(verbose=True)
 
 
 @tool
-@hl.require_approval()
+# @hl.require_approval()
 def multiply(first_int: int, second_int: int) -> int:
     """Multiply two integers together."""
     return first_int * second_int
@@ -211,3 +211,40 @@ async def test_qwen_structured_chat_agent_tools(logging_conf):
         elif isinstance(item, PlatformToolsLLMStatus):
             if item.status == AgentStatus.llm_end:
                 print("llm_end:" + item.text)
+
+
+@pytest.mark.asyncio
+async def test_human_platform_tools(logging_conf):
+    logging.config.dictConfig(logging_conf)  # type: ignore
+
+    llm_params = get_ChatPlatformAIParams(
+        model_name="glm-4-plus",
+        temperature=0.01,
+        max_tokens=100,
+    )
+    llm = ChatPlatformAI(**llm_params)
+    agent_executor = PlatformToolsRunnable.create_agent_executor(
+        agent_type="platform-agent",
+        agents_registry=agents_registry,
+        llm=llm,
+        tools=[multiply, exp, add],
+        callbacks=[],
+    )
+
+    chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5")
+    async for item in chat_iterator:
+        if isinstance(item, PlatformToolsAction):
+            print("PlatformToolsAction:" + str(item.to_json()))
+
+        elif isinstance(item, PlatformToolsFinish):
+            print("PlatformToolsFinish:" + str(item.to_json()))
+
+        elif isinstance(item, PlatformToolsActionToolStart):
+            print("PlatformToolsActionToolStart:" + str(item.to_json()))
+
+        elif isinstance(item, PlatformToolsActionToolEnd):
+            print("PlatformToolsActionToolEnd:" + str(item.to_json()))
+        elif isinstance(item, PlatformToolsLLMStatus):
+            if item.status == AgentStatus.llm_end:
+                print("llm_end:" + item.text)
+

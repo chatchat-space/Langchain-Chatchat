@@ -4,7 +4,7 @@ source  https://github.com/langchain-ai/langchain-mcp-adapters
 from typing import Any, Type, Dict
 import inspect
 from mcp.server.fastmcp.utilities.func_metadata import ArgModelBase
-from pydantic import BaseModel, create_model, Field
+
 from langchain_core.tools import BaseTool, StructuredTool, ToolException
 from mcp import ClientSession
 from mcp.types import (
@@ -16,43 +16,38 @@ from mcp.types import (
 from mcp.types import (
     Tool as MCPTool,
 )
-from pydantic.fields import FieldInfo
+from pydantic.v1 import BaseModel, create_model, Field
+from pydantic.v1.fields import FieldInfo
 
 NonTextContent = ImageContent | EmbeddedResource
 
-from typing import Any, Type
-from pydantic import BaseModel, Field, create_model
 
+def schema_dict_to_model(schema: Dict[str, Any]) -> Any:
+    fields = schema.get('properties', {})
+    required_fields = schema.get('required', [])
 
-def schema_dict_to_model(schema: dict) -> Type[BaseModel]:
-    dynamic_pydantic_model_params = {}
-    for name, prop in schema.get("properties", {}).items():
-        # 简化类型映射
-        type_str = prop.get("type", "string")
-        if type_str == "integer":
-            py_type = int
-        elif type_str == "number":
-            py_type = float
-        elif type_str == "boolean":
-            py_type = bool
-        elif type_str == "array":
-            py_type = list
-        elif type_str == "object":
-            py_type = dict
+    model_fields = {}
+    for field_name, details in fields.items():
+        field_type_str = details['type']
+
+        if field_type_str == 'integer':
+            field_type = int
+        elif field_type_str == 'string':
+            field_type = str
+        elif field_type_str == 'number':
+            field_type = float
+        elif field_type_str == 'boolean':
+            field_type = bool
         else:
-            py_type = str
+            field_type = Any  # 可扩展更多类型
 
-        default = ... if name in schema.get("required", []) else None
-        field_info = FieldInfo.from_annotated_attribute(
-            py_type,
-            inspect.Parameter.empty
-        )
-        dynamic_pydantic_model_params[name] = (field_info.annotation, field_info)
+        if field_name in required_fields:
+            model_fields[field_name] = (field_type, ...)
+        else:
+            model_fields[field_name] = (field_type, None)
 
-    model_name = schema.get("title", "DynamicModel")
-    return create_model(model_name,
-                        **dynamic_pydantic_model_params,
-                        __base__=BaseModel)
+    DynamicSchema = create_model(schema.get('title', 'DynamicSchema'), **model_fields)
+    return DynamicSchema
 
 
 def _convert_call_tool_result(

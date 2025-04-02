@@ -51,7 +51,7 @@ from langchain_chatchat.agents.platform_tools.schema import (
     PlatformToolsActionToolEnd,
     PlatformToolsActionToolStart,
     PlatformToolsFinish,
-    PlatformToolsLLMStatus,
+    PlatformToolsLLMStatus, PlatformToolsApprove,
 )
 from langchain_chatchat.callbacks.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
@@ -156,7 +156,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
             tools: Sequence[
                 Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool]
             ] = None,
-            temperature: float = 0.7,
+            callbacks: List[BaseCallbackHandler] = None,
             **kwargs: Any,
     ) -> "PlatformToolsRunnable":
         """Create an ZhipuAI Assistant and instantiate the Runnable."""
@@ -164,8 +164,11 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
             raise ValueError
 
         callback = AgentExecutorAsyncIteratorCallbackHandler()
-        callbacks = [callback] +  llm.callbacks
-        llm.callbacks = callbacks
+        final_callbacks = [callback] + llm.callbacks
+        if callbacks:
+            final_callbacks.extend(callbacks)
+
+        llm.callbacks = final_callbacks
         llm_with_all_tools = None
 
         temp_tools = []
@@ -174,7 +177,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
 
             temp_tools.extend(
                 [
-                    t.copy(update={"callbacks": callbacks})
+                    t.copy(update={"callbacks": final_callbacks})
                     for t in tools
                     if not _is_assistants_builtin_tool(t)
                 ]
@@ -186,13 +189,13 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                 #       load with langchain_chatchat/agents/all_tools_agent.py:108
                 # AdapterAllTool implements it
                 if _is_assistants_builtin_tool(t):
-                    assistants_builtin_tools.append(cls.paser_all_tools(t, callbacks))
+                    assistants_builtin_tools.append(cls.paser_all_tools(t, final_callbacks))
             temp_tools.extend(assistants_builtin_tools)
 
         agent_executor = agents_registry(
             agent_type=agent_type,
             llm=llm,
-            callbacks=callbacks,
+            callbacks=final_callbacks,
             tools=temp_tools,
             llm_with_platform_tools=llm_with_all_tools,
             verbose=True,
@@ -263,6 +266,14 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
 
                 elif data["status"] == AgentStatus.tool_start:
                     class_status = PlatformToolsActionToolStart(
+                        run_id=data["run_id"],
+                        status=data["status"],
+                        tool_input=data["tool_input"],
+                        tool=data["tool"],
+                    )
+
+                elif data["status"] == AgentStatus.tool_require_approval:
+                    class_status = PlatformToolsApprove(
                         run_id=data["run_id"],
                         status=data["status"],
                         tool_input=data["tool_input"],

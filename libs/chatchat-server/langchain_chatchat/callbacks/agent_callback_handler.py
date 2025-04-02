@@ -1,21 +1,45 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+from typing import Generic, Iterable, TypeVar
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Tuple, Any, Awaitable, Callable, Dict, Optional
 from uuid import UUID
+from enum import Enum
 
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.schema import AgentAction, AgentFinish
+from langchain_community.callbacks.human import HumanRejectedException
+from langchain_core.callbacks import AsyncCallbackHandler
 from langchain_core.outputs import LLMResult
 
 from langchain_chatchat.agent_toolkits import BaseToolOutput
+from langchain_chatchat.callbacks.core.protocol import AgentBackend
 from langchain_chatchat.utils import History
+
+# Define TypeVars for input and output types
+T = TypeVar("T")
+R = TypeVar("R")
+
+
+async def _adefault_approve(_input: str) -> bool:
+    msg = (
+        "Do you approve of the following input? "
+        "Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no."
+    )
+    msg += "\n\n" + _input + "\n"
+    resp = input(msg)
+    return resp.lower() in ("yes", "y")
 
 
 def dumps(obj: Dict) -> str:
     return json.dumps(obj, ensure_ascii=False)
+
+
+class ApprovalMethod(Enum):
+    CLI = "cli"
+    BACKEND = "backend"
 
 
 class AgentStatus:
@@ -25,23 +49,33 @@ class AgentStatus:
     llm_end: int = 3
     agent_action: int = 4
     agent_finish: int = 5
-    tool_start: int = 6
-    tool_end: int = 7
+    tool_require_approval: int = 6
+    tool_start: int = 7
+    tool_end: int = 8
     error: int = -1
     chain_end: int = -999
 
 
 class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
-    def __init__(self):
+    approval_method: ApprovalMethod | None = None
+    backend: AgentBackend | None = None
+    raise_error: bool = True
+
+    def __init__(
+            self,
+            **kwargs
+    ):
         super().__init__()
         self.queue = asyncio.Queue()
         self.done = asyncio.Event()
         self.out = False
         self.intermediate_steps: List[Tuple[AgentAction, BaseToolOutput]] = []
         self.outputs: Dict[str, Any] = {}
+        self.approval_method = kwargs.get("approval_method", ApprovalMethod.CLI)
+        self.backend = kwargs.get("backend", None)
 
     async def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+            self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
         data = {
             "status": AgentStatus.llm_start,
@@ -75,15 +109,15 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             self.queue.put_nowait(dumps(data))
 
     async def on_chat_model_start(
-        self,
-        serialized: Dict[str, Any],
-        messages: List[List],
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
+            self,
+            serialized: Dict[str, Any],
+            messages: List[List],
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            metadata: Optional[Dict[str, Any]] = None,
+            **kwargs: Any,
     ) -> None:
         data = {
             "run_id": str(run_id),
@@ -103,7 +137,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_llm_error(
-        self, error: Exception | KeyboardInterrupt, **kwargs: Any
+            self, error: Exception | KeyboardInterrupt, **kwargs: Any
     ) -> None:
         data = {
             "status": AgentStatus.error,
@@ -112,15 +146,15 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_tool_start(
-        self,
-        serialized: Dict[str, Any],
-        input_str: str,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
+            self,
+            serialized: Dict[str, Any],
+            input_str: str,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            metadata: Optional[Dict[str, Any]] = None,
+            **kwargs: Any,
     ) -> None:
         data = {
             "run_id": str(run_id),
@@ -128,17 +162,32 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "tool": serialized["name"],
             "tool_input": input_str,
         }
+
+        if self.approval_method is ApprovalMethod.CLI:
+
+            self.done.clear()
+            self.queue.put_nowait(dumps(data))
+            if not await _adefault_approve(input_str):
+                raise HumanRejectedException(
+                    f"Inputs {input_str} to tool {serialized} were rejected."
+                )
+            pass
+        elif self.approval_method is ApprovalMethod.BACKEND:
+            pass
+        else:
+            raise ValueError("Approval method not recognized.")
+
         self.done.clear()
         self.queue.put_nowait(dumps(data))
 
     async def on_tool_end(
-        self,
-        output: Any,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
+            self,
+            output: Any,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
     ) -> None:
         """Run when tool ends running."""
         data = {
@@ -150,13 +199,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_tool_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
+            self,
+            error: BaseException,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
     ) -> None:
         """Run when tool errors."""
         data = {
@@ -169,13 +218,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_agent_action(
-        self,
-        action: AgentAction,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
+            self,
+            action: AgentAction,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
     ) -> None:
         data = {
             "run_id": str(run_id),
@@ -189,13 +238,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_agent_finish(
-        self,
-        finish: AgentFinish,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
+            self,
+            finish: AgentFinish,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
     ) -> None:
         if isinstance(finish.return_values["output"], str):
             if "Thought:" in finish.return_values["output"]:
@@ -217,15 +266,15 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_chain_start(
-        self,
-        serialized: Dict[str, Any],
-        inputs: Dict[str, Any],
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        **kwargs: Any,
+            self,
+            serialized: Dict[str, Any],
+            inputs: Dict[str, Any],
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            metadata: Optional[Dict[str, Any]] = None,
+            **kwargs: Any,
     ) -> None:
         """Run when chain starts running."""
         if "agent_scratchpad" in inputs:
@@ -249,13 +298,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_chain_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
-        **kwargs: Any,
+            self,
+            error: BaseException,
+            *,
+            run_id: UUID,
+            parent_run_id: Optional[UUID] = None,
+            tags: Optional[List[str]] = None,
+            **kwargs: Any,
     ) -> None:
         """Run when chain errors."""
         data = {
@@ -266,13 +315,13 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
 
     async def on_chain_end(
-        self,
-        outputs: Dict[str, Any],
-        *,
-        run_id: UUID,
-        parent_run_id: UUID | None = None,
-        tags: List[str] | None = None,
-        **kwargs: Any,
+            self,
+            outputs: Dict[str, Any],
+            *,
+            run_id: UUID,
+            parent_run_id: UUID | None = None,
+            tags: List[str] | None = None,
+            **kwargs: Any,
     ) -> None:
         # TODO agent params of PlatformToolsAgentExecutor or AgentExecutor  enable return_intermediate_steps=True,
         if "intermediate_steps" in outputs:
@@ -292,3 +341,4 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         self.queue.put_nowait(dumps(data))
         self.out = True
         # self.done.set()
+

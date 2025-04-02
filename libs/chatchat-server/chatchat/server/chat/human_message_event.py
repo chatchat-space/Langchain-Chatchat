@@ -25,9 +25,7 @@ def function_calls(
         msg = f"新增人类反馈消息事件出错： {e}"
         logger.error(f"{e.__class__.__name__}: {msg}")
         return BaseResponse(code=500, msg=msg)
-    # 同步更新对话框的评价
-    # update_human_message_event(message_id, comment, action)
-    return BaseResponse(code=200, msg=f"已反馈聊天记录 {message_id}", data={"call_id": call_id})
+    return BaseResponse(code=200, msg=f"已反馈聊天记录 {call_id}", data={"call_id": call_id})
 
 
 def get_function_call(call_id: str):
