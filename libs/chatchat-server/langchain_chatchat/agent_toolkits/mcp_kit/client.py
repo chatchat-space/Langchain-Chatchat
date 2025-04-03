@@ -11,6 +11,8 @@ from langchain_core.tools import BaseTool
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.sse import sse_client
 from mcp.client.stdio import stdio_client
+from mcp.types import Prompt
+
 from langchain_chatchat.agent_toolkits.mcp_kit.prompts import load_mcp_prompt
 from langchain_chatchat.agent_toolkits.mcp_kit.tools import load_mcp_tools
 
@@ -242,12 +244,42 @@ class MultiServerMCPClient:
 
         await self._initialize_session_and_load_tools(server_name, session)
 
+    async def session(
+            self, server_name: str) -> ClientSession:
+        """Get the session for a given MCP server."""
+        session = self.sessions.get(server_name)
+        if session is None:
+            raise ValueError(f"Session for server '{server_name}' not found.")
+        return session
+
     def get_tools(self) -> list[BaseTool]:
         """Get a list of all tools from all connected servers."""
         all_tools: list[BaseTool] = []
         for server_tools in self.server_name_to_tools.values():
             all_tools.extend(server_tools)
         return all_tools
+
+    async def get_tools_from_server(self, server_name: str) -> list[BaseTool]:
+        """Get tools from a specific MCP server."""
+        return self.server_name_to_tools.get(server_name, [])
+
+    async def get_tool(
+            self, server_name: str, tool_name: str
+    ) -> BaseTool | None:
+        """Get a specific tool from a given MCP server."""
+        tools = self.server_name_to_tools.get(server_name, [])
+        for tool in tools:
+            if tool.name == tool_name:
+                return tool
+        return None
+
+    async def list_prompts(
+            self, server_name: str
+    ) -> list[Prompt]:
+        """List all prompts from a given MCP server."""
+        session = self.sessions[server_name]
+        prompts = await session.list_prompts()
+        return [prompt for prompt in prompts.prompts]
 
     async def get_prompt(
             self, server_name: str, prompt_name: str, arguments: Optional[dict[str, Any]]

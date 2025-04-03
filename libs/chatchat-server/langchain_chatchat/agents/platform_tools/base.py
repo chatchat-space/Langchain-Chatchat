@@ -199,6 +199,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
             tools=temp_tools,
             llm_with_platform_tools=llm_with_all_tools,
             verbose=True,
+            **kwargs,
         )
 
         return cls(
