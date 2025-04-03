@@ -778,7 +778,7 @@ class PromptSettings(BaseFileSettings):
                 "<arguments>\n"
                 "{\n"
                 "  \"param1\": \"value1\",\n"
-                "  \"param2\": \"value2\"\n""
+                "  \"param2\": \"value2\"\n"
                 "}\n"
                 "</arguments>\n"
                 "</use_mcp_tool>\n"
