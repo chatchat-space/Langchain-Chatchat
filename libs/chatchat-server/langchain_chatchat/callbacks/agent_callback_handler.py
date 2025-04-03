@@ -165,12 +165,12 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
         if self.approval_method is ApprovalMethod.CLI:
 
-            self.done.clear()
-            self.queue.put_nowait(dumps(data))
-            if not await _adefault_approve(input_str):
-                raise HumanRejectedException(
-                    f"Inputs {input_str} to tool {serialized} were rejected."
-                )
+            # self.done.clear()
+            # self.queue.put_nowait(dumps(data))
+            # if not await _adefault_approve(input_str):
+            #     raise HumanRejectedException(
+            #         f"Inputs {input_str} to tool {serialized} were rejected."
+            #     )
             pass
         elif self.approval_method is ApprovalMethod.BACKEND:
             pass
