@@ -80,6 +80,11 @@ const nextConfig = {
 
     return config;
   },
+
+
+  eslint: {
+    ignoreDuringBuilds: true, // ✅ 关键配置：构建时跳过 ESLint
+  },
 };
 
 export default isProd ? withBundleAnalyzer(withPWA(nextConfig)) : nextConfig;

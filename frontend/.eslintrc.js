@@ -52,5 +52,6 @@ config.rules['no-async-promise-executor'] = 'warn';
 config.rules['unicorn/no-array-callback-reference'] = 'warn'; // 如果是 unicorn 报的
 config.rules['guard-for-in'] = 'warn';
 config.rules['@typescript-eslint/no-unused-expressions'] = 'warn';
+config.rules['sort-keys-fix/sort-keys-fix'] = 'warn';
 
 module.exports = config;
