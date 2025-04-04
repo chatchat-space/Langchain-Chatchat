@@ -5,9 +5,11 @@ from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplat
 from pydantic import BaseModel
 
 from chatchat.server.utils import get_prompt_template_dict
+from langchain_chatchat.agent_toolkits.mcp_kit.tools import MCPStructuredTool
 from langchain_chatchat.agents.all_tools_agent import PlatformToolsAgentExecutor
 from langchain_chatchat.agents.react.create_prompt_template import create_prompt_glm3_template, \
-    create_prompt_structured_react_template, create_prompt_platform_template, create_prompt_gpt_tool_template
+    create_prompt_structured_react_template, create_prompt_platform_template, create_prompt_gpt_tool_template, \
+    create_prompt_platform_knowledge_mode_template
 from langchain_chatchat.agents.structured_chat.glm3_agent import (
     create_structured_glm3_chat_agent,
 )
@@ -31,6 +33,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.tools import BaseTool
 
+from langchain_chatchat.agents.structured_chat.platform_knowledge_bind import create_platform_knowledge_agent
 from langchain_chatchat.agents.structured_chat.platform_tools_bind import create_platform_tools_agent
 from langchain_chatchat.agents.structured_chat.qwen_agent import create_qwen_chat_agent
 from langchain_chatchat.agents.structured_chat.structured_chat_agent import create_chat_agent
@@ -45,7 +48,6 @@ def agents_registry(
         verbose: bool = False,
         **kwargs: Any,
 ):
-
     # Write any optimized method here.
     # TODO agent params of PlatformToolsAgentExecutor or AgentExecutor  enable return_intermediate_steps=True,
     if "glm3" == agent_type:
@@ -104,7 +106,7 @@ def agents_registry(
     elif agent_type == 'structured-chat-agent':
 
         template = get_prompt_template_dict("action_model", agent_type)
-        prompt = create_prompt_structured_react_template(agent_type,template=template)
+        prompt = create_prompt_structured_react_template(agent_type, template=template)
         agent = create_chat_agent(llm=llm,
                                   tools=tools,
                                   prompt=prompt,
@@ -195,3 +197,30 @@ def agents_registry(
             "'tool-calling', 'openai-tools', 'openai-functions', "
             "'default','ChatGLM3','structured-chat-agent','platform-agent','qwen','glm3'"
         )
+
+
+def chatchat_context_registry(
+        agent_type: str,
+        llm: BaseLanguageModel,
+        mcp_tools: Sequence[MCPStructuredTool],
+        tools: Sequence[Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool]] = [],
+        callbacks: List[BaseCallbackHandler] = [],
+        verbose: bool = False,
+        **kwargs: Any,
+):
+    if "platform-knowledge-mode" == agent_type:
+        template = get_prompt_template_dict("action_model", agent_type)
+        prompt = create_prompt_platform_knowledge_mode_template(agent_type, template=template)
+        agent = create_platform_knowledge_agent(llm=llm,
+                                                tools=tools,
+                                                mcp_tools=mcp_tools,
+                                                prompt=prompt)
+
+        agent_executor = PlatformToolsAgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=verbose,
+            callbacks=callbacks,
+            return_intermediate_steps=True,
+        )
+        return agent_executor

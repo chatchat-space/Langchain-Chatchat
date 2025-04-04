@@ -115,7 +115,7 @@ class MultiServerMCPClient:
         self.sessions[server_name] = session
 
         # Load tools from this server
-        server_tools = await load_mcp_tools(session)
+        server_tools = await load_mcp_tools(server_name, session)
         self.server_name_to_tools[server_name] = server_tools
 
     async def connect_to_server(

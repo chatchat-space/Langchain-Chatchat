@@ -733,7 +733,7 @@ class PromptSettings(BaseFileSettings):
                 "{input}\n\n"
             )
         },
-        "platform-mcp": {
+        "platform-knowledge-mode": {
             "SYSTEM_PROMPT": (
                 "You are ChatChat,  a content manager, you are familiar with how to find data from complex projects and better respond to users\n"
                 "  \n"
@@ -762,9 +762,7 @@ class PromptSettings(BaseFileSettings):
                 "Always adhere to this format for the tool use to ensure proper parsing and execution.\n"
                 " \n"
                 "# Tools\n"
-                "\n"
-                "{tools}\n"
-                "\n"
+                "\n" 
                 "## use_mcp_tool\n"
                 "Description: Request to use a tool provided by a connected MCP server. Each MCP server can provide multiple tools with different capabilities. Tools have defined input schemas that specify required and optional parameters.\n"
                 "Parameters:\n"
@@ -907,18 +905,12 @@ class PromptSettings(BaseFileSettings):
                 "2. Work through these goals sequentially, utilizing available tools one at a time as necessary. Each goal should correspond to a distinct step in your problem-solving process. You will be informed on the work completed and what's remaining as you go.\n"
                 "3. Remember, you have extensive capabilities with access to a wide range of tools that can be used in powerful and clever ways as necessary to accomplish each goal. Before calling a tool, do some analysis within <thinking></thinking> tags. First, analyze the file structure provided in environment_details to gain context and insights for proceeding effectively. Then, think about which of the provided tools is the most relevant tool to accomplish the user's task.\n"
                 "4. The user may provide feedback, which you can use to make improvements and try again. But DO NOT continue in pointless back and forth conversations, i.e. don't end your responses with questions or offers for further assistance.\n"
-
-
             ),
             "HUMAN_MESSAGE": (
                 "{input}\n\n" 
                 "<environment_details>\n"
                 "# Current Time\n"
                 "{datetime}\n"
-                "\n"
-                "# Current Knowledge Base Information\n"
-                "- ({knowledge_base}): {knowledge_base_info}\n"
-                "\n"
                 "</environment_details>\n"
             )
         },

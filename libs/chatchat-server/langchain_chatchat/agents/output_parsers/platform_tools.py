@@ -12,6 +12,8 @@ from chatchat.server.pydantic_v1 import Field, model_schema, typing
 from typing_extensions import Literal
 
 from langchain_chatchat.agents.output_parsers import StructuredGLM3ChatOutputParser, QwenChatAgentOutputParserCustom
+from langchain_chatchat.agents.output_parsers.platform_knowledge_output_parsers import \
+    PlatformKnowledgeOutputParserCustom
 from langchain_chatchat.agents.output_parsers.structured_chat_output_parsers import StructuredChatOutputParserLC
 from langchain_chatchat.agents.output_parsers.tools_output.code_interpreter import (
     CodeInterpreterAgentAction,
@@ -74,6 +76,7 @@ class PlatformToolsAgentOutputParser(MultiActionAgentOutputParser):
     gpt_base_parser: AgentOutputParser = Field(default_factory=StructuredChatOutputParser)
     glm3_base_parser: AgentOutputParser = Field(default_factory=StructuredGLM3ChatOutputParser)
     qwen_base_parser: AgentOutputParser = Field(default_factory=QwenChatAgentOutputParserCustom)
+    knowledge_parser: AgentOutputParser = Field(default_factory=PlatformKnowledgeOutputParserCustom)
     base_parser: AgentOutputParser = Field(default_factory=StructuredChatOutputParserLC)
 
     @property
@@ -95,6 +98,8 @@ class PlatformToolsAgentOutputParser(MultiActionAgentOutputParser):
         elif self.instance_type == "platform-agent":
             message = result[0].message
             return parse_ai_message_to_platform_tool_action(message)
+        elif self.instance_type == "platform-knowledge-mode":
+            return self.knowledge_parser.parse(result[0].text)
         else:
             return self.base_parser.parse(result[0].text)
 

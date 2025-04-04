@@ -22,6 +22,10 @@ from pydantic.v1.fields import FieldInfo
 NonTextContent = ImageContent | EmbeddedResource
 
 
+class MCPStructuredTool(StructuredTool):
+    server_name: str
+
+
 def schema_dict_to_model(schema: Dict[str, Any]) -> Any:
     fields = schema.get('properties', {})
     required_fields = schema.get('required', [])
@@ -72,6 +76,7 @@ def _convert_call_tool_result(
 
 
 def convert_mcp_tool_to_langchain_tool(
+        server_name: str,
         session: ClientSession,
         tool: MCPTool,
 ) -> BaseTool:
@@ -80,6 +85,7 @@ def convert_mcp_tool_to_langchain_tool(
     NOTE: this tool can be executed only in a context of an active MCP client session.
 
     Args:
+        server_name: MCP server name
         session: MCP client session
         tool: MCP tool to convert
 
@@ -94,7 +100,8 @@ def convert_mcp_tool_to_langchain_tool(
         return _convert_call_tool_result(call_tool_result)
 
     tool_input_model = schema_dict_to_model(tool.inputSchema)
-    return StructuredTool(
+    return MCPStructuredTool(
+        server_name=server_name,
         name=tool.name,
         description=tool.description or "",
         args_schema=tool_input_model,
@@ -103,7 +110,7 @@ def convert_mcp_tool_to_langchain_tool(
     )
 
 
-async def load_mcp_tools(session: ClientSession) -> list[BaseTool]:
+async def load_mcp_tools(server_name: str, session: ClientSession) -> list[BaseTool]:
     """Load all available MCP tools and convert them to LangChain tools."""
     tools = await session.list_tools()
-    return [convert_mcp_tool_to_langchain_tool(session, tool) for tool in tools.tools]
+    return [convert_mcp_tool_to_langchain_tool(server_name, session, tool) for tool in tools.tools]
