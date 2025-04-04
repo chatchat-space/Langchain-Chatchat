@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { MobileNavBar } from '@lobehub/ui';
 import { memo } from 'react';
 

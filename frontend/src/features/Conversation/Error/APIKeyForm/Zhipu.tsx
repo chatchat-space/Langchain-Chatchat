@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { Zhipu } from '@lobehub/icons';
 import { Input } from 'antd';
-import { rgba } from 'polished';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,17 +21,16 @@ const ZhipuForm = memo(() => {
 
   return (
     <FormAction
-      avatar={<Zhipu.Color size={64} />}
-      background={rgba(Zhipu.colorPrimary, 0.1)}
+      avatar={<Zhipu size={56} />}
       description={t('unlock.apikey.Zhipu.description')}
       title={t('unlock.apikey.Zhipu.title')}
     >
       <Input.Password
         autoComplete={'new-password'}
         onChange={(e) => {
-          setConfig(ModelProvider.ZhiPu, { apiKey: e.target.value });
+          setConfig(ModelProvider.Zhipu, { apiKey: e.target.value });
         }}
-        placeholder={'*************************.****************'}
+        placeholder={'*********************************'}
         type={'block'}
         value={apiKey}
       />

@@ -45,9 +45,9 @@ export interface StoreAction {
       onMessageHandle: FetchSSEOptions['onMessageHandle'];
     },
   ) => void;
-  useFetcUpdateDocs: (arg: KnowledgeUpdateDocsParams) => Promise<Reseponse<NonNullable<unknown>>>;
+  useFetcUpdateDocs: (arg: KnowledgeUpdateDocsParams) => Promise<Reseponse<{}>>;
   useFetchKnowledgeAdd: (arg: KnowledgeFormFields) => Promise<Reseponse<KnowledgeFormFields>>;
-  useFetchKnowledgeDel: (name: string) => Promise<Reseponse<NonNullable<unknown>>>;
+  useFetchKnowledgeDel: (name: string) => Promise<Reseponse<{}>>;
   // useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<Reseponse<{}>>;
   useFetchKnowledgeDownloadDocs: (kbName: string, docName: string) => Promise<void>;
 

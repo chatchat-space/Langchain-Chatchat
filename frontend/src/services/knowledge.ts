@@ -66,7 +66,7 @@ class KnowledgeService {
     };
   };
 
-  uploadDocs = async (formData: FormData): Promise<Reseponse<NonNullable<unknown>>> => {
+  uploadDocs = async (formData: FormData): Promise<Reseponse<{}>> => {
     const res = await fetch(`${API_ENDPOINTS.knowledgeUploadDocs}`, {
       body: formData,
       method: 'POST',

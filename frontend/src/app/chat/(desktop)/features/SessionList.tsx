@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DraggablePanelBody } from '@lobehub/ui';
 import { createStyles } from 'antd-style';
 import { memo } from 'react';

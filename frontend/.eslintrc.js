@@ -53,5 +53,6 @@ config.rules['unicorn/no-array-callback-reference'] = 'warn'; // 如果是 unico
 config.rules['guard-for-in'] = 'warn';
 config.rules['@typescript-eslint/no-unused-expressions'] = 'warn';
 config.rules['sort-keys-fix/sort-keys-fix'] = 'warn';
+config.rules['typescript-sort-keys/interface'] = 'warn';
 
 module.exports = config;
