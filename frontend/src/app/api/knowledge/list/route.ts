@@ -2,21 +2,25 @@ import { NextResponse } from 'next/server';
 
 import { getServerConfig } from '@/config/server';
 
-export const GET = async (request: Request) => {
-  const { KNOWLEDGE_PROXY_URL } = getServerConfig(); // ✅ 延迟调用
+export const dynamic = 'force-dynamic';
 
+export const GET = async () => {
   try {
-    const fetchRes = await fetch(`${KNOWLEDGE_PROXY_URL}/list_knowledge_bases`);
+    const { KNOWLEDGE_PROXY_URL } = getServerConfig();
+    console.log('KNOWLEDGE_PROXY_URL:', KNOWLEDGE_PROXY_URL);
 
-    if (!fetchRes.ok) {
-      return NextResponse.json({ error: 'Failed to fetch' }, { status: fetchRes.status });
-    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // 3 秒超时
 
-    const data = await fetchRes.json();
-    return NextResponse.json(data);
+    const fetchRes = await fetch(`${KNOWLEDGE_PROXY_URL}/list_knowledge_bases`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    return fetchRes;
   } catch (err) {
+    console.error('API Error:', err);
     return NextResponse.json(
-      { error: 'Fetch failed', detail: (err as Error).message },
+      { error: 'API failure', message: err instanceof Error ? err.message : String(err) },
       { status: 500 },
     );
   }
