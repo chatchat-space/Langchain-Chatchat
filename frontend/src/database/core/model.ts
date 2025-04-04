@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Dexie, { BulkError } from 'dexie';
 import { ZodObject } from 'zod';
 

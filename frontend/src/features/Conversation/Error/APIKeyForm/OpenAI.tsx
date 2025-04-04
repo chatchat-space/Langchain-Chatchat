@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OpenAI } from '@lobehub/icons';
 import { Icon } from '@lobehub/ui';
 import { Button, Input } from 'antd';

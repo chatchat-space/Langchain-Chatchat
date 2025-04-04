@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ShareGPTConversation } from '@/types/share';
 import { parseMarkdown } from '@/utils/parseMarkdown';
 

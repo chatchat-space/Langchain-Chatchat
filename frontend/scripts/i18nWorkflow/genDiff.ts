@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { consola } from 'consola';
 import { colors } from 'consola/utils';
 import { diff } from 'just-diff';

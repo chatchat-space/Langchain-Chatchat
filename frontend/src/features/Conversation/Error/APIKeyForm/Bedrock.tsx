@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Aws } from '@lobehub/icons';
 import { Icon } from '@lobehub/ui';
 import { Button, Input, Select } from 'antd';

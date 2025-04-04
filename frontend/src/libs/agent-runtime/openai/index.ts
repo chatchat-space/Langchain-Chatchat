@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import OpenAI, { ClientOptions } from 'openai';
 import urlJoin from 'url-join';

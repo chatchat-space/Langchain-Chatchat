@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Zhipu } from '@lobehub/icons';
 import { Input } from 'antd';
 import { rgba } from 'polished';

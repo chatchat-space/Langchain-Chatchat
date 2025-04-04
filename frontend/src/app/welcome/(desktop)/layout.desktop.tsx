@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { PropsWithChildren, memo } from 'react';

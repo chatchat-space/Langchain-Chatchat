@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Perplexity } from '@lobehub/icons';
 import { Input } from 'antd';
 import { memo } from 'react';

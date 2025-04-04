@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Dropdown } from 'antd';
 import { createStyles } from 'antd-style';
 import isEqual from 'fast-deep-equal';

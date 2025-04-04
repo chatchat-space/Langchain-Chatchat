@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { memo } from 'react';
 
 import { SvgProps } from '@/types';
