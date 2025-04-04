@@ -2,7 +2,7 @@ import click
 from pathlib import Path
 import shutil
 import typing as t
-
+import os,sys
 from chatchat.startup import main as startup_main
 from chatchat.init_database import main as kb_main, create_tables, folder2db
 from chatchat.settings import Settings
@@ -11,7 +11,11 @@ from chatchat.server.utils import get_default_embedding
 
 
 logger = build_logger()
-
+script_dir = os.path.dirname(os.path.abspath(__file__))
+print("script_dir:", script_dir)
+module_path = os.path.join(script_dir, "../")
+sys.path.insert(0,module_path)
+print("sys.path:",sys.path)
 
 @click.group(help="chatchat 命令行工具")
 def main():
