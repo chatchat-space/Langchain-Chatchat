@@ -1,4 +1,4 @@
-import { ChatModelCard } from "../llm";
+import { ChatModelCard } from '../llm';
 
 export type CustomModels = { displayName: string; id: string }[];
 
@@ -24,74 +24,75 @@ export interface AzureOpenAIConfig {
   deployments: string;
   enabled: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface ZhiPuConfig {
   apiKey?: string;
   enabled: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface MoonshotConfig {
   apiKey?: string;
   enabled: boolean;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface GoogleConfig {
   apiKey?: string;
   enabled: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface AWSBedrockConfig {
   accessKeyId?: string;
   enabled: boolean;
+  models?: ChatModelCard[];
   region?: string;
   secretAccessKey?: string;
-  models?: ChatModelCard[]
 }
 
 export interface OllamaConfig {
   customModelName?: string;
   enabled?: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface PerplexityConfig {
   apiKey?: string;
   enabled: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface AnthropicConfig {
   apiKey?: string;
   enabled: boolean;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface MistralConfig {
   apiKey?: string;
   enabled: boolean;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface ChatChatConfig {
   customModelName?: string;
   enabled?: boolean;
   endpoint?: string;
-  models?: ChatModelCard[]
+  models?: ChatModelCard[];
 }
 
 export interface GlobalLLMConfig {
   anthropic: AnthropicConfig;
   azure: AzureOpenAIConfig;
   bedrock: AWSBedrockConfig;
+  chatchat: ChatChatConfig;
   google: GoogleConfig;
   mistral: MistralConfig;
   moonshot: MoonshotConfig;
@@ -99,7 +100,6 @@ export interface GlobalLLMConfig {
   openAI: OpenAIConfig;
   perplexity: PerplexityConfig;
   zhipu: ZhiPuConfig;
-  chatchat: ChatChatConfig;
 }
 
 export type GlobalLLMProviderKey = keyof GlobalLLMConfig;

@@ -11,8 +11,8 @@ import {
   Moonshot,
   OpenAI,
   Perplexity,
-  Tongyi,
   Spark,
+  Tongyi,
   Wenxin,
 } from '@lobehub/icons';
 import { memo } from 'react';

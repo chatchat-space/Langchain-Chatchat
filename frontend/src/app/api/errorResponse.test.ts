@@ -113,7 +113,6 @@ describe('createErrorResponse', () => {
       const response = createErrorResponse(errorType);
       expect(response.status).toBe(481);
     });
-
   });
 
   // 测试状态码不在200-599范围内的情况

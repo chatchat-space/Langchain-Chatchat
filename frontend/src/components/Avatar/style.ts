@@ -17,8 +17,9 @@ export const useStyles = createStyles(
         align-items: center;
         justify-content: center;
 
-        background: ${backgroundColor};
         border: 1px solid ${background ? 'transparent' : token.colorSplit};
+
+        background: ${backgroundColor};
 
         > .${prefixCls}-avatar-string {
           font-size: ${size * (isEmoji ? 0.7 : 0.5)}px;

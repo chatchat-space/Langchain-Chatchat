@@ -46,7 +46,7 @@ const FileUpload = memo(() => {
             icon={LucideLoader2}
             size={{ fontSize: 18 }}
             spin
-          ></Icon>
+           />
         </Center>
       ) : (
         <ActionIcon

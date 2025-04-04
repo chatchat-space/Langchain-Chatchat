@@ -4,6 +4,7 @@ import { Dropdown } from 'antd';
 import isEqual from 'fast-deep-equal';
 import { LucideToyBrick } from 'lucide-react';
 import { memo } from 'react';
+
 import Avatar from '@/components/Avatar';
 import { pluginHelpers, useToolStore } from '@/store/tool';
 import { toolSelectors } from '@/store/tool/selectors';

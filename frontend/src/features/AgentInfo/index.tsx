@@ -4,6 +4,7 @@ import { createStyles } from 'antd-style';
 import { startCase } from 'lodash-es';
 import { CSSProperties, memo } from 'react';
 import { Center } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import { MetaData } from '@/types/meta';
 

@@ -3,6 +3,7 @@ import { produce } from 'immer';
 import {
   AnthropicProvider,
   BedrockProvider,
+  ChatChatProvider,
   GoogleProvider,
   LOBE_DEFAULT_MODEL_LIST,
   MistralProvider,
@@ -11,7 +12,6 @@ import {
   OpenAIProvider,
   PerplexityProvider,
   ZhiPuProvider,
-  ChatChatProvider,
 } from '@/config/modelProviders';
 import { ChatModelCard, ModelProviderCard } from '@/types/llm';
 import { GlobalLLMProviderKey } from '@/types/settings';
@@ -139,11 +139,10 @@ const modelSelectList = (s: GlobalStore): ModelProviderCard[] => {
 
   const ollamaChatModels = processChatModels(ollamaModelConfig, OllamaProvider.chatModels);
 
-
   const chatChatModelConfig = parseModelString(
-    currentSettings(s).languageModel.chatchat.customModelName
-  )
-  const chatChatChatModels = processChatModels(chatChatModelConfig, chatChatModels(s))
+    currentSettings(s).languageModel.chatchat.customModelName,
+  );
+  const chatChatChatModels = processChatModels(chatChatModelConfig, chatChatModels(s));
 
   return [
     {
@@ -238,7 +237,7 @@ export const modelProviderSelectors = {
   // Anthropic
   enableAnthropic,
   anthropicAPIKey,
-  
+
   // Mistral
   enableMistral,
   mistralAPIKey,

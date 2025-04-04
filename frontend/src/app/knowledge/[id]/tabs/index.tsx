@@ -14,7 +14,7 @@ export interface KnowledgeTabsProps {
   params: Record<string, string>;
 }
 
-const KnowledgeTabsBox = memo<KnowledgeTabsProps>(({ params }) => { 
+const KnowledgeTabsBox = memo<KnowledgeTabsProps>(({ params }) => {
   const [activeTab, setActiveTab] = useState<KnowledgeTabs>(KnowledgeTabs.Base);
   const items = [
     { icon: Webhook, label: '知识库', value: KnowledgeTabs.Base },

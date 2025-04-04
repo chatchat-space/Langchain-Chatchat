@@ -58,7 +58,7 @@ const nextConfig = {
     { source: '/docs', destination: `${docsBasePath}/docs` },
     { source: '/docs/zh', destination: `${docsBasePath}/docs/zh` },
     { source: '/docs/en', destination: `${docsBasePath}/docs/en` },
-    { source: '/docs/:path*', destination: `${docsBasePath}/docs/:path*` }
+    { source: '/docs/:path*', destination: `${docsBasePath}/docs/:path*` },
   ],
   reactStrictMode: true,
 

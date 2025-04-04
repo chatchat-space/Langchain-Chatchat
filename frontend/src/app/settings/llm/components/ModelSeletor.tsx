@@ -7,11 +7,11 @@ import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
 
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { ModelSelectorError } from '@/types/message';
 import { modelsServer } from '@/services/models';
 import { useGlobalStore } from '@/store/global';
-import { GlobalLLMProviderKey } from '@/types/settings/modelProvider';
 import { currentSettings } from '@/store/global/slices/settings/selectors/settings';
+import { ModelSelectorError } from '@/types/message';
+import { GlobalLLMProviderKey } from '@/types/settings/modelProvider';
 
 interface FetchModelParams {
   provider: GlobalLLMProviderKey;
@@ -26,7 +26,7 @@ const ModelSelector = memo<FetchModelParams>(({ provider }) => {
   const theme = useTheme();
   const [error, setError] = useState<ModelSelectorError | undefined>();
 
-  const [setConfig, languageModel ] = useGlobalStore((s) => [
+  const [setConfig, languageModel] = useGlobalStore((s) => [
     s.setModelProviderConfig,
     currentSettings(s).languageModel,
   ]);
@@ -36,36 +36,37 @@ const ModelSelector = memo<FetchModelParams>(({ provider }) => {
   // 过滤格式
   const filterModel = (data: any[] = []) => {
     return data.map((item) => {
-
       return {
-        tokens: item?.tokens || 8000,
         displayName: item.displayName || item.id,
-        functionCall:  false, // false 默认都不能用使用插件，chatchat 的插件还没弄
-        ...item
-      }
-    })
-  }
+        functionCall: false,
+        tokens: item?.tokens || 8000, // false 默认都不能用使用插件，chatchat 的插件还没弄
+        ...item,
+      };
+    });
+  };
 
   const processProviderModels = () => {
-    if(!enable) return
+    if (!enable) return;
 
     setLoading(true);
 
-    modelsServer.getModels(provider).then((data) => {
-      if (data.error) {
-        setError({ message: data.error, type: 500});
-      } else {
-        // 更新模型
-        setConfig(provider, { models: filterModel(data.data) });
+    modelsServer
+      .getModels(provider)
+      .then((data) => {
+        if (data.error) {
+          setError({ message: data.error, type: 500 });
+        } else {
+          // 更新模型
+          setConfig(provider, { models: filterModel(data.data) });
 
-        setError(undefined);
-        setPass(true);
-      }
-
-    }).finally(() => {
-      setLoading(false);
-    })
-  }
+          setError(undefined);
+          setPass(true);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const isMobile = useIsMobile();
 

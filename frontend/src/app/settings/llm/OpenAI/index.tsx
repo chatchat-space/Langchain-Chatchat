@@ -124,7 +124,7 @@ const LLM = memo(() => {
         },
       ]}
       provider={providerKey}
-      title={<OpenAI.Combine size={24}></OpenAI.Combine>}
+      title={<OpenAI.Combine size={24} />}
     />
   );
 });

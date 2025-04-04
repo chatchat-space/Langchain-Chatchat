@@ -4,6 +4,7 @@ import { createStyles } from 'antd-style';
 import { rgba } from 'polished';
 import { memo } from 'react';
 import { Flexbox } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import { LobeAgentSession } from '@/types/session';
 
@@ -21,16 +22,16 @@ const useStyles = createStyles(({ css, token, cx, stylish }) => ({
       flex: 1;
 
       padding: 16px;
-
-      background-color: ${rgba(token.colorBgContainer, 0.5)};
       border: 1px solid ${rgba(token.colorText, 0.2)};
       border-radius: ${token.borderRadiusLG}px;
+
+      background-color: ${rgba(token.colorBgContainer, 0.5)};
 
       transition: all 400ms ${token.motionEaseOut};
 
       &:hover {
-        background-color: ${rgba(token.colorBgElevated, 0.2)};
         border-color: ${token.colorText};
+        background-color: ${rgba(token.colorBgElevated, 0.2)};
         box-shadow: 0 0 0 1px ${token.colorText};
       }
 

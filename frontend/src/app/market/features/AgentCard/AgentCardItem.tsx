@@ -5,6 +5,7 @@ import { useThemeMode } from 'antd-style';
 import { startCase } from 'lodash-es';
 import { memo, useRef } from 'react';
 import { Flexbox } from 'react-layout-kit';
+
 import { useMarketStore } from '@/store/market';
 import { AgentsMarketIndexItem } from '@/types/market';
 

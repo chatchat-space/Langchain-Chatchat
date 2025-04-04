@@ -6,9 +6,9 @@ import { Flexbox } from 'react-layout-kit';
 const useStyles = createStyles(({ css, token, isDarkMode }) => ({
   container: css`
     overflow: hidden;
-    background: ${token.colorBgContainer};
     border: 1px solid ${isDarkMode ? token.colorFillTertiary : token.colorFillSecondary};
     border-radius: ${token.borderRadiusLG}px;
+    background: ${token.colorBgContainer};
   `,
 }));
 

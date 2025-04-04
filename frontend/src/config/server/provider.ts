@@ -35,7 +35,7 @@ declare global {
 
       // Anthropic Provider
       ANTHROPIC_API_KEY?: string;
-      
+
       // Mistral Provider
       MISTRAL_API_KEY?: string;
 
@@ -71,7 +71,7 @@ export const getProviderConfig = () => {
   const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY || '';
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-  
+
   const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || '';
 
   // region format: iad1,sfo1
@@ -79,7 +79,7 @@ export const getProviderConfig = () => {
   if (process.env.OPENAI_FUNCTION_REGIONS) {
     regions = process.env.OPENAI_FUNCTION_REGIONS.split(',');
   }
-  
+
   return {
     CUSTOM_MODELS: process.env.CUSTOM_MODELS,
 
@@ -100,7 +100,7 @@ export const getProviderConfig = () => {
 
     ENABLED_ANTHROPIC: !!ANTHROPIC_API_KEY,
     ANTHROPIC_API_KEY,
-    
+
     ENABLED_MISTRAL: !!MISTRAL_API_KEY,
     MISTRAL_API_KEY,
 

@@ -1,23 +1,21 @@
 'use client';
 
 import { Form, type ItemGroup } from '@lobehub/ui';
-import { Form as AntForm, Button, Input, InputNumber, Switch, message } from 'antd';
+import { Form as AntForm, Button, Input, message } from 'antd';
 import { Settings } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 import { Flexbox } from 'react-layout-kit';
-import { useKnowledgeStore } from '@/store/knowledge';
+
 import { FORM_STYLE } from '@/const/layoutTokens';
+import { useKnowledgeStore } from '@/store/knowledge';
 
 const KnowledgeBaseConfig = memo(({ params }: { params: { id: string } }) => {
-  const [form] = AntForm.useForm(); 
+  const [form] = AntForm.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const [
-    editKnowledgeInfo,
-    useFetchKnowledgeUpdate
-  ] = useKnowledgeStore((s) => [
+  const [editKnowledgeInfo, useFetchKnowledgeUpdate] = useKnowledgeStore((s) => [
     s.editKnowledgeInfo,
-    s.useFetchKnowledgeUpdate
+    s.useFetchKnowledgeUpdate,
   ]);
   // console.log("editKnowledgeInfo===", editKnowledgeInfo);
   const handleConfigChange = useCallback(async () => {
@@ -40,10 +38,10 @@ const KnowledgeBaseConfig = memo(({ params }: { params: { id: string } }) => {
   const system: ItemGroup = {
     children: [
       {
-        children: <Input placeholder={'请为知识库命名'} disabled />,
+        children: <Input disabled placeholder={'请为知识库命名'} />,
         label: '知识库名称',
         name: 'knowledge_base_name',
-        rules: [{ message: '请输入知识库名称', required: true }], 
+        rules: [{ message: '请输入知识库名称', required: true }],
       },
       {
         children: <Input.TextArea placeholder={'请简单介绍你的知识库'} />,
@@ -81,9 +79,14 @@ const KnowledgeBaseConfig = memo(({ params }: { params: { id: string } }) => {
 
   return (
     <>
-      <Form form={form} items={[system]} initialValues={{...editKnowledgeInfo}} {...FORM_STYLE} />
+      <Form form={form} initialValues={{ ...editKnowledgeInfo }} items={[system]} {...FORM_STYLE} />
       <Flexbox padding={50}>
-        <Button loading={submitLoading} size="large" style={{ width: 400 }} onClick={handleConfigChange} >
+        <Button
+          loading={submitLoading}
+          onClick={handleConfigChange}
+          size="large"
+          style={{ width: 400 }}
+        >
           保存
         </Button>
       </Flexbox>

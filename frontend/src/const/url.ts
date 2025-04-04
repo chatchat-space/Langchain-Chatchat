@@ -15,7 +15,9 @@ export const CHANGELOG = urlJoin(GITHUB, 'blob/master/CHANGELOG.md');
 
 const { LOBE_CHAT_DOCS } = getClientConfig();
 
-export const DOCUMENTS = !!LOBE_CHAT_DOCS ? '/docs' : 'https://github.com/chatchat-space/Langchain-Chatchat/wiki';
+export const DOCUMENTS = !!LOBE_CHAT_DOCS
+  ? '/docs'
+  : 'https://github.com/chatchat-space/Langchain-Chatchat/wiki';
 
 export const WIKI_PLUGIN_GUIDE = urlJoin(GITHUB, 'wiki', 'Plugin-Development');
 

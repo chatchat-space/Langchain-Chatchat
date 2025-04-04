@@ -46,18 +46,18 @@ export const API_ENDPOINTS = mapWithBasePath({
   microsoft: '/api/tts/microsoft-speech',
 
   // knowledge
-  knowledgeList: '/api/knowledge/list', 
+  knowledgeList: '/api/knowledge/list',
   knowledgeAdd: '/api/knowledge/add',
   knowledgeUpdate: '/api/knowledge/update',
   knowledgeDel: '/api/knowledge/del',
   // knowledge files
-  knowledgeFilesList: '/api/knowledge/listFiles', 
-  knowledgeUploadDocs:  '/api/knowledge/uploadDocs', 
-  updateDocsContent:  '/api/knowledge/updateDocs', 
-  knowledgeDownloadDocs:  '/api/knowledge/downloadDocs', 
-  knowledgeDelInknowledgeDB:  '/api/knowledge/deleteDocs', 
-  knowledgeDelVectorDB:'/api/knowledge/delVectorDocs', 
-  knowledgeRebuildVectorDB:  '/api/knowledge/rebuildVectorDB', 
-  knowledgeReAddVectorDB:  '/api/knowledge/reAddVectorDB', 
-  knowledgeSearchDocs: '/api/knowledge/searchDocs',  
+  knowledgeFilesList: '/api/knowledge/listFiles',
+  knowledgeUploadDocs: '/api/knowledge/uploadDocs',
+  updateDocsContent: '/api/knowledge/updateDocs',
+  knowledgeDownloadDocs: '/api/knowledge/downloadDocs',
+  knowledgeDelInknowledgeDB: '/api/knowledge/deleteDocs',
+  knowledgeDelVectorDB: '/api/knowledge/delVectorDocs',
+  knowledgeRebuildVectorDB: '/api/knowledge/rebuildVectorDB',
+  knowledgeReAddVectorDB: '/api/knowledge/reAddVectorDB',
+  knowledgeSearchDocs: '/api/knowledge/searchDocs',
 });

@@ -3,12 +3,13 @@ import { createStyles } from 'antd-style';
 import { MessageSquarePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { memo } from 'react';
-import Logo from '@/components/Logo';
+
 import Avatar from '@/components/Avatar';
-import { useSessionStore } from '@/store/session';
+import Logo from '@/components/Logo';
 import { MOBILE_HEADER_ICON_SIZE } from '@/const/layoutTokens';
 import { useGlobalStore } from '@/store/global';
 import { commonSelectors } from '@/store/global/selectors';
+import { useSessionStore } from '@/store/session';
 
 export const useStyles = createStyles(({ css, token }) => ({
   logo: css`

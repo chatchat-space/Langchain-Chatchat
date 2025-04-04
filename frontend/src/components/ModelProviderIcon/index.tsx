@@ -10,13 +10,12 @@ import {
   Perplexity,
   Zhipu,
 } from '@lobehub/icons';
+import Avatar from 'next/image';
 import { memo } from 'react';
 import { Center } from 'react-layout-kit';
-import Avatar from 'next/image';
-
-import { ModelProvider } from '@/libs/agent-runtime';
 
 import { imageUrl } from '@/const/url';
+import { ModelProvider } from '@/libs/agent-runtime';
 
 interface ModelProviderIconProps {
   provider?: string;
@@ -73,12 +72,7 @@ const ModelProviderIcon = memo<ModelProviderIconProps>(({ provider }) => {
     }
 
     case ModelProvider.ChatChat: {
-      return  <Avatar
-                alt={'Chatchat'}
-                height={24}
-                src={imageUrl('logo.png')}
-                width={24}
-              />
+      return <Avatar alt={'Chatchat'} height={24} src={imageUrl('logo.png')} width={24} />;
     }
 
     default: {

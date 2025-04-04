@@ -4,6 +4,7 @@ import isEqual from 'fast-deep-equal';
 import { startCase } from 'lodash-es';
 import { memo } from 'react';
 import { Center } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import { pluginHelpers, useToolStore } from '@/store/tool';
 import { pluginSelectors } from '@/store/tool/selectors';

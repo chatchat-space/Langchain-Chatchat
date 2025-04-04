@@ -1,5 +1,6 @@
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 import OpenAI, { ClientOptions } from 'openai';
+import { Stream } from 'openai/streaming';
 
 import { LobeRuntimeAI } from '../BaseAI';
 import { AgentRuntimeErrorType } from '../error';
@@ -8,11 +9,9 @@ import { AgentRuntimeError } from '../utils/createError';
 import { debugStream } from '../utils/debugStream';
 import { desensitizeUrl } from '../utils/desensitizeUrl';
 import { handleOpenAIError } from '../utils/handleOpenAIError';
-import { Stream } from 'openai/streaming';
 
 const DEFAULT_BASE_URL = 'http://localhost:7861/v1';
 // const DEFAULT_BASE_URL = 'https://beige-points-count.loca.lt/v1';
-
 
 export class LobeChatChatAI implements LobeRuntimeAI {
   private client: OpenAI;
@@ -27,14 +26,14 @@ export class LobeChatChatAI implements LobeRuntimeAI {
   }
 
   async chat(payload: ChatStreamPayload, options?: ChatCompetitionOptions) {
-
     try {
       const response = await this.client.chat.completions.create(
-        payload as unknown as (OpenAI.ChatCompletionCreateParamsStreaming | OpenAI.ChatCompletionCreateParamsNonStreaming),
+        payload as unknown as
+          | OpenAI.ChatCompletionCreateParamsStreaming
+          | OpenAI.ChatCompletionCreateParamsNonStreaming,
       );
 
       if (LobeChatChatAI.isStream(response)) {
-
         const [prod, debug] = response.tee();
 
         if (process.env.DEBUG_OLLAMA_CHAT_COMPLETION === '1') {
@@ -45,12 +44,13 @@ export class LobeChatChatAI implements LobeRuntimeAI {
           headers: options?.headers,
         });
       } else {
-
         if (process.env.DEBUG_OLLAMA_CHAT_COMPLETION === '1') {
           console.debug(JSON.stringify(response));
         }
 
-        const stream = LobeChatChatAI.createChatCompletionStream(response?.choices[0].message.content || '');
+        const stream = LobeChatChatAI.createChatCompletionStream(
+          response?.choices[0].message.content || '',
+        );
 
         return new StreamingTextResponse(stream);
       }
@@ -92,13 +92,13 @@ export class LobeChatChatAI implements LobeRuntimeAI {
   }
 
   static isStream(obj: unknown): obj is Stream<OpenAI.Chat.Completions.ChatCompletionChunk> {
-    return typeof Stream !== 'undefined' && (obj instanceof Stream || obj instanceof ReadableStream);
+    return (
+      typeof Stream !== 'undefined' && (obj instanceof Stream || obj instanceof ReadableStream)
+    );
   }
-
 
   // 创建一个类型为 Stream<string> 的流
   static createChatCompletionStream(text: string): ReadableStream<string> {
-
     const stream = new ReadableStream({
       start(controller) {
         controller.enqueue(text);
@@ -108,5 +108,4 @@ export class LobeChatChatAI implements LobeRuntimeAI {
 
     return stream;
   }
-
 }

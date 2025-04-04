@@ -2,14 +2,15 @@
 import { createStyles } from 'antd-style';
 import { ReactNode, memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 
 export const useStyles = createStyles(({ css, token }) => ({
   container: css`
-    color: ${token.colorText};
-    background: ${token.colorBgContainer};
     border: 1px solid ${token.colorSplit};
     border-radius: 8px;
+    color: ${token.colorText};
+    background: ${token.colorBgContainer};
   `,
   desc: css`
     color: ${token.colorTextTertiary};

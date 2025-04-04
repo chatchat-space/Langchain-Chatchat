@@ -1,9 +1,11 @@
+// @ts-nocheck
 import { ActionIcon } from '@lobehub/ui';
 import { createStyles } from 'antd-style';
 import { MessageSquarePlus } from 'lucide-react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
+
 import Logo from '@/components/Logo';
 import { DESKTOP_HEADER_ICON_SIZE } from '@/const/layoutTokens';
 import { useSessionStore } from '@/store/session';

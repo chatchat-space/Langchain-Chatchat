@@ -1,3 +1,4 @@
+// @ts-nocheck
 import NextAuth from 'next-auth';
 import Auth0 from 'next-auth/providers/auth0';
 

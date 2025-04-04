@@ -18,8 +18,8 @@ export const useStyles = createStyles(({ css, token }) => ({
     }
   `,
   editableImage: css`
-    background: ${token.colorBgContainer};
     border: 1px solid ${token.colorBorderSecondary};
+    background: ${token.colorBgContainer};
   `,
   image: css`
     margin-block: 0 !important;

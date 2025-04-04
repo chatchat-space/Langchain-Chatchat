@@ -14,11 +14,11 @@ const useStyles = createStyles(({ css, token, stylish }) => {
       width: 300px;
       height: 300px;
       padding: 16px;
+      border-radius: 16px;
 
       color: ${token.colorWhite};
 
       background: ${token.geekblue};
-      border-radius: 16px;
       box-shadow:
         ${rgba(token.geekblue, 0.1)} 0 1px 1px 0 inset,
         ${rgba(token.geekblue, 0.1)} 0 50px 100px -20px,
@@ -28,7 +28,6 @@ const useStyles = createStyles(({ css, token, stylish }) => {
       width: 100%;
       height: 100%;
       padding: 16px;
-
       border: 2px dashed ${token.colorWhite};
       border-radius: 12px;
     `,

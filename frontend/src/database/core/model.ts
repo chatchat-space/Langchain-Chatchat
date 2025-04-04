@@ -91,7 +91,7 @@ export class BaseModel<N extends keyof LocalDBSchema = any, T = LocalDBSchema[N]
         const item = result.data;
         const autoId = idGenerator();
 
-        const id = createWithNewId ? autoId : item.id ?? autoId;
+        const id = createWithNewId ? autoId : (item.id ?? autoId);
 
         // skip if the id already exists
         if (await this.table.get(id)) {

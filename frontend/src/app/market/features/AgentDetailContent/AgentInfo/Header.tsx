@@ -4,6 +4,7 @@ import { startCase } from 'lodash-es';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Center } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import { agentMarketSelectors, useMarketStore } from '@/store/market';
 import { useSessionStore } from '@/store/session';

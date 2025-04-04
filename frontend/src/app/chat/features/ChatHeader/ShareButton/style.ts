@@ -30,8 +30,8 @@ export const useStyles = createStyles(({ css, token, stylish, cx }, withBackgrou
   header: css`
     margin-bottom: -24px;
     padding: 16px;
-    background: ${token.colorBgContainer};
     border-bottom: 1px solid ${token.colorBorder};
+    background: ${token.colorBgContainer};
   `,
   markdown: stylish.markdownInChat,
   preview: cx(
@@ -41,10 +41,10 @@ export const useStyles = createStyles(({ css, token, stylish, cx }, withBackgrou
 
       width: 100%;
       max-height: 40dvh;
-
-      background: ${token.colorBgLayout};
       border: 1px solid ${token.colorBorder};
       border-radius: ${token.borderRadiusLG}px;
+
+      background: ${token.colorBgLayout};
 
       * {
         pointer-events: none;
@@ -59,8 +59,8 @@ export const useStyles = createStyles(({ css, token, stylish, cx }, withBackgrou
   role: css`
     margin-top: 12px;
     padding-top: 12px;
-    opacity: 0.75;
     border-top: 1px dashed ${token.colorBorderSecondary};
+    opacity: 0.75;
 
     * {
       font-size: 12px !important;

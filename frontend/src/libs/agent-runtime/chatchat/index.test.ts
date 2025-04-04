@@ -31,12 +31,11 @@ afterEach(() => {
 });
 
 describe('LobeChatChatAI', () => {
-
-  describe('init', ()=>{
+  describe('init', () => {
     it('should init with default baseURL', () => {
       expect(instance.baseURL).toBe(defaultBaseURL);
     });
-  })
+  });
 
   describe('chat', () => {
     it('should return a StreamingTextResponse on successful API call', async () => {
@@ -60,27 +59,27 @@ describe('LobeChatChatAI', () => {
     it('should return a StreamingTextResponse on successful API call', async () => {
       // Arrange
       const mockResponse = Promise.resolve({
-        "id": "chatcmpl-98QIb3NiYLYlRTB6t0VrJ0wntNW6K",
-        "object": "chat.completion",
-        "created": 1711794745,
-        "model": "gpt-3.5-turbo-0125",
-        "choices": [
+        id: 'chatcmpl-98QIb3NiYLYlRTB6t0VrJ0wntNW6K',
+        object: 'chat.completion',
+        created: 1711794745,
+        model: 'gpt-3.5-turbo-0125',
+        choices: [
           {
-            "index": 0,
-            "message": {
-              "role": "assistant",
-              "content": "你好！有什么可以帮助你的吗？"
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: '你好！有什么可以帮助你的吗？',
             },
-            "logprobs": null,
-            "finish_reason": "stop"
-          }
+            logprobs: null,
+            finish_reason: 'stop',
+          },
         ],
-        "usage": {
-          "prompt_tokens": 9,
-          "completion_tokens": 17,
-          "total_tokens": 26
+        usage: {
+          prompt_tokens: 9,
+          completion_tokens: 17,
+          total_tokens: 26,
         },
-        "system_fingerprint": "fp_b28b39ffa8"
+        system_fingerprint: 'fp_b28b39ffa8',
       });
 
       (instance['client'].chat.completions.create as Mock).mockResolvedValue(mockResponse);
@@ -96,7 +95,5 @@ describe('LobeChatChatAI', () => {
       // Assert
       expect(result).toBeInstanceOf(Response);
     });
-  })
-
-
+  });
 });

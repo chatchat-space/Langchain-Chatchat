@@ -1,53 +1,53 @@
 import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Card, Skeleton, message, Modal } from 'antd';
+import { Card, Modal, Skeleton, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+
 import { useKnowledgeStore } from '@/store/knowledge';
 
 const { Meta } = Card;
 
 interface KnowLedgeCardProps {
+  embed_model?: string;
   intro: string;
   name: string;
   vector_store_type?: string;
-  embed_model?: string;
 }
 const KnowledgeCard: React.FC<KnowLedgeCardProps> = (props: KnowLedgeCardProps) => {
-
-
   const [useFetchKnowledgeDel, useFetchKnowledgeList, setEditKnowledge] = useKnowledgeStore((s) => [
-    s.useFetchKnowledgeDel, s.useFetchKnowledgeList, s.setEditKnowledge
+    s.useFetchKnowledgeDel,
+    s.useFetchKnowledgeList,
+    s.setEditKnowledge,
   ]);
-  const { mutate } = useFetchKnowledgeList()
+  const { mutate } = useFetchKnowledgeList();
 
   const [loading, setLoading] = useState(false);
   const { name, intro } = props;
   const router = useRouter();
   const handleCardEditClick = () => {
     setEditKnowledge({
+      embed_model: props.embed_model,
+      kb_info: props.intro,
       knowledge_base_name: props.name,
-      kb_info:  props.intro,
       vector_store_type: props.vector_store_type,
-      embed_model:props.embed_model,
     });
     router.push(`/knowledge/${encodeURIComponent(name)}/base`);
   };
   const delClick = async () => {
     Modal.confirm({
-      title: `确认 ${name} 删除吗?`,
       icon: <ExclamationCircleOutlined />,
       async onOk() {
-        const { code: resCode, msg: resMsg } = await useFetchKnowledgeDel(name)
+        const { code: resCode, msg: resMsg } = await useFetchKnowledgeDel(name);
         if (resCode !== 200) {
-          message.error(resMsg)
+          message.error(resMsg);
         } else {
-          message.success(resMsg)
-          mutate()
+          message.success(resMsg);
+          mutate();
         }
-        return Promise.resolve();
+        return;
       },
+      title: `确认 ${name} 删除吗?`,
     });
-
   };
   return (
     <Card

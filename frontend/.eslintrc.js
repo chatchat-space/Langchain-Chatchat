@@ -17,5 +17,40 @@ config.rules['unicorn/prefer-spread'] = 0;
 config.rules['unicorn/catch-error-name'] = 0;
 config.rules['unicorn/no-array-for-each'] = 0;
 config.rules['unicorn/prefer-number-properties'] = 0;
+config.rules['@typescript-eslint/no-unused-vars'] = [
+  'warn',
+  {
+    vars: 'all',
+    varsIgnorePattern: '^_',
+    args: 'after-used',
+    argsIgnorePattern: '^_',
+  },
+];
+
+config.rules['unused-imports/no-unused-vars'] = [
+  'warn',
+  {
+    vars: 'all',
+    varsIgnorePattern: '^_',
+    args: 'after-used',
+    argsIgnorePattern: '^_',
+  },
+];
+config.rules['@typescript-eslint/no-empty-interface'] = 'off';
+config.rules['unicorn/consistent-function-scoping'] = 'off';
+config.rules['@typescript-eslint/ban-types'] = [
+  'error',
+  {
+    types: {
+      '{}': false,
+    },
+    extendDefaults: true,
+  },
+];
+config.rules['react-hooks/rules-of-hooks'] = 'warn';
+config.rules['no-async-promise-executor'] = 'warn';
+config.rules['unicorn/no-array-callback-reference'] = 'warn'; // 如果是 unicorn 报的
+config.rules['guard-for-in'] = 'warn';
+config.rules['@typescript-eslint/no-unused-expressions'] = 'warn';
 
 module.exports = config;

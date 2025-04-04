@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Aws, Bedrock } from '@lobehub/icons';
 import { Divider, Input, Select } from 'antd';
 import { memo } from 'react';

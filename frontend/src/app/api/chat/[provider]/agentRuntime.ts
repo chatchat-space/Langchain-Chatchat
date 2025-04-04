@@ -12,6 +12,7 @@ import {
   LobeAnthropicAI,
   LobeAzureOpenAI,
   LobeBedrockAI,
+  LobeChatChatAI,
   LobeGoogleAI,
   LobeMistralAI,
   LobeMoonshotAI,
@@ -20,7 +21,6 @@ import {
   LobePerplexityAI,
   LobeRuntimeAI,
   LobeZhipuAI,
-  LobeChatChatAI,
   ModelProvider,
 } from '@/libs/agent-runtime';
 import { TraceClient } from '@/libs/traces';
@@ -163,7 +163,7 @@ class AgentRuntime {
         runtimeModel = this.initAnthropic(payload);
         break;
       }
-      
+
       case ModelProvider.Mistral: {
         runtimeModel = this.initMistral(payload);
         break;
@@ -267,7 +267,7 @@ class AgentRuntime {
 
     return new LobeAnthropicAI({ apiKey });
   }
-  
+
   private static initMistral(payload: JWTPayload) {
     const { MISTRAL_API_KEY } = getServerConfig();
     const apiKey = apiKeyManager.pick(payload?.apiKey || MISTRAL_API_KEY);

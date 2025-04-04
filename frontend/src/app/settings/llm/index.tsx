@@ -10,6 +10,7 @@ import { MORE_MODEL_PROVIDER_REQUEST_URL } from '@/const/url';
 import Footer from '../features/Footer';
 import Anthropic from './Anthropic';
 import Bedrock from './Bedrock';
+import ChatChat from './ChatChat';
 import Google from './Google';
 import Mistral from './Mistral';
 import Moonshot from './Moonshot';
@@ -17,7 +18,6 @@ import Ollama from './Ollama';
 import OpenAI from './OpenAI';
 import Perplexity from './Perplexity';
 import Zhipu from './Zhipu';
-import ChatChat from './ChatChat'
 
 export default memo<{ showOllama: boolean }>(({ showOllama }) => {
   const { t } = useTranslation('setting');
@@ -35,7 +35,7 @@ export default memo<{ showOllama: boolean }>(({ showOllama }) => {
       <Anthropic />
       <Mistral />
       {showOllama && <Ollama />}
-      <ChatChat/>
+      <ChatChat />
       <Footer>
         <Trans i18nKey="llm.waitingForMore" ns={'setting'}>
           更多模型正在

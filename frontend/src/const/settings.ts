@@ -62,6 +62,10 @@ export const DEFAULT_LLM_CONFIG: GlobalLLMConfig = {
     region: 'us-east-1',
     secretAccessKey: '',
   },
+  chatchat: {
+    enabled: false,
+    endpoint: '',
+  },
   google: {
     apiKey: '',
     enabled: false,
@@ -90,10 +94,6 @@ export const DEFAULT_LLM_CONFIG: GlobalLLMConfig = {
   zhipu: {
     apiKey: '',
     enabled: false,
-  },
-  chatchat: {
-    enabled: false,
-    endpoint: ''
   },
 };
 

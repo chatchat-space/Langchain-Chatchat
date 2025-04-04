@@ -82,7 +82,7 @@ describe('LobeMistralAI', () => {
         stream: true,
         temperature: 0.7,
         top_p: 1,
-      })
+      });
       expect(result).toBeInstanceOf(Response);
     });
 
@@ -112,9 +112,9 @@ describe('LobeMistralAI', () => {
         stream: true,
         temperature: 0.7,
         top_p: 1,
-      })
+      });
       expect(result).toBeInstanceOf(Response);
-    });   
+    });
 
     describe('Error', () => {
       it('should return MistralBizError with an openai error response when OpenAI.APIError is thrown', async () => {

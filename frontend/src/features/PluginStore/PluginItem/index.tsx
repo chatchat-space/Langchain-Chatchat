@@ -4,6 +4,7 @@ import { createStyles } from 'antd-style';
 import Link from 'next/link';
 import { memo } from 'react';
 import { Flexbox } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import PluginTag from '@/features/PluginStore/PluginItem/PluginTag';
 import { InstallPluginMeta } from '@/types/tool/plugin';

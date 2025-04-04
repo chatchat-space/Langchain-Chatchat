@@ -13,6 +13,7 @@ import {
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import { pluginHelpers, useToolStore } from '@/store/tool';
 import { pluginSelectors, toolSelectors } from '@/store/tool/selectors';

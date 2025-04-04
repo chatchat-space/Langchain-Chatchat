@@ -105,9 +105,9 @@ const AzureOpenAIProvider = memo(() => {
       provider={providerKey}
       title={
         <Flexbox align={'center'} gap={8} horizontal>
-          <Azure.Combine size={24} type={'color'}></Azure.Combine>
+          <Azure.Combine size={24} type={'color'} />
           <Divider style={{ margin: '0 4px' }} type={'vertical'} />
-          <OpenAI.Combine size={24}></OpenAI.Combine>
+          <OpenAI.Combine size={24} />
         </Flexbox>
       }
     />

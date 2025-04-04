@@ -196,7 +196,7 @@ export const chatMessage: StateCreator<
 
     const { coreProcessMessage } = get();
 
-    const latestMsg = contextMessages.filter((s) => s.role === 'user').at(-1);
+    const latestMsg = contextMessages.findLast((s) => s.role === 'user');
 
     if (!latestMsg) return;
 

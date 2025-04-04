@@ -1,5 +1,4 @@
 import { memo } from 'react';
-
 import { type HTMLAttributes } from 'react';
 
 const Divider = memo<HTMLAttributes<SVGSVGElement> | any>(({ ...rest }) => (

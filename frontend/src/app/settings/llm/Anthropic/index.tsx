@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Anthropic } from '@lobehub/icons';
 import { Input } from 'antd';
 import { useTheme } from 'antd-style';

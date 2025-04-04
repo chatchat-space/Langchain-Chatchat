@@ -1,17 +1,16 @@
-import { Input, Flex } from 'antd';
+import { Flex, Input } from 'antd';
 import { useTheme } from 'antd-style';
+import Avatar from 'next/image';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import Avatar from 'next/image';
 
 import { imageUrl } from '@/const/url';
-
 import { ModelProvider } from '@/libs/agent-runtime';
 
 import Checker from '../components/Checker';
+import ModelSelector from '../components/ModelSeletor';
 import ProviderConfig from '../components/ProviderConfig';
 import { LLMProviderBaseUrlKey, LLMProviderConfigKey } from '../const';
-import ModelSelector from '../components/ModelSeletor';
 
 const providerKey = 'chatchat';
 
@@ -55,13 +54,8 @@ const ChatChatProvider = memo(() => {
       provider={providerKey}
       title={
         <Flex>
-          <Avatar
-            alt={'Chatchat'}
-            height={24}
-            src={imageUrl('logo.png')}
-            width={24}
-          />
-          { 'ChatChat' }
+          <Avatar alt={'Chatchat'} height={24} src={imageUrl('logo.png')} width={24} />
+          {'ChatChat'}
         </Flex>
       }
     />

@@ -34,5 +34,5 @@ export enum ModelProvider {
   OpenAI = 'openai',
   Perplexity = 'perplexity',
   Tongyi = 'tongyi',
-  ZhiPu = 'zhipu'
+  ZhiPu = 'zhipu',
 }

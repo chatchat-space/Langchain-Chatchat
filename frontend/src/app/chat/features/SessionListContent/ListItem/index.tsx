@@ -2,6 +2,7 @@ import { List, ListItemProps } from '@lobehub/ui';
 import { useHover } from 'ahooks';
 import { createStyles, useResponsive } from 'antd-style';
 import { memo, useMemo, useRef } from 'react';
+
 import Avatar from '@/components/Avatar';
 
 const { Item } = List;
@@ -14,7 +15,6 @@ const useStyles = createStyles(({ css, token, responsive }) => {
       margin-block: 2px;
       padding-right: 16px;
       padding-left: 8px;
-
       border-radius: ${token.borderRadius}px;
       ${responsive.mobile} {
         margin-block: 0;

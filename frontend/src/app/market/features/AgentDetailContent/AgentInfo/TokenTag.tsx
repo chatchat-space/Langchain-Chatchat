@@ -6,13 +6,13 @@ import { useTokenCount } from '@/hooks/useTokenCount';
 const useStyles = createStyles(
   ({ css, token }) => css`
     padding: 2px 5px;
+    border-radius: 12px;
 
     font-size: 12px;
     line-height: 1;
     color: ${token.colorBgLayout};
 
     background: ${token.colorText};
-    border-radius: 12px;
   `,
 );
 

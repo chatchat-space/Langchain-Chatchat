@@ -2,6 +2,7 @@
 
 import { PropsWithChildren, memo } from 'react';
 import { Center, Flexbox } from 'react-layout-kit';
+
 import Logo from '@/components/Logo';
 import AppLayoutDesktop from '@/layout/AppLayout.desktop';
 

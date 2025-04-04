@@ -22,10 +22,10 @@ const useStyles = createStyles(({ css, token, isDarkMode }) => ({
     overflow: hidden;
 
     width: 422px;
-
-    background: ${token.colorBgContainer};
     border: 1px solid ${token.colorSplit};
     border-radius: 8px;
+
+    background: ${token.colorBgContainer};
     box-shadow: ${token.boxShadowSecondary};
   `,
   desc: css`
@@ -42,7 +42,8 @@ const useStyles = createStyles(({ css, token, isDarkMode }) => ({
   `,
   wrapper: css`
     padding: 20px 20px 16px;
-    background: linear-gradient(
+    background:
+      linear-gradient(
         180deg,
         ${rgba(token.colorBgContainer, 0)},
         ${token.colorBgContainer} ${isDarkMode ? '80' : '140'}px
@@ -77,7 +78,7 @@ const TelemetryNotification = memo<{ mobile?: boolean }>(({ mobile }) => {
               avatar={<TelescopeIcon />}
               background={theme.geekblue1}
               style={{ color: theme.geekblue7 }}
-            ></Avatar>
+             />
           </Flexbox>
           <Flexbox gap={16}>
             <Flexbox gap={12}>

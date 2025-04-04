@@ -1,17 +1,18 @@
-import React from 'react';
-import { ReactNode, memo } from 'react';
+import { useTheme } from 'antd-style';
+import React, { ReactNode, memo } from 'react';
 import { Flexbox } from 'react-layout-kit';
+
+import Divider from './Divider';
 import LogoText from './LogoText';
 import { useStyles } from './style';
-import { useTheme } from 'antd-style';
-import Divider from './Divider';
-import LogoHighContrast from './LogoHighContrast';
 
-export interface LogoProps  {
-    /**
+export interface LogoProps {
+  /**
    * @description Additional React Node to be rendered next to the logo
    */
   extra?: ReactNode;
+  imageUrl?: string;
+  localImage?: string;
   /**
    * @description Size of the logo in pixels
    * @default 32
@@ -22,12 +23,10 @@ export interface LogoProps  {
    * @default '3d'
    */
   type?: '3d' | 'flat' | 'high-contrast' | 'text' | 'combine';
-  imageUrl?: string;
-  localImage?: string;
 }
 
 const Logo = memo<LogoProps>(
-  ({ type = 'flat', size = 32, style, extra, className, imageUrl, localImage, ...rest  }) => {
+  ({ type = 'flat', size = 32, style, extra, className, imageUrl, localImage, ...rest }) => {
     let logoComponent: ReactNode;
     const { styles } = useStyles();
     const theme = useTheme();
@@ -35,7 +34,13 @@ const Logo = memo<LogoProps>(
     switch (type) {
       case 'flat': {
         logoComponent = (
-          <img alt="chatchat" height={size} src={`/images/chathead.webp`} style={style} width={size} />
+          <img
+            alt="chatchat"
+            height={size}
+            src={`/images/chathead.webp`}
+            style={style}
+            width={size}
+          />
         );
         break;
       }
@@ -57,7 +62,13 @@ const Logo = memo<LogoProps>(
       case 'combine': {
         logoComponent = (
           <>
-            <img alt="chatchat" height={size} src={`/images/chatjump.webp`} style={style} width={size} />
+            <img
+              alt="chatchat"
+              height={size}
+              src={`/images/chatjump.webp`}
+              style={style}
+              width={size}
+            />
             <LogoText style={{ height: size, marginLeft: Math.round(size / 4), width: 'auto' }} />
           </>
         );
@@ -83,14 +94,14 @@ const Logo = memo<LogoProps>(
 
     return (
       <Flexbox align={'center'} className={className} horizontal style={style} {...rest}>
-      {logoComponent}
-      <Divider style={{ color: theme.colorFill, height: extraSize, width: extraSize }} />
-      <div className={styles.extraTitle} style={{ fontSize: extraSize }}>
-        {extra}
-      </div>
-    </Flexbox>
+        {logoComponent}
+        <Divider style={{ color: theme.colorFill, height: extraSize, width: extraSize }} />
+        <div className={styles.extraTitle} style={{ fontSize: extraSize }}>
+          {extra}
+        </div>
+      </Flexbox>
     );
-  }
+  },
 );
 
 export default Logo;

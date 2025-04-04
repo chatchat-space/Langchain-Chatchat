@@ -1,5 +1,5 @@
 import { Avatar as AntAvatar, type AvatarProps as AntAvatarProps } from 'antd';
-import { type ReactNode, isValidElement, memo, useMemo } from 'react';
+import { type ReactNode, memo } from 'react';
 
 import { useStyles } from './style';
 
@@ -48,7 +48,7 @@ const Avatar = memo<AvatarProps>(
     //       isValidElement(avatar)),
     // );
     const isDefaultAntAvatar = true;
-    const { styles, cx } = useStyles({ background, isEmoji:false , size });
+    const { styles, cx } = useStyles({ background, isEmoji: false, size });
 
     const text = String(isDefaultAntAvatar ? title : avatar);
     const defaultAvatarPath = `/images/logo.png`;
@@ -64,11 +64,7 @@ const Avatar = memo<AvatarProps>(
     return isDefaultAntAvatar ? (
       <AntAvatar src={defaultAvatarPath} {...avatarProps} />
     ) : (
-      <AntAvatar {...avatarProps}>
-        {(
-          text?.toUpperCase().slice(0, 2)
-        )}
-      </AntAvatar>
+      <AntAvatar {...avatarProps}>{text?.toUpperCase().slice(0, 2)}</AntAvatar>
     );
   },
 );

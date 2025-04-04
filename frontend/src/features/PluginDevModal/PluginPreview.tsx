@@ -3,6 +3,7 @@ import { Form as AForm, Card, FormInstance } from 'antd';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
+
 import Avatar from '@/components/Avatar';
 import PluginTag from '@/features/PluginStore/PluginItem/PluginTag';
 import { pluginHelpers } from '@/store/tool';

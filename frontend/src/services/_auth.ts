@@ -55,13 +55,13 @@ export const getProviderAuthPayload = (provider: string) => {
     case ModelProvider.Anthropic: {
       return { apiKey: modelProviderSelectors.anthropicAPIKey(useGlobalStore.getState()) };
     }
-    
+
     case ModelProvider.Mistral: {
       return { apiKey: modelProviderSelectors.mistralAPIKey(useGlobalStore.getState()) };
     }
 
     case ModelProvider.ChatChat: {
-      return { endpoint: modelProviderSelectors.chatChatProxyUrl(useGlobalStore.getState()) }
+      return { endpoint: modelProviderSelectors.chatChatProxyUrl(useGlobalStore.getState()) };
     }
 
     default:

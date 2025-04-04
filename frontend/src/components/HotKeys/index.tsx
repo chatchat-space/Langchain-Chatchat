@@ -21,15 +21,15 @@ const useStyles = createStyles(
     kbd {
       min-width: 16px;
       padding: 3px 6px;
+      border: 1px solid ${token.colorBorderSecondary};
+      border-bottom-color: ${token.colorBorder};
+      border-radius: ${token.borderRadius}px;
 
       line-height: 1;
       color: ${token.colorTextDescription};
       text-align: center;
 
       background: ${token.colorBgContainer};
-      border: 1px solid ${token.colorBorderSecondary};
-      border-bottom-color: ${token.colorBorder};
-      border-radius: ${token.borderRadius}px;
       box-shadow: inset 0 -1px 0 ${token.colorBorder};
     }
   `,
