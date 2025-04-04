@@ -4,10 +4,9 @@ import { Button, Input, Modal } from 'antd';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { FormAction } from '@/features/Conversation/Error/style';
 import { useGlobalStore } from '@/store/global';
 import { folderSelectors } from '@/store/global/selectors';
-
-import { FormAction } from '../style';
 
 const FolderPanel = memo(() => {
   const { t } = useTranslation('error');

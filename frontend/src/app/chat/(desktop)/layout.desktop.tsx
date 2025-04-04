@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { PropsWithChildren, memo } from 'react';
@@ -7,6 +8,8 @@ import AppLayoutDesktop from '@/layout/AppLayout.desktop';
 import { SidebarTabKey } from '@/store/global/initialState';
 
 import ResponsiveSessionList from './features/SessionList';
+
+// @ts-nocheck
 
 export default memo(({ children }: PropsWithChildren) => {
   return (

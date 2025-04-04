@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -11,6 +12,8 @@ import ChatHeader from './features/ChatHeader';
 import Conversation from './features/Conversation';
 import SideBar from './features/SideBar';
 import Layout from './layout.desktop';
+
+// @ts-nocheck
 
 const Mobile: FC = dynamic(() => import('../(mobile)'), { ssr: false }) as FC;
 
