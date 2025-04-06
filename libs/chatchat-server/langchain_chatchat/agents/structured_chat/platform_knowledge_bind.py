@@ -43,6 +43,8 @@ def create_platform_knowledge_agent(
         tools: Sequence[BaseTool],
         mcp_tools: Sequence[MCPStructuredTool],
         prompt: ChatPromptTemplate,
+        *,
+        llm_with_platform_tools: List[Dict[str, Any]] = [],
 ) -> Runnable:
     """Create an agent that uses tools.
 
@@ -64,7 +66,7 @@ def create_platform_knowledge_agent(
         mcp_tools=render_knowledge_mcp_tools(list(mcp_tools)),
     )
     llm_with_stop = llm.bind(
-        tools=tools
+        tools=llm_with_platform_tools
     )
     agent = (
             RunnablePassthrough.assign(

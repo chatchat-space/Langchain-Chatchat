@@ -39,18 +39,18 @@ async def test_mcp_stdio_tools(logging_conf):
 
             # Create and run the agent
             llm_params = get_ChatPlatformAIParams(
-                model_name="fun-lora",
+                model_name="glm-4-plus",
                 temperature=0.01,
                 max_tokens=120000,
             )
             llm = ChatPlatformAI(**llm_params)
             agent_executor = PlatformToolsRunnable.create_agent_executor(
-                agent_type="qwen",
+                agent_type="platform-agent",
                 agents_registry=agents_registry,
                 llm=llm,
                 tools=tools,
             )
-            chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5")
+            chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5,之后计算 100*2")
             async for item in chat_iterator:
                 if isinstance(item, PlatformToolsAction):
                     print("PlatformToolsAction:" + str(item.to_json()))
@@ -128,32 +128,47 @@ async def test_mcp_multi_tools(logging_conf):
 @pytest.mark.asyncio
 async def test_mcp_tools(logging_conf):
     logging.config.dictConfig(logging_conf)  # type: ignore
-
-    # Create and run the agent
-    llm_params = get_ChatPlatformAIParams(
-        model_name="glm-4-plus",
-        temperature=0.01,
-        max_tokens=120000,
+    logging.config.dictConfig(logging_conf)  # type: ignore
+    server_params = StdioServerParameters(
+        command="python",
+        # Make sure to update to the full absolute path to your math_server.py file
+        args=[f"{os.path.dirname(__file__)}/math_server.py"],
     )
-    llm = ChatPlatformAI(**llm_params)
-    agent_executor = PlatformToolsRunnable.create_agent_executor(
-        agent_type="platform-knowledge-mode",
-        agents_registry=agents_registry,
-        llm=llm,
-    )
-    chat_iterator = agent_executor.invoke(chat_input="使用浏览器下载项目到本地 https://github.com/microsoft/playwright-mcp")
-    async for item in chat_iterator:
-        if isinstance(item, PlatformToolsAction):
-            print("PlatformToolsAction:" + str(item.to_json()))
 
-        elif isinstance(item, PlatformToolsFinish):
-            print("PlatformToolsFinish:" + str(item.to_json()))
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize the connection
+            await session.initialize()
 
-        elif isinstance(item, PlatformToolsActionToolStart):
-            print("PlatformToolsActionToolStart:" + str(item.to_json()))
+            # Get tools
+            tools = await load_mcp_tools("test",session)
 
-        elif isinstance(item, PlatformToolsActionToolEnd):
-            print("PlatformToolsActionToolEnd:" + str(item.to_json()))
-        elif isinstance(item, PlatformToolsLLMStatus):
-            if item.status == AgentStatus.llm_end:
-                print("llm_end:" + item.text)
+            # Create and run the agent
+            llm_params = get_ChatPlatformAIParams(
+                model_name="glm-4-plus",
+                temperature=0.01,
+                max_tokens=120000,
+            )
+            llm = ChatPlatformAI(**llm_params)
+            agent_executor = PlatformToolsRunnable.create_agent_executor(
+                agent_type="platform-knowledge-mode",
+                agents_registry=agents_registry,
+                llm=llm,
+                tools=tools,
+            )
+            chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5,之后计算 100*2,然后获取这个链接https://mp.weixin.qq.com/s/YCHHY6mA8-1o7hbXlyEyEQ 的文本")
+            async for item in chat_iterator:
+                if isinstance(item, PlatformToolsAction):
+                    print("PlatformToolsAction:" + str(item.to_json()))
+
+                elif isinstance(item, PlatformToolsFinish):
+                    print("PlatformToolsFinish:" + str(item.to_json()))
+
+                elif isinstance(item, PlatformToolsActionToolStart):
+                    print("PlatformToolsActionToolStart:" + str(item.to_json()))
+
+                elif isinstance(item, PlatformToolsActionToolEnd):
+                    print("PlatformToolsActionToolEnd:" + str(item.to_json()))
+                elif isinstance(item, PlatformToolsLLMStatus):
+                    if item.status == AgentStatus.llm_end:
+                        print("llm_end:" + item.text)

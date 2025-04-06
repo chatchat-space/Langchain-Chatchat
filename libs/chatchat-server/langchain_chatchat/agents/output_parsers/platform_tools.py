@@ -99,7 +99,7 @@ class PlatformToolsAgentOutputParser(MultiActionAgentOutputParser):
             message = result[0].message
             return parse_ai_message_to_platform_tool_action(message)
         elif self.instance_type == "platform-knowledge-mode":
-            return self.knowledge_parser.parse(result[0].text)
+            return self.knowledge_parser.parse_result(result, partial=partial)
         else:
             return self.base_parser.parse(result[0].text)
 

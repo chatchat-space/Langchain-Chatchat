@@ -215,6 +215,7 @@ def agents_registry(
         agent = create_platform_knowledge_agent(llm=llm,
                                                 tools=tools,
                                                 mcp_tools=mcp_tools,
+                                                llm_with_platform_tools=llm_with_platform_tools,
                                                 prompt=prompt)
 
         agent_executor = PlatformToolsAgentExecutor(
@@ -242,6 +243,11 @@ async def create_mcp_client() -> MultiServerMCPClient:
                     "url": "http://localhost:8931/sse",
                     "transport": "sse",
                 },
+                # "ufn-mcp-server": {
+                #     # make sure you start your weather server on port 8000
+                #     "url": "http://localhost:8932/sse",
+                #     "transport": "sse",
+                # },
             }
     ) as client:
         return client
