@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 from typing import Sequence, Union, List, Dict, Any
 
 from langchain_core.language_models import BaseLanguageModel
@@ -45,15 +46,6 @@ def create_platform_knowledge_agent(
 ) -> Runnable:
     """Create an agent that uses tools.
 
-    Args:
-
-        llm: LLM to use as the agent.
-        tools: Tools this agent has access to.
-        prompt: The prompt to use, must have input keys
-            `tools`: contains descriptions for each tool.
-            `agent_scratchpad`: contains previous agent actions and tool outputs.
-        mcp_tools:
-
     Returns:
         A Runnable sequence representing an agent. It takes as input all the same input
         variables as the prompt passed in does. It returns as output either an
@@ -68,6 +60,7 @@ def create_platform_knowledge_agent(
         raise ValueError(f"Prompt missing required variables: {missing_vars}")
 
     prompt = prompt.partial(
+        datetime=datetime.now().isoformat(),
         mcp_tools=render_knowledge_mcp_tools(list(mcp_tools)),
     )
     llm_with_stop = llm.bind(

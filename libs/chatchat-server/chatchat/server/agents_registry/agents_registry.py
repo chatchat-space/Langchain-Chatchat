@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import asyncio
+import sys
+from contextlib import AsyncExitStack
+
 from langchain.agents.agent import RunnableMultiActionAgent
 from langchain_core.messages import SystemMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel
 
 from chatchat.server.utils import get_prompt_template_dict
-from langchain_chatchat.agent_toolkits.mcp_kit.tools import MCPStructuredTool
+from langchain_chatchat.agent_toolkits.mcp_kit.client import MultiServerMCPClient
 from langchain_chatchat.agents.all_tools_agent import PlatformToolsAgentExecutor
 from langchain_chatchat.agents.react.create_prompt_template import create_prompt_glm3_template, \
     create_prompt_structured_react_template, create_prompt_platform_template, create_prompt_gpt_tool_template, \
@@ -191,24 +195,21 @@ def agents_registry(
         )
         return agent_executor
 
-    else:
-        raise ValueError(
-            f"Agent type {agent_type} not supported at the moment. Must be one of "
-            "'tool-calling', 'openai-tools', 'openai-functions', "
-            "'default','ChatGLM3','structured-chat-agent','platform-agent','qwen','glm3'"
-        )
+    elif "platform-knowledge-mode" == agent_type:
+        import nest_asyncio
+        nest_asyncio.apply()
+        if sys.version_info < (3, 10):
+            loop = asyncio.get_event_loop()
+        else:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
 
-
-def chatchat_context_registry(
-        agent_type: str,
-        llm: BaseLanguageModel,
-        mcp_tools: Sequence[MCPStructuredTool],
-        tools: Sequence[Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool]] = [],
-        callbacks: List[BaseCallbackHandler] = [],
-        verbose: bool = False,
-        **kwargs: Any,
-):
-    if "platform-knowledge-mode" == agent_type:
+            asyncio.set_event_loop(loop)
+        client = loop.run_until_complete(create_mcp_client())
+        # Get tools
+        mcp_tools = client.get_tools()
         template = get_prompt_template_dict("action_model", agent_type)
         prompt = create_prompt_platform_knowledge_mode_template(agent_type, template=template)
         agent = create_platform_knowledge_agent(llm=llm,
@@ -224,3 +225,23 @@ def chatchat_context_registry(
             return_intermediate_steps=True,
         )
         return agent_executor
+
+    else:
+        raise ValueError(
+            f"Agent type {agent_type} not supported at the moment. Must be one of "
+            "'tool-calling', 'openai-tools', 'openai-functions', "
+            "'default','ChatGLM3','structured-chat-agent','platform-agent','qwen','glm3'"
+        )
+
+
+async def create_mcp_client() -> MultiServerMCPClient:
+    async with MultiServerMCPClient(
+            {
+                "playwright": {
+                    # make sure you start your weather server on port 8000
+                    "url": "http://localhost:8931/sse",
+                    "transport": "sse",
+                },
+            }
+    ) as client:
+        return client

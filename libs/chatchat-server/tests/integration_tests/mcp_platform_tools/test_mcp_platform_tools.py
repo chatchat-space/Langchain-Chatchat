@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from mcp import ClientSession, StdioServerParameters, stdio_client
 
-from chatchat.server.agents_registry.agents_registry import agents_registry, chatchat_context_registry
+from chatchat.server.agents_registry.agents_registry import agents_registry
 from chatchat.server.utils import get_ChatPlatformAIParams
 from langchain_chatchat import ChatPlatformAI
 from langchain_chatchat.agent_toolkits.mcp_kit.client import MultiServerMCPClient
@@ -128,55 +128,32 @@ async def test_mcp_multi_tools(logging_conf):
 @pytest.mark.asyncio
 async def test_mcp_tools(logging_conf):
     logging.config.dictConfig(logging_conf)  # type: ignore
-    async with MultiServerMCPClient(
-            {
-                "math": {
-                    "command": "python",
-                    # Make sure to update to the full absolute path to your math_server.py file
-                    "args": [f"{os.path.dirname(__file__)}/math_server.py"],
-                    "transport": "stdio",
-                    "env": {
-                        **os.environ,
-                        "PYTHONHASHSEED": "0",
-                    },
-                },
-                "playwright": {
-                    # make sure you start your weather server on port 8000
-                    "url": "http://localhost:8931/sse",
-                    "transport": "sse",
-                },
-            }
-    ) as client:
 
-        # Get tools
-        tools = client.get_tools()
+    # Create and run the agent
+    llm_params = get_ChatPlatformAIParams(
+        model_name="glm-4-plus",
+        temperature=0.01,
+        max_tokens=120000,
+    )
+    llm = ChatPlatformAI(**llm_params)
+    agent_executor = PlatformToolsRunnable.create_agent_executor(
+        agent_type="platform-knowledge-mode",
+        agents_registry=agents_registry,
+        llm=llm,
+    )
+    chat_iterator = agent_executor.invoke(chat_input="使用浏览器下载项目到本地 https://github.com/microsoft/playwright-mcp")
+    async for item in chat_iterator:
+        if isinstance(item, PlatformToolsAction):
+            print("PlatformToolsAction:" + str(item.to_json()))
 
-        # Create and run the agent
-        llm_params = get_ChatPlatformAIParams(
-            model_name="fun-lora",
-            temperature=0.01,
-            max_tokens=120000,
-        )
-        llm = ChatPlatformAI(**llm_params)
-        agent_executor = PlatformToolsRunnable.create_agent_executor(
-            agent_type="platform-knowledge-mode",
-            agents_registry=chatchat_context_registry,
-            llm=llm,
-            tools=tools,
-        )
-        chat_iterator = agent_executor.invoke(chat_input="使用浏览器下载项目到本地 https://github.com/microsoft/playwright-mcp")
-        async for item in chat_iterator:
-            if isinstance(item, PlatformToolsAction):
-                print("PlatformToolsAction:" + str(item.to_json()))
+        elif isinstance(item, PlatformToolsFinish):
+            print("PlatformToolsFinish:" + str(item.to_json()))
 
-            elif isinstance(item, PlatformToolsFinish):
-                print("PlatformToolsFinish:" + str(item.to_json()))
+        elif isinstance(item, PlatformToolsActionToolStart):
+            print("PlatformToolsActionToolStart:" + str(item.to_json()))
 
-            elif isinstance(item, PlatformToolsActionToolStart):
-                print("PlatformToolsActionToolStart:" + str(item.to_json()))
-
-            elif isinstance(item, PlatformToolsActionToolEnd):
-                print("PlatformToolsActionToolEnd:" + str(item.to_json()))
-            elif isinstance(item, PlatformToolsLLMStatus):
-                if item.status == AgentStatus.llm_end:
-                    print("llm_end:" + item.text)
+        elif isinstance(item, PlatformToolsActionToolEnd):
+            print("PlatformToolsActionToolEnd:" + str(item.to_json()))
+        elif isinstance(item, PlatformToolsLLMStatus):
+            if item.status == AgentStatus.llm_end:
+                print("llm_end:" + item.text)

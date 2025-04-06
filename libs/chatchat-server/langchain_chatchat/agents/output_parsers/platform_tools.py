@@ -68,7 +68,7 @@ class PlatformToolsAgentOutputParser(MultiActionAgentOutputParser):
 
     If one is not passed, then the AIMessage is assumed to be the final output.
     """
-    instance_type: Literal["GPT-4", "glm3", "qwen", "platform-agent", "base"] = "platform-agent"
+    instance_type: Literal["GPT-4", "glm3", "qwen", "platform-agent", "platform-knowledge-mode", "base"] = "platform-agent"
     """
     instance type of the agent， parser platform return chunk to agent action
     """
