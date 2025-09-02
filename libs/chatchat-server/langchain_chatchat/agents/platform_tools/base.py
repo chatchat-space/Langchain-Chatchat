@@ -15,7 +15,8 @@ from typing import (
     Type,
     Union,
 )
-
+import os
+import sys
 from langchain import hub
 from langchain.agents import AgentExecutor
 from langchain_core.agents import AgentAction
@@ -57,6 +58,7 @@ from langchain_chatchat.callbacks.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
     AgentStatus,
 )
+from langchain_chatchat.agent_toolkits.mcp_kit.client import MultiServerMCPClient, StdioConnection, SSEConnection
 from langchain_chatchat.chat_models import ChatPlatformAI
 from langchain_chatchat.chat_models.base import ChatPlatformAI
 from langchain_chatchat.utils import History
@@ -122,11 +124,36 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
     history: List[Union[List, Tuple, Dict]] = []
     """user message history"""
 
+    mcp_connections: dict[str, StdioConnection | SSEConnection] = None
+    """MCP connections."""
+
     class Config:
         arbitrary_types_allowed = True
 
     if PYDANTIC_V2:
         model_config: ClassVar[ConfigDict] = ConfigDict(arbitrary_types_allowed=True)
+
+    @staticmethod
+    async def create_mcp_client(connections: dict[str, StdioConnection | SSEConnection] = None) -> MultiServerMCPClient:
+        """
+
+        # 更新协议 transport == "stdio" 的 config，增加env变量
+        "env": {
+            **os.environ,
+            "PYTHONHASHSEED": "0",
+        },
+        """ 
+        for server_name, connection in connections.items(): 
+            if connection["transport"] == "stdio":
+                connection["env"] = {
+                    **os.environ,
+                    "PYTHONHASHSEED": "0",
+                }
+              
+        async with MultiServerMCPClient(
+               connections
+        ) as client:
+            return client
 
     @staticmethod
     def paser_all_tools(
@@ -156,6 +183,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
             tools: Sequence[
                 Union[Dict[str, Any], Type[BaseModel], Callable, BaseTool]
             ] = None,
+            mcp_connections: dict[str, StdioConnection | SSEConnection] = None,
             callbacks: List[BaseCallbackHandler] = None,
             **kwargs: Any,
     ) -> "PlatformToolsRunnable":
@@ -192,11 +220,27 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                     assistants_builtin_tools.append(cls.paser_all_tools(t, final_callbacks))
             temp_tools.extend(assistants_builtin_tools)
 
+
+        import nest_asyncio
+        nest_asyncio.apply()
+        if sys.version_info < (3, 10):
+            loop = asyncio.get_event_loop()
+        else:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+
+            asyncio.set_event_loop(loop)
+        client = loop.run_until_complete(cls.create_mcp_client(mcp_connections))
+        # Get tools
+        mcp_tools = client.get_tools()
         agent_executor = agents_registry(
             agent_type=agent_type,
             llm=llm,
             callbacks=final_callbacks,
             tools=temp_tools,
+            mcp_tools=mcp_tools,
             llm_with_platform_tools=llm_with_all_tools,
             verbose=True,
             **kwargs,

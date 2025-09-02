@@ -763,6 +763,8 @@ class PromptSettings(BaseFileSettings):
                 " \n"
                 "# Tools\n"
                 "\n" 
+                "{tools}\n"
+                "\n" 
                 "## use_mcp_tool\n"
                 "Description: Request to use a tool provided by a connected MCP server. Each MCP server can provide multiple tools with different capabilities. Tools have defined input schemas that specify required and optional parameters.\n"
                 "Parameters:\n"

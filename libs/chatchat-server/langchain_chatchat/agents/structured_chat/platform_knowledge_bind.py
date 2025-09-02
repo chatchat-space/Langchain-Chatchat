@@ -38,6 +38,34 @@ def render_knowledge_mcp_tools(tools: List[MCPStructuredTool]) -> str:
     return "\n\n".join(output)
 
 
+def render_knowledge_tools(tools: List[BaseTool]) -> str:
+ 
+    output = []
+    for t in tools:
+        # 处理描述，去掉多余换行
+        desc = re.sub(r"\n+", " ", t.description)
+
+        # 构建参数部分
+        params = []
+        if hasattr(t, "args") and t.args:  # 确保有参数定义
+            for arg_name, arg_def in t.args.items():
+                arg_type = arg_def.get("type", "string")
+                required = arg_def.get("required", True)
+                required_str = "(required)" if required else "(optional)"
+                arg_desc = arg_def.get("description", "").strip()
+                params.append(f"- {arg_name}: {required_str} {arg_desc}")
+
+        # 拼接最终文本
+        text = (
+            f"## {t.name}\n"
+            f"Description: {desc}\n"
+            f"Parameters:\n" +
+            ("\n".join(params) if params else "- None")
+        )
+        output.append(text)
+
+    return "\n\n".join(output)
+
 def create_platform_knowledge_agent(
         llm: BaseLanguageModel,
         tools: Sequence[BaseTool],
@@ -62,12 +90,11 @@ def create_platform_knowledge_agent(
         raise ValueError(f"Prompt missing required variables: {missing_vars}")
 
     prompt = prompt.partial(
+        tools=render_knowledge_tools(list(tools)),
         datetime=datetime.now().isoformat(),
         mcp_tools=render_knowledge_mcp_tools(list(mcp_tools)),
-    )
-    llm_with_stop = llm.bind(
-        tools=llm_with_platform_tools
-    )
+    ) 
+    
     agent = (
             RunnablePassthrough.assign(
                 agent_scratchpad=lambda x: format_to_platform_tool_messages(
@@ -75,7 +102,7 @@ def create_platform_knowledge_agent(
                 )
             )
             | prompt
-            | llm_with_stop
+            | llm
             | PlatformToolsAgentOutputParser(instance_type="platform-knowledge-mode")
 
     )
