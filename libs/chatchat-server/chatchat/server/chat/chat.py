@@ -75,55 +75,30 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
 def create_models_chains(
         history, history_len, prompts, models, tools, callbacks, conversation_id, metadata
 ):
-    memory = None
-    chat_prompt = None
 
-    if history:
-        history = [History.from_data(h) for h in history]
-        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(
-            False
-        )
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg]
-        )
-    elif conversation_id and history_len > 0:
-        memory = ConversationBufferDBMemory(
-            conversation_id=conversation_id,
-            llm=models["llm_model"],
-            message_limit=history_len,
-        )
-    else:
-        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(
-            False
-        )
-        chat_prompt = ChatPromptTemplate.from_messages([input_msg])
+    # 从数据库获取conversation_id对应的 intermediate_steps 、 mcp_connections
+   
+    llm = models["action_model"]
+    llm.callbacks = callbacks
+    agent_executor = PlatformToolsRunnable.create_agent_executor(
+        agent_type="platform-knowledge-mode",
+        agents_registry=agents_registry,
+        llm=llm,
+        tools=tools,
+        history=history,
+        mcp_connections={
+            "playwright": {
+                "command": "npx",
+                "args": [
+                    "@playwright/mcp@latest"
+                ],
+                "transport": "stdio",
+            },
+        }
+    )
 
-    if "action_model" in models and tools:
-        llm = models["action_model"]
-        llm.callbacks = callbacks
-        agent_executor = PlatformToolsRunnable.create_agent_executor(
-            agent_type="platform-knowledge-mode",
-            agents_registry=agents_registry,
-            llm=llm,
-            tools=tools,
-            history=history,
-            mcp_connections={
-                "playwright": {
-                    "command": "npx",
-                    "args": [
-                        "@playwright/mcp@latest"
-                    ],
-                    "transport": "stdio",
-                },
-            }
-        )
+    full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
 
-        full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
-    else:
-        llm = models["llm_model"]
-        llm.callbacks = callbacks
-        chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
-        full_chain = {"input": lambda x: x["input"]} | chain
     return full_chain
 
 
