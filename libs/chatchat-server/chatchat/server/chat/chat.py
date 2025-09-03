@@ -308,20 +308,3 @@ async def chat(
             ret.created = data["created"]
 
         return ret.model_dump()
-
-    llm_params = get_ChatPlatformAIParams(
-        model_name="glm-4-plus",
-        temperature=0.01,
-        max_tokens=100,
-    )
-    llm = ChatPlatformAI(**llm_params)
-
-    agent_executor = PlatformToolsRunnable.create_agent_executor(
-        agent_type="platform-agent",
-        agents_registry=agents_registry,
-        llm=llm,
-        tools=tools,
-        history=history,
-    )
-
-    full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
