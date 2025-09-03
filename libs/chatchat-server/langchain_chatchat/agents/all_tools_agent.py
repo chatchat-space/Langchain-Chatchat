@@ -10,6 +10,7 @@ from typing import (
     List,
     Optional,
     Tuple, Union,
+    Sequence
 )
 
 from langchain.agents.agent import AgentExecutor
@@ -29,13 +30,20 @@ from langchain_core.pydantic_v1 import root_validator
 from langchain_chatchat.agent_toolkits.all_tools.struct_type import (
     AdapterAllToolStructType,
 )
+from langchain_chatchat.agent_toolkits.mcp_kit.tools import MCPStructuredTool
+
 from langchain_chatchat.agents.output_parsers.tools_output.drawing_tool import DrawingToolAgentAction
 from langchain_chatchat.agents.output_parsers.tools_output.web_browser import WebBrowserAgentAction
 from langchain_chatchat.agents.output_parsers.platform_tools import PlatformToolsAgentOutputParser
+from langchain_chatchat.agents.output_parsers import MCPToolAction
 logger = logging.getLogger(__name__)
+
+NextStepOutput = List[Union[AgentFinish, MCPToolAction, AgentAction, AgentStep]]
 
 
 class PlatformToolsAgentExecutor(AgentExecutor):
+    mcp_tools: Sequence[MCPStructuredTool] = []
+
     @root_validator()
     def validate_return_direct_tool(cls, values: Dict) -> Dict:
         """Validate that tools are compatible with agent.
@@ -221,8 +229,29 @@ class PlatformToolsAgentExecutor(AgentExecutor):
     ) -> AgentStep:
         if run_manager:
             run_manager.on_agent_action(agent_action, color="green")
+        
+        if isinstance(agent_action, MCPToolAction): 
+            tool_run_kwargs = self.agent.tool_run_logging_kwargs()
+            # Find the MCP tool by name and server_name from self.mcp_tools
+            mcp_tool = None
+            for tool in self.mcp_tools:
+                if tool.name == agent_action.tool and tool.server_name == agent_action.server_name:
+                    mcp_tool = tool
+                    break
+            
+            if mcp_tool:
+                observation = mcp_tool.run(
+                    agent_action.tool_input,
+                    verbose=self.verbose,
+                    color="blue",
+                    callbacks=run_manager.get_child() if run_manager else None,
+                    **tool_run_kwargs,
+                )
+            else:
+                observation = f"MCP tool '{agent_action.tool}' from server '{agent_action.server_name}' not found in available MCP tools"
+
         # Otherwise we lookup the tool
-        if agent_action.tool in name_to_tool_map:
+        elif agent_action.tool in name_to_tool_map:
             tool = name_to_tool_map[agent_action.tool]
             return_direct = tool.return_direct
             color = color_mapping[agent_action.tool]
@@ -280,13 +309,33 @@ class PlatformToolsAgentExecutor(AgentExecutor):
         color_mapping: Dict[str, str],
         agent_action: AgentAction,
         run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
-    ) -> Union[AgentFinish, AgentAction, AgentStep]:
+    ) -> AgentStep:
         if run_manager:
             await run_manager.on_agent_action(
                 agent_action, verbose=self.verbose, color="green"
             )
+        if isinstance(agent_action, MCPToolAction): 
+            tool_run_kwargs = self.agent.tool_run_logging_kwargs()
+            # Find the MCP tool by name and server_name from self.mcp_tools
+            mcp_tool = None
+            for tool in self.mcp_tools:
+                if tool.name == agent_action.tool and tool.server_name == agent_action.server_name:
+                    mcp_tool = tool
+                    break
+            
+            if mcp_tool:
+                observation = await mcp_tool.arun(
+                    agent_action.tool_input,
+                    verbose=self.verbose,
+                    color="blue",
+                    callbacks=run_manager.get_child() if run_manager else None,
+                    **tool_run_kwargs,
+                )
+            else:
+                observation = f"MCP tool '{agent_action.tool}' from server '{agent_action.server_name}' not found in available MCP tools"
+
         # Otherwise we lookup the tool
-        if agent_action.tool in name_to_tool_map:
+        elif agent_action.tool in name_to_tool_map:
             tool = name_to_tool_map[agent_action.tool]
             return_direct = tool.return_direct
             color = color_mapping[agent_action.tool]
@@ -315,8 +364,6 @@ class PlatformToolsAgentExecutor(AgentExecutor):
                     callbacks=run_manager.get_child() if run_manager else None,
                     **tool_run_kwargs,
                 )
-        elif agent_action.tool == 'approved':
-            return AgentFinish(return_values={"output": "approved"}, log=agent_action.log)
         else:
             tool_run_kwargs = self.agent.tool_run_logging_kwargs()
             observation = await InvalidTool().arun(

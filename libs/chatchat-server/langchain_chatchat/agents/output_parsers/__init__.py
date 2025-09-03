@@ -17,7 +17,12 @@ from langchain_chatchat.agents.output_parsers.platform_tools import (
     PlatformToolsAgentOutputParser,
 )
 
+from langchain_chatchat.agents.output_parsers.platform_knowledge_output_parsers import (
+    PlatformKnowledgeOutputParserCustom, MCPToolAction
+)
 __all__ = [
+    "MCPToolAction",
+    "PlatformKnowledgeOutputParserCustom",
     "PlatformToolsAgentOutputParser",
     "QwenChatAgentOutputParserCustom",
     "StructuredGLM3ChatOutputParser",

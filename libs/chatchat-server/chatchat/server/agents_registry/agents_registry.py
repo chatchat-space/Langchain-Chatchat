@@ -209,6 +209,7 @@ def agents_registry(
         agent_executor = PlatformToolsAgentExecutor(
             agent=agent,
             tools=tools,
+            mcp_tools=mcp_tools,
             verbose=verbose,
             callbacks=callbacks,
             return_intermediate_steps=True,

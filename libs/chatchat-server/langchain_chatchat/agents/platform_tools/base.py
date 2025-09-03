@@ -150,10 +150,10 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                     "PYTHONHASHSEED": "0",
                 }
               
-        async with MultiServerMCPClient(
-               connections
-        ) as client:
-            return client
+        # Create client without context manager to keep session alive
+        client = MultiServerMCPClient(connections)
+        await client.__aenter__()
+        return client
 
     @staticmethod
     def paser_all_tools(
