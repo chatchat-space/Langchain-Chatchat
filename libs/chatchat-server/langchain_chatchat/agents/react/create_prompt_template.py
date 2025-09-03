@@ -179,7 +179,7 @@ def create_prompt_platform_knowledge_mode_template(model_name: str, template: di
         messages=[
             langchain_core.prompts.SystemMessagePromptTemplate(
                 prompt=langchain_core.prompts.PromptTemplate(
-                    input_variables=["tools", "mcp_tools"], template=SYSTEM_PROMPT
+                    input_variables=["current_working_directory", "tools", "mcp_tools"], template=SYSTEM_PROMPT
                 )
             ),
             langchain_core.prompts.MessagesPlaceholder(

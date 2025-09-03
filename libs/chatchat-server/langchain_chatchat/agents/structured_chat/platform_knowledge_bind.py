@@ -68,6 +68,7 @@ def render_knowledge_tools(tools: List[BaseTool]) -> str:
 
 def create_platform_knowledge_agent(
         llm: BaseLanguageModel,
+        current_working_directory: str,
         tools: Sequence[BaseTool],
         mcp_tools: Sequence[MCPStructuredTool],
         prompt: ChatPromptTemplate,
@@ -90,6 +91,7 @@ def create_platform_knowledge_agent(
         raise ValueError(f"Prompt missing required variables: {missing_vars}")
 
     prompt = prompt.partial(
+        current_working_directory=current_working_directory,
         tools=render_knowledge_tools(list(tools)),
         datetime=datetime.now().isoformat(),
         mcp_tools=render_knowledge_mcp_tools(list(mcp_tools)),

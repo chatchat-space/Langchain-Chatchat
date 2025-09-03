@@ -201,6 +201,7 @@ def agents_registry(
         template = get_prompt_template_dict("action_model", agent_type)
         prompt = create_prompt_platform_knowledge_mode_template(agent_type, template=template)
         agent = create_platform_knowledge_agent(llm=llm,
+                                                current_working_directory=kwargs.get("current_working_directory", "/tmp"),
                                                 tools=tools,
                                                 mcp_tools=mcp_tools,
                                                 llm_with_platform_tools=llm_with_platform_tools,

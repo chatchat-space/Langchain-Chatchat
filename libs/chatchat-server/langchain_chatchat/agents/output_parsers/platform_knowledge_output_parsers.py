@@ -70,6 +70,11 @@ class PlatformKnowledgeOutputParserCustom(ToolsAgentOutputParser):
                     )
                     temp_tools.append(act)
 
+            if isinstance(tools, AgentFinish) and len(temp_tools) == 0:
+                return tools 
+
+            elif not isinstance(tools, AgentFinish):
+                temp_tools.extend(tools)
         except Exception as e:
             logger.error(e)
             return AgentFinish(return_values={"output": str(message.content)}, log=str(message.content))
