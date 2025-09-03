@@ -1,6 +1,8 @@
 import asyncio
 import json
 import uuid
+import os
+import sys
 from typing import AsyncIterable, List
 
 from fastapi import Body
@@ -100,11 +102,20 @@ def create_models_chains(
         llm = models["action_model"]
         llm.callbacks = callbacks
         agent_executor = PlatformToolsRunnable.create_agent_executor(
-            agent_type="platform-agent",
+            agent_type="platform-knowledge-mode",
             agents_registry=agents_registry,
             llm=llm,
             tools=tools,
             history=history,
+            mcp_connections={
+                "playwright": {
+                    "command": "npx",
+                    "args": [
+                        "@playwright/mcp@latest"
+                    ],
+                    "transport": "stdio",
+                },
+            }
         )
 
         full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
@@ -201,7 +212,6 @@ async def chat(
                     data["tool_calls"].append(tool_call)
 
                 elif isinstance(item, PlatformToolsFinish):
-                    logger.info("PlatformToolsFinish:" + str(item.to_json()))
                     data["text"] = item.log
 
                     last_tool.update(
@@ -299,8 +309,6 @@ async def chat(
 
         return ret.model_dump()
 
-
-async def chat_with_mcp():
     llm_params = get_ChatPlatformAIParams(
         model_name="glm-4-plus",
         temperature=0.01,

@@ -27,12 +27,28 @@ class MCPStructuredTool(StructuredTool):
 
 
 def schema_dict_to_model(schema: Dict[str, Any]) -> Any:
+    """
+    Convert JSON schema to Pydantic model with required field validation.
+    
+    Args:
+        schema: JSON schema dictionary containing tool parameter definitions
+        
+    Returns:
+        Dynamic Pydantic model class with proper field validation
+        
+    Note:
+        Required fields are marked with required=True to ensure they have actual content,
+        empty or null values are strictly prohibited for required parameters.
+    """
     fields = schema.get('properties', {})
     required_fields = schema.get('required', [])
 
     model_fields = {}
     for field_name, details in fields.items():
         field_type_str = details['type']
+        
+        # Add field description if available
+        field_description = details.get('description', '')
 
         if field_type_str == 'integer':
             field_type = int
@@ -45,10 +61,25 @@ def schema_dict_to_model(schema: Dict[str, Any]) -> Any:
         else:
             field_type = Any  # 可扩展更多类型
 
+        # For required fields, use Field with required=True
         if field_name in required_fields:
-            model_fields[field_name] = (field_type, ...)
+            # Ensure required fields have actual content and cannot be empty/null
+            if field_type == str:
+                model_fields[field_name] = (field_type, Field(..., min_length=1, required=True, 
+                    description=field_description or f"Required string parameter: {field_name}"))
+            elif field_type in (int, float):
+                model_fields[field_name] = (field_type, Field(..., required=True, 
+                    description=field_description or f"Required numeric parameter: {field_name}"))
+            elif field_type == bool:
+                model_fields[field_name] = (field_type, Field(..., required=True, 
+                    description=field_description or f"Required boolean parameter: {field_name}"))
+            else:
+                model_fields[field_name] = (field_type, Field(..., required=True, 
+                    description=field_description or f"Required parameter: {field_name}"))
         else:
-            model_fields[field_name] = (field_type, None)
+            # Optional fields can be None
+            model_fields[field_name] = (field_type, Field(None, required=False, 
+                description=field_description or f"Optional parameter: {field_name}"))
 
     DynamicSchema = create_model(schema.get('title', 'DynamicSchema'), **model_fields)
     return DynamicSchema
@@ -72,7 +103,7 @@ def _convert_call_tool_result(
     if call_tool_result.isError:
         raise ToolException(tool_content)
 
-    return tool_content, non_text_contents or None
+    return tool_content
 
 
 def convert_mcp_tool_to_langchain_tool(

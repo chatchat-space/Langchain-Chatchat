@@ -23,9 +23,27 @@ def render_knowledge_mcp_tools(tools: List[MCPStructuredTool]) -> str:
 
     for t in tools:
         desc = re.sub(r"\n+", " ", t.description)
+        
+        # 构建参数描述，强调 required=True 属性
+        params = []
+        if hasattr(t, "args") and t.args:
+            for arg_name, arg_def in t.args.items():
+                # 获取字段信息
+                required = arg_def.get("required", True)
+                required_str = "(required)" if required else "(optional)"
+                arg_desc = arg_def.get("description", "").strip() 
+                # 强调 required 属性
+                if required:
+                    params.append(f"- {arg_name}: {required_str} CRITICAL: Must provide actual content, empty/null forbidden. {arg_desc}")
+                else:
+                    params.append(f"- {arg_name}: {required_str} {arg_desc}")
+        
+        # 拼接工具描述
+        params_text = "\n".join(params) if params else "- None"
         text = (
             f"- {t.name}: {desc}  \n"
-            f"  Input Schema: {t.args}"
+            f"  Input Schema:\n"
+            f"  {params_text}"
         )
         grouped_tools[t.server_name].append(text)
 
