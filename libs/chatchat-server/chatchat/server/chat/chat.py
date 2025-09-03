@@ -2,8 +2,8 @@ import asyncio
 import json
 import uuid
 import os
-import sys
-from typing import AsyncIterable, List
+from chatchat.server.db.repository.message_repository import filter_message
+from typing import AsyncIterable, List, Union, Tuple
 
 from fastapi import Body
 from langchain.chains import LLMChain
@@ -21,9 +21,8 @@ from langchain_chatchat.callbacks.agent_callback_handler import (
 from langchain_chatchat.agents.platform_tools import PlatformToolsAction, PlatformToolsFinish, \
     PlatformToolsActionToolStart, PlatformToolsActionToolEnd, PlatformToolsLLMStatus
 from chatchat.server.chat.utils import History
-from chatchat.server.memory.conversation_db_buffer_memory import (
-    ConversationBufferDBMemory,
-)
+from chatchat.server.db.repository import add_message_to_db, update_message
+
 from langchain_chatchat import ChatPlatformAI, PlatformToolsRunnable
 from chatchat.server.utils import (
     MsgType,
@@ -73,11 +72,21 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
 
 
 def create_models_chains(
-        history, history_len, prompts, models, tools, callbacks, conversation_id, metadata
+    history_len, prompts, models, tools, callbacks, conversation_id, metadata
 ):
 
     # 从数据库获取conversation_id对应的 intermediate_steps 、 mcp_connections
-   
+    messages = filter_message(
+        conversation_id=conversation_id, limit=history_len
+    )
+    # 返回的记录按时间倒序，转为正序
+    messages = list(reversed(messages))
+    history: List[Union[List, Tuple]] = []
+    for message in messages:
+        history.append({"role": "user", "content": message["query"]}) 
+        history.append({"role": "assistant", "content":  message["response"]}) 
+ 
+
     llm = models["action_model"]
     llm.callbacks = callbacks
     agent_executor = PlatformToolsRunnable.create_agent_executor(
@@ -99,7 +108,7 @@ def create_models_chains(
 
     full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
 
-    return full_chain
+    return full_chain, agent_executor
 
 
 async def chat(
@@ -148,17 +157,20 @@ async def chat(
             all_tools = get_tool().values()
             tools = [tool for tool in all_tools if tool.name in tool_config]
             tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-            full_chain = create_models_chains(
+            full_chain, agent_executor = create_models_chains(
                 prompts=prompts,
                 models=models,
                 conversation_id=conversation_id,
                 tools=tools,
                 callbacks=callbacks,
-                history=history,
                 history_len=history_len,
                 metadata=metadata,
             )
-
+            message_id = add_message_to_db(
+                    chat_type="llm_chat",
+                    query=query,
+                    conversation_id=conversation_id,
+            )
             chat_iterator = full_chain.invoke({
                 "input": query
             })
@@ -250,6 +262,14 @@ async def chat(
                 )
                 yield ret.model_dump_json()
 
+            update_message(
+                message_id, 
+                agent_executor.history[-1].get("content"),
+                metadata = {
+                    "intermediate_steps": agent_executor.intermediate_steps 
+                }
+            )
+             
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
