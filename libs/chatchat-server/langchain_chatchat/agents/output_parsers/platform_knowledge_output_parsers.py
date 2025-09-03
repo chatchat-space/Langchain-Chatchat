@@ -69,6 +69,29 @@ class PlatformKnowledgeOutputParserCustom(ToolsAgentOutputParser):
                         log=str(log_text)
                     )
                     temp_tools.append(act)
+                elif elem.tag == 'thinking':
+                    # 忽略thinking标签，这是用于内部思考过程的标签
+                    continue
+                elif elem.tag in ['use_mcp_resource']:
+                    # 处理use_mcp_resource标签，暂时跳过
+                    continue
+                else:
+                    # 处理其他工具标签（如calculate等）
+                    tool_name = elem.tag
+                    tool_input = {}
+                    
+                    # 遍历标签内的所有子标签，作为工具参数
+                    for child in elem:
+                        if child.text and child.text.strip():
+                            tool_input[child.tag] = child.text.strip()
+                    
+                    # 创建通用的AgentAction
+                    act = AgentAction(
+                        tool=tool_name,
+                        tool_input=tool_input,
+                        log=str(log_text)
+                    )
+                    temp_tools.append(act)
 
             if isinstance(tools, AgentFinish) and len(temp_tools) == 0:
                 return tools 
