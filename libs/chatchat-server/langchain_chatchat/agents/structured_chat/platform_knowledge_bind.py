@@ -67,11 +67,15 @@ def render_knowledge_tools(tools: List[BaseTool]) -> str:
         params = []
         if hasattr(t, "args") and t.args:  # 确保有参数定义
             for arg_name, arg_def in t.args.items():
-                arg_type = arg_def.get("type", "string")
+                # 获取字段信息
                 required = arg_def.get("required", True)
                 required_str = "(required)" if required else "(optional)"
-                arg_desc = arg_def.get("description", "").strip()
-                params.append(f"- {arg_name}: {required_str} {arg_desc}")
+                arg_desc = arg_def.get("description", "").strip() 
+                # 强调 required 属性
+                if required:
+                    params.append(f"- {arg_name}: {required_str} CRITICAL: Must provide actual content, empty/null forbidden. {arg_desc}")
+                else:
+                    params.append(f"- {arg_name}: {required_str} {arg_desc}")
 
         # 拼接最终文本
         text = (

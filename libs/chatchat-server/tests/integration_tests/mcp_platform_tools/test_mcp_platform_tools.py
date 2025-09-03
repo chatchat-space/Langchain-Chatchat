@@ -145,7 +145,7 @@ async def test_mcp_tools(logging_conf):
             },
         },
     )
-    chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5,之后计算 100*2,然后获取这个链接https://mp.weixin.qq.com/s/YCHHY6mA8-1o7hbXlyEyEQ 的文本")
+    chat_iterator = agent_executor.invoke(chat_input="计算下 2 乘以 5,之后计算 100*2,然后获取这个链接https://mp.weixin.qq.com/s/YCHHY6mA8-1o7hbXlyEyEQ 的文本,接着 使用浏览器下载项目到本地 https://github.com/microsoft/playwright-mcp")
     async for item in chat_iterator:
         if isinstance(item, PlatformToolsAction):
             print("PlatformToolsAction:" + str(item.to_json()))
