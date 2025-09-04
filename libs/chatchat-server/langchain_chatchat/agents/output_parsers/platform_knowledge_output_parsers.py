@@ -33,8 +33,7 @@ class MCPToolAction(AgentAction):
     @classmethod
     def get_lc_namespace(cls) -> List[str]:
         """Get the namespace of the langchain object."""
-        return ["langchain", "schema", "agent"]
-
+        return ["langchain_chatchat", "agents", "output_parsers", "platform_knowledge_output_parsers"]
         
 def collect_plain_text(root):
     texts = []

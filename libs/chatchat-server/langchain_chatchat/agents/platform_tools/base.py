@@ -118,8 +118,8 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
 
     """工具模型"""
     callback: AgentExecutorAsyncIteratorCallbackHandler
-    """ZhipuAI AgentExecutor callback."""
-    intermediate_steps: List[Tuple[AgentAction, BaseToolOutput]] = []
+    """AgentExecutor callback."""
+    intermediate_steps: List[Tuple[AgentAction, Union[BaseToolOutput, str]]] = []
     """intermediate_steps to store the data to be processed."""
     history: List[Union[List, Tuple, Dict]] = []
     """user message history"""

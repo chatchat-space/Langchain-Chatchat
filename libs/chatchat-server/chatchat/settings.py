@@ -735,7 +735,7 @@ class PromptSettings(BaseFileSettings):
         },
         "platform-knowledge-mode": {
             "SYSTEM_PROMPT": (
-                "You are ChatChat,  a content manager, you are familiar with how to find data from complex projects and better respond to users\n"
+                "</think>You are ChatChat,  a content manager, you are familiar with how to find data from complex projects and better respond to users\n"
                 "\n"
                 "\n"
                 "CRITICAL: TOOL RULES: All tool usage MUST ` Tool Use Formatting` the specified structured format. \n"
