@@ -4,6 +4,7 @@ import uuid
 import os
 from chatchat.server.db.repository.message_repository import filter_message
 from typing import AsyncIterable, List, Union, Tuple
+from langchain_core.load import dumpd, dumps, load, loads
 
 from fastapi import Body
 from langchain.chains import LLMChain
@@ -84,9 +85,9 @@ def create_models_chains(
     history: List[Union[List, Tuple]] = []
     for message in messages:
         history.append({"role": "user", "content": message["query"]}) 
-        history.append({"role": "assistant", "content":  message["response"]}) 
- 
+        history.append({"role": "assistant", "content":  message["response"]})  
 
+    intermediate_steps = loads(messages[-1].get("metadata", {}).get("intermediate_steps"), valid_namespaces=["langchain_chatchat", "agent_toolkits", "all_tools", "tool"] )  if len(messages)>0 and messages[-1].get("metadata") is not None else []
     llm = models["action_model"]
     llm.callbacks = callbacks
     agent_executor = PlatformToolsRunnable.create_agent_executor(
@@ -95,6 +96,7 @@ def create_models_chains(
         llm=llm,
         tools=tools,
         history=history,
+        intermediate_steps=intermediate_steps,
         mcp_connections={
             "playwright": {
                 "command": "npx",
@@ -262,11 +264,13 @@ async def chat(
                 )
                 yield ret.model_dump_json()
 
+            string_intermediate_steps = dumps(agent_executor.intermediate_steps, pretty=True)
+
             update_message(
                 message_id, 
                 agent_executor.history[-1].get("content"),
                 metadata = {
-                    "intermediate_steps": agent_executor.intermediate_steps 
+                    "intermediate_steps": string_intermediate_steps
                 }
             )
              

@@ -7,6 +7,7 @@ import json
 from typing import List, Tuple, Any, Awaitable, Callable, Dict, Optional
 from uuid import UUID
 from enum import Enum
+from langchain_core.load import dumpd, dumps, load, loads
 
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.schema import AgentAction, AgentFinish
@@ -21,20 +22,6 @@ from langchain_chatchat.utils import History
 # Define TypeVars for input and output types
 T = TypeVar("T")
 R = TypeVar("R")
-
-
-async def _adefault_approve(_input: str) -> bool:
-    msg = (
-        "Do you approve of the following input? "
-        "Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no."
-    )
-    msg += "\n\n" + _input + "\n"
-    resp = input(msg)
-    return resp.lower() in ("yes", "y")
-
-
-def dumps(obj: Dict) -> str:
-    return json.dumps(obj, ensure_ascii=False)
 
 
 class ApprovalMethod(Enum):
@@ -83,7 +70,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         }
         self.out = False
         self.done.clear()
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         special_tokens = ["\nAction:", "\nObservation:", "<|observation|>"]
@@ -95,7 +82,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
                     "text": before_action + "\n",
                 }
                 self.done.clear()
-                self.queue.put_nowait(dumps(data))
+                self.queue.put_nowait(dumps(data, pretty=True))
 
                 break
 
@@ -106,7 +93,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
                 "text": token,
             }
             self.done.clear()
-            self.queue.put_nowait(dumps(data))
+            self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_chat_model_start(
             self,
@@ -125,7 +112,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "text": "",
         }
         self.done.clear()
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         data = {
@@ -134,7 +121,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "text": response.generations[0][0].message.content,
         }
 
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_llm_error(
             self, error: Exception | KeyboardInterrupt, **kwargs: Any
@@ -143,7 +130,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "status": AgentStatus.error,
             "text": str(error),
         }
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_tool_start(
             self,
@@ -166,7 +153,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
         if self.approval_method is ApprovalMethod.CLI:
 
             # self.done.clear()
-            # self.queue.put_nowait(dumps(data))
+            # self.queue.put_nowait(dumps(data, pretty=True))
             # if not await _adefault_approve(input_str):
             #     raise HumanRejectedException(
             #         f"Inputs {input_str} to tool {serialized} were rejected."
@@ -178,7 +165,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             raise ValueError("Approval method not recognized.")
 
         self.done.clear()
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_tool_end(
             self,
@@ -196,7 +183,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "tool": kwargs["name"],
             "tool_output": str(output),
         }
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_tool_error(
             self,
@@ -215,7 +202,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "is_error": True,
         }
 
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_agent_action(
             self,
@@ -235,7 +222,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
                 "log": action.log,
             },
         }
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_agent_finish(
             self,
@@ -263,7 +250,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             },
         }
 
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_chain_start(
             self,
@@ -295,7 +282,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
 
         self.done.clear()
         self.out = False
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_chain_error(
             self,
@@ -312,7 +299,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "status": AgentStatus.error,
             "error": str(error),
         }
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
 
     async def on_chain_end(
             self,
@@ -338,7 +325,7 @@ class AgentExecutorAsyncIteratorCallbackHandler(AsyncIteratorCallbackHandler):
             "parent_run_id": parent_run_id,
             "tags": tags,
         }
-        self.queue.put_nowait(dumps(data))
+        self.queue.put_nowait(dumps(data, pretty=True))
         self.out = True
         # self.done.set()
 

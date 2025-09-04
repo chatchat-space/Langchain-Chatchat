@@ -11,8 +11,11 @@ from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import MsgType, get_tool_config, get_model_info
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool(title="""
 #文本生成图片工具

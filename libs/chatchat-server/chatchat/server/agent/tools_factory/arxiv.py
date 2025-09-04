@@ -1,8 +1,11 @@
 # LangChain 的 ArxivQueryRun 工具
 from chatchat.server.pydantic_v1 import Field
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool(title="ARXIV论文")
 def arxiv(query: str = Field(description="The search query title")):

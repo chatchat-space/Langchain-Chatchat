@@ -36,6 +36,7 @@ from langchain_chatchat.agents.output_parsers.tools_output.drawing_tool import D
 from langchain_chatchat.agents.output_parsers.tools_output.web_browser import WebBrowserAgentAction
 from langchain_chatchat.agents.output_parsers.platform_tools import PlatformToolsAgentOutputParser
 from langchain_chatchat.agents.output_parsers import MCPToolAction
+from sqlalchemy import Null
 logger = logging.getLogger(__name__)
 
 NextStepOutput = List[Union[AgentFinish, MCPToolAction, AgentAction, AgentStep]]
@@ -81,7 +82,11 @@ class PlatformToolsAgentExecutor(AgentExecutor):
         color_mapping = get_color_mapping(
             [tool.name for tool in self.tools], excluded_colors=["green", "red"]
         )
-        intermediate_steps: List[Tuple[AgentAction, str]] = []
+        intermediate_steps: List[Tuple[AgentAction, str]] = inputs.get("intermediate_steps") if inputs.get("intermediate_steps") is not None else []
+        # 确保 inputs 里不带 intermediate_steps
+        if "intermediate_steps" in inputs:
+            inputs = dict(inputs)
+            inputs.pop("intermediate_steps")
         # Let's start tracking the number of iterations and time elapsed
         iterations = 0
         time_elapsed = 0.0
@@ -128,7 +133,11 @@ class PlatformToolsAgentExecutor(AgentExecutor):
         color_mapping = get_color_mapping(
             [tool.name for tool in self.tools], excluded_colors=["green"]
         )
-        intermediate_steps: List[Tuple[AgentAction, str]] = []
+        intermediate_steps: List[Tuple[AgentAction, str]] = inputs.get("intermediate_steps") if inputs.get("intermediate_steps") is not None else []
+        # 确保 inputs 里不带 intermediate_steps
+        if "intermediate_steps" in inputs:
+            inputs = dict(inputs)
+            inputs.pop("intermediate_steps")
         # Let's start tracking the number of iterations and time elapsed
         iterations = 0
         time_elapsed = 0.0

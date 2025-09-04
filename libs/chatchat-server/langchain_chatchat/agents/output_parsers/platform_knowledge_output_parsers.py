@@ -25,6 +25,17 @@ from langchain_core.outputs import Generation
 class MCPToolAction(AgentAction):
     server_name: str  
 
+    @classmethod
+    def is_lc_serializable(cls) -> bool:
+        """Return whether or not the class is serializable."""
+        return True
+
+    @classmethod
+    def get_lc_namespace(cls) -> List[str]:
+        """Get the namespace of the langchain object."""
+        return ["langchain", "schema", "agent"]
+
+        
 def collect_plain_text(root):
     texts = []
     if root.text and root.text.strip():
@@ -32,7 +43,7 @@ def collect_plain_text(root):
     for elem in root.iter():
         if elem.tail and elem.tail.strip():
             texts.append(elem.tail.strip())
-    return texts
+    return "".join(texts)
 
 class PlatformKnowledgeOutputParserCustom(ToolsAgentOutputParser):
     """Output parser with retries for the structured chat agent with custom Knowledge prompt."""

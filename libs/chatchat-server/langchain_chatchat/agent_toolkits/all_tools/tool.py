@@ -15,8 +15,13 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    List,
+    Callable
 )
 
+from langchain_core.load.serializable import (
+    Serializable
+)
 from dataclasses_json import DataClassJsonMixin
 from langchain_core.agents import AgentAction
 from langchain_core.callbacks import (
@@ -36,33 +41,45 @@ from langchain_chatchat.agents.output_parsers.tools_output.web_browser import We
 logger = logging.getLogger(__name__)
 
 
-class BaseToolOutput:
+
+class BaseToolOutput(Serializable):
     """
     LLM 要求 Tool 的输出为 str，但 Tool 用在别处时希望它正常返回结构化数据。
     只需要将 Tool 返回值用该类封装，能同时满足两者的需要。
-    基类简单的将返回值字符串化，或指定 format="json" 将其转为 json。
-    用户也可以继承该类定义自己的转换方法。
     """
+
+    # 使用 pydantic v1 兼容的字段定义
+    data: Any
+    format: str = None
+    data_alias: str = ""
+    extras: dict = {}
 
     def __init__(
         self,
         data: Any,
-        format: str = "",
+        format: str | Callable = None,
         data_alias: str = "",
         **extras: Any,
     ) -> None:
-        self.data = data
-        self.format = format
-        self.extras = extras
-        if data_alias:
-            setattr(self, data_alias, property(lambda obj: obj.data))
+        super().__init__(data=data, format=format, data_alias=data_alias, **extras)
 
     def __str__(self) -> str:
         if self.format == "json":
             return json.dumps(self.data, ensure_ascii=False, indent=2)
+        elif hasattr(self, "_format_callable") and callable(self._format_callable):
+            return self._format_callable(self)
         else:
             return str(self.data)
 
+    @classmethod
+    def is_lc_serializable(cls) -> bool:
+        """Return whether or not the class is serializable."""
+        return True
+
+    @classmethod
+    def get_lc_namespace(cls) -> List[str]:
+        """Get the namespace of the langchain object."""
+        return ["langchain_chatchat", "agent_toolkits", "all_tools", "tool"] 
 
 @dataclass
 class AllToolExecutor(DataClassJsonMixin):

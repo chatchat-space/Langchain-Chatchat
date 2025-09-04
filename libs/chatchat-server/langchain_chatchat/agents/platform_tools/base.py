@@ -273,9 +273,7 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
                         {
                             "input": chat_input,
                             "chat_history": history_message,
-                            "agent_scratchpad": lambda x: format_to_platform_tool_messages(
-                                self.intermediate_steps
-                            ),
+                            "intermediate_steps": self.intermediate_steps
                         }
                     ),
                     self.callback.done,
@@ -369,11 +367,11 @@ class PlatformToolsRunnable(RunnableSerializable[Dict, OutputType]):
 
             await task
 
-            if self.callback.out:
-                self.history.append({"role": "user", "content": chat_input})
-                self.history.append(
-                    {"role": "assistant", "content": self.callback.outputs["output"]}
-                )
-                self.intermediate_steps.extend(self.callback.intermediate_steps)
+            # if self.callback.out:
+            self.history.append({"role": "user", "content": chat_input})
+            self.history.append(
+                {"role": "assistant", "content": self.callback.outputs["output"]}
+            )
+            self.intermediate_steps.extend(self.callback.intermediate_steps)
 
         return chat_iterator()
