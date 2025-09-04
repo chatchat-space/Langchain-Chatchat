@@ -56,7 +56,9 @@ class PlatformKnowledgeOutputParserCustom(ToolsAgentOutputParser):
         message = result[0].message
         temp_tools = []
         try:
-            wrapped_xml = f"<root>{str(message.content)}</root>"
+            cleaned_content = str(message.content).replace("</think>", "")
+
+            wrapped_xml = f"<root>{cleaned_content}</root>"
             # 解析mcp_use标签
             root = ET.fromstring(wrapped_xml)
             
