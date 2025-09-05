@@ -35,8 +35,137 @@ from chatchat.server.db.repository.mcp_connection_repository import (
     reset_mcp_profile,
     delete_mcp_profile,
 )
+from chatchat.utils import build_logger
 
+
+logger = build_logger()
 mcp_router = APIRouter(prefix="/api/v1/mcp_connections", tags=["MCP Connections"])
+
+
+# MCP Profile 相关路由 - 放在前面避免与 {connection_id} 冲突
+@mcp_router.get("/profile", response_model=MCPProfileResponse, summary="获取 MCP 通用配置")
+async def get_mcp_profile_endpoint():
+    """
+    获取 MCP 通用配置
+    """
+    try:
+        profile = get_mcp_profile()
+        if profile:
+            return MCPProfileResponse(
+                timeout=profile.timeout,
+                working_dir=profile.working_dir,
+                env_vars=profile.env_vars,
+                update_time=profile.update_time.isoformat() if profile.update_time else None
+            )
+        else:
+            # 如果不存在配置，返回默认配置
+            return MCPProfileResponse(
+                timeout=30,
+                working_dir="/tmp",
+                env_vars={
+                    "PATH": "/usr/local/bin:/usr/bin:/bin",
+                    "PYTHONPATH": "/app",
+                    "HOME": "/tmp"
+                },
+                update_time=datetime.now().isoformat()
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@mcp_router.post("/profile", response_model=MCPProfileResponse, summary="创建/更新 MCP 通用配置")
+async def create_or_update_mcp_profile(profile_data: MCPProfileCreate):
+    """
+    创建或更新 MCP 通用配置
+    """
+    try:
+        profile_id = create_mcp_profile(
+            timeout=profile_data.timeout,
+            working_dir=profile_data.working_dir,
+            env_vars=profile_data.env_vars,
+        )
+        
+        profile = get_mcp_profile()
+        return MCPProfileResponse(
+            timeout=profile.timeout,
+            working_dir=profile.working_dir,
+            env_vars=profile.env_vars,
+            update_time=profile.update_time.isoformat() if profile.update_time else None
+        )
+    
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@mcp_router.put("/profile", response_model=MCPProfileResponse, summary="更新 MCP 通用配置")
+async def update_mcp_profile_endpoint(profile_data: MCPProfileCreate):
+    """
+    更新 MCP 通用配置
+    """
+    try:
+        profile_id = update_mcp_profile(
+            timeout=profile_data.timeout,
+            working_dir=profile_data.working_dir,
+            env_vars=profile_data.env_vars,
+        )
+        
+        profile = get_mcp_profile()
+        return MCPProfileResponse(
+            timeout=profile.timeout,
+            working_dir=profile.working_dir,
+            env_vars=profile.env_vars,
+            update_time=profile.update_time.isoformat() if profile.update_time else None
+        )
+    
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@mcp_router.post("/profile/reset", response_model=MCPProfileStatusResponse, summary="重置 MCP 通用配置")
+async def reset_mcp_profile_endpoint():
+    """
+    重置 MCP 通用配置为默认值
+    """
+    try:
+        success = reset_mcp_profile()
+        if success:
+            return MCPProfileStatusResponse(
+                success=True,
+                message="MCP 通用配置已重置为默认值"
+            )
+        else:
+            return MCPProfileStatusResponse(
+                success=False,
+                message="重置 MCP 通用配置失败"
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@mcp_router.delete("/profile", response_model=MCPProfileStatusResponse, summary="删除 MCP 通用配置")
+async def delete_mcp_profile_endpoint():
+    """
+    删除 MCP 通用配置
+    """
+    try:
+        success = delete_mcp_profile()
+        if success:
+            return MCPProfileStatusResponse(
+                success=True,
+                message="MCP 通用配置已删除"
+            )
+        else:
+            return MCPProfileStatusResponse(
+                success=False,
+                message="删除 MCP 通用配置失败"
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def model_to_response(model) -> MCPConnectionResponse:
@@ -415,137 +544,4 @@ async def list_auto_connect_mcp_connections():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# MCP Profile 相关路由
-@mcp_router.get("/profile", response_model=MCPProfileResponse, summary="获取 MCP 通用配置")
-async def get_mcp_profile_endpoint():
-    """
-    获取 MCP 通用配置
-    """
-    try:
-        profile = get_mcp_profile()
-        if profile:
-            return MCPProfileResponse(
-                timeout=profile.timeout,
-                transport=profile.transport,
-                auto_connect=profile.auto_connect,
-                working_dir=profile.working_dir,
-                env_vars=profile.env_vars,
-                update_time=profile.update_time.isoformat() if profile.update_time else None
-            )
-        else:
-            # 如果不存在配置，返回默认配置
-            return MCPProfileResponse(
-                timeout=30,
-                transport="stdio",
-                auto_connect=False,
-                working_dir="/tmp",
-                env_vars={
-                    "PATH": "/usr/local/bin:/usr/bin:/bin",
-                    "PYTHONPATH": "/app",
-                    "HOME": "/tmp"
-                },
-                update_time=datetime.now().isoformat()
-            )
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@mcp_router.post("/profile", response_model=MCPProfileResponse, summary="创建/更新 MCP 通用配置")
-async def create_or_update_mcp_profile(profile_data: MCPProfileCreate):
-    """
-    创建或更新 MCP 通用配置
-    """
-    try:
-        profile_id = create_mcp_profile(
-            timeout=profile_data.timeout,
-            transport=profile_data.transport,
-            auto_connect=profile_data.auto_connect,
-            working_dir=profile_data.working_dir,
-            env_vars=profile_data.env_vars,
-        )
-        
-        profile = get_mcp_profile()
-        return MCPProfileResponse(
-            timeout=profile.timeout,
-            transport=profile.transport,
-            auto_connect=profile.auto_connect,
-            working_dir=profile.working_dir,
-            env_vars=profile.env_vars,
-            update_time=profile.update_time.isoformat() if profile.update_time else None
-        )
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@mcp_router.put("/profile", response_model=MCPProfileResponse, summary="更新 MCP 通用配置")
-async def update_mcp_profile_endpoint(profile_data: MCPProfileCreate):
-    """
-    更新 MCP 通用配置
-    """
-    try:
-        profile_id = update_mcp_profile(
-            timeout=profile_data.timeout,
-            transport=profile_data.transport,
-            auto_connect=profile_data.auto_connect,
-            working_dir=profile_data.working_dir,
-            env_vars=profile_data.env_vars,
-        )
-        
-        profile = get_mcp_profile()
-        return MCPProfileResponse(
-            timeout=profile.timeout,
-            transport=profile.transport,
-            auto_connect=profile.auto_connect,
-            working_dir=profile.working_dir,
-            env_vars=profile.env_vars,
-            update_time=profile.update_time.isoformat() if profile.update_time else None
-        )
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@mcp_router.post("/profile/reset", response_model=MCPProfileStatusResponse, summary="重置 MCP 通用配置")
-async def reset_mcp_profile_endpoint():
-    """
-    重置 MCP 通用配置为默认值
-    """
-    try:
-        success = reset_mcp_profile()
-        if success:
-            return MCPProfileStatusResponse(
-                success=True,
-                message="MCP 通用配置已重置为默认值"
-            )
-        else:
-            return MCPProfileStatusResponse(
-                success=False,
-                message="重置 MCP 通用配置失败"
-            )
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@mcp_router.delete("/profile", response_model=MCPProfileStatusResponse, summary="删除 MCP 通用配置")
-async def delete_mcp_profile_endpoint():
-    """
-    删除 MCP 通用配置
-    """
-    try:
-        success = delete_mcp_profile()
-        if success:
-            return MCPProfileStatusResponse(
-                success=True,
-                message="MCP 通用配置已删除"
-            )
-        else:
-            return MCPProfileStatusResponse(
-                success=False,
-                message="删除 MCP 通用配置失败"
-            )
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# MCP Profile 相关路由已移至文件开头以避免路由冲突

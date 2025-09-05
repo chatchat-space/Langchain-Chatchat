@@ -190,7 +190,7 @@ def delete_mcp_connection(session, connection_id: str) -> bool:
     """
     删除 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(session, connection_id)
+    mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
         session.delete(mcp_connection)
         session.commit()
@@ -203,7 +203,7 @@ def enable_mcp_connection(session, connection_id: str) -> bool:
     """
     启用 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(session, connection_id)
+    mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
         mcp_connection.enabled = True
         session.add(mcp_connection)
@@ -217,7 +217,7 @@ def disable_mcp_connection(session, connection_id: str) -> bool:
     """
     禁用 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(session, connection_id)
+    mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
         mcp_connection.enabled = False
         session.add(mcp_connection)
@@ -231,7 +231,7 @@ def set_auto_connect(session, connection_id: str, auto_connect: bool) -> bool:
     """
     设置 MCP 连接的自动连接状态
     """
-    mcp_connection = get_mcp_connection_by_id(session, connection_id)
+    mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
         mcp_connection.auto_connect = auto_connect
         session.add(mcp_connection)
@@ -303,10 +303,9 @@ def create_mcp_profile(
         }
     
     # 检查是否已存在配置
-    existing_profile = get_mcp_profile(session)
+    existing_profile = get_mcp_profile()
     if existing_profile:
         return update_mcp_profile(
-            session,
             timeout=timeout,
             working_dir=working_dir,
             env_vars=env_vars,
@@ -332,7 +331,7 @@ def update_mcp_profile(
     """
     更新 MCP 通用配置
     """
-    profile = get_mcp_profile(session)
+    profile = get_mcp_profile()
     if profile is not None:
         if timeout is not None:
             profile.timeout = timeout
@@ -347,7 +346,6 @@ def update_mcp_profile(
     else:
         # 如果不存在配置，则创建新的
         return create_mcp_profile(
-            session,
             timeout=timeout or 30,
             working_dir=working_dir or "/tmp",
             env_vars=env_vars,
@@ -359,7 +357,7 @@ def reset_mcp_profile(session):
     """
     重置 MCP 通用配置为默认值
     """
-    profile = get_mcp_profile(session)
+    profile = get_mcp_profile()
     if profile is not None:
         profile.timeout = 30
         profile.transport = "stdio"
@@ -382,7 +380,7 @@ def delete_mcp_profile(session):
     """
     删除 MCP 通用配置
     """
-    profile = get_mcp_profile(session)
+    profile = get_mcp_profile()
     if profile is not None:
         session.delete(profile)
         session.commit()
