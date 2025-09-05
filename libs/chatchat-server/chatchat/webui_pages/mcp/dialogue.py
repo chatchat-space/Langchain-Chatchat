@@ -1,557 +1,797 @@
-import base64
-import hashlib
-import io
-import os
-import uuid
-from datetime import datetime
-from PIL import Image as PILImage
-from typing import Dict, List
-import streamlit_toggle as tog
-
-# from audio_recorder_streamlit import audio_recorder
-import openai
 import streamlit as st
 import streamlit_antd_components as sac
-from streamlit_chatbox import *
-from streamlit_extras.bottom_container import bottom
-from streamlit_paste_button import paste_image_button
-
-from chatchat.settings import Settings
-from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
-from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.knowledge_base.utils import format_reference
-from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
 from chatchat.webui_pages.utils import *
-
-chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
-
-
-def save_session(conv_name: str = None):
-    """save session state to chat context"""
-    chat_box.context_from_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
-    )
+from chatchat.settings import Settings
+import requests
+import json
 
 
-def restore_session(conv_name: str = None):
-    """restore sesstion state from chat context"""
-    chat_box.context_to_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
-    )
 
-
-def rerun():
+def mcp_management_page(api: ApiRequest, is_lite: bool = False):
     """
-    save chat context before rerun
+    MCP管理页面 - 连接器设置界面
+    采用超感官极简主义×液态数字形态主义设计风格
+    使用Streamlit语法实现
     """
-    save_session()
-    st.rerun()
-
-
-def get_messages_history(
-        history_len: int, content_in_expander: bool = False
-) -> List[Dict]:
-    """
-    返回消息历史。
-    content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
-    """
-
-    def filter(msg):
-        content = [
-            x for x in msg["elements"] if x._output_method in ["markdown", "text"]
-        ]
-        if not content_in_expander:
-            content = [x for x in content if not x._in_expander]
-        content = [x.content for x in content]
-
-        return {
-            "role": msg["role"],
-            "content": "\n\n".join(content),
-        }
-
-    messages = chat_box.filter_history(history_len=history_len, filter=filter)
-    if sys_msg := chat_box.context.get("system_message"):
-        messages = [{"role": "system", "content": sys_msg}] + messages
-
-    return messages
-
-
-@st.cache_data
-def upload_temp_docs(files, _api: ApiRequest) -> str:
-    """
-    将文件上传到临时目录，用于文件对话
-    返回临时向量库ID
-    """
-    return _api.upload_temp_docs(files).get("data", {}).get("id")
-
-
-@st.cache_data
-def upload_image_file(file_name: str, content: bytes) -> dict:
-    '''upload image for vision model using openai sdk'''
-    client = openai.Client(base_url=f"{api_address()}/v1", api_key="NONE")
-    return client.files.create(file=(file_name, content), purpose="assistants").to_dict()
-
-
-def get_image_file_url(upload_file: dict) -> str:
-    file_id = upload_file.get("id")
-    return f"{api_address(True)}/v1/files/{file_id}/content"
-
-
-def add_conv(name: str = ""):
-    conv_names = chat_box.get_chat_names()
-    if not name:
-        i = len(conv_names) + 1
-        while True:
-            name = f"会话{i}"
-            if name not in conv_names:
-                break
-            i += 1
-    if name in conv_names:
-        sac.alert(
-            "创建新会话出错",
-            f"该会话名称 “{name}” 已存在",
-            color="error",
-            closable=True,
-        )
-    else:
-        chat_box.use_chat_name(name)
-        st.session_state["cur_conv_name"] = name
-
-
-def del_conv(name: str = None):
-    conv_names = chat_box.get_chat_names()
-    name = name or chat_box.cur_chat_name
-
-    if len(conv_names) == 1:
-        sac.alert(
-            "删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True
-        )
-    elif not name or name not in conv_names:
-        sac.alert(
-            "删除会话出错", f"无效的会话名称：“{name}”", color="error", closable=True
-        )
-    else:
-        chat_box.del_chat_name(name)
-        # restore_session()
-    st.session_state["cur_conv_name"] = chat_box.cur_chat_name
-
-
-def clear_conv(name: str = None):
-    chat_box.reset_history(name=name or None)
-
-
-# @st.cache_data
-def list_tools(_api: ApiRequest):
-    return _api.list_tools() or {}
-
-
-def dialogue_page(
-        api: ApiRequest,
-        is_lite: bool = False,
-):
-    ctx = chat_box.context
-    ctx.setdefault("uid", uuid.uuid4().hex)
-    ctx.setdefault("file_chat_id", None)
-    ctx.setdefault("llm_model", get_default_llm())
-    ctx.setdefault("temperature", Settings.model_settings.TEMPERATURE)
-    st.session_state.setdefault("cur_conv_name", chat_box.cur_chat_name)
-    st.session_state.setdefault("last_conv_name", chat_box.cur_chat_name)
-
-    # sac on_change callbacks not working since st>=1.34
-    if st.session_state.cur_conv_name != st.session_state.last_conv_name:
-        save_session(st.session_state.last_conv_name)
-        restore_session(st.session_state.cur_conv_name)
-        st.session_state.last_conv_name = st.session_state.cur_conv_name
-
-    # st.write(chat_box.cur_chat_name)
-    # st.write(st.session_state)
-    # st.write(chat_box.context)
-
-    @st.experimental_dialog("模型配置", width="large")
-    def llm_model_setting():
-        # 模型
-        cols = st.columns(3)
-        platforms = ["所有"] + list(get_config_platforms())
-        platform = cols[0].selectbox("选择模型平台", platforms, key="platform")
-        llm_models = list(
-            get_config_models(
-                model_type="llm", platform_name=None if platform == "所有" else platform
-            )
-        )
-        llm_models += list(
-            get_config_models(
-                model_type="image2text", platform_name=None if platform == "所有" else platform
-            )
-        )
-        llm_model = cols[1].selectbox("选择LLM模型", llm_models, key="llm_model")
-        temperature = cols[2].slider("Temperature", 0.0, 1.0, key="temperature")
-        system_message = st.text_area("System Message:", key="system_message")
-        if st.button("OK"):
-            rerun()
-
-    @st.experimental_dialog("重命名会话")
-    def rename_conversation():
-        name = st.text_input("会话名称")
-        if st.button("OK"):
-            chat_box.change_chat_name(name)
-            restore_session()
-            st.session_state["cur_conv_name"] = name
-            rerun()
-
-    with st.sidebar:
-        tab1, tab2 = st.tabs(["工具设置", "会话设置"])
-
-        with tab1:
-            use_agent = st.checkbox(
-                "启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent"
-            )
-            output_agent = st.checkbox("显示 Agent 过程", key="output_agent")
-
-            # 选择工具
-            tools = list_tools(api)
-            selected_tools = {}
-            if use_agent:
-                with st.expander("Tools"):
-                    for name in list(tools):
-                        toggle_value = st.select_slider(
-                            "选择"+name+"执行方式",
-                            options=[
-                                "排除",
-                                "执行前询问",
-                                "自动执行",
-                            ],
-                        )
-                        selected_tools[name] = toggle_value
-
-            selected_tool_configs = {}
-            for name, tool in tools.items():
-                if selected_tools.get(name) != "排除":
-                    requires_approval = selected_tools.get(name) == "执行前询问"
-                    selected_tool_configs[name] = {
-                        **tool["config"],
-                        "requires_approval": requires_approval,
-                    }
-
-            # uploaded_file = st.file_uploader("上传附件", accept_multiple_files=False)
-            # files_upload = process_files(files=[uploaded_file]) if uploaded_file else None
-            files_upload = None
-
-            # 用于图片对话、文生图的图片
-            upload_image = None
-            def on_upload_file_change():
-                if f := st.session_state.get("upload_image"):
-                    name = ".".join(f.name.split(".")[:-1]) + ".png"
-                    st.session_state["cur_image"] = (name, PILImage.open(f))
-                else:
-                    st.session_state["cur_image"] = (None, None)
-                st.session_state.pop("paste_image", None)
-
-            st.file_uploader("上传图片", ["bmp", "jpg", "jpeg", "png"],
-                             accept_multiple_files=False,
-                             key="upload_image",
-                             on_change=on_upload_file_change)
-            paste_image = paste_image_button("黏贴图像", key="paste_image")
-            cur_image = st.session_state.get("cur_image", (None, None))
-            if cur_image[1] is None and paste_image.image_data is not None:
-                name = hashlib.md5(paste_image.image_data.tobytes()).hexdigest() + ".png"
-                cur_image = (name, paste_image.image_data)
-            if cur_image[1] is not None:
-                st.image(cur_image[1])
-                buffer = io.BytesIO()
-                cur_image[1].save(buffer, format="png")
-                upload_image = upload_image_file(cur_image[0], buffer.getvalue())
-
-        with tab2:
-            # 会话
-            cols = st.columns(3)
-            conv_names = chat_box.get_chat_names()
-
-            def on_conv_change():
-                print(conversation_name, st.session_state.cur_conv_name)
-                save_session(conversation_name)
-                restore_session(st.session_state.cur_conv_name)
-
-            conversation_name = sac.buttons(
-                conv_names,
-                label="当前会话：",
-                key="cur_conv_name",
-                # on_change=on_conv_change, # not work
-            )
-            chat_box.use_chat_name(conversation_name)
-            conversation_id = chat_box.context["uid"]
-            if cols[0].button("新建", on_click=add_conv):
-                ...
-            if cols[1].button("重命名"):
-                rename_conversation()
-            if cols[2].button("删除", on_click=del_conv):
-                ...
-
-    # Display chat messages from history on app rerun
-    chat_box.output_messages()
-    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter。"
-
-    # def on_feedback(
-    #         feedback,
-    #         message_id: str = "",
-    #         history_index: int = -1,
-    # ):
-
-    #     reason = feedback["text"]
-    #     score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
-    #     api.chat_feedback(message_id=message_id,
-    #                       score=score_int,
-    #                       reason=reason)
-    #     st.session_state["need_rerun"] = True
-
-    # feedback_kwargs = {
-    #     "feedback_type": "thumbs",
-    #     "optional_text_label": "欢迎反馈您打分的理由",
-    # }
-
-    # TODO: 这里的内容有点奇怪，从后端导入Settings.model_settings.LLM_MODEL_CONFIG，然后又从前端传到后端。需要优化
-    #  传入后端的内容
-    llm_model_config = Settings.model_settings.LLM_MODEL_CONFIG
-    chat_model_config = {key: {} for key in llm_model_config.keys()}
-    for key in llm_model_config:
-        if c := llm_model_config[key]:
-            model = c.get("model", "").strip() or get_default_llm()
-            chat_model_config[key][model] = llm_model_config[key]
-    llm_model = ctx.get("llm_model")
-    if llm_model is not None:
-        chat_model_config["llm_model"][llm_model] = llm_model_config["llm_model"].get(
-            llm_model, {}
-        )
-
-    # chat input
-    with bottom():
-        cols = st.columns([1, 0.2, 15, 1])
-        if cols[0].button(":gear:", help="模型配置"):
-            widget_keys = ["platform", "llm_model", "temperature", "system_message"]
-            chat_box.context_to_session(include=widget_keys)
-            llm_model_setting()
-        if cols[-1].button(":wastebasket:", help="清空对话"):
-            chat_box.reset_history()
-            rerun()
-        # with cols[1]:
-        #     mic_audio = audio_recorder("", icon_size="2x", key="mic_audio")
-        prompt = cols[2].chat_input(chat_input_placeholder, key="prompt")
-    if prompt:
-        history = get_messages_history(
-            chat_model_config["llm_model"]
-            .get(next(iter(chat_model_config["llm_model"])), {})
-            .get("history_len", 1)
-        )
-
-        is_vision_chat = upload_image and not selected_tools
-
-        if is_vision_chat:  # multimodal chat
-            chat_box.user_say([Image(get_image_file_url(upload_image), width=100), Markdown(prompt)])
-        else:
-            chat_box.user_say(prompt)
-        if files_upload:
-            if files_upload["images"]:
-                st.markdown(
-                    f'<img src="data:image/jpeg;base64,{files_upload["images"][0]}" width="300">',
-                    unsafe_allow_html=True,
-                )
-            elif files_upload["videos"]:
-                st.markdown(
-                    f'<video width="400" height="300" controls><source src="data:video/mp4;base64,{files_upload["videos"][0]}" type="video/mp4"></video>',
-                    unsafe_allow_html=True,
-                )
-            elif files_upload["audios"]:
-                st.markdown(
-                    f'<audio controls><source src="data:audio/wav;base64,{files_upload["audios"][0]}" type="audio/wav"></audio>',
-                    unsafe_allow_html=True,
-                )
-
-        chat_box.ai_say("正在思考...")
-        text = ""
-        started = False
-
-        client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE", timeout=100000)
-        if is_vision_chat:  # multimodal chat
-            content = [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": get_image_file_url(upload_image)}}
-            ]
-            messages = [{"role": "user", "content": content}]
-        else:
-            messages = history + [{"role": "user", "content": prompt}]
-
-
-        extra_body = dict(
-            metadata=files_upload,
-            chat_model_config=chat_model_config,
-            conversation_id=conversation_id,
-            upload_image=upload_image,
-        )
-        stream = not is_vision_chat
-        params = dict(
-            messages=messages,
-            model=llm_model,
-            stream=stream,  # TODO：xinference qwen-vl-chat 流式输出会出错，后续看更新
-            extra_body=extra_body,
-            tool_config=selected_tool_configs,
-        )
-
-        if Settings.model_settings.MAX_TOKENS:
-            params["max_tokens"] = Settings.model_settings.MAX_TOKENS
-
-        if stream:
-            try:
-                for d in client.chat.completions.create(**params):
-                    # import rich
-                    # rich.print(d)
-                    message_id = d.message_id
-                    metadata = {
-                        "message_id": message_id,
-                    }
-
-                    # clear initial message
-                    if not started:
-                        chat_box.update_msg("", streaming=False)
-                        started = True
-
-                    if d.status == AgentStatus.error:
-                        st.error(d.choices[0].delta.content)
-                    elif d.status == AgentStatus.llm_start:
-                        if not output_agent:
-                            continue
-                        chat_box.insert_msg("正在解读工具输出结果...")
-                        text = d.choices[0].delta.content or ""
-                    elif d.status == AgentStatus.llm_new_token:
-                        if not output_agent:
-                            continue
-                        text += d.choices[0].delta.content or ""
-                        chat_box.update_msg(
-                            text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                        )
-                    elif d.status == AgentStatus.llm_end:
-                        if not output_agent:
-                            continue
-                        text += d.choices[0].delta.content or ""
-                        chat_box.update_msg(
-                            text.replace("\n", "\n\n"), streaming=False, metadata=metadata
-                        )
-                    # tool 的输出与 llm 输出重复了
-                    elif d.status == AgentStatus.tool_start:
-                        formatted_data = {
-                            "Function": d.choices[0].delta.tool_calls[0].function.name,
-                            "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+    
+    # 初始化会话状态
+    if 'mcp_profile_loaded' not in st.session_state:
+        st.session_state.mcp_profile_loaded = False
+    if 'mcp_connections_loaded' not in st.session_state:
+        st.session_state.mcp_connections_loaded = False
+    if 'mcp_connections' not in st.session_state:
+        st.session_state.mcp_connections = []
+    if 'mcp_profile' not in st.session_state:
+        st.session_state.mcp_profile = {}
+    
+    # 页面CSS样式
+    st.markdown("""
+        <style>
+            /* CSS变量定义 */
+            :root {
+                --accent-primary: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
+                --accent-warning: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+                --bg-nav: #F9FAFB;
+                --bg-card: #FFFFFF;
+                --text-primary: #111827;
+                --text-secondary: #6B7280;
+                --border-light: #E5E7EB;
+                --shadow-hover: 0 8px 24px rgba(79, 70, 229, 0.1);
+            }
+            
+            /* 全局样式重置 */
+            .stApp {
+                background-color: #FAFAFA !important;
+            }
+            
+            /* 隐藏Streamlit默认元素 */
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            .stDeployButton {display: none;}
+            
+            /* 导航栏样式 */
+            .nav-container {
+                background: var(--bg-nav);
+                border-right: 1px solid var(--border-light);
+                padding: 16px 8px;
+                border-radius: 12px;
+                margin-bottom: 24px;
+            }
+            
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 16px;
+                margin: 4px 0;
+                color: var(--text-secondary);
+                text-decoration: none;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            
+            .nav-item:hover {
+                background: rgba(0, 0, 0, 0.05);
+            }
+            
+            .nav-item.active {
+                background: var(--bg-card);
+                color: var(--text-primary);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                border-left: 3px solid #4F46E5;
+            }
+            
+            /* 连接器卡片样式 */
+            .connector-card {
+                background: var(--bg-card);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 16px;
+                border: 1px solid var(--border-light);
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            
+            .connector-card:hover {
+                border-color: rgba(79, 70, 229, 0.2);
+                box-shadow: var(--shadow-hover);
+                transform: translateY(-2px);
+            }
+            
+            .connector-card.warning {
+                border-color: rgba(245, 158, 11, 0.2);
+            }
+            
+            .connector-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .connector-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+            
+            .connector-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 20px;
+                color: white;
+                flex-shrink: 0;
+            }
+            
+            .connector-info h3 {
+                margin: 0 0 4px 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text-primary);
+            }
+            
+            .connector-info p {
+                margin: 0;
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+            
+            .status-indicator {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 8px;
+            }
+            
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--accent-warning);
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            
+            /* 浏览连接器卡片样式 */
+            .browse-card {
+                background: var(--bg-card);
+                border-radius: 12px;
+                padding: 24px;
+                border: 1px solid var(--border-light);
+                text-align: center;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                height: 100%;
+            }
+            
+            .browse-card:hover {
+                border-color: rgba(79, 70, 229, 0.3);
+                box-shadow: var(--shadow-hover);
+                transform: scale(1.03);
+            }
+            
+            .browse-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 12px;
+                transition: transform 0.5s ease;
+            }
+            
+            .browse-card:hover .browse-icon {
+                transform: scale(1.1);
+            }
+            
+            .browse-card h3 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 500;
+                color: var(--text-primary);
+            }
+            
+            /* 页面标题样式 */
+            .page-title {
+                font-size: 24px;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 32px;
+            }
+            
+            /* Section标题样式 */
+            .section-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin: 32px 0 16px 0;
+            }
+            
+            /* 响应式设计 */
+            @media (max-width: 768px) {
+                .connector-content {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 12px;
+                }
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # 页面布局
+    with st.container():
+        # 页面标题
+        st.markdown('<h1 class="page-title">连接器管理</h1>', unsafe_allow_html=True)
+        
+        # 通用设置部分
+        with st.expander("⚙️ 通用设置", expanded=True): 
+            
+            # 加载当前配置
+            if not st.session_state.mcp_profile_loaded:
+                try:
+                    profile_data = api.get_mcp_profile()
+                    if profile_data and profile_data.get("code") == 200:
+                        st.session_state.mcp_profile = profile_data.get("data", {})
+                        # 初始化环境变量列表
+                        env_vars = st.session_state.mcp_profile.get("env_vars", {})
+                        st.session_state.env_vars_list = [
+                            {"key": k, "value": v} for k, v in env_vars.items()
+                        ]
+                        st.session_state.mcp_profile_loaded = True
+                    else:
+                        # 使用默认值
+                        st.session_state.mcp_profile = {
+                            "timeout": 30,
+                            "working_dir": str(Settings.CHATCHAT_ROOT),
+                            "env_vars": {
+                                "PATH": "/usr/local/bin:/usr/bin:/bin",
+                                "PYTHONPATH": "/app",
+                                "HOME": str(Settings.CHATCHAT_ROOT)
+                            }
                         }
-                        formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                        text = """\n```{}\n```\n""".format(formatted_json)
-                        chat_box.insert_msg(  # TODO: insert text directly not shown
-                            Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
-                    elif d.status == AgentStatus.tool_end:
-                        tool_output = d.choices[0].delta.tool_calls[0].tool_output
-                        if d.message_type == MsgType.IMAGE:
-                            for url in json.loads(tool_output).get("images", []):
-                                # 判断是否携带域名
-                                if not url.startswith("http"):
-                                    url = f"{api.base_url}/media/{url}"
-                                # md语法不支持，所以pos 跳过
-                                chat_box.insert_msg(Image(url), pos=-2)
-                            chat_box.update_msg(text, streaming=False, expanded=True, state="complete")
+                        st.session_state.env_vars_list = [
+                            {"key": "PATH", "value": "/usr/local/bin:/usr/bin:/bin"},
+                            {"key": "PYTHONPATH", "value": "/app"},
+                            {"key": "HOME", "value": str(Settings.CHATCHAT_ROOT)}
+                        ]
+                except Exception as e:
+                    st.error(f"加载配置失败: {str(e)}")
+                    return
+            
+            # 默认超时时间设置
+            timeout_value = st.slider(
+                "默认连接超时时间（秒）",
+                min_value=10,
+                max_value=300,
+                value=st.session_state.mcp_profile.get("timeout", 30),
+                step=5,
+                help="设置MCP连接器的默认超时时间，范围：10-300秒"
+            )
+            
+            # 环境变量设置
+            st.subheader("环境变量配置")
+            
+            # 环境变量键值对编辑
+            st.write("添加环境变量键值对：")
+            
+            # 初始化环境变量列表
+            if 'env_vars_list' not in st.session_state:
+                st.session_state.env_vars_list = [
+                    {"key": "PATH", "value": "/usr/local/bin:/usr/bin:/bin"},
+                    {"key": "PYTHONPATH", "value": "/app"},
+                    {"key": "HOME", "value": str(Settings.CHATCHAT_ROOT)}
+                ]
+            
+            # 显示现有环境变量
+            for i, env_var in enumerate(st.session_state.env_vars_list):
+                col1, col2, col3 = st.columns([2, 3, 1])
+                
+                with col1:
+                    key = st.text_input(
+                        "变量名",
+                        value=env_var["key"],
+                        key=f"env_key_{i}",
+                        placeholder="例如：PATH"
+                    )
+                
+                with col2:
+                    value = st.text_input(
+                        "变量值",
+                        value=env_var["value"],
+                        key=f"env_value_{i}",
+                        placeholder="例如：/usr/bin"
+                    )
+                
+                with col3:
+                    if st.button("🗑️", key=f"env_delete_{i}", help="删除此环境变量"):
+                        st.session_state.env_vars_list.pop(i)
+                        st.rerun()
+                
+                # 更新值
+                if key != env_var["key"] or value != env_var["value"]:
+                    st.session_state.env_vars_list[i] = {"key": key, "value": value}
+            
+            # 添加新环境变量按钮
+            if st.button("➕ 添加环境变量", key="add_env_var"):
+                st.session_state.env_vars_list.append({"key": "", "value": ""})
+                st.rerun()
+            
+            # 显示当前环境变量预览
+            if st.session_state.env_vars_list:
+                st.markdown("### 当前环境变量")
+                env_preview = {}
+                for env_var in st.session_state.env_vars_list:
+                    if env_var["key"] and env_var["value"]:
+                        env_preview[env_var["key"]] = env_var["value"]
+                
+                st.code(
+                    "\n".join([f'{k}="{v}"' for k, v in env_preview.items()]),
+                    language="bash",
+                    line_numbers=False
+                )
+            else:
+                st.info("暂无配置的环境变量")
+            
+            # 工作目录设置
+            working_dir = st.text_input(
+                "默认工作目录",
+                value=st.session_state.mcp_profile.get("working_dir", str(Settings.CHATCHAT_ROOT)),
+                help="设置MCP连接器的默认工作目录"
+            )
+            
+            # 保存设置按钮
+            col1, col2 = st.columns([1, 2])
+            
+            with col1:
+                if st.button("💾 保存设置", type="primary", use_container_width=True):
+                    try:
+                        # 构建环境变量字典
+                        env_vars_dict = {}
+                        for env_var in st.session_state.env_vars_list:
+                            if env_var["key"] and env_var["value"]:
+                                env_vars_dict[env_var["key"]] = env_var["value"]
+                        
+                        # 保存到数据库
+                        result = api.update_mcp_profile(
+                            timeout=timeout_value,
+                            working_dir=working_dir,
+                            env_vars=env_vars_dict
+                        )
+                        
+                        if result and result.get("code") == 200:
+                            st.success("通用设置已保存")
+                            st.session_state.mcp_profile_loaded = False  # 重新加载
                         else:
-                            text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
-                            chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
-                    elif d.status == AgentStatus.agent_finish:
-                        text = d.choices[0].delta.content or ""
-                        chat_box.update_msg(text.replace("\n", "\n\n"))
-                    elif d.status is None:  # not agent chat
-                        if getattr(d, "is_ref", False):
-                            context = str(d.tool_output)
-                            if isinstance(d.tool_output, dict):
-                                docs = d.tool_output.get("docs", [])
-                                source_documents = format_reference(kb_name=d.tool_output.get("knowledge_base"),
-                                                                    docs=docs,
-                                                                    api_base_url=api_address(is_public=True))
-                                context = "\n".join(source_documents)
-
-                            chat_box.insert_msg(
-                                Markdown(
-                                    context,
-                                    in_expander=True,
-                                    state="complete",
-                                    title="参考资料",
-                                )
-                            )
-                            chat_box.insert_msg("")
-                        elif getattr(d, "tool_call", None) == "text2images":  # TODO：特定工具特别处理，需要更通用的处理方式
-                            for img in d.tool_output.get("images", []):
-                                chat_box.insert_msg(Image(f"{api.base_url}/media/{img}"), pos=-2)
+                            st.error("保存失败，请检查配置")
+                    except Exception as e:
+                        st.error(f"保存失败: {str(e)}")
+            
+            with col2:
+                if st.button("🔄 重置默认", use_container_width=True):
+                    try:
+                        result = api.reset_mcp_profile()
+                        if result and result.get("code") == 200:
+                            # 重置UI状态
+                            st.session_state.env_vars_list = [
+                                {"key": "PATH", "value": "/usr/local/bin:/usr/bin:/bin"},
+                                {"key": "PYTHONPATH", "value": "/app"},
+                                {"key": "HOME", "value": str(Settings.CHATCHAT_ROOT)}
+                            ]
+                            st.session_state.mcp_profile_loaded = False
+                            st.rerun()
                         else:
-                            text += d.choices[0].delta.content or ""
-                            chat_box.update_msg(
-                                text.replace("\n", "\n\n"), streaming=True, metadata=metadata
-                            )
-                    chat_box.update_msg(text, streaming=False, metadata=metadata)
-            except Exception as e:
-                st.error(e.body)
-        else:
+                            st.error("重置失败")
+                    except Exception as e:
+                        st.error(f"重置失败: {str(e)}")
+             
+        
+        # 连接器导航
+        st.markdown('<h2 class="section-title">🔗 连接器管理</h2>', unsafe_allow_html=True)
+        
+        # 加载MCP连接数据
+        if not st.session_state.mcp_connections_loaded:
             try:
-                d = client.chat.completions.create(**params)
-                chat_box.update_msg(d.choices[0].message.content or "", streaming=False)
+                connections_data = api.get_all_mcp_connections()
+                if connections_data and connections_data.get("code") == 200:
+                    st.session_state.mcp_connections = connections_data.get("data", {}).get("connections", [])
+                    st.session_state.mcp_connections_loaded = True
+                else:
+                    st.session_state.mcp_connections = []
             except Exception as e:
-                st.error(e.body)
+                st.error(f"加载连接器失败: {str(e)}")
+                return
+        
+        # 已启用连接器部分
+        st.markdown('<h2 class="section-title">已启用连接器</h2>', unsafe_allow_html=True)
+        
+        # 显示已启用的连接器
+        enabled_connections = [conn for conn in st.session_state.mcp_connections if conn.get("enabled", False)]
+        
+        if enabled_connections:
+            for connection in enabled_connections:
+                # 生成连接器图标颜色
+                icon_colors = {
+                    "github": "#111827",
+                    "canva": "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)",
+                    "gmail": "#EF4444",
+                    "slack": "#7E22CE",
+                    "box": "#3B82F6",
+                    "notion": "#22C55E",
+                    "twitter": "#F97316",
+                    "google_drive": "#A855F7"
+                }
+                
+                # 获取连接器名称首字母作为图标
+                name = connection.get("name", "")
+                server_type = connection.get("server_type", "").lower()
+                icon_letter = name[0].upper() if name else "C"
+                icon_bg = icon_colors.get(server_type, "linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)")
+                
+                # 状态指示器
+                status_html = ""
+                if connection.get("auto_connect", False):
+                    status_html = f"""
+                        <div class="status-indicator">
+                            <div class="status-dot" style="background: #22C55E;"></div>
+                            <span style="color: #22C55E; font-size: 12px; font-weight: 500;">自动连接</span>
+                        </div>
+                    """
+                else:
+                    status_html = f"""
+                        <div class="status-indicator">
+                            <div class="status-dot" style="background: #6B7280;"></div>
+                            <span style="color: #6B7280; font-size: 12px; font-weight: 500;">手动连接</span>
+                        </div>
+                    """
+                
+                # 连接器卡片
+                with st.container():
+                    st.markdown(f"""
+                        <div class="connector-card">
+                            <div class="connector-content">
+                                <div class="connector-left">
+                                    <div class="connector-icon" style="background: {icon_bg};">
+                                        <span>{icon_letter}</span>
+                                    </div>
+                                    <div class="connector-info">
+                                        <h3>{connection.get('name', '')}</h3>
+                                        <p>{connection.get('description', '') or connection.get('server_type', '')}</p>
+                                        {status_html}
+                                    </div>
+                                </div>
+                                <span style="color: var(--text-secondary); font-size: 12px;">➡️</span>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("暂无已启用的连接器")
+        
+        # 浏览连接器部分
+        st.markdown('<h2 class="section-title">浏览连接器</h2>', unsafe_allow_html=True)
+        
+        # 显示所有连接器（包括未启用的）
+        disabled_connections = [conn for conn in st.session_state.mcp_connections if not conn.get("enabled", True)]
+        
+        if disabled_connections:
+            # 连接器网格
+            cols = st.columns(3)
+            
+            for i, connection in enumerate(disabled_connections):
+                with cols[i % 3]:
+                    # 生成连接器图标
+                    icon_emojis = {
+                        "github": "🐙",
+                        "canva": "🎨",
+                        "gmail": "📧",
+                        "slack": "💬",
+                        "box": "📦",
+                        "notion": "📝",
+                        "twitter": "🐦",
+                        "google_drive": "🗄️"
+                    }
+                    
+                    server_type = connection.get("server_type", "").lower()
+                    icon_emoji = icon_emojis.get(server_type, "🔗")
+                    
+                    # 连接器卡片
+                    st.markdown(f"""
+                        <div class="browse-card">
+                            <div class="browse-icon" style="background: rgba(107, 114, 128, 0.1);">
+                                <span style="color: #6B7280; font-size: 24px;">{icon_emoji}</span>
+                            </div>
+                            <h3>{connection.get('name', '')}</h3>
+                        </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("暂无其他连接器")
+    
+    # 添加一些交互功能
+    st.divider()
+    
+    # 连接器操作区域
+    st.subheader("连接器操作")
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("➕ 添加新连接器", type="primary", use_container_width=True):
+            # 显示添加新连接器的表单
+            with st.expander("添加新连接器", expanded=True):
+                add_new_connection_form(api)
+    
+    with col2:
+        if st.button("🔄 刷新连接器状态", use_container_width=True):
+            try:
+                # 重新加载连接数据
+                st.session_state.mcp_connections_loaded = False
+                connections_data = api.get_all_mcp_connections()
+                if connections_data and connections_data.get("code") == 200:
+                    st.session_state.mcp_connections = connections_data.get("data", {}).get("connections", [])
+                    st.session_state.mcp_connections_loaded = True
+                    st.success("连接器状态已刷新")
+                else:
+                    st.error("刷新失败")
+            except Exception as e:
+                st.error(f"刷新失败: {str(e)}")
+    
+    with col3:
+        if st.button("🗑️ 清理未启用", use_container_width=True):
+            st.info("清理未启用的连接器功能")
+    
+    # 添加一些说明信息
+    st.divider()
+    
+    with st.expander("📖 使用说明", expanded=False):
+        st.markdown("""
+        ### 连接器管理
+        
+        **已启用连接器**：显示当前已配置并启用的连接器，支持直接点击进入详细设置。
+        
+        **浏览连接器**：展示可用的连接器类型，点击可快速添加和配置。
+        
+        **状态指示**：
+        - ✅ 正常运行
+        - ⚠️ 设置未完成或配置错误
+        - ❌ 连接失败
+        
+        **支持的连接器类型**：
+        - 文档协作：Canva, Notion
+        - 代码托管：GitHub
+        - 沟通工具：Gmail, Slack
+        - 云存储：Box, Google Drive
+        - 社交媒体：Twitter
+        """)
+    
+    # 页脚信息
+    st.markdown("---")
+    st.caption("💡 提示：连接器需要正确的API权限和网络访问才能正常工作")
 
-        # if os.path.exists("tmp/image.jpg"):
-        #     with open("tmp/image.jpg", "rb") as image_file:
-        #         encoded_string = base64.b64encode(image_file.read()).decode()
-        #         img_tag = (
-        #             f'<img src="data:image/jpeg;base64,{encoded_string}" width="300">'
-        #         )
-        #         st.markdown(img_tag, unsafe_allow_html=True)
-        # os.remove("tmp/image.jpg")
-        # chat_box.show_feedback(**feedback_kwargs,
-        #                        key=message_id,
-        #                        on_submit=on_feedback,
-        #                        kwargs={"message_id": message_id, "history_index": len(chat_box.history) - 1})
 
-        # elif dialogue_mode == "文件对话":
-        #     if st.session_state["file_chat_id"] is None:
-        #         st.error("请先上传文件再进行对话")
-        #         st.stop()
-        #     chat_box.ai_say([
-        #         f"正在查询文件 `{st.session_state['file_chat_id']}` ...",
-        #         Markdown("...", in_expander=True, title="文件匹配结果", state="complete"),
-        #     ])
-        #     text = ""
-        #     for d in api.file_chat(prompt,
-        #                            knowledge_id=st.session_state["file_chat_id"],
-        #                            top_k=kb_top_k,
-        #                            score_threshold=score_threshold,
-        #                            history=history,
-        #                            model=llm_model,
-        #                            prompt_name=prompt_template_name,
-        #                            temperature=temperature):
-        #         if error_msg := check_error_msg(d):
-        #             st.error(error_msg)
-        #         elif chunk := d.get("answer"):
-        #             text += chunk
-        #             chat_box.update_msg(text, element_index=0)
-        #     chat_box.update_msg(text, element_index=0, streaming=False)
-        #     chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
-
-    now = datetime.now()
-    with tab2:
-        cols = st.columns(2)
-        export_btn = cols[0]
-        if cols[1].button(
-                "清空对话",
-                use_container_width=True,
-        ):
-            chat_box.reset_history()
-            rerun()
-
-    export_btn.download_button(
-        "导出记录",
-        "".join(chat_box.export2md()),
-        file_name=f"{now:%Y-%m-%d %H.%M}_对话记录.md",
-        mime="text/markdown",
-        use_container_width=True,
-    )
-
-    # st.write(chat_box.history)
+def add_new_connection_form(api: ApiRequest):
+    """
+    添加新连接器的表单
+    """
+    with st.form("add_connection_form", clear_on_submit=True):
+        st.subheader("新连接器配置")
+        
+        # 基本信息
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            name = st.text_input(
+                "连接器名称 *",
+                placeholder="例如：我的GitHub",
+                help="连接器的显示名称"
+            )
+            server_type = st.selectbox(
+                "服务器类型 *",
+                options=["github", "canva", "gmail", "slack", "box", "notion", "twitter", "google_drive"],
+                help="选择连接器类型"
+            )
+        
+        with col2:
+            server_name = st.text_input(
+                "服务器名称 *",
+                placeholder="例如：github-server",
+                help="服务器的唯一标识符"
+            )
+            transport = st.selectbox(
+                "传输方式",
+                options=["stdio", "sse"],
+                help="连接传输协议"
+            )
+        
+        # 命令配置
+        st.subheader("启动命令")
+        command = st.text_input(
+            "启动命令 *",
+            placeholder="例如：python -m mcp_server",
+            help="启动MCP服务器的命令"
+        )
+        
+        # 命令参数
+        st.write("命令参数（可选）：")
+        if 'connection_args' not in st.session_state:
+            st.session_state.connection_args = []
+        
+        # 显示现有参数
+        for i, arg in enumerate(st.session_state.connection_args):
+            col_arg, col_del = st.columns([4, 1])
+            with col_arg:
+                new_arg = st.text_input(
+                    f"参数 {i+1}",
+                    value=arg,
+                    key=f"arg_{i}",
+                    placeholder="例如：--port=8080"
+                )
+            with col_del:
+                if st.button("🗑️", key=f"del_arg_{i}"):
+                    st.session_state.connection_args.pop(i)
+                    st.rerun()
+            if new_arg != arg:
+                st.session_state.connection_args[i] = new_arg
+        
+        # 添加新参数按钮
+        if st.button("➕ 添加参数", key="add_arg"):
+            st.session_state.connection_args.append("")
+            st.rerun()
+        
+        # 高级设置
+        with st.expander("高级设置", expanded=False):
+            col_adv1, col_adv2 = st.columns(2)
+            
+            with col_adv1:
+                timeout = st.number_input(
+                    "连接超时（秒）",
+                    min_value=10,
+                    max_value=300,
+                    value=30,
+                    help="连接超时时间"
+                )
+                cwd = st.text_input(
+                    "工作目录",
+                    placeholder="/tmp",
+                    help="服务器运行的工作目录"
+                )
+            
+            with col_adv2:
+                auto_connect = st.checkbox(
+                    "自动连接",
+                    value=False,
+                    help="启动时自动连接此服务器"
+                )
+                enabled = st.checkbox(
+                    "启用连接器",
+                    value=True,
+                    help="是否启用此连接器"
+                )
+        
+        # 环境变量
+        st.subheader("环境变量")
+        st.write("添加环境变量（可选）：")
+        
+        if 'connection_env_vars' not in st.session_state:
+            st.session_state.connection_env_vars = []
+        
+        # 显示现有环境变量
+        for i, env_var in enumerate(st.session_state.connection_env_vars):
+            col_env_key, col_env_val, col_env_del = st.columns([2, 3, 1])
+            
+            with col_env_key:
+                env_key = st.text_input(
+                    "变量名",
+                    value=env_var.get("key", ""),
+                    key=f"env_key_{i}",
+                    placeholder="例如：API_KEY"
+                )
+            
+            with col_env_val:
+                env_value = st.text_input(
+                    "变量值",
+                    value=env_var.get("value", ""),
+                    key=f"env_val_{i}",
+                    placeholder="例如：your-api-key",
+                    type="password"
+                )
+            
+            with col_env_del:
+                if st.button("🗑️", key=f"del_env_{i}"):
+                    st.session_state.connection_env_vars.pop(i)
+                    st.rerun()
+            
+            # 更新值
+            if env_key != env_var.get("key", "") or env_value != env_var.get("value", ""):
+                st.session_state.connection_env_vars[i] = {"key": env_key, "value": env_value}
+        
+        # 添加新环境变量按钮
+        if st.button("➕ 添加环境变量", key="add_env_var_conn"):
+            st.session_state.connection_env_vars.append({"key": "", "value": ""})
+            st.rerun()
+        
+        # 描述信息
+        description = st.text_area(
+            "连接器描述",
+            placeholder="描述此连接器的用途和配置...",
+            help="可选的连接器描述信息"
+        )
+        
+        # 额外配置（JSON格式）
+        config_json = st.text_area(
+            "额外配置",
+            placeholder='{"key": "value"}',
+            help="额外的JSON格式配置，可选"
+        )
+        
+        # 提交按钮
+        col_submit, col_cancel = st.columns([1, 1])
+        
+        with col_submit:
+            submitted = st.form_submit_button("💾 创建连接器", type="primary")
+        
+        with col_cancel:
+            if st.form_submit_button("❌ 取消"):
+                st.rerun()
+        
+        # 处理表单提交
+        if submitted:
+            try:
+                # 验证必填字段
+                if not name or not server_type or not server_name or not command:
+                    st.error("请填写所有必填字段（*标记）")
+                    return
+                
+                # 解析额外配置
+                config_dict = {}
+                if config_json.strip():
+                    try:
+                        import json
+                        config_dict = json.loads(config_json)
+                    except json.JSONDecodeError:
+                        st.error("额外配置必须是有效的JSON格式")
+                        return
+                
+                # 构建环境变量字典
+                env_vars_dict = {}
+                for env_var in st.session_state.connection_env_vars:
+                    if env_var.get("key") and env_var.get("value"):
+                        env_vars_dict[env_var["key"]] = env_var["value"]
+                
+                # 调用API创建连接器
+                result = api.add_mcp_connection(
+                    name=name,
+                    server_type=server_type,
+                    server_name=server_name,
+                    command=command,
+                    args=st.session_state.connection_args,
+                    env=env_vars_dict,
+                    cwd=cwd if cwd else None,
+                    transport=transport,
+                    timeout=timeout,
+                    auto_connect=auto_connect,
+                    enabled=enabled,
+                    description=description if description else None,
+                    config=config_dict
+                )
+                
+                if result and result.get("code") == 200:
+                    st.success("连接器创建成功！")
+                    # 清理表单状态
+                    st.session_state.connection_args = []
+                    st.session_state.connection_env_vars = []
+                    st.session_state.mcp_connections_loaded = False  # 重新加载连接列表
+                    st.rerun()
+                else:
+                    st.error(f"创建失败：{result.get('msg', '未知错误')}")
+                    
+            except Exception as e:
+                st.error(f"创建连接器时出错：{str(e)}")
