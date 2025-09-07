@@ -48,16 +48,19 @@ async def get_mcp_profile_endpoint():
     """
     获取 MCP 通用配置
     """
+    logger.info("获取 MCP 通用配置")
     try:
         profile = get_mcp_profile()
         if profile:
+            logger.info("成功获取 MCP 通用配置")
             return MCPProfileResponse(
-                timeout=profile.timeout,
-                working_dir=profile.working_dir,
-                env_vars=profile.env_vars,
-                update_time=profile.update_time.isoformat() if profile.update_time else None
+                timeout=profile["timeout"],
+                working_dir=profile["working_dir"],
+                env_vars=profile["env_vars"],
+                update_time=profile["update_time"]
             )
         else:
+            logger.info("MCP 通用配置不存在，返回默认配置")
             # 如果不存在配置，返回默认配置
             return MCPProfileResponse(
                 timeout=30,
@@ -71,6 +74,7 @@ async def get_mcp_profile_endpoint():
             )
     
     except Exception as e:
+        logger.error(f"获取 MCP 通用配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -79,6 +83,7 @@ async def create_or_update_mcp_profile(profile_data: MCPProfileCreate):
     """
     创建或更新 MCP 通用配置
     """
+    logger.info(f"创建/更新 MCP 通用配置: timeout={profile_data.timeout}, working_dir={profile_data.working_dir}")
     try:
         profile_id = create_mcp_profile(
             timeout=profile_data.timeout,
@@ -87,15 +92,16 @@ async def create_or_update_mcp_profile(profile_data: MCPProfileCreate):
         )
         
         profile = get_mcp_profile()
+        logger.info(f"成功创建/更新 MCP 通用配置，ID: {profile_id}")
         return MCPProfileResponse(
-            timeout=profile.timeout,
-            working_dir=profile.working_dir,
-            env_vars=profile.env_vars,
-            update_time=profile.update_time.isoformat() if profile.update_time else None
+            timeout=profile["timeout"],
+            working_dir=profile["working_dir"],
+            env_vars=profile["env_vars"],
+            update_time=profile["update_time"]
         )
     
     except Exception as e:
-        logger.error(e)
+        logger.error(f"创建/更新 MCP 通用配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -104,6 +110,7 @@ async def update_mcp_profile_endpoint(profile_data: MCPProfileCreate):
     """
     更新 MCP 通用配置
     """
+    logger.info(f"更新 MCP 通用配置: timeout={profile_data.timeout}, working_dir={profile_data.working_dir}")
     try:
         profile_id = update_mcp_profile(
             timeout=profile_data.timeout,
@@ -112,15 +119,16 @@ async def update_mcp_profile_endpoint(profile_data: MCPProfileCreate):
         )
         
         profile = get_mcp_profile()
+        logger.info(f"成功更新 MCP 通用配置，ID: {profile_id}")
         return MCPProfileResponse(
-            timeout=profile.timeout,
-            working_dir=profile.working_dir,
-            env_vars=profile.env_vars,
-            update_time=profile.update_time.isoformat() if profile.update_time else None
+            timeout=profile["timeout"],
+            working_dir=profile["working_dir"],
+            env_vars=profile["env_vars"],
+            update_time=profile["update_time"]
         )
     
     except Exception as e:
-        logger.error(e)
+        logger.error(f"更新 MCP 通用配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -129,20 +137,24 @@ async def reset_mcp_profile_endpoint():
     """
     重置 MCP 通用配置为默认值
     """
+    logger.info("重置 MCP 通用配置为默认值")
     try:
         success = reset_mcp_profile()
         if success:
+            logger.info("成功重置 MCP 通用配置")
             return MCPProfileStatusResponse(
                 success=True,
                 message="MCP 通用配置已重置为默认值"
             )
         else:
+            logger.error("重置 MCP 通用配置失败")
             return MCPProfileStatusResponse(
                 success=False,
                 message="重置 MCP 通用配置失败"
             )
     
     except Exception as e:
+        logger.error(f"重置 MCP 通用配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -151,20 +163,24 @@ async def delete_mcp_profile_endpoint():
     """
     删除 MCP 通用配置
     """
+    logger.info("删除 MCP 通用配置")
     try:
         success = delete_mcp_profile()
         if success:
+            logger.info("成功删除 MCP 通用配置")
             return MCPProfileStatusResponse(
                 success=True,
                 message="MCP 通用配置已删除"
             )
         else:
+            logger.error("删除 MCP 通用配置失败")
             return MCPProfileStatusResponse(
                 success=False,
                 message="删除 MCP 通用配置失败"
             )
     
     except Exception as e:
+        logger.error(f"删除 MCP 通用配置失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -195,10 +211,12 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
     """
     创建新的 MCP 连接配置
     """
+    logger.info(f"创建 MCP 连接: {connection_data.name}")
     try:
         # 检查名称是否已存在
         existing = get_mcp_connection_by_name(name=connection_data.name)
         if existing:
+            logger.error(f"连接名称 '{connection_data.name}' 已存在")
             raise HTTPException(
                 status_code=400,
                 detail=f"连接名称 '{connection_data.name}' 已存在"
@@ -221,9 +239,28 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
         )
         
         connection = get_mcp_connection_by_id(connection_id)
-        return model_to_response(connection)
+        logger.info(f"成功创建 MCP 连接: {connection_data.name}, ID: {connection_id}")
+        return MCPConnectionResponse(
+            id=connection["id"],
+            name=connection["name"],
+            server_type=connection["server_type"],
+            server_name=connection["server_name"],
+            command=connection["command"],
+            args=connection["args"],
+            env=connection["env"],
+            cwd=connection["cwd"],
+            transport=connection["transport"],
+            timeout=connection["timeout"],
+            auto_connect=connection["auto_connect"],
+            enabled=connection["enabled"],
+            description=connection["description"],
+            config=connection["config"],
+            create_time=connection["create_time"],
+            update_time=connection["update_time"],
+        )
     
     except Exception as e:
+        logger.error(f"创建 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -234,19 +271,39 @@ async def list_mcp_connections(
     """
     获取所有 MCP 连接配置列表
     """
+    logger.info(f"获取 MCP 连接列表, enabled_only={enabled_only}")
     try:
         if enabled_only:
             connections = get_enabled_mcp_connections()
         else:
             connections = get_all_mcp_connections()
         
-        response_connections = [model_to_response(conn) for conn in connections]
+        response_connections = [MCPConnectionResponse(
+            id=conn["id"],
+            name=conn["name"],
+            server_type=conn["server_type"],
+            server_name=conn["server_name"],
+            command=conn["command"],
+            args=conn["args"],
+            env=conn["env"],
+            cwd=conn["cwd"],
+            transport=conn["transport"],
+            timeout=conn["timeout"],
+            auto_connect=conn["auto_connect"],
+            enabled=conn["enabled"],
+            description=conn["description"],
+            config=conn["config"],
+            create_time=conn["create_time"],
+            update_time=conn["update_time"],
+        ) for conn in connections]
+        logger.info(f"成功获取 MCP 连接列表，共 {len(response_connections)} 个连接")
         return MCPConnectionListResponse(
             connections=response_connections,
             total=len(response_connections)
         )
     
     except Exception as e:
+        logger.error(f"获取 MCP 连接列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -255,19 +312,23 @@ async def get_mcp_connection(connection_id: str):
     """
     根据 ID 获取 MCP 连接配置详情
     """
+    logger.info(f"获取 MCP 连接详情: {connection_id}")
     try:
         connection = get_mcp_connection_by_id(connection_id)
         if not connection:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
             )
         
+        logger.info(f"成功获取 MCP 连接详情: {connection_id}")
         return model_to_response(connection)
     
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"获取 MCP 连接详情失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -279,10 +340,12 @@ async def update_mcp_connection_by_id(
     """
     更新 MCP 连接配置
     """
+    logger.info(f"更新 MCP 连接: {connection_id}")
     try:
         # 检查连接是否存在
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
@@ -292,6 +355,7 @@ async def update_mcp_connection_by_id(
         if update_data.name and update_data.name != existing.name:
             name_existing = get_mcp_connection_by_name(name=update_data.name)
             if name_existing:
+                logger.error(f"连接名称 '{update_data.name}' 已存在")
                 raise HTTPException(
                     status_code=400,
                     detail=f"连接名称 '{update_data.name}' 已存在"
@@ -316,13 +380,33 @@ async def update_mcp_connection_by_id(
         
         if updated_id:
             connection = get_mcp_connection_by_id(connection_id)
-            return model_to_response(connection)
+            logger.info(f"成功更新 MCP 连接: {connection_id}")
+            return MCPConnectionResponse(
+                id=connection["id"],
+                name=connection["name"],
+                server_type=connection["server_type"],
+                server_name=connection["server_name"],
+                command=connection["command"],
+                args=connection["args"],
+                env=connection["env"],
+                cwd=connection["cwd"],
+                transport=connection["transport"],
+                timeout=connection["timeout"],
+                auto_connect=connection["auto_connect"],
+                enabled=connection["enabled"],
+                description=connection["description"],
+                config=connection["config"],
+                create_time=connection["create_time"],
+                update_time=connection["update_time"],
+            )
         else:
+            logger.error("更新 MCP 连接失败")
             raise HTTPException(status_code=400, detail="更新失败")
     
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"更新 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -331,10 +415,12 @@ async def delete_mcp_connection_by_id(connection_id: str):
     """
     删除 MCP 连接配置
     """
+    logger.info(f"删除 MCP 连接: {connection_id}")
     try:
         # 检查连接是否存在
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
@@ -342,12 +428,14 @@ async def delete_mcp_connection_by_id(connection_id: str):
         
         success = delete_mcp_connection(connection_id)
         if success:
+            logger.info(f"成功删除 MCP 连接: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=True,
                 message="连接删除成功",
                 connection_id=connection_id
             )
         else:
+            logger.error(f"删除 MCP 连接失败: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=False,
                 message="连接删除失败",
@@ -357,6 +445,7 @@ async def delete_mcp_connection_by_id(connection_id: str):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"删除 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -365,10 +454,12 @@ async def enable_mcp_connection_endpoint(connection_id: str):
     """
     启用指定的 MCP 连接
     """
+    logger.info(f"启用 MCP 连接: {connection_id}")
     try:
         # 检查连接是否存在
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
@@ -376,12 +467,14 @@ async def enable_mcp_connection_endpoint(connection_id: str):
         
         success = enable_mcp_connection(connection_id)
         if success:
+            logger.info(f"成功启用 MCP 连接: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=True,
                 message="连接启用成功",
                 connection_id=connection_id
             )
         else:
+            logger.error(f"启用 MCP 连接失败: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=False,
                 message="连接启用失败",
@@ -391,6 +484,7 @@ async def enable_mcp_connection_endpoint(connection_id: str):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"启用 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -399,10 +493,12 @@ async def disable_mcp_connection_endpoint(connection_id: str):
     """
     禁用指定的 MCP 连接
     """
+    logger.info(f"禁用 MCP 连接: {connection_id}")
     try:
         # 检查连接是否存在
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
@@ -410,12 +506,14 @@ async def disable_mcp_connection_endpoint(connection_id: str):
         
         success = disable_mcp_connection(connection_id)
         if success:
+            logger.info(f"成功禁用 MCP 连接: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=True,
                 message="连接禁用成功",
                 connection_id=connection_id
             )
         else:
+            logger.error(f"禁用 MCP 连接失败: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=False,
                 message="连接禁用失败",
@@ -425,6 +523,7 @@ async def disable_mcp_connection_endpoint(connection_id: str):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"禁用 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -436,10 +535,12 @@ async def set_mcp_connection_auto_connect(
     """
     设置 MCP 连接的自动连接状态
     """
+    logger.info(f"设置 MCP 连接自动连接: {connection_id}, auto_connect={auto_connect}")
     try:
         # 检查连接是否存在
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
+            logger.error(f"连接 ID '{connection_id}' 不存在")
             raise HTTPException(
                 status_code=404,
                 detail=f"连接 ID '{connection_id}' 不存在"
@@ -448,12 +549,14 @@ async def set_mcp_connection_auto_connect(
         success = set_auto_connect(connection_id, auto_connect)
         if success:
             status = "自动连接已启用" if auto_connect else "自动连接已禁用"
+            logger.info(f"成功设置 MCP 连接自动连接: {connection_id}, {status}")
             return MCPConnectionStatusResponse(
                 success=True,
                 message=status,
                 connection_id=connection_id
             )
         else:
+            logger.error(f"设置 MCP 连接自动连接失败: {connection_id}")
             return MCPConnectionStatusResponse(
                 success=False,
                 message="自动连接设置失败",
@@ -463,6 +566,7 @@ async def set_mcp_connection_auto_connect(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"设置 MCP 连接自动连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -471,6 +575,7 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
     """
     根据条件搜索 MCP 连接配置
     """
+    logger.info(f"搜索 MCP 连接: keyword={search_request.keyword}, server_type={search_request.server_type}, enabled={search_request.enabled}, auto_connect={search_request.auto_connect}, limit={search_request.limit}")
     try:
         connections = search_mcp_connections(
             keyword=search_request.keyword,
@@ -480,13 +585,32 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
             limit=search_request.limit,
         )
         
-        response_connections = [model_to_response(conn) for conn in connections]
+        response_connections = [MCPConnectionResponse(
+            id=conn["id"],
+            name=conn["name"],
+            server_type=conn["server_type"],
+            server_name=conn["server_name"],
+            command=conn["command"],
+            args=conn["args"],
+            env=conn["env"],
+            cwd=conn["cwd"],
+            transport=conn["transport"],
+            timeout=conn["timeout"],
+            auto_connect=conn["auto_connect"],
+            enabled=conn["enabled"],
+            description=conn["description"],
+            config=conn["config"],
+            create_time=conn["create_time"],
+            update_time=conn["update_time"],
+        ) for conn in connections]
+        logger.info(f"成功搜索 MCP 连接，找到 {len(response_connections)} 个连接")
         return MCPConnectionListResponse(
             connections=response_connections,
             total=len(response_connections)
         )
     
     except Exception as e:
+        logger.error(f"搜索 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -495,16 +619,36 @@ async def get_connections_by_server_name(server_name: str):
     """
     根据服务器名称获取 MCP 连接配置列表
     """
+    logger.info(f"根据服务器名称获取 MCP 连接: {server_name}")
     try:
         connections = get_mcp_connections_by_server_name(server_name)
         
-        response_connections = [model_to_response(conn) for conn in connections]
+        response_connections = [MCPConnectionResponse(
+            id=conn["id"],
+            name=conn["name"],
+            server_type=conn["server_type"],
+            server_name=conn["server_name"],
+            command=conn["command"],
+            args=conn["args"],
+            env=conn["env"],
+            cwd=conn["cwd"],
+            transport=conn["transport"],
+            timeout=conn["timeout"],
+            auto_connect=conn["auto_connect"],
+            enabled=conn["enabled"],
+            description=conn["description"],
+            config=conn["config"],
+            create_time=conn["create_time"],
+            update_time=conn["update_time"],
+        ) for conn in connections]
+        logger.info(f"成功根据服务器名称获取 MCP 连接，找到 {len(response_connections)} 个连接")
         return MCPConnectionListResponse(
             connections=response_connections,
             total=len(response_connections)
         )
     
     except Exception as e:
+        logger.error(f"根据服务器名称获取 MCP 连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -513,16 +657,36 @@ async def list_enabled_mcp_connections():
     """
     获取所有启用的 MCP 连接配置
     """
+    logger.info("获取启用的 MCP 连接列表")
     try:
         connections = get_enabled_mcp_connections()
         
-        response_connections = [model_to_response(conn) for conn in connections]
+        response_connections = [MCPConnectionResponse(
+            id=conn["id"],
+            name=conn["name"],
+            server_type=conn["server_type"],
+            server_name=conn["server_name"],
+            command=conn["command"],
+            args=conn["args"],
+            env=conn["env"],
+            cwd=conn["cwd"],
+            transport=conn["transport"],
+            timeout=conn["timeout"],
+            auto_connect=conn["auto_connect"],
+            enabled=conn["enabled"],
+            description=conn["description"],
+            config=conn["config"],
+            create_time=conn["create_time"],
+            update_time=conn["update_time"],
+        ) for conn in connections]
+        logger.info(f"成功获取启用的 MCP 连接列表，共 {len(response_connections)} 个连接")
         return MCPConnectionListResponse(
             connections=response_connections,
             total=len(response_connections)
         )
     
     except Exception as e:
+        logger.error(f"获取启用的 MCP 连接列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -531,16 +695,36 @@ async def list_auto_connect_mcp_connections():
     """
     获取所有自动连接的 MCP 连接配置
     """
+    logger.info("获取自动连接的 MCP 连接列表")
     try:
         connections = get_auto_connect_mcp_connections()
         
-        response_connections = [model_to_response(conn) for conn in connections]
+        response_connections = [MCPConnectionResponse(
+            id=conn["id"],
+            name=conn["name"],
+            server_type=conn["server_type"],
+            server_name=conn["server_name"],
+            command=conn["command"],
+            args=conn["args"],
+            env=conn["env"],
+            cwd=conn["cwd"],
+            transport=conn["transport"],
+            timeout=conn["timeout"],
+            auto_connect=conn["auto_connect"],
+            enabled=conn["enabled"],
+            description=conn["description"],
+            config=conn["config"],
+            create_time=conn["create_time"],
+            update_time=conn["update_time"],
+        ) for conn in connections]
+        logger.info(f"成功获取自动连接的 MCP 连接列表，共 {len(response_connections)} 个连接")
         return MCPConnectionListResponse(
             connections=response_connections,
             total=len(response_connections)
         )
     
     except Exception as e:
+        logger.error(f"获取自动连接的 MCP 连接列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

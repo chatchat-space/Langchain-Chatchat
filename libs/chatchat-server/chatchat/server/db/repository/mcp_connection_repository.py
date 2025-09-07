@@ -78,7 +78,7 @@ def update_mcp_connection(
     """
     更新 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(session, connection_id)
+    mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
         if name is not None:
             mcp_connection.name = name
@@ -114,25 +114,63 @@ def update_mcp_connection(
 
 
 @with_session
-def get_mcp_connection_by_id(session, connection_id: str) -> Optional[MCPConnectionModel]:
+def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
     """
     根据 ID 查询 MCP 连接配置
     """
     mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
-    return mcp_connection
+    if mcp_connection:
+        return {
+            "id": mcp_connection.id,
+            "name": mcp_connection.name,
+            "server_type": mcp_connection.server_type,
+            "server_name": mcp_connection.server_name,
+            "command": mcp_connection.command,
+            "args": mcp_connection.args,
+            "env": mcp_connection.env,
+            "cwd": mcp_connection.cwd,
+            "transport": mcp_connection.transport,
+            "timeout": mcp_connection.timeout,
+            "auto_connect": mcp_connection.auto_connect,
+            "enabled": mcp_connection.enabled,
+            "description": mcp_connection.description,
+            "config": mcp_connection.config,
+            "create_time": mcp_connection.create_time.isoformat() if mcp_connection.create_time else None,
+            "update_time": mcp_connection.update_time.isoformat() if mcp_connection.update_time else None,
+        }
+    return None
 
 
 @with_session
-def get_mcp_connection_by_name(session, name: str) -> Optional[MCPConnectionModel]:
+def get_mcp_connection_by_name(session, name: str) -> Optional[dict]:
     """
     根据名称查询 MCP 连接配置
     """
     mcp_connection = session.query(MCPConnectionModel).filter_by(name=name).first()
-    return mcp_connection
+    if mcp_connection:
+        return {
+            "id": mcp_connection.id,
+            "name": mcp_connection.name,
+            "server_type": mcp_connection.server_type,
+            "server_name": mcp_connection.server_name,
+            "command": mcp_connection.command,
+            "args": mcp_connection.args,
+            "env": mcp_connection.env,
+            "cwd": mcp_connection.cwd,
+            "transport": mcp_connection.transport,
+            "timeout": mcp_connection.timeout,
+            "auto_connect": mcp_connection.auto_connect,
+            "enabled": mcp_connection.enabled,
+            "description": mcp_connection.description,
+            "config": mcp_connection.config,
+            "create_time": mcp_connection.create_time.isoformat() if mcp_connection.create_time else None,
+            "update_time": mcp_connection.update_time.isoformat() if mcp_connection.update_time else None,
+        }
+    return None
 
 
 @with_session
-def get_mcp_connections_by_server_name(session, server_name: str) -> List[MCPConnectionModel]:
+def get_mcp_connections_by_server_name(session, server_name: str) -> List[dict]:
     """
     根据服务器名称查询 MCP 连接配置列表
     """
@@ -141,11 +179,31 @@ def get_mcp_connections_by_server_name(session, server_name: str) -> List[MCPCon
         .filter_by(server_name=server_name)
         .all()
     )
-    return connections
+    return [
+        {
+            "id": conn.id,
+            "name": conn.name,
+            "server_type": conn.server_type,
+            "server_name": conn.server_name,
+            "command": conn.command,
+            "args": conn.args,
+            "env": conn.env,
+            "cwd": conn.cwd,
+            "transport": conn.transport,
+            "timeout": conn.timeout,
+            "auto_connect": conn.auto_connect,
+            "enabled": conn.enabled,
+            "description": conn.description,
+            "config": conn.config,
+            "create_time": conn.create_time.isoformat() if conn.create_time else None,
+            "update_time": conn.update_time.isoformat() if conn.update_time else None,
+        }
+        for conn in connections
+    ]
 
 
 @with_session
-def get_all_mcp_connections(session, enabled_only: bool = False) -> List[MCPConnectionModel]:
+def get_all_mcp_connections(session, enabled_only: bool = False) -> List[dict]:
     """
     获取所有 MCP 连接配置
     """
@@ -154,11 +212,31 @@ def get_all_mcp_connections(session, enabled_only: bool = False) -> List[MCPConn
         query = query.filter_by(enabled=True)
     
     connections = query.order_by(MCPConnectionModel.create_time.desc()).all()
-    return connections
+    return [
+        {
+            "id": conn.id,
+            "name": conn.name,
+            "server_type": conn.server_type,
+            "server_name": conn.server_name,
+            "command": conn.command,
+            "args": conn.args,
+            "env": conn.env,
+            "cwd": conn.cwd,
+            "transport": conn.transport,
+            "timeout": conn.timeout,
+            "auto_connect": conn.auto_connect,
+            "enabled": conn.enabled,
+            "description": conn.description,
+            "config": conn.config,
+            "create_time": conn.create_time.isoformat() if conn.create_time else None,
+            "update_time": conn.update_time.isoformat() if conn.update_time else None,
+        }
+        for conn in connections
+    ]
 
 
 @with_session
-def get_enabled_mcp_connections(session) -> List[MCPConnectionModel]:
+def get_enabled_mcp_connections(session) -> List[dict]:
     """
     获取所有启用的 MCP 连接配置
     """
@@ -168,11 +246,31 @@ def get_enabled_mcp_connections(session) -> List[MCPConnectionModel]:
         .order_by(MCPConnectionModel.create_time.desc())
         .all()
     )
-    return connections
+    return [
+        {
+            "id": conn.id,
+            "name": conn.name,
+            "server_type": conn.server_type,
+            "server_name": conn.server_name,
+            "command": conn.command,
+            "args": conn.args,
+            "env": conn.env,
+            "cwd": conn.cwd,
+            "transport": conn.transport,
+            "timeout": conn.timeout,
+            "auto_connect": conn.auto_connect,
+            "enabled": conn.enabled,
+            "description": conn.description,
+            "config": conn.config,
+            "create_time": conn.create_time.isoformat() if conn.create_time else None,
+            "update_time": conn.update_time.isoformat() if conn.update_time else None,
+        }
+        for conn in connections
+    ]
 
 
 @with_session
-def get_auto_connect_mcp_connections(session) -> List[MCPConnectionModel]:
+def get_auto_connect_mcp_connections(session) -> List[dict]:
     """
     获取所有自动连接的 MCP 连接配置
     """
@@ -182,7 +280,27 @@ def get_auto_connect_mcp_connections(session) -> List[MCPConnectionModel]:
         .order_by(MCPConnectionModel.create_time.desc())
         .all()
     )
-    return connections
+    return [
+        {
+            "id": conn.id,
+            "name": conn.name,
+            "server_type": conn.server_type,
+            "server_name": conn.server_name,
+            "command": conn.command,
+            "args": conn.args,
+            "env": conn.env,
+            "cwd": conn.cwd,
+            "transport": conn.transport,
+            "timeout": conn.timeout,
+            "auto_connect": conn.auto_connect,
+            "enabled": conn.enabled,
+            "description": conn.description,
+            "config": conn.config,
+            "create_time": conn.create_time.isoformat() if conn.create_time else None,
+            "update_time": conn.update_time.isoformat() if conn.update_time else None,
+        }
+        for conn in connections
+    ]
 
 
 @with_session
@@ -190,7 +308,7 @@ def delete_mcp_connection(session, connection_id: str) -> bool:
     """
     删除 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(connection_id)
+    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
     if mcp_connection is not None:
         session.delete(mcp_connection)
         session.commit()
@@ -203,7 +321,7 @@ def enable_mcp_connection(session, connection_id: str) -> bool:
     """
     启用 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(connection_id)
+    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
     if mcp_connection is not None:
         mcp_connection.enabled = True
         session.add(mcp_connection)
@@ -217,7 +335,7 @@ def disable_mcp_connection(session, connection_id: str) -> bool:
     """
     禁用 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(connection_id)
+    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
     if mcp_connection is not None:
         mcp_connection.enabled = False
         session.add(mcp_connection)
@@ -231,7 +349,7 @@ def set_auto_connect(session, connection_id: str, auto_connect: bool) -> bool:
     """
     设置 MCP 连接的自动连接状态
     """
-    mcp_connection = get_mcp_connection_by_id(connection_id)
+    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
     if mcp_connection is not None:
         mcp_connection.auto_connect = auto_connect
         session.add(mcp_connection)
@@ -248,7 +366,7 @@ def search_mcp_connections(
     enabled: bool = None,
     auto_connect: bool = None,
     limit: int = 50,
-) -> List[MCPConnectionModel]:
+) -> List[dict]:
     """
     搜索 MCP 连接配置
     """
@@ -272,17 +390,45 @@ def search_mcp_connections(
         query = query.filter_by(auto_connect=auto_connect)
     
     connections = query.order_by(MCPConnectionModel.create_time.desc()).limit(limit).all()
-    return connections
+    return [
+        {
+            "id": conn.id,
+            "name": conn.name,
+            "server_type": conn.server_type,
+            "server_name": conn.server_name,
+            "command": conn.command,
+            "args": conn.args,
+            "env": conn.env,
+            "cwd": conn.cwd,
+            "transport": conn.transport,
+            "timeout": conn.timeout,
+            "auto_connect": conn.auto_connect,
+            "enabled": conn.enabled,
+            "description": conn.description,
+            "config": conn.config,
+            "create_time": conn.create_time.isoformat() if conn.create_time else None,
+            "update_time": conn.update_time.isoformat() if conn.update_time else None,
+        }
+        for conn in connections
+    ]
 
 
 # MCP Profile 相关操作
 @with_session
-def get_mcp_profile(session) -> Optional[MCPProfileModel]:
+def get_mcp_profile(session) -> Optional[dict]:
     """
     获取 MCP 通用配置
     """
     profile = session.query(MCPProfileModel).first()
-    return profile
+    if profile:
+        return {
+            "id": profile.id,
+            "timeout": profile.timeout,
+            "working_dir": profile.working_dir,
+            "env_vars": profile.env_vars,
+            "update_time": profile.update_time.isoformat() if profile.update_time else None
+        }
+    return None
 
 
 @with_session
@@ -303,9 +449,10 @@ def create_mcp_profile(
         }
     
     # 检查是否已存在配置
-    existing_profile = get_mcp_profile()
+    existing_profile = session.query(MCPProfileModel).first()
     if existing_profile:
         return update_mcp_profile(
+            session,
             timeout=timeout,
             working_dir=working_dir,
             env_vars=env_vars,
@@ -331,7 +478,7 @@ def update_mcp_profile(
     """
     更新 MCP 通用配置
     """
-    profile = get_mcp_profile()
+    profile = session.query(MCPProfileModel).first()
     if profile is not None:
         if timeout is not None:
             profile.timeout = timeout
@@ -346,6 +493,7 @@ def update_mcp_profile(
     else:
         # 如果不存在配置，则创建新的
         return create_mcp_profile(
+            session,
             timeout=timeout or 30,
             working_dir=working_dir or "/tmp",
             env_vars=env_vars,
@@ -357,7 +505,7 @@ def reset_mcp_profile(session):
     """
     重置 MCP 通用配置为默认值
     """
-    profile = get_mcp_profile()
+    profile = session.query(MCPProfileModel).first()
     if profile is not None:
         profile.timeout = 30
         profile.transport = "stdio"
@@ -380,7 +528,7 @@ def delete_mcp_profile(session):
     """
     删除 MCP 通用配置
     """
-    profile = get_mcp_profile()
+    profile = session.query(MCPProfileModel).first()
     if profile is not None:
         session.delete(profile)
         session.commit()
