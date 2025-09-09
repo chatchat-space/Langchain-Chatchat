@@ -613,7 +613,7 @@ def add_new_connection_form(api: "ApiRequest"):
         with col2:
             transport = st.selectbox(
                 "传输方式 *",
-                options=["stdio", "sse"],
+                options=["sse", "stdio"],
                 help="连接传输协议",
                 key="conn_transport",
             )
@@ -723,12 +723,12 @@ def add_new_connection_form(api: "ApiRequest"):
                 # 注意：表单内的按钮也会触发表单提交，这里使用不同的 key 且仅做状态修改
                 if st.form_submit_button(f"🗑️ 删除_{i}", use_container_width=True):
                     st.session_state.connection_args.pop(i)
-                    st.experimental_rerun()
+                    st.rerun()
 
         # 添加参数按钮（表单内）
         if st.form_submit_button("➕ 添加参数", use_container_width=False):
             st.session_state.connection_args.append("")
-            st.experimental_rerun()
+            st.rerun()
 
         # ===== 环境变量（可选） =====
         st.write("环境变量（可选）：")
@@ -753,14 +753,14 @@ def add_new_connection_form(api: "ApiRequest"):
             with col_del:
                 if st.form_submit_button(f"🗑️ 删ENV_{i}", use_container_width=True):
                     st.session_state.connection_env_vars.pop(i)
-                    st.experimental_rerun()
+                    st.rerun()
             # 同步修改
             st.session_state.connection_env_vars[i] = {"key": new_k, "value": new_v}
 
         # 添加 ENV 按钮
         if st.form_submit_button("➕ 添加环境变量"):
             st.session_state.connection_env_vars.append({"key": "", "value": ""})
-            st.experimental_rerun()
+            st.rerun()
 
         # ===== 高级设置 =====
         with st.expander("高级设置", expanded=False):
@@ -816,7 +816,7 @@ def add_new_connection_form(api: "ApiRequest"):
             st.session_state.connection_args = []
             st.session_state.connection_env_vars = []
             st.session_state.show_add_conn = False
-            st.experimental_rerun()
+            st.rerun()
 
         if submitted:
             # 校验
@@ -891,7 +891,8 @@ def add_new_connection_form(api: "ApiRequest"):
                     st.session_state.connection_args = []
                     st.session_state.connection_env_vars = []
                     st.session_state.mcp_connections_loaded = False
-                    st.experimental_rerun()
+                    st.session_state.show_add_conn = False
+                    st.rerun()
                 else:
                     st.error(f"创建失败：{getattr(result,'msg', None) or (result.get('msg') if isinstance(result, dict) else '未知错误')}")
             except Exception as e:
