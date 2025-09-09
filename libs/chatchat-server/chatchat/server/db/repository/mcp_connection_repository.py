@@ -9,7 +9,6 @@ from chatchat.server.db.session import with_session
 def add_mcp_connection(
     session,
     server_name: str,
-    command: str,
     args: List[str] = None,
     env: Dict[str, str] = None,
     cwd: str = None,
@@ -36,7 +35,6 @@ def add_mcp_connection(
     mcp_connection = MCPConnectionModel(
         id=connection_id,
         server_name=server_name,
-        command=command,
         args=args,
         env=env,
         cwd=cwd,
@@ -56,7 +54,6 @@ def update_mcp_connection(
     session,
     connection_id: str,
     server_name: str = None,
-    command: str = None,
     args: List[str] = None,
     env: Dict[str, str] = None,
     cwd: str = None,
@@ -74,8 +71,6 @@ def update_mcp_connection(
     if mcp_connection is not None:
         if server_name is not None:
             mcp_connection.server_name = server_name
-        if command is not None:
-            mcp_connection.command = command
         if args is not None:
             mcp_connection.args = args
         if env is not None:

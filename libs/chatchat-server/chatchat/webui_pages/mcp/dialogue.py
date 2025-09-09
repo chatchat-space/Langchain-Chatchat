@@ -470,7 +470,7 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                                         </div>
                                         <div class="connector-info">
                                             <h3>{connection.get('server_name', '')}</h3>
-                                            <p>{connection.get('description', '') or connection.get('transport', '').upper()}</p>
+                                            <p>{json.dumps(connection.get('config', {}), ensure_ascii=False, indent=2)}</p>
                                             {status_html}
                                         </div>
                                     </div>
@@ -481,10 +481,6 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                     with col2:
                         if st.button("🔄 禁用", key=f"toggle_disable_{connection.get('id', i)}", use_container_width=True):
                             toggle_connection_status(api, connection.get('id', i), False)
-                    
-                    with col3:
-                        if st.button("🗑️ 删除", key=f"del_conn_{connection.get('id', i)}", use_container_width=True):
-                            delete_connection(api, connection.get('id', i))
         else:
             st.info("暂无已启用的连接器")
         
@@ -838,13 +834,13 @@ def add_new_connection_form(api: "ApiRequest"):
             )
 
             if transport == "stdio":
-                payload["command"] = command
+                # Add command to config instead of payload root
+                payload["config"]["command"] = command
                 # Add stdio-specific config
                 payload["config"]["encoding"] = encoding
                 payload["config"]["encoding_error_handler"] = encoding_error_handler
             else:
                 # SSE transport - store SSE-specific fields in config
-                payload["command"] = ""
                 payload["config"]["url"] = sse_url
                 payload["config"]["timeout"] = sse_timeout
                 payload["config"]["sse_read_timeout"] = sse_read_timeout

@@ -186,7 +186,6 @@ def model_to_response(model) -> MCPConnectionResponse:
     return MCPConnectionResponse(
         id=model.id,
         server_name=model.server_name,
-        command=model.command,
         args=model.args,
         env=model.env,
         cwd=model.cwd,
@@ -218,7 +217,6 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
         
         connection_id = add_mcp_connection(
             server_name=connection_data.server_name,
-            command=connection_data.command,
             args=connection_data.args,
             env=connection_data.env,
             cwd=connection_data.cwd,
@@ -234,7 +232,6 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
         return MCPConnectionResponse(
             id=connection["id"],
             server_name=connection["server_name"],
-            command=connection["command"],
             args=connection["args"],
             env=connection["env"],
             cwd=connection["cwd"],
@@ -269,7 +266,6 @@ async def list_mcp_connections(
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
             server_name=conn["server_name"],
-            command=conn["command"],
             args=conn["args"],
             env=conn["env"],
             cwd=conn["cwd"],
@@ -353,7 +349,6 @@ async def update_mcp_connection_by_id(
         updated_id = update_mcp_connection(
             connection_id=connection_id,
             server_name=update_data.server_name,
-            command=update_data.command,
             args=update_data.args,
             env=update_data.env,
             cwd=update_data.cwd,
@@ -527,7 +522,6 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
             server_name=conn["server_name"],
-            command=conn["command"],
             args=conn["args"],
             env=conn["env"],
             cwd=conn["cwd"],
@@ -562,7 +556,6 @@ async def get_connections_by_server_name(server_name: str):
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
             server_name=conn["server_name"],
-            command=conn["command"],
             args=conn["args"],
             env=conn["env"],
             cwd=conn["cwd"],
@@ -597,7 +590,6 @@ async def list_enabled_mcp_connections():
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
             server_name=conn["server_name"],
-            command=conn["command"],
             args=conn["args"],
             env=conn["env"],
             cwd=conn["cwd"],

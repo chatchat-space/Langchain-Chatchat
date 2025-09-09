@@ -180,7 +180,6 @@ class OpenAIChatOutput(OpenAIBaseOutput):
 class MCPConnectionCreate(BaseModel):
     """创建 MCP 连接的请求体"""
     server_name: str = Field(..., min_length=1, max_length=100, description="服务器名称")
-    command: str = Field(..., max_length=500, description="启动命令")
     args: List[str] = Field(default=[], description="命令参数")
     env: Dict[str, str] = Field(default={}, description="环境变量")
     cwd: Optional[str] = Field(None, description="工作目录")
@@ -188,13 +187,12 @@ class MCPConnectionCreate(BaseModel):
     timeout: int = Field(default=30, ge=1, le=300, description="连接超时时间（秒）")
     enabled: bool = Field(default=True, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
-    config: Dict = Field(default={}, description="额外配置")
+    config: Dict = Field(default={}, description="连接配置，包含 command 等字段")
 
 
 class MCPConnectionUpdate(BaseModel):
     """更新 MCP 连接的请求体"""
     server_name: Optional[str] = Field(None, min_length=1, max_length=100, description="服务器名称")
-    command: Optional[str] = Field(None, max_length=500, description="启动命令")
     args: Optional[List[str]] = Field(None, description="命令参数")
     env: Optional[Dict[str, str]] = Field(None, description="环境变量")
     cwd: Optional[str] = Field(None, description="工作目录")
@@ -202,14 +200,13 @@ class MCPConnectionUpdate(BaseModel):
     timeout: Optional[int] = Field(None, ge=1, le=300, description="连接超时时间（秒）")
     enabled: Optional[bool] = Field(None, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
-    config: Optional[Dict] = Field(None, description="额外配置")
+    config: Optional[Dict] = Field(None, description="连接配置，包含 command 等字段")
 
 
 class MCPConnectionResponse(BaseModel):
     """MCP 连接响应体"""
     id: str
     server_name: str
-    command: str
     args: List[str]
     env: Dict[str, str]
     cwd: Optional[str]
