@@ -179,8 +179,6 @@ class OpenAIChatOutput(OpenAIBaseOutput):
 # MCP Connection 相关 Schema
 class MCPConnectionCreate(BaseModel):
     """创建 MCP 连接的请求体"""
-    name: str = Field(..., min_length=1, max_length=100, description="连接名称")
-    server_type: str = Field(..., min_length=1, max_length=50, description="服务器类型")
     server_name: str = Field(..., min_length=1, max_length=100, description="服务器名称")
     command: str = Field(..., min_length=1, max_length=500, description="启动命令")
     args: List[str] = Field(default=[], description="命令参数")
@@ -196,8 +194,6 @@ class MCPConnectionCreate(BaseModel):
 
 class MCPConnectionUpdate(BaseModel):
     """更新 MCP 连接的请求体"""
-    name: Optional[str] = Field(None, min_length=1, max_length=100, description="连接名称")
-    server_type: Optional[str] = Field(None, min_length=1, max_length=50, description="服务器类型")
     server_name: Optional[str] = Field(None, min_length=1, max_length=100, description="服务器名称")
     command: Optional[str] = Field(None, min_length=1, max_length=500, description="启动命令")
     args: Optional[List[str]] = Field(None, description="命令参数")
@@ -214,8 +210,6 @@ class MCPConnectionUpdate(BaseModel):
 class MCPConnectionResponse(BaseModel):
     """MCP 连接响应体"""
     id: str
-    name: str
-    server_type: str
     server_name: str
     command: str
     args: List[str]
@@ -245,7 +239,7 @@ class MCPConnectionListResponse(BaseModel):
 class MCPConnectionSearchRequest(BaseModel):
     """MCP 连接搜索请求体"""
     keyword: Optional[str] = Field(None, description="搜索关键词")
-    server_type: Optional[str] = Field(None, description="服务器类型过滤")
+    transport: Optional[str] = Field(None, description="传输方式过滤")
     enabled: Optional[bool] = Field(None, description="启用状态过滤")
     auto_connect: Optional[bool] = Field(None, description="自动连接状态过滤")
     limit: int = Field(default=50, ge=1, le=100, description="返回数量限制")

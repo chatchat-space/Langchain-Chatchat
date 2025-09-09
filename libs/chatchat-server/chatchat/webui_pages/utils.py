@@ -765,8 +765,6 @@ class ApiRequest:
     # MCP Connection Methods
     def add_mcp_connection(
         self,
-        name: str,
-        server_type: str,
         server_name: str,
         command: str,
         args: List[str] = None,
@@ -790,8 +788,6 @@ class ApiRequest:
         if config is None:
             config = {}
         data = {
-            "name": name,
-            "server_type": server_type,
             "server_name": server_name,
             "command": command,
             "args": args,
@@ -825,8 +821,6 @@ class ApiRequest:
     def update_mcp_connection(
         self,
         connection_id: str,
-        name: Optional[str] = None,
-        server_type: Optional[str] = None,
         server_name: Optional[str] = None,
         command: Optional[str] = None,
         args: Optional[List[str]] = None,
@@ -844,10 +838,6 @@ class ApiRequest:
         更新 MCP 连接
         """
         data = {}
-        if name is not None:
-            data["name"] = name
-        if server_type is not None:
-            data["server_type"] = server_type
         if server_name is not None:
             data["server_name"] = server_name
         if command is not None:

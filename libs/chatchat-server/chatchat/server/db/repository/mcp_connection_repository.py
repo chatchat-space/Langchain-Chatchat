@@ -8,8 +8,6 @@ from chatchat.server.db.session import with_session
 @with_session
 def add_mcp_connection(
     session,
-    name: str,
-    server_type: str,
     server_name: str,
     command: str,
     args: List[str] = None,
@@ -38,8 +36,6 @@ def add_mcp_connection(
     
     mcp_connection = MCPConnectionModel(
         id=connection_id,
-        name=name,
-        server_type=server_type,
         server_name=server_name,
         command=command,
         args=args,
@@ -61,8 +57,6 @@ def add_mcp_connection(
 def update_mcp_connection(
     session,
     connection_id: str,
-    name: str = None,
-    server_type: str = None,
     server_name: str = None,
     command: str = None,
     args: List[str] = None,
@@ -80,10 +74,6 @@ def update_mcp_connection(
     """
     mcp_connection = get_mcp_connection_by_id(connection_id)
     if mcp_connection is not None:
-        if name is not None:
-            mcp_connection.name = name
-        if server_type is not None:
-            mcp_connection.server_type = server_type
         if server_name is not None:
             mcp_connection.server_name = server_name
         if command is not None:
@@ -122,8 +112,6 @@ def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
     if mcp_connection:
         return {
             "id": mcp_connection.id,
-            "name": mcp_connection.name,
-            "server_type": mcp_connection.server_type,
             "server_name": mcp_connection.server_name,
             "command": mcp_connection.command,
             "args": mcp_connection.args,
@@ -142,16 +130,14 @@ def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
 
 
 @with_session
-def get_mcp_connection_by_name(session, name: str) -> Optional[dict]:
+def get_mcp_connection_by_server_name(session, server_name: str) -> Optional[dict]:
     """
-    根据名称查询 MCP 连接配置
+    根据服务器名称查询 MCP 连接配置
     """
-    mcp_connection = session.query(MCPConnectionModel).filter_by(name=name).first()
+    mcp_connection = session.query(MCPConnectionModel).filter_by(server_name=server_name).first()
     if mcp_connection:
         return {
             "id": mcp_connection.id,
-            "name": mcp_connection.name,
-            "server_type": mcp_connection.server_type,
             "server_name": mcp_connection.server_name,
             "command": mcp_connection.command,
             "args": mcp_connection.args,
@@ -182,8 +168,6 @@ def get_mcp_connections_by_server_name(session, server_name: str) -> List[dict]:
     return [
         {
             "id": conn.id,
-            "name": conn.name,
-            "server_type": conn.server_type,
             "server_name": conn.server_name,
             "command": conn.command,
             "args": conn.args,
@@ -215,8 +199,6 @@ def get_all_mcp_connections(session, enabled_only: bool = False) -> List[dict]:
     return [
         {
             "id": conn.id,
-            "name": conn.name,
-            "server_type": conn.server_type,
             "server_name": conn.server_name,
             "command": conn.command,
             "args": conn.args,
@@ -249,8 +231,6 @@ def get_enabled_mcp_connections(session) -> List[dict]:
     return [
         {
             "id": conn.id,
-            "name": conn.name,
-            "server_type": conn.server_type,
             "server_name": conn.server_name,
             "command": conn.command,
             "args": conn.args,
@@ -283,8 +263,6 @@ def get_auto_connect_mcp_connections(session) -> List[dict]:
     return [
         {
             "id": conn.id,
-            "name": conn.name,
-            "server_type": conn.server_type,
             "server_name": conn.server_name,
             "command": conn.command,
             "args": conn.args,
@@ -362,7 +340,6 @@ def set_auto_connect(session, connection_id: str, auto_connect: bool) -> bool:
 def search_mcp_connections(
     session,
     keyword: str = None,
-    server_type: str = None,
     enabled: bool = None,
     auto_connect: bool = None,
     limit: int = 50,
@@ -375,13 +352,9 @@ def search_mcp_connections(
     if keyword:
         keyword = f"%{keyword}%"
         query = query.filter(
-            MCPConnectionModel.name.like(keyword) |
             MCPConnectionModel.server_name.like(keyword) |
             MCPConnectionModel.description.like(keyword)
         )
-    
-    if server_type:
-        query = query.filter_by(server_type=server_type)
     
     if enabled is not None:
         query = query.filter_by(enabled=enabled)
@@ -393,8 +366,6 @@ def search_mcp_connections(
     return [
         {
             "id": conn.id,
-            "name": conn.name,
-            "server_type": conn.server_type,
             "server_name": conn.server_name,
             "command": conn.command,
             "args": conn.args,
@@ -508,8 +479,6 @@ def reset_mcp_profile(session):
     profile = session.query(MCPProfileModel).first()
     if profile is not None:
         profile.timeout = 30
-        profile.transport = "stdio"
-        profile.auto_connect = False
         profile.working_dir = "/tmp"
         profile.env_vars = {
             "PATH": "/usr/local/bin:/usr/bin:/bin",

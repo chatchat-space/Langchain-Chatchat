@@ -188,8 +188,6 @@ def model_to_response(model) -> MCPConnectionResponse:
     """将数据库模型转换为响应对象"""
     return MCPConnectionResponse(
         id=model.id,
-        name=model.name,
-        server_type=model.server_type,
         server_name=model.server_name,
         command=model.command,
         args=model.args,
@@ -211,20 +209,18 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
     """
     创建新的 MCP 连接配置
     """
-    logger.info(f"创建 MCP 连接: {connection_data.name}")
+    logger.info(f"创建 MCP 连接: {connection_data.server_name}")
     try:
-        # 检查名称是否已存在
-        existing = get_mcp_connection_by_name(name=connection_data.name)
+        # 检查服务器名称是否已存在
+        existing = get_mcp_connection_by_name(name=connection_data.server_name)
         if existing:
-            logger.error(f"连接名称 '{connection_data.name}' 已存在")
+            logger.error(f"服务器名称 '{connection_data.server_name}' 已存在")
             raise HTTPException(
                 status_code=400,
-                detail=f"连接名称 '{connection_data.name}' 已存在"
+                detail=f"服务器名称 '{connection_data.server_name}' 已存在"
             )
         
         connection_id = add_mcp_connection(
-            name=connection_data.name,
-            server_type=connection_data.server_type,
             server_name=connection_data.server_name,
             command=connection_data.command,
             args=connection_data.args,
@@ -239,11 +235,9 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
         )
         
         connection = get_mcp_connection_by_id(connection_id)
-        logger.info(f"成功创建 MCP 连接: {connection_data.name}, ID: {connection_id}")
+        logger.info(f"成功创建 MCP 连接: {connection_data.server_name}, ID: {connection_id}")
         return MCPConnectionResponse(
             id=connection["id"],
-            name=connection["name"],
-            server_type=connection["server_type"],
             server_name=connection["server_name"],
             command=connection["command"],
             args=connection["args"],
@@ -280,8 +274,6 @@ async def list_mcp_connections(
         
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
-            name=conn["name"],
-            server_type=conn["server_type"],
             server_name=conn["server_name"],
             command=conn["command"],
             args=conn["args"],
@@ -352,19 +344,17 @@ async def update_mcp_connection_by_id(
             )
         
         # 如果更新名称，检查是否与其他连接冲突
-        if update_data.name and update_data.name != existing.name:
-            name_existing = get_mcp_connection_by_name(name=update_data.name)
+        if update_data.server_name and update_data.server_name != existing.server_name:
+            name_existing = get_mcp_connection_by_name(name=update_data.server_name)
             if name_existing:
-                logger.error(f"连接名称 '{update_data.name}' 已存在")
+                logger.error(f"服务器名称 '{update_data.server_name}' 已存在")
                 raise HTTPException(
                     status_code=400,
-                    detail=f"连接名称 '{update_data.name}' 已存在"
+                    detail=f"服务器名称 '{update_data.server_name}' 已存在"
                 )
         
         updated_id = update_mcp_connection(
             connection_id=connection_id,
-            name=update_data.name,
-            server_type=update_data.server_type,
             server_name=update_data.server_name,
             command=update_data.command,
             args=update_data.args,
@@ -383,8 +373,6 @@ async def update_mcp_connection_by_id(
             logger.info(f"成功更新 MCP 连接: {connection_id}")
             return MCPConnectionResponse(
                 id=connection["id"],
-                name=connection["name"],
-                server_type=connection["server_type"],
                 server_name=connection["server_name"],
                 command=connection["command"],
                 args=connection["args"],
@@ -575,11 +563,11 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
     """
     根据条件搜索 MCP 连接配置
     """
-    logger.info(f"搜索 MCP 连接: keyword={search_request.keyword}, server_type={search_request.server_type}, enabled={search_request.enabled}, auto_connect={search_request.auto_connect}, limit={search_request.limit}")
+    logger.info(f"搜索 MCP 连接: keyword={search_request.keyword}, transport={search_request.transport}, enabled={search_request.enabled}, auto_connect={search_request.auto_connect}, limit={search_request.limit}")
     try:
         connections = search_mcp_connections(
             keyword=search_request.keyword,
-            server_type=search_request.server_type,
+            transport=search_request.transport,
             enabled=search_request.enabled,
             auto_connect=search_request.auto_connect,
             limit=search_request.limit,

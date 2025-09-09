@@ -449,11 +449,10 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                     "google_drive": "#A855F7"
                 }
                 
-                # 获取连接器名称首字母作为图标
-                name = connection.get("name", "")
-                server_type = connection.get("server_type", "").lower()
-                icon_letter = name[0].upper() if name else "C"
-                icon_bg = icon_colors.get(server_type, "linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)")
+                # 获取传输类型作为图标标识
+                transport = connection.get("transport", "stdio").lower()
+                icon_letter = "S" if transport == "stdio" else "E"
+                icon_bg = icon_colors.get("stdio", "linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)") if transport == "stdio" else icon_colors.get("sse", "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)")
                 
                 # 状态指示器
                 status_html = ""
@@ -485,8 +484,8 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                                             <span>{icon_letter}</span>
                                         </div>
                                         <div class="connector-info">
-                                            <h3>{connection.get('name', '')}</h3>
-                                            <p>{connection.get('description', '') or connection.get('server_type', '')}</p>
+                                            <h3>{connection.get('server_name', '')}</h3>
+                                            <p>{connection.get('description', '') or connection.get('transport', '').upper()}</p>
                                             {status_html}
                                         </div>
                                     </div>
@@ -519,18 +518,12 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                 with cols[i % 3]:
                     # 生成连接器图标
                     icon_emojis = {
-                        "github": "🐙",
-                        "canva": "🎨",
-                        "gmail": "📧",
-                        "slack": "💬",
-                        "box": "📦",
-                        "notion": "📝",
-                        "twitter": "🐦",
-                        "google_drive": "🗄️"
+                        "stdio": "💻",
+                        "sse": "🌐"
                     }
                     
-                    server_type = connection.get("server_type", "").lower()
-                    icon_emoji = icon_emojis.get(server_type, "🔗")
+                    transport = connection.get("transport", "stdio").lower()
+                    icon_emoji = icon_emojis.get(transport, "🔗")
                     
                     # 连接器卡片
                     st.markdown(f"""
@@ -538,7 +531,7 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                             <div class="browse-icon" style="background: rgba(107, 114, 128, 0.1);">
                                 <span style="color: #6B7280; font-size: 24px;">{icon_emoji}</span>
                             </div>
-                            <h3>{connection.get('name', '')}</h3>
+                            <h3>{connection.get('server_name', '')}</h3>
                         </div>
                     """, unsafe_allow_html=True)
         else:
@@ -611,21 +604,9 @@ def add_new_connection_form(api: "ApiRequest"):
         # ===== 基本信息 =====
         col1, col2 = st.columns(2)
         with col1:
-            name = st.text_input(
-                "连接器名称 *",
-                placeholder="例如：我的GitHub",
-                help="连接器的显示名称",
-                key="conn_name",
-            )
-            server_type = st.selectbox(
-                "服务器类型 *",
-                options=["github", "canva", "gmail", "slack", "box", "notion", "twitter", "google_drive"],
-                help="选择连接器类型",
-                key="conn_server_type",
-            )
             server_name = st.text_input(
                 "服务器名称 *",
-                placeholder="例如：github-server",
+                placeholder="例如：my-server",
                 help="服务器的唯一标识符",
                 key="conn_server_name",
             )
@@ -638,7 +619,7 @@ def add_new_connection_form(api: "ApiRequest"):
             )
 
         # ===== 启动命令 / SSE 配置 =====
-        st.subheader("启动命令 / 连接参数")
+        st.subheader("传输配置")
         # 统一给 command 一个默认值，避免未定义
         command = ""
 
@@ -646,8 +627,26 @@ def add_new_connection_form(api: "ApiRequest"):
             command = st.text_input(
                 "启动命令 *",
                 placeholder="例如：python -m mcp_server",
-                help="启动 MCP 服务器的命令（stdio）",
+                help="启动 MCP 服务器的命令",
                 key="conn_command",
+            )
+            
+            # Stdio 特定配置
+            st.subheader("Stdio 传输配置")
+            encoding = st.selectbox(
+                "文本编码",
+                options=["utf-8", "gbk", "ascii", "latin-1"],
+                index=0,
+                help="文本编码格式",
+                key="conn_encoding",
+            )
+            
+            encoding_error_handler = st.selectbox(
+                "编码错误处理",
+                options=["strict", "ignore", "replace"],
+                index=0,
+                help="编码错误处理方式",
+                key="conn_encoding_error_handler",
             )
         else:
             # SSE 模式下通常需要 URL；字段名按你的后端需要调整
@@ -657,12 +656,53 @@ def add_new_connection_form(api: "ApiRequest"):
                 help="SSE 服务器的 URL",
                 key="conn_sse_url",
             )
+            
+            # SSE 特定配置
+            st.subheader("SSE 传输配置")
+            
             # 可选：SSE 额外 header
             sse_headers = st.text_area(
                 "SSE Headers（可选，JSON）",
                 placeholder='例如：{"Authorization":"Bearer xxx"}',
                 help="以 JSON 形式填写可选的请求头",
                 key="conn_sse_headers",
+            )
+            
+            col_timeout1, col_timeout2 = st.columns(2)
+            with col_timeout1:
+                sse_timeout = st.number_input(
+                    "HTTP 超时时间（秒）",
+                    min_value=1,
+                    max_value=300,
+                    value=30,
+                    help="HTTP 请求超时时间",
+                    key="conn_sse_timeout",
+                )
+            with col_timeout2:
+                sse_read_timeout = st.number_input(
+                    "SSE 读取超时时间（秒）",
+                    min_value=1,
+                    max_value=300,
+                    value=30,
+                    help="SSE 流读取超时时间",
+                    key="conn_sse_read_timeout",
+                )
+            
+            # SSE 编码配置
+            sse_encoding = st.selectbox(
+                "文本编码",
+                options=["utf-8", "gbk", "ascii", "latin-1"],
+                index=0,
+                help="文本编码格式",
+                key="conn_sse_encoding",
+            )
+            
+            sse_encoding_error_handler = st.selectbox(
+                "编码错误处理",
+                options=["strict", "ignore", "replace"],
+                index=0,
+                help="编码错误处理方式",
+                key="conn_sse_encoding_error_handler",
             )
 
         # ===== 命令参数（可选） =====
@@ -781,10 +821,6 @@ def add_new_connection_form(api: "ApiRequest"):
         if submitted:
             # 校验
             errors = []
-            if not name:
-                errors.append("连接器名称")
-            if not server_type:
-                errors.append("服务器类型")
             if not server_name:
                 errors.append("服务器名称")
 
@@ -809,8 +845,6 @@ def add_new_connection_form(api: "ApiRequest"):
 
             # 组装 API 参数
             payload = dict(
-                name=name,
-                server_type=server_type,
                 server_name=server_name,
                 args=st.session_state.connection_args,
                 env=env_vars_dict,
@@ -825,17 +859,28 @@ def add_new_connection_form(api: "ApiRequest"):
 
             if transport == "stdio":
                 payload["command"] = command
+                # Add stdio-specific config
+                payload["config"]["encoding"] = encoding
+                payload["config"]["encoding_error_handler"] = encoding_error_handler
             else:
-                # 后端若需要以 command 传递，也可以把 sse_url 写入 command
+                # SSE transport - store SSE-specific fields in config
                 payload["command"] = ""
-                payload["config"]["sse_url"] = sse_url
+                payload["config"]["url"] = sse_url
+                payload["config"]["timeout"] = sse_timeout
+                payload["config"]["sse_read_timeout"] = sse_read_timeout
                 if sse_headers:
                     # 尽量解析为 JSON；失败则当作原文本
                     import json
                     try:
-                        payload["config"]["sse_headers"] = json.loads(sse_headers)
+                        payload["config"]["headers"] = json.loads(sse_headers)
                     except Exception:
-                        payload["config"]["sse_headers"] = sse_headers
+                        payload["config"]["headers"] = sse_headers
+                else:
+                    payload["config"]["headers"] = None
+                
+                # Set encoding config for SSE
+                payload["config"]["encoding"] = sse_encoding
+                payload["config"]["encoding_error_handler"] = sse_encoding_error_handler
 
             try:
                 result = api.add_mcp_connection(**payload)
