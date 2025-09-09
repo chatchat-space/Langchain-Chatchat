@@ -420,8 +420,8 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
         if not st.session_state.mcp_connections_loaded:
             try:
                 connections_data = api.get_all_mcp_connections()
-                if connections_data and connections_data.get("code") == 200:
-                    st.session_state.mcp_connections = connections_data.get("data", {}).get("connections", [])
+                if connections_data:
+                    st.session_state.mcp_connections = connections_data.get("connections", [])
                     st.session_state.mcp_connections_loaded = True
                 else:
                     st.session_state.mcp_connections = []
@@ -439,14 +439,8 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
             for connection in enabled_connections:
                 # 生成连接器图标颜色
                 icon_colors = {
-                    "github": "#111827",
-                    "canva": "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)",
-                    "gmail": "#EF4444",
-                    "slack": "#7E22CE",
-                    "box": "#3B82F6",
-                    "notion": "#22C55E",
-                    "twitter": "#F97316",
-                    "google_drive": "#A855F7"
+                    "stdio": "#111827",
+                    "sse": "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)"
                 }
                 
                 # 获取传输类型作为图标标识
@@ -494,9 +488,8 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                         """, unsafe_allow_html=True)
                     
                     with col2:
-                        # if st.button("✏️ 编辑", key=f"edit_conn_{connection.get('id', i)}", use_container_width=True):
-                            # edit_connection_form(api, connection)
-                        pass
+                        if st.button("🔄 禁用", key=f"toggle_disable_{connection.get('id', i)}", use_container_width=True):
+                            toggle_connection_status(api, connection.get('id', i), False)
                     
                     with col3:
                         if st.button("🗑️ 删除", key=f"del_conn_{connection.get('id', i)}", use_container_width=True):
@@ -534,6 +527,9 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                             <h3>{connection.get('server_name', '')}</h3>
                         </div>
                     """, unsafe_allow_html=True)
+                    
+                    if st.button("🔄 启用", key=f"toggle_enable_{connection.get('id', i)}", use_container_width=True):
+                        toggle_connection_status(api, connection.get('id', i), True)
         else:
             st.info("暂无其他连接器")
     
@@ -897,6 +893,24 @@ def add_new_connection_form(api: "ApiRequest"):
                     st.error(f"创建失败：{getattr(result,'msg', None) or (result.get('msg') if isinstance(result, dict) else '未知错误')}")
             except Exception as e:
                 st.error(f"创建连接器时出错：{e}")
+
+def toggle_connection_status(api: ApiRequest, connection_id: str, enabled: bool):
+    """
+    切换连接器启用/禁用状态
+    """
+    try:
+        result = api.update_mcp_connection(connection_id=connection_id, enabled=enabled)
+        if result and result.get("success"):
+            status = "启用" if enabled else "禁用"
+            st.success(f"连接器{status}成功！")
+            st.session_state.mcp_connections_loaded = False  # 重新加载连接列表
+            st.rerun()
+        else:
+            status = "启用" if enabled else "禁用"
+            st.error(f"{status}失败：{result.get('message', '未知错误')}")
+    except Exception as e:
+        status = "启用" if enabled else "禁用"
+        st.error(f"{status}连接器时出错：{str(e)}")
 
 def delete_connection(api: ApiRequest, connection_id: str):
     """

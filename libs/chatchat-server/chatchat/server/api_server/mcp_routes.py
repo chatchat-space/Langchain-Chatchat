@@ -323,7 +323,7 @@ async def get_mcp_connection(connection_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@mcp_router.put("/{connection_id}", response_model=MCPConnectionResponse, summary="更新 MCP 连接")
+@mcp_router.put("/{connection_id}", response_model=MCPConnectionStatusResponse, summary="更新 MCP 连接")
 async def update_mcp_connection_by_id(
     connection_id: str, 
     update_data: MCPConnectionUpdate
@@ -337,20 +337,24 @@ async def update_mcp_connection_by_id(
         existing = get_mcp_connection_by_id(connection_id)
         if not existing:
             logger.error(f"连接 ID '{connection_id}' 不存在")
-            raise HTTPException(
-                status_code=404,
-                detail=f"连接 ID '{connection_id}' 不存在"
-            )
+         
+            return MCPConnectionStatusResponse(
+                    connection_id=connection_id,
+                    success=False,
+                    message=f"连接 ID '{connection_id}' 不存在"
+            )   
+        
         
         # 如果更新名称，检查是否与其他连接冲突
         if update_data.server_name and update_data.server_name != existing.server_name:
-            name_existing = get_mcp_connection_by_name(name=update_data.server_name)
+            name_existing = get_connections_by_server_name(server_name=update_data.server_name)
             if name_existing:
                 logger.error(f"服务器名称 '{update_data.server_name}' 已存在")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"服务器名称 '{update_data.server_name}' 已存在"
-                )
+                return MCPConnectionStatusResponse(
+                    connection_id=connection_id,
+                    success=False,
+                    message=f"服务器名称 '{update_data.server_name}' 已存在"
+                )   
         
         updated_id = update_mcp_connection(
             connection_id=connection_id,
@@ -370,31 +374,28 @@ async def update_mcp_connection_by_id(
         if updated_id:
             connection = get_mcp_connection_by_id(connection_id)
             logger.info(f"成功更新 MCP 连接: {connection_id}")
-            return MCPConnectionResponse(
-                id=connection["id"],
-                server_name=connection["server_name"],
-                command=connection["command"],
-                args=connection["args"],
-                env=connection["env"],
-                cwd=connection["cwd"],
-                transport=connection["transport"],
-                timeout=connection["timeout"],
-                auto_connect=connection["auto_connect"],
-                enabled=connection["enabled"],
-                description=connection["description"],
-                config=connection["config"],
-                create_time=connection["create_time"],
-                update_time=connection["update_time"],
+            return MCPConnectionStatusResponse(
+                connection_id=connection["id"],
+                success=True,
+                message="成功更新",
             )
         else:
             logger.error("更新 MCP 连接失败")
-            raise HTTPException(status_code=400, detail="更新失败")
+            return MCPConnectionStatusResponse(
+                connection_id=connection_id,
+                success=False,
+                message=f"更新 MCP 连接失败",
+            )
     
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"更新 MCP 连接失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return MCPConnectionStatusResponse(
+                connection_id=connection_id,
+                success=False,
+                message=f"更新 MCP 连接失败: {str(e)}",
+        )
 
 
 @mcp_router.delete("/{connection_id}", response_model=MCPConnectionStatusResponse, summary="删除 MCP 连接")

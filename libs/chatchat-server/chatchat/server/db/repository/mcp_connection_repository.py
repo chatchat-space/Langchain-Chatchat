@@ -72,7 +72,8 @@ def update_mcp_connection(
     """
     更新 MCP 连接配置
     """
-    mcp_connection = get_mcp_connection_by_id(connection_id)
+    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
+
     if mcp_connection is not None:
         if server_name is not None:
             mcp_connection.server_name = server_name
