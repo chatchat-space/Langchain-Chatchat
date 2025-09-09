@@ -13,6 +13,7 @@ from langchain.prompts.chat import ChatPromptTemplate
 from chatchat.server.agents_registry.agents_registry import agents_registry
 from sse_starlette.sse import EventSourceResponse
 
+from chatchat.server.db.repository.mcp_connection_repository import get_enabled_mcp_connections
 from chatchat.settings import Settings
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
 from langchain_chatchat.callbacks.agent_callback_handler import (
@@ -73,7 +74,7 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
 
 
 def create_models_chains(
-    history_len, prompts, models, tools, callbacks, conversation_id, metadata
+    history_len, prompts, models, tools, callbacks, conversation_id, metadata,  use_mcp: bool = False
 ):
 
     # 从数据库获取conversation_id对应的 intermediate_steps 、 mcp_connections
@@ -90,6 +91,31 @@ def create_models_chains(
     intermediate_steps = loads(messages[-1].get("metadata", {}).get("intermediate_steps"), valid_namespaces=["langchain_chatchat", "agent_toolkits", "all_tools", "tool"] )  if len(messages)>0 and messages[-1].get("metadata") is not None else []
     llm = models["action_model"]
     llm.callbacks = callbacks
+    connections = get_enabled_mcp_connections()
+    
+    # 转换为MCP连接格式，支持StdioConnection和SSEConnection类型
+    mcp_connections = {}
+    for conn in connections:
+        if conn["transport"] == "stdio":
+            # StdioConnection类型
+            mcp_connections[conn["server_name"]] = {
+                "transport": "stdio",
+                "command": conn["config"].get("command", conn["args"][0] if conn["args"] else ""),
+                "args": conn["args"][1:] if len(conn["args"]) > 1 else [],
+                "env": conn["env"],
+                "encoding": "utf-8",
+                "encoding_error_handler": "strict"
+            }
+        elif conn["transport"] == "sse":
+            # SSEConnection类型
+            mcp_connections[conn["server_name"]] = {
+                "transport": "sse",
+                "url": conn["config"].get("url", ""),
+                "headers": conn["config"].get("headers", {}),
+                "timeout": conn.get("timeout", 30.0),
+                "sse_read_timeout": conn.get("sse_read_timeout", 60.0)
+            }
+    
     agent_executor = PlatformToolsRunnable.create_agent_executor(
         agent_type="platform-knowledge-mode",
         agents_registry=agents_registry,
@@ -97,15 +123,7 @@ def create_models_chains(
         tools=tools,
         history=history,
         intermediate_steps=intermediate_steps,
-        mcp_connections={
-            "playwright": {
-                "command": "npx",
-                "args": [
-                    "@playwright/mcp@latest"
-                ],
-                "transport": "stdio",
-            },
-        }
+        mcp_connections=mcp_connections if use_mcp else {}
     )
 
     full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
@@ -119,19 +137,10 @@ async def chat(
         conversation_id: str = Body("", description="对话框ID"),
         message_id: str = Body(None, description="数据库消息ID"),
         history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-        history: List[History] = Body(
-            [],
-            description="历史对话，设为一个整数可以从数据库中读取历史消息",
-            examples=[
-                [
-                    {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                    {"role": "assistant", "content": "虎头虎脑"},
-                ]
-            ],
-        ),
         stream: bool = Body(True, description="流式输出"),
         chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
         tool_config: dict = Body({}, description="工具配置", examples=[]),
+        use_mcp: bool = Body(False, description="使用MCP"),
         max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
@@ -167,6 +176,7 @@ async def chat(
                 callbacks=callbacks,
                 history_len=history_len,
                 metadata=metadata,
+                use_mcp = use_mcp
             )
             message_id = add_message_to_db(
                     chat_type="llm_chat",
