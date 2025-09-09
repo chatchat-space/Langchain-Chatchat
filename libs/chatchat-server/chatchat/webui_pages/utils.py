@@ -766,7 +766,6 @@ class ApiRequest:
     def add_mcp_connection(
         self,
         server_name: str,
-        command: str,
         args: List[str] = None,
         env: Dict[str, str] = None,
         cwd: Optional[str] = None,
@@ -788,7 +787,6 @@ class ApiRequest:
             config = {}
         data = {
             "server_name": server_name,
-            "command": command,
             "args": args,
             "env": env,
             "cwd": cwd,
@@ -820,7 +818,6 @@ class ApiRequest:
         self,
         connection_id: str,
         server_name: Optional[str] = None,
-        command: Optional[str] = None,
         args: Optional[List[str]] = None,
         env: Optional[Dict[str, str]] = None,
         cwd: Optional[str] = None,
@@ -837,8 +834,6 @@ class ApiRequest:
         data = {}
         if server_name is not None:
             data["server_name"] = server_name
-        if command is not None:
-            data["command"] = command
         if args is not None:
             data["args"] = args
         if env is not None:

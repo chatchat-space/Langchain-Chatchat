@@ -388,6 +388,8 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                         
                         if result:
                             st.success("通用设置已保存")
+                            st.session_state.mcp_profile['timeout'] = timeout_value
+                            st.session_state.mcp_profile['working_dir'] = working_dir
                             st.session_state.mcp_profile_loaded = False  # 重新加载
                         else:
                             st.error("保存失败，请检查配置")
@@ -448,14 +450,6 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                 icon_letter = "S" if transport == "stdio" else "E"
                 icon_bg = icon_colors.get("stdio", "linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)") if transport == "stdio" else icon_colors.get("sse", "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)")
                 
-                # 状态指示器
-                status_html = """
-                    <div class="status-indicator">
-                        <div class="status-dot" style="background: #6B7280;"></div>
-                        <span style="color: #6B7280; font-size: 12px; font-weight: 500;">手动连接</span>
-                    </div>
-                """
-                
                 # 连接器卡片
                 with st.container():
                     col1, col2, col3 = st.columns([3, 1, 1])
@@ -471,7 +465,10 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                                         <div class="connector-info">
                                             <h3>{connection.get('server_name', '')}</h3>
                                             <p>{json.dumps(connection.get('config', {}), ensure_ascii=False, indent=2)}</p>
-                                            {status_html}
+                                            <div class="status-indicator">
+                                                <div class="status-dot" style="background: #6B7280;"></div>
+                                                <span style="color: #6B7280; font-size: 12px; font-weight: 500;">连接</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -579,7 +576,7 @@ def add_new_connection_form(api: "ApiRequest"):
         st.session_state.connection_args = []
     if "connection_env_vars" not in st.session_state:
         # 形如 [{"key":"FOO","value":"bar"}]
-        st.session_state.connection_env_vars = []
+        st.session_state.connection_env_vars = st.session_state.env_vars_list or []
 
     st.subheader("新连接器配置")
 
@@ -651,43 +648,28 @@ def add_new_connection_form(api: "ApiRequest"):
                 key="conn_sse_headers",
             )
             
-            col_timeout1, col_timeout2 = st.columns(2)
-            with col_timeout1:
-                sse_timeout = st.number_input(
-                    "HTTP 超时时间（秒）",
-                    min_value=1,
-                    max_value=300,
-                    value=30,
-                    help="HTTP 请求超时时间",
-                    key="conn_sse_timeout",
+            col_ti1, col_ti2 = st.columns(2)
+            with col_ti1:
+                
+                sse_encoding_error_handler = st.selectbox(
+                    "编码错误处理",
+                    options=["strict", "ignore", "replace"],
+                    index=0,
+                    help="编码错误处理方式",
+                    key="conn_sse_encoding_error_handler",
                 )
-            with col_timeout2:
-                sse_read_timeout = st.number_input(
-                    "SSE 读取超时时间（秒）",
-                    min_value=1,
-                    max_value=300,
-                    value=30,
-                    help="SSE 流读取超时时间",
-                    key="conn_sse_read_timeout",
-                )
-            
-            # SSE 编码配置
-            sse_encoding = st.selectbox(
-                "文本编码",
-                options=["utf-8", "gbk", "ascii", "latin-1"],
-                index=0,
-                help="文本编码格式",
-                key="conn_sse_encoding",
-            )
-            
-            sse_encoding_error_handler = st.selectbox(
-                "编码错误处理",
-                options=["strict", "ignore", "replace"],
-                index=0,
-                help="编码错误处理方式",
-                key="conn_sse_encoding_error_handler",
-            )
 
+            with col_ti2:
+                
+                # SSE 编码配置
+                sse_encoding = st.selectbox(
+                    "文本编码",
+                    options=["utf-8", "gbk", "ascii", "latin-1"],
+                    index=0,
+                    help="文本编码格式",
+                    key="conn_sse_encoding",
+                )
+            
         # ===== 命令参数（可选） =====
         st.write("命令参数（可选）：")
         # 展示已添加的参数
@@ -753,13 +735,13 @@ def add_new_connection_form(api: "ApiRequest"):
                     "连接超时（秒）",
                     min_value=10,
                     max_value=300,
-                    value=30,
+                    value=st.session_state.mcp_profile.get("timeout", 30),
                     help="连接超时时间",
                     key="conn_timeout",
                 )
                 cwd = st.text_input(
                     "工作目录",
-                    value="",
+                    value=st.session_state.mcp_profile.get("working_dir", str(Settings.CHATCHAT_ROOT)),
                     placeholder="/tmp",
                     help="服务器运行的工作目录",
                     key="conn_cwd",
@@ -842,15 +824,13 @@ def add_new_connection_form(api: "ApiRequest"):
             else:
                 # SSE transport - store SSE-specific fields in config
                 payload["config"]["url"] = sse_url
-                payload["config"]["timeout"] = sse_timeout
-                payload["config"]["sse_read_timeout"] = sse_read_timeout
                 if sse_headers:
                     # 尽量解析为 JSON；失败则当作原文本
                     import json
                     try:
                         payload["config"]["headers"] = json.loads(sse_headers)
-                    except Exception:
-                        payload["config"]["headers"] = sse_headers
+                    except Exception as e:
+                        st.error(f"sse_headers出错：{e}")
                 else:
                     payload["config"]["headers"] = None
                 

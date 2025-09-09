@@ -187,7 +187,7 @@ class MCPConnectionCreate(BaseModel):
     timeout: int = Field(default=30, ge=1, le=300, description="连接超时时间（秒）")
     enabled: bool = Field(default=True, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
-    config: Dict = Field(default={}, description="连接配置，包含 command 等字段")
+    config: Dict = Field(default={}, description="连接配置")
 
 
 class MCPConnectionUpdate(BaseModel):
@@ -200,7 +200,7 @@ class MCPConnectionUpdate(BaseModel):
     timeout: Optional[int] = Field(None, ge=1, le=300, description="连接超时时间（秒）")
     enabled: Optional[bool] = Field(None, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
-    config: Optional[Dict] = Field(None, description="连接配置，包含 command 等字段")
+    config: Optional[Dict] = Field(None, description="连接配置")
 
 
 class MCPConnectionResponse(BaseModel):

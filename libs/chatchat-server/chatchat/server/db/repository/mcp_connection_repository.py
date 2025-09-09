@@ -104,7 +104,6 @@ def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
         return {
             "id": mcp_connection.id,
             "server_name": mcp_connection.server_name,
-            "command": mcp_connection.command,
             "args": mcp_connection.args,
             "env": mcp_connection.env,
             "cwd": mcp_connection.cwd,
@@ -133,7 +132,6 @@ def get_mcp_connections_by_server_name(session, server_name: str) -> List[dict]:
         {
             "id": conn.id,
             "server_name": conn.server_name,
-            "command": conn.command,
             "args": conn.args,
             "env": conn.env,
             "cwd": conn.cwd,
@@ -163,7 +161,6 @@ def get_all_mcp_connections(session, enabled_only: bool = False) -> List[dict]:
         {
             "id": conn.id,
             "server_name": conn.server_name,
-            "command": conn.command,
             "args": conn.args,
             "env": conn.env,
             "cwd": conn.cwd,
@@ -194,7 +191,6 @@ def get_enabled_mcp_connections(session) -> List[dict]:
         {
             "id": conn.id,
             "server_name": conn.server_name,
-            "command": conn.command,
             "args": conn.args,
             "env": conn.env,
             "cwd": conn.cwd,
@@ -282,7 +278,6 @@ def search_mcp_connections(
         {
             "id": conn.id,
             "server_name": conn.server_name,
-            "command": conn.command,
             "args": conn.args,
             "env": conn.env,
             "cwd": conn.cwd,
