@@ -15,7 +15,6 @@ def add_mcp_connection(
     cwd: str = None,
     transport: str = "stdio",
     timeout: int = 30,
-    auto_connect: bool = False,
     enabled: bool = True,
     description: str = "",
     config: Dict = None,
@@ -43,7 +42,6 @@ def add_mcp_connection(
         cwd=cwd,
         transport=transport,
         timeout=timeout,
-        auto_connect=auto_connect,
         enabled=enabled,
         description=description,
         config=config,
@@ -64,7 +62,6 @@ def update_mcp_connection(
     cwd: str = None,
     transport: str = None,
     timeout: int = None,
-    auto_connect: bool = None,
     enabled: bool = None,
     description: str = None,
     config: Dict = None,
@@ -89,8 +86,6 @@ def update_mcp_connection(
             mcp_connection.transport = transport
         if timeout is not None:
             mcp_connection.timeout = timeout
-        if auto_connect is not None:
-            mcp_connection.auto_connect = auto_connect
         if enabled is not None:
             mcp_connection.enabled = enabled
         if description is not None:
@@ -120,7 +115,6 @@ def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
             "cwd": mcp_connection.cwd,
             "transport": mcp_connection.transport,
             "timeout": mcp_connection.timeout,
-            "auto_connect": mcp_connection.auto_connect,
             "enabled": mcp_connection.enabled,
             "description": mcp_connection.description,
             "config": mcp_connection.config,
@@ -150,7 +144,6 @@ def get_mcp_connections_by_server_name(session, server_name: str) -> List[dict]:
             "cwd": conn.cwd,
             "transport": conn.transport,
             "timeout": conn.timeout,
-            "auto_connect": conn.auto_connect,
             "enabled": conn.enabled,
             "description": conn.description,
             "config": conn.config,
@@ -181,7 +174,6 @@ def get_all_mcp_connections(session, enabled_only: bool = False) -> List[dict]:
             "cwd": conn.cwd,
             "transport": conn.transport,
             "timeout": conn.timeout,
-            "auto_connect": conn.auto_connect,
             "enabled": conn.enabled,
             "description": conn.description,
             "config": conn.config,
@@ -213,7 +205,6 @@ def get_enabled_mcp_connections(session) -> List[dict]:
             "cwd": conn.cwd,
             "transport": conn.transport,
             "timeout": conn.timeout,
-            "auto_connect": conn.auto_connect,
             "enabled": conn.enabled,
             "description": conn.description,
             "config": conn.config,
@@ -224,36 +215,6 @@ def get_enabled_mcp_connections(session) -> List[dict]:
     ]
 
 
-@with_session
-def get_auto_connect_mcp_connections(session) -> List[dict]:
-    """
-    获取所有自动连接的 MCP 连接配置
-    """
-    connections = (
-        session.query(MCPConnectionModel)
-        .filter_by(enabled=True, auto_connect=True)
-        .order_by(MCPConnectionModel.create_time.desc())
-        .all()
-    )
-    return [
-        {
-            "id": conn.id,
-            "server_name": conn.server_name,
-            "command": conn.command,
-            "args": conn.args,
-            "env": conn.env,
-            "cwd": conn.cwd,
-            "transport": conn.transport,
-            "timeout": conn.timeout,
-            "auto_connect": conn.auto_connect,
-            "enabled": conn.enabled,
-            "description": conn.description,
-            "config": conn.config,
-            "create_time": conn.create_time.isoformat() if conn.create_time else None,
-            "update_time": conn.update_time.isoformat() if conn.update_time else None,
-        }
-        for conn in connections
-    ]
 
 
 @with_session
@@ -297,18 +258,6 @@ def disable_mcp_connection(session, connection_id: str) -> bool:
     return False
 
 
-@with_session
-def set_auto_connect(session, connection_id: str, auto_connect: bool) -> bool:
-    """
-    设置 MCP 连接的自动连接状态
-    """
-    mcp_connection = session.query(MCPConnectionModel).filter_by(id=connection_id).first()
-    if mcp_connection is not None:
-        mcp_connection.auto_connect = auto_connect
-        session.add(mcp_connection)
-        session.commit()
-        return True
-    return False
 
 
 @with_session
@@ -316,7 +265,6 @@ def search_mcp_connections(
     session,
     keyword: str = None,
     enabled: bool = None,
-    auto_connect: bool = None,
     limit: int = 50,
 ) -> List[dict]:
     """
@@ -334,9 +282,6 @@ def search_mcp_connections(
     if enabled is not None:
         query = query.filter_by(enabled=enabled)
     
-    if auto_connect is not None:
-        query = query.filter_by(auto_connect=auto_connect)
-    
     connections = query.order_by(MCPConnectionModel.create_time.desc()).limit(limit).all()
     return [
         {
@@ -348,7 +293,6 @@ def search_mcp_connections(
             "cwd": conn.cwd,
             "transport": conn.transport,
             "timeout": conn.timeout,
-            "auto_connect": conn.auto_connect,
             "enabled": conn.enabled,
             "description": conn.description,
             "config": conn.config,

@@ -449,21 +449,12 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                 icon_bg = icon_colors.get("stdio", "linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)") if transport == "stdio" else icon_colors.get("sse", "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)")
                 
                 # 状态指示器
-                status_html = ""
-                if connection.get("auto_connect", False):
-                    status_html = f"""
-                        <div class="status-indicator">
-                            <div class="status-dot" style="background: #22C55E;"></div>
-                            <span style="color: #22C55E; font-size: 12px; font-weight: 500;">自动连接</span>
-                        </div>
-                    """
-                else:
-                    status_html = f"""
-                        <div class="status-indicator">
-                            <div class="status-dot" style="background: #6B7280;"></div>
-                            <span style="color: #6B7280; font-size: 12px; font-weight: 500;">手动连接</span>
-                        </div>
-                    """
+                status_html = """
+                    <div class="status-indicator">
+                        <div class="status-dot" style="background: #6B7280;"></div>
+                        <span style="color: #6B7280; font-size: 12px; font-weight: 500;">手动连接</span>
+                    </div>
+                """
                 
                 # 连接器卡片
                 with st.container():
@@ -778,12 +769,6 @@ def add_new_connection_form(api: "ApiRequest"):
                     key="conn_cwd",
                 )
             with col_adv2:
-                auto_connect = st.checkbox(
-                    "自动连接",
-                    value=False,
-                    help="启动时自动连接此服务器",
-                    key="conn_auto_connect",
-                )
                 enabled = st.checkbox(
                     "启用连接器",
                     value=False,
@@ -847,7 +832,6 @@ def add_new_connection_form(api: "ApiRequest"):
                 cwd=cwd or "",
                 transport=transport,
                 timeout=timeout,               # 传递整数
-                auto_connect=bool(auto_connect),
                 enabled=bool(enabled),
                 description=description or None,
                 config={},                     # 预留

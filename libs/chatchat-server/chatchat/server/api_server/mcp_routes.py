@@ -22,11 +22,9 @@ from chatchat.server.db.repository.mcp_connection_repository import (
     get_mcp_connections_by_server_name,
     get_all_mcp_connections,
     get_enabled_mcp_connections,
-    get_auto_connect_mcp_connections,
     delete_mcp_connection,
     enable_mcp_connection,
     disable_mcp_connection,
-    set_auto_connect,
     search_mcp_connections,
     get_mcp_profile,
     create_mcp_profile,
@@ -194,7 +192,6 @@ def model_to_response(model) -> MCPConnectionResponse:
         cwd=model.cwd,
         transport=model.transport,
         timeout=model.timeout,
-        auto_connect=model.auto_connect,
         enabled=model.enabled,
         description=model.description,
         config=model.config,
@@ -227,7 +224,6 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
             cwd=connection_data.cwd,
             transport=connection_data.transport,
             timeout=connection_data.timeout,
-            auto_connect=connection_data.auto_connect,
             enabled=connection_data.enabled,
             description=connection_data.description,
             config=connection_data.config,
@@ -244,7 +240,6 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
             cwd=connection["cwd"],
             transport=connection["transport"],
             timeout=connection["timeout"],
-            auto_connect=connection["auto_connect"],
             enabled=connection["enabled"],
             description=connection["description"],
             config=connection["config"],
@@ -280,7 +275,6 @@ async def list_mcp_connections(
             cwd=conn["cwd"],
             transport=conn["transport"],
             timeout=conn["timeout"],
-            auto_connect=conn["auto_connect"],
             enabled=conn["enabled"],
             description=conn["description"],
             config=conn["config"],
@@ -365,7 +359,6 @@ async def update_mcp_connection_by_id(
             cwd=update_data.cwd,
             transport=update_data.transport,
             timeout=update_data.timeout,
-            auto_connect=update_data.auto_connect,
             enabled=update_data.enabled,
             description=update_data.description,
             config=update_data.config,
@@ -515,47 +508,6 @@ async def disable_mcp_connection_endpoint(connection_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@mcp_router.post("/{connection_id}/auto_connect", response_model=MCPConnectionStatusResponse, summary="设置自动连接")
-async def set_mcp_connection_auto_connect(
-    connection_id: str, 
-    auto_connect: bool
-):
-    """
-    设置 MCP 连接的自动连接状态
-    """
-    logger.info(f"设置 MCP 连接自动连接: {connection_id}, auto_connect={auto_connect}")
-    try:
-        # 检查连接是否存在
-        existing = get_mcp_connection_by_id(connection_id)
-        if not existing:
-            logger.error(f"连接 ID '{connection_id}' 不存在")
-            raise HTTPException(
-                status_code=404,
-                detail=f"连接 ID '{connection_id}' 不存在"
-            )
-        
-        success = set_auto_connect(connection_id, auto_connect)
-        if success:
-            status = "自动连接已启用" if auto_connect else "自动连接已禁用"
-            logger.info(f"成功设置 MCP 连接自动连接: {connection_id}, {status}")
-            return MCPConnectionStatusResponse(
-                success=True,
-                message=status,
-                connection_id=connection_id
-            )
-        else:
-            logger.error(f"设置 MCP 连接自动连接失败: {connection_id}")
-            return MCPConnectionStatusResponse(
-                success=False,
-                message="自动连接设置失败",
-                connection_id=connection_id
-            )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"设置 MCP 连接自动连接失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @mcp_router.post("/search", response_model=MCPConnectionListResponse, summary="搜索 MCP 连接")
@@ -563,20 +515,17 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
     """
     根据条件搜索 MCP 连接配置
     """
-    logger.info(f"搜索 MCP 连接: keyword={search_request.keyword}, transport={search_request.transport}, enabled={search_request.enabled}, auto_connect={search_request.auto_connect}, limit={search_request.limit}")
+    logger.info(f"搜索 MCP 连接: keyword={search_request.keyword}, transport={search_request.transport}, enabled={search_request.enabled}, limit={search_request.limit}")
     try:
         connections = search_mcp_connections(
             keyword=search_request.keyword,
             transport=search_request.transport,
             enabled=search_request.enabled,
-            auto_connect=search_request.auto_connect,
             limit=search_request.limit,
         )
         
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
-            name=conn["name"],
-            server_type=conn["server_type"],
             server_name=conn["server_name"],
             command=conn["command"],
             args=conn["args"],
@@ -584,7 +533,6 @@ async def search_mcp_connections_endpoint(search_request: MCPConnectionSearchReq
             cwd=conn["cwd"],
             transport=conn["transport"],
             timeout=conn["timeout"],
-            auto_connect=conn["auto_connect"],
             enabled=conn["enabled"],
             description=conn["description"],
             config=conn["config"],
@@ -613,8 +561,6 @@ async def get_connections_by_server_name(server_name: str):
         
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
-            name=conn["name"],
-            server_type=conn["server_type"],
             server_name=conn["server_name"],
             command=conn["command"],
             args=conn["args"],
@@ -622,7 +568,6 @@ async def get_connections_by_server_name(server_name: str):
             cwd=conn["cwd"],
             transport=conn["transport"],
             timeout=conn["timeout"],
-            auto_connect=conn["auto_connect"],
             enabled=conn["enabled"],
             description=conn["description"],
             config=conn["config"],
@@ -651,8 +596,6 @@ async def list_enabled_mcp_connections():
         
         response_connections = [MCPConnectionResponse(
             id=conn["id"],
-            name=conn["name"],
-            server_type=conn["server_type"],
             server_name=conn["server_name"],
             command=conn["command"],
             args=conn["args"],
@@ -660,7 +603,6 @@ async def list_enabled_mcp_connections():
             cwd=conn["cwd"],
             transport=conn["transport"],
             timeout=conn["timeout"],
-            auto_connect=conn["auto_connect"],
             enabled=conn["enabled"],
             description=conn["description"],
             config=conn["config"],
@@ -678,42 +620,6 @@ async def list_enabled_mcp_connections():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@mcp_router.get("/auto_connect/list", response_model=MCPConnectionListResponse, summary="获取自动连接的 MCP 连接")
-async def list_auto_connect_mcp_connections():
-    """
-    获取所有自动连接的 MCP 连接配置
-    """
-    logger.info("获取自动连接的 MCP 连接列表")
-    try:
-        connections = get_auto_connect_mcp_connections()
-        
-        response_connections = [MCPConnectionResponse(
-            id=conn["id"],
-            name=conn["name"],
-            server_type=conn["server_type"],
-            server_name=conn["server_name"],
-            command=conn["command"],
-            args=conn["args"],
-            env=conn["env"],
-            cwd=conn["cwd"],
-            transport=conn["transport"],
-            timeout=conn["timeout"],
-            auto_connect=conn["auto_connect"],
-            enabled=conn["enabled"],
-            description=conn["description"],
-            config=conn["config"],
-            create_time=conn["create_time"],
-            update_time=conn["update_time"],
-        ) for conn in connections]
-        logger.info(f"成功获取自动连接的 MCP 连接列表，共 {len(response_connections)} 个连接")
-        return MCPConnectionListResponse(
-            connections=response_connections,
-            total=len(response_connections)
-        )
-    
-    except Exception as e:
-        logger.error(f"获取自动连接的 MCP 连接列表失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # MCP Profile 相关路由已移至文件开头以避免路由冲突

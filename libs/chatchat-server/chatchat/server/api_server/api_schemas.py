@@ -186,7 +186,6 @@ class MCPConnectionCreate(BaseModel):
     cwd: Optional[str] = Field(None, description="工作目录")
     transport: str = Field(default="stdio", pattern="^(stdio|sse)$", description="传输方式")
     timeout: int = Field(default=30, ge=1, le=300, description="连接超时时间（秒）")
-    auto_connect: bool = Field(default=False, description="是否自动连接")
     enabled: bool = Field(default=True, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
     config: Dict = Field(default={}, description="额外配置")
@@ -201,7 +200,6 @@ class MCPConnectionUpdate(BaseModel):
     cwd: Optional[str] = Field(None, description="工作目录")
     transport: Optional[str] = Field(None, pattern="^(stdio|sse)$", description="传输方式")
     timeout: Optional[int] = Field(None, ge=1, le=300, description="连接超时时间（秒）")
-    auto_connect: Optional[bool] = Field(None, description="是否自动连接")
     enabled: Optional[bool] = Field(None, description="是否启用")
     description: Optional[str] = Field(None, max_length=1000, description="连接描述")
     config: Optional[Dict] = Field(None, description="额外配置")
@@ -217,7 +215,6 @@ class MCPConnectionResponse(BaseModel):
     cwd: Optional[str]
     transport: str
     timeout: int
-    auto_connect: bool
     enabled: bool
     description: Optional[str]
     config: Dict
@@ -241,7 +238,6 @@ class MCPConnectionSearchRequest(BaseModel):
     keyword: Optional[str] = Field(None, description="搜索关键词")
     transport: Optional[str] = Field(None, description="传输方式过滤")
     enabled: Optional[bool] = Field(None, description="启用状态过滤")
-    auto_connect: Optional[bool] = Field(None, description="自动连接状态过滤")
     limit: int = Field(default=50, ge=1, le=100, description="返回数量限制")
 
 

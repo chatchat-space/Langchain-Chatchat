@@ -23,7 +23,6 @@ class MCPConnectionModel(Base):
     
     # 连接状态
     timeout = Column(Integer, default=30, comment="连接超时时间（秒）")
-    auto_connect = Column(Boolean, default=False, comment="是否自动连接")
     enabled = Column(Boolean, default=True, comment="是否启用")
     description = Column(Text, nullable=True, comment="连接器描述")
     
@@ -52,7 +51,6 @@ class MCPConnectionModel(Base):
             "env": self.env or {},
             "cwd": self.cwd,
             "timeout": self.timeout,
-            "auto_connect": self.auto_connect,
             "enabled": self.enabled,
             "description": self.description,
             "config": self.config or {},

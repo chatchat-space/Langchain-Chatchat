@@ -772,7 +772,6 @@ class ApiRequest:
         cwd: Optional[str] = None,
         transport: str = "stdio",
         timeout: int = 30,
-        auto_connect: bool = False,
         enabled: bool = True,
         description: Optional[str] = None,
         config: Dict = None,
@@ -795,7 +794,6 @@ class ApiRequest:
             "cwd": cwd,
             "transport": transport,
             "timeout": timeout,
-            "auto_connect": auto_connect,
             "enabled": enabled,
             "description": description,
             "config": config,
@@ -828,7 +826,6 @@ class ApiRequest:
         cwd: Optional[str] = None,
         transport: Optional[str] = None,
         timeout: Optional[int] = None,
-        auto_connect: Optional[bool] = None,
         enabled: Optional[bool] = None,
         description: Optional[str] = None,
         config: Optional[Dict] = None,
@@ -852,8 +849,6 @@ class ApiRequest:
             data["transport"] = transport
         if timeout is not None:
             data["timeout"] = timeout
-        if auto_connect is not None:
-            data["auto_connect"] = auto_connect
         if enabled is not None:
             data["enabled"] = enabled
         if description is not None:
@@ -885,25 +880,12 @@ class ApiRequest:
         resp = self.post(f"/api/v1/mcp_connections/{connection_id}/disable", **kwargs)
         return self._get_response_value(resp, as_json=True)
 
-    def set_mcp_connection_auto_connect(
-        self, 
-        connection_id: str, 
-        auto_connect: bool,
-        **kwargs
-    ) -> Dict:
-        """
-        设置 MCP 连接自动连接状态
-        """
-        data = {"auto_connect": auto_connect}
-        resp = self.post(f"/api/v1/mcp_connections/{connection_id}/auto_connect", json=data, **kwargs)
-        return self._get_response_value(resp, as_json=True)
-
+    
     def search_mcp_connections(
         self,
         keyword: Optional[str] = None,
         server_type: Optional[str] = None,
         enabled: Optional[bool] = None,
-        auto_connect: Optional[bool] = None,
         limit: int = 50,
         **kwargs
     ) -> Dict:
@@ -914,7 +896,6 @@ class ApiRequest:
             "keyword": keyword,
             "server_type": server_type,
             "enabled": enabled,
-            "auto_connect": auto_connect,
             "limit": limit,
         }
         resp = self.post("/api/v1/mcp_connections/search", json=data, **kwargs)
@@ -934,13 +915,7 @@ class ApiRequest:
         resp = self.get("/api/v1/mcp_connections/enabled/list", **kwargs)
         return self._get_response_value(resp, as_json=True)
 
-    def get_auto_connect_mcp_connections(self, **kwargs) -> Dict:
-        """
-        获取自动连接的 MCP 连接
-        """
-        resp = self.get("/api/v1/mcp_connections/auto_connect/list", **kwargs)
-        return self._get_response_value(resp, as_json=True)
-
+    
 
 class AsyncApiRequest(ApiRequest):
     def __init__(
