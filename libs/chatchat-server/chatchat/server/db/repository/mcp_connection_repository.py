@@ -130,32 +130,6 @@ def get_mcp_connection_by_id(session, connection_id: str) -> Optional[dict]:
 
 
 @with_session
-def get_mcp_connection_by_server_name(session, server_name: str) -> Optional[dict]:
-    """
-    根据服务器名称查询 MCP 连接配置
-    """
-    mcp_connection = session.query(MCPConnectionModel).filter_by(server_name=server_name).first()
-    if mcp_connection:
-        return {
-            "id": mcp_connection.id,
-            "server_name": mcp_connection.server_name,
-            "command": mcp_connection.command,
-            "args": mcp_connection.args,
-            "env": mcp_connection.env,
-            "cwd": mcp_connection.cwd,
-            "transport": mcp_connection.transport,
-            "timeout": mcp_connection.timeout,
-            "auto_connect": mcp_connection.auto_connect,
-            "enabled": mcp_connection.enabled,
-            "description": mcp_connection.description,
-            "config": mcp_connection.config,
-            "create_time": mcp_connection.create_time.isoformat() if mcp_connection.create_time else None,
-            "update_time": mcp_connection.update_time.isoformat() if mcp_connection.update_time else None,
-        }
-    return None
-
-
-@with_session
 def get_mcp_connections_by_server_name(session, server_name: str) -> List[dict]:
     """
     根据服务器名称查询 MCP 连接配置列表

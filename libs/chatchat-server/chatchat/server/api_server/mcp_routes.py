@@ -19,7 +19,6 @@ from chatchat.server.db.repository.mcp_connection_repository import (
     add_mcp_connection,
     update_mcp_connection,
     get_mcp_connection_by_id,
-    get_mcp_connection_by_name,
     get_mcp_connections_by_server_name,
     get_all_mcp_connections,
     get_enabled_mcp_connections,
