@@ -105,18 +105,20 @@ async def chat_completions(
         message_id = None
 
     chat_model_config = {}  # TODO: 前端支持配置模型
-    tool_names = [x["function"]["name"] for x in body.tools]
-    tool_config = {name: get_tool_config(name) for name in tool_names}
+    tool_config = {}
+    if body.tools:
+        tool_names = [x["function"]["name"] for x in body.tools]
+        tool_config = {name: get_tool_config(name) for name in tool_names}
+
     result = await chat(
         query=body.messages[-1]["content"],
         metadata=extra.get("metadata", {}),
         conversation_id=extra.get("conversation_id", ""),
         message_id=message_id,
         history_len=-1,
-        history=body.messages[:-1],
         stream=body.stream,
         chat_model_config=extra.get("chat_model_config", chat_model_config),
-        tool_config=extra.get("tool_config", tool_config),
+        tool_config=tool_config,
         use_mcp=extra.get("use_mcp", False),
         max_tokens=body.max_tokens,
     )
