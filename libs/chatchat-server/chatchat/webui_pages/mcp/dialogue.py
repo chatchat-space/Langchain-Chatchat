@@ -23,7 +23,10 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
         st.session_state.mcp_connections = []
     if 'mcp_profile' not in st.session_state:
         st.session_state.mcp_profile = {}
-    
+        
+    if "show_add_conn" not in st.session_state:
+        st.session_state.show_add_conn = False
+
     # 页面CSS样式
     st.markdown("""
         <style>
@@ -234,7 +237,7 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
         st.markdown('<h1 class="page-title">连接器管理</h1>', unsafe_allow_html=True)
         
         # 通用设置部分
-        with st.expander("⚙️ 通用设置", expanded=True): 
+        with st.expander("⚙️ 通用设置", expanded=False): 
             
             # 加载当前配置
             if not st.session_state.mcp_profile_loaded:
@@ -492,8 +495,9 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
                         """, unsafe_allow_html=True)
                     
                     with col2:
-                        if st.button("✏️ 编辑", key=f"edit_conn_{connection.get('id', i)}", use_container_width=True):
-                            edit_connection_form(api, connection)
+                        # if st.button("✏️ 编辑", key=f"edit_conn_{connection.get('id', i)}", use_container_width=True):
+                            # edit_connection_form(api, connection)
+                        pass
                     
                     with col3:
                         if st.button("🗑️ 删除", key=f"del_conn_{connection.get('id', i)}", use_container_width=True):
@@ -545,34 +549,17 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
     
     # 连接器操作区域
     st.subheader("连接器操作")
-    
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("➕ 添加新连接器", type="primary", use_container_width=True):
-            # 显示添加新连接器的表单
-            with st.expander("添加新连接器", expanded=True):
-                add_new_connection_form(api)
-    
-    with col2:
-        if st.button("🔄 刷新连接器状态", use_container_width=True):
-            try:
-                # 重新加载连接数据
-                st.session_state.mcp_connections_loaded = False
-                connections_data = api.get_all_mcp_connections()
-                if connections_data and connections_data.get("code") == 200:
-                    st.session_state.mcp_connections = connections_data.get("data", {}).get("connections", [])
-                    st.session_state.mcp_connections_loaded = True
-                    st.success("连接器状态已刷新")
-                else:
-                    st.error("刷新失败")
-            except Exception as e:
-                st.error(f"刷新失败: {str(e)}")
-    
-    with col3:
-        if st.button("🗑️ 清理未启用", use_container_width=True):
-            st.info("清理未启用的连接器功能")
-    
+      
+    # 点击后仅修改状态，立刻重跑
+    if st.button("➕ 添加新连接器", type="primary"):
+        st.session_state.show_add_conn = True
+        st.rerun()
+
+    # 用一个占位容器承载“弹窗内容”
+    placeholder = st.empty()
+    if st.session_state.show_add_conn:
+        with placeholder.container():
+            add_new_connection_form(api)     # 表单本体 
     # 添加一些说明信息
     st.divider()
     
@@ -602,461 +589,268 @@ def mcp_management_page(api: ApiRequest, is_lite: bool = False):
     st.caption("💡 提示：连接器需要正确的API权限和网络访问才能正常工作")
 
 
-def add_new_connection_form(api: ApiRequest):
+def add_new_connection_form(api: "ApiRequest"):
     """
-    添加新连接器的表单
+    添加新连接器的弹窗表单（修正版）
+    - 统一使用 st.form 保证一次性提交
+    - 健壮的 Session State 初始化
+    - 根据 transport 显示不同必填项
     """
-    with st.form("add_connection_form", clear_on_submit=True):
-        st.subheader("新连接器配置")
-        
-        # 基本信息
+    import streamlit as st
+
+    # ---- State 初始化 ----
+    if "connection_args" not in st.session_state:
+        st.session_state.connection_args = []
+    if "connection_env_vars" not in st.session_state:
+        # 形如 [{"key":"FOO","value":"bar"}]
+        st.session_state.connection_env_vars = []
+
+    st.subheader("新连接器配置")
+
+    with st.form("new_mcp_connection"):
+        # ===== 基本信息 =====
         col1, col2 = st.columns(2)
-        
         with col1:
             name = st.text_input(
                 "连接器名称 *",
                 placeholder="例如：我的GitHub",
-                help="连接器的显示名称"
+                help="连接器的显示名称",
+                key="conn_name",
             )
             server_type = st.selectbox(
                 "服务器类型 *",
                 options=["github", "canva", "gmail", "slack", "box", "notion", "twitter", "google_drive"],
-                help="选择连接器类型"
+                help="选择连接器类型",
+                key="conn_server_type",
             )
-        
-        with col2:
             server_name = st.text_input(
                 "服务器名称 *",
                 placeholder="例如：github-server",
-                help="服务器的唯一标识符"
+                help="服务器的唯一标识符",
+                key="conn_server_name",
             )
+        with col2:
             transport = st.selectbox(
-                "传输方式",
+                "传输方式 *",
                 options=["stdio", "sse"],
-                help="连接传输协议"
+                help="连接传输协议",
+                key="conn_transport",
             )
-        
-        # 命令配置
-        st.subheader("启动命令")
-        command = st.text_input(
-            "启动命令 *",
-            placeholder="例如：python -m mcp_server",
-            help="启动MCP服务器的命令"
-        )
-        
-        # 命令参数
+
+        # ===== 启动命令 / SSE 配置 =====
+        st.subheader("启动命令 / 连接参数")
+        # 统一给 command 一个默认值，避免未定义
+        command = ""
+
+        if transport == "stdio":
+            command = st.text_input(
+                "启动命令 *",
+                placeholder="例如：python -m mcp_server",
+                help="启动 MCP 服务器的命令（stdio）",
+                key="conn_command",
+            )
+        else:
+            # SSE 模式下通常需要 URL；字段名按你的后端需要调整
+            sse_url = st.text_input(
+                "SSE 服务器地址 *",
+                placeholder="例如：https://example.com/mcp/sse",
+                help="SSE 服务器的 URL",
+                key="conn_sse_url",
+            )
+            # 可选：SSE 额外 header
+            sse_headers = st.text_area(
+                "SSE Headers（可选，JSON）",
+                placeholder='例如：{"Authorization":"Bearer xxx"}',
+                help="以 JSON 形式填写可选的请求头",
+                key="conn_sse_headers",
+            )
+
+        # ===== 命令参数（可选） =====
         st.write("命令参数（可选）：")
-        if 'connection_args' not in st.session_state:
-            st.session_state.connection_args = []
-        
-        # 显示现有参数
+        # 展示已添加的参数
         for i, arg in enumerate(st.session_state.connection_args):
             col_arg, col_del = st.columns([4, 1])
             with col_arg:
                 new_arg = st.text_input(
                     f"参数 {i+1}",
                     value=arg,
-                    key=f"arg_{i}",
-                    placeholder="例如：--port=8080"
+                    key=f"conn_arg_{i}",
+                    placeholder="例如：--port=8080",
+                )
+                if new_arg != arg:
+                    st.session_state.connection_args[i] = new_arg
+            with col_del:
+                # 注意：表单内的按钮也会触发表单提交，这里使用不同的 key 且仅做状态修改
+                if st.form_submit_button(f"🗑️ 删除_{i}", use_container_width=True):
+                    st.session_state.connection_args.pop(i)
+                    st.experimental_rerun()
+
+        # 添加参数按钮（表单内）
+        if st.form_submit_button("➕ 添加参数", use_container_width=False):
+            st.session_state.connection_args.append("")
+            st.experimental_rerun()
+
+        # ===== 环境变量（可选） =====
+        st.write("环境变量（可选）：")
+        # 展示已添加的 env
+        for i, pair in enumerate(st.session_state.connection_env_vars):
+            col_k, col_v, col_del = st.columns([3, 4, 1])
+            with col_k:
+                new_k = st.text_input(
+                    f"键 {i+1}",
+                    value=pair.get("key", ""),
+                    key=f"env_k_{i}",
+                    placeholder="例如：GITHUB_TOKEN",
+                )
+            with col_v:
+                new_v = st.text_input(
+                    f"值 {i+1}",
+                    value=pair.get("value", ""),
+                    key=f"env_v_{i}",
+                    placeholder="例如：xxxxxx",
+                    type="password",
                 )
             with col_del:
-                if st.button("🗑️", key=f"del_arg_{i}"):
-                    st.session_state.connection_args.pop(i)
-                    st.rerun()
-            if new_arg != arg:
-                st.session_state.connection_args[i] = new_arg
-        
-        # 添加新参数按钮
-        if st.button("➕ 添加参数", key="add_arg"):
-            st.session_state.connection_args.append("")
-            st.rerun()
-        
-        # 高级设置
+                if st.form_submit_button(f"🗑️ 删ENV_{i}", use_container_width=True):
+                    st.session_state.connection_env_vars.pop(i)
+                    st.experimental_rerun()
+            # 同步修改
+            st.session_state.connection_env_vars[i] = {"key": new_k, "value": new_v}
+
+        # 添加 ENV 按钮
+        if st.form_submit_button("➕ 添加环境变量"):
+            st.session_state.connection_env_vars.append({"key": "", "value": ""})
+            st.experimental_rerun()
+
+        # ===== 高级设置 =====
         with st.expander("高级设置", expanded=False):
             col_adv1, col_adv2 = st.columns(2)
-            
             with col_adv1:
                 timeout = st.number_input(
                     "连接超时（秒）",
                     min_value=10,
                     max_value=300,
                     value=30,
-                    help="连接超时时间"
+                    help="连接超时时间",
+                    key="conn_timeout",
                 )
                 cwd = st.text_input(
                     "工作目录",
+                    value="",
                     placeholder="/tmp",
-                    help="服务器运行的工作目录"
+                    help="服务器运行的工作目录",
+                    key="conn_cwd",
                 )
-            
             with col_adv2:
                 auto_connect = st.checkbox(
                     "自动连接",
                     value=False,
-                    help="启动时自动连接此服务器"
+                    help="启动时自动连接此服务器",
+                    key="conn_auto_connect",
                 )
                 enabled = st.checkbox(
                     "启用连接器",
-                    value=True,
-                    help="是否启用此连接器"
+                    value=False,
+                    help="是否启用此连接器",
+                    key="conn_enabled",
                 )
-        
-        # 环境变量
-        st.subheader("环境变量")
-        st.write("添加环境变量（可选）：")
-        
-        if 'connection_env_vars' not in st.session_state:
-            st.session_state.connection_env_vars = []
-        
-        # 显示现有环境变量
-        for i, env_var in enumerate(st.session_state.connection_env_vars):
-            col_env_key, col_env_val, col_env_del = st.columns([2, 3, 1])
-            
-            with col_env_key:
-                env_key = st.text_input(
-                    "变量名",
-                    value=env_var.get("key", ""),
-                    key=f"env_key_{i}",
-                    placeholder="例如：API_KEY"
-                )
-            
-            with col_env_val:
-                env_value = st.text_input(
-                    "变量值",
-                    value=env_var.get("value", ""),
-                    key=f"env_val_{i}",
-                    placeholder="例如：your-api-key",
-                    type="password"
-                )
-            
-            with col_env_del:
-                if st.button("🗑️", key=f"del_env_{i}"):
-                    st.session_state.connection_env_vars.pop(i)
-                    st.rerun()
-            
-            # 更新值
-            if env_key != env_var.get("key", "") or env_value != env_var.get("value", ""):
-                st.session_state.connection_env_vars[i] = {"key": env_key, "value": env_value}
-        
-        # 添加新环境变量按钮
-        if st.button("➕ 添加环境变量", key="add_env_var_conn"):
-            st.session_state.connection_env_vars.append({"key": "", "value": ""})
-            st.rerun()
-        
-        # 描述信息
+
+        # ===== 描述信息 =====
         description = st.text_area(
             "连接器描述",
             placeholder="描述此连接器的用途和配置...",
-            help="可选的连接器描述信息"
+            help="可选的连接器描述信息",
+            key="conn_description",
         )
-        
-        # 额外配置（JSON格式）
-        config_json = st.text_area(
-            "额外配置",
-            placeholder='{"key": "value"}',
-            help="额外的JSON格式配置，可选"
-        )
-        
-        # 提交按钮
+
+        # ===== 提交/取消 =====
         col_submit, col_cancel = st.columns([1, 1])
-        
         with col_submit:
-            submitted = st.form_submit_button("💾 创建连接器", type="primary")
-        
+            submitted = st.form_submit_button("💾 创建连接器", type="primary", use_container_width=True)
         with col_cancel:
-            if st.form_submit_button("❌ 取消"):
-                st.rerun()
-        
-        # 处理表单提交
+            cancel_clicked = st.form_submit_button("❌ 取消", use_container_width=True)
+
+        # ----- 提交处理 -----
+        if cancel_clicked:
+            # 清理状态并刷新
+            st.session_state.connection_args = []
+            st.session_state.connection_env_vars = []
+            st.session_state.show_add_conn = False
+            st.experimental_rerun()
+
         if submitted:
-            try:
-                # 验证必填字段
-                if not name or not server_type or not server_name or not command:
-                    st.error("请填写所有必填字段（*标记）")
-                    return
-                
-                # 解析额外配置
-                config_dict = {}
-                if config_json.strip():
+            # 校验
+            errors = []
+            if not name:
+                errors.append("连接器名称")
+            if not server_type:
+                errors.append("服务器类型")
+            if not server_name:
+                errors.append("服务器名称")
+
+            if transport == "stdio":
+                if not command:
+                    errors.append("启动命令（stdio）")
+            else:
+                if not sse_url:
+                    errors.append("SSE 服务器地址")
+
+            if errors:
+                st.error("请填写所有必填字段（*）：" + "、".join(errors))
+                return
+
+            # 解析 env
+            env_vars_dict = {}
+            for env_var in st.session_state.connection_env_vars:
+                k = (env_var.get("key") or "").strip()
+                v = (env_var.get("value") or "").strip()
+                if k and v:
+                    env_vars_dict[k] = v
+
+            # 组装 API 参数
+            payload = dict(
+                name=name,
+                server_type=server_type,
+                server_name=server_name,
+                args=st.session_state.connection_args,
+                env=env_vars_dict,
+                cwd=cwd or "",
+                transport=transport,
+                timeout=timeout,               # 传递整数
+                auto_connect=bool(auto_connect),
+                enabled=bool(enabled),
+                description=description or None,
+                config={},                     # 预留
+            )
+
+            if transport == "stdio":
+                payload["command"] = command
+            else:
+                # 后端若需要以 command 传递，也可以把 sse_url 写入 command
+                payload["command"] = ""
+                payload["config"]["sse_url"] = sse_url
+                if sse_headers:
+                    # 尽量解析为 JSON；失败则当作原文本
+                    import json
                     try:
-                        import json
-                        config_dict = json.loads(config_json)
-                    except json.JSONDecodeError:
-                        st.error("额外配置必须是有效的JSON格式")
-                        return
-                
-                # 构建环境变量字典
-                env_vars_dict = {}
-                for env_var in st.session_state.connection_env_vars:
-                    if env_var.get("key") and env_var.get("value"):
-                        env_vars_dict[env_var["key"]] = env_var["value"]
-                
-                # 调用API创建连接器
-                result = api.add_mcp_connection(
-                    name=name,
-                    server_type=server_type,
-                    server_name=server_name,
-                    command=command,
-                    args=st.session_state.connection_args,
-                    env=env_vars_dict,
-                    cwd=cwd if cwd else None,
-                    transport=transport,
-                    timeout=timeout,
-                    auto_connect=auto_connect,
-                    enabled=enabled,
-                    description=description if description else None,
-                    config=config_dict
-                )
-                
-                if result and result.get("code") == 200:
+                        payload["config"]["sse_headers"] = json.loads(sse_headers)
+                    except Exception:
+                        payload["config"]["sse_headers"] = sse_headers
+
+            try:
+                result = api.add_mcp_connection(**payload)
+                # 约定：返回 True/非空 dict 视为成功
+                if result:
                     st.success("连接器创建成功！")
-                    # 清理表单状态
+                    # 清理并刷新列表
                     st.session_state.connection_args = []
                     st.session_state.connection_env_vars = []
-                    st.session_state.mcp_connections_loaded = False  # 重新加载连接列表
-                    st.rerun()
+                    st.session_state.mcp_connections_loaded = False
+                    st.experimental_rerun()
                 else:
-                    st.error(f"创建失败：{result.get('msg', '未知错误')}")
-                    
+                    st.error(f"创建失败：{getattr(result,'msg', None) or (result.get('msg') if isinstance(result, dict) else '未知错误')}")
             except Exception as e:
-                st.error(f"创建连接器时出错：{str(e)}")
-
-
-def edit_connection_form(api: ApiRequest, connection: dict):
-    """
-    编辑连接器的表单
-    """
-    with st.expander(f"编辑连接器: {connection.get('name', '')}", expanded=True):
-        with st.form(f"edit_connection_form_{connection.get('id', '')}", clear_on_submit=True):
-            st.subheader("编辑连接器配置")
-            
-            # 基本信息
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                name = st.text_input(
-                    "连接器名称 *",
-                    value=connection.get('name', ''),
-                    placeholder="例如：我的GitHub",
-                    help="连接器的显示名称"
-                )
-                server_type = st.selectbox(
-                    "服务器类型 *",
-                    options=["github", "canva", "gmail", "slack", "box", "notion", "twitter", "google_drive"],
-                    index=["github", "canva", "gmail", "slack", "box", "notion", "twitter", "google_drive"].index(connection.get('server_type', 'github')),
-                    help="选择连接器类型"
-                )
-            
-            with col2:
-                server_name = st.text_input(
-                    "服务器名称 *",
-                    value=connection.get('server_name', ''),
-                    placeholder="例如：github-server",
-                    help="服务器的唯一标识符"
-                )
-                transport = st.selectbox(
-                    "传输方式",
-                    options=["stdio", "sse"],
-                    index=["stdio", "sse"].index(connection.get('transport', 'stdio')),
-                    help="连接传输协议"
-                )
-            
-            # 命令配置
-            st.subheader("启动命令")
-            command = st.text_input(
-                "启动命令 *",
-                value=connection.get('command', ''),
-                placeholder="例如：python -m mcp_server",
-                help="启动MCP服务器的命令"
-            )
-            
-            # 命令参数
-            st.write("命令参数（可选）：")
-            if 'edit_connection_args' not in st.session_state:
-                st.session_state.edit_connection_args = connection.get('args', [])
-            
-            # 显示现有参数
-            for i, arg in enumerate(st.session_state.edit_connection_args):
-                col_arg, col_del = st.columns([4, 1])
-                with col_arg:
-                    new_arg = st.text_input(
-                        f"参数 {i+1}",
-                        value=arg,
-                        key=f"edit_arg_{i}",
-                        placeholder="例如：--port=8080"
-                    )
-                with col_del:
-                    if st.button("🗑️", key=f"edit_del_arg_{i}"):
-                        st.session_state.edit_connection_args.pop(i)
-                        st.rerun()
-                if new_arg != arg:
-                    st.session_state.edit_connection_args[i] = new_arg
-            
-            # 添加新参数按钮
-            if st.button("➕ 添加参数", key="edit_add_arg"):
-                st.session_state.edit_connection_args.append("")
-                st.rerun()
-            
-            # 高级设置
-            with st.expander("高级设置", expanded=False):
-                col_adv1, col_adv2 = st.columns(2)
-                
-                with col_adv1:
-                    timeout = st.number_input(
-                        "连接超时（秒）",
-                        min_value=10,
-                        max_value=300,
-                        value=connection.get('timeout', 30),
-                        help="连接超时时间"
-                    )
-                    cwd = st.text_input(
-                        "工作目录",
-                        value=connection.get('cwd', ''),
-                        placeholder="/tmp",
-                        help="服务器运行的工作目录"
-                    )
-                
-                with col_adv2:
-                    auto_connect = st.checkbox(
-                        "自动连接",
-                        value=connection.get('auto_connect', False),
-                        help="启动时自动连接此服务器"
-                    )
-                    enabled = st.checkbox(
-                        "启用连接器",
-                        value=connection.get('enabled', True),
-                        help="是否启用此连接器"
-                    )
-            
-            # 环境变量
-            st.subheader("环境变量")
-            st.write("环境变量（可选）：")
-            
-            if 'edit_connection_env_vars' not in st.session_state:
-                st.session_state.edit_connection_env_vars = [{"key": k, "value": v} for k, v in connection.get('env', {}).items()]
-            
-            # 显示现有环境变量
-            for i, env_var in enumerate(st.session_state.edit_connection_env_vars):
-                col_env_key, col_env_val, col_env_del = st.columns([2, 3, 1])
-                
-                with col_env_key:
-                    env_key = st.text_input(
-                        "变量名",
-                        value=env_var.get("key", ""),
-                        key=f"edit_env_key_{i}",
-                        placeholder="例如：API_KEY"
-                    )
-                
-                with col_env_val:
-                    env_value = st.text_input(
-                        "变量值",
-                        value=env_var.get("value", ""),
-                        key=f"edit_env_val_{i}",
-                        placeholder="例如：your-api-key",
-                        type="password"
-                    )
-                
-                with col_env_del:
-                    if st.button("🗑️", key=f"edit_del_env_{i}"):
-                        st.session_state.edit_connection_env_vars.pop(i)
-                        st.rerun()
-                
-                # 更新值
-                if env_key != env_var.get("key", "") or env_value != env_var.get("value", ""):
-                    st.session_state.edit_connection_env_vars[i] = {"key": env_key, "value": env_value}
-            
-            # 添加新环境变量按钮
-            if st.button("➕ 添加环境变量", key="edit_add_env_var_conn"):
-                st.session_state.edit_connection_env_vars.append({"key": "", "value": ""})
-                st.rerun()
-            
-            # 描述信息
-            description = st.text_area(
-                "连接器描述",
-                value=connection.get('description', ''),
-                placeholder="描述此连接器的用途和配置...",
-                help="可选的连接器描述信息"
-            )
-            
-            # 额外配置（JSON格式）
-            config_json = st.text_area(
-                "额外配置",
-                value=json.dumps(connection.get('config', {}), ensure_ascii=False, indent=2) if connection.get('config') else '',
-                placeholder='{"key": "value"}',
-                help="额外的JSON格式配置，可选"
-            )
-            
-            # 提交按钮
-            col_submit, col_cancel = st.columns([1, 1])
-            
-            with col_submit:
-                submitted = st.form_submit_button("💾 保存修改", type="primary")
-            
-            with col_cancel:
-                if st.form_submit_button("❌ 取消"):
-                    # 清理编辑状态
-                    if 'edit_connection_args' in st.session_state:
-                        del st.session_state.edit_connection_args
-                    if 'edit_connection_env_vars' in st.session_state:
-                        del st.session_state.edit_connection_env_vars
-                    st.rerun()
-            
-            # 处理表单提交
-            if submitted:
-                try:
-                    # 验证必填字段
-                    if not name or not server_type or not server_name or not command:
-                        st.error("请填写所有必填字段（*标记）")
-                        return
-                    
-                    # 解析额外配置
-                    config_dict = {}
-                    if config_json.strip():
-                        try:
-                            config_dict = json.loads(config_json)
-                        except json.JSONDecodeError:
-                            st.error("额外配置必须是有效的JSON格式")
-                            return
-                    
-                    # 构建环境变量字典
-                    env_vars_dict = {}
-                    for env_var in st.session_state.edit_connection_env_vars:
-                        if env_var.get("key") and env_var.get("value"):
-                            env_vars_dict[env_var["key"]] = env_var["value"]
-                    
-                    # 调用API更新连接器
-                    result = api.update_mcp_connection(
-                        connection_id=connection.get('id'),
-                        name=name,
-                        server_type=server_type,
-                        server_name=server_name,
-                        command=command,
-                        args=st.session_state.edit_connection_args,
-                        env=env_vars_dict,
-                        cwd=cwd if cwd else None,
-                        transport=transport,
-                        timeout=timeout,
-                        auto_connect=auto_connect,
-                        enabled=enabled,
-                        description=description if description else None,
-                        config=config_dict
-                    )
-                    
-                    if result and result.get("code") == 200:
-                        st.success("连接器更新成功！")
-                        # 清理编辑状态
-                        if 'edit_connection_args' in st.session_state:
-                            del st.session_state.edit_connection_args
-                        if 'edit_connection_env_vars' in st.session_state:
-                            del st.session_state.edit_connection_env_vars
-                        st.session_state.mcp_connections_loaded = False  # 重新加载连接列表
-                        st.rerun()
-                    else:
-                        st.error(f"更新失败：{result.get('msg', '未知错误')}")
-                        
-                except Exception as e:
-                    st.error(f"更新连接器时出错：{str(e)}")
-
+                st.error(f"创建连接器时出错：{e}")
 
 def delete_connection(api: ApiRequest, connection_id: str):
     """
