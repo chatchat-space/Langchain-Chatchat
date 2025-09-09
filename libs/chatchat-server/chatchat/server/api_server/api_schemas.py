@@ -180,7 +180,7 @@ class OpenAIChatOutput(OpenAIBaseOutput):
 class MCPConnectionCreate(BaseModel):
     """创建 MCP 连接的请求体"""
     server_name: str = Field(..., min_length=1, max_length=100, description="服务器名称")
-    command: str = Field(..., min_length=1, max_length=500, description="启动命令")
+    command: str = Field(..., max_length=500, description="启动命令")
     args: List[str] = Field(default=[], description="命令参数")
     env: Dict[str, str] = Field(default={}, description="环境变量")
     cwd: Optional[str] = Field(None, description="工作目录")
@@ -195,7 +195,7 @@ class MCPConnectionCreate(BaseModel):
 class MCPConnectionUpdate(BaseModel):
     """更新 MCP 连接的请求体"""
     server_name: Optional[str] = Field(None, min_length=1, max_length=100, description="服务器名称")
-    command: Optional[str] = Field(None, min_length=1, max_length=500, description="启动命令")
+    command: Optional[str] = Field(None, max_length=500, description="启动命令")
     args: Optional[List[str]] = Field(None, description="命令参数")
     env: Optional[Dict[str, str]] = Field(None, description="环境变量")
     cwd: Optional[str] = Field(None, description="工作目录")

@@ -211,7 +211,7 @@ async def create_mcp_connection(connection_data: MCPConnectionCreate):
     logger.info(f"创建 MCP 连接: {connection_data.server_name}")
     try:
         # 检查服务器名称是否已存在
-        existing = get_mcp_connection_by_name(name=connection_data.server_name)
+        existing = get_mcp_connections_by_server_name(server_name=connection_data.server_name)
         if existing:
             logger.error(f"服务器名称 '{connection_data.server_name}' 已存在")
             raise HTTPException(
