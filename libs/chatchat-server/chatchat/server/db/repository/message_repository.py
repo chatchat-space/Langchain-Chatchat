@@ -88,5 +88,5 @@ def filter_message(session, conversation_id: str, limit: int = 10):
     # 直接返回 List[MessageModel] 报错
     data = []
     for m in messages:
-        data.append({"query": m.query, "response": m.response})
+        data.append({"query": m.query, "response": m.response, "metadata": m.meta_data})
     return data

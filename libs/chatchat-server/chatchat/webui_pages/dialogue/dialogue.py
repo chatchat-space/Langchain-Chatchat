@@ -17,7 +17,7 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_paste_button import paste_image_button
 
 from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import format_reference
 from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
@@ -206,12 +206,12 @@ def dialogue_page(
             use_agent = st.checkbox(
                 "启用Agent", help="请确保选择的模型具备Agent能力", key="use_agent"
             )
-            output_agent = st.checkbox("显示 Agent 过程", key="output_agent")
 
             # 选择工具
             tools = list_tools(api)
             tool_names = ["None"] + list(tools)
             if use_agent:
+                use_mcp = st.checkbox("使用MCP", key="use_mcp")
                 # selected_tools = sac.checkbox(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
                 # check_all=True, key="selected_tools")
                 selected_tools = st.multiselect(
@@ -222,14 +222,8 @@ def dialogue_page(
                 )
             else:
                 # selected_tool = sac.buttons(list(tools), format_func=lambda x: tools[x]["title"], label="选择工具",
-                # key="selected_tool")
-                selected_tool = st.selectbox(
-                    "选择工具",
-                    tool_names,
-                    format_func=lambda x: tools.get(x, {"title": "None"})["title"],
-                    key="selected_tool",
-                )
-                selected_tools = [selected_tool]
+             
+                selected_tools = []
             selected_tool_configs = {
                 name: tool["config"]
                 for name, tool in tools.items()
@@ -397,7 +391,7 @@ def dialogue_page(
         text = ""
         started = False
 
-        client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE")
+        client = openai.Client(base_url=f"{api_address()}/chat", api_key="NONE", timeout=100000)
         if is_vision_chat: # multimodal chat
             content = [
                 {"type": "text", "text": prompt},
@@ -422,6 +416,7 @@ def dialogue_page(
             conversation_id=conversation_id,
             tool_input=tool_input,
             upload_image=upload_image,
+            use_mcp=use_mcp,
         )
         stream = not is_vision_chat
         params = dict(
@@ -455,44 +450,41 @@ def dialogue_page(
                     if d.status == AgentStatus.error:
                         st.error(d.choices[0].delta.content)
                     elif d.status == AgentStatus.llm_start:
-                        if not output_agent:
-                            continue
                         chat_box.insert_msg("正在解读工具输出结果...")
                         text = d.choices[0].delta.content or ""
                     elif d.status == AgentStatus.llm_new_token:
-                        if not output_agent:
-                            continue
                         text += d.choices[0].delta.content or ""
                         chat_box.update_msg(
                             text.replace("\n", "\n\n"), streaming=True, metadata=metadata
                         )
                     elif d.status == AgentStatus.llm_end:
-                        if not output_agent:
-                            continue
                         text += d.choices[0].delta.content or ""
                         chat_box.update_msg(
                             text.replace("\n", "\n\n"), streaming=False, metadata=metadata
                         )
                     # tool 的输出与 llm 输出重复了
-                    # elif d.status == AgentStatus.tool_start:
-                    #     formatted_data = {
-                    #         "Function": d.choices[0].delta.tool_calls[0].function.name,
-                    #         "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
-                    #     }
-                    #     formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
-                    #     text = """\n```{}\n```\n""".format(formatted_json)
-                    #     chat_box.insert_msg( # TODO: insert text directly not shown
-                    #         Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
-                    # elif d.status == AgentStatus.tool_end:
-                    #     tool_output = d.choices[0].delta.tool_calls[0].tool_output
-                    #     if d.message_type == MsgType.IMAGE:
-                    #         for url in json.loads(tool_output).get("images", []):
-                    #             url = f"{api.base_url}/media/{url}"
-                    #             chat_box.insert_msg(Image(url))
-                    #         chat_box.update_msg(expanded=False, state="complete")
-                    #     else:
-                    #         text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
-                    #         chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
+                    elif d.status == AgentStatus.tool_start:
+                        formatted_data = {
+                            "Function": d.choices[0].delta.tool_calls[0].function.name,
+                            "function_input": d.choices[0].delta.tool_calls[0].function.arguments,
+                        }
+                        formatted_json = json.dumps(formatted_data, indent=2, ensure_ascii=False)
+                        text = """\n```{}\n```\n""".format(formatted_json)
+                        chat_box.insert_msg( # TODO: insert text directly not shown
+                            Markdown(text, title="Function call", in_expander=True, expanded=True, state="running"))
+                    elif d.status == AgentStatus.tool_end:
+                        tool_output = d.choices[0].delta.tool_calls[0].tool_output
+                        if d.message_type == MsgType.IMAGE:
+                            for url in json.loads(tool_output).get("images", []):
+                                # 判断是否携带域名
+                                if not url.startswith("http"):
+                                    url = f"{api.base_url}/media/{url}"
+                                # md语法不支持，所以pos 跳过
+                                chat_box.insert_msg(Image(url), pos=-2)
+                            chat_box.update_msg(text, streaming=False, expanded=True, state="complete")
+                        else:
+                            text += """\n```\nObservation:\n{}\n```\n""".format(tool_output)
+                            chat_box.update_msg(text, streaming=False, expanded=False, state="complete")
                     elif d.status == AgentStatus.agent_finish:
                         text = d.choices[0].delta.content or ""
                         chat_box.update_msg(text.replace("\n", "\n\n"))

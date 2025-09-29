@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, List
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
 
 from chatchat.server.knowledge_base.kb_doc_api import DocumentWithVSId
 from chatchat.server.pydantic_v1 import BaseModel, Extra
-
 
 __all__ = ["regist_tool", "BaseToolOutput", "format_context"]
 
@@ -121,36 +120,6 @@ def regist_tool(
         )
         _parse_tool(t)
         return t
-
-
-class BaseToolOutput:
-    """
-    LLM 要求 Tool 的输出为 str，但 Tool 用在别处时希望它正常返回结构化数据。
-    只需要将 Tool 返回值用该类封装，能同时满足两者的需要。
-    基类简单的将返回值字符串化，或指定 format="json" 将其转为 json。
-    用户也可以继承该类定义自己的转换方法。
-    """
-
-    def __init__(
-        self,
-        data: Any,
-        format: str | Callable = None,
-        data_alias: str = "",
-        **extras: Any,
-    ) -> None:
-        self.data = data
-        self.format = format
-        self.extras = extras
-        if data_alias:
-            setattr(self, data_alias, property(lambda obj: obj.data))
-
-    def __str__(self) -> str:
-        if self.format == "json":
-            return json.dumps(self.data, ensure_ascii=False, indent=2)
-        elif callable(self.format):
-            return self.format(self)
-        else:
-            return str(self.data)
 
 
 def format_context(self: BaseToolOutput) -> str:

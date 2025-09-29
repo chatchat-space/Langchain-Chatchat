@@ -5,8 +5,11 @@ from chatchat.server.pydantic_v1 import Field
 
 
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool(title="维基百科搜索")
 def wikipedia_search(query: str = Field(description="The search query")):

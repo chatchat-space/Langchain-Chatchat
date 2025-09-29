@@ -3,8 +3,11 @@ from langchain_community.tools import ShellTool
 
 from chatchat.server.pydantic_v1 import Field
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool(title="系统命令")
 def shell(query: str = Field(description="The command to execute")):

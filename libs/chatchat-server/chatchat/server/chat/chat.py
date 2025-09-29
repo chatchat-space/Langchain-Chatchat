@@ -1,25 +1,31 @@
 import asyncio
 import json
 import uuid
-from typing import AsyncIterable, List
+import os
+from chatchat.server.db.repository.message_repository import filter_message
+from typing import AsyncIterable, List, Union, Tuple
+from langchain_core.load import dumpd, dumps, load, loads
 
 from fastapi import Body
 from langchain.chains import LLMChain
 from langchain.prompts.chat import ChatPromptTemplate
-from langchain_core.messages import AIMessage, HumanMessage, convert_to_messages
+
+from chatchat.server.agents_registry.agents_registry import agents_registry
 from sse_starlette.sse import EventSourceResponse
 
+from chatchat.server.db.repository.mcp_connection_repository import get_enabled_mcp_connections
 from chatchat.settings import Settings
-from chatchat.server.agent.agent_factory.agents_registry import agents_registry
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
-from chatchat.server.callback_handler.agent_callback_handler import (
+from langchain_chatchat.callbacks.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
     AgentStatus,
 )
+from langchain_chatchat.agents.platform_tools import PlatformToolsAction, PlatformToolsFinish, \
+    PlatformToolsActionToolStart, PlatformToolsActionToolEnd, PlatformToolsLLMStatus
 from chatchat.server.chat.utils import History
-from chatchat.server.memory.conversation_db_buffer_memory import (
-    ConversationBufferDBMemory,
-)
+from chatchat.server.db.repository import add_message_to_db, update_message
+
+from langchain_chatchat import ChatPlatformAI, PlatformToolsRunnable
 from chatchat.server.utils import (
     MsgType,
     get_ChatOpenAI,
@@ -28,8 +34,8 @@ from chatchat.server.utils import (
     wrap_done,
     get_default_llm,
     build_logger,
+    get_ChatPlatformAIParams
 )
-
 
 logger = build_logger()
 
@@ -43,14 +49,23 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
         callbacks = callbacks if params.get("callbacks", False) else None
         # 判断是否传入 max_tokens 的值, 如果传入就按传入的赋值(api 调用且赋值), 如果没有传入则按照初始化配置赋值(ui 调用或 api 调用未赋值)
         max_tokens_value = max_tokens if max_tokens is not None else params.get("max_tokens", 1000)
-        model_instance = get_ChatOpenAI(
-            model_name=model_name,
-            temperature=params.get("temperature", 0.5),
-            max_tokens=max_tokens_value,
-            callbacks=callbacks,
-            streaming=stream,
-            local_wrap=True,
-        )
+        if model_type == "action_model":
+
+            llm_params = get_ChatPlatformAIParams(
+                model_name=model_name,
+                temperature=params.get("temperature", 0.5),
+                max_tokens=max_tokens_value,
+            )
+            model_instance = ChatPlatformAI(**llm_params)
+        else:
+            model_instance = get_ChatOpenAI(
+                model_name=model_name,
+                temperature=params.get("temperature", 0.5),
+                max_tokens=max_tokens_value,
+                callbacks=callbacks,
+                streaming=stream,
+                local_wrap=True,
+            )
         models[model_type] = model_instance
         prompt_name = params.get("prompt_name", "default")
         prompt_template = get_prompt_template(type=model_type, name=prompt_name)
@@ -59,73 +74,80 @@ def create_models_from_config(configs, callbacks, stream, max_tokens):
 
 
 def create_models_chains(
-    history, history_len, prompts, models, tools, callbacks, conversation_id, metadata
+    history_len, prompts, models, tools, callbacks, conversation_id, metadata,  use_mcp: bool = False
 ):
-    memory = None
-    chat_prompt = None
 
-    if history:
-        history = [History.from_data(h) for h in history]
-        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(
-            False
-        )
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg]
-        )
-    elif conversation_id and history_len > 0:
-        memory = ConversationBufferDBMemory(
-            conversation_id=conversation_id,
-            llm=models["llm_model"],
-            message_limit=history_len,
-        )
-    else:
-        input_msg = History(role="user", content=prompts["llm_model"]).to_msg_template(
-            False
-        )
-        chat_prompt = ChatPromptTemplate.from_messages([input_msg])
+    # 从数据库获取conversation_id对应的 intermediate_steps 、 mcp_connections
+    messages = filter_message(
+        conversation_id=conversation_id, limit=history_len
+    )
+    # 返回的记录按时间倒序，转为正序
+    messages = list(reversed(messages))
+    history: List[Union[List, Tuple]] = []
+    for message in messages:
+        history.append({"role": "user", "content": message["query"]}) 
+        history.append({"role": "assistant", "content":  message["response"]})  
 
-    if "action_model" in models and tools:
-        llm = models["action_model"]
-        llm.callbacks = callbacks
-        agent_executor = agents_registry(
-            llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
-        )
-        full_chain = {"input": lambda x: x["input"]} | agent_executor
-    else:
-        llm = models["llm_model"]
-        llm.callbacks = callbacks
-        chain = LLMChain(prompt=chat_prompt, llm=llm, memory=memory)
-        full_chain = {"input": lambda x: x["input"]} | chain
-    return full_chain
+    intermediate_steps = loads(messages[-1].get("metadata", {}).get("intermediate_steps"), valid_namespaces=["langchain_chatchat", "agent_toolkits", "all_tools", "tool"] )  if len(messages)>0 and messages[-1].get("metadata") is not None else []
+    llm = models["action_model"]
+    llm.callbacks = callbacks
+    connections = get_enabled_mcp_connections()
+    
+    # 转换为MCP连接格式，支持StdioConnection和SSEConnection类型
+    mcp_connections = {}
+    for conn in connections:
+        if conn["transport"] == "stdio":
+            # StdioConnection类型
+            mcp_connections[conn["server_name"]] = {
+                "transport": "stdio",
+                "command": conn["config"].get("command", conn["args"][0] if conn["args"] else ""),
+                "args": conn["args"][1:] if len(conn["args"]) > 1 else [],
+                "env": conn["env"],
+                "encoding": "utf-8",
+                "encoding_error_handler": "strict"
+            }
+        elif conn["transport"] == "sse":
+            # SSEConnection类型
+            mcp_connections[conn["server_name"]] = {
+                "transport": "sse",
+                "url": conn["config"].get("url", ""),
+                "headers": conn["config"].get("headers", {}),
+                "timeout": conn.get("timeout", 30.0),
+                "sse_read_timeout": conn.get("sse_read_timeout", 60.0)
+            }
+    
+    agent_executor = PlatformToolsRunnable.create_agent_executor(
+        agent_type="platform-knowledge-mode",
+        agents_registry=agents_registry,
+        llm=llm,
+        tools=tools,
+        history=history,
+        intermediate_steps=intermediate_steps,
+        mcp_connections=mcp_connections if use_mcp else {}
+    )
+
+    full_chain = {"chat_input": lambda x: x["input"]} | agent_executor
+
+    return full_chain, agent_executor
 
 
 async def chat(
-    query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
-    metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
-    conversation_id: str = Body("", description="对话框ID"),
-    message_id: str = Body(None, description="数据库消息ID"),
-    history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
-    history: List[History] = Body(
-        [],
-        description="历史对话，设为一个整数可以从数据库中读取历史消息",
-        examples=[
-            [
-                {"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                {"role": "assistant", "content": "虎头虎脑"},
-            ]
-        ],
-    ),
-    stream: bool = Body(True, description="流式输出"),
-    chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
-    tool_config: dict = Body({}, description="工具配置", examples=[]),
-    max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
+        query: str = Body(..., description="用户输入", examples=["恼羞成怒"]),
+        metadata: dict = Body({}, description="附件，可能是图像或者其他功能", examples=[]),
+        conversation_id: str = Body("", description="对话框ID"),
+        message_id: str = Body(None, description="数据库消息ID"),
+        history_len: int = Body(-1, description="从数据库中取历史消息的数量"),
+        stream: bool = Body(True, description="流式输出"),
+        chat_model_config: dict = Body({}, description="LLM 模型配置", examples=[]),
+        tool_config: dict = Body({}, description="工具配置", examples=[]),
+        use_mcp: bool = Body(False, description="使用MCP"),
+        max_tokens: int = Body(None, description="LLM最大token数配置", example=4096),
 ):
     """Agent 对话"""
 
-    async def chat_iterator() -> AsyncIterable[OpenAIChatOutput]:
+    async def chat_iterator_event() -> AsyncIterable[OpenAIChatOutput]:
         try:
-            callback = AgentExecutorAsyncIteratorCallbackHandler()
-            callbacks = [callback]
+            callbacks = []
 
             # Enable langchain-chatchat to support langfuse
             import os
@@ -146,98 +168,122 @@ async def chat(
             all_tools = get_tool().values()
             tools = [tool for tool in all_tools if tool.name in tool_config]
             tools = [t.copy(update={"callbacks": callbacks}) for t in tools]
-            full_chain = create_models_chains(
+            full_chain, agent_executor = create_models_chains(
                 prompts=prompts,
                 models=models,
                 conversation_id=conversation_id,
                 tools=tools,
                 callbacks=callbacks,
-                history=history,
                 history_len=history_len,
                 metadata=metadata,
+                use_mcp = use_mcp
             )
-
-            _history = [History.from_data(h) for h in history]
-            chat_history = [h.to_msg_tuple() for h in _history]
-
-            history_message = convert_to_messages(chat_history)
-
-            task = asyncio.create_task(
-                wrap_done(
-                    full_chain.ainvoke(
-                        {
-                            "input": query,
-                            "chat_history": history_message,
-                        }
-                    ),
-                    callback.done,
-                )
+            message_id = add_message_to_db(
+                    chat_type="llm_chat",
+                    query=query,
+                    conversation_id=conversation_id,
             )
-
+            chat_iterator = full_chain.invoke({
+                "input": query
+            })
             last_tool = {}
-            async for chunk in callback.aiter():
-                data = json.loads(chunk)
+            async for item in chat_iterator:
+
+                data = {}
+
+                data["status"] = item.status
                 data["tool_calls"] = []
                 data["message_type"] = MsgType.TEXT
-
-                if data["status"] == AgentStatus.tool_start:
-                    last_tool = {
+                if isinstance(item, PlatformToolsAction):
+                    logger.info("PlatformToolsAction:" + str(item.to_json()))
+                    data["text"] = item.log
+                    tool_call = {
                         "index": 0,
-                        "id": data["run_id"],
+                        "id": item.run_id,
                         "type": "function",
                         "function": {
-                            "name": data["tool"],
-                            "arguments": data["tool_input"],
+                            "name": item.tool,
+                            "arguments": item.tool_input,
+                        },
+                        "tool_output": None,
+                        "is_error": False,
+                    }
+                    data["tool_calls"].append(tool_call)
+
+                elif isinstance(item, PlatformToolsFinish):
+                    data["text"] = item.log
+
+                    last_tool.update(
+                        tool_output=item.return_values["output"],
+                    )
+                    data["tool_calls"].append(last_tool)
+
+                    try:
+                        tool_output = json.loads(item.return_values["output"])
+                        if message_type := tool_output.get("message_type"):
+                            data["message_type"] = message_type
+                    except:
+                        ...
+
+                elif isinstance(item, PlatformToolsActionToolStart):
+                    logger.info("PlatformToolsActionToolStart:" + str(item.to_json()))
+
+                    last_tool = {
+                        "index": 0,
+                        "id": item.run_id,
+                        "type": "function",
+                        "function": {
+                            "name": item.tool,
+                            "arguments": item.tool_input,
                         },
                         "tool_output": None,
                         "is_error": False,
                     }
                     data["tool_calls"].append(last_tool)
-                if data["status"] in [AgentStatus.tool_end]:
+
+                elif isinstance(item, PlatformToolsActionToolEnd):
+                    logger.info("PlatformToolsActionToolEnd:" + str(item.to_json()))
                     last_tool.update(
-                        tool_output=data["tool_output"],
-                        is_error=data.get("is_error", False),
+                        tool_output=item.tool_output,
+                        is_error=False,
                     )
                     data["tool_calls"] = [last_tool]
+
                     last_tool = {}
                     try:
-                        tool_output = json.loads(data["tool_output"])
+                        tool_output = json.loads(item.tool_output)
                         if message_type := tool_output.get("message_type"):
                             data["message_type"] = message_type
                     except:
                         ...
-                elif data["status"] == AgentStatus.agent_finish:
-                    try:
-                        tool_output = json.loads(data["text"])
-                        if message_type := tool_output.get("message_type"):
-                            data["message_type"] = message_type
-                    except:
-                        ...
-                text_value = data.get("text", "")
-                content = text_value if isinstance(text_value, str) else str(text_value)
+                elif isinstance(item, PlatformToolsLLMStatus):
+
+                    data["text"] = item.text
+
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
                     object="chat.completion.chunk",
-                    content=content,
+                    content=data.get("text", ""),
                     role="assistant",
                     tool_calls=data["tool_calls"],
                     model=models["llm_model"].model_name,
                     status=data["status"],
                     message_type=data["message_type"],
                     message_id=message_id,
+                    class_name=item.class_name()
                 )
                 yield ret.model_dump_json()
-            # yield OpenAIChatOutput( # return blank text lastly
-            #         id=f"chat{uuid.uuid4()}",
-            #         object="chat.completion.chunk",
-            #         content="",
-            #         role="assistant",
-            #         model=models["llm_model"].model_name,
-            #         status = data["status"],
-            #         message_type = data["message_type"],
-            #         message_id=message_id,
-            # )
-            await task
+
+            string_intermediate_steps = dumps(agent_executor.intermediate_steps, pretty=True)
+
+            update_message(
+                message_id, 
+                agent_executor.history[-1].get("content"),
+                metadata = {
+                    "intermediate_steps": string_intermediate_steps
+                }
+            )
+             
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
@@ -247,7 +293,7 @@ async def chat(
             return
 
     if stream:
-        return EventSourceResponse(chat_iterator())
+        return EventSourceResponse(chat_iterator_event())
     else:
         ret = OpenAIChatOutput(
             id=f"chat{uuid.uuid4()}",
@@ -261,7 +307,7 @@ async def chat(
             message_id=message_id,
         )
 
-        async for chunk in chat_iterator():
+        async for chunk in chat_iterator_event():
             data = json.loads(chunk)
             if text := data["choices"][0]["delta"]["content"]:
                 ret.content += text

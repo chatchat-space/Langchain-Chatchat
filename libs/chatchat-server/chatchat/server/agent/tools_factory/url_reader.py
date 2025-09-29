@@ -10,8 +10,11 @@ from chatchat.server.utils import get_tool_config
 
 from chatchat.server.agent.tools_factory.tools_registry import format_context
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool(title="URL内容阅读")
 def url_reader(

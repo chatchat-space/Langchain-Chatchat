@@ -1,6 +1,10 @@
 import requests
 from chatchat.server.pydantic_v1 import Field
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
+
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 from chatchat.server.utils import get_tool_config
 
 BASE_URL = "https://restapi.amap.com/v5/place/text"

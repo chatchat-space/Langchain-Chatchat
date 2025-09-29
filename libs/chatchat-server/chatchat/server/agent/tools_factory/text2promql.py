@@ -15,8 +15,11 @@ from chatchat.server.utils import get_tool_config, get_ChatOpenAI
 #     MAX_TOKENS,
 # )
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 logger = logging.getLogger()
 
 # Prompt for the prom_chain

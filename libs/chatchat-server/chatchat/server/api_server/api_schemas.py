@@ -13,7 +13,7 @@ from openai.types.chat import (
 )
 
 from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
+from langchain_chatchat.callbacks.agent_callback_handler import AgentStatus  # noaq
 from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
@@ -174,3 +174,93 @@ class OpenAIBaseOutput(BaseModel):
 
 class OpenAIChatOutput(OpenAIBaseOutput):
     ...
+
+
+# MCP Connection 相关 Schema
+class MCPConnectionCreate(BaseModel):
+    """创建 MCP 连接的请求体"""
+    server_name: str = Field(..., min_length=1, max_length=100, description="服务器名称")
+    args: List[str] = Field(default=[], description="命令参数")
+    env: Dict[str, str] = Field(default={}, description="环境变量")
+    cwd: Optional[str] = Field(None, description="工作目录")
+    transport: str = Field(default="stdio", pattern="^(stdio|sse)$", description="传输方式")
+    timeout: int = Field(default=30, ge=1, le=300, description="连接超时时间（秒）")
+    enabled: bool = Field(default=True, description="是否启用")
+    description: Optional[str] = Field(None, max_length=1000, description="连接描述")
+    config: Dict = Field(default={}, description="连接配置")
+
+
+class MCPConnectionUpdate(BaseModel):
+    """更新 MCP 连接的请求体"""
+    server_name: Optional[str] = Field(None, min_length=1, max_length=100, description="服务器名称")
+    args: Optional[List[str]] = Field(None, description="命令参数")
+    env: Optional[Dict[str, str]] = Field(None, description="环境变量")
+    cwd: Optional[str] = Field(None, description="工作目录")
+    transport: Optional[str] = Field(None, pattern="^(stdio|sse)$", description="传输方式")
+    timeout: Optional[int] = Field(None, ge=1, le=300, description="连接超时时间（秒）")
+    enabled: Optional[bool] = Field(None, description="是否启用")
+    description: Optional[str] = Field(None, max_length=1000, description="连接描述")
+    config: Optional[Dict] = Field(None, description="连接配置")
+
+
+class MCPConnectionResponse(BaseModel):
+    """MCP 连接响应体"""
+    id: str
+    server_name: str
+    args: List[str]
+    env: Dict[str, str]
+    cwd: Optional[str]
+    transport: str
+    timeout: int
+    enabled: bool
+    description: Optional[str]
+    config: Dict
+    create_time: str
+    update_time: Optional[str]
+
+    class Config:
+        json_encoders = {
+            # 处理 datetime 类型
+        }
+
+
+class MCPConnectionListResponse(BaseModel):
+    """MCP 连接列表响应体"""
+    connections: List[MCPConnectionResponse]
+    total: int
+
+
+class MCPConnectionSearchRequest(BaseModel):
+    """MCP 连接搜索请求体"""
+    keyword: Optional[str] = Field(None, description="搜索关键词")
+    transport: Optional[str] = Field(None, description="传输方式过滤")
+    enabled: Optional[bool] = Field(None, description="启用状态过滤")
+    limit: int = Field(default=50, ge=1, le=100, description="返回数量限制")
+
+
+class MCPConnectionStatusResponse(BaseModel):
+    """MCP 连接状态响应体"""
+    success: bool
+    message: str
+    connection_id: Optional[str] = None
+
+
+class MCPProfileCreate(BaseModel):
+    """MCP 通用配置创建请求体"""
+    timeout: int = Field(default=30, ge=10, le=300, description="默认连接超时时间（秒）")
+    working_dir: str = Field(default="/tmp", description="默认工作目录")
+    env_vars: Dict[str, str] = Field(default={}, description="默认环境变量")
+
+
+class MCPProfileResponse(BaseModel):
+    """MCP 通用配置响应体"""
+    timeout: int
+    working_dir: str
+    env_vars: Dict[str, str]
+    update_time: str
+
+
+class MCPProfileStatusResponse(BaseModel):
+    """MCP 通用配置状态响应体"""
+    success: bool
+    message: str
