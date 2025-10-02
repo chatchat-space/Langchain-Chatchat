@@ -15,7 +15,7 @@ Langchain-Chatchat 自 0.3.0 版本起，为方便支持用户使用 pip 方式�
 
 ### 1.1 安装 Poetry
 
-> 在安装 Poetry 之前，如果您使用 Conda，请创建并激活一个新的 Conda 环境，例如使用 `conda create -n chatchat python=3.9` 创建一个新的 Conda 环境。
+> 在安装 Poetry 之前，如果您使用 Conda，请创建并激活一个新的 Conda 环境，例如使用 `conda create -n chatchat python=3.11` 创建一个新的 Conda 环境。
 
 安装 Poetry: [Poetry 安装文档](https://python-poetry.org/docs/#installing-with-pipx)
 
