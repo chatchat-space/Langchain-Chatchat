@@ -61,6 +61,6 @@ class RapidOCRPPTLoader(UnstructuredFileLoader):
 
 
 if __name__ == "__main__":
-    loader = RapidOCRPPTLoader(file_path="../tests/samples/ocr_test.pptx")
+    loader = RapidOCRPPTLoader(file_path="../../../../tests/samples/ocr_test.pptx")
     docs = loader.load()
     print(docs)
