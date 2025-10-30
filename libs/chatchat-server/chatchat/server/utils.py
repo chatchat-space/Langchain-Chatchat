@@ -1,7 +1,6 @@
 import asyncio
 import multiprocessing as mp
 import os
-import requests
 import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -33,6 +32,8 @@ from chatchat.settings import Settings, XF_MODELS_TYPES
 from chatchat.server.pydantic_v2 import BaseModel, Field
 from chatchat.utils import build_logger
 import requests
+
+from langchain_chatchat.embeddings.zhipuai import ZhipuAIEmbeddings
 
 logger = build_logger()
 
@@ -73,25 +74,25 @@ def detect_xf_models(xf_url: str) -> Dict[str, List[str]]:
     '''
     xf_model_type_maps = {
         "llm_models": lambda xf_models: [k for k, v in xf_models.items()
-                                        if "LLM" == v["model_type"]
-                                        and "vision" not in v["model_ability"]],
+                                         if "LLM" == v["model_type"]
+                                         and "vision" not in v["model_ability"]],
         "embed_models": lambda xf_models: [k for k, v in xf_models.items()
-                                        if "embedding" == v["model_type"]],
+                                           if "embedding" == v["model_type"]],
         "text2image_models": lambda xf_models: [k for k, v in xf_models.items()
                                                 if "image" == v["model_type"]],
         "image2image_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                if "image" == v["model_type"]],
+                                                 if "image" == v["model_type"]],
         "image2text_models": lambda xf_models: [k for k, v in xf_models.items()
                                                 if "LLM" == v["model_type"]
                                                 and "vision" in v["model_ability"]],
         "rerank_models": lambda xf_models: [k for k, v in xf_models.items()
                                             if "rerank" == v["model_type"]],
         "speech2text_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
-                                                in XF_MODELS_TYPES["speech2text"].values()],
+                                                 if v.get(list(XF_MODELS_TYPES["speech2text"].keys())[0])
+                                                 in XF_MODELS_TYPES["speech2text"].values()],
         "text2speech_models": lambda xf_models: [k for k, v in xf_models.items()
-                                                if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
-                                                in XF_MODELS_TYPES["text2speech"].values()],
+                                                 if v.get(list(XF_MODELS_TYPES["text2speech"].keys())[0])
+                                                 in XF_MODELS_TYPES["text2speech"].values()],
     }
     models = {}
     try:
@@ -102,7 +103,7 @@ def detect_xf_models(xf_url: str) -> Dict[str, List[str]]:
             models[m_type] = filter(xf_models)
     except ImportError:
         logger.warning('auto_detect_model needs xinference-client installed. '
-                        'Please try "pip install xinference-client". ')
+                       'Please try "pip install xinference-client". ')
     except requests.exceptions.ConnectionError:
         logger.warning(f"cannot connect to xinference host: {xf_url}, please check your configuration.")
     except Exception as e:
@@ -206,6 +207,7 @@ def get_default_llm():
                        f"using {available_llms[0]} instead")
         return available_llms[0]
 
+
 def get_default_embedding():
     available_embeddings = list(get_config_models(model_type="embed").keys())
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
@@ -214,6 +216,11 @@ def get_default_embedding():
         logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
                        f"available embeddings, using {available_embeddings[0]} instead")
         return available_embeddings[0]
+
+
+def get_history_len() -> int:
+    return (Settings.model_settings.HISTORY_LEN or
+            Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
 def get_ChatOpenAI(
@@ -260,6 +267,46 @@ def get_ChatOpenAI(
     return model
 
 
+def get_ChatPlatformAIParams(
+        model_name: str = get_default_llm(),
+        temperature: float = Settings.model_settings.TEMPERATURE,
+        max_tokens: int = Settings.model_settings.MAX_TOKENS,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        local_wrap: bool = False,  # use local wrapped api
+        **kwargs: Any,
+) -> Dict:
+    model_info = get_model_info(model_name)
+    if not model_info:
+        raise ValueError(f"cannot find model info for model: {model_name}")
+
+    params = dict(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        model=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **kwargs,
+    )
+    # remove paramters with None value to avoid openai validation error
+    for k in list(params):
+        if params[k] is None:
+            params.pop(k)
+
+    try:
+        params.update(
+            api_base=model_info.get("api_base_url"),
+            api_key=model_info.get("api_key"),
+            proxy=model_info.get("api_proxy"),
+        )
+        return params
+    except Exception as e:
+        logger.exception(f"failed to create for model: {model_name}.")
+        return {}
+
+
 def get_OpenAI(
         model_name: str,
         temperature: float,
@@ -303,8 +350,8 @@ def get_OpenAI(
 
 
 def get_Embeddings(
-    embed_model: str = None,
-    local_wrap: bool = False,  # use local wrapped api
+        embed_model: str = None,
+        local_wrap: bool = False,  # use local wrapped api
 ) -> Embeddings:
     from langchain_community.embeddings import OllamaEmbeddings
     from langchain_openai import OpenAIEmbeddings
@@ -335,10 +382,18 @@ def get_Embeddings(
                 base_url=model_info.get("api_base_url").replace("/v1", ""),
                 model=embed_model,
             )
+        elif model_info.get("platform_type") == "zhipuai":
+            return ZhipuAIEmbeddings(
+                base_url=model_info.get("api_base_url"),
+                api_key=model_info.get("api_key"),
+                zhipuai_proxy=model_info.get("api_proxy"),
+                model=embed_model,
+            )
         else:
             return LocalAIEmbeddings(**params)
     except Exception as e:
         logger.exception(f"failed to create Embeddings for model: {embed_model}.")
+        raise e
 
 
 def check_embed_model(embed_model: str = None) -> Tuple[bool, str]:
@@ -653,6 +708,28 @@ def get_prompt_template(type: str, name: str) -> Optional[str]:
     from chatchat.settings import Settings
 
     return Settings.prompt_settings.model_dump().get(type, {}).get(name)
+
+
+def get_prompt_template_dict(type: str, name: str) -> Optional[Dict]:
+    """
+    从prompt_config中加载模板内容
+    type: 对应于 model_settings.llm_model_config 模型类别其中的一种，以及 "rag"，如果有新功能，应该进行加入。
+    返回：定义的对象特点字典“SYSTEM_PROMPT”，“HUMAN_MESSAGE”
+    """
+
+    from chatchat.settings import Settings
+
+    return Settings.prompt_settings.model_dump().get(type, {}).get(name)
+
+
+def get_model_dump_dict(type: str) -> Optional[Dict]:
+    """
+    从prompt_config中加载模板内容
+    """
+
+    from chatchat.settings import Settings
+
+    return Settings.prompt_settings.model_dump().get(type, {})
 
 
 def set_httpx_config(

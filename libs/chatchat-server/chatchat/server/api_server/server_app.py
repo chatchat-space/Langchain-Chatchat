@@ -12,6 +12,7 @@ from chatchat import __version__
 from chatchat.settings import Settings
 from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.kb_routes import kb_router
+from chatchat.server.api_server.mcp_routes import mcp_router
 from chatchat.server.api_server.openai_routes import openai_router
 from chatchat.server.api_server.server_routes import server_router
 from chatchat.server.api_server.tool_routes import tool_router
@@ -43,6 +44,7 @@ def create_app(run_mode: str = None):
     app.include_router(tool_router)
     app.include_router(openai_router)
     app.include_router(server_router)
+    app.include_router(mcp_router)
 
     # 其它接口
     app.post(

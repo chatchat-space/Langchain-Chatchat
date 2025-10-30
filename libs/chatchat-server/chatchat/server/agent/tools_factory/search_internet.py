@@ -12,8 +12,11 @@ from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
-from .tools_registry import BaseToolOutput, regist_tool, format_context
+from .tools_registry import regist_tool, format_context
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 def searx_search(text ,config, top_k: int):
     search = SearxSearchWrapper(

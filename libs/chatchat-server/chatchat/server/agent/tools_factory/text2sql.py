@@ -8,7 +8,11 @@ from sqlalchemy.exc import OperationalError
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
+
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 READ_ONLY_PROMPT_TEMPLATE = """You are a MySQL expert. The database is currently in read-only mode. 
 Given an input question, determine if the related SQL can be executed in read-only mode.

@@ -2,9 +2,12 @@ from urllib.parse import urlencode
 
 from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.tools_registry import (
-    BaseToolOutput,
     regist_tool,
     format_context,
+)
+
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
 )
 from chatchat.server.knowledge_base.kb_api import list_kbs
 from chatchat.server.knowledge_base.kb_doc_api import search_docs

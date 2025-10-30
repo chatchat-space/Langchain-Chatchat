@@ -3,8 +3,11 @@
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
 @regist_tool
 def wolfram(query: str = Field(description="The formula to be calculated")):

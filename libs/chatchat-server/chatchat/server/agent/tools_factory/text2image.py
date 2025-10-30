@@ -11,16 +11,26 @@ from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import MsgType, get_tool_config, get_model_info
 
-from .tools_registry import BaseToolOutput, regist_tool
+from .tools_registry import regist_tool
 
+from langchain_chatchat.agent_toolkits.all_tools.tool import (
+    BaseToolOutput,
+)
 
-@regist_tool(title="文生图", return_direct=True)
+@regist_tool(title="""
+#文本生成图片工具
+##描述
+则根据用户的描述生成图片。
+##请求参数
+参数名	类型	必填	描述 
+prompt	String	是	所需图像的文本描述
+size	String	否	图片尺寸，可选值：1024x1024,768x1344,864x1152,1344x768,1152x864,1440x720,720x1440，默认是1024x1024。 
+""", return_direct=True)
 def text2images(
-    prompt: str,
+    prompt: str = Field(description="用户的描述"),
     n: int = Field(1, description="需生成图片的数量"),
-    width: Literal[256, 512, 1024] = Field(512, description="生成图片的宽度"),
-    height: Literal[256, 512, 1024] = Field(512, description="生成图片的高度"),
-) -> List[str]:
+    size: Literal["1024x1024", "768x1344", "864x1152", "1344x768", "1152x864", "1440x720", "720x1440"] = Field(description="图片尺寸"),
+):
     """根据用户的描述生成图片"""
 
     tool_config = get_tool_config("text2images")
@@ -35,20 +45,23 @@ def text2images(
     resp = client.images.generate(
         prompt=prompt,
         n=n,
-        size=f"{width}*{height}",
+        size=size,
         response_format="b64_json",
         model=model_config["model_name"],
     )
     images = []
     for x in resp.data:
-        uid = uuid.uuid4().hex
-        today = datetime.now().strftime("%Y-%m-%d")
-        path = os.path.join(Settings.basic_settings.MEDIA_PATH, "image", today)
-        os.makedirs(path, exist_ok=True)
-        filename = f"image/{today}/{uid}.png"
-        with open(os.path.join(Settings.basic_settings.MEDIA_PATH, filename), "wb") as fp:
-            fp.write(base64.b64decode(x.b64_json))
-        images.append(filename)
+        if x.b64_json is not None:
+            uid = uuid.uuid4().hex
+            today = datetime.now().strftime("%Y-%m-%d")
+            path = os.path.join(Settings.basic_settings.MEDIA_PATH, "image", today)
+            os.makedirs(path, exist_ok=True)
+            filename = f"image/{today}/{uid}.png"
+            with open(os.path.join(Settings.basic_settings.MEDIA_PATH, filename), "wb") as fp:
+                fp.write(base64.b64decode(x.b64_json))
+            images.append(filename)
+        else:
+            images.append(x.url)
     return BaseToolOutput(
         {"message_type": MsgType.IMAGE, "images": images}, format="json"
     )

@@ -89,122 +89,37 @@ async def chat_completions(
                     }
 
     conversation_id = extra.get("conversation_id")
-
-    # chat based on result from one choiced tool
-    if body.tool_choice:
-        tool = get_tool(body.tool_choice["function"]["name"])
-        if not body.tools:
-            body.tools = [
-                {
-                    "type": "function",
-                    "function": {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": tool.args,
-                    },
-                }
-            ]
-        if tool_input := extra.get("tool_input"):
-            try:
-                message_id = (
-                    add_message_to_db(
-                        chat_type="tool_call",
-                        query=body.messages[-1]["content"],
-                        conversation_id=conversation_id,
-                    )
-                    if conversation_id
-                    else None
-                )
-            except Exception as e:
-                logger.warning(f"failed to add message to db: {e}")
-                message_id = None
-
-            tool_result = await tool.ainvoke(tool_input)
-            prompt_template = PromptTemplate.from_template(
-                get_prompt_template("rag", "default"), template_format="jinja2"
+  
+    try:
+        message_id = (
+            add_message_to_db(
+                chat_type="agent_chat",
+                query=body.messages[-1]["content"],
+                conversation_id=conversation_id,
             )
-            body.messages[-1]["content"] = prompt_template.format(
-                context=tool_result, question=body.messages[-1]["content"]
-            )
-            del body.tools
-            del body.tool_choice
-            extra_json = {
-                "message_id": message_id,
-                "status": None,
-                "model": body.model,
-            }
-            header = [
-                {
-                    **extra_json,
-                    "content": f"{tool_result}",
-                    "tool_call": tool.get_name(),
-                    "tool_output": tool_result.data,
-                    "is_ref": False if tool.return_direct else True,
-                }
-            ]
-            if tool.return_direct:
-                def temp_gen():
-                    yield OpenAIChatOutput(**header[0]).model_dump_json()
-                return EventSourceResponse(temp_gen())
-            else:
-                return await openai_request(
-                    client.chat.completions.create,
-                    body,
-                    extra_json=extra_json,
-                    header=header,
-                )
+            if conversation_id
+            else None
+        )
+    except Exception as e:
+        logger.warning(f"failed to add message to db: {e}")
+        message_id = None
 
-    # agent chat with tool calls
+    chat_model_config = {}  # TODO: 前端支持配置模型
+    tool_config = {}
     if body.tools:
-        try:
-            message_id = (
-                add_message_to_db(
-                    chat_type="agent_chat",
-                    query=body.messages[-1]["content"],
-                    conversation_id=conversation_id,
-                )
-                if conversation_id
-                else None
-            )
-        except Exception as e:
-            logger.warning(f"failed to add message to db: {e}")
-            message_id = None
-
-        chat_model_config = {}  # TODO: 前端支持配置模型
         tool_names = [x["function"]["name"] for x in body.tools]
         tool_config = {name: get_tool_config(name) for name in tool_names}
-        result = await chat(
-            query=body.messages[-1]["content"],
-            metadata=extra.get("metadata", {}),
-            conversation_id=extra.get("conversation_id", ""),
-            message_id=message_id,
-            history_len=-1,
-            history=body.messages[:-1],
-            stream=body.stream,
-            chat_model_config=extra.get("chat_model_config", chat_model_config),
-            tool_config=extra.get("tool_config", tool_config),
-            max_tokens=body.max_tokens,
-        )
-        return result
-    else:  # LLM chat directly
-        try: # query is complex object that unable add to db when using qwen-vl-chat 
-            message_id = (
-                add_message_to_db(
-                    chat_type="llm_chat",
-                    query=body.messages[-1]["content"],
-                    conversation_id=conversation_id,
-                )
-                if conversation_id
-                else None
-            )
-        except Exception as e:
-            logger.warning(f"failed to add message to db: {e}")
-            message_id = None
 
-        extra_json = {
-            "message_id": message_id,
-            "status": None,
-        }
-        return await openai_request(
-            client.chat.completions.create, body, extra_json=extra_json
-        )
+    result = await chat(
+        query=body.messages[-1]["content"],
+        metadata=extra.get("metadata", {}),
+        conversation_id=extra.get("conversation_id", ""),
+        message_id=message_id,
+        history_len=-1,
+        stream=body.stream,
+        chat_model_config=extra.get("chat_model_config", chat_model_config),
+        tool_config=tool_config,
+        use_mcp=extra.get("use_mcp", False),
+        max_tokens=body.max_tokens,
+    )
+    return result
