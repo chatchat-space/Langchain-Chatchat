@@ -6,10 +6,10 @@ from langchain.agents.output_parsers.tools import ToolAgentAction
 from langchain_core.agents import AgentAction
 from langchain_core.messages import (
     AIMessage,
+    HumanMessage,
     BaseMessage,
     ToolMessage,
 )
-
 from langchain_chatchat.agent_toolkits import BaseToolOutput
 from langchain_chatchat.agent_toolkits.all_tools.code_interpreter_tool import (
     CodeInterpreterToolOutput,
@@ -53,7 +53,6 @@ def _create_tool_message(
         additional_kwargs={"name": agent_action.tool},
     )
 
-
 def format_to_platform_tool_messages(
     intermediate_steps: Sequence[Tuple[AgentAction, BaseToolOutput]],
 ) -> List[BaseMessage]:
@@ -64,63 +63,74 @@ def format_to_platform_tool_messages(
 
     Returns:
         list of messages to send to the LLM for the next prediction
-
     """
     messages = []
-    for agent_action, observation in intermediate_steps:
+
+    for idx, (agent_action, observation) in enumerate(intermediate_steps):
+        # === CodeInterpreter ===
         if isinstance(agent_action, CodeInterpreterAgentAction):
             if isinstance(observation, CodeInterpreterToolOutput):
-                if "auto" == observation.platform_params.get("sandbox", "auto"):
+                sandbox_type = observation.platform_params.get("sandbox", "auto")
+                if sandbox_type == "auto":
                     new_messages = [
                         AIMessage(content=str(observation.code_input)),
                         _create_tool_message(agent_action, observation),
                     ]
-
-                    messages.extend(
-                        [new for new in new_messages if new not in messages]
-                    )
-                elif "none" == observation.platform_params.get("sandbox", "auto"):
+                elif sandbox_type == "none":
                     new_messages = [
                         AIMessage(content=str(observation.code_input)),
                         _create_tool_message(agent_action, observation.code_output),
                     ]
-
-                    messages.extend(
-                        [new for new in new_messages if new not in messages]
-                    )
                 else:
-                    raise ValueError(
-                        f"Unknown sandbox type: {observation.platform_params.get('sandbox', 'auto')}"
-                    )
+                    raise ValueError(f"Unknown sandbox type: {sandbox_type}")
+                messages.extend([m for m in new_messages if m not in messages])
             else:
                 raise ValueError(f"Unknown observation type: {type(observation)}")
 
+        # === DrawingTool ===
         elif isinstance(agent_action, DrawingToolAgentAction):
             if isinstance(observation, DrawingToolOutput):
-                new_messages = [AIMessage(content=str(observation))]
-                messages.extend([new for new in new_messages if new not in messages])
+                messages.append(AIMessage(content=str(observation)))
             else:
                 raise ValueError(f"Unknown observation type: {type(observation)}")
 
+        # === WebBrowser ===
         elif isinstance(agent_action, WebBrowserAgentAction):
             if isinstance(observation, WebBrowserToolOutput):
-                new_messages = [AIMessage(content=str(observation))]
-                messages.extend([new for new in new_messages if new not in messages])
+                messages.append(AIMessage(content=str(observation)))
             else:
                 raise ValueError(f"Unknown observation type: {type(observation)}")
 
+        # === ToolAgentAction ===
         elif isinstance(agent_action, ToolAgentAction):
             ai_msgs = AIMessage(
-                content=f"arguments='{agent_action.tool_input}', name='{agent_action.tool}'"
+                content=f"arguments='{agent_action.tool_input}', name='{agent_action.tool}'",
+                additional_kwargs={
+                    "tool_calls": [
+                        {
+                            "index": idx,
+                            "id": agent_action.tool_call_id,
+                            "type": "function",
+                            "function": {
+                                "name": agent_action.tool,
+                                "arguments": json.dumps(agent_action.tool_input, ensure_ascii=False),
+                            },
+                        }
+                    ]
+                },
             )
-            new_messages = [ai_msgs, _create_tool_message(agent_action, observation)]
-            messages.extend([new for new in new_messages if new not in messages])
+            messages.extend([ai_msgs, _create_tool_message(agent_action, observation)])
+
+        # === Generic AgentAction ===
         elif isinstance(agent_action, AgentAction):
+            # 这里假设 observation 是本项目自定义prompt tools，而不是 模型测tools
             ai_msgs = AIMessage(
                 content=f"{agent_action.log}"
             )
-            new_messages = [ai_msgs, _create_tool_message(agent_action, observation)]
-            messages.extend([new for new in new_messages if new not in messages])
+            messages.extend([ai_msgs, HumanMessage(content=str(observation))])
+
+        # === Fallback ===
         else:
-            messages.append(AIMessage(content=agent_action.log))
+            messages.append(AIMessage(content=getattr(agent_action, "log", str(agent_action))))
+
     return messages
