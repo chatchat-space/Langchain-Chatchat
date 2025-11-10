@@ -7,8 +7,9 @@ from numbers import Number
 from typing import Any, Dict, List, Optional, Union
 
 from openai import BaseModel
-from openai._compat import ConfigDict, PYDANTIC_V2
 from typing_extensions import ClassVar, Self
+from langchain_chatchat.utils.__init__ import PYDANTIC_V2
+from pydantic import ConfigDict
 
 
 class MsgType:

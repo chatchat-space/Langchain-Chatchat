@@ -29,7 +29,7 @@ from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_openai import ChatOpenAI
 from openai import BaseModel
-from openai._compat import PYDANTIC_V2, ConfigDict
+from pydantic import ConfigDict
 from typing_extensions import ClassVar
 
 from langchain_chatchat.agent_toolkits.all_tools.registry import (
@@ -62,6 +62,7 @@ from langchain_chatchat.agent_toolkits.mcp_kit.client import MultiServerMCPClien
 from langchain_chatchat.chat_models import ChatPlatformAI
 from langchain_chatchat.chat_models.base import ChatPlatformAI
 from langchain_chatchat.utils import History
+from langchain_chatchat.utils.__init__ import PYDANTIC_V2
 
 logger = logging.getLogger()
 

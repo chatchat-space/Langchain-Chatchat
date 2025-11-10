@@ -78,7 +78,8 @@ from langchain_core.utils.function_calling import (
 from langchain_core.utils.json import parse_partial_json
 from langchain_core.utils.utils import build_extra_kwargs
 from openai import BaseModel
-from openai._compat import PYDANTIC_V2, ConfigDict
+from langchain_chatchat.utils.__init__ import PYDANTIC_V2
+from pydantic import ConfigDict
 from typing_extensions import ClassVar
 
 from langchain_chatchat.chat_models.platform_tools_message import (
