@@ -66,7 +66,7 @@ class FilteredCSVLoader(CSVLoader):
                     content.append(f"{col}:{str(row[col])}")
                 else:
                     raise ValueError(
-                        f"Column '{self.columns_to_read[0]}' not found in CSV file."
+                        f"Column '{col}' not found in CSV file."
                     )
             content = "\n".join(content)
             # Extract the source if available
