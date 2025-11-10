@@ -122,9 +122,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 ) .model_dump_json()
                 return
 
-            callback = AsyncIteratorCallbackHandler()
-            callbacks = [callback]
-
             # Enable langchain-chatchat to support langfuse
             import os
             langfuse_secret_key = os.environ.get('LANGFUSE_SECRET_KEY')
@@ -142,8 +139,7 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             llm = get_ChatOpenAI(
                 model_name=model,
                 temperature=temperature,
-                max_tokens=max_tokens,
-                callbacks=callbacks,
+                max_tokens=max_tokens
             )
             # TODO： 视情况使用 API
             # # 加入reranker
@@ -171,12 +167,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
 
             chain = chat_prompt | llm
 
-            # Begin a task that runs in the background.
-            task = asyncio.create_task(wrap_done(
-                chain.ainvoke({"context": context, "question": query}),
-                callback.done),
-            )
-
             if len(source_documents) == 0:  # 没有找到相关文档
                 source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
 
@@ -191,20 +181,38 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                     docs=source_documents,
                 )
                 yield ret.model_dump_json()
-
-                async for token in callback.aiter():
-                    ret = OpenAIChatOutput(
-                        id=f"chat{uuid.uuid4()}",
-                        object="chat.completion.chunk",
-                        content=token,
-                        role="assistant",
-                        model=model,
-                    )
+                
+                async for chunk in chain.astream({"context": context, "question": query}):
+                    if chunk.additional_kwargs.get("reasoning_content"):
+                        reasoning_token = chunk.additional_kwargs["reasoning_content"]
+                        if reasoning_token:
+                            ret = OpenAIChatOutput(
+                                id=f"chat{uuid.uuid4()}",
+                                object="chat.completion.chunk",
+                                reasoning_content=reasoning_token,
+                                role="assistant",
+                                model=model,
+                            )
+                    # Otherwise, treat it as an answer token
+                    else:
+                        ret = OpenAIChatOutput(
+                            id=f"chat{uuid.uuid4()}",
+                            object="chat.completion.chunk",
+                            content=chunk.content,
+                            role="assistant",
+                            model=model,
+                        )
                     yield ret.model_dump_json()
             else:
                 answer = ""
-                async for token in callback.aiter():
-                    answer += token
+                async for chunk in chain.astream({"context": context, "question": query}):
+                    if chunk.additional_kwargs.get("reasoning_content"):
+                        reasoning_token = chunk.additional_kwargs["reasoning_content"]
+                        if reasoning_token:
+                            answer += reasoning_token
+                    else:
+                        answer += chunk.content
+                
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
                     object="chat.completion",
@@ -213,7 +221,6 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                     model=model,
                 )
                 yield ret.model_dump_json()
-            await task
         except asyncio.exceptions.CancelledError:
             logger.warning("streaming progress has been interrupted by user.")
             return
