@@ -573,6 +573,12 @@ class ToolSettings(BaseFileSettings):
             # "tableA":"这是一个用户表，存储了用户的基本信息",
             # "tableB":"角色表",
         },
+        # 安全配置：SQL查询执行超时时间（秒），防止资源耗尽型DoS攻击（如无限递归CTE）
+        "query_timeout": 30,
+        # 安全配置：递归CTE最大递归深度限制（仅MySQL/MariaDB生效），防止无限递归查询
+        "max_recursion_depth": 100,
+        # 安全配置：SQL子查询最大嵌套深度，防止深度嵌套查询导致的资源耗尽
+        "max_subquery_depth": 5,
     }
     '''
     text2sql使用建议
@@ -581,7 +587,8 @@ class ToolSettings(BaseFileSettings):
     3、对于写操作应保持谨慎，如不需要写操作，设置read_only为True,最好再从数据库层面收回数据库用户的写权限，防止用户通过自然语言对数据库进行修改操作；
     4、text2sql与大模型在意图理解、sql转换等方面的能力有关，可切换不同大模型进行测试；
     5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
-    6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
+    6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用；
+    7、安全配置：query_timeout控制SQL执行超时，max_recursion_depth控制递归深度，max_subquery_depth控制子查询嵌套深度，三者共同防止恶意SQL导致的DoS攻击。
     '''
   
     amap: dict = {

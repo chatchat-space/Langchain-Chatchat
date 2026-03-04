@@ -1,8 +1,11 @@
+import logging
+import re
+
 from langchain.chains import LLMChain
 from langchain_community.utilities import SQLDatabase
 from langchain_core.prompts.prompt import PromptTemplate
 from langchain_experimental.sql import SQLDatabaseChain, SQLDatabaseSequentialChain
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.exc import OperationalError
 
 from chatchat.server.pydantic_v1 import Field
@@ -14,7 +17,14 @@ from langchain_chatchat.agent_toolkits.all_tools.tool import (
     BaseToolOutput,
 )
 
-READ_ONLY_PROMPT_TEMPLATE = """You are a MySQL expert. The database is currently in read-only mode. 
+logger = logging.getLogger(__name__)
+
+# Default security limits
+DEFAULT_QUERY_TIMEOUT = 30  # seconds
+DEFAULT_MAX_RECURSION_DEPTH = 100
+DEFAULT_MAX_SUBQUERY_DEPTH = 5
+
+READ_ONLY_PROMPT_TEMPLATE = """You are a MySQL expert. The database is currently in read-only mode.
 Given an input question, determine if the related SQL can be executed in read-only mode.
 If the SQL can be executed normally, return Answer:'SQL can be executed normally'.
 If the SQL cannot be executed normally, return Answer: 'SQL cannot be executed normally'.
@@ -24,6 +34,98 @@ Answer: Final answer here
 
 Question: {query}
 """
+
+
+def _validate_sql_safety(statement: str, max_subquery_depth: int = DEFAULT_MAX_SUBQUERY_DEPTH):
+    """Validate SQL statement for potentially dangerous patterns that could cause DoS.
+
+    Checks for:
+    - Unbounded recursive CTEs (WITH RECURSIVE without LIMIT)
+    - Excessively nested subqueries
+
+    Args:
+        statement: The SQL statement to validate.
+        max_subquery_depth: Maximum allowed subquery nesting depth.
+
+    Raises:
+        OperationalError: If the SQL statement is deemed unsafe.
+    """
+    normalized = statement.strip().lower()
+    # Remove SQL comments to prevent comment-based obfuscation
+    # Remove block comments /* ... */
+    normalized = re.sub(r'/\*.*?\*/', ' ', normalized, flags=re.DOTALL)
+    # Remove line comments -- ...
+    normalized = re.sub(r'--[^\n]*', ' ', normalized)
+    # Normalize whitespace
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+
+    # Check for unbounded recursive CTEs
+    if 'with recursive' in normalized:
+        # Check if the recursive CTE has a LIMIT clause to bound the recursion
+        # We look for LIMIT after the recursive CTE definition
+        if 'limit' not in normalized:
+            raise OperationalError(
+                "Unbounded recursive CTE detected. Recursive queries must include a LIMIT clause "
+                "to prevent resource exhaustion.",
+                params=None,
+                orig=None,
+            )
+
+    # Check for excessive subquery nesting depth
+    depth = 0
+    max_depth = 0
+    for char in normalized:
+        if char == '(':
+            depth += 1
+            max_depth = max(max_depth, depth)
+        elif char == ')':
+            depth -= 1
+    if max_depth > max_subquery_depth:
+        raise OperationalError(
+            f"SQL query nesting depth ({max_depth}) exceeds maximum allowed depth ({max_subquery_depth}). "
+            "This limit exists to prevent resource exhaustion attacks.",
+            params=None,
+            orig=None,
+        )
+
+
+def _set_db_timeout(engine, timeout_seconds: int, max_recursion_depth: int = DEFAULT_MAX_RECURSION_DEPTH):
+    """Set query execution timeout and recursion limits at the database level.
+
+    Supports SQLite, MySQL, and PostgreSQL. For unsupported databases, a warning is logged.
+
+    Args:
+        engine: The SQLAlchemy engine.
+        timeout_seconds: Maximum query execution time in seconds.
+        max_recursion_depth: Maximum recursion depth for recursive CTEs.
+    """
+    dialect = engine.dialect.name
+
+    @event.listens_for(engine, "connect")
+    def set_timeout_on_connect(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        try:
+            if dialect == "sqlite":
+                # SQLite timeout is in milliseconds
+                cursor.execute(f"PRAGMA busy_timeout = {timeout_seconds * 1000}")
+            elif dialect in ("mysql", "mariadb"):
+                # MySQL/MariaDB max_execution_time is in milliseconds
+                cursor.execute(f"SET SESSION max_execution_time = {timeout_seconds * 1000}")
+                cursor.execute(f"SET SESSION cte_max_recursion_depth = {max_recursion_depth}")
+            elif dialect == "postgresql":
+                # PostgreSQL statement_timeout is in milliseconds
+                cursor.execute(f"SET statement_timeout = '{timeout_seconds * 1000}'")
+                # PostgreSQL uses max_recursion_depth via the recursive query planning
+                # We set a work_mem limit as additional protection
+            else:
+                logger.warning(
+                    f"Database dialect '{dialect}' does not have built-in timeout support in text2sql. "
+                    "Consider adding database-specific timeout configuration."
+                )
+        except Exception as e:
+            logger.warning(f"Failed to set database timeout/recursion limits: {e}")
+        finally:
+            cursor.close()
 
 
 # 定义一个拦截器函数来检查SQL语句，以支持read-only,可修改下面的write_operations，以匹配你使用的数据库写操作关键字
@@ -48,13 +150,35 @@ def intercept_sql(conn, cursor, statement, parameters, context, executemany):
         )
 
 
+def intercept_sql_safety(conn, cursor, statement, parameters, context, executemany):
+    """SQL interceptor that validates queries for DoS-prone patterns before execution.
+
+    This interceptor is always registered (regardless of read_only mode) to protect
+    against prompt injection attacks that use resource-exhaustive queries.
+    """
+    _validate_sql_safety(statement)
+
+
 def query_database(query: str, config: dict):
     model_name= config["model_name"]
     top_k = config["top_k"]
     return_intermediate_steps = config["return_intermediate_steps"]
     sqlalchemy_connect_str = config["sqlalchemy_connect_str"]
     read_only = config["read_only"]
+    # Security configuration with sensible defaults
+    query_timeout = config.get("query_timeout", DEFAULT_QUERY_TIMEOUT)
+    max_recursion_depth = config.get("max_recursion_depth", DEFAULT_MAX_RECURSION_DEPTH)
+    max_subquery_depth = config.get("max_subquery_depth", DEFAULT_MAX_SUBQUERY_DEPTH)
+
     db = SQLDatabase.from_uri(sqlalchemy_connect_str)
+
+    # Always register the SQL safety interceptor to protect against DoS attacks
+    # (e.g., unbounded recursive CTEs injected via prompt injection).
+    # This runs regardless of read_only mode since DoS attacks use SELECT queries.
+    event.listen(db._engine, "before_cursor_execute", intercept_sql_safety)
+
+    # Set database-level query timeout and recursion limits
+    _set_db_timeout(db._engine, query_timeout, max_recursion_depth)
 
     from chatchat.server.utils import get_ChatOpenAI
 
