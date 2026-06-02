@@ -261,7 +261,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "custom openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "minimax", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -458,6 +458,21 @@ class ApiModelSettings(BaseFileSettings):
                 "embed_models": [
                     "text-embedding-3-small",
                     "text-embedding-3-large",
+                ],
+            }),
+            PlatformConfig(**{
+                "platform_name": "minimax",
+                "platform_type": "minimax",
+                "api_base_url": "https://api.minimax.io/v1",
+                "api_key": "YOUR_API_KEY",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "MiniMax-M3",
+                    "MiniMax-M2.7",
+                    "MiniMax-M2.7-highspeed",
+                ],
+                "embed_models": [
+                    "embo-01",
                 ],
             }),
         ]

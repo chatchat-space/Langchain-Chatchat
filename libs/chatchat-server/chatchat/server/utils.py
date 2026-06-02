@@ -375,7 +375,7 @@ def get_Embeddings(
                 openai_api_key=model_info.get("api_key"),
                 openai_proxy=model_info.get("api_proxy"),
             )
-        if model_info.get("platform_type") == "openai":
+        if model_info.get("platform_type") in ("openai", "minimax"):
             return OpenAIEmbeddings(**params)
         elif model_info.get("platform_type") == "ollama":
             return OllamaEmbeddings(

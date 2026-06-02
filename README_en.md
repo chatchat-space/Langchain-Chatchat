@@ -119,7 +119,7 @@ information. The supported local model deployment frameworks in this project are
 In addition to the above local model loading frameworks, the project also supports
 the [One API](https://github.com/songquanpeng/one-api) framework for integrating online APIs, supporting commonly used
 online APIs such
-as [OpenAI ChatGPT](https://platform.openai.com/docs/guides/gpt/chat-completions-api), [Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference), [Anthropic Claude](https://anthropic.com/), [Zhipu Qingyan](https://bigmodel.cn/),
+as [OpenAI ChatGPT](https://platform.openai.com/docs/guides/gpt/chat-completions-api), [Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference), [Anthropic Claude](https://anthropic.com/), [MiniMax](https://www.minimax.io/), [Zhipu Qingyan](https://bigmodel.cn/),
 and [Baichuan](https://platform.baichuan-ai.com/).
 
 > [!Note]
