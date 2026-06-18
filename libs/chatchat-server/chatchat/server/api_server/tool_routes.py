@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import List
 
-from fastapi import APIRouter, Body, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
 from chatchat.utils import build_logger
@@ -11,7 +13,23 @@ from chatchat.utils import build_logger
 
 logger = build_logger()
 
-tool_router = APIRouter(prefix="/tools", tags=["Toolkits"])
+security_scheme = HTTPBearer(auto_error=False)
+
+
+async def verify_api_key(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
+) -> None:
+    api_key = os.environ.get("CHATCHAT_API_KEY", "")
+    if api_key:
+        if credentials is None or credentials.credentials != api_key:
+            raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+
+tool_router = APIRouter(
+    prefix="/tools",
+    tags=["Toolkits"],
+    dependencies=[Depends(verify_api_key)] if os.environ.get("CHATCHAT_API_KEY", "") else [],
+)
 
 
 @tool_router.get("", response_model=BaseResponse)

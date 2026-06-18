@@ -24,8 +24,16 @@ logger = build_logger()
 
 
 def validate_kb_name(knowledge_base_id: str) -> bool:
-    # 检查是否包含预期外的字符或路径攻击关键字
-    if "../" in knowledge_base_id:
+    # Prevent path traversal attacks by rejecting traversal sequences,
+    # absolute paths, and hidden directory references
+    if not knowledge_base_id:
+        return False
+    if "../" in knowledge_base_id or "..\\" in knowledge_base_id:
+        return False
+    if os.path.isabs(knowledge_base_id):
+        return False
+    normalized = os.path.normpath(knowledge_base_id)
+    if normalized.startswith(".."):
         return False
     return True
 
