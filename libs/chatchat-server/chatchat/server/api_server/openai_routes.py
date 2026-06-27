@@ -253,8 +253,19 @@ def _get_file_info(file_id: str) -> Dict:
 
 
 def _get_file_path(file_id: str) -> str:
-    file_id = base64.urlsafe_b64decode(file_id).decode()
-    return os.path.join(Settings.basic_settings.BASE_TEMP_DIR, "openai_files", file_id)
+    decoded = base64.urlsafe_b64decode(file_id).decode()
+    # Security: the decoded file_id is attacker-controllable. Treat it as a
+    # relative path that must stay inside the openai_files directory. Reject
+    # absolute paths (os.path.join would otherwise drop the base dir, e.g.
+    # "/etc/passwd") and ".." traversal, then verify containment after resolve.
+    root = (Path(Settings.basic_settings.BASE_TEMP_DIR) / "openai_files").resolve()
+    candidate = Path(decoded)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        raise HTTPException(status_code=400, detail="Invalid file_id")
+    file_path = (root / candidate).resolve()
+    if file_path != root and root not in file_path.parents:
+        raise HTTPException(status_code=400, detail="Invalid file_id")
+    return str(file_path)
 
 
 @openai_router.post("/files")
