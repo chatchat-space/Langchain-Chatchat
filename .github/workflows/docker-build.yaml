@@ -71,7 +71,7 @@ jobs:
           rm -rf /opt/hostedtoolcache
           sudo timedatectl set-timezone "$TZ"
       - name: Free Up Disk Space
-        uses: easimon/maximize-build-space@master
+        uses: easimon/maximize-build-space@c28619d8999a147d5e09c1199f84ff6af6ad5794 # master
         with:
           root-reserve-mb: 20480 # 给 / 预留 20GiB 空间( docker 预留)
           swap-size-mb: 1
