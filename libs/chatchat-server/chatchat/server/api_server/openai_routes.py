@@ -35,8 +35,8 @@ async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
     """
     对重名模型进行调度，依次选择：空闲的模型 -> 当前访问数最少的模型
     """
-    max_semaphore = 0
-    selected_platform = ""
+    max_available_slots = -1
+    selected_key = None
     model_infos = get_model_info(model_name=model_name, multiple=True)
     assert model_infos, f"specified model '{model_name}' cannot be found in MODEL_PLATFORMS."
 
@@ -47,18 +47,20 @@ async def get_model_client(model_name: str) -> AsyncGenerator[AsyncClient]:
             model_semaphores[key] = asyncio.Semaphore(api_concurrencies)
         semaphore = model_semaphores[key]
         if semaphore._value >= api_concurrencies:
-            selected_platform = c["platform_name"]
+            selected_key = key
             break
-        elif semaphore._value > max_semaphore:
-            selected_platform = c["platform_name"]
+        elif semaphore._value > max_available_slots:
+            selected_key = key
+            max_available_slots = semaphore._value
 
-    key = (m, selected_platform)
-    semaphore = model_semaphores[key]
+    assert selected_key is not None
+    semaphore = model_semaphores[selected_key]
+    selected_platform = selected_key[1]
     try:
         await semaphore.acquire()
         yield get_OpenAIClient(platform_name=selected_platform, is_async=True)
     except Exception:
-        logger.exception(f"failed when request to {key}")
+        logger.exception(f"failed when request to {selected_key}")
     finally:
         semaphore.release()
 
