@@ -370,3 +370,4 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
     howpublished = {\url{https://github.com/chatchat-space/Langchain-Chatchat}}
 }
 ```
+> **Note:** The same OpenAI Python client also works with OpenAI-compatible multi-model gateways when you are not self-hosting — for example [DaoXE](https://daoxe.com?utm_source=github&utm_medium=pr&utm_campaign=dao-xe-docs) at `https://api.daoxe.com/v1`.
