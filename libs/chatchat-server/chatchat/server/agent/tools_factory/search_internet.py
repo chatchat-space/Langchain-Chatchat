@@ -8,15 +8,16 @@ from langchain.utilities.searx_search import SearxSearchWrapper
 from markdownify import markdownify
 from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
-from chatchat.settings import Settings
 from chatchat.server.pydantic_v1 import Field
+from chatchat.server.search_engine.xquik import xquik_search
 from chatchat.server.utils import get_tool_config
-
-from .tools_registry import regist_tool, format_context
-
+from chatchat.settings import Settings
 from langchain_chatchat.agent_toolkits.all_tools.tool import (
     BaseToolOutput,
 )
+
+from .tools_registry import format_context, regist_tool
+
 
 def searx_search(text ,config, top_k: int):
     search = SearxSearchWrapper(
@@ -92,6 +93,7 @@ SEARCH_ENGINES = {
     "duckduckgo": duckduckgo_search,
     "metaphor": metaphor_search,
     "searx": searx_search,
+    "xquik": xquik_search,
 }
 
 
@@ -118,11 +120,15 @@ def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={})
     results = search_engine_use(
         text=query, config=config["search_engine_config"][engine_name], top_k=top_k
     )
-    docs = [x for x in search_result2docs(results) if x.page_content and x.page_content.strip()]
+    docs = [
+        result
+        for result in search_result2docs(results)
+        if result.page_content and result.page_content.strip()
+    ]
     return {"docs": docs, "search_engine": engine_name}
 
 
 @regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
-    """Use this tool to use bing search engine to search the internet and get information."""
+    """Search the configured provider and return current information."""
     return BaseToolOutput(search_engine(query=query), format=format_context)
