@@ -281,7 +281,7 @@
 
 - 搜索引擎问答
     ```python3
-    engine_name = "bing" # 可选值：bing, duckduckgo, metaphor, searx
+    engine_name = "bing" # 可选值：bing, duckduckgo, metaphor, searx, xquik
     base_url = f"http://127.0.0.1:7861/knowledge_base/search_engine/{engine_name}"
     data = {
         "model": "qwen2-instruct",

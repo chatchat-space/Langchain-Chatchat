@@ -156,7 +156,9 @@ class KBSettings(BaseFileSettings):
     SCORE_THRESHOLD: float = 2.0
     """知识库匹配相关度阈值，取值范围在0-2之间，SCORE越小，相关度越高，取到2相当于不筛选，建议设置在0.5左右"""
 
-    DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor", "searx"] = "duckduckgo"
+    DEFAULT_SEARCH_ENGINE: t.Literal[
+        "bing", "duckduckgo", "metaphor", "searx", "xquik"
+    ] = "duckduckgo"
     """默认搜索引擎"""
 
     SEARCH_ENGINE_TOP_K: int = 3
@@ -506,7 +508,11 @@ class ToolSettings(BaseFileSettings):
                 "engines": [],
                 "categories": [],
                 "language": "zh-CN",
-            }
+            },
+            "xquik": {
+                "query_type": "Latest",
+                "timeout": 30,
+            },
         },
         "top_k": 5,
         "verbose": "Origin",

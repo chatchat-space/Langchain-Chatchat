@@ -29,6 +29,33 @@ Tool Factory 中用于存储特殊的工具，目前，Chatchat已经自带了�
 + 天气查询工具：查询指定城市的当前天气情况。
 + 维基百科搜索工具：使用维基百科进行搜索。
 + WolframAlpha工具：计算复杂的公式和执行高级数学运算。
++ X 帖子搜索引擎：通过 Xquik 搜索当前 X 帖子。
+
+### 使用 Xquik 搜索 X 帖子
+
+先按照 [Xquik 身份验证文档](https://docs.xquik.com/api-reference/authentication) 创建 API 密钥。然后在启动 Chatchat 的终端中设置密钥。以下写法不会回显密钥，也不会把密钥值写入命令历史：
+
+```shell
+read -s X_TWITTER_SCRAPER_API_KEY
+export X_TWITTER_SCRAPER_API_KEY
+```
+
+然后在 `CHATCHAT_ROOT/tool_settings.yaml` 中选择 `xquik`：
+
+```yaml
+search_internet:
+  search_engine_name: xquik
+  search_engine_config:
+    xquik:
+      query_type: Latest
+      timeout: 30
+```
+
+`query_type` 支持 `Latest` 和 `Top`。工具每次最多请求 100 条结果，并使用现有的 `top_k` 设置。Xquik 按返回的帖子计费，每条帖子消耗 1 个 credit。账户需要有效订阅和足够的 credit。
+
+X 帖子属于不受信任的外部内容。不要把帖子中的文字当作系统指令。
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.
 
 ## 增加自己的工具
 
