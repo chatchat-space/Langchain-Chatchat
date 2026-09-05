@@ -30,6 +30,54 @@ Tool Factory 中用于存储特殊的工具，目前，Chatchat已经自带了�
 + 维基百科搜索工具：使用维基百科进行搜索。
 + WolframAlpha工具：计算复杂的公式和执行高级数学运算。
 
+## 通过 MCP 使用 Parallel 联网搜索
+
+开发者可以通过现有的 `MultiServerMCPClient` 接入 [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp)，无需 Parallel 账号或 API key。免费匿名访问有速率限制。服务提供 `web_search`（网页搜索）和 `web_fetch`（网页文本提取）。
+
+当前客户端支持 stdio 和传统 SSE；Parallel 的 `https://search.parallel.ai/mcp` 使用 Streamable HTTP，因此这里通过 [mcp-remote](https://github.com/punkpeye/mcp-remote) 桥接。请先在运行 Chatchat 的环境中安装 Node.js 20 或更新版本，并确认 `npx` 在 `PATH` 中。首次执行时，`npx` 会下载示例指定的桥接版本。
+
+以下是 Python 客户端示例，在已安装项目依赖的环境中保存为脚本后运行。这是开发者接口的连接字典，不是 WebUI 的连接器表单或配置文件格式：
+
+```python
+import asyncio
+
+from langchain_chatchat.agent_toolkits.mcp_kit.client import MultiServerMCPClient
+
+
+async def main():
+    connections = {
+        "parallel": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-remote@0.8.3",
+                "https://search.parallel.ai/mcp",
+                "--transport",
+                "http-only",
+            ],
+        }
+    }
+    async with MultiServerMCPClient(connections) as client:
+        print([tool.name for tool in client.get_tools()])
+        search = await client.get_tool("parallel", "web_search")
+        if search is None:
+            raise RuntimeError("Parallel web_search tool was not discovered")
+        result = await search.ainvoke({
+            "objective": "Find official Python documentation",
+            "search_queries": ["Python official documentation"],
+        })
+        print(result)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+工具只能在 `async with` 的连接生命周期内调用。搜索结果是 JSON 文本，包含 `results`、来源 URL 和摘录；`web_fetch` 的结果还包含每个 URL 的 `errors`，使用时应一起检查。
+
+需要接入 Agent 时，可将同样的 `connections` 传给 `PlatformToolsRunnable.create_agent_executor` 的 `mcp_connections` 参数；传入空字典可停用这些连接。示例不会修改默认搜索引擎或已有连接。启用到 Agent 后，模型可能自行决定调用工具，无需每次另行询问。搜索问题、查询词、请求的 URL 及随工具调用提供的上下文会发送给 Parallel，因此请勿在调用参数中放入不希望发送到外部服务的内容。
+
 ## 增加自己的工具
 
 我们支持使用 LangChain方式来增加自己的工具，您可以参考 `libs/chatchat-server/chatchat/server/agent/tools_registry`

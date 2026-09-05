@@ -45,7 +45,9 @@ def schema_dict_to_model(schema: Dict[str, Any]) -> Any:
 
     model_fields = {}
     for field_name, details in fields.items():
-        field_type_str = details['type']
+        # Composed schemas (for example anyOf) need not declare a top-level type.
+        # Leave them to the server, like other types this converter does not model.
+        field_type_str = details.get('type')
         
         # Add field description if available
         field_description = details.get('description', '')
