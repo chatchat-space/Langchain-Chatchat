@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import AsyncGenerator, Dict, Iterable, List, Tuple
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from openai import AsyncClient
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
@@ -216,8 +216,13 @@ async def create_audio_transcriptions(
     prompt: str = Form(None),
     response_format: str = Form(None),
     temperature: float = Form(0.0),
-    timestamp_granularities: List[str] = Form(None),
+    timestamp_granularities: List[str] = Form(None, alias="timestamp_granularities[]"),
+    legacy_timestamp_granularities: List[str] = Form(
+        None, alias="timestamp_granularities"
+    ),
 ):
+    if timestamp_granularities is None:
+        timestamp_granularities = legacy_timestamp_granularities
     params = {
         "file": (
             file.filename or "audio",
@@ -239,6 +244,12 @@ async def create_audio_transcriptions(
     try:
         async with get_model_client(model) as client:
             result = await client.audio.transcriptions.create(**params)
+            if isinstance(result, str):
+                media_type = {
+                    "srt": "application/x-subrip",
+                    "vtt": "text/vtt",
+                }.get(response_format, "text/plain")
+                return PlainTextResponse(result, media_type=media_type)
             return result.model_dump(exclude_none=True)
     finally:
         await file.close()
