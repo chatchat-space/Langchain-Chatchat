@@ -226,6 +226,43 @@ chatchat init
 
   默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
 
+##### 使用 FunASR / SenseVoice 进行语音转写
+
+默认的 `MODEL_PLATFORMS` 已包含本地 `funasr` 平台，连接
+`http://127.0.0.1:8000/v1`，支持 `sensevoice`、`paraformer`、
+`paraformer-en` 和 `fun-asr-nano`。先启动 FunASR 服务：
+
+建议为 FunASR 服务使用独立虚拟环境，避免与 Langchain-Chatchat 的依赖约束冲突。
+运行下面的安装命令前，先根据 [PyTorch 安装说明](https://pytorch.org/get-started/locally/)
+安装适合当前平台的匹配版本 PyTorch 和 Torchaudio；`pip install funasr` 不会替你选择它们。
+首次转写可能需要下载模型权重。平台中的模型名称需与实际部署的服务匹配；
+配置列表本身不会下载或部署所有模型。`127.0.0.1` 指 Langchain-Chatchat
+服务所在的主机或容器，分开部署时请使用服务端可访问的地址。
+
+```shell
+pip install -U funasr fastapi uvicorn python-multipart
+funasr-server --model sensevoice --device cpu
+```
+
+启动 Langchain-Chatchat 后，可通过其 OpenAI 兼容入口转写音频：
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://127.0.0.1:7861/v1", api_key="EMPTY")
+with open("audio.wav", "rb") as audio:
+    result = client.audio.transcriptions.create(
+        model="sensevoice",
+        file=audio,
+        language="zh",
+    )
+print(result.text)
+```
+
+若 FunASR 服务运行在其他地址，请修改 `model_settings.yaml` 中 `funasr`
+平台的 `api_base_url`。模型部署和 GPU/vLLM 选项见
+[FunASR OpenAI 兼容 API 文档](https://github.com/modelscope/FunASR/tree/main/examples/openai_api)。
+
 #### 4. 初始化知识库
 
 > [!WARNING]  

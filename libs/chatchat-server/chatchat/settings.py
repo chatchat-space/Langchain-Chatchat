@@ -446,6 +446,19 @@ class ApiModelSettings(BaseFileSettings):
                 "text2speech_models": [],
             }),
             PlatformConfig(**{
+                "platform_name": "funasr",
+                "platform_type": "custom openai",
+                "api_base_url": "http://127.0.0.1:8000/v1",
+                "api_key": "EMPTY",
+                "api_concurrencies": 5,
+                "speech2text_models": [
+                    "sensevoice",
+                    "paraformer",
+                    "paraformer-en",
+                    "fun-asr-nano",
+                ],
+            }),
+            PlatformConfig(**{
                 "platform_name": "openai",
                 "platform_type": "openai",
                 "api_base_url": "https://api.openai.com/v1",

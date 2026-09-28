@@ -7,15 +7,15 @@ import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncGenerator, Dict, Iterable, Tuple
+from typing import AsyncGenerator, Dict, Iterable, List, Tuple
 
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, PlainTextResponse
 from openai import AsyncClient
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
-from chatchat.settings import Settings
 from chatchat.server.utils import get_config_platforms, get_model_info, get_OpenAIClient
+from chatchat.settings import Settings
 from chatchat.utils import build_logger
 
 from .api_schemas import *
@@ -208,13 +208,51 @@ async def create_audio_translations(
         return await openai_request(client.audio.translations.create, body)
 
 
-@openai_router.post("/audio/transcriptions", deprecated="暂不支持")
+@openai_router.post("/audio/transcriptions")
 async def create_audio_transcriptions(
-    request: Request,
-    body: OpenAIAudioTranscriptionsInput,
+    file: UploadFile = File(...),
+    model: str = Form(...),
+    language: str = Form(None),
+    prompt: str = Form(None),
+    response_format: str = Form(None),
+    temperature: float = Form(0.0),
+    timestamp_granularities: List[str] = Form(None, alias="timestamp_granularities[]"),
+    legacy_timestamp_granularities: List[str] = Form(
+        None, alias="timestamp_granularities"
+    ),
 ):
-    async with get_model_client(body.model) as client:
-        return await openai_request(client.audio.transcriptions.create, body)
+    if timestamp_granularities is None:
+        timestamp_granularities = legacy_timestamp_granularities
+    params = {
+        "file": (
+            file.filename or "audio",
+            await file.read(),
+            file.content_type or "application/octet-stream",
+        ),
+        "model": model,
+        "temperature": temperature,
+    }
+    for key, value in {
+        "language": language,
+        "prompt": prompt,
+        "response_format": response_format,
+        "timestamp_granularities": timestamp_granularities,
+    }.items():
+        if value is not None:
+            params[key] = value
+
+    try:
+        async with get_model_client(model) as client:
+            result = await client.audio.transcriptions.create(**params)
+            if isinstance(result, str):
+                media_type = {
+                    "srt": "application/x-subrip",
+                    "vtt": "text/vtt",
+                }.get(response_format, "text/plain")
+                return PlainTextResponse(result, media_type=media_type)
+            return result.model_dump(exclude_none=True)
+    finally:
+        await file.close()
 
 
 @openai_router.post("/audio/speech", deprecated="暂不支持")
