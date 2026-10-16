@@ -208,6 +208,10 @@ class KBService(ABC):
             return []
 
         docs = self.do_search(query, top_k, score_threshold)
+        # 改动2：do_search 可能返回 (Document, score) 元组（混合检索），
+        # 统一剥掉分数，保持上层接口只见到 Document
+        if docs and isinstance(docs[0], tuple):
+            docs = [d for d, _ in docs]
         return docs
 
     def get_doc_by_ids(self, ids: List[str]) -> List[Document]:

@@ -156,6 +156,22 @@ class KBSettings(BaseFileSettings):
     SCORE_THRESHOLD: float = 2.0
     """知识库匹配相关度阈值，取值范围在0-2之间，SCORE越小，相关度越高，取到2相当于不筛选，建议设置在0.5左右"""
 
+    # ---- 改动2：混合检索配置 ----
+    SEARCH_METHOD: t.Literal["vector", "ensemble", "hybrid_rrf", "hybrid_rerank"] = "hybrid_rerank"
+    """检索方法：vector 纯向量 / ensemble 原混合 / hybrid_rrf 向量+BM25 RRF / hybrid_rerank 混合+重排"""
+
+    HYBRID_RECALL_K: int = 8
+    """hybrid 检索中向量检索的召回数量（融合前）"""
+
+    BM25_RECALL_K: int = 8
+    """BM25 召回数量（融合前）"""
+
+    RRF_K: int = 60
+    """RRF 融合参数 k"""
+
+    RERANK_CANDIDATE_K: int = 6
+    """Rerank 候选数量（RRF 融合后送入 rerank 的文档数）"""
+
     DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor", "searx"] = "duckduckgo"
     """默认搜索引擎"""
 

@@ -69,13 +69,21 @@ class FaissKBService(KBService):
         top_k: int,
         score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
     ) -> List[Tuple[Document, float]]:
+        # 改动2：混合检索（向量+BM25 RRF / Rerank），由 kb_settings.SEARCH_METHOD 控制
+        from chatchat.server.knowledge_base.hybrid_search import (
+            drop_bm25_cache,
+            hybrid_search,
+        )
+
         with self.load_vector_store().acquire() as vs:
-            retriever = get_Retriever("ensemble").from_vectorstore(
-                vs,
+            docs = hybrid_search(
+                vectorstore=vs,
+                query=query,
                 top_k=top_k,
                 score_threshold=score_threshold,
+                kb_key=(self.kb_name, self.vector_name),
+                embed_model=self.embed_model,
             )
-            docs = retriever.get_relevant_documents(query)
         return docs
 
     def do_add_doc(
@@ -83,6 +91,9 @@ class FaissKBService(KBService):
         docs: List[Document],
         **kwargs,
     ) -> List[Dict]:
+        from chatchat.server.knowledge_base.hybrid_search import drop_bm25_cache
+
+        drop_bm25_cache((self.kb_name, self.vector_name))
         texts = [x.page_content for x in docs]
         metadatas = [x.metadata for x in docs]
         with self.load_vector_store().acquire() as vs:
@@ -96,6 +107,9 @@ class FaissKBService(KBService):
         return doc_infos
 
     def do_delete_doc(self, kb_file: KnowledgeFile, **kwargs):
+        from chatchat.server.knowledge_base.hybrid_search import drop_bm25_cache
+
+        drop_bm25_cache((self.kb_name, self.vector_name))
         with self.load_vector_store().acquire() as vs:
             ids = [
                 k

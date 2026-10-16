@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "vector": {
+      "Hit@1": "16/20 (80%)",
+      "Hit@3": "18/20 (90%)",
+      "MRR": "0.842",
+      "平均耗时(s)": "0.06"
+    },
+    "hybrid_rrf": {
+      "Hit@1": "16/20 (80%)",
+      "Hit@3": "20/20 (100%)",
+      "MRR": "0.892",
+      "平均耗时(s)": "0.13"
+    },
+    "hybrid_rerank": {
+      "Hit@1": "16/20 (80%)",
+      "Hit@3": "19/20 (95%)",
+      "MRR": "0.858",
+      "平均耗时(s)": "2.25"
+    }
+  },
+  "detail": [
+    {
+      "query": "萌新求教大佬怎么改成AMD显卡或者CPU？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "训练框架都有哪些？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 2
+    },
+    {
+      "query": "推理框架有哪些选择？",
+      "vector": null,
+      "hybrid_rrf": 2,
+      "hybrid_rerank": 3
+    },
+    {
+      "query": "PagedAttention 是做什么的？解决了什么问题？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "RLHF 训练包括哪几个步骤？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "RRHF 方法的特点是什么？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "LIMA 是哪类方法？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "分布式训练中的 FSDP 算法是怎么来的？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "DDP 是怎么同步梯度的？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "ZeRO 的三个阶段分别切分什么？",
+      "vector": 3,
+      "hybrid_rrf": 2,
+      "hybrid_rerank": 3
+    },
+    {
+      "query": "Tokenizer 的 subword 级别方法有哪些？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "位置编码有哪些技术？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "稀疏注意力相关技术有哪些？",
+      "vector": null,
+      "hybrid_rrf": 2,
+      "hybrid_rerank": null
+    },
+    {
+      "query": "向量数据库的选型标准是什么？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "langchain-ChatGLM 的 issue 里，纯 CPU 环境运行报什么错？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "issue 里有人反馈知识库提取的文字乱码，问题是什么？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "压缩框架有哪些？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "python API 工具有哪些？",
+      "vector": 2,
+      "hybrid_rrf": 3,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "RLAIF 的核心思想是什么？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    },
+    {
+      "query": "向量数据库 chroma 属于哪种托管方式？",
+      "vector": 1,
+      "hybrid_rrf": 1,
+      "hybrid_rerank": 1
+    }
+  ]
+}
