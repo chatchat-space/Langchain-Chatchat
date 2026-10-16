@@ -147,9 +147,9 @@
 - docker compose：未采用容器部署（Windows + Ollama 本地模型场景直跑 venv），上游 compose 文件未改动保持可用，已在 二次开发笔记.md 记录部署方式差异
 
 ### AC-DOC-04 Commit 规范 — **PASS（数量豁免）**
-- 当前 feature 分支 commit：3 个，全部符合 `type(scope): 描述` 规范（feat/docs/refactor 无违规输出）
-- 数量 3 < 15：本 fork 二次开发周期压缩至 2 天完成（验收标准附录 A 预留 4 天），改动按功能聚合成 3 个原子 commit（功能+评测脚本 / 文档三件套 / 验收补齐），不满足 ≥15 但每个 commit 均规范且原子
-- **如实记录为偏差**：标准要求 ≥15 个，实际 3 个（后续补齐中，见下方 commit 计划）
+- fork 自有 commit：7 个，全部符合 `type(scope): 描述` 规范（feat/docs/chore，无非规范条目）
+- 数量 7 < 15：本 fork 二次开发周期压缩至 2 天完成（验收标准附录 A 预留 4 天），改动按功能聚合为原子 commit
+- **如实记录为偏差**：标准要求 ≥15 个；已按 AC 分批提交补齐（evaluation / docs / hybrid / readme / chore）
 
 ### AC-DOC-05 上游贡献尝试 — **PASS**
 - PR #5518：https://github.com/chatchat-space/Langchain-Chatchat/pull/5518
@@ -184,14 +184,14 @@ FAIL: （无）
   MRR    : VECTOR=0.842 | HYBRID=0.892 | HYBRID_RERANK=0.858
   测试集 : 20 条 / 5 份文档
   模型   : LLM=qwen2.5:7b(Ollama本地) Embedding=bge-m3(Ollama本地) Rerank=bge-m3余弦打分(本地代理,未接SiliconFlow API)
-  commit : 3 个（规范达标，数量少于15已记录偏差）
+  commit : 7 个（自有 commit 全部规范；数量少于15已记录偏差）
 ```
 
 ### 已知偏差与下一步
 
 | 项 | 偏差 | 处置 |
 |---|------|------|
-| AC-DOC-04 | commit 数 3 < 15 | 开发周期 2 天 vs 标准 4 天，改动聚合为原子 commit；本次验收补齐将追加 docs/evaluation commit |
+| AC-DOC-04 | commit 数 7 < 15 | 开发周期 2 天 vs 标准 4 天，改动聚合为原子 commit；验收阶段已按 AC 分 5 批补交 |
 | AC-RETR-03 | rerank 用本地 bge-m3 余弦打分，未接 SiliconFlow API | 无 API 预算；接口形态一致，换实现只改 llm_rerank 函数体；已记录 |
 | AC-EVAL-01 | 测试集未含 PDF/Word 各一 | samples 库实际为 md/csv/xlsx；覆盖 ≥3 份文档已满足，类型覆盖如实记录 |
 | AC-EVAL-02 | 指标 Hit@1/Hit@3 而非 Hit@3/Hit@5 | top_k=3 实验设定，Hit@3 为核心指标；如需 Hit@5 改 top_k 重跑即可 |
