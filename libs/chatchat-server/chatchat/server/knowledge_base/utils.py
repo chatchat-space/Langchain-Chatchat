@@ -123,7 +123,7 @@ LOADER_DICT = {
     ],
     "UnstructuredEmailLoader": [".eml", ".msg"],
     "UnstructuredEPubLoader": [".epub"],
-    "UnstructuredExcelLoader": [".xlsx", ".xls", ".xlsd"],
+    "OpenpyxlExcelLoader": [".xlsx", ".xls", ".xlsd"],
     "NotebookLoader": [".ipynb"],
     "UnstructuredODTLoader": [".odt"],
     "PythonLoader": [".py"],
@@ -178,6 +178,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
             "FilteredCSVLoader",
             "RapidOCRDocLoader",
             "RapidOCRPPTLoader",
+            "OpenpyxlExcelLoader",
         ]:
             document_loaders_module = importlib.import_module(
                 "chatchat.server.file_rag.document_loaders"

@@ -23,6 +23,10 @@
     * [pip 安装部署](README.md#pip-安装部署)
     * [源码安装部署/开发部署](README.md#源码安装部署开发部署)
     * [Docker 部署](README.md#docker-部署)
+* [本项目（fork）的二次开发改动](README.md#本项目fork的二次开发改动)
+    * [改动点一：Excel 结构化入库解析器](README.md#改动点一excel-结构化入库解析器表头识别--行转文档块)
+    * [改动点二：混合检索（向量 + BM25 RRF）与 LLM Rerank](README.md#改动点二混合检索向量--bm25-rrf-与-llm-rerank)
+    * [检索效果对比实验（20 题问答对）](README.md#检索效果对比实验20-题问答对)
 * [项目里程碑](README.md#项目里程碑)
 * [联系我们](README.md#联系我们)
 
@@ -318,6 +322,46 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
 
 - 首先按照 `安装部署` 中的步骤配置运行环境，修改配置文件
 - 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
+
+---
+
+## 本项目（fork）的二次开发改动
+
+> 以下为 fork 仓库相对上游的定制改动，详细设计见仓库根目录 [二次开发笔记.md](二次开发笔记.md)。
+
+### 改动点一：Excel 结构化入库解析器（表头识别 + 行转文档块）
+
+原 `UnstructuredExcelLoader` 在 Windows 下存在段错误问题，且整表拼接为一个字符串，检索粒度粗。本仓库新增 `OpenpyxlExcelLoader`（`chatchat/server/file_rag/document_loaders/openpyxl_loader.py`）：
+
+- **表头识别**：自动跳过开头空行，取第一个非空行（≥2 个非空单元格）作为表头；无表头或单行 sheet 退化为整表单文档
+- **行转文档块**：每个数据行生成一个独立 Document，内容为 `表头: 值` 逐行拼接（自带列名上下文，利于向量化检索），metadata 记录 `row_id`（Excel 行号）、`sheet_name`、`title`
+- **效果**：samples 知识库 753 → 1147 条目（xlsx 从 2 个大块变为 495 个行级块）；行级问题（如 issue 表中某条记录）可被精确检索命中
+
+### 改动点二：混合检索（向量 + BM25 RRF）与 LLM Rerank
+
+新增 `chatchat/server/knowledge_base/hybrid_search.py`，`FaissKBService.do_search` 改为可配置的四种检索模式（`data/kb_settings.yaml` 的 `SEARCH_METHOD`，改配置无需重启）：
+
+| 模式 | 说明 |
+|------|------|
+| `vector` | 纯 FAISS 向量检索（原行为） |
+| `ensemble` | 原 EnsembleRetriever（保留兼容） |
+| `hybrid_rrf` | 向量召回 + BM25 召回（jieba 分词）→ RRF 融合 |
+| `hybrid_rerank` | RRF 候选再经 bge-m3 对 (query, doc) 相关性打分重排 |
+
+工程优化：BM25 索引按知识库缓存（文档增删自动失效重建）、rerank 分数 LRU 缓存、检索接口层统一兼容。
+
+### 检索效果对比实验（20 题问答对）
+
+在 samples 知识库（13 文件 / 1147 条目，bge-m3，qwen2.5:7b，CPU 环境）上构造 20 条问答对，离线直读 FAISS 索引评测（脚本与原始数据见 `eval_retrieval.py` / `retrieval_eval_results.json`）：
+
+| 指标 | vector（改动前） | hybrid_rrf | hybrid_rerank |
+|------|-----------------|------------|---------------|
+| Hit@1 | 16/20 (80%) | 16/20 (80%) | 16/20 (80%) |
+| **Hit@3** | 18/20 (90%) | **20/20 (100%)** | 19/20 (95%) |
+| **MRR** | 0.842 | **0.892 (+6.0%)** | 0.858 (+1.9%) |
+| 平均耗时/题 | 0.06s | 0.13s | 2.25s |
+
+关键结论：**BM25 精确词匹配能救回向量检索的语义改写 miss**（两道纯向量完全未命中的题，混合检索全部召回，Hit@3 90%→100%）；rerank 对 top1 排序有增益但对近义术语区分度有限且 CPU 耗时较高，追求性价比建议 `hybrid_rrf`。
 
 ---
 
