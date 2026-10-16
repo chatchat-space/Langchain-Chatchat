@@ -225,8 +225,18 @@ def hybrid_search(
         if key not in bm25_ranking:
             bm25_ranking.append(key)
 
+    # AC-RETR-05：全链路日志（分词样例 + 两通道排名 + 融合分）
+    logger.info(
+        f"[hybrid] query={query!r} | jieba分词={_tokenize_zh(query)[:8]} | "
+        f"向量top5={[id2doc[k].metadata.get('source', '?') for k in vec_ranking[:5]]} | "
+        f"BM25 top5={[id2doc[k].metadata.get('source', '?') for k in bm25_ranking[:5]]}"
+    )
+
     # 3) RRF 融合（用对象身份做 doc_id）
     fused = rrf_fuse([vec_ranking, bm25_ranking], k=rrf_k)
+    logger.info(
+        f"[hybrid] RRF融合分 top5={[(id2doc[k].metadata.get('source', '?'), round(s, 4)) for k, s in list(fused.items())[:5]]}"
+    )
 
     if method == "hybrid_rrf":
         result = [(id2doc[k], s) for k, s in fused.items()]
@@ -238,7 +248,16 @@ def hybrid_search(
         cand_docs = [id2doc[k] for k in cand_ids]
         # rerank 用字符串 doc_id 缓存（page_content hash），跨进程不共享但进程内有效
         str_ids = [f"{k}:{hash(d.page_content)}" for k, d in zip(cand_ids, cand_docs)]
-        reranked = llm_rerank(query, cand_docs, str_ids, embed_model, top_n=top_k)
-        return reranked
+        try:
+            reranked = llm_rerank(query, cand_docs, str_ids, embed_model, top_n=top_k)
+            logger.info(
+                f"[hybrid] rerank后top5={[(d.metadata.get('source', '?'), round(s, 4)) for d, s in reranked[:5]]}"
+            )
+            return reranked
+        except Exception as e:
+            # AC-RETR-03 降级路径：rerank 失败返回 RRF 融合结果
+            logger.warning(f"rerank=degraded ({e.__class__.__name__}: {e})，返回 RRF 融合结果")
+            result = [(id2doc[k], s) for k, s in fused.items()]
+            return result[:top_k]
 
     raise ValueError(f"unknown SEARCH_METHOD: {method}")
