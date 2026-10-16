@@ -352,7 +352,7 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
 
 ### 检索效果对比实验（20 题问答对）
 
-在 samples 知识库（13 文件 / 1147 条目，bge-m3，qwen2.5:7b，CPU 环境）上构造 20 条问答对，离线直读 FAISS 索引评测（脚本与原始数据见 `eval_retrieval.py` / `retrieval_eval_results.json`）：
+在 samples 知识库（13 文件 / 1147 条目，bge-m3，qwen2.5:7b，CPU 环境）上构造 20 条改写问答对（`evaluation/testset.json`），离线直读 FAISS 索引评测（脚本与原始数据见 `evaluation/eval_retrieval.py` / `evaluation/retrieval_eval_results.json`，结果表 `docs/eval-results.md`）：
 
 | 指标 | vector（改动前） | hybrid_rrf | hybrid_rerank |
 |------|-----------------|------------|---------------|
@@ -362,6 +362,43 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
 | 平均耗时/题 | 0.06s | 0.13s | 2.25s |
 
 关键结论：**BM25 精确词匹配能救回向量检索的语义改写 miss**（两道纯向量完全未命中的题，混合检索全部召回，Hit@3 90%→100%）；rerank 对 top1 排序有增益但对近义术语区分度有限且 CPU 耗时较高，追求性价比建议 `hybrid_rrf`。
+
+### 干净环境复跑步骤（Windows）
+
+```bash
+# 1. 克隆本 fork 并切到 feature 分支
+git clone https://github.com/sheep719/Langchain-Chatchat.git
+cd Langchain-Chatchat && git checkout feature/excel-loader-and-hybrid-search
+
+# 2. Python 3.11 venv + 源码可编辑安装
+python -m venv .venv
+.venv\Scripts\pip install -e libs/chatchat-server -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 3. 模型准备（Ollama 本地，无 GPU 依赖；或改 data/model_settings.yaml 接 API）
+ollama pull qwen2.5:7b
+ollama pull bge-m3
+
+# 4. 初始化并启动
+set CHATCHAT_ROOT=D:\github_projects\Langchain-Chatchat\data
+.venv\Scripts\chatchat.exe init
+.venv\Scripts\chatchat.exe kb -r        # 重建 samples 知识库
+.venv\Scripts\chatchat.exe start -a     # API :7861 + WebUI :8501
+
+# 5. 验证：curl http://localhost:7861/docs 返回 200 即环境就绪
+# 6. 复现实验数字：
+.venv\Scripts\python evaluation\eval_retrieval.py
+# 输出 SUMMARY 应与 docs/eval-results.md 一致（Hit@3: 90% / 100% / 95%）
+```
+
+### 与原版差异对照
+
+| 维度 | 原版（上游） | 本 fork |
+|------|------------|---------|
+| 检索路径 | vector-only（FAISS 单路） | 三模式可选：vector / hybrid_rrf / hybrid_rerank（`kb_settings.yaml` 的 `SEARCH_METHOD`，默认 vector 保持上游行为） |
+| Excel 解析 | UnstructuredExcelLoader 整表文本切块 | OpenpyxlExcelLoader 表头识别 + 行转文档块（metadata 含 sheet/row_id） |
+| 依赖 | — | rank_bm25、jieba（BM25 通道） |
+| 评测 | 无 | evaluation/ 目录：testset + 一键脚本 + 原始数据 |
+| 向后兼容 | — | 原检索路径零改动，VECTOR 模式回归一致（A/B 实验前提） |
 
 ---
 
