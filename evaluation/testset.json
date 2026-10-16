@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "kb": "samples",
+    "embed_model": "bge-m3",
+    "created": "2026-10-18",
+    "note": "20 条测试问答对。问题均为改写（paraphrase），不照抄文档原句；keywords 为期望命中文档的判定关键词（出现在期望文档、其他文档少出现）。难度分布：关键词可命中约 1/3（Q1-6）、需语义理解约 1/3（Q7-13）、刁钻题（正确答案在别处文档/跨文档干扰）约 1/3（Q14-20）。"
+  },
+  "testset": [
+    {"id": "Q01", "question": "萌新求教大佬怎么改成AMD显卡或者CPU？", "expected_doc": "langchain-ChatGLM_closed.xlsx", "keywords": ["把.cuda()去掉就行", "AMD显卡"]},
+    {"id": "Q02", "question": "训练框架都有哪些？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["deepspeed", "megatron-lm"]},
+    {"id": "Q03", "question": "推理框架有哪些选择？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["vllm", "text-generation-inference"]},
+    {"id": "Q04", "question": "PagedAttention 是做什么的？解决了什么问题？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["PagedAttention", "KV cache"]},
+    {"id": "Q05", "question": "RLHF 训练包括哪几个步骤？", "expected_doc": "大模型指令对齐训练原理.md", "keywords": ["SFT", "RM", "PPO"]},
+    {"id": "Q06", "question": "RRHF 方法的特点是什么？", "expected_doc": "大模型指令对齐训练原理.md", "keywords": ["RRHF", "排名损失"]},
+    {"id": "Q07", "question": "LIMA 是哪类方法？", "expected_doc": "大模型指令对齐训练原理.md", "keywords": ["LIMA", "SFT-only"]},
+    {"id": "Q08", "question": "分布式训练中的 FSDP 算法是怎么来的？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["FSDP", "ZeroRedundancyOptimizer"]},
+    {"id": "Q09", "question": "DDP 是怎么同步梯度的？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["DistributedDataParallel", "AllReduce"]},
+    {"id": "Q10", "question": "ZeRO 的三个阶段分别切分什么？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["ZeRO1", "optimizer state"]},
+    {"id": "Q11", "question": "Tokenizer 的 subword 级别方法有哪些？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["BPE", "WordPiece"]},
+    {"id": "Q12", "question": "位置编码有哪些技术？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["ROPE", "AliBi"]},
+    {"id": "Q13", "question": "稀疏注意力相关技术有哪些？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["稀疏注意力", "flash-attention"]},
+    {"id": "Q14", "question": "向量数据库的选型标准是什么？", "expected_doc": "向量数据库介绍.md- Matthias", "keywords": ["选型标准", "开源vs.闭源"]},
+    {"id": "Q15", "question": "langchain-ChatGLM 的 issue 里，纯 CPU 环境运行报什么错？", "expected_doc": "langchain-ChatGLM_open.csv", "keywords": ["nvcuda.dll", "纯CPU"]},
+    {"id": "Q16", "question": "issue 里有人反馈知识库提取的文字乱码，问题是什么？", "expected_doc": "langchain-ChatGLM_open.csv", "keywords": ["乱码", "prompt"]},
+    {"id": "Q17", "question": "压缩框架有哪些？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["bitsandbytes", "auto-gptq"]},
+    {"id": "Q18", "question": "python API 工具有哪些？", "expected_doc": "大模型技术栈-算法与原理.md", "keywords": ["FastAPI", "flask"]},
+    {"id": "Q19", "question": "RLAIF 的核心思想是什么？", "expected_doc": "大模型指令对齐训练原理.md", "keywords": ["AI 模型监督其他 AI 模型", "自我批评"]},
+    {"id": "Q20", "question": "向量数据库 chroma 属于哪种托管方式？", "expected_doc": "向量数据库介绍.md- Matthias", "keywords": ["embeded+cloud-native", "chroma"]}
+  ]
+}
