@@ -1,4 +1,4 @@
-from chatchat.settings import ApiModelSettings
+from chatchat.settings import ApiModelSettings, PlatformConfig
 
 
 def test_minimax_platform_endpoints():
@@ -23,4 +23,17 @@ def test_minimax_platform_endpoints():
         assert platform.platform_type == "minimax"
         assert platform.api_base_url == endpoints[0]
         assert platform.anthropic_api_base_url == endpoints[1]
-        assert platform.llm_models == ["MiniMax-M3", "MiniMax-M2.7"]
+        assert platform.llm_models == ["MiniMax-M3.1-Flash", "MiniMax-M3"]
+
+
+def test_saved_platform_configuration_round_trip():
+    saved = PlatformConfig(
+        platform_name="minimax-saved",
+        platform_type="minimax",
+        llm_models=["MiniMax-M2.7", "my-custom-model"],
+        embed_models=["saved-embedding"],
+        text2speech_models=["saved-speech"],
+        image2text_models=["saved-vision"],
+    )
+    restored = PlatformConfig.model_validate_json(saved.model_dump_json())
+    assert restored.model_dump() == saved.model_dump()

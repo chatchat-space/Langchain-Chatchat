@@ -103,6 +103,18 @@ def format_to_platform_tool_messages(
 
         # === ToolAgentAction ===
         elif isinstance(agent_action, ToolAgentAction):
+            if any(
+                "reasoning_content" in message.additional_kwargs
+                or (isinstance(message.content, str) and "<think>" in message.content)
+                for message in agent_action.message_log
+            ):
+                # Reasoning and tool calls must stay in the original assistant turn.
+                new_messages = [
+                    *agent_action.message_log,
+                    _create_tool_message(agent_action, observation),
+                ]
+                messages.extend(m for m in new_messages if m not in messages)
+                continue
             ai_msgs = AIMessage(
                 content=f"arguments='{agent_action.tool_input}', name='{agent_action.tool}'",
                 additional_kwargs={

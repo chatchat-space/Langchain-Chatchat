@@ -473,8 +473,8 @@ class ApiModelSettings(BaseFileSettings):
                 "api_key": "YOUR_API_KEY",
                 "api_concurrencies": 5,
                 "llm_models": [
+                    "MiniMax-M3.1-Flash",
                     "MiniMax-M3",
-                    "MiniMax-M2.7",
                 ],
             }),
             PlatformConfig(**{
@@ -485,8 +485,8 @@ class ApiModelSettings(BaseFileSettings):
                 "api_key": "YOUR_API_KEY",
                 "api_concurrencies": 5,
                 "llm_models": [
+                    "MiniMax-M3.1-Flash",
                     "MiniMax-M3",
-                    "MiniMax-M2.7",
                 ],
             }),
         ]

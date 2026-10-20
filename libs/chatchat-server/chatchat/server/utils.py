@@ -260,7 +260,12 @@ def get_ChatOpenAI(
                 openai_api_key=model_info.get("api_key"),
                 openai_proxy=model_info.get("api_proxy"),
             )
-        model = ChatOpenAI(**params)
+        if model_info.get("platform_type") == "minimax":
+            from langchain_chatchat.chat_models.minimax import MiniMaxChatOpenAI
+
+            model = MiniMaxChatOpenAI(**params)
+        else:
+            model = ChatOpenAI(**params)
     except Exception as e:
         logger.exception(f"failed to create ChatOpenAI for model: {model_name}.")
         model = None
