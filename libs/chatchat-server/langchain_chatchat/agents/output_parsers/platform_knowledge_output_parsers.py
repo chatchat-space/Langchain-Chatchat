@@ -54,6 +54,12 @@ class PlatformKnowledgeOutputParserCustom(ToolsAgentOutputParser):
         """Parse a list of candidate model Generations into a specific format."""
         tools = super().parse_result(result, partial=partial)
         message = result[0].message
+        if not isinstance(tools, AgentFinish) and (
+            "reasoning_content" in message.additional_kwargs
+            or (isinstance(message.content, str) and "<think>" in message.content)
+        ):
+            # Native tool calls already carry their complete reasoning history.
+            return tools
         temp_tools = []
         try:
             cleaned_content = str(message.content).replace("</think>", "")

@@ -115,6 +115,8 @@ def _convert_dict_to_message(_dict: Mapping[str, Any]) -> BaseMessage:
             additional_kwargs["function_call"] = dict(function_call)
         if tool_calls := _dict.get("tool_calls"):
             additional_kwargs["tool_calls"] = tool_calls
+        if "reasoning_content" in _dict:
+            additional_kwargs["reasoning_content"] = _dict["reasoning_content"]
         return AIMessage(content=content, additional_kwargs=additional_kwargs)
     elif role == "system":
         return SystemMessage(content=_dict.get("content", ""))
@@ -149,6 +151,10 @@ def _convert_message_to_dict(message: BaseMessage) -> dict:
         message_dict = {"role": "user", "content": message.content}
     elif isinstance(message, AIMessage):
         message_dict = {"role": "assistant", "content": message.content}
+        if "reasoning_content" in message.additional_kwargs:
+            message_dict["reasoning_content"] = message.additional_kwargs[
+                "reasoning_content"
+            ]
         if "function_call" in message.additional_kwargs:
             message_dict["function_call"] = message.additional_kwargs["function_call"]
             # If function call only, content is None not empty string
@@ -193,6 +199,8 @@ def _convert_delta_to_message_chunk(
         additional_kwargs["function_call"] = function_call
     if _dict.get("tool_calls"):
         additional_kwargs["tool_calls"] = _dict["tool_calls"]
+    if "reasoning_content" in _dict:
+        additional_kwargs["reasoning_content"] = _dict["reasoning_content"]
 
     if role == "user" or default_class == HumanMessageChunk:
         return HumanMessageChunk(content=content)

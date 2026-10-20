@@ -105,7 +105,7 @@ async def openai_request(
             logger.error(f"openai request error: {e}")
             yield {"data": json.dumps({"error": str(e)})}
 
-    params = body.model_dump(exclude_unset=True)
+    params = body.model_dump(exclude_unset=True, by_alias=True)
     if params.get("max_tokens") == 0:
         params["max_tokens"] = Settings.model_settings.MAX_TOKENS
 
@@ -128,7 +128,20 @@ async def list_models() -> Dict:
         try:
             client = get_OpenAIClient(name, is_async=True)
             models = await client.models.list()
-            return [{**x.model_dump(), "platform_name": name} for x in models.data]
+            items = models.data
+            if config.get("platform_type") == "minimax":
+                current = ["MiniMax-M3.1-Flash", "MiniMax-M3"]
+                saved = config.get("llm_models", [])
+                saved = saved if isinstance(saved, list) else []
+                items = [
+                    x for x in items
+                    if x.id in current + saved or not (
+                        (x.id.startswith("MiniMax-M") and x.id[9:10].isdigit())
+                        or x.id.startswith(("MiniMax-Text-", "abab"))
+                    )
+                ]
+                items.sort(key=lambda x: current.index(x.id) if x.id in current else 2)
+            return [{**x.model_dump(), "platform_name": name} for x in items]
         except Exception:
             logger.exception(f"failed request to platform: {name}")
             return []
